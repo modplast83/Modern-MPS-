@@ -1,0 +1,73 @@
+# Overview
+
+MPBF Next is a modern Arabic-first ERP system designed for plastic bag manufacturing operations. The system provides comprehensive production management, quality control, inventory tracking, and human resources management with an intelligent AI assistant. It features a mobile-first design with RTL (right-to-left) language support and voice/text command capabilities.
+
+# User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+# System Architecture
+
+## Frontend Architecture
+- **Framework**: React 18 with TypeScript and Vite for fast development builds
+- **UI Framework**: Tailwind CSS with shadcn/ui component library for consistent design
+- **State Management**: TanStack Query (React Query) for server state management
+- **Routing**: Wouter for lightweight client-side routing
+- **Internationalization**: Built-in Arabic RTL support with fallback to English
+- **Mobile-First Design**: Responsive layouts optimized for mobile devices with dedicated mobile navigation
+
+## Backend Architecture
+- **Runtime**: Node.js with Express.js framework
+- **Language**: TypeScript for type safety across the full stack
+- **Database ORM**: Drizzle ORM for type-safe database operations
+- **API Design**: RESTful APIs with consistent error handling and logging middleware
+- **Authentication**: Simple username/password authentication with session storage
+- **File Structure**: Modular separation between server, client, and shared code
+
+## Database Design
+- **Primary Database**: PostgreSQL with Drizzle ORM migrations
+- **Development Database**: SQLite support for local development
+- **Schema Structure**: Comprehensive factory management schema including:
+  - User management with roles and permissions
+  - Production workflow (orders, job orders, rolls, machines)
+  - Quality control and maintenance tracking
+  - Human resources (attendance, training, performance)
+  - Customer and product management
+
+## Authentication & Authorization
+- **Authentication Method**: Username/password with server-side validation
+- **Session Management**: Local storage for client-side session persistence
+- **Role-Based Access Control**: Hierarchical permission system with role-based restrictions
+- **Security**: Password hashing and secure session handling
+
+## AI Integration
+- **AI Service**: OpenAI GPT-4o integration for intelligent assistance
+- **Capabilities**: Natural language processing for Arabic and English commands
+- **Features**: Voice/text command processing, production insights, and automated responses
+- **Context Awareness**: Integration with production data for informed responses
+
+# External Dependencies
+
+## Database Services
+- **Neon Database**: PostgreSQL hosting service with serverless connection pooling
+- **Connection Management**: WebSocket-based connections for real-time data access
+
+## AI Services
+- **OpenAI API**: GPT-4o model for natural language processing and intelligent responses
+- **Configuration**: Environment-based API key management
+
+## Development Tools
+- **Vite**: Frontend build tool with hot module replacement
+- **TypeScript**: Type checking and compilation across the entire stack
+- **Tailwind CSS**: Utility-first CSS framework with RTL support
+- **ESBuild**: Fast JavaScript bundling for production builds
+
+## UI Components
+- **Radix UI**: Headless component primitives for accessibility
+- **Lucide Icons**: Consistent icon library throughout the application
+- **Framer Motion**: Animation library for smooth user interactions
+
+## Production Infrastructure
+- **Build Process**: Vite for frontend, ESBuild for backend bundling
+- **Environment Management**: Environment variable configuration for different deployment stages
+- **Asset Management**: Static file serving with proper caching headers

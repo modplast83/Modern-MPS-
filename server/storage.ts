@@ -1,0 +1,268 @@
+import { 
+  users, 
+  orders, 
+  job_orders, 
+  rolls, 
+  machines, 
+  customers,
+  products,
+  maintenance_requests,
+  quality_checks,
+  attendance,
+  waste,
+  type User, 
+  type InsertUser,
+  type Order,
+  type InsertOrder,
+  type JobOrder,
+  type InsertJobOrder,
+  type Roll,
+  type InsertRoll,
+  type Machine,
+  type Customer,
+  type Product,
+  type MaintenanceRequest,
+  type InsertMaintenanceRequest,
+  type QualityCheck,
+  type Attendance
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, sql, sum, count } from "drizzle-orm";
+
+export interface IStorage {
+  // Users
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Orders
+  getOrders(): Promise<Order[]>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  getOrderById(id: number): Promise<Order | undefined>;
+  
+  // Job Orders
+  getJobOrders(): Promise<JobOrder[]>;
+  getJobOrdersByStage(stage: string): Promise<JobOrder[]>;
+  createJobOrder(jobOrder: InsertJobOrder): Promise<JobOrder>;
+  
+  // Rolls
+  getRolls(): Promise<Roll[]>;
+  getRollsByJobOrder(jobOrderId: number): Promise<Roll[]>;
+  createRoll(roll: InsertRoll): Promise<Roll>;
+  updateRoll(id: number, updates: Partial<Roll>): Promise<Roll>;
+  
+  // Machines
+  getMachines(): Promise<Machine[]>;
+  getMachineById(id: number): Promise<Machine | undefined>;
+  
+  // Customers
+  getCustomers(): Promise<Customer[]>;
+  
+  // Products
+  getProducts(): Promise<Product[]>;
+  
+  // Maintenance
+  getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
+  createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest>;
+  
+  // Dashboard Stats
+  getDashboardStats(): Promise<{
+    activeOrders: number;
+    productionRate: number;
+    qualityScore: number;
+    wastePercentage: number;
+  }>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  async getOrders(): Promise<Order[]> {
+    return await db.select().from(orders).orderBy(desc(orders.created_at));
+  }
+
+  async createOrder(insertOrder: InsertOrder): Promise<Order> {
+    const orderNumber = `ORD-${Date.now()}`;
+    const [order] = await db
+      .insert(orders)
+      .values({ ...insertOrder, order_number: orderNumber })
+      .returning();
+    return order;
+  }
+
+  async getOrderById(id: number): Promise<Order | undefined> {
+    const [order] = await db.select().from(orders).where(eq(orders.id, id));
+    return order || undefined;
+  }
+
+  async getJobOrders(): Promise<JobOrder[]> {
+    return await db.select().from(job_orders).orderBy(desc(job_orders.created_at));
+  }
+
+  async getJobOrdersByStage(stage: string): Promise<JobOrder[]> {
+    return await db
+      .select({
+        id: job_orders.id,
+        job_number: job_orders.job_number,
+        order_id: job_orders.order_id,
+        product_id: job_orders.product_id,
+        quantity_required: job_orders.quantity_required,
+        quantity_produced: job_orders.quantity_produced,
+        status: job_orders.status,
+        created_at: job_orders.created_at
+      })
+      .from(job_orders)
+      .innerJoin(rolls, eq(job_orders.id, rolls.job_order_id))
+      .where(eq(rolls.current_stage, stage))
+      .groupBy(job_orders.id)
+      .orderBy(desc(job_orders.created_at));
+  }
+
+  async createJobOrder(insertJobOrder: InsertJobOrder): Promise<JobOrder> {
+    const jobNumber = `JO-${Date.now()}`;
+    const [jobOrder] = await db
+      .insert(job_orders)
+      .values({ ...insertJobOrder, job_number: jobNumber })
+      .returning();
+    return jobOrder;
+  }
+
+  async getRolls(): Promise<Roll[]> {
+    return await db.select().from(rolls).orderBy(desc(rolls.created_at));
+  }
+
+  async getRollsByJobOrder(jobOrderId: number): Promise<Roll[]> {
+    return await db.select().from(rolls).where(eq(rolls.job_order_id, jobOrderId));
+  }
+
+  async createRoll(insertRoll: InsertRoll): Promise<Roll> {
+    const rollNumber = `R-${Date.now()}`;
+    const qrCode = `QR-${rollNumber}`;
+    const [roll] = await db
+      .insert(rolls)
+      .values({ 
+        ...insertRoll, 
+        roll_number: rollNumber,
+        qr_code: qrCode 
+      })
+      .returning();
+    return roll;
+  }
+
+  async updateRoll(id: number, updates: Partial<Roll>): Promise<Roll> {
+    const [roll] = await db
+      .update(rolls)
+      .set(updates)
+      .where(eq(rolls.id, id))
+      .returning();
+    return roll;
+  }
+
+  async getMachines(): Promise<Machine[]> {
+    return await db.select().from(machines);
+  }
+
+  async getMachineById(id: number): Promise<Machine | undefined> {
+    const [machine] = await db.select().from(machines).where(eq(machines.id, id));
+    return machine || undefined;
+  }
+
+  async getCustomers(): Promise<Customer[]> {
+    return await db.select().from(customers);
+  }
+
+  async getProducts(): Promise<Product[]> {
+    return await db.select().from(products);
+  }
+
+  async getMaintenanceRequests(): Promise<MaintenanceRequest[]> {
+    return await db
+      .select()
+      .from(maintenance_requests)
+      .orderBy(desc(maintenance_requests.date_reported));
+  }
+
+  async createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest> {
+    const [maintenanceRequest] = await db
+      .insert(maintenance_requests)
+      .values(request)
+      .returning();
+    return maintenanceRequest;
+  }
+
+  async getDashboardStats(): Promise<{
+    activeOrders: number;
+    productionRate: number;
+    qualityScore: number;
+    wastePercentage: number;
+  }> {
+    // Get active orders count
+    const [activeOrdersResult] = await db
+      .select({ count: count() })
+      .from(orders)
+      .where(eq(orders.status, 'for_production'));
+    
+    const activeOrders = activeOrdersResult?.count || 0;
+
+    // Get production rate (percentage based on job orders)
+    const [productionResult] = await db
+      .select({
+        totalRequired: sum(job_orders.quantity_required),
+        totalProduced: sum(job_orders.quantity_produced)
+      })
+      .from(job_orders);
+
+    const productionRate = productionResult?.totalRequired && Number(productionResult.totalRequired) > 0
+      ? Math.round((Number(productionResult.totalProduced) / Number(productionResult.totalRequired)) * 100)
+      : 0;
+
+    // Get quality score (average from quality checks)
+    const [qualityResult] = await db
+      .select({
+        avgScore: sql<number>`AVG(CAST(${quality_checks.score} AS DECIMAL))`
+      })
+      .from(quality_checks)
+      .where(sql`${quality_checks.created_at} >= NOW() - INTERVAL '30 days'`);
+
+    const qualityScore = qualityResult?.avgScore 
+      ? Math.round(Number(qualityResult.avgScore) * 20) // Convert 1-5 to percentage
+      : 95; // Default high score
+
+    // Get waste percentage
+    const [wasteResult] = await db
+      .select({ 
+        totalWaste: sum(waste.quantity_wasted)
+      })
+      .from(waste)
+      .where(sql`${waste.created_at} >= NOW() - INTERVAL '7 days'`);
+
+    const wastePercentage = wasteResult?.totalWaste 
+      ? Number(wasteResult.totalWaste) / 100 // Convert to percentage
+      : 2.5; // Default low waste
+
+    return {
+      activeOrders,
+      productionRate,
+      qualityScore,
+      wastePercentage
+    };
+  }
+}
+
+export const storage = new DatabaseStorage();
