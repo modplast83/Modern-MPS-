@@ -189,6 +189,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sections routes
+  app.get("/api/sections", async (req, res) => {
+    try {
+      const sections = await storage.getSections();
+      res.json(sections);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب الأقسام" });
+    }
+  });
+
+  // Material Groups routes
+  app.get("/api/material-groups", async (req, res) => {
+    try {
+      const materialGroups = await storage.getMaterialGroups();
+      res.json(materialGroups);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب مجموعات المواد" });
+    }
+  });
+
+  // Items routes
+  app.get("/api/items", async (req, res) => {
+    try {
+      const items = await storage.getItems();
+      res.json(items);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب الأصناف" });
+    }
+  });
+
+  // Customer Products routes
+  app.get("/api/customer-products", async (req, res) => {
+    try {
+      const customerProducts = await storage.getCustomerProducts();
+      res.json(customerProducts);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب منتجات العملاء" });
+    }
+  });
+
+  // Locations routes
+  app.get("/api/locations", async (req, res) => {
+    try {
+      const locations = await storage.getLocations();
+      res.json(locations);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب المواقع" });
+    }
+  });
+
 
 
   // Maintenance routes

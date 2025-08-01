@@ -10,6 +10,11 @@ import {
   quality_checks,
   attendance,
   waste,
+  sections,
+  material_groups,
+  items,
+  customer_products,
+  locations,
   type User, 
   type InsertUser,
   type Order,
@@ -26,7 +31,12 @@ import {
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
-  type Attendance
+  type Attendance,
+  type Section,
+  type MaterialGroup,
+  type Item,
+  type CustomerProduct,
+  type Location
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, sum, count } from "drizzle-orm";
@@ -66,6 +76,21 @@ export interface IStorage {
   
   // Customers
   createCustomer(customer: InsertCustomer): Promise<Customer>;
+  
+  // Sections
+  getSections(): Promise<Section[]>;
+  
+  // Material Groups
+  getMaterialGroups(): Promise<MaterialGroup[]>;
+  
+  // Items
+  getItems(): Promise<Item[]>;
+  
+  // Customer Products
+  getCustomerProducts(): Promise<CustomerProduct[]>;
+  
+  // Locations
+  getLocations(): Promise<Location[]>;
   
   // Maintenance
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
@@ -253,6 +278,26 @@ export class DatabaseStorage implements IStorage {
       .values(customer)
       .returning();
     return newCustomer;
+  }
+
+  async getSections(): Promise<Section[]> {
+    return await db.select().from(sections);
+  }
+
+  async getMaterialGroups(): Promise<MaterialGroup[]> {
+    return await db.select().from(material_groups);
+  }
+
+  async getItems(): Promise<Item[]> {
+    return await db.select().from(items);
+  }
+
+  async getCustomerProducts(): Promise<CustomerProduct[]> {
+    return await db.select().from(customer_products);
+  }
+
+  async getLocations(): Promise<Location[]> {
+    return await db.select().from(locations);
   }
 
   async getDashboardStats(): Promise<{
