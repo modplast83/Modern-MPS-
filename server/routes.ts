@@ -239,6 +239,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Training Records routes
+  app.get("/api/training-records", async (req, res) => {
+    try {
+      const trainingRecords = await storage.getTrainingRecords();
+      res.json(trainingRecords);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب سجلات التدريب" });
+    }
+  });
+
+  app.post("/api/training-records", async (req, res) => {
+    try {
+      const trainingRecord = await storage.createTrainingRecord(req.body);
+      res.json(trainingRecord);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  // Admin Decisions routes
+  app.get("/api/admin-decisions", async (req, res) => {
+    try {
+      const adminDecisions = await storage.getAdminDecisions();
+      res.json(adminDecisions);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب القرارات الإدارية" });
+    }
+  });
+
+  app.post("/api/admin-decisions", async (req, res) => {
+    try {
+      const adminDecision = await storage.createAdminDecision(req.body);
+      res.json(adminDecision);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  // Warehouse Transactions routes
+  app.get("/api/warehouse-transactions", async (req, res) => {
+    try {
+      const warehouseTransactions = await storage.getWarehouseTransactions();
+      res.json(warehouseTransactions);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب حركات المستودع" });
+    }
+  });
+
+  app.post("/api/warehouse-transactions", async (req, res) => {
+    try {
+      const warehouseTransaction = await storage.createWarehouseTransaction(req.body);
+      res.json(warehouseTransaction);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  // Mixing Recipes routes
+  app.get("/api/mixing-recipes", async (req, res) => {
+    try {
+      const mixingRecipes = await storage.getMixingRecipes();
+      res.json(mixingRecipes);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب وصفات الخلط" });
+    }
+  });
+
+  app.post("/api/mixing-recipes", async (req, res) => {
+    try {
+      const mixingRecipe = await storage.createMixingRecipe(req.body);
+      res.json(mixingRecipe);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
 
 
   // Maintenance routes

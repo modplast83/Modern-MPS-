@@ -81,6 +81,22 @@ export interface IStorage {
   createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
   createLocation(location: any): Promise<Location>;
   
+  // Training Records
+  getTrainingRecords(): Promise<TrainingRecord[]>;
+  createTrainingRecord(record: any): Promise<TrainingRecord>;
+  
+  // Admin Decisions  
+  getAdminDecisions(): Promise<AdminDecision[]>;
+  createAdminDecision(decision: any): Promise<AdminDecision>;
+  
+  // Warehouse Transactions
+  getWarehouseTransactions(): Promise<WarehouseTransaction[]>;
+  createWarehouseTransaction(transaction: any): Promise<WarehouseTransaction>;
+  
+  // Mixing Recipes
+  getMixingRecipes(): Promise<MixingRecipe[]>;
+  createMixingRecipe(recipe: any): Promise<MixingRecipe>;
+  
   // Sections
   getSections(): Promise<Section[]>;
   
@@ -408,6 +424,58 @@ export class DatabaseStorage implements IStorage {
       qualityScore,
       wastePercentage
     };
+  }
+
+  // Training Records
+  async getTrainingRecords(): Promise<TrainingRecord[]> {
+    return await db.select().from(training_records).orderBy(desc(training_records.date));
+  }
+
+  async createTrainingRecord(record: any): Promise<TrainingRecord> {
+    const [newRecord] = await db
+      .insert(training_records)
+      .values(record)
+      .returning();
+    return newRecord;
+  }
+
+  // Admin Decisions
+  async getAdminDecisions(): Promise<AdminDecision[]> {
+    return await db.select().from(admin_decisions).orderBy(desc(admin_decisions.date));
+  }
+
+  async createAdminDecision(decision: any): Promise<AdminDecision> {
+    const [newDecision] = await db
+      .insert(admin_decisions)
+      .values(decision)
+      .returning();
+    return newDecision;
+  }
+
+  // Warehouse Transactions
+  async getWarehouseTransactions(): Promise<WarehouseTransaction[]> {
+    return await db.select().from(warehouse_transactions).orderBy(desc(warehouse_transactions.date));
+  }
+
+  async createWarehouseTransaction(transaction: any): Promise<WarehouseTransaction> {
+    const [newTransaction] = await db
+      .insert(warehouse_transactions)
+      .values(transaction)
+      .returning();
+    return newTransaction;
+  }
+
+  // Mixing Recipes
+  async getMixingRecipes(): Promise<MixingRecipe[]> {
+    return await db.select().from(mixing_recipes).orderBy(desc(mixing_recipes.created_at));
+  }
+
+  async createMixingRecipe(recipe: any): Promise<MixingRecipe> {
+    const [newRecipe] = await db
+      .insert(mixing_recipes)
+      .values(recipe)
+      .returning();
+    return newRecipe;
   }
 }
 
