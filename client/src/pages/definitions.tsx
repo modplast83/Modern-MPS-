@@ -881,7 +881,7 @@ export default function Definitions() {
                       <Building2 className="w-5 h-5" />
                       إدارة الأقسام
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('sections'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة قسم
                     </Button>
@@ -958,7 +958,7 @@ export default function Definitions() {
                       <Package className="w-5 h-5" />
                       إدارة مجموعات المواد
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('material-groups'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة مجموعة
                     </Button>
@@ -1035,7 +1035,7 @@ export default function Definitions() {
                       <Package className="w-5 h-5" />
                       إدارة الأصناف
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('items'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة صنف
                     </Button>
@@ -1116,7 +1116,7 @@ export default function Definitions() {
                       <Building2 className="w-5 h-5" />
                       إدارة منتجات العملاء
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('customer-products'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة منتج عميل
                     </Button>
@@ -1197,7 +1197,7 @@ export default function Definitions() {
                       <Building2 className="w-5 h-5" />
                       إدارة المواقع الجغرافية
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('locations'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة موقع
                     </Button>
@@ -1281,7 +1281,7 @@ export default function Definitions() {
                       <Cog className="w-5 h-5" />
                       إدارة المكائن
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('machines'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة ماكينة
                     </Button>
@@ -1364,7 +1364,7 @@ export default function Definitions() {
                       <Users className="w-5 h-5" />
                       إدارة المستخدمين
                     </CardTitle>
-                    <Button>
+                    <Button onClick={() => { resetForm(); setSelectedTab('users'); setIsDialogOpen(true); }}>
                       <Plus className="w-4 h-4 mr-2" />
                       إضافة مستخدم
                     </Button>
