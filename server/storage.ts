@@ -20,7 +20,9 @@ import {
   type InsertRoll,
   type Machine,
   type Customer,
+  type InsertCustomer,
   type Product,
+  type InsertProduct,
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
@@ -60,6 +62,10 @@ export interface IStorage {
   
   // Products
   getProducts(): Promise<Product[]>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  
+  // Customers
+  createCustomer(customer: InsertCustomer): Promise<Customer>;
   
   // Maintenance
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
@@ -231,6 +237,22 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    const [newProduct] = await db
+      .insert(products)
+      .values(product)
+      .returning();
+    return newProduct;
+  }
+
+  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+    const [newCustomer] = await db
+      .insert(customers)
+      .values(customer)
+      .returning();
+    return newCustomer;
   }
 
   async getDashboardStats(): Promise<{

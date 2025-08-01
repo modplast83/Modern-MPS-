@@ -1,7 +1,19 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertOrderSchema, insertJobOrderSchema, insertRollSchema, insertMaintenanceRequestSchema } from "@shared/schema";
+import { 
+  insertUserSchema, 
+  insertOrderSchema, 
+  insertJobOrderSchema, 
+  insertRollSchema, 
+  insertMaintenanceRequestSchema,
+  customers,
+  products
+} from "@shared/schema";
+import { createInsertSchema } from "drizzle-zod";
+
+const insertCustomerSchema = createInsertSchema(customers).omit({ id: true });
+const insertProductSchema = createInsertSchema(products).omit({ id: true });
 import { openaiService } from "./services/openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -155,6 +167,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "خطأ في جلب المنتجات" });
     }
   });
+
+  app.post("/api/products", async (req, res) => {
+    try {
+      const validatedData = insertProductSchema.parse(req.body);
+      const product = await storage.createProduct(validatedData);
+      res.json(product);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  // Customers routes  
+  app.post("/api/customers", async (req, res) => {
+    try {
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.createCustomer(validatedData);
+      res.json(customer);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+
 
   // Maintenance routes
   app.get("/api/maintenance", async (req, res) => {
