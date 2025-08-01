@@ -5,6 +5,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import Dashboard from "@/pages/dashboard";
+import Production from "@/pages/production";
+import Quality from "@/pages/quality";
+import Maintenance from "@/pages/maintenance";
+import HR from "@/pages/hr";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -33,6 +37,26 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
+      <Route path="/production">
+        <ProtectedRoute>
+          <Production />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/quality">
+        <ProtectedRoute>
+          <Quality />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/maintenance">
+        <ProtectedRoute>
+          <Maintenance />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/hr">
+        <ProtectedRoute>
+          <HR />
+        </ProtectedRoute>
+      </Route>
       <Route path="/">
         <ProtectedRoute>
           <Dashboard />
