@@ -2,6 +2,22 @@
 
 MPBF Next is a modern Arabic-first ERP system designed for plastic bag manufacturing operations. The system provides comprehensive production management, quality control, inventory tracking, and human resources management with an intelligent AI assistant. It features a mobile-first design with RTL (right-to-left) language support and voice/text command capabilities.
 
+## Recent Changes (January 2025)
+- Enhanced database schema with comprehensive HR, maintenance, and administrative modules
+- Added realistic sample data for immediate testing and demonstration
+- Fixed authentication system with simple password access for testing
+- Resolved CSS circular dependencies and JavaScript module errors
+- Successfully migrated from in-memory to PostgreSQL database storage
+
+## Test Accounts
+- admin/admin123 (System Administrator)
+- demo/demo123 (Demo User)  
+- test/test123 (Test User)
+- production_mgr/prod123 (Production Manager)
+- operator1/op123 (Machine Operator)
+- quality1/qa123 (Quality Inspector)
+- maintenance1/maint123 (Maintenance Technician)
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
