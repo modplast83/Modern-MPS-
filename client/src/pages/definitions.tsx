@@ -1167,17 +1167,82 @@ export default function Definitions() {
             <TabsContent value="machines" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Cog className="w-5 h-5" />
-                    إدارة المكائن
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Cog className="w-5 h-5" />
+                      إدارة المكائن
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة ماكينة
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Cog className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">إدارة المكائن قيد التطوير</p>
-                    <p className="text-sm text-gray-500">سيتم إضافة هذه الميزة قريباً</p>
-                  </div>
+                  {machinesLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">معدل الإنتاج</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(machines) && machines.length > 0 ? (
+                            machines.map((machine) => (
+                              <tr key={machine.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {machine.name_ar || machine.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {machine.type || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {machine.section_id ? `قسم ${machine.section_id}` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {machine.production_rate ? `${machine.production_rate}/ساعة` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={machine.status === 'operational' ? 'default' : 'secondary'}>
+                                    {machine.status === 'operational' ? 'يعمل' : 
+                                     machine.status === 'maintenance' ? 'صيانة' : 
+                                     machine.status === 'down' ? 'متوقف' : machine.status}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1185,17 +1250,82 @@ export default function Definitions() {
             <TabsContent value="users" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    إدارة المستخدمين
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      إدارة المستخدمين
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة مستخدم
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-4">إدارة المستخدمين قيد التطوير</p>
-                    <p className="text-sm text-gray-500">سيتم إضافة هذه الميزة قريباً</p>
-                  </div>
+                  {usersLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الدور</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(users) && users.length > 0 ? (
+                            users.map((user) => (
+                              <tr key={user.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {user.display_name_ar || user.display_name || user.username}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {user.username}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {user.role_id === 1 ? 'مدير عام' :
+                                   user.role_id === 2 ? 'مشرف' :
+                                   user.role_id === 3 ? 'عامل' : `دور ${user.role_id}`}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {user.section_id ? `قسم ${user.section_id}` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                                    {user.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
