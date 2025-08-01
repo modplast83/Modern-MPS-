@@ -25,9 +25,7 @@ import {
   type InsertRoll,
   type Machine,
   type Customer,
-  type InsertCustomer,
   type Product,
-  type InsertProduct,
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
@@ -72,10 +70,11 @@ export interface IStorage {
   
   // Products
   getProducts(): Promise<Product[]>;
-  createProduct(product: InsertProduct): Promise<Product>;
+  createProduct(product: any): Promise<Product>;
   
   // Customers
-  createCustomer(customer: InsertCustomer): Promise<Customer>;
+  createCustomer(customer: any): Promise<Customer>;
+  createMachine(machine: any): Promise<Machine>;
   
   // Sections
   getSections(): Promise<Section[]>;
@@ -250,7 +249,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(quality_checks)
-      .orderBy(desc(quality_checks.checked_at));
+      .orderBy(desc(quality_checks.created_at));
   }
 
   async getAttendance(): Promise<Attendance[]> {
@@ -264,7 +263,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users);
   }
 
-  async createProduct(product: InsertProduct): Promise<Product> {
+  async createProduct(product: any): Promise<Product> {
     const [newProduct] = await db
       .insert(products)
       .values(product)
@@ -272,12 +271,20 @@ export class DatabaseStorage implements IStorage {
     return newProduct;
   }
 
-  async createCustomer(customer: InsertCustomer): Promise<Customer> {
+  async createCustomer(customer: any): Promise<Customer> {
     const [newCustomer] = await db
       .insert(customers)
       .values(customer)
       .returning();
     return newCustomer;
+  }
+
+  async createMachine(machine: any): Promise<Machine> {
+    const [newMachine] = await db
+      .insert(machines)
+      .values(machine)
+      .returning();
+    return newMachine;
   }
 
   async getSections(): Promise<Section[]> {
