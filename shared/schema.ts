@@ -441,3 +441,52 @@ export type Role = typeof roles.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Violation = typeof violations.$inferSelect;
 export type CompanyProfile = typeof company_profile.$inferSelect;
+
+// Material Groups (if not already defined)
+export const material_groups = pgTable("material_groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  name_ar: varchar("name_ar", { length: 100 }).notNull(),
+  code: varchar("code", { length: 20 }).unique(),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).default("active"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export type MaterialGroup = typeof material_groups.$inferSelect;
+export type InsertMaterialGroup = typeof material_groups.$inferInsert;
+
+// Customer Products
+export const customer_products = pgTable("customer_products", {
+  id: serial("id").primaryKey(),
+  customer_id: integer("customer_id").references(() => customers.id).notNull(),
+  product_id: integer("product_id").references(() => products.id).notNull(),
+  customer_product_code: varchar("customer_product_code", { length: 50 }),
+  customer_product_name: varchar("customer_product_name", { length: 100 }),
+  customer_product_name_ar: varchar("customer_product_name_ar", { length: 100 }),
+  specifications: text("specifications"),
+  price: decimal("price", { precision: 10, scale: 2 }),
+  status: varchar("status", { length: 20 }).default("active"),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export type CustomerProduct = typeof customer_products.$inferSelect;
+export type InsertCustomerProduct = typeof customer_products.$inferInsert;
+
+// Insert schemas for new tables
+export const insertMaterialGroupSchema = createInsertSchema(material_groups).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertCustomerProductSchema = createInsertSchema(customer_products).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertSectionSchema = createInsertSchema(sections).omit({
+  id: true,
+  created_at: true,
+}).extend({
+  manager_id: z.number().optional().nullable(),
+});

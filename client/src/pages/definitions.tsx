@@ -39,6 +39,26 @@ export default function Definitions() {
     queryKey: ["/api/users"],
   });
 
+  const { data: sections, isLoading: sectionsLoading } = useQuery({
+    queryKey: ["/api/sections"],
+  });
+
+  const { data: materialGroups, isLoading: materialGroupsLoading } = useQuery({
+    queryKey: ["/api/material-groups"],
+  });
+
+  const { data: items, isLoading: itemsLoading } = useQuery({
+    queryKey: ["/api/items"],
+  });
+
+  const { data: customerProducts, isLoading: customerProductsLoading } = useQuery({
+    queryKey: ["/api/customer-products"],
+  });
+
+  const { data: locations, isLoading: locationsLoading } = useQuery({
+    queryKey: ["/api/locations"],
+  });
+
   // Customer form state
   const [customerForm, setCustomerForm] = useState({
     name: '',
@@ -73,6 +93,57 @@ export default function Definitions() {
     display_name_ar: '',
     role_id: 3,
     section_id: 1,
+    status: 'active'
+  });
+
+  // Section form state
+  const [sectionForm, setSectionForm] = useState({
+    name: '',
+    name_ar: '',
+    description: '',
+    manager_id: null,
+    status: 'active'
+  });
+
+  // Material Group form state
+  const [materialGroupForm, setMaterialGroupForm] = useState({
+    name: '',
+    name_ar: '',
+    code: '',
+    description: '',
+    status: 'active'
+  });
+
+  // Item form state
+  const [itemForm, setItemForm] = useState({
+    name: '',
+    name_ar: '',
+    code: '',
+    material_group_id: null,
+    unit: '',
+    unit_ar: '',
+    status: 'active'
+  });
+
+  // Customer Product form state
+  const [customerProductForm, setCustomerProductForm] = useState({
+    customer_id: null,
+    product_id: null,
+    customer_product_code: '',
+    customer_product_name: '',
+    customer_product_name_ar: '',
+    specifications: '',
+    price: '',
+    status: 'active'
+  });
+
+  // Location form state
+  const [locationForm, setLocationForm] = useState({
+    name: '',
+    name_ar: '',
+    type: 'city',
+    parent_id: null,
+    coordinates: '',
     status: 'active'
   });
 
@@ -397,21 +468,41 @@ export default function Definitions() {
           </div>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="customers" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
+            <TabsList className="grid w-full grid-cols-9 text-xs">
+              <TabsTrigger value="customers" className="flex items-center gap-1">
+                <Building2 className="w-3 h-3" />
                 العملاء
               </TabsTrigger>
-              <TabsTrigger value="products" className="flex items-center gap-2">
-                <Package className="w-4 h-4" />
+              <TabsTrigger value="products" className="flex items-center gap-1">
+                <Package className="w-3 h-3" />
                 المنتجات
               </TabsTrigger>
-              <TabsTrigger value="machines" className="flex items-center gap-2">
-                <Cog className="w-4 h-4" />
+              <TabsTrigger value="sections" className="flex items-center gap-1">
+                <Building2 className="w-3 h-3" />
+                الأقسام
+              </TabsTrigger>
+              <TabsTrigger value="material-groups" className="flex items-center gap-1">
+                <Package className="w-3 h-3" />
+                مجموعات المواد
+              </TabsTrigger>
+              <TabsTrigger value="items" className="flex items-center gap-1">
+                <Package className="w-3 h-3" />
+                الأصناف
+              </TabsTrigger>
+              <TabsTrigger value="customer-products" className="flex items-center gap-1">
+                <Building2 className="w-3 h-3" />
+                منتجات العملاء
+              </TabsTrigger>
+              <TabsTrigger value="locations" className="flex items-center gap-1">
+                <Building2 className="w-3 h-3" />
+                المواقع
+              </TabsTrigger>
+              <TabsTrigger value="machines" className="flex items-center gap-1">
+                <Cog className="w-3 h-3" />
                 المكائن
               </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
+              <TabsTrigger value="users" className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
                 المستخدمين
               </TabsTrigger>
             </TabsList>
@@ -658,6 +749,406 @@ export default function Definitions() {
                                   </td>
                                 </tr>
                               ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="sections" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      إدارة الأقسام
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة قسم
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {sectionsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدير</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(sections) && sections.length > 0 ? (
+                            sections.map((section) => (
+                              <tr key={section.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {section.name_ar || section.name}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                  {section.description || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {section.manager_id ? `مدير ${section.manager_id}` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={section.status === 'active' ? 'default' : 'secondary'}>
+                                    {section.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="material-groups" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      إدارة مجموعات المواد
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة مجموعة
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {materialGroupsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(materialGroups) && materialGroups.length > 0 ? (
+                            materialGroups.map((group) => (
+                              <tr key={group.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {group.name_ar || group.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {group.code || '-'}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                  {group.description || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
+                                    {group.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="items" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      إدارة الأصناف
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة صنف
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {itemsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المجموعة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(items) && items.length > 0 ? (
+                            items.map((item) => (
+                              <tr key={item.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {item.name_ar || item.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {item.code || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {item.material_group_id ? `مجموعة ${item.material_group_id}` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {item.unit_ar || item.unit || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={item.status === 'active' ? 'default' : 'secondary'}>
+                                    {item.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="customer-products" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      إدارة منتجات العملاء
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة منتج عميل
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {customerProductsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المنتج</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">كود العميل</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(customerProducts) && customerProducts.length > 0 ? (
+                            customerProducts.map((cp) => (
+                              <tr key={cp.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  عميل {cp.customer_id}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {cp.customer_product_name_ar || cp.customer_product_name || `منتج ${cp.product_id}`}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {cp.customer_product_code || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {cp.price ? `${cp.price} د.ع` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={cp.status === 'active' ? 'default' : 'secondary'}>
+                                    {cp.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                لا توجد بيانات متاحة
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="locations" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      إدارة المواقع الجغرافية
+                    </CardTitle>
+                    <Button>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة موقع
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {locationsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المنطقة الأب</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإحداثيات</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Array.isArray(locations) && locations.length > 0 ? (
+                            locations.map((location) => (
+                              <tr key={location.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  {location.name_ar || location.name}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {location.type === 'country' ? 'دولة' :
+                                   location.type === 'governorate' ? 'محافظة' :
+                                   location.type === 'city' ? 'مدينة' :
+                                   location.type === 'district' ? 'منطقة' : location.type}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {location.parent_id ? `منطقة ${location.parent_id}` : '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  {location.coordinates || '-'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap">
+                                  <Badge variant={location.status === 'active' ? 'default' : 'secondary'}>
+                                    {location.status === 'active' ? 'نشط' : 'غير نشط'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="outline" size="sm">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="outline" size="sm">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
                           ) : (
                             <tr>
                               <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
