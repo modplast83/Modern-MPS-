@@ -1,51 +1,91 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { RollWithDetails } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Package, 
+  Clock, 
+  User, 
+  Settings, 
+  CheckCircle2, 
+  AlertCircle,
+  RefreshCw 
+} from "lucide-react";
 
 export default function RecentRolls() {
-  const { data: rolls = [], isLoading } = useQuery<RollWithDetails[]>({
-    queryKey: ['/api/rolls'],
-    select: (data) => data.slice(0, 5) // Get only recent 5 rolls
+  const { data: rolls = [], isLoading, refetch } = useQuery({
+    queryKey: ["/api/rolls"],
   });
 
-  const getStatusInfo = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'for_printing':
-        return { label: 'جاهز للطباعة', variant: 'default' as const };
-      case 'for_cutting': 
-        return { label: 'جاهز للتقطيع', variant: 'secondary' as const };
-      case 'done':
-        return { label: 'مكتمل', variant: 'default' as const };
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+        return 'bg-red-100 text-red-800';
       default:
-        return { label: status, variant: 'outline' as const };
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / (1000 * 60));
-    
-    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-    return `منذ ${Math.floor(diffHours / 24)} يوم`;
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'مكتمل';
+      case 'in_progress':
+        return 'قيد التنفيذ';
+      case 'pending':
+        return 'في الانتظار';
+      case 'failed':
+        return 'فشل';
+      default:
+        return status;
+    }
   };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      case 'in_progress':
+        return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
+      case 'pending':
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      case 'failed':
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <Package className="w-4 h-4 text-gray-600" />;
+    }
+  };
+
+  const recentRolls = Array.isArray(rolls) ? rolls.slice(0, 10) : [];
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>آخر الرولات المنتجة</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            الرولات الحديثة
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-20 bg-muted animate-pulse rounded-lg"></div>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </CardContent>
@@ -55,53 +95,113 @@ export default function RecentRolls() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle>آخر الرولات المنتجة</CardTitle>
-          <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80">
-            عرض الكل
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            الرولات الحديثة
+          </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        {rolls.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">لا توجد رولات</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {rolls.map((roll) => {
-              const statusInfo = getStatusInfo(roll.status);
-              
-              return (
-                <div key={roll.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3 space-x-reverse">
-                    <div className="bg-primary text-primary-foreground p-2 rounded-lg">
-                      <QrCode className="h-4 w-4" />
+      <CardContent className="p-0">
+        <ScrollArea className="h-80">
+          {recentRolls.length > 0 ? (
+            <div className="p-4 space-y-4">
+              {recentRolls.map((roll: any) => (
+                <div key={roll.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">
+                        {getStatusIcon(roll.status)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900 truncate">
+                            {roll.roll_number}
+                          </h4>
+                          <Badge className={getStatusColor(roll.status)}>
+                            {getStatusText(roll.status)}
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Package className="w-3 h-3" />
+                            <span>أمر تشغيل: {roll.job_order_id}</span>
+                          </div>
+                          
+                          {roll.machine_id && (
+                            <div className="flex items-center gap-1">
+                              <Settings className="w-3 h-3" />
+                              <span>ماكينة: {roll.machine_id}</span>
+                            </div>
+                          )}
+                          
+                          {roll.employee_id && (
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>عامل: {roll.employee_id}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {new Date(roll.created_at).toLocaleDateString('ar-SA', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{roll.roll_number}</p>
-                      <p className="text-xs text-gray-600">
-                        {roll.product_name_ar || roll.product_name || "منتج غير محدد"}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        الوزن: {roll.weight ? `${parseFloat(roll.weight).toFixed(1)} كجم` : "غير محدد"}
-                      </p>
+                    
+                    <div className="text-right">
+                      {roll.length && (
+                        <div className="text-sm font-medium text-gray-900">
+                          {roll.length} م
+                        </div>
+                      )}
+                      {roll.weight && (
+                        <div className="text-xs text-gray-500">
+                          {roll.weight} كغ
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-left">
-                    <Badge variant={statusInfo.variant} className="mb-1">
-                      {statusInfo.label}
-                    </Badge>
-                    <p className="text-xs text-gray-600">
-                      {getTimeAgo(roll.created_at)}
-                    </p>
-                  </div>
+                  
+                  {/* Progress bar for in-progress rolls */}
+                  {roll.status === 'in_progress' && roll.length && roll.target_length && (
+                    <div className="mt-3">
+                      <div className="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>التقدم</span>
+                        <span>{Math.round((roll.length / roll.target_length) * 100)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min((roll.length / roll.target_length) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 mb-2">لا توجد رولات حديثة</p>
+              <p className="text-sm text-gray-500">ستظهر الرولات الجديدة هنا</p>
+            </div>
+          )}
+        </ScrollArea>
       </CardContent>
     </Card>
   );
