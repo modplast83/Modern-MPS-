@@ -65,6 +65,15 @@ export interface IStorage {
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
   createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest>;
   
+  // Quality
+  getQualityChecks(): Promise<QualityCheck[]>;
+  
+  // Attendance
+  getAttendance(): Promise<Attendance[]>;
+  
+  // Users list
+  getUsers(): Promise<User[]>;
+  
   // Dashboard Stats
   getDashboardStats(): Promise<{
     activeOrders: number;
@@ -204,6 +213,24 @@ export class DatabaseStorage implements IStorage {
       .values(request)
       .returning();
     return maintenanceRequest;
+  }
+
+  async getQualityChecks(): Promise<QualityCheck[]> {
+    return await db
+      .select()
+      .from(quality_checks)
+      .orderBy(desc(quality_checks.checked_at));
+  }
+
+  async getAttendance(): Promise<Attendance[]> {
+    return await db
+      .select()
+      .from(attendance)
+      .orderBy(desc(attendance.date));
+  }
+
+  async getUsers(): Promise<User[]> {
+    return await db.select().from(users);
   }
 
   async getDashboardStats(): Promise<{

@@ -176,6 +176,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quality checks routes
+  app.get("/api/quality-checks", async (req, res) => {
+    try {
+      const qualityChecks = await storage.getQualityChecks();
+      res.json(qualityChecks);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب فحوصات الجودة" });
+    }
+  });
+
+  // Maintenance requests routes
+  app.get("/api/maintenance-requests", async (req, res) => {
+    try {
+      const maintenanceRequests = await storage.getMaintenanceRequests();
+      res.json(maintenanceRequests);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب طلبات الصيانة" });
+    }
+  });
+
+  // Attendance routes
+  app.get("/api/attendance", async (req, res) => {
+    try {
+      const attendance = await storage.getAttendance();
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب بيانات الحضور" });
+    }
+  });
+
   // AI Assistant routes
   app.post("/api/ai/chat", async (req, res) => {
     try {
