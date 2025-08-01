@@ -379,6 +379,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Users routes
+  app.post("/api/users", async (req, res) => {
+    try {
+      const user = await storage.createUser(req.body);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء المستخدم" });
+    }
+  });
+
+  // Sections routes
+  app.post("/api/sections", async (req, res) => {
+    try {
+      const section = await storage.createSection(req.body);
+      res.json(section);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء القسم" });
+    }
+  });
+
+  // Material Groups routes
+  app.post("/api/material-groups", async (req, res) => {
+    try {
+      const materialGroup = await storage.createMaterialGroup(req.body);
+      res.json(materialGroup);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء مجموعة المواد" });
+    }
+  });
+
+  // Items routes
+  app.post("/api/items", async (req, res) => {
+    try {
+      const item = await storage.createItem(req.body);
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء الصنف" });
+    }
+  });
+
+  // Customer Products routes
+  app.post("/api/customer-products", async (req, res) => {
+    try {
+      const customerProduct = await storage.createCustomerProduct(req.body);
+      res.json(customerProduct);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء منتج العميل" });
+    }
+  });
+
+  // Locations routes
+  app.post("/api/locations", async (req, res) => {
+    try {
+      const location = await storage.createLocation(req.body);
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

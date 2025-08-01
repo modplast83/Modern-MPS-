@@ -174,6 +174,97 @@ export default function Definitions() {
     }
   });
 
+  const createMachineMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/machines', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الماكينة الجديدة" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/users', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة المستخدم الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createSectionMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/sections', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة القسم الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createMaterialGroupMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/material-groups', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/material-groups'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة مجموعة المواد الجديدة" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createItemMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/items', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الصنف الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createCustomerProductMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/customer-products', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة منتج العميل الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createLocationMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('/api/locations', 'POST', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الموقع الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
   const deleteItemMutation = useMutation({
     mutationFn: ({ endpoint, id }: { endpoint: string; id: number }) => 
       apiRequest(`${endpoint}/${id}`, 'DELETE'),
@@ -191,6 +282,11 @@ export default function Definitions() {
     setProductForm({ name: '', name_ar: '', code: '', type: 'hdpe', color: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extrusion', speed_rating: '', status: 'active' });
     setUserForm({ username: '', display_name_ar: '', role_id: 3, section_id: 1, status: 'active' });
+    setSectionForm({ name: '', name_ar: '', description: '', manager_id: null, status: 'active' });
+    setMaterialGroupForm({ name: '', name_ar: '', code: '', description: '', status: 'active' });
+    setItemForm({ name: '', name_ar: '', code: '', material_group_id: null, unit: '', unit_ar: '', status: 'active' });
+    setCustomerProductForm({ customer_id: null, product_id: null, customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
+    setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: null, coordinates: '', status: 'active' });
     setEditingItem(null);
   };
 
@@ -262,12 +358,25 @@ export default function Definitions() {
         createProductMutation.mutate(productForm);
         break;
       case 'machines':
-        // Machine creation would need API endpoint
-        toast({ title: "قريباً", description: "إضافة المكائن قيد التطوير" });
+        createMachineMutation.mutate(machineForm);
         break;
       case 'users':
-        // User creation would need API endpoint
-        toast({ title: "قريباً", description: "إضافة المستخدمين قيد التطوير" });
+        createUserMutation.mutate(userForm);
+        break;
+      case 'sections':
+        createSectionMutation.mutate(sectionForm);
+        break;
+      case 'material-groups':
+        createMaterialGroupMutation.mutate(materialGroupForm);
+        break;
+      case 'items':
+        createItemMutation.mutate(itemForm);
+        break;
+      case 'customer-products':
+        createCustomerProductMutation.mutate(customerProductForm);
+        break;
+      case 'locations':
+        createLocationMutation.mutate(locationForm);
         break;
     }
   };

@@ -75,6 +75,11 @@ export interface IStorage {
   // Customers
   createCustomer(customer: any): Promise<Customer>;
   createMachine(machine: any): Promise<Machine>;
+  createSection(section: any): Promise<Section>;
+  createMaterialGroup(materialGroup: any): Promise<MaterialGroup>;
+  createItem(item: any): Promise<Item>;
+  createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
+  createLocation(location: any): Promise<Location>;
   
   // Sections
   getSections(): Promise<Section[]>;
@@ -285,6 +290,46 @@ export class DatabaseStorage implements IStorage {
       .values(machine)
       .returning();
     return newMachine;
+  }
+
+  async createSection(section: any): Promise<Section> {
+    const [newSection] = await db
+      .insert(sections)
+      .values(section)
+      .returning();
+    return newSection;
+  }
+
+  async createMaterialGroup(materialGroup: any): Promise<MaterialGroup> {
+    const [newMaterialGroup] = await db
+      .insert(material_groups)
+      .values(materialGroup)
+      .returning();
+    return newMaterialGroup;
+  }
+
+  async createItem(item: any): Promise<Item> {
+    const [newItem] = await db
+      .insert(items)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async createCustomerProduct(customerProduct: any): Promise<CustomerProduct> {
+    const [newCustomerProduct] = await db
+      .insert(customer_products)
+      .values(customerProduct)
+      .returning();
+    return newCustomerProduct;
+  }
+
+  async createLocation(location: any): Promise<Location> {
+    const [newLocation] = await db
+      .insert(locations)
+      .values(location)
+      .returning();
+    return newLocation;
   }
 
   async getSections(): Promise<Section[]> {
