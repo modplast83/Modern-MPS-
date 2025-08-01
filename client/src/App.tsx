@@ -9,6 +9,7 @@ import Production from "@/pages/production";
 import Quality from "@/pages/quality";
 import Maintenance from "@/pages/maintenance";
 import HR from "@/pages/hr";
+import Definitions from "@/pages/definitions";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -55,6 +56,11 @@ function Router() {
       <Route path="/hr">
         <ProtectedRoute>
           <HR />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/definitions">
+        <ProtectedRoute>
+          <Definitions />
         </ProtectedRoute>
       </Route>
       <Route path="/">
