@@ -37,6 +37,20 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Run database migrations in production
+  if (app.get("env") === "production") {
+    try {
+      console.log("🚀 Running database migrations...");
+      const { migrate } = await import('drizzle-orm/neon-serverless/migrator');
+      const { db } = await import('./db.js');
+      await migrate(db, { migrationsFolder: './migrations' });
+      console.log("✅ Database migrations completed");
+    } catch (error) {
+      console.error("❌ Migration failed:", error);
+      process.exit(1);
+    }
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
