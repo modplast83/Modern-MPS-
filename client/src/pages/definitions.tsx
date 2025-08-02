@@ -12,8 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings } from "lucide-react";
 
 export default function Definitions() {
   const { toast } = useToast();
@@ -26,31 +26,30 @@ export default function Definitions() {
 
   // Form states
   const [customerForm, setCustomerForm] = useState({
-    name: '', name_ar: '', phone: '', address: '', email: '', status: 'active'
-  });
-  const [productForm, setProductForm] = useState({
-    name: '', name_ar: '', code: '', type: 'hdpe', color: '', weight: '', size_width: '', size_length: '', status: 'active'
+    name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', 
+    tax_number: '', phone: '', sales_rep_id: ''
   });
   const [sectionForm, setSectionForm] = useState({
-    name: '', name_ar: '', description: '', manager_id: '', status: 'active'
+    name: '', name_ar: '', description: ''
   });
   const [materialGroupForm, setMaterialGroupForm] = useState({
-    name: '', name_ar: '', code: '', description: '', status: 'active'
+    name: '', name_ar: '', code: '', parent_id: ''
   });
   const [itemForm, setItemForm] = useState({
-    name: '', name_ar: '', code: '', type: 'raw_material', unit: '', group_id: '', status: 'active'
+    name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active'
   });
   const [customerProductForm, setCustomerProductForm] = useState({
-    customer_id: '', product_id: '', customer_code: '', customer_name: '', price: '', status: 'active'
+    customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', 
+    customer_product_name_ar: '', specifications: '', price: '', status: 'active'
   });
   const [locationForm, setLocationForm] = useState({
-    name: '', name_ar: '', code: '', type: 'warehouse', description: '', capacity: '', status: 'active'
+    name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active'
   });
   const [machineForm, setMachineForm] = useState({
-    name: '', name_ar: '', code: '', type: 'extruder', location_id: '', status: 'operational'
+    name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active'
   });
   const [userForm, setUserForm] = useState({
-    username: '', name: '', name_ar: '', email: '', role: 'operator', section_id: '', status: 'active'
+    username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active'
   });
 
   // Data queries
@@ -116,15 +115,14 @@ export default function Definitions() {
 
   // Event handlers
   const resetForm = () => {
-    setCustomerForm({ name: '', name_ar: '', phone: '', address: '', email: '', status: 'active' });
-    setProductForm({ name: '', name_ar: '', code: '', type: 'hdpe', color: '', weight: '', size_width: '', size_length: '', status: 'active' });
-    setSectionForm({ name: '', name_ar: '', description: '', manager_id: '', status: 'active' });
-    setMaterialGroupForm({ name: '', name_ar: '', code: '', description: '', status: 'active' });
-    setItemForm({ name: '', name_ar: '', code: '', type: 'raw_material', unit: '', group_id: '', status: 'active' });
-    setCustomerProductForm({ customer_id: '', product_id: '', customer_code: '', customer_name: '', price: '', status: 'active' });
-    setLocationForm({ name: '', name_ar: '', code: '', type: 'warehouse', description: '', capacity: '', status: 'active' });
-    setMachineForm({ name: '', name_ar: '', code: '', type: 'extruder', location_id: '', status: 'operational' });
-    setUserForm({ username: '', name: '', name_ar: '', email: '', role: 'operator', section_id: '', status: 'active' });
+    setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
+    setSectionForm({ name: '', name_ar: '', description: '' });
+    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: '' });
+    setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active' });
+    setCustomerProductForm({ customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
+    setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
+    setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
+    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active' });
     setEditingItem(null);
   };
 
@@ -180,10 +178,427 @@ export default function Definitions() {
   };
 
   const handleSubmit = async () => {
-    // Implementation will depend on selected tab
-    setIsDialogOpen(false);
-    resetForm();
+    try {
+      let endpoint = '';
+      let data = {};
+      
+      switch (selectedTab) {
+        case 'customers':
+          endpoint = '/api/customers';
+          data = customerForm;
+          break;
+        case 'sections':
+          endpoint = '/api/sections';
+          data = sectionForm;
+          break;
+        case 'material-groups':
+          endpoint = '/api/categories';
+          data = materialGroupForm;
+          break;
+        case 'items':
+          endpoint = '/api/items';
+          data = itemForm;
+          break;
+        case 'customer-products':
+          endpoint = '/api/customer-products';
+          data = customerProductForm;
+          break;
+        case 'locations':
+          endpoint = '/api/locations';
+          data = locationForm;
+          break;
+        case 'machines':
+          endpoint = '/api/machines';
+          data = machineForm;
+          break;
+        case 'users':
+          endpoint = '/api/users';
+          data = userForm;
+          break;
+      }
+
+      if (editingItem) {
+        await apiRequest(`${endpoint}/${editingItem.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } else {
+        await apiRequest(endpoint, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      toast({
+        title: "تم الحفظ",
+        description: editingItem ? "تم تحديث البيانات بنجاح" : "تم إضافة البيانات بنجاح",
+      });
+
+      queryClient.invalidateQueries({ queryKey: [endpoint] });
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء الحفظ",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Form render functions
+  const renderCustomerForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={customerForm.name}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم العميل"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={customerForm.name_ar}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم العميل بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="code">الكود</Label>
+        <Input
+          id="code"
+          value={customerForm.code}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, code: e.target.value }))}
+          placeholder="كود العميل"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="user_id">معرف المستخدم</Label>
+        <Input
+          id="user_id"
+          value={customerForm.user_id}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, user_id: e.target.value }))}
+          placeholder="معرف المستخدم"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="plate_drawer_code">كود اللوح الجرار</Label>
+        <Input
+          id="plate_drawer_code"
+          value={customerForm.plate_drawer_code}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, plate_drawer_code: e.target.value }))}
+          placeholder="كود اللوح الجرار"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="city">المدينة</Label>
+        <Input
+          id="city"
+          value={customerForm.city}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, city: e.target.value }))}
+          placeholder="المدينة"
+        />
+      </div>
+      <div className="space-y-2 md:col-span-2">
+        <Label htmlFor="address">العنوان</Label>
+        <Input
+          id="address"
+          value={customerForm.address}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, address: e.target.value }))}
+          placeholder="العنوان الكامل"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="tax_number">الرقم الضريبي</Label>
+        <Input
+          id="tax_number"
+          value={customerForm.tax_number}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, tax_number: e.target.value }))}
+          placeholder="الرقم الضريبي"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">الهاتف</Label>
+        <Input
+          id="phone"
+          value={customerForm.phone}
+          onChange={(e) => setCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+          placeholder="رقم الهاتف"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="sales_rep_id">مندوب المبيعات</Label>
+        <Select value={customerForm.sales_rep_id} onValueChange={(value) => setCustomerForm(prev => ({ ...prev, sales_rep_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر مندوب المبيعات" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(users) && users.map((user: any) => (
+              <SelectItem key={user.id} value={user.id.toString()}>
+                {user.display_name_ar || user.display_name || user.username}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderSectionForm = () => (
+    <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={sectionForm.name}
+          onChange={(e) => setSectionForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم القسم"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={sectionForm.name_ar}
+          onChange={(e) => setSectionForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم القسم بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="description">الوصف</Label>
+        <Input
+          id="description"
+          value={sectionForm.description}
+          onChange={(e) => setSectionForm(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="وصف القسم"
+        />
+      </div>
+    </div>
+  );
+
+  const renderMaterialGroupForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={materialGroupForm.name}
+          onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم المجموعة"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={materialGroupForm.name_ar}
+          onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم المجموعة بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="code">الكود</Label>
+        <Input
+          id="code"
+          value={materialGroupForm.code}
+          onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, code: e.target.value }))}
+          placeholder="كود المجموعة"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="parent_id">المجموعة الأب</Label>
+        <Select value={materialGroupForm.parent_id} onValueChange={(value) => setMaterialGroupForm(prev => ({ ...prev, parent_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر المجموعة الأب" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">بدون مجموعة أب</SelectItem>
+            {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
+              <SelectItem key={group.id} value={group.id.toString()}>
+                {group.name_ar || group.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderItemForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={itemForm.name}
+          onChange={(e) => setItemForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم الصنف"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={itemForm.name_ar}
+          onChange={(e) => setItemForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم الصنف بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="code">الكود</Label>
+        <Input
+          id="code"
+          value={itemForm.code}
+          onChange={(e) => setItemForm(prev => ({ ...prev, code: e.target.value }))}
+          placeholder="كود الصنف"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="unit">الوحدة (إنجليزي)</Label>
+        <Input
+          id="unit"
+          value={itemForm.unit}
+          onChange={(e) => setItemForm(prev => ({ ...prev, unit: e.target.value }))}
+          placeholder="وحدة القياس"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="unit_ar">الوحدة (عربي)</Label>
+        <Input
+          id="unit_ar"
+          value={itemForm.unit_ar}
+          onChange={(e) => setItemForm(prev => ({ ...prev, unit_ar: e.target.value }))}
+          placeholder="وحدة القياس بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="material_group_id">مجموعة المواد</Label>
+        <Select value={itemForm.material_group_id} onValueChange={(value) => setItemForm(prev => ({ ...prev, material_group_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر مجموعة المواد" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
+              <SelectItem key={group.id} value={group.id.toString()}>
+                {group.name_ar || group.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={itemForm.status} onValueChange={(value) => setItemForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderCustomerProductForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="customer_id">العميل</Label>
+        <Select value={customerProductForm.customer_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, customer_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر العميل" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(customers) && customers.map((customer: any) => (
+              <SelectItem key={customer.id} value={customer.id.toString()}>
+                {customer.name_ar || customer.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="category_id">المجموعة</Label>
+        <Select value={customerProductForm.category_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, category_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر المجموعة" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
+              <SelectItem key={group.id} value={group.id.toString()}>
+                {group.name_ar || group.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="customer_product_code">كود المنتج عند العميل</Label>
+        <Input
+          id="customer_product_code"
+          value={customerProductForm.customer_product_code}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_code: e.target.value }))}
+          placeholder="كود المنتج"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="customer_product_name">اسم المنتج (إنجليزي)</Label>
+        <Input
+          id="customer_product_name"
+          value={customerProductForm.customer_product_name}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name: e.target.value }))}
+          placeholder="اسم المنتج"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="customer_product_name_ar">اسم المنتج (عربي)</Label>
+        <Input
+          id="customer_product_name_ar"
+          value={customerProductForm.customer_product_name_ar}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name_ar: e.target.value }))}
+          placeholder="اسم المنتج بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="price">السعر</Label>
+        <Input
+          id="price"
+          type="number"
+          value={customerProductForm.price}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, price: e.target.value }))}
+          placeholder="السعر"
+        />
+      </div>
+      <div className="space-y-2 md:col-span-2">
+        <Label htmlFor="specifications">المواصفات</Label>
+        <Input
+          id="specifications"
+          value={customerProductForm.specifications}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, specifications: e.target.value }))}
+          placeholder="مواصفات المنتج"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={customerProductForm.status} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -254,9 +669,8 @@ export default function Definitions() {
           </Card>
 
           <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-8">
               <TabsTrigger value="customers">العملاء</TabsTrigger>
-              <TabsTrigger value="products">المنتجات</TabsTrigger>
               <TabsTrigger value="sections">الأقسام</TabsTrigger>
               <TabsTrigger value="material-groups">مجموعات المواد</TabsTrigger>
               <TabsTrigger value="items">الأصناف</TabsTrigger>
@@ -364,109 +778,7 @@ export default function Definitions() {
               </Card>
             </TabsContent>
 
-            {/* Products Tab */}
-            <TabsContent value="products" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Package className="w-5 h-5" />
-                      إدارة المنتجات
-                    </CardTitle>
-                    <Button onClick={() => { resetForm(); setIsDialogOpen(true); }}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      إضافة منتج
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {productsLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اللون</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {(() => {
-                            const filteredProducts = getFilteredProducts();
-                            return filteredProducts.length > 0 ? (
-                              filteredProducts.map((product) => (
-                                <tr key={product.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {product.name_ar || product.name}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.code}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.type === 'hdpe' ? 'HDPE' : 
-                                     product.type === 'ldpe' ? 'LDPE' : 
-                                     product.type === 'pp' ? 'PP' : product.type}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {product.color || '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
-                                      {product.status === 'active' ? 'نشط' : 'غير نشط'}
-                                    </Badge>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handleEdit(product, 'product')}
-                                      >
-                                        <Edit className="w-4 h-4" />
-                                      </Button>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handleDelete(product.id, 'product')}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                      <Button 
-                                        variant="outline" 
-                                        size="sm"
-                                        onClick={() => handlePrint(product)}
-                                      >
-                                        <Printer className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  </td>
-                                </tr>
-                              ))
-                            ) : (
-                              <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                  {quickSearch || statusFilter !== "all" ? 
-                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
-                                    "لا توجد بيانات متاحة"}
-                                </td>
-                              </tr>
-                            );
-                          })()}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+
 
             {/* Sections Tab */}
             <TabsContent value="sections" className="space-y-6">
@@ -566,23 +878,345 @@ export default function Definitions() {
               </Card>
             </TabsContent>
 
-            {/* Show Search Summary */}
-            <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Search className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-semibold text-blue-900">نظام البحث والتصفية متاح الآن!</h3>
-              </div>
-              <div className="text-blue-800 space-y-2">
-                <p>✅ البحث السريع في جميع الحقول للعملاء والمنتجات والأقسام</p>
-                <p>✅ تصفية حسب الحالة (نشط/غير نشط)</p>
-                <p>✅ عرض الفلاتر النشطة مع إمكانية مسحها</p>
-                <p>✅ رسائل ديناميكية عند عدم وجود نتائج</p>
-                <p>✅ تم إصلاح جميع أزرار الطباعة والتعديل والحذف</p>
-              </div>
-              <div className="mt-4 text-sm text-blue-700">
-                <strong>ملاحظة:</strong> تم تطبيق النظام على العملاء والمنتجات والأقسام. الباقي متاح للإضافة عند الحاجة.
-              </div>
-            </div>
+            {/* Material Groups Tab */}
+            <TabsContent value="material-groups" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Package className="w-5 h-5" />
+                      إدارة مجموعات المواد
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('material-groups'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة مجموعة
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {materialGroupsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المجموعة الأب</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredGroups = getFilteredMaterialGroups();
+                            return filteredGroups.length > 0 ? (
+                              filteredGroups.map((group) => (
+                                <tr key={group.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {group.name_ar || group.name}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {group.code || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {group.parent_id ? 'فرعية' : 'رئيسية'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(group, 'material-group')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(group.id, 'category')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(group)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Items Tab */}
+            <TabsContent value="items" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Cog className="w-5 h-5" />
+                      إدارة الأصناف
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('items'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة صنف
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {itemsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المجموعة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredItems = getFilteredItems();
+                            return filteredItems.length > 0 ? (
+                              filteredItems.map((item) => (
+                                <tr key={item.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {item.name_ar || item.name}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {item.code || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {item.unit || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {item.category_id || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={item.status === 'active' ? 'default' : 'secondary'}>
+                                      {item.status === 'active' ? 'نشط' : 'غير نشط'}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(item, 'item')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(item.id, 'item')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(item)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Customer Products Tab */}
+            <TabsContent value="customer-products" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      إدارة منتجات العملاء
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('customer-products'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة منتج عميل
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {customerProductsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">كود المنتج</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المنتج</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredCP = getFilteredCustomerProducts();
+                            return filteredCP.length > 0 ? (
+                              filteredCP.map((cp) => (
+                                <tr key={cp.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {cp.customer_id}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.customer_product_code || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.customer_product_name_ar || cp.customer_product_name}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.price || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={cp.status === 'active' ? 'default' : 'secondary'}>
+                                      {cp.status === 'active' ? 'نشط' : 'غير نشط'}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(cp, 'customer-product')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(cp.id, 'customer-product')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(cp)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Add Dialog */}
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>
+                    {editingItem ? 
+                      (selectedTab === 'customers' ? 'تعديل عميل' :
+                       selectedTab === 'sections' ? 'تعديل قسم' :
+                       selectedTab === 'material-groups' ? 'تعديل مجموعة مواد' :
+                       selectedTab === 'items' ? 'تعديل صنف' :
+                       selectedTab === 'customer-products' ? 'تعديل منتج عميل' :
+                       selectedTab === 'locations' ? 'تعديل موقع' :
+                       selectedTab === 'machines' ? 'تعديل ماكينة' :
+                       selectedTab === 'users' ? 'تعديل مستخدم' : 'تعديل')
+                      :
+                      (selectedTab === 'customers' ? 'إضافة عميل جديد' :
+                       selectedTab === 'sections' ? 'إضافة قسم جديد' :
+                       selectedTab === 'material-groups' ? 'إضافة مجموعة مواد جديدة' :
+                       selectedTab === 'items' ? 'إضافة صنف جديد' :
+                       selectedTab === 'customer-products' ? 'إضافة منتج عميل جديد' :
+                       selectedTab === 'locations' ? 'إضافة موقع جديد' :
+                       selectedTab === 'machines' ? 'إضافة ماكينة جديدة' :
+                       selectedTab === 'users' ? 'إضافة مستخدم جديد' : 'إضافة جديد')
+                    }
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  {selectedTab === 'customers' && renderCustomerForm()}
+                  {selectedTab === 'sections' && renderSectionForm()}
+                  {selectedTab === 'material-groups' && renderMaterialGroupForm()}
+                  {selectedTab === 'items' && renderItemForm()}
+                  {selectedTab === 'customer-products' && renderCustomerProductForm()}
+                </div>
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    إلغاء
+                  </Button>
+                  <Button onClick={handleSubmit}>
+                    {editingItem ? 'تحديث' : 'حفظ'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
           </Tabs>
         </main>
