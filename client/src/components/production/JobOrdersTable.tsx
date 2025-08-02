@@ -11,7 +11,7 @@ interface JobOrdersTableProps {
 
 export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTableProps) {
   const { data: jobOrders = [], isLoading } = useQuery<JobOrderWithDetails[]>({
-    queryKey: ['/api/job-orders', { stage }],
+    queryKey: ['/api/job-orders', stage],
   });
 
   if (isLoading) {

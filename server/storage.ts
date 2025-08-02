@@ -723,7 +723,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram> {
-    const [trainingProgram] = await db.insert(training_programs).values(program).returning();
+    const [trainingProgram] = await db.insert(training_programs).values([program]).returning();
     return trainingProgram;
   }
 
@@ -766,7 +766,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTrainingMaterial(id: number): Promise<boolean> {
     const result = await db.delete(training_materials).where(eq(training_materials.id, id));
-    return result.rowCount > 0;
+    return result.rowCount !== null && result.rowCount > 0;
   }
 
   // Training Enrollments
@@ -832,7 +832,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPerformanceCriteria(criteria: InsertPerformanceCriteria): Promise<PerformanceCriteria> {
-    const [performanceCriteria] = await db.insert(performance_criteria).values(criteria).returning();
+    const [performanceCriteria] = await db.insert(performance_criteria).values([criteria]).returning();
     return performanceCriteria;
   }
 
@@ -920,14 +920,13 @@ export class DatabaseStorage implements IStorage {
 
   // Leave Balances
   async getLeaveBalances(employeeId: number, year?: number): Promise<LeaveBalance[]> {
-    const query = db.select().from(leave_balances).where(eq(leave_balances.employee_id, employeeId));
     if (year) {
-      return await query.where(and(
+      return await db.select().from(leave_balances).where(and(
         eq(leave_balances.employee_id, employeeId),
         eq(leave_balances.year, year)
       ));
     }
-    return await query;
+    return await db.select().from(leave_balances).where(eq(leave_balances.employee_id, employeeId));
   }
 
   async createLeaveBalance(balance: InsertLeaveBalance): Promise<LeaveBalance> {
