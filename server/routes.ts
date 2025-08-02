@@ -276,24 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Products routes
-  app.get("/api/products", async (req, res) => {
-    try {
-      const products = await storage.getProducts();
-      res.json(products);
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في جلب المنتجات" });
-    }
-  });
-
-  app.post("/api/products", async (req, res) => {
-    try {
-      const validatedData = req.body; // تم إزالة products table
-      const product = await storage.createProduct(validatedData);
-      res.json(product);
-    } catch (error) {
-      res.status(400).json({ message: "بيانات غير صحيحة" });
-    }
+  // Health check endpoint for deployment
+  app.get("/api/health", (req, res) => {
+    res.json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || "development"
+    });
   });
 
   // Customers routes  
