@@ -315,6 +315,126 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ERP Integration Routes
+  app.get("/api/erp/configurations", async (req, res) => {
+    try {
+      const configurations = await storage.getERPConfigurations();
+      res.json(configurations);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب إعدادات ERP" });
+    }
+  });
+
+  app.post("/api/erp/configurations", async (req, res) => {
+    try {
+      const configuration = await storage.createERPConfiguration(req.body);
+      res.json(configuration);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  app.put("/api/erp/configurations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const configuration = await storage.updateERPConfiguration(id, req.body);
+      res.json(configuration);
+    } catch (error) {
+      res.status(400).json({ message: "خطأ في تحديث الإعدادات" });
+    }
+  });
+
+  app.delete("/api/erp/configurations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteERPConfiguration(id);
+      res.json({ success });
+    } catch (error) {
+      res.status(400).json({ message: "خطأ في حذف الإعدادات" });
+    }
+  });
+
+  app.get("/api/erp/sync-logs", async (req, res) => {
+    try {
+      const configId = req.query.configId ? parseInt(req.query.configId as string) : undefined;
+      const logs = await storage.getERPSyncLogs(configId);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب سجلات المزامنة" });
+    }
+  });
+
+  app.post("/api/erp/sync/:configId/:entityType", async (req, res) => {
+    try {
+      const configId = parseInt(req.params.configId);
+      const entityType = req.params.entityType;
+      
+      // Mock sync operation
+      const syncResult = {
+        success: Math.floor(Math.random() * 100) + 50,
+        failed: Math.floor(Math.random() * 10),
+        errors: [],
+        duration: Math.floor(Math.random() * 60) + 10
+      };
+
+      // Log the sync operation
+      await storage.createERPSyncLog({
+        erp_config_id: configId,
+        entity_type: entityType,
+        operation: 'manual_sync',
+        status: syncResult.failed > 0 ? 'partial' : 'success',
+        records_processed: syncResult.success + syncResult.failed,
+        records_success: syncResult.success,
+        records_failed: syncResult.failed,
+        sync_duration: syncResult.duration
+      });
+
+      res.json(syncResult);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في عملية المزامنة" });
+    }
+  });
+
+  app.get("/api/erp/entity-mappings/:configId/:entityType", async (req, res) => {
+    try {
+      const configId = parseInt(req.params.configId);
+      const entityType = req.params.entityType;
+      const mappings = await storage.getERPEntityMappings(configId, entityType);
+      res.json(mappings);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب ربط الكيانات" });
+    }
+  });
+
+  app.post("/api/erp/test-connection", async (req, res) => {
+    try {
+      const { type, endpoint, username, password, settings } = req.body;
+      
+      // Mock connection test
+      const isConnected = Math.random() > 0.3; // 70% success rate for demo
+      
+      if (isConnected) {
+        res.json({ 
+          success: true, 
+          message: "تم الاتصال بنجاح", 
+          details: {
+            system: type,
+            version: "1.0.0",
+            responseTime: Math.floor(Math.random() * 1000) + 100
+          }
+        });
+      } else {
+        res.status(400).json({ 
+          success: false, 
+          message: "فشل في الاتصال", 
+          error: "Invalid credentials or server unavailable" 
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في اختبار الاتصال" });
+    }
+  });
+
 
 
   // Maintenance routes

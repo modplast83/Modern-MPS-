@@ -7,7 +7,8 @@ import {
   Wrench, 
   Database, 
   BarChart3,
-  Home
+  Home,
+  Link2
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -66,6 +67,13 @@ const modules = [
     name_ar: "التقارير",
     icon: BarChart3,
     path: "/reports",
+    active: false
+  },
+  {
+    name: "تكامل ERP",
+    name_ar: "تكامل ERP",
+    icon: Link2,
+    path: "/erp-integration",
     active: false
   },
   {
