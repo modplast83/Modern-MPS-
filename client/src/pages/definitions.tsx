@@ -264,6 +264,20 @@ export default function Definitions() {
     }
   });
 
+  const updateItemMutation = useMutation({
+    mutationFn: ({ endpoint, data }: { endpoint: string; data: any }) => 
+      apiRequest('PUT', `${endpoint}/${data.id}`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: [variables.endpoint] });
+      toast({ title: "تم التحديث بنجاح", description: "تم تحديث العنصر" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في تحديث العنصر", variant: "destructive" });
+    }
+  });
+
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', phone: '', address: '', status: 'active' });
     setProductForm({ name: '', name_ar: '', code: '', type: 'hdpe', color: '', status: 'active' });
@@ -317,6 +331,57 @@ export default function Definitions() {
           status: item.status || 'active'
         });
         break;
+      case 'section':
+        setSectionForm({
+          name: item.name || '',
+          name_ar: item.name_ar || '',
+          description: item.description || '',
+          manager_id: item.manager_id || null,
+          status: item.status || 'active'
+        });
+        break;
+      case 'material-group':
+        setMaterialGroupForm({
+          name: item.name || '',
+          name_ar: item.name_ar || '',
+          code: item.code || '',
+          description: item.description || '',
+          status: item.status || 'active'
+        });
+        break;
+      case 'item':
+        setItemForm({
+          name: item.name || '',
+          name_ar: item.name_ar || '',
+          code: item.code || '',
+          material_group_id: item.material_group_id || null,
+          unit: item.unit || '',
+          unit_ar: item.unit_ar || '',
+          status: item.status || 'active'
+        });
+        break;
+      case 'customer-product':
+        setCustomerProductForm({
+          customer_id: item.customer_id || '',
+          product_id: item.product_id || '',
+          customer_product_code: item.customer_product_code || '',
+          customer_product_name: item.customer_product_name || '',
+          customer_product_name_ar: item.customer_product_name_ar || '',
+          specifications: item.specifications || '',
+          price: item.price?.toString() || '',
+          status: item.status || 'active'
+        });
+        break;
+      case 'location':
+        setLocationForm({
+          name: item.name || '',
+          name_ar: item.name_ar || '',
+          type: item.type || 'city',
+          parent_id: item.parent_id || null,
+          coordinates: item.coordinates || '',
+          status: item.status || 'active'
+        });
+        break;
     }
     setIsDialogOpen(true);
   };
@@ -327,7 +392,12 @@ export default function Definitions() {
         customer: '/api/customers',
         product: '/api/products',
         machine: '/api/machines',
-        user: '/api/users'
+        user: '/api/users',
+        section: '/api/sections',
+        'material-group': '/api/material-groups',
+        item: '/api/items',
+        'customer-product': '/api/customer-products',
+        location: '/api/locations'
       };
       deleteItemMutation.mutate({ 
         endpoint: endpoints[type as keyof typeof endpoints], 
@@ -337,34 +407,94 @@ export default function Definitions() {
   };
 
   const handleSubmit = () => {
+    if (editingItem) {
+      // Update mode
+      const updateData = { ...getCurrentFormData(), id: editingItem.id };
+      updateItemMutation.mutate({ 
+        endpoint: getEndpointForTab(selectedTab), 
+        data: updateData 
+      });
+    } else {
+      // Create mode
+      switch(selectedTab) {
+        case 'customers':
+          createCustomerMutation.mutate(customerForm);
+          break;
+        case 'products':
+          createProductMutation.mutate(productForm);
+          break;
+        case 'machines':
+          createMachineMutation.mutate(machineForm);
+          break;
+        case 'users':
+          createUserMutation.mutate(userForm);
+          break;
+        case 'sections':
+          createSectionMutation.mutate(sectionForm);
+          break;
+        case 'material-groups':
+          createMaterialGroupMutation.mutate(materialGroupForm);
+          break;
+        case 'items':
+          createItemMutation.mutate(itemForm);
+          break;
+        case 'customer-products':
+          createCustomerProductMutation.mutate(customerProductForm);
+          break;
+        case 'locations':
+          createLocationMutation.mutate(locationForm);
+          break;
+      }
+    }
+  };
+
+  const getCurrentFormData = () => {
     switch(selectedTab) {
-      case 'customers':
-        createCustomerMutation.mutate(customerForm);
-        break;
-      case 'products':
-        createProductMutation.mutate(productForm);
-        break;
-      case 'machines':
-        createMachineMutation.mutate(machineForm);
-        break;
-      case 'users':
-        createUserMutation.mutate(userForm);
-        break;
-      case 'sections':
-        createSectionMutation.mutate(sectionForm);
-        break;
-      case 'material-groups':
-        createMaterialGroupMutation.mutate(materialGroupForm);
-        break;
-      case 'items':
-        createItemMutation.mutate(itemForm);
-        break;
-      case 'customer-products':
-        createCustomerProductMutation.mutate(customerProductForm);
-        break;
-      case 'locations':
-        createLocationMutation.mutate(locationForm);
-        break;
+      case 'customers': return customerForm;
+      case 'products': return productForm;
+      case 'machines': return machineForm;
+      case 'users': return userForm;
+      case 'sections': return sectionForm;
+      case 'material-groups': return materialGroupForm;
+      case 'items': return itemForm;
+      case 'customer-products': return customerProductForm;
+      case 'locations': return locationForm;
+      default: return {};
+    }
+  };
+
+  const getEndpointForTab = (tab: string) => {
+    const endpoints = {
+      customers: '/api/customers',
+      products: '/api/products',
+      machines: '/api/machines',
+      users: '/api/users',
+      sections: '/api/sections',
+      'material-groups': '/api/material-groups',
+      items: '/api/items',
+      'customer-products': '/api/customer-products',
+      locations: '/api/locations'
+    };
+    return endpoints[tab as keyof typeof endpoints];
+  };
+
+  const handlePrint = (item: any) => {
+    const printContent = `
+      <div style="direction: rtl; font-family: Arial; padding: 20px;">
+        <h2>تفاصيل العنصر</h2>
+        <table style="border-collapse: collapse; width: 100%;">
+          ${Object.entries(item).map(([key, value]) => 
+            `<tr><td style="border: 1px solid #ccc; padding: 8px;"><strong>${key}:</strong></td>
+             <td style="border: 1px solid #ccc; padding: 8px;">${value}</td></tr>`
+          ).join('')}
+        </table>
+      </div>
+    `;
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
     }
   };
 
@@ -733,6 +863,52 @@ export default function Definitions() {
     </div>
   );
 
+  const renderSectionForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="section-name-ar">اسم القسم بالعربية</Label>
+          <Input
+            id="section-name-ar"
+            value={sectionForm.name_ar}
+            onChange={(e) => setSectionForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم القسم بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="section-name">اسم القسم بالإنجليزية</Label>
+          <Input
+            id="section-name"
+            value={sectionForm.name}
+            onChange={(e) => setSectionForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Section Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="section-status">الحالة</Label>
+          <Select value={sectionForm.status} onValueChange={(value) => setSectionForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="section-description">الوصف</Label>
+        <Input
+          id="section-description"
+          value={sectionForm.description}
+          onChange={(e) => setSectionForm(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="وصف القسم"
+        />
+      </div>
+    </div>
+  );
+
   const renderLocationForm = () => (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -867,52 +1043,6 @@ export default function Definitions() {
           value={customerProductForm.specifications}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, specifications: e.target.value }))}
           placeholder="مواصفات المنتج الخاصة بالعميل"
-        />
-      </div>
-    </div>
-  );
-
-  const renderSectionForm = () => (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="section-name-ar">اسم القسم بالعربية</Label>
-          <Input
-            id="section-name-ar"
-            value={sectionForm.name_ar}
-            onChange={(e) => setSectionForm(prev => ({ ...prev, name_ar: e.target.value }))}
-            placeholder="اسم القسم بالعربية"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="section-name">اسم القسم بالإنجليزية</Label>
-          <Input
-            id="section-name"
-            value={sectionForm.name}
-            onChange={(e) => setSectionForm(prev => ({ ...prev, name: e.target.value }))}
-            placeholder="Section Name"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="section-status">الحالة</Label>
-          <Select value={sectionForm.status} onValueChange={(value) => setSectionForm(prev => ({ ...prev, status: value }))}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">نشط</SelectItem>
-              <SelectItem value="inactive">غير نشط</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="section-description">الوصف</Label>
-        <Input
-          id="section-description"
-          value={sectionForm.description}
-          onChange={(e) => setSectionForm(prev => ({ ...prev, description: e.target.value }))}
-          placeholder="وصف القسم"
         />
       </div>
     </div>
@@ -1133,7 +1263,11 @@ export default function Definitions() {
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>
-                                      <Button variant="outline" size="sm">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(customer)}
+                                      >
                                         <Printer className="w-4 h-4" />
                                       </Button>
                                     </div>
@@ -1339,11 +1473,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(section, 'section')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(section.id, 'section')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(section)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1416,11 +1565,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(group, 'material-group')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(group.id, 'material-group')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(group)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1497,11 +1661,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(item, 'item')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(item.id, 'item')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(item)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1578,11 +1757,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(cp, 'customer-product')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(cp.id, 'customer-product')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(cp)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1662,11 +1856,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(location, 'location')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(location.id, 'location')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(location)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1745,11 +1954,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(machine, 'machine')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(machine.id, 'machine')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(machine)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
@@ -1828,11 +2052,26 @@ export default function Definitions() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEdit(user, 'user')}
+                                    >
                                       <Edit className="w-4 h-4" />
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleDelete(user.id, 'user')}
+                                    >
                                       <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handlePrint(user)}
+                                    >
+                                      <Printer className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </td>
