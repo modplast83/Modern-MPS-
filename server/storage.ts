@@ -14,6 +14,19 @@ import {
   items,
   customer_products,
   locations,
+  training_records,
+  admin_decisions,
+  warehouse_transactions,
+  mixing_recipes,
+  training_programs,
+  training_materials,
+  training_enrollments,
+  performance_reviews,
+  performance_criteria,
+  performance_ratings,
+  leave_types,
+  leave_requests,
+  leave_balances,
   type User, 
   type InsertUser,
   type Order,
@@ -24,7 +37,6 @@ import {
   type InsertRoll,
   type Machine,
   type Customer,
-
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
@@ -33,7 +45,29 @@ import {
   type MaterialGroup,
   type Item,
   type CustomerProduct,
-  type Location
+  type Location,
+  type TrainingRecord,
+  type AdminDecision,
+  type WarehouseTransaction,
+  type MixingRecipe,
+  type TrainingProgram,
+  type InsertTrainingProgram,
+  type TrainingMaterial,
+  type InsertTrainingMaterial,
+  type TrainingEnrollment,
+  type InsertTrainingEnrollment,
+  type PerformanceReview,
+  type InsertPerformanceReview,
+  type PerformanceCriteria,
+  type InsertPerformanceCriteria,
+  type PerformanceRating,
+  type InsertPerformanceRating,
+  type LeaveType,
+  type InsertLeaveType,
+  type LeaveRequest,
+  type InsertLeaveRequest,
+  type LeaveBalance,
+  type InsertLeaveBalance
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, sql, sum, count } from "drizzle-orm";
@@ -67,9 +101,9 @@ export interface IStorage {
   // Customers
   getCustomers(): Promise<Customer[]>;
   
-  // Products
-  getProducts(): Promise<Product[]>;
-  createProduct(product: any): Promise<Product>;
+  // Customer Products (replacing the old Product table)
+  getCustomerProducts(): Promise<CustomerProduct[]>;
+  createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
   
   // Customers
   createCustomer(customer: any): Promise<Customer>;
@@ -120,6 +154,58 @@ export interface IStorage {
   
   // Locations
   getLocations(): Promise<Location[]>;
+  
+  // HR System - Training Programs
+  getTrainingPrograms(): Promise<TrainingProgram[]>;
+  createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram>;
+  updateTrainingProgram(id: number, updates: Partial<TrainingProgram>): Promise<TrainingProgram>;
+  getTrainingProgramById(id: number): Promise<TrainingProgram | undefined>;
+  
+  // HR System - Training Materials
+  getTrainingMaterials(programId?: number): Promise<TrainingMaterial[]>;
+  createTrainingMaterial(material: InsertTrainingMaterial): Promise<TrainingMaterial>;
+  updateTrainingMaterial(id: number, updates: Partial<TrainingMaterial>): Promise<TrainingMaterial>;
+  deleteTrainingMaterial(id: number): Promise<boolean>;
+  
+  // HR System - Training Enrollments  
+  getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]>;
+  createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
+  updateTrainingEnrollment(id: number, updates: Partial<TrainingEnrollment>): Promise<TrainingEnrollment>;
+  getEnrollmentsByProgram(programId: number): Promise<TrainingEnrollment[]>;
+  
+  // HR System - Performance Reviews
+  getPerformanceReviews(employeeId?: number): Promise<PerformanceReview[]>;
+  createPerformanceReview(review: InsertPerformanceReview): Promise<PerformanceReview>;
+  updatePerformanceReview(id: number, updates: Partial<PerformanceReview>): Promise<PerformanceReview>;
+  getPerformanceReviewById(id: number): Promise<PerformanceReview | undefined>;
+  
+  // HR System - Performance Criteria
+  getPerformanceCriteria(): Promise<PerformanceCriteria[]>;
+  createPerformanceCriteria(criteria: InsertPerformanceCriteria): Promise<PerformanceCriteria>;
+  updatePerformanceCriteria(id: number, updates: Partial<PerformanceCriteria>): Promise<PerformanceCriteria>;
+  
+  // HR System - Performance Ratings
+  getPerformanceRatings(reviewId: number): Promise<PerformanceRating[]>;
+  createPerformanceRating(rating: InsertPerformanceRating): Promise<PerformanceRating>;
+  updatePerformanceRating(id: number, updates: Partial<PerformanceRating>): Promise<PerformanceRating>;
+  
+  // HR System - Leave Types
+  getLeaveTypes(): Promise<LeaveType[]>;
+  createLeaveType(leaveType: InsertLeaveType): Promise<LeaveType>;
+  updateLeaveType(id: number, updates: Partial<LeaveType>): Promise<LeaveType>;
+  
+  // HR System - Leave Requests
+  getLeaveRequests(employeeId?: number): Promise<LeaveRequest[]>;
+  createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
+  updateLeaveRequest(id: number, updates: Partial<LeaveRequest>): Promise<LeaveRequest>;
+  getLeaveRequestById(id: number): Promise<LeaveRequest | undefined>;
+  getPendingLeaveRequests(): Promise<LeaveRequest[]>;
+  
+  // HR System - Leave Balances
+  getLeaveBalances(employeeId: number, year?: number): Promise<LeaveBalance[]>;
+  createLeaveBalance(balance: InsertLeaveBalance): Promise<LeaveBalance>;
+  updateLeaveBalance(id: number, updates: Partial<LeaveBalance>): Promise<LeaveBalance>;
+  getLeaveBalanceByType(employeeId: number, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined>;
   
   // Maintenance
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
@@ -190,7 +276,7 @@ export class DatabaseStorage implements IStorage {
         id: job_orders.id,
         job_number: job_orders.job_number,
         order_id: job_orders.order_id,
-        product_id: job_orders.product_id,
+        customer_product_id: job_orders.customer_product_id,
         quantity_required: job_orders.quantity_required,
         quantity_produced: job_orders.quantity_produced,
         status: job_orders.status,
@@ -256,9 +342,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(customers);
   }
 
-  async getProducts(): Promise<Product[]> {
-    return await db.select().from(products);
-  }
+  // Customer Products - replaced the old Products table
 
   async getMaintenanceRequests(): Promise<MaintenanceRequest[]> {
     return await db
@@ -293,13 +377,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(users);
   }
 
-  async createProduct(product: any): Promise<Product> {
-    const [newProduct] = await db
-      .insert(products)
-      .values(product)
-      .returning();
-    return newProduct;
-  }
+  // Replaced by createCustomerProduct
 
   async createCustomer(customer: any): Promise<Customer> {
     const [newCustomer] = await db
@@ -635,6 +713,245 @@ export class DatabaseStorage implements IStorage {
       created_at: new Date(),
       last_synced: new Date()
     };
+  }
+
+  // ============ HR System Implementation ============
+
+  // Training Programs
+  async getTrainingPrograms(): Promise<TrainingProgram[]> {
+    return await db.select().from(training_programs).orderBy(desc(training_programs.created_at));
+  }
+
+  async createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram> {
+    const [trainingProgram] = await db.insert(training_programs).values(program).returning();
+    return trainingProgram;
+  }
+
+  async updateTrainingProgram(id: number, updates: Partial<TrainingProgram>): Promise<TrainingProgram> {
+    const [trainingProgram] = await db
+      .update(training_programs)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(training_programs.id, id))
+      .returning();
+    return trainingProgram;
+  }
+
+  async getTrainingProgramById(id: number): Promise<TrainingProgram | undefined> {
+    const [program] = await db.select().from(training_programs).where(eq(training_programs.id, id));
+    return program || undefined;
+  }
+
+  // Training Materials
+  async getTrainingMaterials(programId?: number): Promise<TrainingMaterial[]> {
+    const query = db.select().from(training_materials);
+    if (programId) {
+      return await query.where(eq(training_materials.program_id, programId)).orderBy(training_materials.order_index);
+    }
+    return await query.orderBy(training_materials.program_id, training_materials.order_index);
+  }
+
+  async createTrainingMaterial(material: InsertTrainingMaterial): Promise<TrainingMaterial> {
+    const [trainingMaterial] = await db.insert(training_materials).values(material).returning();
+    return trainingMaterial;
+  }
+
+  async updateTrainingMaterial(id: number, updates: Partial<TrainingMaterial>): Promise<TrainingMaterial> {
+    const [trainingMaterial] = await db
+      .update(training_materials)
+      .set(updates)
+      .where(eq(training_materials.id, id))
+      .returning();
+    return trainingMaterial;
+  }
+
+  async deleteTrainingMaterial(id: number): Promise<boolean> {
+    const result = await db.delete(training_materials).where(eq(training_materials.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Training Enrollments
+  async getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]> {
+    const query = db.select().from(training_enrollments);
+    if (employeeId) {
+      return await query.where(eq(training_enrollments.employee_id, employeeId)).orderBy(desc(training_enrollments.enrolled_date));
+    }
+    return await query.orderBy(desc(training_enrollments.enrolled_date));
+  }
+
+  async createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment> {
+    const [trainingEnrollment] = await db.insert(training_enrollments).values(enrollment).returning();
+    return trainingEnrollment;
+  }
+
+  async updateTrainingEnrollment(id: number, updates: Partial<TrainingEnrollment>): Promise<TrainingEnrollment> {
+    const [trainingEnrollment] = await db
+      .update(training_enrollments)
+      .set(updates)
+      .where(eq(training_enrollments.id, id))
+      .returning();
+    return trainingEnrollment;
+  }
+
+  async getEnrollmentsByProgram(programId: number): Promise<TrainingEnrollment[]> {
+    return await db.select().from(training_enrollments)
+      .where(eq(training_enrollments.program_id, programId))
+      .orderBy(desc(training_enrollments.enrolled_date));
+  }
+
+  // Performance Reviews
+  async getPerformanceReviews(employeeId?: number): Promise<PerformanceReview[]> {
+    const query = db.select().from(performance_reviews);
+    if (employeeId) {
+      return await query.where(eq(performance_reviews.employee_id, employeeId)).orderBy(desc(performance_reviews.created_at));
+    }
+    return await query.orderBy(desc(performance_reviews.created_at));
+  }
+
+  async createPerformanceReview(review: InsertPerformanceReview): Promise<PerformanceReview> {
+    const [performanceReview] = await db.insert(performance_reviews).values(review).returning();
+    return performanceReview;
+  }
+
+  async updatePerformanceReview(id: number, updates: Partial<PerformanceReview>): Promise<PerformanceReview> {
+    const [performanceReview] = await db
+      .update(performance_reviews)
+      .set(updates)
+      .where(eq(performance_reviews.id, id))
+      .returning();
+    return performanceReview;
+  }
+
+  async getPerformanceReviewById(id: number): Promise<PerformanceReview | undefined> {
+    const [review] = await db.select().from(performance_reviews).where(eq(performance_reviews.id, id));
+    return review || undefined;
+  }
+
+  // Performance Criteria
+  async getPerformanceCriteria(): Promise<PerformanceCriteria[]> {
+    return await db.select().from(performance_criteria).where(eq(performance_criteria.is_active, true));
+  }
+
+  async createPerformanceCriteria(criteria: InsertPerformanceCriteria): Promise<PerformanceCriteria> {
+    const [performanceCriteria] = await db.insert(performance_criteria).values(criteria).returning();
+    return performanceCriteria;
+  }
+
+  async updatePerformanceCriteria(id: number, updates: Partial<PerformanceCriteria>): Promise<PerformanceCriteria> {
+    const [performanceCriteria] = await db
+      .update(performance_criteria)
+      .set(updates)
+      .where(eq(performance_criteria.id, id))
+      .returning();
+    return performanceCriteria;
+  }
+
+  // Performance Ratings
+  async getPerformanceRatings(reviewId: number): Promise<PerformanceRating[]> {
+    return await db.select().from(performance_ratings)
+      .where(eq(performance_ratings.review_id, reviewId));
+  }
+
+  async createPerformanceRating(rating: InsertPerformanceRating): Promise<PerformanceRating> {
+    const [performanceRating] = await db.insert(performance_ratings).values(rating).returning();
+    return performanceRating;
+  }
+
+  async updatePerformanceRating(id: number, updates: Partial<PerformanceRating>): Promise<PerformanceRating> {
+    const [performanceRating] = await db
+      .update(performance_ratings)
+      .set(updates)
+      .where(eq(performance_ratings.id, id))
+      .returning();
+    return performanceRating;
+  }
+
+  // Leave Types
+  async getLeaveTypes(): Promise<LeaveType[]> {
+    return await db.select().from(leave_types).where(eq(leave_types.is_active, true));
+  }
+
+  async createLeaveType(leaveType: InsertLeaveType): Promise<LeaveType> {
+    const [newLeaveType] = await db.insert(leave_types).values(leaveType).returning();
+    return newLeaveType;
+  }
+
+  async updateLeaveType(id: number, updates: Partial<LeaveType>): Promise<LeaveType> {
+    const [leaveType] = await db
+      .update(leave_types)
+      .set(updates)
+      .where(eq(leave_types.id, id))
+      .returning();
+    return leaveType;
+  }
+
+  // Leave Requests
+  async getLeaveRequests(employeeId?: number): Promise<LeaveRequest[]> {
+    const query = db.select().from(leave_requests);
+    if (employeeId) {
+      return await query.where(eq(leave_requests.employee_id, employeeId)).orderBy(desc(leave_requests.created_at));
+    }
+    return await query.orderBy(desc(leave_requests.created_at));
+  }
+
+  async createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest> {
+    const [leaveRequest] = await db.insert(leave_requests).values(request).returning();
+    return leaveRequest;
+  }
+
+  async updateLeaveRequest(id: number, updates: Partial<LeaveRequest>): Promise<LeaveRequest> {
+    const [leaveRequest] = await db
+      .update(leave_requests)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(leave_requests.id, id))
+      .returning();
+    return leaveRequest;
+  }
+
+  async getLeaveRequestById(id: number): Promise<LeaveRequest | undefined> {
+    const [request] = await db.select().from(leave_requests).where(eq(leave_requests.id, id));
+    return request || undefined;
+  }
+
+  async getPendingLeaveRequests(): Promise<LeaveRequest[]> {
+    return await db.select().from(leave_requests)
+      .where(eq(leave_requests.final_status, 'pending'))
+      .orderBy(desc(leave_requests.created_at));
+  }
+
+  // Leave Balances
+  async getLeaveBalances(employeeId: number, year?: number): Promise<LeaveBalance[]> {
+    const query = db.select().from(leave_balances).where(eq(leave_balances.employee_id, employeeId));
+    if (year) {
+      return await query.where(and(
+        eq(leave_balances.employee_id, employeeId),
+        eq(leave_balances.year, year)
+      ));
+    }
+    return await query;
+  }
+
+  async createLeaveBalance(balance: InsertLeaveBalance): Promise<LeaveBalance> {
+    const [leaveBalance] = await db.insert(leave_balances).values(balance).returning();
+    return leaveBalance;
+  }
+
+  async updateLeaveBalance(id: number, updates: Partial<LeaveBalance>): Promise<LeaveBalance> {
+    const [leaveBalance] = await db
+      .update(leave_balances)
+      .set(updates)
+      .where(eq(leave_balances.id, id))
+      .returning();
+    return leaveBalance;
+  }
+
+  async getLeaveBalanceByType(employeeId: number, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined> {
+    const [balance] = await db.select().from(leave_balances)
+      .where(and(
+        eq(leave_balances.employee_id, employeeId),
+        eq(leave_balances.leave_type_id, leaveTypeId),
+        eq(leave_balances.year, year)
+      ));
+    return balance || undefined;
   }
 }
 

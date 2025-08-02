@@ -237,6 +237,161 @@ export const training_records = pgTable('training_records', {
   notes: text('notes'),
 });
 
+// 📚 جدول البرامج التدريبية
+export const training_programs = pgTable('training_programs', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  title_ar: varchar('title_ar', { length: 200 }),
+  description: text('description'),
+  description_ar: text('description_ar'),
+  category: varchar('category', { length: 50 }), // safety / technical / soft_skills / management
+  duration_hours: integer('duration_hours'),
+  max_participants: integer('max_participants'),
+  prerequisites: text('prerequisites'),
+  learning_objectives: json('learning_objectives').$type<string[]>(),
+  materials: json('materials').$type<{title: string, type: string, url?: string}[]>(),
+  instructor_id: integer('instructor_id').references(() => users.id),
+  status: varchar('status', { length: 20 }).default('active'), // active / inactive / draft
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// 📖 جدول المواد التدريبية
+export const training_materials = pgTable('training_materials', {
+  id: serial('id').primaryKey(),
+  program_id: integer('program_id').references(() => training_programs.id),
+  title: varchar('title', { length: 200 }).notNull(),
+  title_ar: varchar('title_ar', { length: 200 }),
+  type: varchar('type', { length: 20 }), // video / document / quiz / assignment
+  content: text('content'),
+  file_url: varchar('file_url', { length: 500 }),
+  order_index: integer('order_index').default(0),
+  duration_minutes: integer('duration_minutes'),
+  is_mandatory: boolean('is_mandatory').default(true),
+});
+
+// 🎓 جدول تسجيل الموظفين في البرامج التدريبية
+export const training_enrollments = pgTable('training_enrollments', {
+  id: serial('id').primaryKey(),
+  program_id: integer('program_id').references(() => training_programs.id),
+  employee_id: integer('employee_id').references(() => users.id),
+  enrolled_date: timestamp('enrolled_date').defaultNow(),
+  start_date: date('start_date'),
+  completion_date: date('completion_date'),
+  status: varchar('status', { length: 20 }).default('enrolled'), // enrolled / in_progress / completed / cancelled
+  progress_percentage: integer('progress_percentage').default(0),
+  final_score: integer('final_score'), // 0-100
+  certificate_issued: boolean('certificate_issued').default(false),
+});
+
+// 📊 جدول تقييم الأداء
+export const performance_reviews = pgTable('performance_reviews', {
+  id: serial('id').primaryKey(),
+  employee_id: integer('employee_id').notNull().references(() => users.id),
+  reviewer_id: integer('reviewer_id').notNull().references(() => users.id),
+  review_period_start: date('review_period_start').notNull(),
+  review_period_end: date('review_period_end').notNull(),
+  review_type: varchar('review_type', { length: 20 }), // annual / semi_annual / quarterly / probation
+  overall_rating: integer('overall_rating'), // 1-5 scale
+  goals_achievement: integer('goals_achievement'), // 1-5 scale
+  skills_rating: integer('skills_rating'), // 1-5 scale
+  behavior_rating: integer('behavior_rating'), // 1-5 scale
+  strengths: text('strengths'),
+  areas_for_improvement: text('areas_for_improvement'),
+  development_plan: text('development_plan'),
+  goals_for_next_period: text('goals_for_next_period'),
+  employee_comments: text('employee_comments'),
+  reviewer_comments: text('reviewer_comments'),
+  hr_comments: text('hr_comments'),
+  status: varchar('status', { length: 20 }).default('draft'), // draft / completed / approved / archived
+  created_at: timestamp('created_at').defaultNow(),
+  completed_at: timestamp('completed_at'),
+});
+
+// 🎯 جدول معايير التقييم
+export const performance_criteria = pgTable('performance_criteria', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  name_ar: varchar('name_ar', { length: 100 }),
+  description: text('description'),
+  description_ar: text('description_ar'),
+  category: varchar('category', { length: 50 }), // technical / behavioral / leadership / productivity
+  weight_percentage: integer('weight_percentage').default(20), // وزن المعيار في التقييم الإجمالي
+  applicable_roles: json('applicable_roles').$type<number[]>(), // أيدي الأدوار المطبق عليها
+  is_active: boolean('is_active').default(true),
+});
+
+// 📋 جدول تفاصيل تقييم المعايير
+export const performance_ratings = pgTable('performance_ratings', {
+  id: serial('id').primaryKey(),
+  review_id: integer('review_id').notNull().references(() => performance_reviews.id),
+  criteria_id: integer('criteria_id').notNull().references(() => performance_criteria.id),
+  rating: integer('rating').notNull(), // 1-5 scale
+  comments: text('comments'),
+});
+
+// 🏖️ جدول أنواع الإجازات
+export const leave_types = pgTable('leave_types', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  name_ar: varchar('name_ar', { length: 100 }),
+  description: text('description'),
+  description_ar: text('description_ar'),
+  days_per_year: integer('days_per_year'), // عدد الأيام المسموحة سنوياً
+  is_paid: boolean('is_paid').default(true),
+  requires_medical_certificate: boolean('requires_medical_certificate').default(false),
+  min_notice_days: integer('min_notice_days').default(1), // الحد الأدنى للإشعار المسبق
+  max_consecutive_days: integer('max_consecutive_days'), // أقصى عدد أيام متتالية
+  applicable_after_months: integer('applicable_after_months').default(0), // يحق للموظف بعد كم شهر
+  color: varchar('color', { length: 20 }).default('#3b82f6'), // لون العرض في التقويم
+  is_active: boolean('is_active').default(true),
+});
+
+// 📝 جدول طلبات الإجازات
+export const leave_requests = pgTable('leave_requests', {
+  id: serial('id').primaryKey(),
+  employee_id: integer('employee_id').notNull().references(() => users.id),
+  leave_type_id: integer('leave_type_id').notNull().references(() => leave_types.id),
+  start_date: date('start_date').notNull(),
+  end_date: date('end_date').notNull(),
+  days_count: integer('days_count').notNull(),
+  reason: text('reason'),
+  medical_certificate_url: varchar('medical_certificate_url', { length: 500 }),
+  emergency_contact: varchar('emergency_contact', { length: 100 }),
+  work_handover: text('work_handover'), // تسليم العمل
+  replacement_employee_id: integer('replacement_employee_id').references(() => users.id),
+  
+  // Approval workflow
+  direct_manager_id: integer('direct_manager_id').references(() => users.id),
+  direct_manager_status: varchar('direct_manager_status', { length: 20 }).default('pending'), // pending / approved / rejected
+  direct_manager_comments: text('direct_manager_comments'),
+  direct_manager_action_date: timestamp('direct_manager_action_date'),
+  
+  hr_status: varchar('hr_status', { length: 20 }).default('pending'), // pending / approved / rejected
+  hr_comments: text('hr_comments'),
+  hr_action_date: timestamp('hr_action_date'),
+  hr_reviewed_by: integer('hr_reviewed_by').references(() => users.id),
+  
+  final_status: varchar('final_status', { length: 20 }).default('pending'), // pending / approved / rejected / cancelled
+  
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// 💰 جدول رصيد الإجازات
+export const leave_balances = pgTable('leave_balances', {
+  id: serial('id').primaryKey(),
+  employee_id: integer('employee_id').notNull().references(() => users.id),
+  leave_type_id: integer('leave_type_id').notNull().references(() => leave_types.id),
+  year: integer('year').notNull(),
+  allocated_days: integer('allocated_days').notNull(), // الأيام المخصصة
+  used_days: integer('used_days').default(0), // الأيام المستخدمة
+  pending_days: integer('pending_days').default(0), // الأيام المعلقة (طلبات لم توافق عليها بعد)
+  remaining_days: integer('remaining_days').notNull(), // الأيام المتبقية
+  carried_forward: integer('carried_forward').default(0), // الأيام المنقولة من السنة السابقة
+  expires_at: date('expires_at'), // تاريخ انتهاء صلاحية الإجازات المنقولة
+});
+
 // 📢 جدول القرارات الإدارية
 export const admin_decisions = pgTable('admin_decisions', {
   id: serial('id').primaryKey(),
@@ -303,6 +458,13 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   section: one(sections, { fields: [users.section_id], references: [sections.id] }),
   attendance: many(attendance),
   violations: many(violations),
+  trainingRecords: many(training_records),
+  trainingEnrollments: many(training_enrollments),
+  performanceReviews: many(performance_reviews, { relationName: "employee_reviews" }),
+  conductedReviews: many(performance_reviews, { relationName: "reviewer_reviews" }),
+  leaveRequests: many(leave_requests),
+  leaveBalances: many(leave_balances),
+  instructedPrograms: many(training_programs),
 }));
 
 export const customersRelations = relations(customers, ({ one, many }) => ({
@@ -507,6 +669,121 @@ export const insertCategorySchema = createInsertSchema(categories);
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   created_at: true,
 });
+
+// HR System Schemas
+export const insertTrainingProgramSchema = createInsertSchema(training_programs).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertTrainingMaterialSchema = createInsertSchema(training_materials).omit({
+  id: true,
+});
+
+export const insertTrainingEnrollmentSchema = createInsertSchema(training_enrollments).omit({
+  id: true,
+  enrolled_date: true,
+});
+
+export const insertPerformanceReviewSchema = createInsertSchema(performance_reviews).omit({
+  id: true,
+  created_at: true,
+  completed_at: true,
+});
+
+export const insertPerformanceCriteriaSchema = createInsertSchema(performance_criteria).omit({
+  id: true,
+});
+
+export const insertPerformanceRatingSchema = createInsertSchema(performance_ratings).omit({
+  id: true,
+});
+
+export const insertLeaveTypeSchema = createInsertSchema(leave_types).omit({
+  id: true,
+});
+
+export const insertLeaveRequestSchema = createInsertSchema(leave_requests).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  direct_manager_action_date: true,
+  hr_action_date: true,
+});
+
+export const insertLeaveBalanceSchema = createInsertSchema(leave_balances).omit({
+  id: true,
+});
+
+// HR System Types
+export type TrainingProgram = typeof training_programs.$inferSelect;
+export type InsertTrainingProgram = z.infer<typeof insertTrainingProgramSchema>;
+export type TrainingMaterial = typeof training_materials.$inferSelect;
+export type InsertTrainingMaterial = z.infer<typeof insertTrainingMaterialSchema>;
+export type TrainingEnrollment = typeof training_enrollments.$inferSelect;
+export type InsertTrainingEnrollment = z.infer<typeof insertTrainingEnrollmentSchema>;
+export type PerformanceReview = typeof performance_reviews.$inferSelect;
+export type InsertPerformanceReview = z.infer<typeof insertPerformanceReviewSchema>;
+export type PerformanceCriteria = typeof performance_criteria.$inferSelect;
+export type InsertPerformanceCriteria = z.infer<typeof insertPerformanceCriteriaSchema>;
+export type PerformanceRating = typeof performance_ratings.$inferSelect;
+export type InsertPerformanceRating = z.infer<typeof insertPerformanceRatingSchema>;
+export type LeaveType = typeof leave_types.$inferSelect;
+export type InsertLeaveType = z.infer<typeof insertLeaveTypeSchema>;
+export type LeaveRequest = typeof leave_requests.$inferSelect;
+export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
+export type LeaveBalance = typeof leave_balances.$inferSelect;
+export type InsertLeaveBalance = z.infer<typeof insertLeaveBalanceSchema>;
+
+// HR Relations
+export const trainingProgramsRelations = relations(training_programs, ({ one, many }) => ({
+  instructor: one(users, { fields: [training_programs.instructor_id], references: [users.id] }),
+  materials: many(training_materials),
+  enrollments: many(training_enrollments),
+}));
+
+export const trainingMaterialsRelations = relations(training_materials, ({ one }) => ({
+  program: one(training_programs, { fields: [training_materials.program_id], references: [training_programs.id] }),
+}));
+
+export const trainingEnrollmentsRelations = relations(training_enrollments, ({ one }) => ({
+  program: one(training_programs, { fields: [training_enrollments.program_id], references: [training_programs.id] }),
+  employee: one(users, { fields: [training_enrollments.employee_id], references: [users.id] }),
+}));
+
+export const performanceReviewsRelations = relations(performance_reviews, ({ one, many }) => ({
+  employee: one(users, { fields: [performance_reviews.employee_id], references: [users.id], relationName: "employee_reviews" }),
+  reviewer: one(users, { fields: [performance_reviews.reviewer_id], references: [users.id], relationName: "reviewer_reviews" }),
+  ratings: many(performance_ratings),
+}));
+
+export const performanceCriteriaRelations = relations(performance_criteria, ({ many }) => ({
+  ratings: many(performance_ratings),
+}));
+
+export const performanceRatingsRelations = relations(performance_ratings, ({ one }) => ({
+  review: one(performance_reviews, { fields: [performance_ratings.review_id], references: [performance_reviews.id] }),
+  criteria: one(performance_criteria, { fields: [performance_ratings.criteria_id], references: [performance_criteria.id] }),
+}));
+
+export const leaveTypesRelations = relations(leave_types, ({ many }) => ({
+  requests: many(leave_requests),
+  balances: many(leave_balances),
+}));
+
+export const leaveRequestsRelations = relations(leave_requests, ({ one }) => ({
+  employee: one(users, { fields: [leave_requests.employee_id], references: [users.id] }),
+  leaveType: one(leave_types, { fields: [leave_requests.leave_type_id], references: [leave_types.id] }),
+  directManager: one(users, { fields: [leave_requests.direct_manager_id], references: [users.id] }),
+  hrReviewer: one(users, { fields: [leave_requests.hr_reviewed_by], references: [users.id] }),
+  replacementEmployee: one(users, { fields: [leave_requests.replacement_employee_id], references: [users.id] }),
+}));
+
+export const leaveBalancesRelations = relations(leave_balances, ({ one }) => ({
+  employee: one(users, { fields: [leave_balances.employee_id], references: [users.id] }),
+  leaveType: one(leave_types, { fields: [leave_balances.leave_type_id], references: [leave_types.id] }),
+}));
 
 // Import ERP schemas
 export * from './erp-schema';
