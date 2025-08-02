@@ -513,7 +513,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "أمر صوتي غير صالح" });
       }
 
-      const result = await openaiService.processVoiceCommand(command, language);
+      const { dialect } = req.body;
+      const result = await openaiService.processVoiceCommand(command, language, dialect);
       
       // Map actions to actual system operations
       let actionData = null;

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { useSpeechSynthesis } from '@/hooks/use-speech-synthesis';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -15,7 +16,8 @@ import {
   Languages,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Globe
 } from 'lucide-react';
 
 interface VoiceCommand {
@@ -31,9 +33,12 @@ interface AIResponse {
   data?: any;
 }
 
+type ArabicDialect = 'standard' | 'egyptian' | 'gulf' | 'levantine' | 'maghreb';
+
 export function VoiceAssistant() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [language, setLanguage] = useState<'ar-SA' | 'en-US'>('ar-SA');
+  const [selectedDialect, setSelectedDialect] = useState<ArabicDialect>('standard');
   const [commandHistory, setCommandHistory] = useState<VoiceCommand[]>([]);
   const [currentResponse, setCurrentResponse] = useState<string>('');
 
@@ -50,7 +55,8 @@ export function VoiceAssistant() {
   } = useSpeechRecognition({
     continuous: false,
     interimResults: true,
-    language: language
+    language: language,
+    dialect: language === 'ar-SA' ? selectedDialect : undefined
   });
 
   const {
@@ -58,7 +64,9 @@ export function VoiceAssistant() {
     stop: stopSpeaking,
     isSpeaking,
     isSupported: isSpeechSupported,
-    getArabicVoices
+    getArabicVoices,
+    getVoicesByDialect,
+    getAvailableDialects
   } = useSpeechSynthesis();
 
   // AI Assistant mutation
@@ -70,6 +78,7 @@ export function VoiceAssistant() {
         body: JSON.stringify({ 
           command,
           language,
+          dialect: language === 'ar-SA' ? selectedDialect : undefined,
           context: 'voice_assistant'
         })
       });
@@ -91,9 +100,12 @@ export function VoiceAssistant() {
       setCommandHistory(prev => [newCommand, ...prev.slice(0, 9)]);
       setCurrentResponse(data.message);
       
-      // Speak the response
+      // Speak the response with selected dialect
       if (isEnabled && data.message) {
-        speak(data.message, { lang: language });
+        speak(data.message, { 
+          lang: language,
+          dialect: language === 'ar-SA' ? selectedDialect : undefined
+        });
       }
 
       // Execute any actions
@@ -108,7 +120,10 @@ export function VoiceAssistant() {
       
       setCurrentResponse(errorMsg);
       if (isEnabled) {
-        speak(errorMsg, { lang: language });
+        speak(errorMsg, { 
+          lang: language,
+          dialect: language === 'ar-SA' ? selectedDialect : undefined
+        });
       }
     }
   });
@@ -167,7 +182,25 @@ export function VoiceAssistant() {
       ? 'تم تغيير اللغة إلى العربية' 
       : 'Language changed to English';
     
-    speak(message, { lang: newLang });
+    speak(message, { 
+      lang: newLang,
+      dialect: newLang === 'ar-SA' ? selectedDialect : undefined
+    });
+  };
+
+  const handleDialectChange = (newDialect: ArabicDialect) => {
+    setSelectedDialect(newDialect);
+    
+    const dialectNames: Record<ArabicDialect, string> = {
+      'standard': 'العربية الفصحى',
+      'egyptian': 'اللهجة المصرية',
+      'gulf': 'اللهجة الخليجية',
+      'levantine': 'اللهجة الشامية',
+      'maghreb': 'اللهجة المغاربية'
+    };
+    
+    const message = `تم تغيير اللهجة إلى ${dialectNames[newDialect]}`;
+    speak(message, { dialect: newDialect });
   };
 
   if (!hasRecognitionSupport || !isSpeechSupported) {
@@ -200,6 +233,23 @@ export function VoiceAssistant() {
             </CardTitle>
             
             <div className="flex items-center gap-2">
+              {/* Dialect Selector for Arabic */}
+              {language === 'ar-SA' && (
+                <Select value={selectedDialect} onValueChange={(value: ArabicDialect) => handleDialectChange(value)}>
+                  <SelectTrigger className="w-[140px] h-8">
+                    <Globe className="h-4 w-4 mr-1" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">العربية الفصحى</SelectItem>
+                    <SelectItem value="egyptian">المصرية</SelectItem>
+                    <SelectItem value="gulf">الخليجية</SelectItem>
+                    <SelectItem value="levantine">الشامية</SelectItem>
+                    <SelectItem value="maghreb">المغاربية</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              
               <Button
                 variant="outline"
                 size="sm"
@@ -303,19 +353,42 @@ export function VoiceAssistant() {
             </div>
           )}
 
-          {/* Voice Commands Help */}
+          {/* Voice Commands Help with Dialect Examples */}
           <div className="text-xs text-muted-foreground">
             <p className="font-medium mb-1">
               {language === 'ar-SA' ? 'أمثلة على الأوامر الصوتية:' : 'Voice command examples:'}
             </p>
             <ul className="space-y-1">
               {language === 'ar-SA' ? (
-                <>
-                  <li>• "اعرض لي إحصائيات الإنتاج"</li>
-                  <li>• "انتقل إلى صفحة الطلبات"</li>
-                  <li>• "ما هي حالة المكائن؟"</li>
-                  <li>• "أضف طلب جديد"</li>
-                </>
+                selectedDialect === 'egyptian' ? (
+                  <>
+                    <li>• "وريني إحصائيات الإنتاج"</li>
+                    <li>• "روح لصفحة الطلبات"</li>
+                    <li>• "إيه حالة المكن؟"</li>
+                    <li>• "اعمل طلب جديد"</li>
+                  </>
+                ) : selectedDialect === 'gulf' ? (
+                  <>
+                    <li>• "خلني أشوف إحصائيات الإنتاج"</li>
+                    <li>• "روح لصفحة الطلبيات"</li>
+                    <li>• "شلون حالة المكائن؟"</li>
+                    <li>• "سوي طلب جديد"</li>
+                  </>
+                ) : selectedDialect === 'levantine' ? (
+                  <>
+                    <li>• "فيني شوف إحصائيات الإنتاج"</li>
+                    <li>• "روح عصفحة الطلبات"</li>
+                    <li>• "شو وضع المكائن؟"</li>
+                    <li>• "اعمل طلب جديد"</li>
+                  </>
+                ) : (
+                  <>
+                    <li>• "اعرض لي إحصائيات الإنتاج"</li>
+                    <li>• "انتقل إلى صفحة الطلبات"</li>
+                    <li>• "ما هي حالة المكائن؟"</li>
+                    <li>• "أضف طلب جديد"</li>
+                  </>
+                )
               ) : (
                 <>
                   <li>• "Show production statistics"</li>
@@ -325,6 +398,14 @@ export function VoiceAssistant() {
                 </>
               )}
             </ul>
+            
+            {language === 'ar-SA' && selectedDialect !== 'standard' && (
+              <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                💡 يمكنك استخدام اللهجة {selectedDialect === 'egyptian' ? 'المصرية' : 
+                  selectedDialect === 'gulf' ? 'الخليجية' : 
+                  selectedDialect === 'levantine' ? 'الشامية' : 'المغاربية'} أو العربية الفصحى
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

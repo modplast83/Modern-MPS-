@@ -67,20 +67,39 @@ class OpenAIService {
     return dataKeywords.some(keyword => message.includes(keyword));
   }
 
-  async processVoiceCommand(command: string, language: string = 'ar-SA'): Promise<AICommand> {
+  async processVoiceCommand(command: string, language: string = 'ar-SA', dialect: string = 'standard'): Promise<AICommand> {
     try {
+      // Get dialect-specific response style
+      const getDialectResponseStyle = (dialect: string): string => {
+        const dialectStyles: Record<string, string> = {
+          'standard': 'بالعربية الفصحى',
+          'egyptian': 'باللهجة المصرية (مثل: "حاضر"، "طيب"، "إيه رأيك")',
+          'gulf': 'باللهجة الخليجية (مثل: "زين"، "ماشي"، "شلونك")',
+          'levantine': 'باللهجة الشامية (مثل: "منيح"، "تمام"، "شو رأيك")',
+          'maghreb': 'باللهجة المغاربية (مثل: "واخا"، "بزاف"، "فين")'
+        };
+        return dialectStyles[dialect] || dialectStyles['standard'];
+      };
+
       const systemPrompt = language === 'ar-SA' ? 
         `أنت مساعد صوتي ذكي لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next).
 
 مهامك:
-1. فهم الأوامر الصوتية باللغة العربية
+1. فهم الأوامر الصوتية باللغة العربية بجميع اللهجات
 2. تحديد النية (intent) والإجراء المطلوب (action)
 3. استخراج المعاملات اللازمة
-4. تقديم رد مناسب وودود
+4. تقديم رد مناسب ${getDialectResponseStyle(dialect)}
+
+اللهجات المدعومة والأوامر الشائعة:
+- العربية الفصحى: "اعرض لي", "انتقل إلى", "ما حالة"
+- المصرية: "وريني", "روح لـ", "إيه حالة", "اعمل"
+- الخليجية: "خلني أشوف", "روح لـ", "شلون حالة", "سوي"
+- الشامية: "فيني شوف", "روح عـ", "شو وضع", "اعمل"
+- المغاربية: "ورايني", "سير لـ", "آش حال", "دير"
 
 الأوامر المدعومة:
-- التنقل: "انتقل إلى [صفحة]", "اذهب إلى [قسم]"
-- الاستعلام: "اعرض [بيانات]", "ما هي حالة [شيء]"
+- التنقل: "انتقل إلى [صفحة]", "اذهب إلى [قسم]", "روح لـ"
+- الاستعلام: "اعرض [بيانات]", "ما هي حالة [شيء]", "وريني"
 - الإجراءات: "أضف [عنصر]", "احذف [عنصر]", "حدث [بيانات]"
 - الإحصائيات: "إحصائيات الإنتاج", "تقرير [نوع]"
 
@@ -89,7 +108,7 @@ class OpenAIService {
   "intent": "نوع النية",
   "action": "الإجراء المطلوب", 
   "parameters": {"مفتاح": "قيمة"},
-  "response": "الرد النصي المناسب"
+  "response": "الرد النصي المناسب ${getDialectResponseStyle(dialect)}"
 }` :
         `You are an intelligent voice assistant for the MPBF Next plastic bag factory management system.
 
