@@ -8,12 +8,12 @@ import {
   insertRollSchema, 
   insertMaintenanceRequestSchema,
   customers,
-  products
+  customer_products
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
-const insertCustomerSchema = createInsertSchema(customers).omit({ id: true });
-const insertProductSchema = createInsertSchema(products).omit({ id: true });
+const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true });
+const insertCustomerProductSchema = createInsertSchema(customer_products).omit({ id: true, created_at: true });
 import { openaiService } from "./services/openai";
 
 export async function registerRoutes(app: Express): Promise<Server> {

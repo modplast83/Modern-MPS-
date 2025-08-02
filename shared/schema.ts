@@ -57,17 +57,7 @@ export const categories = pgTable('categories', {
   parent_id: varchar('parent_id', { length: 20 }),
 });
 
-// 📦 جدول المنتجات
-export const products = pgTable('products', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
-  name_ar: varchar('name_ar', { length: 100 }),
-  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
-  type: varchar('type', { length: 50 }), // علاقي، بنانة، بدون تخريم
-  needs_printing: boolean('needs_printing').default(false),
-  waste_percentage: decimal('waste_percentage', { precision: 5, scale: 2 }).default('5.00'),
-  unit: varchar('unit', { length: 20 }).default('kg'),
-});
+// تم حذف جدول المنتجات واستبداله بجدول منتجات العملاء
 
 // 🏭 جدول المكائن
 export const machines = pgTable('machines', {
@@ -95,7 +85,8 @@ export const job_orders = pgTable('job_orders', {
   id: serial('id').primaryKey(),
   job_number: varchar('job_number', { length: 50 }).notNull().unique(),
   order_id: integer('order_id').notNull().references(() => orders.id),
-  product_id: integer('product_id').notNull().references(() => products.id),
+  // product_id: تم إزالة المرجع لجدول المنتجات المحذوف
+  customer_product_id: integer('customer_product_id').references(() => customer_products.id),
   quantity_required: decimal('quantity_required', { precision: 10, scale: 2 }).notNull(),
   quantity_produced: decimal('quantity_produced', { precision: 10, scale: 2 }).default('0'),
   status: varchar('status', { length: 30 }).default('pending'),
@@ -276,7 +267,6 @@ export const company_profile = pgTable('company_profile', {
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
   customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  product_id: integer('product_id').references(() => products.id), // nullable for user data
   category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
   item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   size_caption: varchar('size_caption', { length: 50 }),
@@ -327,7 +317,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
 
 export const jobOrdersRelations = relations(job_orders, ({ one, many }) => ({
   order: one(orders, { fields: [job_orders.order_id], references: [orders.id] }),
-  product: one(products, { fields: [job_orders.product_id], references: [products.id] }),
+  customerProduct: one(customer_products, { fields: [job_orders.customer_product_id], references: [customer_products.id] }),
   rolls: many(rolls),
   waste: many(waste),
 }));
@@ -358,7 +348,6 @@ export const rolesRelations = relations(roles, ({ many }) => ({
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
   parent: one(categories, { fields: [categories.parent_id], references: [categories.id], relationName: "parent_category" }),
   children: many(categories, { relationName: "parent_category" }),
-  products: many(products),
   items: many(items),
   customerProducts: many(customer_products),
 }));
@@ -369,18 +358,14 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
   warehouseTransactions: many(warehouse_transactions),
 }));
 
-export const customerProductsRelations = relations(customer_products, ({ one }) => ({
+export const customerProductsRelations = relations(customer_products, ({ one, many }) => ({
   customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
-  product: one(products, { fields: [customer_products.product_id], references: [products.id] }),
   category: one(categories, { fields: [customer_products.category_id], references: [categories.id] }),
   item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
+  jobOrders: many(job_orders),
 }));
 
-export const productsRelations = relations(products, ({ one, many }) => ({
-  category: one(categories, { fields: [products.category_id], references: [categories.id] }),
-  jobOrders: many(job_orders),
-  customerProducts: many(customer_products),
-}));
+// تم حذف علاقات جدول المنتجات
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   // يمكن إضافة علاقات الموردين مع الأصناف لاحقاً
@@ -471,7 +456,6 @@ export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSc
 export type QualityCheck = typeof quality_checks.$inferSelect;
 export type Attendance = typeof attendance.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
-export type Product = typeof products.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type InsertItem = z.infer<typeof insertItemSchema>;
 export type Supplier = typeof suppliers.$inferSelect;
