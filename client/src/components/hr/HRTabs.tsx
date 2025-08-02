@@ -1,8 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Target, Calendar, Users } from "lucide-react";
-import TrainingPrograms from "./TrainingPrograms";
-import PerformanceReviews from "./PerformanceReviews";
-import LeaveManagement from "./LeaveManagement";
+import TrainingPrograms from "./TrainingPrograms.tsx";
+import PerformanceReviews from "./PerformanceReviews.tsx";
+import LeaveManagement from "./LeaveManagement.tsx";
 
 export default function HRTabs() {
   return (

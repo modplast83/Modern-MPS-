@@ -349,13 +349,13 @@ export default function LeaveManagement() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">موافقة المدير</p>
-                  <Badge size="sm" className={getStatusColor(request.manager_status)}>
+                  <Badge className={getStatusColor(request.manager_status)}>
                     {getStatusText(request.manager_status)}
                   </Badge>
                 </div>
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">موافقة الموارد البشرية</p>
-                  <Badge size="sm" className={getStatusColor(request.hr_status)}>
+                  <Badge className={getStatusColor(request.hr_status)}>
                     {getStatusText(request.hr_status)}
                   </Badge>
                 </div>
