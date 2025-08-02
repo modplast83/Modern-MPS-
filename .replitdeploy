@@ -1,20 +1,30 @@
 # Replit Deployment Configuration
-# This file specifies how the application should be deployed
+# This file configures how the application is deployed on Replit
 
-# Build configuration
-[build]
-command = "npm run build"
-publicDir = "dist/client"
+[deployment]
+# Build command - prepares the application for production
+build = "npm run build:production"
 
-# Runtime configuration
-[deploy]
-command = "npm start"
+# Start command - runs the application in production
+run = "npm start"
 
-# Environment variables needed for deployment
-[env]
+# Exclude files from deployment
+exclude = [
+  "node_modules/.cache",
+  "*.log", 
+  ".env.local",
+  "migrations/meta",
+  "scripts/test-*",
+  "client/src/**/*.test.*"
+]
+
+# Environment variables required for deployment
+[deployment.env]
 NODE_ENV = "production"
-# DATABASE_URL will be provided by Replit's database service
+DATABASE_URL = "required"
 
-# Health check endpoint
-[health]
+# Health check configuration
+[deployment.health]
 path = "/api/health"
+timeout = 30
+interval = 10
