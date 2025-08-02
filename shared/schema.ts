@@ -34,9 +34,12 @@ export const users = pgTable('users', {
 
 // 🧾 جدول العملاء
 export const customers = pgTable('customers', {
-  id: serial('id').primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
-  name_ar: varchar('name_ar', { length: 100 }),
+  id: varchar('id', { length: 20 }).primaryKey(), // Changed to varchar to match CID001 format
+  name: varchar('name', { length: 200 }).notNull(),
+  name_ar: varchar('name_ar', { length: 200 }),
+  code: varchar('code', { length: 20 }),
+  user_id: varchar('user_id', { length: 10 }),
+  plate_drawer_code: varchar('plate_drawer_code', { length: 20 }),
   city: varchar('city', { length: 50 }),
   address: text('address'),
   tax_number: varchar('tax_number', { length: 20 }),
@@ -47,10 +50,11 @@ export const customers = pgTable('customers', {
 
 // 🗂️ جدول المجموعات
 export const categories = pgTable('categories', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(), // Changed to varchar to match CAT001 format
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
-  parent_id: integer('parent_id'),
+  code: varchar('code', { length: 20 }),
+  parent_id: varchar('parent_id', { length: 20 }),
 });
 
 // 📦 جدول المنتجات
@@ -58,7 +62,7 @@ export const products = pgTable('products', {
   id: serial('id').primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
-  category_id: integer('category_id').references(() => categories.id),
+  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
   type: varchar('type', { length: 50 }), // علاقي، بنانة، بدون تخريم
   needs_printing: boolean('needs_printing').default(false),
   waste_percentage: decimal('waste_percentage', { precision: 5, scale: 2 }).default('5.00'),
@@ -79,7 +83,7 @@ export const machines = pgTable('machines', {
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
   order_number: varchar('order_number', { length: 50 }).notNull().unique(),
-  customer_id: integer('customer_id').notNull().references(() => customers.id),
+  customer_id: varchar('customer_id', { length: 20 }).notNull().references(() => customers.id),
   status: varchar('status', { length: 30 }).default('pending'), // pending / for_production / completed / delivered
   created_at: timestamp('created_at').defaultNow(),
   delivery_date: date('delivery_date'),
@@ -176,13 +180,14 @@ export const violations = pgTable('violations', {
 
 // 📦 جدول الأصناف والمواد
 export const items = pgTable('items', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(), // Changed to varchar to match ITM001 format
+  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
   name: varchar('name', { length: 100 }).notNull(),
+  full_name: varchar('full_name', { length: 100 }),
   name_ar: varchar('name_ar', { length: 100 }),
   unit: varchar('unit', { length: 20 }),
   type: varchar('type', { length: 50 }), // raw / final
   price: decimal('price', { precision: 10, scale: 2 }),
-  category_id: integer('category_id').references(() => categories.id),
 });
 
 // 🌍 جدول المواقع الجغرافية
@@ -267,6 +272,41 @@ export const company_profile = pgTable('company_profile', {
   default_language: varchar('default_language', { length: 10 }).default('ar'),
 });
 
+// 🛒 جدول منتجات العملاء (User's Custom Data Integration)
+export const customer_products = pgTable('customer_products', {
+  id: serial('id').primaryKey(),
+  customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
+  product_id: integer('product_id').references(() => products.id), // nullable for user data
+  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
+  item_id: varchar('item_id', { length: 20 }).references(() => items.id),
+  size_caption: varchar('size_caption', { length: 50 }),
+  width: varchar('width', { length: 10 }),
+  left_f: varchar('left_f', { length: 10 }),
+  right_f: varchar('right_f', { length: 10 }),
+  thickness: varchar('thickness', { length: 10 }),
+  thickness_one: varchar('thickness_one', { length: 10 }),
+  printing_cylinder: varchar('printing_cylinder', { length: 10 }),
+  length_cm: varchar('length_cm', { length: 10 }),
+  cutting_length_cm: varchar('cutting_length_cm', { length: 10 }),
+  raw_material: varchar('raw_material', { length: 50 }),
+  master_batch_id: varchar('master_batch_id', { length: 20 }),
+  printed: varchar('printed', { length: 10 }),
+  cutting_unit: varchar('cutting_unit', { length: 50 }),
+  unit_weight_kg: varchar('unit_weight_kg', { length: 10 }),
+  packing: varchar('packing', { length: 100 }),
+  punching: varchar('punching', { length: 50 }),
+  cover: varchar('cover', { length: 100 }),
+  volum: varchar('volum', { length: 10 }),
+  knife: varchar('knife', { length: 10 }),
+  unit_qty: varchar('unit_qty', { length: 10 }),
+  package_kg: varchar('package_kg', { length: 10 }),
+  cliche_front_design: text('cliche_front_design'),
+  cliche_back_design: text('cliche_back_design'),
+  notes: text('notes'),
+  status: varchar('status', { length: 20 }).default('active'),
+  created_at: timestamp('created_at').defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, { fields: [users.role_id], references: [roles.id] }),
@@ -320,16 +360,26 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   children: many(categories, { relationName: "parent_category" }),
   products: many(products),
   items: many(items),
+  customerProducts: many(customer_products),
+}));
+
+export const itemsRelations = relations(items, ({ one, many }) => ({
+  category: one(categories, { fields: [items.category_id], references: [categories.id] }),
+  customerProducts: many(customer_products),
+  warehouseTransactions: many(warehouse_transactions),
+}));
+
+export const customerProductsRelations = relations(customer_products, ({ one }) => ({
+  customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
+  product: one(products, { fields: [customer_products.product_id], references: [products.id] }),
+  category: one(categories, { fields: [customer_products.category_id], references: [categories.id] }),
+  item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
 }));
 
 export const productsRelations = relations(products, ({ one, many }) => ({
   category: one(categories, { fields: [products.category_id], references: [categories.id] }),
   jobOrders: many(job_orders),
-}));
-
-export const itemsRelations = relations(items, ({ one, many }) => ({
-  category: one(categories, { fields: [items.category_id], references: [categories.id] }),
-  warehouseTransactions: many(warehouse_transactions),
+  customerProducts: many(customer_products),
 }));
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
@@ -441,8 +491,10 @@ export type Role = typeof roles.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Violation = typeof violations.$inferSelect;
 export type CompanyProfile = typeof company_profile.$inferSelect;
+export type CustomerProduct = typeof customer_products.$inferSelect;
+export type InsertCustomerProduct = z.infer<typeof insertCustomerProductSchema>;
 
-// Material Groups (if not already defined)
+// 🧱 جدول مجموعات المواد
 export const material_groups = pgTable("material_groups", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
@@ -456,23 +508,6 @@ export const material_groups = pgTable("material_groups", {
 export type MaterialGroup = typeof material_groups.$inferSelect;
 export type InsertMaterialGroup = typeof material_groups.$inferInsert;
 
-// Customer Products
-export const customer_products = pgTable("customer_products", {
-  id: serial("id").primaryKey(),
-  customer_id: integer("customer_id").references(() => customers.id).notNull(),
-  product_id: integer("product_id").references(() => products.id).notNull(),
-  customer_product_code: varchar("customer_product_code", { length: 50 }),
-  customer_product_name: varchar("customer_product_name", { length: 100 }),
-  customer_product_name_ar: varchar("customer_product_name_ar", { length: 100 }),
-  specifications: text("specifications"),
-  price: decimal("price", { precision: 10, scale: 2 }),
-  status: varchar("status", { length: 20 }).default("active"),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
-export type CustomerProduct = typeof customer_products.$inferSelect;
-export type InsertCustomerProduct = typeof customer_products.$inferInsert;
-
 // Insert schemas for new tables
 export const insertMaterialGroupSchema = createInsertSchema(material_groups).omit({
   id: true,
@@ -484,11 +519,9 @@ export const insertCustomerProductSchema = createInsertSchema(customer_products)
   created_at: true,
 });
 
-export const insertSectionSchema = createInsertSchema(sections).omit({
-  id: true,
+export const insertCategorySchema = createInsertSchema(categories);
+export const insertCustomerSchema = createInsertSchema(customers).omit({
   created_at: true,
-}).extend({
-  manager_id: z.number().optional().nullable(),
 });
 
 // Import ERP schemas
