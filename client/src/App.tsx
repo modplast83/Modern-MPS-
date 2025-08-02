@@ -12,6 +12,7 @@ import HR from "@/pages/hr";
 import Definitions from "@/pages/definitions";
 import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
+import MLAnalytics from "@/pages/ml-analytics";
 import ERPIntegration from "@/pages/erp-integration";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
@@ -74,6 +75,11 @@ function Router() {
       <Route path="/reports">
         <ProtectedRoute>
           <Reports />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ml-analytics">
+        <ProtectedRoute>
+          <MLAnalytics />
         </ProtectedRoute>
       </Route>
       <Route path="/erp-integration">
