@@ -819,6 +819,229 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ HR System API Routes ============
+
+  // Training Programs
+  app.get("/api/hr/training-programs", async (req, res) => {
+    try {
+      const programs = await storage.getTrainingPrograms();
+      res.json(programs);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب البرامج التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-programs", async (req, res) => {
+    try {
+      const program = await storage.createTrainingProgram(req.body);
+      res.json(program);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء البرنامج التدريبي" });
+    }
+  });
+
+  app.put("/api/hr/training-programs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const program = await storage.updateTrainingProgram(id, req.body);
+      res.json(program);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث البرنامج التدريبي" });
+    }
+  });
+
+  app.get("/api/hr/training-programs/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const program = await storage.getTrainingProgramById(id);
+      if (program) {
+        res.json(program);
+      } else {
+        res.status(404).json({ message: "البرنامج التدريبي غير موجود" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب البرنامج التدريبي" });
+    }
+  });
+
+  // Training Materials
+  app.get("/api/hr/training-materials", async (req, res) => {
+    try {
+      const programId = req.query.program_id ? parseInt(req.query.program_id as string) : undefined;
+      const materials = await storage.getTrainingMaterials(programId);
+      res.json(materials);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب المواد التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-materials", async (req, res) => {
+    try {
+      const material = await storage.createTrainingMaterial(req.body);
+      res.json(material);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء المادة التدريبية" });
+    }
+  });
+
+  // Training Enrollments  
+  app.get("/api/hr/training-enrollments", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const enrollments = await storage.getTrainingEnrollments(employeeId);
+      res.json(enrollments);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب التسجيلات التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-enrollments", async (req, res) => {
+    try {
+      const enrollment = await storage.createTrainingEnrollment(req.body);
+      res.json(enrollment);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تسجيل الموظف في البرنامج" });
+    }
+  });
+
+  app.put("/api/hr/training-enrollments/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const enrollment = await storage.updateTrainingEnrollment(id, req.body);
+      res.json(enrollment);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث التسجيل التدريبي" });
+    }
+  });
+
+  // Performance Reviews
+  app.get("/api/hr/performance-reviews", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const reviews = await storage.getPerformanceReviews(employeeId);
+      res.json(reviews);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب تقييمات الأداء" });
+    }
+  });
+
+  app.post("/api/hr/performance-reviews", async (req, res) => {
+    try {
+      const review = await storage.createPerformanceReview(req.body);
+      res.json(review);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء تقييم الأداء" });
+    }
+  });
+
+  app.put("/api/hr/performance-reviews/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const review = await storage.updatePerformanceReview(id, req.body);
+      res.json(review);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث تقييم الأداء" });
+    }
+  });
+
+  // Performance Criteria
+  app.get("/api/hr/performance-criteria", async (req, res) => {
+    try {
+      const criteria = await storage.getPerformanceCriteria();
+      res.json(criteria);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب معايير التقييم" });
+    }
+  });
+
+  app.post("/api/hr/performance-criteria", async (req, res) => {
+    try {
+      const criteria = await storage.createPerformanceCriteria(req.body);
+      res.json(criteria);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء معيار التقييم" });
+    }
+  });
+
+  // Leave Types
+  app.get("/api/hr/leave-types", async (req, res) => {
+    try {
+      const leaveTypes = await storage.getLeaveTypes();
+      res.json(leaveTypes);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب أنواع الإجازات" });
+    }
+  });
+
+  app.post("/api/hr/leave-types", async (req, res) => {
+    try {
+      const leaveType = await storage.createLeaveType(req.body);
+      res.json(leaveType);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء نوع الإجازة" });
+    }
+  });
+
+  // Leave Requests
+  app.get("/api/hr/leave-requests", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const requests = await storage.getLeaveRequests(employeeId);
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب طلبات الإجازات" });
+    }
+  });
+
+  app.post("/api/hr/leave-requests", async (req, res) => {
+    try {
+      const request = await storage.createLeaveRequest(req.body);
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء طلب الإجازة" });
+    }
+  });
+
+  app.put("/api/hr/leave-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const request = await storage.updateLeaveRequest(id, req.body);
+      res.json(request);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث طلب الإجازة" });
+    }
+  });
+
+  app.get("/api/hr/leave-requests/pending", async (req, res) => {
+    try {
+      const requests = await storage.getPendingLeaveRequests();
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب الطلبات المعلقة" });
+    }
+  });
+
+  // Leave Balances
+  app.get("/api/hr/leave-balances/:employeeId", async (req, res) => {
+    try {
+      const employeeId = parseInt(req.params.employeeId);
+      const year = req.query.year ? parseInt(req.query.year as string) : undefined;
+      const balances = await storage.getLeaveBalances(employeeId, year);
+      res.json(balances);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب أرصدة الإجازات" });
+    }
+  });
+
+  app.post("/api/hr/leave-balances", async (req, res) => {
+    try {
+      const balance = await storage.createLeaveBalance(req.body);
+      res.json(balance);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء رصيد الإجازة" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
