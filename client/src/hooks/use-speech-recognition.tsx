@@ -4,6 +4,7 @@ interface SpeechRecognitionOptions {
   continuous?: boolean;
   interimResults?: boolean;
   language?: string;
+  dialect?: 'standard' | 'egyptian' | 'gulf' | 'levantine' | 'maghreb';
 }
 
 interface UseSpeechRecognitionReturn {
@@ -16,6 +17,22 @@ interface UseSpeechRecognitionReturn {
   confidence: number;
 }
 
+// Arabic dialect to language code mapping
+const getLanguageCode = (dialect: string = 'standard'): string => {
+  const dialectMap: Record<string, string> = {
+    'standard': 'ar-SA', // Modern Standard Arabic (Saudi Arabia)
+    'egyptian': 'ar-EG', // Egyptian Arabic
+    'gulf': 'ar-SA',     // Gulf Arabic (Saudi Arabia)
+    'levantine': 'ar-LB', // Levantine Arabic (Lebanon)
+    'maghreb': 'ar-MA',   // Maghreb Arabic (Morocco)
+    'iraqi': 'ar-IQ',     // Iraqi Arabic
+    'jordanian': 'ar-JO', // Jordanian Arabic
+    'kuwaiti': 'ar-KW',   // Kuwaiti Arabic
+    'emirati': 'ar-AE'    // Emirati Arabic
+  };
+  return dialectMap[dialect] || 'ar-SA';
+};
+
 export const useSpeechRecognition = (
   options: SpeechRecognitionOptions = {}
 ): UseSpeechRecognitionReturn => {
@@ -27,7 +44,8 @@ export const useSpeechRecognition = (
   const {
     continuous = false,
     interimResults = true,
-    language = 'ar-SA' // Arabic (Saudi Arabia) as default
+    language = getLanguageCode(options.dialect),
+    dialect = 'standard'
   } = options;
 
   const hasRecognitionSupport = 

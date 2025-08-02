@@ -6,6 +6,7 @@ interface SpeechSynthesisOptions {
   pitch?: number;
   volume?: number;
   lang?: string;
+  dialect?: 'standard' | 'egyptian' | 'gulf' | 'levantine' | 'maghreb';
 }
 
 interface UseSpeechSynthesisReturn {
@@ -18,6 +19,8 @@ interface UseSpeechSynthesisReturn {
   isSupported: boolean;
   voices: SpeechSynthesisVoice[];
   getArabicVoices: () => SpeechSynthesisVoice[];
+  getVoicesByDialect: (dialect: string) => SpeechSynthesisVoice[];
+  getAvailableDialects: () => string[];
 }
 
 export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
@@ -55,6 +58,37 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     );
   };
 
+  const getVoicesByDialect = (dialect: string): SpeechSynthesisVoice[] => {
+    const dialectLanguageCodes: Record<string, string[]> = {
+      'standard': ['ar-SA', 'ar'],
+      'egyptian': ['ar-EG'],
+      'gulf': ['ar-SA', 'ar-KW', 'ar-AE', 'ar-BH', 'ar-QA'],
+      'levantine': ['ar-LB', 'ar-SY', 'ar-JO', 'ar-PS'],
+      'maghreb': ['ar-MA', 'ar-TN', 'ar-DZ'],
+      'iraqi': ['ar-IQ']
+    };
+
+    const targetLangCodes = dialectLanguageCodes[dialect] || ['ar-SA'];
+    
+    return voices.filter(voice => 
+      targetLangCodes.some(code => voice.lang.startsWith(code)) ||
+      (voice.name.toLowerCase().includes('arabic') && targetLangCodes.includes('ar'))
+    );
+  };
+
+  const getAvailableDialects = (): string[] => {
+    const availableDialects: string[] = [];
+    const dialectsToCheck = ['standard', 'egyptian', 'gulf', 'levantine', 'maghreb', 'iraqi'];
+    
+    dialectsToCheck.forEach(dialect => {
+      if (getVoicesByDialect(dialect).length > 0) {
+        availableDialects.push(dialect);
+      }
+    });
+    
+    return availableDialects.length > 0 ? availableDialects : ['standard'];
+  };
+
   const speak = (text: string, options: SpeechSynthesisOptions = {}) => {
     if (!isSupported || !text.trim()) return;
 
@@ -64,15 +98,32 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     const utterance = new SpeechSynthesisUtterance(text);
     utteranceRef.current = utterance;
 
-    // Set default options for Arabic
+    // Get appropriate voice based on dialect
+    const dialect = options.dialect || 'standard';
+    const dialectVoices = getVoicesByDialect(dialect);
     const arabicVoices = getArabicVoices();
-    const defaultVoice = arabicVoices.length > 0 ? arabicVoices[0] : null;
+    
+    // Priority: dialect-specific voices > any Arabic voices > default
+    const defaultVoice = dialectVoices.length > 0 
+      ? dialectVoices[0] 
+      : (arabicVoices.length > 0 ? arabicVoices[0] : null);
 
     utterance.voice = options.voice || defaultVoice;
-    utterance.rate = options.rate || 0.9; // Slightly slower for Arabic
-    utterance.pitch = options.pitch || 1;
+    utterance.rate = options.rate || (dialect === 'egyptian' ? 1.0 : 0.9); // Egyptian dialect can be faster
+    utterance.pitch = options.pitch || (dialect === 'gulf' ? 1.1 : 1.0); // Gulf dialect slightly higher pitch
     utterance.volume = options.volume || 1;
-    utterance.lang = options.lang || 'ar-SA';
+    
+    // Set language based on dialect
+    const dialectLanguageMap: Record<string, string> = {
+      'standard': 'ar-SA',
+      'egyptian': 'ar-EG',
+      'gulf': 'ar-SA',
+      'levantine': 'ar-LB',
+      'maghreb': 'ar-MA',
+      'iraqi': 'ar-IQ'
+    };
+    
+    utterance.lang = options.lang || dialectLanguageMap[dialect] || 'ar-SA';
 
     utterance.onstart = () => {
       setIsSpeaking(true);
@@ -130,6 +181,8 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     isPaused,
     isSupported,
     voices,
-    getArabicVoices
+    getArabicVoices,
+    getVoicesByDialect,
+    getAvailableDialects
   };
 };
