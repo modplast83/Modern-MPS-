@@ -490,3 +490,6 @@ export const insertSectionSchema = createInsertSchema(sections).omit({
 }).extend({
   manager_id: z.number().optional().nullable(),
 });
+
+// Import ERP schemas
+export * from './erp-schema';
