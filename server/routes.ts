@@ -504,6 +504,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AI Voice Command endpoint
+  app.post("/api/ai/voice-command", async (req, res) => {
+    try {
+      const { command, language = 'ar-SA', context = 'voice_assistant' } = req.body;
+      
+      if (!command || typeof command !== 'string') {
+        return res.status(400).json({ message: "أمر صوتي غير صالح" });
+      }
+
+      const result = await openaiService.processVoiceCommand(command, language);
+      
+      // Map actions to actual system operations
+      let actionData = null;
+      switch (result.action) {
+        case 'navigate_dashboard':
+          actionData = { route: '/dashboard' };
+          break;
+        case 'navigate_orders':
+          actionData = { route: '/orders' };
+          break;
+        case 'navigate_production':
+          actionData = { route: '/production' };
+          break;
+        case 'navigate_maintenance':
+          actionData = { route: '/maintenance' };
+          break;
+        case 'navigate_definitions':
+          actionData = { route: '/definitions' };
+          break;
+        case 'navigate_hr':
+          actionData = { route: '/hr' };
+          break;
+        case 'navigate_quality':
+          actionData = { route: '/quality' };
+          break;
+        case 'navigate_reports':
+          actionData = { route: '/reports' };
+          break;
+        case 'show_stats':
+          actionData = { queryKey: '/api/dashboard/stats' };
+          break;
+        case 'refresh_orders':
+          actionData = { queryKey: '/api/orders' };
+          break;
+        case 'refresh_machines':
+          actionData = { queryKey: '/api/machines' };
+          break;
+        case 'refresh_production':
+          actionData = { queryKey: '/api/job-orders' };
+          break;
+      }
+
+      res.json({
+        message: result.response,
+        action: result.action !== 'none' ? result.action : null,
+        data: actionData,
+        intent: result.intent,
+        parameters: result.parameters
+      });
+    } catch (error) {
+      console.error('Voice Command Error:', error);
+      res.status(500).json({ message: "خطأ في معالجة الأمر الصوتي" });
+    }
+  });
+
   function generateFallbackResponse(message: string): string {
     const lowerMessage = message.toLowerCase();
     

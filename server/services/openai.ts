@@ -67,6 +67,82 @@ class OpenAIService {
     return dataKeywords.some(keyword => message.includes(keyword));
   }
 
+  async processVoiceCommand(command: string, language: string = 'ar-SA'): Promise<AICommand> {
+    try {
+      const systemPrompt = language === 'ar-SA' ? 
+        `أنت مساعد صوتي ذكي لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next).
+
+مهامك:
+1. فهم الأوامر الصوتية باللغة العربية
+2. تحديد النية (intent) والإجراء المطلوب (action)
+3. استخراج المعاملات اللازمة
+4. تقديم رد مناسب وودود
+
+الأوامر المدعومة:
+- التنقل: "انتقل إلى [صفحة]", "اذهب إلى [قسم]"
+- الاستعلام: "اعرض [بيانات]", "ما هي حالة [شيء]"
+- الإجراءات: "أضف [عنصر]", "احذف [عنصر]", "حدث [بيانات]"
+- الإحصائيات: "إحصائيات الإنتاج", "تقرير [نوع]"
+
+استجب بتنسيق JSON يحتوي على:
+{
+  "intent": "نوع النية",
+  "action": "الإجراء المطلوب", 
+  "parameters": {"مفتاح": "قيمة"},
+  "response": "الرد النصي المناسب"
+}` :
+        `You are an intelligent voice assistant for the MPBF Next plastic bag factory management system.
+
+Your tasks:
+1. Understand voice commands in English
+2. Determine intent and required action
+3. Extract necessary parameters
+4. Provide appropriate and friendly response
+
+Supported commands:
+- Navigation: "go to [page]", "navigate to [section]" 
+- Queries: "show [data]", "what is the status of [item]"
+- Actions: "add [item]", "delete [item]", "update [data]"
+- Statistics: "production stats", "[type] report"
+
+Respond in JSON format containing:
+{
+  "intent": "intent type",
+  "action": "required action",
+  "parameters": {"key": "value"},
+  "response": "appropriate text response"
+}`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: command }
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: 300,
+        temperature: 0.3,
+      });
+
+      const result = JSON.parse(response.choices[0].message.content || '{}');
+      
+      return {
+        intent: result.intent || 'unknown',
+        action: result.action || 'none',
+        parameters: result.parameters || {},
+        response: result.response || (language === 'ar-SA' ? 'لم أتمكن من فهم الأمر' : 'I could not understand the command')
+      };
+    } catch (error) {
+      console.error('Voice command processing error:', error);
+      return {
+        intent: 'error',
+        action: 'none',
+        parameters: {},
+        response: language === 'ar-SA' ? 'عذراً، حدث خطأ في معالجة الأمر الصوتي' : 'Sorry, there was an error processing the voice command'
+      };
+    }
+  }
+
   private async handleDataQuery(message: string, baseResponse: string): Promise<string> {
     try {
       // Extract order numbers or specific identifiers from the message
