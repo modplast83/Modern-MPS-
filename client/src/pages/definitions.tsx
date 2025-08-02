@@ -149,7 +149,7 @@ export default function Definitions() {
 
   // Mutations for CRUD operations
   const createCustomerMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/customers', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/customers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة العميل الجديد" });
@@ -162,7 +162,7 @@ export default function Definitions() {
   });
 
   const createProductMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/products', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/products', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة المنتج الجديد" });
@@ -175,7 +175,7 @@ export default function Definitions() {
   });
 
   const createMachineMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/machines', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/machines', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الماكينة الجديدة" });
@@ -188,7 +188,7 @@ export default function Definitions() {
   });
 
   const createUserMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/users', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/users', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة المستخدم الجديد" });
@@ -201,7 +201,7 @@ export default function Definitions() {
   });
 
   const createSectionMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/sections', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/sections', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة القسم الجديد" });
@@ -214,7 +214,7 @@ export default function Definitions() {
   });
 
   const createMaterialGroupMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/material-groups', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/material-groups', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/material-groups'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة مجموعة المواد الجديدة" });
@@ -227,7 +227,7 @@ export default function Definitions() {
   });
 
   const createItemMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/items', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/items', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/items'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الصنف الجديد" });
@@ -240,7 +240,7 @@ export default function Definitions() {
   });
 
   const createCustomerProductMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/customer-products', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/customer-products', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة منتج العميل الجديد" });
@@ -253,7 +253,7 @@ export default function Definitions() {
   });
 
   const createLocationMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('/api/locations', 'POST', data),
+    mutationFn: (data: any) => apiRequest('POST', '/api/locations', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الموقع الجديد" });
@@ -267,7 +267,7 @@ export default function Definitions() {
 
   const deleteItemMutation = useMutation({
     mutationFn: ({ endpoint, id }: { endpoint: string; id: number }) => 
-      apiRequest(`${endpoint}/${id}`, 'DELETE'),
+      apiRequest('DELETE', `${endpoint}/${id}`),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [variables.endpoint] });
       toast({ title: "تم الحذف بنجاح", description: "تم حذف العنصر" });
