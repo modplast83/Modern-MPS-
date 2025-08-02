@@ -8,6 +8,7 @@ import RecentRolls from "@/components/dashboard/RecentRolls";
 import MachineStatus from "@/components/dashboard/MachineStatus";
 import AIAssistant from "@/components/ai/AIAssistant";
 import RollCreationModal from "@/components/modals/RollCreationModal";
+import { VoiceAssistant } from "@/components/voice/VoiceAssistant";
 
 export default function Dashboard() {
   const [isRollModalOpen, setIsRollModalOpen] = useState(false);
@@ -30,7 +31,10 @@ export default function Dashboard() {
             <MachineStatus onCreateRoll={() => setIsRollModalOpen(true)} />
           </div>
           
-          <AIAssistant />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <AIAssistant />
+            <VoiceAssistant />
+          </div>
         </main>
       </div>
       
