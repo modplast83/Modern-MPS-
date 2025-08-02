@@ -127,8 +127,8 @@ export default function Definitions() {
 
   // Customer Product form state
   const [customerProductForm, setCustomerProductForm] = useState({
-    customer_id: null,
-    product_id: null,
+    customer_id: '',
+    product_id: '',
     customer_product_code: '',
     customer_product_name: '',
     customer_product_name_ar: '',
@@ -174,6 +174,32 @@ export default function Definitions() {
     }
   });
 
+  const createItemMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/items', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الصنف الجديد" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
+  const createMaterialGroupMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/material-groups', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/material-groups'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة مجموعة المواد الجديدة" });
+      resetForm();
+      setIsDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
+    }
+  });
+
   const createMachineMutation = useMutation({
     mutationFn: (data: any) => apiRequest('POST', '/api/machines', data),
     onSuccess: () => {
@@ -200,37 +226,11 @@ export default function Definitions() {
     }
   });
 
-  const createSectionMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('POST', '/api/sections', data),
+  const createLocationMutation = useMutation({
+    mutationFn: (data: any) => apiRequest('POST', '/api/locations', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
-      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة القسم الجديد" });
-      resetForm();
-      setIsDialogOpen(false);
-    },
-    onError: () => {
-      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
-    }
-  });
-
-  const createMaterialGroupMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('POST', '/api/material-groups', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/material-groups'] });
-      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة مجموعة المواد الجديدة" });
-      resetForm();
-      setIsDialogOpen(false);
-    },
-    onError: () => {
-      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
-    }
-  });
-
-  const createItemMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('POST', '/api/items', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
-      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الصنف الجديد" });
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الموقع الجديد" });
       resetForm();
       setIsDialogOpen(false);
     },
@@ -244,19 +244,6 @@ export default function Definitions() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
       toast({ title: "تم الحفظ بنجاح", description: "تم إضافة منتج العميل الجديد" });
-      resetForm();
-      setIsDialogOpen(false);
-    },
-    onError: () => {
-      toast({ title: "خطأ", description: "فشل في حفظ البيانات", variant: "destructive" });
-    }
-  });
-
-  const createLocationMutation = useMutation({
-    mutationFn: (data: any) => apiRequest('POST', '/api/locations', data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
-      toast({ title: "تم الحفظ بنجاح", description: "تم إضافة الموقع الجديد" });
       resetForm();
       setIsDialogOpen(false);
     },
@@ -285,7 +272,7 @@ export default function Definitions() {
     setSectionForm({ name: '', name_ar: '', description: '', manager_id: null, status: 'active' });
     setMaterialGroupForm({ name: '', name_ar: '', code: '', description: '', status: 'active' });
     setItemForm({ name: '', name_ar: '', code: '', material_group_id: null, unit: '', unit_ar: '', status: 'active' });
-    setCustomerProductForm({ customer_id: null, product_id: null, customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
+    setCustomerProductForm({ customer_id: '', product_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: null, coordinates: '', status: 'active' });
     setEditingItem(null);
   };
@@ -500,6 +487,433 @@ export default function Definitions() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+    </div>
+  );
+
+  const renderItemForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="item-name-ar">اسم الصنف بالعربية</Label>
+          <Input
+            id="item-name-ar"
+            value={itemForm.name_ar}
+            onChange={(e) => setItemForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم الصنف بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-name">اسم الصنف بالإنجليزية</Label>
+          <Input
+            id="item-name"
+            value={itemForm.name}
+            onChange={(e) => setItemForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Item Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-code">كود الصنف</Label>
+          <Input
+            id="item-code"
+            value={itemForm.code}
+            onChange={(e) => setItemForm(prev => ({ ...prev, code: e.target.value }))}
+            placeholder="I-001"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-unit">الوحدة بالعربية</Label>
+          <Input
+            id="item-unit"
+            value={itemForm.unit_ar}
+            onChange={(e) => setItemForm(prev => ({ ...prev, unit_ar: e.target.value }))}
+            placeholder="كيلو، قطعة، متر..."
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-unit-en">الوحدة بالإنجليزية</Label>
+          <Input
+            id="item-unit-en"
+            value={itemForm.unit}
+            onChange={(e) => setItemForm(prev => ({ ...prev, unit: e.target.value }))}
+            placeholder="kg, pc, m..."
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="item-status">الحالة</Label>
+          <Select value={itemForm.status} onValueChange={(value) => setItemForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMaterialGroupForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="mg-name-ar">اسم مجموعة المواد بالعربية</Label>
+          <Input
+            id="mg-name-ar"
+            value={materialGroupForm.name_ar}
+            onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم مجموعة المواد بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="mg-name">اسم مجموعة المواد بالإنجليزية</Label>
+          <Input
+            id="mg-name"
+            value={materialGroupForm.name}
+            onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Material Group Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="mg-code">كود المجموعة</Label>
+          <Input
+            id="mg-code"
+            value={materialGroupForm.code}
+            onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, code: e.target.value }))}
+            placeholder="MG-001"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="mg-status">الحالة</Label>
+          <Select value={materialGroupForm.status} onValueChange={(value) => setMaterialGroupForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="mg-description">الوصف</Label>
+        <Input
+          id="mg-description"
+          value={materialGroupForm.description}
+          onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="وصف مجموعة المواد"
+        />
+      </div>
+    </div>
+  );
+
+  const renderMachineForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="machine-name-ar">اسم الماكينة بالعربية</Label>
+          <Input
+            id="machine-name-ar"
+            value={machineForm.name_ar}
+            onChange={(e) => setMachineForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم الماكينة بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="machine-name">اسم الماكينة بالإنجليزية</Label>
+          <Input
+            id="machine-name"
+            value={machineForm.name}
+            onChange={(e) => setMachineForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Machine Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="machine-type">نوع الماكينة</Label>
+          <Select value={machineForm.type} onValueChange={(value) => setMachineForm(prev => ({ ...prev, type: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="extrusion">بثق</SelectItem>
+              <SelectItem value="printing">طباعة</SelectItem>
+              <SelectItem value="cutting">قطع</SelectItem>
+              <SelectItem value="packaging">تعبئة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="machine-speed">معدل السرعة</Label>
+          <Input
+            id="machine-speed"
+            value={machineForm.speed_rating}
+            onChange={(e) => setMachineForm(prev => ({ ...prev, speed_rating: e.target.value }))}
+            placeholder="100 م/دقيقة"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="machine-status">الحالة</Label>
+          <Select value={machineForm.status} onValueChange={(value) => setMachineForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderUserForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="user-username">اسم المستخدم</Label>
+          <Input
+            id="user-username"
+            value={userForm.username}
+            onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+            placeholder="username"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="user-display-name">الاسم المعروض</Label>
+          <Input
+            id="user-display-name"
+            value={userForm.display_name_ar}
+            onChange={(e) => setUserForm(prev => ({ ...prev, display_name_ar: e.target.value }))}
+            placeholder="الاسم المعروض بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="user-role">الدور</Label>
+          <Select value={userForm.role_id.toString()} onValueChange={(value) => setUserForm(prev => ({ ...prev, role_id: parseInt(value) }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">مدير عام</SelectItem>
+              <SelectItem value="2">مشرف</SelectItem>
+              <SelectItem value="3">عامل</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="user-section">القسم</Label>
+          <Select value={userForm.section_id.toString()} onValueChange={(value) => setUserForm(prev => ({ ...prev, section_id: parseInt(value) }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">الإنتاج</SelectItem>
+              <SelectItem value="2">الجودة</SelectItem>
+              <SelectItem value="3">الصيانة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="user-status">الحالة</Label>
+          <Select value={userForm.status} onValueChange={(value) => setUserForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderLocationForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="location-name-ar">اسم الموقع بالعربية</Label>
+          <Input
+            id="location-name-ar"
+            value={locationForm.name_ar}
+            onChange={(e) => setLocationForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم الموقع بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location-name">اسم الموقع بالإنجليزية</Label>
+          <Input
+            id="location-name"
+            value={locationForm.name}
+            onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Location Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location-type">نوع الموقع</Label>
+          <Select value={locationForm.type} onValueChange={(value) => setLocationForm(prev => ({ ...prev, type: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="country">دولة</SelectItem>
+              <SelectItem value="governorate">محافظة</SelectItem>
+              <SelectItem value="city">مدينة</SelectItem>
+              <SelectItem value="district">منطقة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location-coordinates">الإحداثيات</Label>
+          <Input
+            id="location-coordinates"
+            value={locationForm.coordinates}
+            onChange={(e) => setLocationForm(prev => ({ ...prev, coordinates: e.target.value }))}
+            placeholder="33.3152, 44.3661"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location-status">الحالة</Label>
+          <Select value={locationForm.status} onValueChange={(value) => setLocationForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderCustomerProductForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cp-customer">العميل</Label>
+          <Select value={customerProductForm.customer_id?.toString() || ""} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, customer_id: value }))}>
+            <SelectTrigger>
+              <SelectValue placeholder="اختر العميل" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.isArray(customers) && customers.map((customer: any) => (
+                <SelectItem key={customer.id} value={customer.id.toString()}>
+                  {customer.name_ar || customer.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cp-code">كود المنتج عند العميل</Label>
+          <Input
+            id="cp-code"
+            value={customerProductForm.customer_product_code}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_code: e.target.value }))}
+            placeholder="CP-001"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cp-name-ar">اسم المنتج بالعربية</Label>
+          <Input
+            id="cp-name-ar"
+            value={customerProductForm.customer_product_name_ar}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name_ar: e.target.value }))}
+            placeholder="اسم المنتج عند العميل"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cp-name">اسم المنتج بالإنجليزية</Label>
+          <Input
+            id="cp-name"
+            value={customerProductForm.customer_product_name}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name: e.target.value }))}
+            placeholder="Customer Product Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cp-price">السعر</Label>
+          <Input
+            id="cp-price"
+            value={customerProductForm.price}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, price: e.target.value }))}
+            placeholder="1000"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cp-status">الحالة</Label>
+          <Select value={customerProductForm.status} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="cp-specs">المواصفات</Label>
+        <Input
+          id="cp-specs"
+          value={customerProductForm.specifications}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, specifications: e.target.value }))}
+          placeholder="مواصفات المنتج الخاصة بالعميل"
+        />
+      </div>
+    </div>
+  );
+
+  const renderSectionForm = () => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="section-name-ar">اسم القسم بالعربية</Label>
+          <Input
+            id="section-name-ar"
+            value={sectionForm.name_ar}
+            onChange={(e) => setSectionForm(prev => ({ ...prev, name_ar: e.target.value }))}
+            placeholder="اسم القسم بالعربية"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="section-name">اسم القسم بالإنجليزية</Label>
+          <Input
+            id="section-name"
+            value={sectionForm.name}
+            onChange={(e) => setSectionForm(prev => ({ ...prev, name: e.target.value }))}
+            placeholder="Section Name"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="section-status">الحالة</Label>
+          <Select value={sectionForm.status} onValueChange={(value) => setSectionForm(prev => ({ ...prev, status: value }))}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">نشط</SelectItem>
+              <SelectItem value="inactive">غير نشط</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="section-description">الوصف</Label>
+        <Input
+          id="section-description"
+          value={sectionForm.description}
+          onChange={(e) => setSectionForm(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="وصف القسم"
+        />
       </div>
     </div>
   );
@@ -1439,6 +1853,49 @@ export default function Definitions() {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Shared Dialog for All Tabs */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingItem ? 
+                    (selectedTab === 'items' ? 'تعديل الصنف' :
+                     selectedTab === 'material-groups' ? 'تعديل مجموعة المواد' :
+                     selectedTab === 'customer-products' ? 'تعديل منتج العميل' :
+                     selectedTab === 'locations' ? 'تعديل الموقع' :
+                     selectedTab === 'machines' ? 'تعديل الماكينة' :
+                     selectedTab === 'users' ? 'تعديل المستخدم' :
+                     selectedTab === 'sections' ? 'تعديل القسم' : 'تعديل العنصر') :
+                    (selectedTab === 'items' ? 'إضافة صنف جديد' :
+                     selectedTab === 'material-groups' ? 'إضافة مجموعة مواد جديدة' :
+                     selectedTab === 'customer-products' ? 'إضافة منتج عميل جديد' :
+                     selectedTab === 'locations' ? 'إضافة موقع جديد' :
+                     selectedTab === 'machines' ? 'إضافة ماكينة جديدة' :
+                     selectedTab === 'users' ? 'إضافة مستخدم جديد' :
+                     selectedTab === 'sections' ? 'إضافة قسم جديد' : 'إضافة عنصر جديد')
+                  }
+                </DialogTitle>
+              </DialogHeader>
+              
+              {selectedTab === 'items' && renderItemForm()}
+              {selectedTab === 'material-groups' && renderMaterialGroupForm()}
+              {selectedTab === 'customer-products' && renderCustomerProductForm()}
+              {selectedTab === 'locations' && renderLocationForm()}
+              {selectedTab === 'machines' && renderMachineForm()}
+              {selectedTab === 'users' && renderUserForm()}
+              {selectedTab === 'sections' && renderSectionForm()}
+              
+              <div className="flex justify-end gap-2 mt-6">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  إلغاء
+                </Button>
+                <Button onClick={handleSubmit}>
+                  {editingItem ? 'تحديث' : 'حفظ'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </main>
       </div>
     </div>
