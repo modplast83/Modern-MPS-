@@ -5,7 +5,6 @@ import {
   rolls, 
   machines, 
   customers,
-  products,
   maintenance_requests,
   quality_checks,
   attendance,
@@ -25,7 +24,7 @@ import {
   type InsertRoll,
   type Machine,
   type Customer,
-  type Product,
+
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
