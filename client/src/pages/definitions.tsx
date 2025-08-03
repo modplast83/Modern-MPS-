@@ -324,7 +324,10 @@ export default function Definitions() {
           break;
         case 'items':
           endpoint = '/api/items';
-          data = itemForm;
+          data = {
+            ...itemForm,
+            category_id: itemForm.material_group_id === '' ? null : itemForm.material_group_id
+          };
           break;
         case 'customer-products':
           endpoint = '/api/customer-products';
@@ -612,6 +615,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر مجموعة المواد" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">بدون مجموعة</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
@@ -1354,11 +1358,14 @@ export default function Definitions() {
                                     {item.unit || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.category_id || '-'}
+                                    {(() => {
+                                      const materialGroup = Array.isArray(materialGroups) && materialGroups.find((mg: any) => mg.id.toString() === item.category_id);
+                                      return materialGroup ? (materialGroup.name_ar || materialGroup.name) : (item.category_id || '-');
+                                    })()}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <Badge variant={item.status === 'active' ? 'default' : 'secondary'}>
-                                      {item.status === 'active' ? 'نشط' : 'غير نشط'}
+                                      {item.status === 'active' ? 'نشط' : item.status === 'inactive' ? 'غير نشط' : (item.status || 'غير محدد')}
                                     </Badge>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
