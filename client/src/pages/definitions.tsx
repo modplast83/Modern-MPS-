@@ -41,7 +41,7 @@ export default function Definitions() {
     name: '', name_ar: '', code: '', parent_id: 'none', description: ''
   });
   const [itemForm, setItemForm] = useState({
-    name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active'
+    name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active'
   });
   const [customerProductForm, setCustomerProductForm] = useState({
     customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', 
@@ -135,7 +135,7 @@ export default function Definitions() {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
     setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '' });
-    setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active' });
+    setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
     setCustomerProductForm({ customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
@@ -190,7 +190,7 @@ export default function Definitions() {
         code: item.code || '',
         unit: item.unit || '',
         unit_ar: item.unit_ar || '',
-        material_group_id: item.material_group_id ? item.material_group_id.toString() : '',
+        material_group_id: item.category_id ? item.category_id.toString() : 'none',
         status: item.status || 'active',
       });
     } else if (type === 'customer-product') {
@@ -326,7 +326,7 @@ export default function Definitions() {
           endpoint = '/api/items';
           data = {
             ...itemForm,
-            category_id: itemForm.material_group_id === '' ? null : itemForm.material_group_id
+            category_id: itemForm.material_group_id === 'none' ? null : itemForm.material_group_id
           };
           break;
         case 'customer-products':
@@ -615,7 +615,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر مجموعة المواد" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">بدون مجموعة</SelectItem>
+            <SelectItem value="none">بدون مجموعة</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
