@@ -723,7 +723,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTrainingProgram(program: InsertTrainingProgram): Promise<TrainingProgram> {
-    const [trainingProgram] = await db.insert(training_programs).values(program).returning();
+    const [trainingProgram] = await db.insert(training_programs).values(program as any).returning();
     return trainingProgram;
   }
 
@@ -832,7 +832,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createPerformanceCriteria(criteria: InsertPerformanceCriteria): Promise<PerformanceCriteria> {
-    const [performanceCriteria] = await db.insert(performance_criteria).values(criteria).returning();
+    const [performanceCriteria] = await db.insert(performance_criteria).values(criteria as any).returning();
     return performanceCriteria;
   }
 

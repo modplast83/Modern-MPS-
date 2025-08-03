@@ -158,7 +158,7 @@ export default function Definitions() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      await apiRequest(`/api/${type}s/${id}`, 'DELETE');
+      await apiRequest('DELETE', `/api/${type}s/${id}`);
       
       toast({
         title: "تم الحذف",
@@ -220,9 +220,9 @@ export default function Definitions() {
       }
 
       if (editingItem) {
-        await apiRequest(`${endpoint}/${editingItem.id}`, 'PUT', data);
+        await apiRequest('PUT', `${endpoint}/${editingItem.id}`, data);
       } else {
-        await apiRequest(endpoint, 'POST', data);
+        await apiRequest('POST', endpoint, data);
       }
 
       toast({
@@ -412,7 +412,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر المجموعة الأب" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">بدون مجموعة أب</SelectItem>
+            <SelectItem value="none">بدون مجموعة أب</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
