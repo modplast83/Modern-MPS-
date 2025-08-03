@@ -346,6 +346,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Users routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب المستخدمين" });
+    }
+  });
+
+  // Categories routes (for material groups)
+  app.get("/api/categories", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب الفئات" });
+    }
+  });
+
   // Training Records routes
   app.get("/api/training-records", async (req, res) => {
     try {

@@ -74,7 +74,7 @@ export default function Definitions() {
     staleTime: 0,
   });
   const { data: materialGroups = [], isLoading: materialGroupsLoading } = useQuery({
-    queryKey: ['/api/material-groups'],
+    queryKey: ['/api/categories'],
     staleTime: 0,
   });
   const { data: items = [], isLoading: itemsLoading } = useQuery({

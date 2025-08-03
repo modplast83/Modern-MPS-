@@ -14,6 +14,7 @@ import {
   items,
   customer_products,
   locations,
+  categories,
   training_records,
   admin_decisions,
   warehouse_transactions,
@@ -154,6 +155,12 @@ export interface IStorage {
   
   // Locations
   getLocations(): Promise<Location[]>;
+  
+  // Users
+  getUsers(): Promise<User[]>;
+  
+  // Categories
+  getCategories(): Promise<any[]>;
   
   // HR System - Training Programs
   getTrainingPrograms(): Promise<TrainingProgram[]>;
@@ -453,6 +460,10 @@ export class DatabaseStorage implements IStorage {
 
   async getLocations(): Promise<Location[]> {
     return await db.select().from(locations);
+  }
+
+  async getCategories(): Promise<any[]> {
+    return await db.select().from(categories);
   }
 
   async getDashboardStats(): Promise<{
