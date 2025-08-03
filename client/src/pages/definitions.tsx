@@ -38,7 +38,7 @@ export default function Definitions() {
     name: '', name_ar: '', description: ''
   });
   const [materialGroupForm, setMaterialGroupForm] = useState({
-    name: '', name_ar: '', code: '', parent_id: '', description: ''
+    name: '', name_ar: '', code: '', parent_id: 'none', description: ''
   });
   const [itemForm, setItemForm] = useState({
     name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active'
@@ -134,7 +134,7 @@ export default function Definitions() {
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
-    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: '', description: '' });
+    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '' });
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active' });
     setCustomerProductForm({ customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
@@ -180,7 +180,7 @@ export default function Definitions() {
         name: item.name || '',
         name_ar: item.name_ar || '',
         code: item.code || '',
-        parent_id: item.parent_id ? item.parent_id.toString() : '',
+        parent_id: item.parent_id ? item.parent_id.toString() : 'none',
         description: item.description || '',
       });
     } else if (type === 'item') {
@@ -317,7 +317,10 @@ export default function Definitions() {
           break;
         case 'material-groups':
           endpoint = '/api/material-groups';
-          data = materialGroupForm;
+          data = {
+            ...materialGroupForm,
+            parent_id: materialGroupForm.parent_id === 'none' ? null : parseInt(materialGroupForm.parent_id)
+          };
           break;
         case 'items':
           endpoint = '/api/items';
@@ -534,7 +537,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر المجموعة الأب" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">بدون مجموعة أب</SelectItem>
+            <SelectItem value="none">بدون مجموعة أب</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
