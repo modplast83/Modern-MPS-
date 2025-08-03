@@ -758,7 +758,7 @@ export default function Definitions() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">اختر فئة المنتج</SelectItem>
-            {Array.isArray(categories) && categories.map((category: any) => (
+            {Array.isArray(categories) && categories.length > 0 && categories.map((category: any) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name_ar || category.name}
               </SelectItem>
