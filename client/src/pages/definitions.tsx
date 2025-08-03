@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -18,6 +18,11 @@ import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Fi
 export default function Definitions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Clear cache on component mount to ensure fresh data
+  useEffect(() => {
+    queryClient.clear();
+  }, []);
   const [selectedTab, setSelectedTab] = useState("customers");
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -55,33 +60,42 @@ export default function Definitions() {
     name: '', name_ar: '', code: '', color: '', type: '', status: 'active'
   });
 
-  // Data queries
+  // Data queries with forced refresh to ensure data integrity
   const { data: customers = [], isLoading: customersLoading } = useQuery({
-    queryKey: ['/api/customers']
+    queryKey: ['/api/customers'],
+    staleTime: 0, // Always fetch fresh data
   });
   const { data: products = [], isLoading: productsLoading } = useQuery({
-    queryKey: ['/api/products']
+    queryKey: ['/api/products'],
+    staleTime: 0,
   });
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
-    queryKey: ['/api/sections']
+    queryKey: ['/api/sections'],
+    staleTime: 0,
   });
   const { data: materialGroups = [], isLoading: materialGroupsLoading } = useQuery({
-    queryKey: ['/api/material-groups']
+    queryKey: ['/api/material-groups'],
+    staleTime: 0,
   });
   const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ['/api/items']
+    queryKey: ['/api/items'],
+    staleTime: 0,
   });
   const { data: customerProducts = [], isLoading: customerProductsLoading } = useQuery({
-    queryKey: ['/api/customer-products']
+    queryKey: ['/api/customer-products'],
+    staleTime: 0,
   });
   const { data: locations = [], isLoading: locationsLoading } = useQuery({
-    queryKey: ['/api/locations']
+    queryKey: ['/api/locations'],
+    staleTime: 0,
   });
   const { data: machines = [], isLoading: machinesLoading } = useQuery({
-    queryKey: ['/api/machines']
+    queryKey: ['/api/machines'],
+    staleTime: 0,
   });
   const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/users']
+    queryKey: ['/api/users'],
+    staleTime: 0,
   });
 
   // Filter helper function
