@@ -351,6 +351,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/customer-products", async (req, res) => {
+    try {
+      const customerProduct = await storage.createCustomerProduct(req.body);
+      res.json(customerProduct);
+    } catch (error) {
+      console.error('Customer product creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء منتج العميل" });
+    }
+  });
+
   // Locations routes
   app.get("/api/locations", async (req, res) => {
     try {
