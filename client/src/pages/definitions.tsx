@@ -44,8 +44,8 @@ export default function Definitions() {
     name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active'
   });
   const [customerProductForm, setCustomerProductForm] = useState({
-    customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', 
-    customer_product_name_ar: '', specifications: '', price: '', status: 'active'
+    customer_id: 'none', category_id: 'none', item_id: 'none', customer_product_code: '', 
+    size_caption: '', status: 'active'
   });
   const [locationForm, setLocationForm] = useState({
     name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active'
@@ -136,7 +136,7 @@ export default function Definitions() {
     setSectionForm({ name: '', name_ar: '', description: '' });
     setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '' });
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
-    setCustomerProductForm({ customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
+    setCustomerProductForm({ customer_id: 'none', category_id: 'none', item_id: 'none', customer_product_code: '', size_caption: '', status: 'active' });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
     setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active' });
@@ -195,13 +195,11 @@ export default function Definitions() {
       });
     } else if (type === 'customer-product') {
       setCustomerProductForm({
-        customer_id: item.customer_id || '',
-        category_id: item.category_id ? item.category_id.toString() : '',
+        customer_id: item.customer_id || 'none',
+        category_id: item.category_id ? item.category_id.toString() : 'none',
+        item_id: item.item_id ? item.item_id.toString() : 'none',
         customer_product_code: item.customer_product_code || '',
-        customer_product_name: item.customer_product_name || '',
-        customer_product_name_ar: item.customer_product_name_ar || '',
-        specifications: item.specifications || '',
-        price: item.price ? item.price.toString() : '',
+        size_caption: item.size_caption || '',
         status: item.status || 'active',
       });
     } else if (type === 'location') {
@@ -331,7 +329,12 @@ export default function Definitions() {
           break;
         case 'customer-products':
           endpoint = '/api/customer-products';
-          data = customerProductForm;
+          data = {
+            ...customerProductForm,
+            customer_id: customerProductForm.customer_id === 'none' ? null : customerProductForm.customer_id,
+            category_id: customerProductForm.category_id === 'none' ? null : customerProductForm.category_id,
+            item_id: customerProductForm.item_id === 'none' ? null : customerProductForm.item_id
+          };
           break;
         case 'locations':
           endpoint = '/api/locations';
@@ -639,6 +642,11 @@ export default function Definitions() {
     </div>
   );
 
+  // Filter items based on selected category
+  const filteredItems = Array.isArray(items) && customerProductForm.category_id !== 'none'
+    ? items.filter((item: any) => item.category_id === customerProductForm.category_id)
+    : [];
+
   const renderCustomerProductForm = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -648,6 +656,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر العميل" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="none">اختر العميل</SelectItem>
             {Array.isArray(customers) && customers.map((customer: any) => (
               <SelectItem key={customer.id} value={customer.id.toString()}>
                 {customer.name_ar || customer.name}
@@ -657,15 +666,43 @@ export default function Definitions() {
         </Select>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="category_id">المجموعة</Label>
-        <Select value={customerProductForm.category_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, category_id: value }))}>
+        <Label htmlFor="category_id">مجموعة المواد</Label>
+        <Select 
+          value={customerProductForm.category_id} 
+          onValueChange={(value) => setCustomerProductForm(prev => ({ 
+            ...prev, 
+            category_id: value,
+            item_id: 'none' // Reset item selection when category changes
+          }))}
+        >
           <SelectTrigger>
-            <SelectValue placeholder="اختر المجموعة" />
+            <SelectValue placeholder="اختر مجموعة المواد" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="none">اختر مجموعة المواد</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="item_id">الصنف</Label>
+        <Select 
+          value={customerProductForm.item_id} 
+          onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, item_id: value }))}
+          disabled={customerProductForm.category_id === 'none'}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder={customerProductForm.category_id === 'none' ? "اختر مجموعة المواد أولاً" : "اختر الصنف"} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">اختر الصنف</SelectItem>
+            {filteredItems.map((item: any) => (
+              <SelectItem key={item.id} value={item.id.toString()}>
+                {item.name_ar || item.name} ({item.code})
               </SelectItem>
             ))}
           </SelectContent>
@@ -681,40 +718,12 @@ export default function Definitions() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="customer_product_name">اسم المنتج (إنجليزي)</Label>
+        <Label htmlFor="size_caption">مقاس المنتج</Label>
         <Input
-          id="customer_product_name"
-          value={customerProductForm.customer_product_name}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name: e.target.value }))}
-          placeholder="اسم المنتج"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="customer_product_name_ar">اسم المنتج (عربي)</Label>
-        <Input
-          id="customer_product_name_ar"
-          value={customerProductForm.customer_product_name_ar}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_name_ar: e.target.value }))}
-          placeholder="اسم المنتج بالعربية"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="price">السعر</Label>
-        <Input
-          id="price"
-          type="number"
-          value={customerProductForm.price}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, price: e.target.value }))}
-          placeholder="السعر"
-        />
-      </div>
-      <div className="space-y-2 md:col-span-2">
-        <Label htmlFor="specifications">المواصفات</Label>
-        <Input
-          id="specifications"
-          value={customerProductForm.specifications}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, specifications: e.target.value }))}
-          placeholder="مواصفات المنتج"
+          id="size_caption"
+          value={customerProductForm.size_caption || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
+          placeholder="مقاس المنتج"
         />
       </div>
       <div className="space-y-2">
@@ -1441,8 +1450,8 @@ export default function Definitions() {
                           <tr>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">كود المنتج</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المنتج</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">السعر</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المقاس</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
@@ -1454,16 +1463,22 @@ export default function Definitions() {
                               filteredCP.map((cp) => (
                                 <tr key={cp.id} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {cp.customer_id}
+                                    {(() => {
+                                      const customer = Array.isArray(customers) && customers.find((c: any) => c.id === cp.customer_id);
+                                      return customer ? (customer.name_ar || customer.name) : cp.customer_id;
+                                    })()}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.customer_product_code || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.customer_product_name_ar || cp.customer_product_name}
+                                    {(() => {
+                                      const item = Array.isArray(items) && items.find((i: any) => i.id === cp.item_id);
+                                      return item ? (item.name_ar || item.name) : cp.item_id;
+                                    })()}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.price || '-'}
+                                    {cp.size_caption || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <Badge variant={cp.status === 'active' ? 'default' : 'secondary'}>
