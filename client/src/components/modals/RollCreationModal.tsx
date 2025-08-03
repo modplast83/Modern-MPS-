@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -122,6 +123,9 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>إنشاء رول جديد</DialogTitle>
+          <DialogDescription>
+            إضافة رول جديد إلى أمر التشغيل المحدد
+          </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
