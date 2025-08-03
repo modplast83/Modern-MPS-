@@ -44,8 +44,29 @@ export default function Definitions() {
     name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active'
   });
   const [customerProductForm, setCustomerProductForm] = useState({
-    customer_id: 'none', category_id: 'none', item_id: 'none', customer_product_code: '', 
-    size_caption: '', status: 'active'
+    customer_id: 'none', 
+    category_id: 'none', 
+    item_id: 'none', 
+    size_caption: '', 
+    width: '', 
+    left_facing: '', 
+    right_facing: '', 
+    thickness: '', 
+    printing_cylinder: '', 
+    length_cm: '', 
+    cutting_length_cm: '', 
+    raw_material: '', 
+    master_batch_id: '', 
+    is_printed: false, 
+    cutting_unit: '', 
+    punching: '', 
+    unit_weight_kg: '', 
+    unit_quantity: '', 
+    package_weight_kg: '', 
+    cliche_front_design: '', 
+    cliche_back_design: '', 
+    notes: '', 
+    status: 'active'
   });
   const [locationForm, setLocationForm] = useState({
     name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active'
@@ -136,7 +157,31 @@ export default function Definitions() {
     setSectionForm({ name: '', name_ar: '', description: '' });
     setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '' });
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
-    setCustomerProductForm({ customer_id: 'none', category_id: 'none', item_id: 'none', customer_product_code: '', size_caption: '', status: 'active' });
+    setCustomerProductForm({ 
+      customer_id: 'none', 
+      category_id: 'none', 
+      item_id: 'none', 
+      size_caption: '', 
+      width: '', 
+      left_facing: '', 
+      right_facing: '', 
+      thickness: '', 
+      printing_cylinder: '', 
+      length_cm: '', 
+      cutting_length_cm: '', 
+      raw_material: '', 
+      master_batch_id: '', 
+      is_printed: false, 
+      cutting_unit: '', 
+      punching: '', 
+      unit_weight_kg: '', 
+      unit_quantity: '', 
+      package_weight_kg: '', 
+      cliche_front_design: '', 
+      cliche_back_design: '', 
+      notes: '', 
+      status: 'active' 
+    });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
     setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active' });
@@ -198,8 +243,25 @@ export default function Definitions() {
         customer_id: item.customer_id || 'none',
         category_id: item.category_id ? item.category_id.toString() : 'none',
         item_id: item.item_id ? item.item_id.toString() : 'none',
-        customer_product_code: item.customer_product_code || '',
         size_caption: item.size_caption || '',
+        width: item.width?.toString() || '',
+        left_facing: item.left_facing?.toString() || '',
+        right_facing: item.right_facing?.toString() || '',
+        thickness: item.thickness?.toString() || '',
+        printing_cylinder: item.printing_cylinder || '',
+        length_cm: item.length_cm?.toString() || '',
+        cutting_length_cm: item.cutting_length_cm?.toString() || '',
+        raw_material: item.raw_material || '',
+        master_batch_id: item.master_batch_id || '',
+        is_printed: item.is_printed || false,
+        cutting_unit: item.cutting_unit || '',
+        punching: item.punching || '',
+        unit_weight_kg: item.unit_weight_kg?.toString() || '',
+        unit_quantity: item.unit_quantity?.toString() || '',
+        package_weight_kg: item.package_weight_kg?.toString() || '',
+        cliche_front_design: item.cliche_front_design || '',
+        cliche_back_design: item.cliche_back_design || '',
+        notes: item.notes || '',
         status: item.status || 'active',
       });
     } else if (type === 'location') {
@@ -333,7 +395,16 @@ export default function Definitions() {
             ...customerProductForm,
             customer_id: customerProductForm.customer_id === 'none' ? null : customerProductForm.customer_id,
             category_id: customerProductForm.category_id === 'none' ? null : customerProductForm.category_id,
-            item_id: customerProductForm.item_id === 'none' ? null : customerProductForm.item_id
+            item_id: customerProductForm.item_id === 'none' ? null : customerProductForm.item_id,
+            width: customerProductForm.width ? parseFloat(customerProductForm.width) : null,
+            left_facing: customerProductForm.left_facing ? parseFloat(customerProductForm.left_facing) : null,
+            right_facing: customerProductForm.right_facing ? parseFloat(customerProductForm.right_facing) : null,
+            thickness: customerProductForm.thickness ? parseFloat(customerProductForm.thickness) : null,
+            length_cm: customerProductForm.length_cm ? parseFloat(customerProductForm.length_cm) : null,
+            cutting_length_cm: customerProductForm.cutting_length_cm ? parseInt(customerProductForm.cutting_length_cm) : null,
+            unit_weight_kg: customerProductForm.unit_weight_kg ? parseFloat(customerProductForm.unit_weight_kg) : null,
+            unit_quantity: customerProductForm.unit_quantity ? parseInt(customerProductForm.unit_quantity) : null,
+            package_weight_kg: customerProductForm.package_weight_kg ? parseFloat(customerProductForm.package_weight_kg) : null
           };
           break;
         case 'locations':
@@ -648,9 +719,10 @@ export default function Definitions() {
     : [];
 
   const renderCustomerProductForm = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[70vh] overflow-y-auto">
+      {/* اسم العميل */}
       <div className="space-y-2">
-        <Label htmlFor="customer_id">العميل</Label>
+        <Label htmlFor="customer_id">العميل *</Label>
         <Select value={customerProductForm.customer_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, customer_id: value }))}>
           <SelectTrigger>
             <SelectValue placeholder="اختر العميل" />
@@ -665,14 +737,16 @@ export default function Definitions() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* مجموعة المواد */}
       <div className="space-y-2">
-        <Label htmlFor="category_id">مجموعة المواد</Label>
+        <Label htmlFor="category_id">مجموعة المواد *</Label>
         <Select 
           value={customerProductForm.category_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ 
             ...prev, 
             category_id: value,
-            item_id: 'none' // Reset item selection when category changes
+            item_id: 'none'
           }))}
         >
           <SelectTrigger>
@@ -688,8 +762,10 @@ export default function Definitions() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* الصنف */}
       <div className="space-y-2">
-        <Label htmlFor="item_id">الصنف</Label>
+        <Label htmlFor="item_id">الصنف *</Label>
         <Select 
           value={customerProductForm.item_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, item_id: value }))}
@@ -708,24 +784,294 @@ export default function Definitions() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="customer_product_code">كود المنتج عند العميل</Label>
-        <Input
-          id="customer_product_code"
-          value={customerProductForm.customer_product_code}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, customer_product_code: e.target.value }))}
-          placeholder="كود المنتج"
-        />
-      </div>
+
+      {/* مقاس المنتج */}
       <div className="space-y-2">
         <Label htmlFor="size_caption">مقاس المنتج</Label>
         <Input
           id="size_caption"
           value={customerProductForm.size_caption || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
-          placeholder="مقاس المنتج"
+          placeholder="مثال: 20x30 cm"
         />
       </div>
+
+      {/* العرض */}
+      <div className="space-y-2">
+        <Label htmlFor="width">العرض (سم)</Label>
+        <Input
+          id="width"
+          type="number"
+          step="0.01"
+          value={customerProductForm.width || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, width: e.target.value }))}
+          placeholder="العرض بالسنتيمتر"
+        />
+      </div>
+
+      {/* Left Facing */}
+      <div className="space-y-2">
+        <Label htmlFor="left_facing">Left Facing (سم)</Label>
+        <Input
+          id="left_facing"
+          type="number"
+          step="0.01"
+          value={customerProductForm.left_facing || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, left_facing: e.target.value }))}
+          placeholder="Left Facing"
+        />
+      </div>
+
+      {/* Right Facing */}
+      <div className="space-y-2">
+        <Label htmlFor="right_facing">Right Facing (سم)</Label>
+        <Input
+          id="right_facing"
+          type="number"
+          step="0.01"
+          value={customerProductForm.right_facing || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, right_facing: e.target.value }))}
+          placeholder="Right Facing"
+        />
+      </div>
+
+      {/* السماكة */}
+      <div className="space-y-2">
+        <Label htmlFor="thickness">السماكة (مم)</Label>
+        <Input
+          id="thickness"
+          type="number"
+          step="0.001"
+          value={customerProductForm.thickness || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, thickness: e.target.value }))}
+          placeholder="السماكة بالمليمتر"
+        />
+      </div>
+
+      {/* أسطوانة الطباعة */}
+      <div className="space-y-2">
+        <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
+        <Select value={customerProductForm.printing_cylinder} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, printing_cylinder: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر أسطوانة الطباعة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="8">8"</SelectItem>
+            <SelectItem value="10">10"</SelectItem>
+            <SelectItem value="12">12"</SelectItem>
+            <SelectItem value="14">14"</SelectItem>
+            <SelectItem value="16">16"</SelectItem>
+            <SelectItem value="18">18"</SelectItem>
+            <SelectItem value="20">20"</SelectItem>
+            <SelectItem value="22">22"</SelectItem>
+            <SelectItem value="24">24"</SelectItem>
+            <SelectItem value="26">26"</SelectItem>
+            <SelectItem value="28">28"</SelectItem>
+            <SelectItem value="30">30"</SelectItem>
+            <SelectItem value="32">32"</SelectItem>
+            <SelectItem value="34">34"</SelectItem>
+            <SelectItem value="36">36"</SelectItem>
+            <SelectItem value="38">38"</SelectItem>
+            <SelectItem value="39">39"</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* الطول (سم) - محسوب تلقائياً */}
+      <div className="space-y-2">
+        <Label htmlFor="length_cm">الطول (سم) - محسوب تلقائياً</Label>
+        <Input
+          id="length_cm"
+          type="number"
+          step="0.01"
+          value={customerProductForm.length_cm || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, length_cm: e.target.value }))}
+          placeholder="يحسب تلقائياً"
+          className="bg-gray-50"
+        />
+      </div>
+
+      {/* طول القطع */}
+      <div className="space-y-2">
+        <Label htmlFor="cutting_length_cm">طول القطع (سم) *</Label>
+        <Input
+          id="cutting_length_cm"
+          type="number"
+          value={customerProductForm.cutting_length_cm || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, cutting_length_cm: e.target.value }))}
+          placeholder="طول القطع (أرقام صحيحة فقط)"
+        />
+      </div>
+
+      {/* المادة الخام */}
+      <div className="space-y-2">
+        <Label htmlFor="raw_material">المادة الخام *</Label>
+        <Select value={customerProductForm.raw_material} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, raw_material: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر المادة الخام" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="HDPE">HDPE</SelectItem>
+            <SelectItem value="LDPE">LDPE</SelectItem>
+            <SelectItem value="Regrind">Regrind</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Master Batch */}
+      <div className="space-y-2">
+        <Label htmlFor="master_batch_id">Master Batch *</Label>
+        <Select value={customerProductForm.master_batch_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, master_batch_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر Master Batch" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CLEAR">CLEAR</SelectItem>
+            <SelectItem value="WHITE">WHITE</SelectItem>
+            <SelectItem value="BLACK">BLACK</SelectItem>
+            <SelectItem value="RED">RED</SelectItem>
+            <SelectItem value="BLUE">BLUE</SelectItem>
+            <SelectItem value="GREEN">GREEN</SelectItem>
+            <SelectItem value="YELLOW">YELLOW</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* هل يطبع */}
+      <div className="space-y-2">
+        <Label htmlFor="is_printed">هل يطبع؟</Label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is_printed"
+            checked={customerProductForm.is_printed || false}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, is_printed: e.target.checked }))}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="is_printed" className="text-sm">نعم، يطبع</Label>
+        </div>
+      </div>
+
+      {/* وحدة القطع */}
+      <div className="space-y-2">
+        <Label htmlFor="cutting_unit">وحدة القطع *</Label>
+        <Select value={customerProductForm.cutting_unit} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, cutting_unit: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر وحدة القطع" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="KG">KG</SelectItem>
+            <SelectItem value="ROLL">ROLL</SelectItem>
+            <SelectItem value="PKT">PKT</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* نوع الثقب */}
+      <div className="space-y-2">
+        <Label htmlFor="punching">نوع الثقب</Label>
+        <Select value={customerProductForm.punching} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, punching: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر نوع الثقب" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="NON">NON</SelectItem>
+            <SelectItem value="T-Shirt">T-Shirt</SelectItem>
+            <SelectItem value="T-shirt\Hook">T-shirt\Hook</SelectItem>
+            <SelectItem value="Banana">Banana</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* وزن الوحدة */}
+      <div className="space-y-2">
+        <Label htmlFor="unit_weight_kg">وزن الوحدة (كيلو)</Label>
+        <Input
+          id="unit_weight_kg"
+          type="number"
+          step="0.001"
+          value={customerProductForm.unit_weight_kg || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, unit_weight_kg: e.target.value }))}
+          placeholder="وزن الوحدة بالكيلوجرام"
+        />
+      </div>
+
+      {/* كمية الوحدة */}
+      <div className="space-y-2">
+        <Label htmlFor="unit_quantity">كمية الوحدة</Label>
+        <Input
+          id="unit_quantity"
+          type="number"
+          value={customerProductForm.unit_quantity || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, unit_quantity: e.target.value }))}
+          placeholder="كمية الوحدة"
+        />
+      </div>
+
+      {/* وزن الحزمة - محسوب تلقائياً */}
+      <div className="space-y-2">
+        <Label htmlFor="package_weight_kg">وزن الحزمة (كيلو) - محسوب تلقائياً</Label>
+        <Input
+          id="package_weight_kg"
+          type="number"
+          step="0.01"
+          value={customerProductForm.package_weight_kg || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, package_weight_kg: e.target.value }))}
+          placeholder="يحسب تلقائياً"
+          className="bg-gray-50"
+        />
+      </div>
+
+      {/* تصميم الكليشة الأمامية */}
+      <div className="space-y-2">
+        <Label htmlFor="cliche_front_design">تصميم الكليشة الأمامية</Label>
+        <Input
+          id="cliche_front_design"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              // Here you would typically upload the file and get a URL
+              // For now, we'll just store the file name
+              setCustomerProductForm(prev => ({ ...prev, cliche_front_design: file.name }));
+            }
+          }}
+          className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
+      </div>
+
+      {/* تصميم الكليشة الخلفية */}
+      <div className="space-y-2">
+        <Label htmlFor="cliche_back_design">تصميم الكليشة الخلفية</Label>
+        <Input
+          id="cliche_back_design"
+          type="file"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              // Here you would typically upload the file and get a URL
+              // For now, we'll just store the file name
+              setCustomerProductForm(prev => ({ ...prev, cliche_back_design: file.name }));
+            }
+          }}
+          className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
+      </div>
+
+      {/* ملاحظات */}
+      <div className="space-y-2 md:col-span-2 lg:col-span-3">
+        <Label htmlFor="notes">ملاحظات</Label>
+        <Input
+          id="notes"
+          value={customerProductForm.notes || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="أي ملاحظات إضافية"
+        />
+      </div>
+
+      {/* الحالة */}
       <div className="space-y-2">
         <Label htmlFor="status">الحالة</Label>
         <Select value={customerProductForm.status} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, status: value }))}>
