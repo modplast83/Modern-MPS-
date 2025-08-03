@@ -1066,6 +1066,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DELETE routes for definitions
+  app.delete("/api/customers/:id", async (req, res) => {
+    try {
+      await storage.deleteCustomer(req.params.id);
+      res.json({ message: "تم حذف العميل بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف العميل" });
+    }
+  });
+
+  app.delete("/api/sections/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteSection(id);
+      res.json({ message: "تم حذف القسم بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف القسم" });
+    }
+  });
+
+  app.delete("/api/material-groups/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMaterialGroup(id);
+      res.json({ message: "تم حذف مجموعة المواد بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف مجموعة المواد" });
+    }
+  });
+
+  app.delete("/api/items/:id", async (req, res) => {
+    try {
+      await storage.deleteItem(req.params.id);
+      res.json({ message: "تم حذف الصنف بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف الصنف" });
+    }
+  });
+
+  app.delete("/api/customer-products/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteCustomerProduct(id);
+      res.json({ message: "تم حذف منتج العميل بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف منتج العميل" });
+    }
+  });
+
+  app.delete("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteLocation(id);
+      res.json({ message: "تم حذف الموقع بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف الموقع" });
+    }
+  });
+
+  app.delete("/api/machines/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMachine(id);
+      res.json({ message: "تم حذف الماكينة بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف الماكينة" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteUser(id);
+      res.json({ message: "تم حذف المستخدم بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف المستخدم" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

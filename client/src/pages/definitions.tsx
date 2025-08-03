@@ -38,7 +38,7 @@ export default function Definitions() {
     name: '', name_ar: '', description: ''
   });
   const [materialGroupForm, setMaterialGroupForm] = useState({
-    name: '', name_ar: '', code: '', parent_id: ''
+    name: '', name_ar: '', code: '', parent_id: '', description: ''
   });
   const [itemForm, setItemForm] = useState({
     name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active'
@@ -134,7 +134,7 @@ export default function Definitions() {
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
-    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: '' });
+    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: '', description: '' });
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: '', status: 'active' });
     setCustomerProductForm({ customer_id: '', category_id: '', customer_product_code: '', customer_product_name: '', customer_product_name_ar: '', specifications: '', price: '', status: 'active' });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
@@ -181,6 +181,7 @@ export default function Definitions() {
         name_ar: item.name_ar || '',
         code: item.code || '',
         parent_id: item.parent_id ? item.parent_id.toString() : '',
+        description: item.description || '',
       });
     } else if (type === 'item') {
       setItemForm({
@@ -238,14 +239,55 @@ export default function Definitions() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      await apiRequest('DELETE', `/api/${type}s/${id}`);
+      let endpoint = '';
+      let queryKey = '';
+      
+      switch (type) {
+        case 'customer':
+          endpoint = `/api/customers/${id}`;
+          queryKey = '/api/customers';
+          break;
+        case 'section':
+          endpoint = `/api/sections/${id}`;
+          queryKey = '/api/sections';
+          break;
+        case 'material-group':
+          endpoint = `/api/material-groups/${id}`;
+          queryKey = '/api/material-groups';
+          break;
+        case 'item':
+          endpoint = `/api/items/${id}`;
+          queryKey = '/api/items';
+          break;
+        case 'customer-product':
+          endpoint = `/api/customer-products/${id}`;
+          queryKey = '/api/customer-products';
+          break;
+        case 'location':
+          endpoint = `/api/locations/${id}`;
+          queryKey = '/api/locations';
+          break;
+        case 'machine':
+          endpoint = `/api/machines/${id}`;
+          queryKey = '/api/machines';
+          break;
+        case 'user':
+          endpoint = `/api/users/${id}`;
+          queryKey = '/api/users';
+          break;
+        default:
+          endpoint = `/api/${type}s/${id}`;
+          queryKey = `/api/${type}s`;
+      }
+      
+      await apiRequest('DELETE', endpoint);
       
       toast({
         title: "تم الحذف",
         description: "تم حذف العنصر بنجاح",
       });
       
-      queryClient.invalidateQueries({ queryKey: [`/api/${type}s`] });
+      queryClient.invalidateQueries({ queryKey: [queryKey] });
     } catch (error) {
       toast({
         title: "خطأ",
@@ -492,7 +534,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر المجموعة الأب" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">بدون مجموعة أب</SelectItem>
+            <SelectItem value="">بدون مجموعة أب</SelectItem>
             {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
               <SelectItem key={group.id} value={group.id.toString()}>
                 {group.name_ar || group.name}
@@ -500,6 +542,15 @@ export default function Definitions() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+      <div className="space-y-2 md:col-span-2">
+        <Label htmlFor="description">الوصف</Label>
+        <Input
+          id="description"
+          value={materialGroupForm.description || ''}
+          onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, description: e.target.value }))}
+          placeholder="وصف مجموعة المواد"
+        />
       </div>
     </div>
   );
@@ -1217,7 +1268,7 @@ export default function Definitions() {
                                       <Button 
                                         variant="outline" 
                                         size="sm"
-                                        onClick={() => handleDelete(group.id, 'category')}
+                                        onClick={() => handleDelete(group.id, 'material-group')}
                                       >
                                         <Trash2 className="w-4 h-4" />
                                       </Button>

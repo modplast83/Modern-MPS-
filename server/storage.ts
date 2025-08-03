@@ -255,6 +255,39 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  // Delete methods
+  async deleteMaterialGroup(id: number): Promise<void> {
+    await db.delete(material_groups).where(eq(material_groups.id, id));
+  }
+
+  async deleteSection(id: number): Promise<void> {
+    await db.delete(sections).where(eq(sections.id, id));
+  }
+
+  async deleteItem(id: string): Promise<void> {
+    await db.delete(items).where(eq(items.id, id));
+  }
+
+  async deleteCustomerProduct(id: number): Promise<void> {
+    await db.delete(customer_products).where(eq(customer_products.id, id));
+  }
+
+  async deleteLocation(id: number): Promise<void> {
+    await db.delete(locations).where(eq(locations.id, id));
+  }
+
+  async deleteMachine(id: number): Promise<void> {
+    await db.delete(machines).where(eq(machines.id, id));
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
+  }
+
+  async deleteCustomer(id: string): Promise<void> {
+    await db.delete(customers).where(eq(customers.id, id));
+  }
+
   async getOrders(): Promise<Order[]> {
     return await db.select().from(orders).orderBy(desc(orders.created_at));
   }
