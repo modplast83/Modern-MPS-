@@ -74,7 +74,7 @@ export default function Definitions() {
     staleTime: 0,
   });
   const { data: materialGroups = [], isLoading: materialGroupsLoading } = useQuery({
-    queryKey: ['/api/categories'],
+    queryKey: ['/api/material-groups'],
     staleTime: 0,
   });
   const { data: items = [], isLoading: itemsLoading } = useQuery({
@@ -274,7 +274,7 @@ export default function Definitions() {
           data = sectionForm;
           break;
         case 'material-groups':
-          endpoint = '/api/categories';
+          endpoint = '/api/material-groups';
           data = materialGroupForm;
           break;
         case 'items':
