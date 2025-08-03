@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings } from "lucide-react";
@@ -50,6 +50,9 @@ export default function Definitions() {
   });
   const [userForm, setUserForm] = useState({
     username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active'
+  });
+  const [productForm, setProductForm] = useState({
+    name: '', name_ar: '', code: '', color: '', type: '', status: 'active'
   });
 
   // Data queries
@@ -103,15 +106,15 @@ export default function Definitions() {
   };
 
   // Specific filter functions
-  const getFilteredCustomers = () => filterData(customers, ['name', 'name_ar', 'phone', 'email', 'address']);
-  const getFilteredProducts = () => filterData(products, ['name', 'name_ar', 'code', 'color', 'type']);
-  const getFilteredSections = () => filterData(sections, ['name', 'name_ar', 'description']);
-  const getFilteredMaterialGroups = () => filterData(materialGroups, ['name', 'name_ar', 'code', 'description']);
-  const getFilteredItems = () => filterData(items, ['name', 'name_ar', 'code', 'type', 'unit']);
-  const getFilteredCustomerProducts = () => filterData(customerProducts, ['customer_code', 'customer_name']);
-  const getFilteredLocations = () => filterData(locations, ['name', 'name_ar', 'code', 'description']);
-  const getFilteredMachines = () => filterData(machines, ['name', 'name_ar', 'code', 'type']);
-  const getFilteredUsers = () => filterData(users, ['username', 'name', 'name_ar', 'email', 'role']);
+  const getFilteredCustomers = () => filterData(customers as any[], ['name', 'name_ar', 'phone', 'email', 'address']);
+  const getFilteredProducts = () => filterData(products as any[], ['name', 'name_ar', 'code', 'color', 'type']);
+  const getFilteredSections = () => filterData(sections as any[], ['name', 'name_ar', 'description']);
+  const getFilteredMaterialGroups = () => filterData(materialGroups as any[], ['name', 'name_ar', 'code', 'description']);
+  const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'code', 'type', 'unit']);
+  const getFilteredCustomerProducts = () => filterData(customerProducts as any[], ['customer_code', 'customer_name']);
+  const getFilteredLocations = () => filterData(locations as any[], ['name', 'name_ar', 'code', 'description']);
+  const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'code', 'type']);
+  const getFilteredUsers = () => filterData(users as any[], ['username', 'name', 'name_ar', 'email', 'role']);
 
   // Event handlers
   const resetForm = () => {
@@ -123,6 +126,7 @@ export default function Definitions() {
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
     setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active' });
+    setProductForm({ name: '', name_ar: '', code: '', color: '', type: '', status: 'active' });
     setEditingItem(null);
   };
 
@@ -154,9 +158,7 @@ export default function Definitions() {
     if (!confirm('هل أنت متأكد من حذف هذا العنصر؟')) return;
     
     try {
-      await apiRequest(`/api/${type}s/${id}`, {
-        method: 'DELETE'
-      });
+      await apiRequest(`/api/${type}s/${id}`, 'DELETE');
       
       toast({
         title: "تم الحذف",
@@ -218,17 +220,9 @@ export default function Definitions() {
       }
 
       if (editingItem) {
-        await apiRequest(`${endpoint}/${editingItem.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(data),
-          headers: { 'Content-Type': 'application/json' }
-        });
+        await apiRequest(`${endpoint}/${editingItem.id}`, 'PUT', data);
       } else {
-        await apiRequest(endpoint, {
-          method: 'POST',
-          body: JSON.stringify(data),
-          headers: { 'Content-Type': 'application/json' }
-        });
+        await apiRequest(endpoint, 'POST', data);
       }
 
       toast({
@@ -1199,6 +1193,9 @@ export default function Definitions() {
                        selectedTab === 'users' ? 'إضافة مستخدم جديد' : 'إضافة جديد')
                     }
                   </DialogTitle>
+                  <DialogDescription>
+                    {editingItem ? 'تحديث بيانات العنصر المحدد' : 'إضافة عنصر جديد إلى النظام'}
+                  </DialogDescription>
                 </DialogHeader>
                 <div className="py-4">
                   {selectedTab === 'customers' && renderCustomerForm()}
