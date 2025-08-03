@@ -387,9 +387,23 @@ export class DatabaseStorage implements IStorage {
   // Replaced by createCustomerProduct
 
   async createCustomer(customer: any): Promise<Customer> {
+    // Generate a new customer ID in format CID001, CID002, etc.
+    const existingCustomers = await db.select({ id: customers.id }).from(customers);
+    const customerIds = existingCustomers.map(c => c.id);
+    const maxNumber = customerIds
+      .filter(id => id.startsWith('CID'))
+      .map(id => parseInt(id.substring(3)))
+      .filter(num => !isNaN(num))
+      .reduce((max, num) => Math.max(max, num), 0);
+    
+    const newId = `CID${String(maxNumber + 1).padStart(3, '0')}`;
+    
     const [newCustomer] = await db
       .insert(customers)
-      .values(customer)
+      .values({
+        ...customer,
+        id: newId
+      })
       .returning();
     return newCustomer;
   }
