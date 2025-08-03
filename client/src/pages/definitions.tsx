@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, UserCheck } from "lucide-react";
+import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User } from "lucide-react";
 
 export default function Definitions() {
   const { toast } = useToast();
@@ -1662,7 +1662,7 @@ export default function Definitions() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
-                      <UserCheck className="w-5 h-5" />
+                      <User className="w-5 h-5" />
                       إدارة المستخدمين
                     </CardTitle>
                     <Button onClick={() => { resetForm(); setSelectedTab('users'); setIsDialogOpen(true); }}>
