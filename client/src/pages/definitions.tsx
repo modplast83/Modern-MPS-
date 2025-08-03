@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings } from "lucide-react";
+import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, UserCheck } from "lucide-react";
 
 export default function Definitions() {
   const { toast } = useToast();
@@ -141,15 +141,81 @@ export default function Definitions() {
                  type === 'location' ? 'locations' : 
                  type === 'machine' ? 'machines' : 'users');
     
-    if (type === 'customer') setCustomerForm(item);
-    else if (type === 'product') setProductForm(item);
-    else if (type === 'section') setSectionForm(item);
-    else if (type === 'material-group') setMaterialGroupForm(item);
-    else if (type === 'item') setItemForm(item);
-    else if (type === 'customer-product') setCustomerProductForm(item);
-    else if (type === 'location') setLocationForm(item);
-    else if (type === 'machine') setMachineForm(item);
-    else if (type === 'user') setUserForm(item);
+    // Ensure all fields have string values to prevent null warnings
+    if (type === 'customer') {
+      setCustomerForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        code: item.code || '',
+        user_id: item.user_id || '',
+        plate_drawer_code: item.plate_drawer_code || '',
+        city: item.city || '',
+        address: item.address || '',
+        tax_number: item.tax_number || '',
+        phone: item.phone || '',
+        sales_rep_id: item.sales_rep_id ? item.sales_rep_id.toString() : '',
+      });
+    } else if (type === 'section') {
+      setSectionForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        description: item.description || '',
+      });
+    } else if (type === 'material-group') {
+      setMaterialGroupForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        code: item.code || '',
+        parent_id: item.parent_id ? item.parent_id.toString() : '',
+      });
+    } else if (type === 'item') {
+      setItemForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        code: item.code || '',
+        unit: item.unit || '',
+        unit_ar: item.unit_ar || '',
+        material_group_id: item.material_group_id ? item.material_group_id.toString() : '',
+        status: item.status || 'active',
+      });
+    } else if (type === 'customer-product') {
+      setCustomerProductForm({
+        customer_id: item.customer_id || '',
+        category_id: item.category_id ? item.category_id.toString() : '',
+        customer_product_code: item.customer_product_code || '',
+        customer_product_name: item.customer_product_name || '',
+        customer_product_name_ar: item.customer_product_name_ar || '',
+        specifications: item.specifications || '',
+        price: item.price ? item.price.toString() : '',
+        status: item.status || 'active',
+      });
+    } else if (type === 'location') {
+      setLocationForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        type: item.type || 'city',
+        parent_id: item.parent_id ? item.parent_id.toString() : '',
+        coordinates: item.coordinates || '',
+        status: item.status || 'active',
+      });
+    } else if (type === 'machine') {
+      setMachineForm({
+        name: item.name || '',
+        name_ar: item.name_ar || '',
+        type: item.type || 'extruder',
+        section_id: item.section_id ? item.section_id.toString() : '',
+        status: item.status || 'active',
+      });
+    } else if (type === 'user') {
+      setUserForm({
+        username: item.username || '',
+        display_name: item.display_name || '',
+        display_name_ar: item.display_name_ar || '',
+        role_id: item.role_id ? item.role_id.toString() : '',
+        section_id: item.section_id ? item.section_id.toString() : '',
+        status: item.status || 'active',
+      });
+    }
     
     setIsDialogOpen(true);
   };
@@ -582,6 +648,212 @@ export default function Definitions() {
       <div className="space-y-2">
         <Label htmlFor="status">الحالة</Label>
         <Select value={customerProductForm.status} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderLocationForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={locationForm.name}
+          onChange={(e) => setLocationForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم الموقع"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={locationForm.name_ar}
+          onChange={(e) => setLocationForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم الموقع بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="type">النوع</Label>
+        <Select value={locationForm.type} onValueChange={(value) => setLocationForm(prev => ({ ...prev, type: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر نوع الموقع" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="city">مدينة</SelectItem>
+            <SelectItem value="factory">مصنع</SelectItem>
+            <SelectItem value="warehouse">مستودع</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="parent_id">الموقع الأب</Label>
+        <Select value={locationForm.parent_id} onValueChange={(value) => setLocationForm(prev => ({ ...prev, parent_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الموقع الأب" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">بدون موقع أب</SelectItem>
+            {Array.isArray(locations) && locations.map((location: any) => (
+              <SelectItem key={location.id} value={location.id.toString()}>
+                {location.name_ar || location.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2 md:col-span-2">
+        <Label htmlFor="coordinates">الإحداثيات</Label>
+        <Input
+          id="coordinates"
+          value={locationForm.coordinates}
+          onChange={(e) => setLocationForm(prev => ({ ...prev, coordinates: e.target.value }))}
+          placeholder="الإحداثيات الجغرافية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={locationForm.status} onValueChange={(value) => setLocationForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderMachineForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">الاسم (إنجليزي)</Label>
+        <Input
+          id="name"
+          value={machineForm.name}
+          onChange={(e) => setMachineForm(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="اسم الماكينة"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="name_ar">الاسم (عربي)</Label>
+        <Input
+          id="name_ar"
+          value={machineForm.name_ar}
+          onChange={(e) => setMachineForm(prev => ({ ...prev, name_ar: e.target.value }))}
+          placeholder="اسم الماكينة بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="type">النوع</Label>
+        <Select value={machineForm.type} onValueChange={(value) => setMachineForm(prev => ({ ...prev, type: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر نوع الماكينة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="extruder">بثق</SelectItem>
+            <SelectItem value="printing">طباعة</SelectItem>
+            <SelectItem value="cutting">قطع</SelectItem>
+            <SelectItem value="sealing">لحام</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="section_id">القسم</Label>
+        <Select value={machineForm.section_id} onValueChange={(value) => setMachineForm(prev => ({ ...prev, section_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر القسم" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(sections) && sections.map((section: any) => (
+              <SelectItem key={section.id} value={section.id.toString()}>
+                {section.name_ar || section.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={machineForm.status} onValueChange={(value) => setMachineForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="operational">تشغيل</SelectItem>
+            <SelectItem value="maintenance">صيانة</SelectItem>
+            <SelectItem value="down">متوقف</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+
+  const renderUserForm = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="username">اسم المستخدم</Label>
+        <Input
+          id="username"
+          value={userForm.username}
+          onChange={(e) => setUserForm(prev => ({ ...prev, username: e.target.value }))}
+          placeholder="اسم المستخدم"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="display_name">الاسم المعروض (إنجليزي)</Label>
+        <Input
+          id="display_name"
+          value={userForm.display_name}
+          onChange={(e) => setUserForm(prev => ({ ...prev, display_name: e.target.value }))}
+          placeholder="الاسم المعروض"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="display_name_ar">الاسم المعروض (عربي)</Label>
+        <Input
+          id="display_name_ar"
+          value={userForm.display_name_ar}
+          onChange={(e) => setUserForm(prev => ({ ...prev, display_name_ar: e.target.value }))}
+          placeholder="الاسم المعروض بالعربية"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="role_id">الدور</Label>
+        <Input
+          id="role_id"
+          value={userForm.role_id}
+          onChange={(e) => setUserForm(prev => ({ ...prev, role_id: e.target.value }))}
+          placeholder="معرف الدور"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="section_id">القسم</Label>
+        <Select value={userForm.section_id} onValueChange={(value) => setUserForm(prev => ({ ...prev, section_id: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر القسم" />
+          </SelectTrigger>
+          <SelectContent>
+            {Array.isArray(sections) && sections.map((section: any) => (
+              <SelectItem key={section.id} value={section.id.toString()}>
+                {section.name_ar || section.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={userForm.status} onValueChange={(value) => setUserForm(prev => ({ ...prev, status: value }))}>
           <SelectTrigger>
             <SelectValue placeholder="اختر الحالة" />
           </SelectTrigger>
@@ -1168,6 +1440,310 @@ export default function Definitions() {
               </Card>
             </TabsContent>
 
+            {/* Locations Tab */}
+            <TabsContent value="locations" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      إدارة المواقع
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('locations'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة موقع
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {locationsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع الأب</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredLocations = getFilteredLocations();
+                            return filteredLocations.length > 0 ? (
+                              filteredLocations.map((location) => (
+                                <tr key={location.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {location.name_ar || location.name}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {location.type === 'city' ? 'مدينة' : 
+                                     location.type === 'factory' ? 'مصنع' : 
+                                     location.type === 'warehouse' ? 'مستودع' : location.type}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {location.parent_id || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={location.status === 'active' ? 'default' : 'secondary'}>
+                                      {location.status === 'active' ? 'نشط' : 'غير نشط'}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(location, 'location')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(location.id, 'location')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(location)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Machines Tab */}
+            <TabsContent value="machines" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="w-5 h-5" />
+                      إدارة الماكينات
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('machines'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة ماكينة
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {machinesLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredMachines = getFilteredMachines();
+                            return filteredMachines.length > 0 ? (
+                              filteredMachines.map((machine) => (
+                                <tr key={machine.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {machine.name_ar || machine.name}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {machine.type === 'extruder' ? 'بثق' : 
+                                     machine.type === 'printing' ? 'طباعة' : 
+                                     machine.type === 'cutting' ? 'قطع' : machine.type}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {machine.section_id || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={machine.status === 'operational' ? 'default' : 'secondary'}>
+                                      {machine.status === 'operational' ? 'تشغيل' : 
+                                       machine.status === 'maintenance' ? 'صيانة' : 
+                                       machine.status === 'down' ? 'متوقف' : machine.status}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(machine, 'machine')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(machine.id, 'machine')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(machine)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Users Tab */}
+            <TabsContent value="users" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCheck className="w-5 h-5" />
+                      إدارة المستخدمين
+                    </CardTitle>
+                    <Button onClick={() => { resetForm(); setSelectedTab('users'); setIsDialogOpen(true); }}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      إضافة مستخدم
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {usersLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم المعروض</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الدور</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {(() => {
+                            const filteredUsers = getFilteredUsers();
+                            return filteredUsers.length > 0 ? (
+                              filteredUsers.map((user) => (
+                                <tr key={user.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {user.username}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {user.display_name_ar || user.display_name || user.username}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {user.role_id || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {user.section_id || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                                      {user.status === 'active' ? 'نشط' : 'غير نشط'}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-2">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(user, 'user')}
+                                      >
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleDelete(user.id, 'user')}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrint(user)}
+                                      >
+                                        <Printer className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                  {quickSearch || statusFilter !== "all" ? 
+                                    "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                    "لا توجد بيانات متاحة"}
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* Add Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -1203,6 +1779,9 @@ export default function Definitions() {
                   {selectedTab === 'material-groups' && renderMaterialGroupForm()}
                   {selectedTab === 'items' && renderItemForm()}
                   {selectedTab === 'customer-products' && renderCustomerProductForm()}
+                  {selectedTab === 'locations' && renderLocationForm()}
+                  {selectedTab === 'machines' && renderMachineForm()}
+                  {selectedTab === 'users' && renderUserForm()}
                 </div>
                 <div className="flex justify-end gap-2 mt-6">
                   <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
