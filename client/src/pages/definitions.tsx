@@ -98,6 +98,10 @@ export default function Definitions() {
     queryKey: ['/api/material-groups'],
     staleTime: 0,
   });
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['/api/categories'],
+    staleTime: 0,
+  });
   const { data: items = [], isLoading: itemsLoading } = useQuery({
     queryKey: ['/api/items'],
     staleTime: 0,
@@ -241,7 +245,7 @@ export default function Definitions() {
     } else if (type === 'customer-product') {
       setCustomerProductForm({
         customer_id: item.customer_id || 'none',
-        category_id: item.category_id ? item.category_id.toString() : 'none',
+        category_id: item.category_id || 'none',
         item_id: item.item_id ? item.item_id.toString() : 'none',
         size_caption: item.size_caption || '',
         width: item.width?.toString() || '',
@@ -738,9 +742,9 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* مجموعة المواد */}
+      {/* فئة المنتج */}
       <div className="space-y-2">
-        <Label htmlFor="category_id">مجموعة المواد *</Label>
+        <Label htmlFor="category_id">فئة المنتج *</Label>
         <Select 
           value={customerProductForm.category_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ 
@@ -750,13 +754,13 @@ export default function Definitions() {
           }))}
         >
           <SelectTrigger>
-            <SelectValue placeholder="اختر مجموعة المواد" />
+            <SelectValue placeholder="اختر فئة المنتج" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">اختر مجموعة المواد</SelectItem>
-            {Array.isArray(materialGroups) && materialGroups.map((group: any) => (
-              <SelectItem key={group.id} value={group.id.toString()}>
-                {group.name_ar || group.name}
+            <SelectItem value="none">اختر فئة المنتج</SelectItem>
+            {Array.isArray(categories) && categories.map((category: any) => (
+              <SelectItem key={category.id} value={category.id}>
+                {category.name_ar || category.name}
               </SelectItem>
             ))}
           </SelectContent>
