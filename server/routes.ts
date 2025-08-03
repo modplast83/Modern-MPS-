@@ -12,7 +12,9 @@ import {
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
-const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true });
+const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true }).extend({
+  sales_rep_id: createInsertSchema(customers).shape.sales_rep_id.optional()
+});
 const insertCustomerProductSchema = createInsertSchema(customer_products).omit({ id: true, created_at: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
@@ -288,11 +290,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customers routes  
   app.post("/api/customers", async (req, res) => {
     try {
+      console.log('Received customer data:', req.body);
       const validatedData = insertCustomerSchema.parse(req.body);
+      console.log('Validated customer data:', validatedData);
       const customer = await storage.createCustomer(validatedData);
       res.json(customer);
     } catch (error) {
-      res.status(400).json({ message: "بيانات غير صحيحة" });
+      console.error('Customer creation error:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+      }
+      res.status(400).json({ message: "بيانات غير صحيحة", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
