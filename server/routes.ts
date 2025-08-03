@@ -13,7 +13,11 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 
 const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true }).extend({
-  sales_rep_id: createInsertSchema(customers).shape.sales_rep_id.optional()
+  sales_rep_id: createInsertSchema(customers).shape.sales_rep_id.optional().transform(val => {
+    if (val === '' || val === null || val === undefined) return null;
+    const num = parseInt(val as string);
+    return isNaN(num) ? null : num;
+  })
 });
 const insertCustomerProductSchema = createInsertSchema(customer_products).omit({ id: true, created_at: true });
 import { openaiService } from "./services/openai";
