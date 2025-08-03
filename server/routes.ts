@@ -12,9 +12,12 @@ import {
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
+import { z } from "zod";
+
 const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true }).extend({
-  sales_rep_id: createInsertSchema(customers).shape.sales_rep_id.optional().transform(val => {
+  sales_rep_id: z.union([z.string(), z.number(), z.null()]).optional().transform(val => {
     if (val === '' || val === null || val === undefined) return null;
+    if (typeof val === 'number') return val;
     const num = parseInt(val as string);
     return isNaN(num) ? null : num;
   })
