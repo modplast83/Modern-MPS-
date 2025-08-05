@@ -111,6 +111,7 @@ export interface IStorage {
   createMachine(machine: any): Promise<Machine>;
   createSection(section: any): Promise<Section>;
   createMaterialGroup(materialGroup: any): Promise<MaterialGroup>;
+  updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup>;
   createItem(item: any): Promise<Item>;
   createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
   createLocation(location: any): Promise<Location>;
@@ -463,6 +464,15 @@ export class DatabaseStorage implements IStorage {
       .values(materialGroup)
       .returning();
     return newMaterialGroup;
+  }
+
+  async updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup> {
+    const [updatedMaterialGroup] = await db
+      .update(material_groups)
+      .set(materialGroup)
+      .where(eq(material_groups.id, id))
+      .returning();
+    return updatedMaterialGroup;
   }
 
   async createItem(item: any): Promise<Item> {

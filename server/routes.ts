@@ -823,6 +823,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/material-groups/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const materialGroup = await storage.updateMaterialGroup(id, req.body);
+      res.json(materialGroup);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث مجموعة المواد" });
+    }
+  });
+
   // Items routes
   app.post("/api/items", async (req, res) => {
     try {
