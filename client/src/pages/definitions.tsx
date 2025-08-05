@@ -38,7 +38,7 @@ export default function Definitions() {
     name: '', name_ar: '', description: ''
   });
   const [materialGroupForm, setMaterialGroupForm] = useState({
-    name: '', name_ar: '', code: '', parent_id: 'none', description: ''
+    name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active'
   });
   const [itemForm, setItemForm] = useState({
     name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active'
@@ -159,7 +159,7 @@ export default function Definitions() {
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
-    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '' });
+    setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active' });
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
     setCustomerProductForm({ 
       customer_id: 'none', 
@@ -231,6 +231,7 @@ export default function Definitions() {
         code: item.code || '',
         parent_id: item.parent_id ? item.parent_id.toString() : 'none',
         description: item.description || '',
+        status: item.status || 'active',
       });
     } else if (type === 'item') {
       setItemForm({
@@ -627,7 +628,7 @@ export default function Definitions() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2 md:col-span-2">
+      <div className="space-y-2 md:col-span-1">
         <Label htmlFor="description">الوصف</Label>
         <Input
           id="description"
@@ -635,6 +636,18 @@ export default function Definitions() {
           onChange={(e) => setMaterialGroupForm(prev => ({ ...prev, description: e.target.value }))}
           placeholder="وصف مجموعة المواد"
         />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="status">الحالة</Label>
+        <Select value={materialGroupForm.status || 'active'} onValueChange={(value) => setMaterialGroupForm(prev => ({ ...prev, status: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الحالة" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">نشط</SelectItem>
+            <SelectItem value="inactive">غير نشط</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );
@@ -1601,9 +1614,13 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المجموعة الأب</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإنشاء</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
@@ -1614,13 +1631,27 @@ export default function Definitions() {
                               filteredGroups.map((group) => (
                                 <tr key={group.id} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {group.name_ar || group.name}
+                                    {group.id}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {group.name_ar || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {group.name || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {group.code || '-'}
                                   </td>
+                                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                                    {group.description || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap">
+                                    <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
+                                      {group.status === 'active' ? 'نشط' : 'غير نشط'}
+                                    </Badge>
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {group.parent_id ? 'فرعية' : 'رئيسية'}
+                                    {group.created_at ? new Date(group.created_at).toLocaleDateString('ar-SA') : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
@@ -1651,7 +1682,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
