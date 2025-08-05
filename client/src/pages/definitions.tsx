@@ -717,9 +717,9 @@ export default function Definitions() {
     </div>
   );
 
-  // Filter items based on selected category
+  // Filter items based on selected material group
   const filteredItems = Array.isArray(items) && customerProductForm.category_id !== 'none'
-    ? items.filter((item: any) => item.category_id === customerProductForm.category_id)
+    ? items.filter((item: any) => item.category_id && item.category_id.toString() === customerProductForm.category_id)
     : [];
 
   const renderCustomerProductForm = () => (
@@ -742,9 +742,9 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* فئة المنتج */}
+      {/* مجموعة المواد */}
       <div className="space-y-2">
-        <Label htmlFor="category_id">فئة المنتج *</Label>
+        <Label htmlFor="category_id">مجموعة المواد *</Label>
         <Select 
           value={customerProductForm.category_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ 
@@ -754,13 +754,13 @@ export default function Definitions() {
           }))}
         >
           <SelectTrigger>
-            <SelectValue placeholder="اختر فئة المنتج" />
+            <SelectValue placeholder="اختر مجموعة المواد" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">اختر فئة المنتج</SelectItem>
-            {Array.isArray(categories) && categories.length > 0 && categories.map((category: any) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name_ar || category.name}
+            <SelectItem value="none">اختر مجموعة المواد</SelectItem>
+            {Array.isArray(materialGroups) && materialGroups.length > 0 && materialGroups.map((group: any) => (
+              <SelectItem key={group.id} value={group.id.toString()}>
+                {group.name_ar || group.name}
               </SelectItem>
             ))}
           </SelectContent>
