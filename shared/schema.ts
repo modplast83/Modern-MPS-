@@ -171,14 +171,12 @@ export const violations = pgTable('violations', {
 
 // 📦 جدول الأصناف والمواد
 export const items = pgTable('items', {
-  id: varchar('id', { length: 20 }).primaryKey(), // Changed to varchar to match ITM001 format
-  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
-  name: varchar('name', { length: 100 }).notNull(),
-  full_name: varchar('full_name', { length: 100 }),
+  id: varchar('id', { length: 20 }).primaryKey(),
+  category_id: varchar('category_id', { length: 20 }),
+  name: varchar('name', { length: 100 }),
   name_ar: varchar('name_ar', { length: 100 }),
-  unit: varchar('unit', { length: 20 }),
-  type: varchar('type', { length: 50 }), // raw / final
-  price: decimal('price', { precision: 10, scale: 2 }),
+  code: varchar('code', { length: 50 }),
+  status: varchar('status', { length: 20 }).default('active'),
 });
 
 // 🌍 جدول المواقع الجغرافية
@@ -422,7 +420,7 @@ export const company_profile = pgTable('company_profile', {
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
   customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  material_group_id: integer('material_group_id').references(() => material_groups.id),
+  category_id: integer('category_id').references(() => material_groups.id),
   item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   size_caption: varchar('size_caption', { length: 50 }),
   width: decimal('width', { precision: 8, scale: 2 }),
@@ -517,7 +515,7 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
 
 export const customerProductsRelations = relations(customer_products, ({ one, many }) => ({
   customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
-  materialGroup: one(material_groups, { fields: [customer_products.material_group_id], references: [material_groups.id] }),
+  materialGroup: one(material_groups, { fields: [customer_products.category_id], references: [material_groups.id] }),
   item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
   jobOrders: many(job_orders),
 }));
