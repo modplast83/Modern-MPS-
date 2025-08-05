@@ -1813,12 +1813,20 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">كود المنتج</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المقاس</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مجموعة المواد</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مقاس المنتج</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">أسطوانة الطباعة</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">السماكة (مم)</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">طول القطع (سم)</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">Master Batch</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الثقب</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن الوحدة (كيلو)</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">كمية الوحدة</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن الحزمة (كيلو)</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -1827,51 +1835,76 @@ export default function Definitions() {
                             return filteredCP.length > 0 ? (
                               filteredCP.map((cp) => (
                                 <tr key={cp.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {(() => {
                                       const customer = Array.isArray(customers) && customers.find((c: any) => c.id === cp.customer_id);
                                       return customer ? (customer.name_ar || customer.name) : cp.customer_id;
                                     })()}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.customer_product_code || '-'}
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {(() => {
+                                      const materialGroup = Array.isArray(materialGroups) && materialGroups.find((mg: any) => mg.id === cp.material_group_id);
+                                      return materialGroup ? (materialGroup.name_ar || materialGroup.name) : cp.material_group_id || '-';
+                                    })()}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {(() => {
                                       const item = Array.isArray(items) && items.find((i: any) => i.id === cp.item_id);
                                       return item ? (item.name_ar || item.name) : cp.item_id;
                                     })()}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.size_caption || '-'}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge variant={cp.status === 'active' ? 'default' : 'secondary'}>
-                                      {cp.status === 'active' ? 'نشط' : 'غير نشط'}
-                                    </Badge>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.printing_cylinder ? `${cp.printing_cylinder}"` : '-'}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.thickness || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.cutting_length_cm || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.raw_material || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.master_batch_id || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.punching || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.unit_weight_kg || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.unit_quantity || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {cp.package_weight_kg || '-'}
+                                  </td>
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div className="flex items-center gap-1">
                                       <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => handleEdit(cp, 'customer-product')}
                                       >
-                                        <Edit className="w-4 h-4" />
+                                        <Edit className="w-3 h-3" />
                                       </Button>
                                       <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => handleDelete(cp.id, 'customer-product')}
                                       >
-                                        <Trash2 className="w-4 h-4" />
+                                        <Trash2 className="w-3 h-3" />
                                       </Button>
                                       <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => handlePrint(cp)}
                                       >
-                                        <Printer className="w-4 h-4" />
+                                        <Printer className="w-3 h-3" />
                                       </Button>
                                     </div>
                                   </td>
@@ -1879,7 +1912,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={14} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
