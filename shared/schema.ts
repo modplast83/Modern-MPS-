@@ -420,7 +420,7 @@ export const company_profile = pgTable('company_profile', {
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
   customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  category_id: integer('category_id').references(() => material_groups.id),
+  material_group_id: integer('material_group_id').references(() => material_groups.id),
   item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   size_caption: varchar('size_caption', { length: 50 }),
   width: decimal('width', { precision: 8, scale: 2 }),
@@ -515,7 +515,7 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
 
 export const customerProductsRelations = relations(customer_products, ({ one, many }) => ({
   customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
-  materialGroup: one(material_groups, { fields: [customer_products.category_id], references: [material_groups.id] }),
+  materialGroup: one(material_groups, { fields: [customer_products.material_group_id], references: [material_groups.id] }),
   item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
   jobOrders: many(job_orders),
 }));
