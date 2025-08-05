@@ -45,7 +45,7 @@ export default function Definitions() {
   });
   const [customerProductForm, setCustomerProductForm] = useState({
     customer_id: 'none', 
-    category_id: 'none', 
+    material_group_id: 'none', 
     item_id: 'none', 
     size_caption: '', 
     width: '', 
@@ -163,7 +163,7 @@ export default function Definitions() {
     setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
     setCustomerProductForm({ 
       customer_id: 'none', 
-      category_id: 'none', 
+      material_group_id: 'none', 
       item_id: 'none', 
       size_caption: '', 
       width: '', 
@@ -245,7 +245,7 @@ export default function Definitions() {
     } else if (type === 'customer-product') {
       setCustomerProductForm({
         customer_id: item.customer_id || 'none',
-        category_id: item.category_id || 'none',
+        material_group_id: item.material_group_id ? item.material_group_id.toString() : 'none',
         item_id: item.item_id ? item.item_id.toString() : 'none',
         size_caption: item.size_caption || '',
         width: item.width?.toString() || '',
@@ -398,7 +398,7 @@ export default function Definitions() {
           data = {
             ...customerProductForm,
             customer_id: customerProductForm.customer_id === 'none' ? null : customerProductForm.customer_id,
-            category_id: customerProductForm.category_id === 'none' ? null : customerProductForm.category_id,
+            material_group_id: customerProductForm.material_group_id === 'none' ? null : parseInt(customerProductForm.material_group_id),
             item_id: customerProductForm.item_id === 'none' ? null : customerProductForm.item_id,
             width: customerProductForm.width ? parseFloat(customerProductForm.width) : null,
             left_facing: customerProductForm.left_facing ? parseFloat(customerProductForm.left_facing) : null,
@@ -718,8 +718,8 @@ export default function Definitions() {
   );
 
   // Filter items based on selected material group
-  const filteredItems = Array.isArray(items) && customerProductForm.category_id !== 'none'
-    ? items.filter((item: any) => item.category_id && item.category_id.toString() === customerProductForm.category_id)
+  const filteredItems = Array.isArray(items) && customerProductForm.material_group_id !== 'none'
+    ? items.filter((item: any) => item.category_id && item.category_id.toString() === customerProductForm.material_group_id)
     : [];
 
   const renderCustomerProductForm = () => (
@@ -744,12 +744,12 @@ export default function Definitions() {
 
       {/* مجموعة المواد */}
       <div className="space-y-2">
-        <Label htmlFor="category_id">مجموعة المواد *</Label>
+        <Label htmlFor="material_group_id">مجموعة المواد *</Label>
         <Select 
-          value={customerProductForm.category_id} 
+          value={customerProductForm.material_group_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ 
             ...prev, 
-            category_id: value,
+            material_group_id: value,
             item_id: 'none'
           }))}
         >
@@ -773,10 +773,10 @@ export default function Definitions() {
         <Select 
           value={customerProductForm.item_id} 
           onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, item_id: value }))}
-          disabled={customerProductForm.category_id === 'none'}
+          disabled={customerProductForm.material_group_id === 'none'}
         >
           <SelectTrigger>
-            <SelectValue placeholder={customerProductForm.category_id === 'none' ? "اختر مجموعة المواد أولاً" : "اختر الصنف"} />
+            <SelectValue placeholder={customerProductForm.material_group_id === 'none' ? "اختر مجموعة المواد أولاً" : "اختر الصنف"} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">اختر الصنف</SelectItem>
