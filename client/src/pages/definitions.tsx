@@ -41,7 +41,7 @@ export default function Definitions() {
     name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active'
   });
   const [itemForm, setItemForm] = useState({
-    name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active'
+    name: '', name_ar: '', code: '', category_id: 'none', status: 'active'
   });
   const [customerProductForm, setCustomerProductForm] = useState({
     customer_id: 'none', 
@@ -160,7 +160,7 @@ export default function Definitions() {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
     setMaterialGroupForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active' });
-    setItemForm({ name: '', name_ar: '', code: '', unit: '', unit_ar: '', material_group_id: 'none', status: 'active' });
+    setItemForm({ name: '', name_ar: '', code: '', category_id: 'none', status: 'active' });
     setCustomerProductForm({ 
       customer_id: 'none', 
       material_group_id: 'none', 
@@ -238,9 +238,7 @@ export default function Definitions() {
         name: item.name || '',
         name_ar: item.name_ar || '',
         code: item.code || '',
-        unit: item.unit || '',
-        unit_ar: item.unit_ar || '',
-        material_group_id: item.category_id ? item.category_id.toString() : 'none',
+        category_id: item.category_id ? item.category_id.toString() : 'none',
         status: item.status || 'active',
       });
     } else if (type === 'customer-product') {
@@ -391,7 +389,7 @@ export default function Definitions() {
           endpoint = '/api/items';
           data = {
             ...itemForm,
-            category_id: itemForm.material_group_id === 'none' ? null : itemForm.material_group_id
+            category_id: itemForm.category_id === 'none' ? null : itemForm.category_id
           };
           break;
         case 'customer-products':
@@ -682,26 +680,8 @@ export default function Definitions() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="unit">الوحدة (إنجليزي)</Label>
-        <Input
-          id="unit"
-          value={itemForm.unit}
-          onChange={(e) => setItemForm(prev => ({ ...prev, unit: e.target.value }))}
-          placeholder="وحدة القياس"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="unit_ar">الوحدة (عربي)</Label>
-        <Input
-          id="unit_ar"
-          value={itemForm.unit_ar}
-          onChange={(e) => setItemForm(prev => ({ ...prev, unit_ar: e.target.value }))}
-          placeholder="وحدة القياس بالعربية"
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="material_group_id">مجموعة المواد</Label>
-        <Select value={itemForm.material_group_id} onValueChange={(value) => setItemForm(prev => ({ ...prev, material_group_id: value }))}>
+        <Label htmlFor="category_id">مجموعة المواد</Label>
+        <Select value={itemForm.category_id} onValueChange={(value) => setItemForm(prev => ({ ...prev, category_id: value }))}>
           <SelectTrigger>
             <SelectValue placeholder="اختر مجموعة المواد" />
           </SelectTrigger>
@@ -1724,10 +1704,11 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المجموعة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">مجموعة المواد</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
@@ -1739,13 +1720,16 @@ export default function Definitions() {
                               filteredItems.map((item) => (
                                 <tr key={item.id} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.name_ar || item.name}
+                                    {item.id}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {item.name_ar || '-'}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {item.name || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {item.code || '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.unit || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {(() => {
@@ -1787,7 +1771,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
