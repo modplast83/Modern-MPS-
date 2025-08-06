@@ -233,18 +233,15 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <Sidebar />
-      <div className="flex-1 flex flex-col lg:mr-64">
-        <Header />
-        <MobileNav />
-        
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
         <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold tracking-tight">الإعدادات</h1>
-              <p className="text-muted-foreground">إدارة إعدادات النظام والتفضيلات الشخصية</p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">الإعدادات</h1>
+            <p className="text-gray-600">إدارة إعدادات النظام والتفضيلات الشخصية</p>
+          </div>
 
             <Tabs defaultValue="profile" className="space-y-6">
               <TabsList className="grid w-full grid-cols-4">
@@ -675,7 +672,6 @@ export default function Settings() {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
         </main>
       </div>
     </div>
