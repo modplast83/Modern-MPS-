@@ -199,11 +199,24 @@ export const suppliers = pgTable('suppliers', {
   materials_supplied: json('materials_supplied').$type<number[]>(),
 });
 
+// 📦 جدول المخزون الحالي
+export const inventory = pgTable('inventory', {
+  id: serial('id').primaryKey(),
+  item_id: varchar('item_id', { length: 20 }).notNull().references(() => items.id),
+  location_id: integer('location_id').references(() => locations.id),
+  current_stock: decimal('current_stock', { precision: 10, scale: 2 }).default('0'),
+  min_stock: decimal('min_stock', { precision: 10, scale: 2 }).default('0'),
+  max_stock: decimal('max_stock', { precision: 10, scale: 2 }).default('0'),
+  unit: varchar('unit', { length: 20 }).default('كيلو'),
+  cost_per_unit: decimal('cost_per_unit', { precision: 10, scale: 4 }),
+  last_updated: timestamp('last_updated').defaultNow(),
+});
+
 // 🏬 جدول حركات المستودع
 export const warehouse_transactions = pgTable('warehouse_transactions', {
   id: serial('id').primaryKey(),
   type: varchar('type', { length: 30 }), // incoming / issued / production / delivery
-  item_id: integer('item_id').references(() => items.id),
+  item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
   from_location: varchar('from_location', { length: 100 }),
   to_location: varchar('to_location', { length: 100 }),
@@ -511,6 +524,12 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
   category: one(categories, { fields: [items.category_id], references: [categories.id] }),
   customerProducts: many(customer_products),
   warehouseTransactions: many(warehouse_transactions),
+  inventory: many(inventory),
+}));
+
+export const inventoryRelations = relations(inventory, ({ one }) => ({
+  item: one(items, { fields: [inventory.item_id], references: [items.id] }),
+  location: one(locations, { fields: [inventory.location_id], references: [locations.id] }),
 }));
 
 export const customerProductsRelations = relations(customer_products, ({ one, many }) => ({
@@ -579,6 +598,11 @@ export const insertWarehouseTransactionSchema = createInsertSchema(warehouse_tra
   date: true,
 });
 
+export const insertInventorySchema = createInsertSchema(inventory).omit({
+  id: true,
+  last_updated: true,
+});
+
 export const insertMixingRecipeSchema = createInsertSchema(mixing_recipes).omit({
   id: true,
   created_at: true,
@@ -625,6 +649,8 @@ export type AdminDecision = typeof admin_decisions.$inferSelect;
 export type InsertAdminDecision = z.infer<typeof insertAdminDecisionSchema>;
 export type Location = typeof locations.$inferSelect;
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
+export type Inventory = typeof inventory.$inferSelect;
+export type InsertInventory = z.infer<typeof insertInventorySchema>;
 export type Section = typeof sections.$inferSelect;
 export type Role = typeof roles.$inferSelect;
 export type Category = typeof categories.$inferSelect;
