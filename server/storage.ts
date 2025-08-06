@@ -82,6 +82,22 @@ import {
   type LeaveBalance,
   type InsertLeaveBalance
 } from "@shared/schema";
+
+import {
+  erp_configurations,
+  erp_sync_logs, 
+  erp_entity_mappings,
+  database_configurations,
+  type ERPConfiguration,
+  type InsertERPConfiguration,
+  type ERPSyncLog,
+  type InsertERPSyncLog,
+  type ERPEntityMapping,
+  type InsertERPEntityMapping,
+  type DatabaseConfiguration,
+  type InsertDatabaseConfiguration
+} from "@shared/erp-schema";
+
 import { db } from "./db";
 import { eq, desc, and, sql, sum, count } from "drizzle-orm";
 
@@ -153,6 +169,12 @@ export interface IStorage {
   createERPSyncLog(log: any): Promise<any>;
   getERPEntityMappings(configId: number, entityType: string): Promise<any[]>;
   createERPEntityMapping(mapping: any): Promise<any>;
+  
+  // Database Configuration
+  getDatabaseConfigurations(): Promise<DatabaseConfiguration[]>;
+  createDatabaseConfiguration(config: InsertDatabaseConfiguration): Promise<DatabaseConfiguration>;
+  updateDatabaseConfiguration(id: number, config: Partial<DatabaseConfiguration>): Promise<DatabaseConfiguration>;
+  deleteDatabaseConfiguration(id: number): Promise<boolean>;
   
   // Sections
   getSections(): Promise<Section[]>;
@@ -1393,6 +1415,31 @@ export class DatabaseStorage implements IStorage {
         setting_value: value
       });
     }
+  }
+
+  // ============ Database Configuration Implementation ============
+
+  async getDatabaseConfigurations(): Promise<DatabaseConfiguration[]> {
+    return await db.select().from(database_configurations).orderBy(desc(database_configurations.created_at));
+  }
+
+  async createDatabaseConfiguration(config: InsertDatabaseConfiguration): Promise<DatabaseConfiguration> {
+    const [dbConfig] = await db.insert(database_configurations).values(config).returning();
+    return dbConfig;
+  }
+
+  async updateDatabaseConfiguration(id: number, updates: Partial<DatabaseConfiguration>): Promise<DatabaseConfiguration> {
+    const [dbConfig] = await db
+      .update(database_configurations)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(database_configurations.id, id))
+      .returning();
+    return dbConfig;
+  }
+
+  async deleteDatabaseConfiguration(id: number): Promise<boolean> {
+    const result = await db.delete(database_configurations).where(eq(database_configurations.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 

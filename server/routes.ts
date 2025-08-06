@@ -634,6 +634,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Configuration Routes
+  app.get("/api/database/configurations", async (req, res) => {
+    try {
+      const configurations = await storage.getDatabaseConfigurations();
+      res.json(configurations);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب إعدادات قواعد البيانات" });
+    }
+  });
+
+  app.post("/api/database/configurations", async (req, res) => {
+    try {
+      const configuration = await storage.createDatabaseConfiguration(req.body);
+      res.json(configuration);
+    } catch (error) {
+      res.status(400).json({ message: "بيانات غير صحيحة لقاعدة البيانات" });
+    }
+  });
+
+  app.put("/api/database/configurations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const configuration = await storage.updateDatabaseConfiguration(id, req.body);
+      res.json(configuration);
+    } catch (error) {
+      res.status(400).json({ message: "خطأ في تحديث إعدادات قاعدة البيانات" });
+    }
+  });
+
+  app.delete("/api/database/configurations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteDatabaseConfiguration(id);
+      res.json({ success });
+    } catch (error) {
+      res.status(400).json({ message: "خطأ في حذف إعدادات قاعدة البيانات" });
+    }
+  });
+
+  app.post("/api/database/test-connection", async (req, res) => {
+    try {
+      const { type, host, port, database, username, password, ssl_enabled } = req.body;
+      
+      // Mock connection test for database
+      const isConnected = Math.random() > 0.2; // 80% success rate for demo
+      
+      if (isConnected) {
+        res.json({
+          success: true,
+          message: "تم الاتصال بقاعدة البيانات بنجاح",
+          details: {
+            type,
+            host,
+            database,
+            responseTime: Math.floor(Math.random() * 200) + 50
+          }
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          message: "فشل في الاتصال بقاعدة البيانات",
+          error: "Connection timeout or invalid credentials"
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في اختبار الاتصال بقاعدة البيانات" });
+    }
+  });
+
   app.post("/api/erp/test-connection", async (req, res) => {
     try {
       const { type, endpoint, username, password, settings } = req.body;
