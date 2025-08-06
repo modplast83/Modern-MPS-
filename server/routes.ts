@@ -7,8 +7,10 @@ import {
   insertJobOrderSchema, 
   insertRollSchema, 
   insertMaintenanceRequestSchema,
+  insertInventoryMovementSchema,
   customers,
-  customer_products
+  customer_products,
+  locations
 } from "@shared/schema";
 import { createInsertSchema } from "drizzle-zod";
 
@@ -23,6 +25,7 @@ const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, crea
   })
 });
 const insertCustomerProductSchema = createInsertSchema(customer_products).omit({ id: true, created_at: true });
+const insertLocationSchema = createInsertSchema(locations).omit({ id: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 
@@ -369,6 +372,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(locations);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب المواقع" });
+    }
+  });
+
+  app.post("/api/locations", async (req, res) => {
+    try {
+      const validatedData = insertLocationSchema.parse(req.body);
+      const location = await storage.createLocationExtended(validatedData);
+      res.json(location);
+    } catch (error) {
+      console.error('Location creation error:', error);
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  app.put("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertLocationSchema.partial().parse(req.body);
+      const location = await storage.updateLocationExtended(id, validatedData);
+      res.json(location);
+    } catch (error) {
+      console.error('Location update error:', error);
+      res.status(400).json({ message: "فشل في تحديث الموقع" });
+    }
+  });
+
+  // Inventory movements routes
+  app.get("/api/inventory-movements", async (req, res) => {
+    try {
+      const movements = await storage.getInventoryMovements();
+      res.json(movements);
+    } catch (error) {
+      console.error('Error fetching inventory movements:', error);
+      res.status(500).json({ message: "خطأ في جلب حركات المخزون" });
+    }
+  });
+
+  app.post("/api/inventory-movements", async (req, res) => {
+    try {
+      const validatedData = insertInventoryMovementSchema.parse(req.body);
+      const movement = await storage.createInventoryMovement(validatedData);
+      res.json(movement);
+    } catch (error) {
+      console.error('Inventory movement creation error:', error);
+      res.status(400).json({ message: "بيانات غير صحيحة" });
+    }
+  });
+
+  app.delete("/api/inventory-movements/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteInventoryMovement(id);
+      if (success) {
+        res.json({ message: "تم حذف الحركة بنجاح" });
+      } else {
+        res.status(404).json({ message: "الحركة غير موجودة" });
+      }
+    } catch (error) {
+      console.error('Inventory movement deletion error:', error);
+      res.status(500).json({ message: "خطأ في حذف الحركة" });
     }
   });
 
@@ -1211,6 +1274,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "تم حذف صنف المخزون بنجاح" });
     } catch (error) {
       res.status(500).json({ message: "خطأ في حذف صنف المخزون" });
+    }
+  });
+
+  // ============ Locations Management API ============
+  
+  app.get("/api/locations", async (req, res) => {
+    try {
+      const locations = await storage.getAllLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error('Error fetching locations:', error);
+      res.status(500).json({ message: "خطأ في جلب المواقع" });
+    }
+  });
+
+  app.post("/api/locations", async (req, res) => {
+    try {
+      const result = insertLocationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const location = await storage.createLocationExtended(result.data);
+      res.status(201).json(location);
+    } catch (error) {
+      console.error('Error creating location:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
+  app.put("/api/locations/:id", async (req, res) => {
+    try {
+      const locationId = parseInt(req.params.id);
+      const result = insertLocationSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const location = await storage.updateLocationExtended(locationId, result.data);
+      res.json(location);
+    } catch (error) {
+      console.error('Error updating location:', error);
+      res.status(500).json({ message: "خطأ في تحديث الموقع" });
+    }
+  });
+
+  // ============ Inventory Movements Management API ============
+  
+  app.get("/api/inventory-movements", async (req, res) => {
+    try {
+      const movements = await storage.getAllInventoryMovements();
+      res.json(movements);
+    } catch (error) {
+      console.error('Error fetching inventory movements:', error);
+      res.status(500).json({ message: "خطأ في جلب حركات المخزون" });
+    }
+  });
+
+  app.post("/api/inventory-movements", async (req, res) => {
+    try {
+      const result = insertInventoryMovementSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const movement = await storage.createInventoryMovement(result.data);
+      res.status(201).json(movement);
+    } catch (error) {
+      console.error('Error creating inventory movement:', error);
+      res.status(500).json({ message: "خطأ في إنشاء حركة المخزون" });
+    }
+  });
+
+  app.delete("/api/inventory-movements/:id", async (req, res) => {
+    try {
+      const movementId = parseInt(req.params.id);
+      await storage.deleteInventoryMovement(movementId);
+      res.json({ message: "تم حذف الحركة بنجاح" });
+    } catch (error) {
+      console.error('Error deleting inventory movement:', error);
+      res.status(500).json({ message: "خطأ في حذف الحركة" });
     }
   });
 

@@ -212,6 +212,21 @@ export const inventory = pgTable('inventory', {
   last_updated: timestamp('last_updated').defaultNow(),
 });
 
+// 📋 جدول حركات المخزون
+export const inventory_movements = pgTable('inventory_movements', {
+  id: serial('id').primaryKey(),
+  inventory_id: integer('inventory_id').references(() => inventory.id),
+  movement_type: varchar('movement_type', { length: 20 }).notNull(), // in / out / transfer / adjustment
+  quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
+  unit_cost: decimal('unit_cost', { precision: 10, scale: 4 }),
+  total_cost: decimal('total_cost', { precision: 10, scale: 4 }),
+  reference_number: varchar('reference_number', { length: 50 }),
+  reference_type: varchar('reference_type', { length: 20 }), // purchase / sale / production / adjustment
+  notes: text('notes'),
+  created_by: integer('created_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow(),
+});
+
 // 🏬 جدول حركات المستودع
 export const warehouse_transactions = pgTable('warehouse_transactions', {
   id: serial('id').primaryKey(),
@@ -603,6 +618,11 @@ export const insertInventorySchema = createInsertSchema(inventory).omit({
   last_updated: true,
 });
 
+export const insertInventoryMovementSchema = createInsertSchema(inventory_movements).omit({
+  id: true,
+  created_at: true,
+});
+
 export const insertMixingRecipeSchema = createInsertSchema(mixing_recipes).omit({
   id: true,
   created_at: true,
@@ -651,6 +671,8 @@ export type Location = typeof locations.$inferSelect;
 export type InsertLocation = z.infer<typeof insertLocationSchema>;
 export type Inventory = typeof inventory.$inferSelect;
 export type InsertInventory = z.infer<typeof insertInventorySchema>;
+export type InventoryMovement = typeof inventory_movements.$inferSelect;
+export type InsertInventoryMovement = z.infer<typeof insertInventoryMovementSchema>;
 export type Section = typeof sections.$inferSelect;
 export type Role = typeof roles.$inferSelect;
 export type Category = typeof categories.$inferSelect;
