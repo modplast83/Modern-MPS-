@@ -1281,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/locations", async (req, res) => {
     try {
-      const locations = await storage.getAllLocations();
+      const locations = await storage.getLocations();
       res.json(locations);
     } catch (error) {
       console.error('Error fetching locations:', error);
