@@ -806,42 +806,42 @@ export default function Definitions() {
         />
       </div>
 
-      {/* Left Facing */}
+      {/* دخلات الجانب الأيسر */}
       <div className="space-y-2">
-        <Label htmlFor="left_facing">Left Facing (سم)</Label>
+        <Label htmlFor="left_facing">دخلات الجانب الأيسر (سم)</Label>
         <Input
           id="left_facing"
           type="number"
           step="0.01"
           value={customerProductForm.left_facing || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, left_facing: e.target.value }))}
-          placeholder="Left Facing"
+          placeholder="دخلات الجانب الأيسر"
         />
       </div>
 
-      {/* Right Facing */}
+      {/* دخلات الجانب الأيمن */}
       <div className="space-y-2">
-        <Label htmlFor="right_facing">Right Facing (سم)</Label>
+        <Label htmlFor="right_facing">دخلات الجانب الأيمن (سم)</Label>
         <Input
           id="right_facing"
           type="number"
           step="0.01"
           value={customerProductForm.right_facing || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, right_facing: e.target.value }))}
-          placeholder="Right Facing"
+          placeholder="دخلات الجانب الأيمن"
         />
       </div>
 
       {/* السماكة */}
       <div className="space-y-2">
-        <Label htmlFor="thickness">السماكة (مم)</Label>
+        <Label htmlFor="thickness">السماكة (مايكرون)</Label>
         <Input
           id="thickness"
           type="number"
           step="0.001"
           value={customerProductForm.thickness || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, thickness: e.target.value }))}
-          placeholder="السماكة بالمليمتر"
+          placeholder="السماكة بالمايكرون"
         />
       </div>
 
@@ -915,12 +915,12 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* Master Batch */}
+      {/* ماستر باتش */}
       <div className="space-y-2">
-        <Label htmlFor="master_batch_id">Master Batch *</Label>
+        <Label htmlFor="master_batch_id">ماستر باتش *</Label>
         <Select value={customerProductForm.master_batch_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, master_batch_id: value }))}>
           <SelectTrigger>
-            <SelectValue placeholder="اختر Master Batch" />
+            <SelectValue placeholder="اختر ماستر باتش" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="CLEAR">CLEAR</SelectItem>
@@ -964,12 +964,12 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* نوع الثقب */}
+      {/* نوع التخريم */}
       <div className="space-y-2">
-        <Label htmlFor="punching">نوع الثقب</Label>
+        <Label htmlFor="punching">نوع التخريم</Label>
         <Select value={customerProductForm.punching} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, punching: value }))}>
           <SelectTrigger>
-            <SelectValue placeholder="اختر نوع الثقب" />
+            <SelectValue placeholder="اختر نوع التخريم" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="NON">NON</SelectItem>
@@ -1818,11 +1818,11 @@ export default function Definitions() {
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مقاس المنتج</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">أسطوانة الطباعة</th>
-                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">السماكة (مم)</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">السماكة (مايكرون)</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">طول القطع (سم)</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
-                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">Master Batch</th>
-                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الثقب</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">ماستر باتش</th>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع التخريم</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن الوحدة (كيلو)</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">كمية الوحدة</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن الحزمة (كيلو)</th>
