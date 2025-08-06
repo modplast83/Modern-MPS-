@@ -487,7 +487,7 @@ export default function Definitions() {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="plate_drawer_code">كود اللوح الجرار</Label>
+        <Label htmlFor="plate_drawer_code">رقم الدرج</Label>
         <Input
           id="plate_drawer_code"
           value={customerForm.plate_drawer_code}
