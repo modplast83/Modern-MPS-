@@ -50,6 +50,15 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     };
   }, [isSupported]);
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isSupported) {
+        speechSynthesis.cancel();
+      }
+    };
+  }, [isSupported]);
+
   const getArabicVoices = (): SpeechSynthesisVoice[] => {
     return voices.filter(voice => 
       voice.lang.startsWith('ar') || 
@@ -144,9 +153,22 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     };
 
     utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event.error);
+      console.error('Speech synthesis error:', {
+        error: event.error,
+        type: event.type,
+        text: text.substring(0, 50) + '...'
+      });
       setIsSpeaking(false);
       setIsPaused(false);
+      
+      // Attempt to recover from common errors
+      if (event.error === 'interrupted' || event.error === 'canceled') {
+        // These are often recoverable, don't log as errors
+        return;
+      }
+      
+      // For other errors, provide user feedback
+      console.warn(`Speech synthesis failed: ${event.error}. Text may be too long or voice unavailable.`);
     };
 
     speechSynthesis.speak(utterance);
