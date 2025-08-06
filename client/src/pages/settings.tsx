@@ -58,10 +58,12 @@ export default function Settings() {
   // System settings state
   const [systemSettings, setSystemSettings] = useState({
     companyName: "مصنع أكياس MPBF",
-    timezone: "Asia/Baghdad",
-    currency: "IQD",
+    timezone: "Asia/Riyadh",
+    currency: "SAR",
     language: "ar",
     dateFormat: "DD/MM/YYYY",
+    country: "المملكة العربية السعودية",
+    region: "الرياض",
     workingHours: {
       start: "08:00",
       end: "17:00"
@@ -189,7 +191,7 @@ export default function Settings() {
                         id="phone"
                         value={userSettings.phone}
                         onChange={(e) => setUserSettings(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="+964 XXX XXX XXXX"
+                        placeholder="+966 XX XXX XXXX"
                       />
                     </div>
                     <div className="space-y-2">
@@ -386,43 +388,91 @@ export default function Settings() {
                       />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="country">البلد</Label>
+                      <Input
+                        id="country"
+                        value={systemSettings.country}
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="timezone">المنطقة الزمنية</Label>
-                      <Select value={systemSettings.timezone} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, timezone: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Asia/Baghdad">بغداد (UTC+3)</SelectItem>
-                          <SelectItem value="Asia/Riyadh">الرياض (UTC+3)</SelectItem>
-                          <SelectItem value="Asia/Dubai">دبي (UTC+4)</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="timezone"
+                        value="الرياض (UTC+3)"
+                        readOnly
+                        className="bg-gray-50"
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="currency">العملة</Label>
-                      <Select value={systemSettings.currency} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, currency: value }))}>
+                      <Input
+                        id="currency"
+                        value="ريال سعودي (SAR)"
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dateFormat">نوع التقويم</Label>
+                      <Input
+                        id="dateFormat"
+                        value="التقويم الميلادي (DD/MM/YYYY)"
+                        readOnly
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="region">المنطقة</Label>
+                      <Select value={systemSettings.region} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, region: value }))}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="IQD">دينار عراقي (IQD)</SelectItem>
-                          <SelectItem value="USD">دولار أمريكي (USD)</SelectItem>
-                          <SelectItem value="EUR">يورو (EUR)</SelectItem>
+                          <SelectItem value="الرياض">الرياض</SelectItem>
+                          <SelectItem value="جدة">جدة</SelectItem>
+                          <SelectItem value="الدمام">الدمام</SelectItem>
+                          <SelectItem value="مكة المكرمة">مكة المكرمة</SelectItem>
+                          <SelectItem value="المدينة المنورة">المدينة المنورة</SelectItem>
+                          <SelectItem value="تبوك">تبوك</SelectItem>
+                          <SelectItem value="أبها">أبها</SelectItem>
+                          <SelectItem value="الطائف">الطائف</SelectItem>
+                          <SelectItem value="حائل">حائل</SelectItem>
+                          <SelectItem value="القصيم">القصيم</SelectItem>
+                          <SelectItem value="الجوف">الجوف</SelectItem>
+                          <SelectItem value="نجران">نجران</SelectItem>
+                          <SelectItem value="الباحة">الباحة</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="dateFormat">تنسيق التاريخ</Label>
-                      <Select value={systemSettings.dateFormat} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, dateFormat: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
-                          <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
-                          <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
-                        </SelectContent>
-                      </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium">معلومات الدولة</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>المملكة</Label>
+                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-green-800">المملكة العربية السعودية</span>
+                            <Badge className="bg-green-100 text-green-800">نشط</Badge>
+                          </div>
+                          <p className="text-sm text-green-600 mt-1">نظام موحد لجميع المناطق</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>العملة الرسمية</Label>
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-blue-800">الريال السعودي (SAR)</span>
+                            <Badge className="bg-blue-100 text-blue-800">ثابت</Badge>
+                          </div>
+                          <p className="text-sm text-blue-600 mt-1">العملة الوحيدة المدعومة</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
