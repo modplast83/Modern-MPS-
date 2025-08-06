@@ -314,6 +314,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/customers/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const validatedData = insertCustomerSchema.parse(req.body);
+      const customer = await storage.updateCustomer(id, validatedData);
+      res.json(customer);
+    } catch (error) {
+      console.error('Customer update error:', error);
+      res.status(400).json({ message: "خطأ في تحديث العميل", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Sections routes
   app.get("/api/sections", async (req, res) => {
     try {
@@ -857,6 +869,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/machines/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const machine = await storage.updateMachine(id, req.body);
+      res.json(machine);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث الماكينة" });
+    }
+  });
+
   // Users routes
   app.post("/api/users", async (req, res) => {
     try {
@@ -867,6 +889,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.updateUser(id, req.body);
+      res.json(user);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث المستخدم" });
+    }
+  });
+
   // Sections routes
   app.post("/api/sections", async (req, res) => {
     try {
@@ -874,6 +906,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(section);
     } catch (error) {
       res.status(500).json({ message: "خطأ في إنشاء القسم" });
+    }
+  });
+
+  app.put("/api/sections/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const section = await storage.updateSection(id, req.body);
+      res.json(section);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث القسم" });
     }
   });
 
@@ -907,6 +949,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/items/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const item = await storage.updateItem(id, req.body);
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث الصنف" });
+    }
+  });
+
   // Customer Products routes
   app.post("/api/customer-products", async (req, res) => {
     try {
@@ -917,6 +969,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/customer-products/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const customerProduct = await storage.updateCustomerProduct(id, req.body);
+      res.json(customerProduct);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث منتج العميل" });
+    }
+  });
+
   // Locations routes
   app.post("/api/locations", async (req, res) => {
     try {
@@ -924,6 +986,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(location);
     } catch (error) {
       res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
+  app.put("/api/locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.updateLocation(id, req.body);
+      res.json(location);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث الموقع" });
     }
   });
 
