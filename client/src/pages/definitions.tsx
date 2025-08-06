@@ -1396,10 +1396,10 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الهاتف</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العنوان</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل (عربي)</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل (إنجليزي)</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المندوب</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم الدرج</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
@@ -1410,18 +1410,22 @@ export default function Definitions() {
                               filteredCustomers.map((customer) => (
                                 <tr key={customer.id} className="hover:bg-gray-50">
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {customer.name_ar || customer.name}
+                                    {customer.name_ar || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {customer.phone || '-'}
+                                    {customer.name || '-'}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                    {customer.address || '-'}
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {(() => {
+                                      if (Array.isArray(users) && customer.sales_rep_id) {
+                                        const salesRep = users.find(user => user.id === customer.sales_rep_id);
+                                        return salesRep ? (salesRep.display_name_ar || salesRep.display_name || salesRep.username) : '-';
+                                      }
+                                      return '-';
+                                    })()}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge variant={customer.status === 'active' ? 'default' : 'secondary'}>
-                                      {customer.status === 'active' ? 'نشط' : 'غير نشط'}
-                                    </Badge>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {customer.plate_drawer_code || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
