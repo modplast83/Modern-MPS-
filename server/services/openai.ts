@@ -110,18 +110,16 @@ class AdvancedOpenAIService {
           }
         ],
         max_tokens: 800,
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+        temperature: 0.3
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{"response": "لم أتمكن من معالجة طلبك."}');
-      
       // تسجيل بيانات التعلم
+      const executionTime = Date.now() - startTime;
       if (userId) {
-        await this.recordLearningData(userId, 'general_query', message, true, Date.now() - startTime);
+        await this.recordLearningData(userId, 'general_query', message, true, executionTime);
       }
       
-      return result.response || "تم معالجة طلبك بنجاح.";
+      return response.choices[0].message.content || "مرحباً! كيف يمكنني مساعدتك في إدارة المصنع اليوم؟";
       
     } catch (error: any) {
       console.error('OpenAI API Error:', error);
