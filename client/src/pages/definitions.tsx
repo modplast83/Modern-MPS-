@@ -2106,7 +2106,11 @@ export default function Definitions() {
                                      machine.type === 'cutting' ? 'قطع' : machine.type}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {machine.section_id || '-'}
+                                    {machine.section_id ? 
+                                      sections?.find(s => s.id === machine.section_id)?.name_ar || 
+                                      sections?.find(s => s.id === machine.section_id)?.name || 
+                                      machine.section_id 
+                                      : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <Badge variant={machine.status === 'operational' ? 'default' : 'secondary'}>
@@ -2214,7 +2218,11 @@ export default function Definitions() {
                                     {user.role_id || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {user.section_id || '-'}
+                                    {user.section_id ? 
+                                      sections?.find(s => s.id === user.section_id)?.name_ar || 
+                                      sections?.find(s => s.id === user.section_id)?.name || 
+                                      user.section_id 
+                                      : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
@@ -2250,7 +2258,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
