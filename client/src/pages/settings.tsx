@@ -50,11 +50,12 @@ export default function Settings() {
   });
 
   // Convert array settings to object format
-  const convertSettingsArrayToObject = (settingsArray: any[]) => {
-    return settingsArray?.reduce((acc, setting) => {
+  const convertSettingsArrayToObject = (settingsArray: any[] | undefined) => {
+    if (!Array.isArray(settingsArray)) return {};
+    return settingsArray.reduce((acc, setting) => {
       acc[setting.setting_key] = setting.setting_value;
       return acc;
-    }, {}) || {};
+    }, {});
   };
 
   // User preferences state
@@ -104,7 +105,7 @@ export default function Settings() {
 
   // Load settings from database when data is available
   useEffect(() => {
-    if (systemSettingsData) {
+    if (systemSettingsData && Array.isArray(systemSettingsData)) {
       const settingsObj = convertSettingsArrayToObject(systemSettingsData);
       setSystemSettings(prev => ({
         ...prev,
@@ -124,7 +125,7 @@ export default function Settings() {
   }, [systemSettingsData]);
 
   useEffect(() => {
-    if (userSettingsData) {
+    if (userSettingsData && Array.isArray(userSettingsData)) {
       const settingsObj = convertSettingsArrayToObject(userSettingsData);
       setUserSettings(prev => ({
         ...prev,
