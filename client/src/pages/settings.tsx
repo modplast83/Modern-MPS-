@@ -238,10 +238,10 @@ export default function Settings() {
         <Header />
         <MobileNav />
         
-        <main className="flex-1 p-4 lg:p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <main className="flex-1 p-6">
+          <div className="space-y-6">
             <div className="space-y-2">
-              <h1 className="text-2xl font-bold">الإعدادات</h1>
+              <h1 className="text-3xl font-bold tracking-tight">الإعدادات</h1>
               <p className="text-muted-foreground">إدارة إعدادات النظام والتفضيلات الشخصية</p>
             </div>
 
