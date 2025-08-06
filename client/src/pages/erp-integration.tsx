@@ -52,6 +52,8 @@ export default function ERPIntegration() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddDbDialogOpen, setIsAddDbDialogOpen] = useState(false);
+  const [isEditDbDialogOpen, setIsEditDbDialogOpen] = useState(false);
+  const [selectedDbConfig, setSelectedDbConfig] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -145,10 +147,52 @@ export default function ERPIntegration() {
     }
   });
 
+  // Update database configuration mutation
+  const updateDbConfig = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<DatabaseConfigFormValues> }) => {
+      const response = await fetch(`/api/database/configurations/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error("فشل في تحديث إعدادات قاعدة البيانات");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/database/configurations"] });
+      setIsEditDbDialogOpen(false);
+      setSelectedDbConfig(null);
+      dbForm.reset();
+      toast({ title: "تم تحديث إعدادات قاعدة البيانات بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في تحديث إعدادات قاعدة البيانات", variant: "destructive" });
+    }
+  });
+
+  // Delete database configuration mutation
+  const deleteDbConfig = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/database/configurations/${id}`, {
+        method: "DELETE"
+      });
+      if (!response.ok) throw new Error("فشل في حذف إعدادات قاعدة البيانات");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/database/configurations"] });
+      toast({ title: "تم حذف إعدادات قاعدة البيانات بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في حذف إعدادات قاعدة البيانات", variant: "destructive" });
+    }
+  });
+
   // Test connection mutation
   const testConnection = useMutation({
     mutationFn: async (config: any) => {
-      const response = await fetch("/api/erp/test-connection", {
+      const endpoint = config.type ? "/api/database/test-connection" : "/api/erp/test-connection";
+      const response = await fetch(endpoint, {
         method: "POST", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(config)
@@ -160,7 +204,7 @@ export default function ERPIntegration() {
     onSuccess: (data) => {
       toast({ 
         title: "نجح اختبار الاتصال", 
-        description: `الوقت المستغرق: ${data.details?.responseTime}ms` 
+        description: data.details ? `الوقت المستغرق: ${data.details.responseTime}ms` : data.message
       });
     },
     onError: (error: any) => {
@@ -198,7 +242,35 @@ export default function ERPIntegration() {
   };
 
   const onDbSubmit = (data: DatabaseConfigFormValues) => {
-    createDbConfig.mutate(data);
+    if (selectedDbConfig) {
+      updateDbConfig.mutate({ id: selectedDbConfig.id, data });
+    } else {
+      createDbConfig.mutate(data);
+    }
+  };
+
+  const handleEditDbConfig = (config: any) => {
+    setSelectedDbConfig(config);
+    dbForm.reset({
+      name: config.name,
+      name_ar: config.name_ar,
+      type: config.type,
+      host: config.host,
+      port: config.port,
+      database: config.database,
+      username: config.username,
+      password: config.password,
+      ssl_enabled: config.ssl_enabled,
+      is_active: config.is_active,
+      sync_frequency: config.sync_frequency
+    });
+    setIsEditDbDialogOpen(true);
+  };
+
+  const handleDeleteDbConfig = (id: number) => {
+    if (confirm("هل أنت متأكد من حذف إعدادات قاعدة البيانات؟")) {
+      deleteDbConfig.mutate(id);
+    }
   };
 
   const handleTestConnection = (config: any) => {
@@ -666,6 +738,236 @@ export default function ERPIntegration() {
                   </Form>
                 </DialogContent>
               </Dialog>
+
+              <Dialog open={isEditDbDialogOpen} onOpenChange={setIsEditDbDialogOpen}>
+                <DialogContent className="max-w-2xl" dir="rtl">
+                  <DialogHeader>
+                    <DialogTitle>تعديل إعدادات قاعدة البيانات</DialogTitle>
+                    <DialogDescription>
+                      تعديل إعدادات التكامل مع قاعدة البيانات الخارجية
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <Form {...dbForm}>
+                    <form onSubmit={dbForm.handleSubmit(onDbSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={dbForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>اسم قاعدة البيانات</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Production Database" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={dbForm.control}
+                          name="name_ar"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>الاسم باللغة العربية</FormLabel>
+                              <FormControl>
+                                <Input placeholder="قاعدة بيانات الإنتاج" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={dbForm.control}
+                          name="type"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>نوع قاعدة البيانات</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="اختر نوع قاعدة البيانات" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="PostgreSQL">PostgreSQL</SelectItem>
+                                  <SelectItem value="MySQL">MySQL</SelectItem>
+                                  <SelectItem value="SQL Server">SQL Server</SelectItem>
+                                  <SelectItem value="Oracle">Oracle</SelectItem>
+                                  <SelectItem value="MongoDB">MongoDB</SelectItem>
+                                  <SelectItem value="MariaDB">MariaDB</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={dbForm.control}
+                          name="host"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>عنوان الخادم</FormLabel>
+                              <FormControl>
+                                <Input placeholder="localhost أو IP العنوان" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <FormField
+                          control={dbForm.control}
+                          name="port"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>رقم المنفذ</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  placeholder="5432" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={dbForm.control}
+                          name="database"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>اسم قاعدة البيانات</FormLabel>
+                              <FormControl>
+                                <Input placeholder="myapp_production" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={dbForm.control}
+                          name="username"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>اسم المستخدم</FormLabel>
+                              <FormControl>
+                                <Input placeholder="dbuser" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={dbForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>كلمة المرور</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={dbForm.control}
+                          name="ssl_enabled"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">تفعيل SSL</FormLabel>
+                                <div className="text-sm text-muted-foreground">
+                                  استخدام اتصال مشفر مع قاعدة البيانات
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={dbForm.control}
+                          name="is_active"
+                          render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                              <div className="space-y-0.5">
+                                <FormLabel className="text-base">تفعيل التكامل</FormLabel>
+                                <div className="text-sm text-muted-foreground">
+                                  تفعيل المزامنة التلقائية مع قاعدة البيانات
+                                </div>
+                              </div>
+                              <FormControl>
+                                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={dbForm.control}
+                        name="sync_frequency"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>تكرار المزامنة (بالدقائق)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                placeholder="60" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 60)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="flex justify-between pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => testConnection.mutate(dbForm.getValues())}
+                          disabled={testConnection.isPending}
+                        >
+                          <TestTube className="h-4 w-4 mr-2" />
+                          {testConnection.isPending ? "جاري الاختبار..." : "اختبار الاتصال"}
+                        </Button>
+                        <div className="space-x-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setIsEditDbDialogOpen(false);
+                              setSelectedDbConfig(null);
+                              dbForm.reset();
+                            }}
+                          >
+                            إلغاء
+                          </Button>
+                          <Button type="submit" disabled={updateDbConfig.isPending}>
+                            {updateDbConfig.isPending ? "جاري التحديث..." : "تحديث"}
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -781,13 +1083,31 @@ export default function ERPIntegration() {
                                 </div>
                                 
                                 <div className="flex gap-2 pt-2">
-                                  <Button size="sm" variant="outline">
-                                    <RefreshCw className="h-3 w-3 mr-1" />
-                                    مزامنة
-                                  </Button>
-                                  <Button size="sm" variant="outline">
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => testConnection.mutate(dbConfig)}
+                                    disabled={testConnection.isPending}
+                                  >
                                     <TestTube className="h-3 w-3 mr-1" />
                                     اختبار
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline"
+                                    onClick={() => handleEditDbConfig(dbConfig)}
+                                  >
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    تعديل
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => handleDeleteDbConfig(dbConfig.id)}
+                                    disabled={deleteDbConfig.isPending}
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    حذف
                                   </Button>
                                 </div>
                               </CardContent>
