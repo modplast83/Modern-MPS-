@@ -343,7 +343,7 @@ export default function Definitions() {
           queryKey = `/api/${type}s`;
       }
       
-      await apiRequest('DELETE', endpoint);
+      await apiRequest(endpoint, { method: 'DELETE' });
       
       toast({
         title: "تم الحذف",
@@ -425,9 +425,9 @@ export default function Definitions() {
       }
 
       if (editingItem) {
-        await apiRequest('PUT', `${endpoint}/${editingItem.id}`, data);
+        await apiRequest(`${endpoint}/${editingItem.id}`, { method: 'PUT', body: JSON.stringify(data) });
       } else {
-        await apiRequest('POST', endpoint, data);
+        await apiRequest(endpoint, { method: 'POST', body: JSON.stringify(data) });
       }
 
       toast({
