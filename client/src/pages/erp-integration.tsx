@@ -123,6 +123,28 @@ export default function ERPIntegration() {
     }
   });
 
+  // Create database configuration mutation
+  const createDbConfig = useMutation({
+    mutationFn: async (data: DatabaseConfigFormValues) => {
+      const response = await fetch("/api/database/configurations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error("فشل في إنشاء إعدادات قاعدة البيانات");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/database/configurations"] });
+      setIsAddDbDialogOpen(false);
+      dbForm.reset();
+      toast({ title: "تم إنشاء إعدادات قاعدة البيانات بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في إنشاء إعدادات قاعدة البيانات", variant: "destructive" });
+    }
+  });
+
   // Test connection mutation
   const testConnection = useMutation({
     mutationFn: async (config: any) => {
@@ -173,6 +195,10 @@ export default function ERPIntegration() {
 
   const onSubmit = (data: ERPConfigFormValues) => {
     createConfig.mutate(data);
+  };
+
+  const onDbSubmit = (data: DatabaseConfigFormValues) => {
+    createDbConfig.mutate(data);
   };
 
   const handleTestConnection = (config: any) => {
@@ -425,7 +451,7 @@ export default function ERPIntegration() {
                   </DialogHeader>
                   
                   <Form {...dbForm}>
-                    <form onSubmit={dbForm.handleSubmit((data) => console.log('Database form:', data))} className="space-y-4">
+                    <form onSubmit={dbForm.handleSubmit(onDbSubmit)} className="space-y-4">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={dbForm.control}
@@ -617,10 +643,11 @@ export default function ERPIntegration() {
                         <Button
                           type="button"
                           variant="outline"
-                          onClick={() => console.log('Test database connection')}
+                          onClick={() => testConnection.mutate(dbForm.getValues())}
+                          disabled={testConnection.isPending}
                         >
                           <TestTube className="h-4 w-4 mr-2" />
-                          اختبار الاتصال
+                          {testConnection.isPending ? "جاري الاختبار..." : "اختبار الاتصال"}
                         </Button>
                         <div className="space-x-2">
                           <Button
@@ -630,8 +657,8 @@ export default function ERPIntegration() {
                           >
                             إلغاء
                           </Button>
-                          <Button type="submit">
-                            حفظ
+                          <Button type="submit" disabled={createDbConfig.isPending}>
+                            {createDbConfig.isPending ? "جاري الحفظ..." : "حفظ"}
                           </Button>
                         </div>
                       </div>
