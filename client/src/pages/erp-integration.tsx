@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Settings, RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Edit, Trash2, TestTube, Database, Server } from "lucide-react";
+import { Settings, RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Edit, Trash2, TestTube, Database, Server, ArrowUpDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -1203,6 +1203,301 @@ export default function ERPIntegration() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="mappings" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">خرائط ربط البيانات</h3>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  إضافة خريطة جديدة
+                </Button>
+              </div>
+
+              <div className="grid gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>ربط العملاء</CardTitle>
+                    <CardDescription>ربط بيانات العملاء بين النظام وقاعدة البيانات الخارجية</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <strong>الجدول المحلي:</strong> customers
+                        </div>
+                        <div>
+                          <strong>الجدول الخارجي:</strong> clients
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="p-3 text-right">الحقل المحلي</th>
+                              <th className="p-3 text-right">الحقل الخارجي</th>
+                              <th className="p-3 text-right">نوع الربط</th>
+                              <th className="p-3 text-right">الحالة</th>
+                              <th className="p-3 text-right">الإجراءات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-t">
+                              <td className="p-3">name</td>
+                              <td className="p-3">client_name</td>
+                              <td className="p-3">مباشر</td>
+                              <td className="p-3">
+                                <Badge variant="default">نشط</Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <RefreshCw className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr className="border-t">
+                              <td className="p-3">phone</td>
+                              <td className="p-3">contact_phone</td>
+                              <td className="p-3">مباشر</td>
+                              <td className="p-3">
+                                <Badge variant="default">نشط</Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <RefreshCw className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm">
+                          <ArrowUpDown className="h-3 w-3 mr-1" />
+                          مزامنة العملاء
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <TestTube className="h-3 w-3 mr-1" />
+                          اختبار الربط
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>ربط الأصناف</CardTitle>
+                    <CardDescription>ربط بيانات الأصناف والمنتجات</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <strong>الجدول المحلي:</strong> items
+                        </div>
+                        <div>
+                          <strong>الجدول الخارجي:</strong> products
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="p-3 text-right">الحقل المحلي</th>
+                              <th className="p-3 text-right">الحقل الخارجي</th>
+                              <th className="p-3 text-right">نوع الربط</th>
+                              <th className="p-3 text-right">الحالة</th>
+                              <th className="p-3 text-right">الإجراءات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-t">
+                              <td className="p-3">code</td>
+                              <td className="p-3">product_code</td>
+                              <td className="p-3">مباشر</td>
+                              <td className="p-3">
+                                <Badge variant="default">نشط</Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <RefreshCw className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr className="border-t">
+                              <td className="p-3">name_ar</td>
+                              <td className="p-3">product_name</td>
+                              <td className="p-3">مباشر</td>
+                              <td className="p-3">
+                                <Badge variant="default">نشط</Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <RefreshCw className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm">
+                          <ArrowUpDown className="h-3 w-3 mr-1" />
+                          مزامنة الأصناف
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <TestTube className="h-3 w-3 mr-1" />
+                          اختبار الربط
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>ربط الأسعار</CardTitle>
+                    <CardDescription>ربط بيانات الأسعار مع قواعد التحويل</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <strong>الجدول المحلي:</strong> customer_products
+                        </div>
+                        <div>
+                          <strong>الجدول الخارجي:</strong> product_prices
+                        </div>
+                      </div>
+                      
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="p-3 text-right">الحقل المحلي</th>
+                              <th className="p-3 text-right">الحقل الخارجي</th>
+                              <th className="p-3 text-right">نوع الربط</th>
+                              <th className="p-3 text-right">قاعدة التحويل</th>
+                              <th className="p-3 text-right">الحالة</th>
+                              <th className="p-3 text-right">الإجراءات</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="border-t">
+                              <td className="p-3">price</td>
+                              <td className="p-3">unit_price</td>
+                              <td className="p-3">تحويل</td>
+                              <td className="p-3">
+                                <code className="text-xs bg-gray-100 p-1 rounded">× 1.15</code>
+                                <br />
+                                <span className="text-xs text-muted-foreground">إضافة ضريبة 15%</span>
+                              </td>
+                              <td className="p-3">
+                                <Badge variant="default">نشط</Badge>
+                              </td>
+                              <td className="p-3">
+                                <div className="flex gap-2">
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <RefreshCw className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm">
+                          <ArrowUpDown className="h-3 w-3 mr-1" />
+                          مزامنة الأسعار
+                        </Button>
+                        <Button size="sm" variant="outline">
+                          <TestTube className="h-3 w-3 mr-1" />
+                          اختبار الربط
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>سجلات المزامنة الأخيرة</CardTitle>
+                    <CardDescription>عرض آخر عمليات مزامنة البيانات</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4" />
+                            <span className="font-medium">العملاء</span>
+                          </div>
+                          <Badge variant="default">نجح</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          45 سجل • منذ ساعة واحدة
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4" />
+                            <span className="font-medium">الأصناف</span>
+                          </div>
+                          <Badge variant="secondary">جزئي</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          118/120 سجل • منذ ساعتين
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <ArrowUpDown className="h-4 w-4" />
+                            <span className="font-medium">الأسعار</span>
+                          </div>
+                          <Badge variant="outline">في الانتظار</Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          مجدولة للساعة 8:00 مساءً
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </main>

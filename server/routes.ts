@@ -703,6 +703,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Data mapping endpoints
+  app.get("/api/database/mappings/:configId", async (req, res) => {
+    try {
+      const configId = parseInt(req.params.configId);
+      const mappings = await storage.getDataMappings(configId);
+      res.json(mappings);
+    } catch (error) {
+      console.error("Error fetching data mappings:", error);
+      res.status(500).json({ error: "فشل في جلب خرائط البيانات" });
+    }
+  });
+
+  app.post("/api/database/mappings", async (req, res) => {
+    try {
+      const mapping = await storage.createDataMapping(req.body);
+      res.json(mapping);
+    } catch (error) {
+      console.error("Error creating data mapping:", error);
+      res.status(500).json({ error: "فشل في إنشاء خريطة البيانات" });
+    }
+  });
+
+  app.put("/api/database/mappings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const mapping = await storage.updateDataMapping(id, req.body);
+      res.json(mapping);
+    } catch (error) {
+      console.error("Error updating data mapping:", error);
+      res.status(500).json({ error: "فشل في تحديث خريطة البيانات" });
+    }
+  });
+
+  app.delete("/api/database/mappings/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteDataMapping(id);
+      res.json({ success });
+    } catch (error) {
+      console.error("Error deleting data mapping:", error);
+      res.status(500).json({ error: "فشل في حذف خريطة البيانات" });
+    }
+  });
+
+  // Data synchronization endpoints
+  app.post("/api/database/sync/:configId", async (req, res) => {
+    try {
+      const configId = parseInt(req.params.configId);
+      const { entity_type, direction } = req.body;
+      const result = await storage.syncData(configId, entity_type, direction);
+      res.json(result);
+    } catch (error) {
+      console.error("Error syncing data:", error);
+      res.status(500).json({ error: "فشل في مزامنة البيانات" });
+    }
+  });
+
+  app.get("/api/database/sync-logs/:configId", async (req, res) => {
+    try {
+      const configId = parseInt(req.params.configId);
+      const logs = await storage.getSyncLogs(configId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching sync logs:", error);
+      res.status(500).json({ error: "فشل في جلب سجلات المزامنة" });
+    }
+  });
+
   app.post("/api/erp/test-connection", async (req, res) => {
     try {
       const { type, endpoint, username, password, settings } = req.body;
