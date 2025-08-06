@@ -141,3 +141,32 @@ export type ERPSyncSchedule = typeof erp_sync_schedules.$inferSelect;
 export type InsertERPSyncSchedule = z.infer<typeof insertERPSyncScheduleSchema>;
 export type ERPIntegrationSetting = typeof erp_integration_settings.$inferSelect;
 export type InsertERPIntegrationSetting = z.infer<typeof insertERPIntegrationSettingSchema>;
+
+// Database Configuration schema for external database integration
+export const database_configurations = pgTable("database_configurations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  name_ar: varchar("name_ar", { length: 255 }),
+  type: varchar("type", { length: 50 }).notNull(), // PostgreSQL, MySQL, SQL Server, Oracle, MongoDB, MariaDB
+  host: varchar("host", { length: 255 }).notNull(),
+  port: integer("port").notNull().default(5432),
+  database: varchar("database", { length: 255 }).notNull(),
+  username: varchar("username", { length: 255 }).notNull(),
+  password: varchar("password", { length: 255 }).notNull(),
+  ssl_enabled: boolean("ssl_enabled").default(false),
+  is_active: boolean("is_active").default(true),
+  sync_frequency: integer("sync_frequency").default(60), // minutes
+  last_sync: timestamp("last_sync"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const insertDatabaseConfigSchema = createInsertSchema(database_configurations).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  last_sync: true,
+});
+
+export type DatabaseConfiguration = typeof database_configurations.$inferSelect;
+export type InsertDatabaseConfiguration = z.infer<typeof insertDatabaseConfigSchema>;
