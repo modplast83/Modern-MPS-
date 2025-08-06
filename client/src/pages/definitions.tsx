@@ -1396,6 +1396,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل (عربي)</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل (إنجليزي)</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المندوب</th>
@@ -1409,6 +1410,9 @@ export default function Definitions() {
                             return filteredCustomers.length > 0 ? (
                               filteredCustomers.map((customer) => (
                                 <tr key={customer.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {customer.id}
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {customer.name_ar || '-'}
                                   </td>
@@ -1456,7 +1460,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
@@ -1500,6 +1504,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدير</th>
@@ -1513,6 +1518,9 @@ export default function Definitions() {
                             return filteredSections.length > 0 ? (
                               filteredSections.map((section) => (
                                 <tr key={section.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {section.id}
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {section.name_ar || section.name}
                                   </td>
@@ -1556,7 +1564,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
@@ -1817,6 +1825,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">مجموعة المواد</th>
                             <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
@@ -1839,6 +1848,9 @@ export default function Definitions() {
                             return filteredCP.length > 0 ? (
                               filteredCP.map((cp) => (
                                 <tr key={cp.id} className="hover:bg-gray-50">
+                                  <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {cp.id}
+                                  </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {(() => {
                                       const customer = Array.isArray(customers) && customers.find((c: any) => c.id === cp.customer_id);
@@ -1936,7 +1948,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={14} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={15} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
@@ -1978,6 +1990,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع الأب</th>
@@ -1991,6 +2004,9 @@ export default function Definitions() {
                             return filteredLocations.length > 0 ? (
                               filteredLocations.map((location) => (
                                 <tr key={location.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {location.id}
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {location.name_ar || location.name}
                                   </td>
@@ -2036,7 +2052,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
@@ -2078,6 +2094,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">القسم</th>
@@ -2091,6 +2108,9 @@ export default function Definitions() {
                             return filteredMachines.length > 0 ? (
                               filteredMachines.map((machine) => (
                                 <tr key={machine.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {machine.id}
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {machine.name_ar || machine.name}
                                   </td>
@@ -2138,7 +2158,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
@@ -2180,6 +2200,7 @@ export default function Definitions() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم المعروض</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الدور</th>
@@ -2194,6 +2215,9 @@ export default function Definitions() {
                             return filteredUsers.length > 0 ? (
                               filteredUsers.map((user) => (
                                 <tr key={user.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {user.id}
+                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {user.username}
                                   </td>
