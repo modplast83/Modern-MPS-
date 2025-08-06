@@ -15,6 +15,7 @@ import {
   customer_products,
   locations,
   categories,
+  inventory,
   training_records,
   admin_decisions,
   warehouse_transactions,
@@ -47,6 +48,8 @@ import {
   type Item,
   type CustomerProduct,
   type Location,
+  type Inventory,
+  type InsertInventory,
   type TrainingRecord,
   type AdminDecision,
   type WarehouseTransaction,
@@ -1019,6 +1022,77 @@ export class DatabaseStorage implements IStorage {
         eq(leave_balances.year, year)
       ));
     return balance || undefined;
+  }
+
+  // ============ Inventory Management ============
+
+  async getInventoryItems(): Promise<any[]> {
+    const result = await db
+      .select({
+        id: inventory.id,
+        item_id: inventory.item_id,
+        item_name: items.name,
+        item_name_ar: items.name_ar,
+        item_code: items.code,
+        category_name: categories.name,
+        category_name_ar: categories.name_ar,
+        location_name: locations.name,
+        location_name_ar: locations.name_ar,
+        current_stock: inventory.current_stock,
+        min_stock: inventory.min_stock,
+        max_stock: inventory.max_stock,
+        unit: inventory.unit,
+        cost_per_unit: inventory.cost_per_unit,
+        last_updated: inventory.last_updated
+      })
+      .from(inventory)
+      .leftJoin(items, eq(inventory.item_id, items.id))
+      .leftJoin(categories, eq(items.category_id, categories.id))
+      .leftJoin(locations, eq(inventory.location_id, locations.id))
+      .orderBy(items.name_ar);
+    
+    return result;
+  }
+
+  async createInventoryItem(item: InsertInventory): Promise<Inventory> {
+    const [inventoryItem] = await db.insert(inventory).values(item).returning();
+    return inventoryItem;
+  }
+
+  async updateInventoryItem(id: number, updates: Partial<Inventory>): Promise<Inventory> {
+    const [inventoryItem] = await db
+      .update(inventory)
+      .set({ ...updates, last_updated: new Date() })
+      .where(eq(inventory.id, id))
+      .returning();
+    return inventoryItem;
+  }
+
+  async deleteInventoryItem(id: number): Promise<boolean> {
+    const result = await db.delete(inventory).where(eq(inventory.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async getInventoryByItemId(itemId: string): Promise<Inventory | undefined> {
+    const [item] = await db.select().from(inventory).where(eq(inventory.item_id, itemId));
+    return item || undefined;
+  }
+
+  async getInventoryStats(): Promise<any> {
+    const totalItems = await db.select({ count: count() }).from(inventory);
+    const lowStockItems = await db.select({ count: count() })
+      .from(inventory)
+      .where(sql`${inventory.current_stock} <= ${inventory.min_stock}`);
+    
+    const totalValue = await db.select({ total: sum(sql`${inventory.current_stock} * ${inventory.cost_per_unit}`) })
+      .from(inventory);
+
+    return {
+      totalItems: totalItems[0]?.count || 0,
+      lowStockItems: lowStockItems[0]?.count || 0,
+      totalValue: totalValue[0]?.total || 0,
+      movementsToday: 28 // Placeholder for now
+    };
   }
 }
 

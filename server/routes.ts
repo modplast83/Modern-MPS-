@@ -1166,6 +1166,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Inventory Management routes
+  app.get("/api/inventory", async (req, res) => {
+    try {
+      const inventory = await storage.getInventoryItems();
+      res.json(inventory);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب بيانات المخزون" });
+    }
+  });
+
+  app.get("/api/inventory/stats", async (req, res) => {
+    try {
+      const stats = await storage.getInventoryStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب إحصائيات المخزون" });
+    }
+  });
+
+  app.post("/api/inventory", async (req, res) => {
+    try {
+      const item = await storage.createInventoryItem(req.body);
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إضافة صنف للمخزون" });
+    }
+  });
+
+  app.put("/api/inventory/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const item = await storage.updateInventoryItem(id, req.body);
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث صنف المخزون" });
+    }
+  });
+
+  app.delete("/api/inventory/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteInventoryItem(id);
+      res.json({ message: "تم حذف صنف المخزون بنجاح" });
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في حذف صنف المخزون" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

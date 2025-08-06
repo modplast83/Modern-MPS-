@@ -1,71 +1,148 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+
+const inventoryFormSchema = z.object({
+  item_id: z.string().min(1, "الصنف مطلوب"),
+  location_id: z.string().transform(val => parseInt(val)),
+  current_stock: z.string().transform(val => parseFloat(val)),
+  min_stock: z.string().transform(val => parseFloat(val)),
+  max_stock: z.string().transform(val => parseFloat(val)),
+  unit: z.string().min(1, "الوحدة مطلوبة"),
+  cost_per_unit: z.string().transform(val => parseFloat(val))
+});
 
 export default function Warehouse() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Sample inventory data
-  const inventoryItems = [
-    {
-      id: 1,
-      name: "HDPE طبيعي",
-      name_ar: "HDPE طبيعي",
-      code: "HDPE-001",
-      category: "مواد خام",
-      currentStock: 2500,
-      minStock: 1000,
-      maxStock: 5000,
-      unit: "كيلو",
-      location: "مستودع A-1",
-      lastUpdated: "2025-02-06"
-    },
-    {
-      id: 2,
-      name: "LDPE شفاف",
-      name_ar: "LDPE شفاف",
-      code: "LDPE-002",
-      category: "مواد خام",
-      currentStock: 1800,
-      minStock: 1500,
-      maxStock: 4000,
-      unit: "كيلو",
-      location: "مستودع A-2",
-      lastUpdated: "2025-02-06"
-    },
-    {
-      id: 3,
-      name: "ماستر باتش أبيض",
-      name_ar: "ماستر باتش أبيض",
-      code: "MB-WHITE",
-      category: "ماستر باتش",
-      currentStock: 500,
-      minStock: 200,
-      maxStock: 1000,
-      unit: "كيلو",
-      location: "مستودع B-1",
-      lastUpdated: "2025-02-05"
-    },
-    {
-      id: 4,
-      name: "أكياس مطبوعة 20x30",
-      name_ar: "أكياس مطبوعة 20x30",
-      code: "BAG-20X30",
-      category: "منتجات نهائية",
-      currentStock: 15000,
-      minStock: 5000,
-      maxStock: 50000,
-      unit: "قطعة",
-      location: "مستودع C-1",
-      lastUpdated: "2025-02-06"
+  // Fetch inventory data
+  const { data: inventoryItems = [], isLoading: inventoryLoading } = useQuery({
+    queryKey: ['/api/inventory'],
+    queryFn: async () => {
+      const response = await fetch('/api/inventory');
+      if (!response.ok) throw new Error('فشل في جلب بيانات المخزون');
+      return response.json();
     }
-  ];
+  });
+
+  // Fetch inventory stats
+  const { data: stats } = useQuery({
+    queryKey: ['/api/inventory/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/inventory/stats');
+      if (!response.ok) throw new Error('فشل في جلب إحصائيات المخزون');
+      return response.json();
+    }
+  });
+
+  // Fetch items for dropdown
+  const { data: items = [] } = useQuery({
+    queryKey: ['/api/items'],
+    queryFn: async () => {
+      const response = await fetch('/api/items');
+      if (!response.ok) throw new Error('فشل في جلب الأصناف');
+      return response.json();
+    }
+  });
+
+  // Fetch locations for dropdown
+  const { data: locations = [] } = useQuery({
+    queryKey: ['/api/locations'],
+    queryFn: async () => {
+      const response = await fetch('/api/locations');
+      if (!response.ok) throw new Error('فشل في جلب المواقع');
+      return response.json();
+    }
+  });
+
+  // Add/Update mutation
+  const mutation = useMutation({
+    mutationFn: async (data: any) => {
+      const url = editingItem ? `/api/inventory/${editingItem.id}` : '/api/inventory';
+      const method = editingItem ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) throw new Error('فشل في حفظ البيانات');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/stats'] });
+      setIsAddDialogOpen(false);
+      setEditingItem(null);
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: editingItem ? "تم تحديث صنف المخزون" : "تم إضافة صنف المخزون"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ البيانات",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/inventory/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('فشل في الحذف');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/stats'] });
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف صنف المخزون"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف الصنف",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const form = useForm({
+    resolver: zodResolver(inventoryFormSchema),
+    defaultValues: {
+      item_id: "",
+      location_id: "",
+      current_stock: "",
+      min_stock: "",
+      max_stock: "",
+      unit: "كيلو",
+      cost_per_unit: ""
+    }
+  });
 
   const getStockStatus = (current: number, min: number, max: number) => {
     if (current <= min) return { status: "منخفض", color: "destructive", icon: AlertTriangle };
@@ -73,11 +150,43 @@ export default function Warehouse() {
     return { status: "طبيعي", color: "success", icon: Package };
   };
 
-  const filteredItems = inventoryItems.filter(item => 
-    item.name_ar.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredItems = inventoryItems.filter((item: any) => 
+    (item.item_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.item_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.category_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleEdit = (item: any) => {
+    setEditingItem(item);
+    form.reset({
+      item_id: item.item_id,
+      location_id: item.location_id?.toString() || "",
+      current_stock: item.current_stock?.toString() || "0",
+      min_stock: item.min_stock?.toString() || "0",
+      max_stock: item.max_stock?.toString() || "0",
+      unit: item.unit || "كيلو",
+      cost_per_unit: item.cost_per_unit?.toString() || "0"
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const handleAdd = () => {
+    setEditingItem(null);
+    form.reset({
+      item_id: "",
+      location_id: "",
+      current_stock: "",
+      min_stock: "",
+      max_stock: "",
+      unit: "كيلو",
+      cost_per_unit: ""
+    });
+    setIsAddDialogOpen(true);
+  };
+
+  const onSubmit = (data: any) => {
+    mutation.mutate(data);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,7 +207,7 @@ export default function Warehouse() {
                 <Package className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">245</div>
+                <div className="text-2xl font-bold">{stats?.totalItems || 0}</div>
                 <p className="text-xs text-muted-foreground">صنف نشط</p>
               </CardContent>
             </Card>
@@ -109,7 +218,7 @@ export default function Warehouse() {
                 <AlertTriangle className="h-4 w-4 text-destructive" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-destructive">12</div>
+                <div className="text-2xl font-bold text-destructive">{stats?.lowStockItems || 0}</div>
                 <p className="text-xs text-muted-foreground">تحتاج إعادة تموين</p>
               </CardContent>
             </Card>
@@ -120,8 +229,8 @@ export default function Warehouse() {
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">$125,430</div>
-                <p className="text-xs text-muted-foreground">+12% من الشهر الماضي</p>
+                <div className="text-2xl font-bold">{stats?.totalValue ? `${Number(stats.totalValue).toLocaleString()} د.ع` : '0 د.ع'}</div>
+                <p className="text-xs text-muted-foreground">القيمة الإجمالية</p>
               </CardContent>
             </Card>
 
@@ -131,7 +240,7 @@ export default function Warehouse() {
                 <TrendingDown className="h-4 w-4 text-blue-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">28</div>
+                <div className="text-2xl font-bold">{stats?.movementsToday || 0}</div>
                 <p className="text-xs text-muted-foreground">عملية دخول وخروج</p>
               </CardContent>
             </Card>
@@ -160,70 +269,253 @@ export default function Warehouse() {
                           className="pl-10 w-64"
                         />
                       </div>
-                      <Button>
-                        <Plus className="h-4 w-4 mr-2" />
-                        إضافة صنف
-                      </Button>
+                      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button onClick={handleAdd}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            إضافة صنف
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>{editingItem ? 'تعديل صنف المخزون' : 'إضافة صنف جديد للمخزون'}</DialogTitle>
+                          </DialogHeader>
+                          <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="item_id"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>الصنف</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="اختر الصنف" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {items.map((item: any) => (
+                                          <SelectItem key={item.id} value={item.id}>
+                                            {item.name_ar} ({item.code})
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
+                              <FormField
+                                control={form.control}
+                                name="location_id"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>الموقع</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="اختر الموقع" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {locations.map((location: any) => (
+                                          <SelectItem key={location.id} value={location.id.toString()}>
+                                            {location.name_ar}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="current_stock"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>المخزون الحالي</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} type="number" step="0.01" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="unit"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>الوحدة</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          <SelectItem value="كيلو">كيلو</SelectItem>
+                                          <SelectItem value="قطعة">قطعة</SelectItem>
+                                          <SelectItem value="طن">طن</SelectItem>
+                                          <SelectItem value="متر">متر</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={form.control}
+                                  name="min_stock"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>الحد الأدنى</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} type="number" step="0.01" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <FormField
+                                  control={form.control}
+                                  name="max_stock"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>الحد الأقصى</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} type="number" step="0.01" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              <FormField
+                                control={form.control}
+                                name="cost_per_unit"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>التكلفة لكل وحدة</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} type="number" step="0.01" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <div className="flex justify-end space-x-2 space-x-reverse">
+                                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                                  إلغاء
+                                </Button>
+                                <Button type="submit" disabled={mutation.isPending}>
+                                  {mutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                                </Button>
+                              </div>
+                            </form>
+                          </Form>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون الحالي</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأدنى</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأقصى</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredItems.map((item) => {
-                          const stockInfo = getStockStatus(item.currentStock, item.minStock, item.maxStock);
-                          const StatusIcon = stockInfo.icon;
-                          
-                          return (
-                            <tr key={item.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4">
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900">{item.name_ar}</div>
-                                  <div className="text-sm text-gray-500">{item.code}</div>
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">{item.category}</td>
-                              <td className="px-6 py-4 text-sm text-gray-900">
-                                {item.currentStock.toLocaleString()} {item.unit}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">
-                                {item.minStock.toLocaleString()} {item.unit}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">
-                                {item.maxStock.toLocaleString()} {item.unit}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">{item.location}</td>
-                              <td className="px-6 py-4">
-                                <Badge variant={stockInfo.color === 'success' ? 'default' : stockInfo.color === 'warning' ? 'secondary' : 'destructive'} className="flex items-center space-x-1">
-                                  <StatusIcon className="h-3 w-3" />
-                                  <span>{stockInfo.status}</span>
-                                </Badge>
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex space-x-2 space-x-reverse">
-                                  <Button variant="outline" size="sm">تعديل</Button>
-                                  <Button variant="outline" size="sm">حركة</Button>
-                                </div>
+                  {inventoryLoading ? (
+                    <div className="text-center py-8">جاري التحميل...</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون الحالي</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأدنى</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأقصى</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {filteredItems.length === 0 ? (
+                            <tr>
+                              <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                                {searchTerm ? 'لا توجد نتائج للبحث' : 'لا توجد أصناف في المخزون'}
                               </td>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                          ) : (
+                            filteredItems.map((item: any) => {
+                              const currentStock = parseFloat(item.current_stock || 0);
+                              const minStock = parseFloat(item.min_stock || 0);
+                              const maxStock = parseFloat(item.max_stock || 0);
+                              const stockInfo = getStockStatus(currentStock, minStock, maxStock);
+                              const StatusIcon = stockInfo.icon;
+                              
+                              return (
+                                <tr key={item.id} className="hover:bg-gray-50">
+                                  <td className="px-6 py-4">
+                                    <div>
+                                      <div className="text-sm font-medium text-gray-900">{item.item_name_ar || item.item_name}</div>
+                                      <div className="text-sm text-gray-500">{item.item_code}</div>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">{item.category_name_ar || item.category_name || '-'}</td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">
+                                    {currentStock.toLocaleString()} {item.unit}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">
+                                    {minStock.toLocaleString()} {item.unit}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">
+                                    {maxStock.toLocaleString()} {item.unit}
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-900">{item.location_name_ar || item.location_name || '-'}</td>
+                                  <td className="px-6 py-4">
+                                    <Badge variant={stockInfo.color === 'success' ? 'default' : stockInfo.color === 'warning' ? 'secondary' : 'destructive'} className="flex items-center space-x-1 w-fit">
+                                      <StatusIcon className="h-3 w-3" />
+                                      <span>{stockInfo.status}</span>
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4">
+                                    <div className="flex space-x-2 space-x-reverse">
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleEdit(item)}
+                                      >
+                                        <Edit className="h-3 w-3" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => deleteMutation.mutate(item.id)}
+                                        disabled={deleteMutation.isPending}
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
