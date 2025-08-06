@@ -260,7 +260,7 @@ export default function AIAssistant() {
               {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
             </Button>
             <Button
-              onClick={handleSendMessage}
+              onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
             >
               <Send className="w-4 h-4" />
