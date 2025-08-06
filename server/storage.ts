@@ -454,12 +454,30 @@ export class DatabaseStorage implements IStorage {
     return newCustomer;
   }
 
+  async updateCustomer(id: string, updates: any): Promise<Customer> {
+    const [updatedCustomer] = await db
+      .update(customers)
+      .set(updates)
+      .where(eq(customers.id, id))
+      .returning();
+    return updatedCustomer;
+  }
+
   async createMachine(machine: any): Promise<Machine> {
     const [newMachine] = await db
       .insert(machines)
       .values(machine)
       .returning();
     return newMachine;
+  }
+
+  async updateMachine(id: number, updates: any): Promise<Machine> {
+    const [updatedMachine] = await db
+      .update(machines)
+      .set(updates)
+      .where(eq(machines.id, id))
+      .returning();
+    return updatedMachine;
   }
 
   async createSection(section: any): Promise<Section> {
@@ -470,12 +488,30 @@ export class DatabaseStorage implements IStorage {
     return newSection;
   }
 
+  async updateSection(id: number, updates: any): Promise<Section> {
+    const [updatedSection] = await db
+      .update(sections)
+      .set(updates)
+      .where(eq(sections.id, id))
+      .returning();
+    return updatedSection;
+  }
+
   async createMaterialGroup(materialGroup: any): Promise<MaterialGroup> {
     const [newMaterialGroup] = await db
       .insert(material_groups)
       .values(materialGroup)
       .returning();
     return newMaterialGroup;
+  }
+
+  async updateUser(id: number, updates: any): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
 
   async updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup> {
@@ -495,6 +531,15 @@ export class DatabaseStorage implements IStorage {
     return newItem;
   }
 
+  async updateItem(id: string, updates: any): Promise<Item> {
+    const [updatedItem] = await db
+      .update(items)
+      .set(updates)
+      .where(eq(items.id, id))
+      .returning();
+    return updatedItem;
+  }
+
   async createCustomerProduct(customerProduct: any): Promise<CustomerProduct> {
     const [newCustomerProduct] = await db
       .insert(customer_products)
@@ -503,12 +548,30 @@ export class DatabaseStorage implements IStorage {
     return newCustomerProduct;
   }
 
+  async updateCustomerProduct(id: number, updates: any): Promise<CustomerProduct> {
+    const [updatedCustomerProduct] = await db
+      .update(customer_products)
+      .set(updates)
+      .where(eq(customer_products.id, id))
+      .returning();
+    return updatedCustomerProduct;
+  }
+
   async createLocation(location: any): Promise<Location> {
     const [newLocation] = await db
       .insert(locations)
       .values(location)
       .returning();
     return newLocation;
+  }
+
+  async updateLocation(id: number, updates: any): Promise<Location> {
+    const [updatedLocation] = await db
+      .update(locations)
+      .set(updates)
+      .where(eq(locations.id, id))
+      .returning();
+    return updatedLocation;
   }
 
   async getSections(): Promise<Section[]> {
