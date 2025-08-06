@@ -1988,8 +1988,6 @@ export default function Definitions() {
                           <tr>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع الأب</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
@@ -2005,14 +2003,6 @@ export default function Definitions() {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {location.name_ar || location.name}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {location.type === 'city' ? 'مدينة' : 
-                                     location.type === 'factory' ? 'مصنع' : 
-                                     location.type === 'warehouse' ? 'مستودع' : location.type}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {location.parent_id || '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
                                     <Badge variant={location.status === 'active' ? 'default' : 'secondary'}>
@@ -2048,7 +2038,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
