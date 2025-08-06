@@ -782,14 +782,16 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* مقاس المنتج */}
+      {/* دخلات الجانب الأيمن */}
       <div className="space-y-2">
-        <Label htmlFor="size_caption">مقاس المنتج</Label>
+        <Label htmlFor="right_facing">دخلات الجانب الأيمن (سم)</Label>
         <Input
-          id="size_caption"
-          value={customerProductForm.size_caption || ''}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
-          placeholder="مثال: 20x30 cm"
+          id="right_facing"
+          type="number"
+          step="0.01"
+          value={customerProductForm.right_facing || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, right_facing: e.target.value }))}
+          placeholder="دخلات الجانب الأيمن"
         />
       </div>
 
@@ -819,29 +821,26 @@ export default function Definitions() {
         />
       </div>
 
-      {/* دخلات الجانب الأيمن */}
+      {/* مقاس المنتج */}
       <div className="space-y-2">
-        <Label htmlFor="right_facing">دخلات الجانب الأيمن (سم)</Label>
+        <Label htmlFor="size_caption">مقاس المنتج</Label>
         <Input
-          id="right_facing"
-          type="number"
-          step="0.01"
-          value={customerProductForm.right_facing || ''}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, right_facing: e.target.value }))}
-          placeholder="دخلات الجانب الأيمن"
+          id="size_caption"
+          value={customerProductForm.size_caption || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
+          placeholder="مثال: 20x30 cm"
         />
       </div>
 
-      {/* السماكة */}
+      {/* طول القطع */}
       <div className="space-y-2">
-        <Label htmlFor="thickness">السماكة (مايكرون)</Label>
+        <Label htmlFor="cutting_length_cm">طول القطع (سم) *</Label>
         <Input
-          id="thickness"
+          id="cutting_length_cm"
           type="number"
-          step="0.001"
-          value={customerProductForm.thickness || ''}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, thickness: e.target.value }))}
-          placeholder="السماكة بالمايكرون"
+          value={customerProductForm.cutting_length_cm || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, cutting_length_cm: e.target.value }))}
+          placeholder="طول القطع (أرقام صحيحة فقط)"
         />
       </div>
 
@@ -888,31 +887,32 @@ export default function Definitions() {
         />
       </div>
 
-      {/* طول القطع */}
+      {/* السماكة */}
       <div className="space-y-2">
-        <Label htmlFor="cutting_length_cm">طول القطع (سم) *</Label>
+        <Label htmlFor="thickness">السماكة (مايكرون)</Label>
         <Input
-          id="cutting_length_cm"
+          id="thickness"
           type="number"
-          value={customerProductForm.cutting_length_cm || ''}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, cutting_length_cm: e.target.value }))}
-          placeholder="طول القطع (أرقام صحيحة فقط)"
+          step="0.001"
+          value={customerProductForm.thickness || ''}
+          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, thickness: e.target.value }))}
+          placeholder="السماكة بالمايكرون"
         />
       </div>
 
-      {/* المادة الخام */}
+      {/* هل يطبع */}
       <div className="space-y-2">
-        <Label htmlFor="raw_material">المادة الخام *</Label>
-        <Select value={customerProductForm.raw_material} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, raw_material: value }))}>
-          <SelectTrigger>
-            <SelectValue placeholder="اختر المادة الخام" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="HDPE">HDPE</SelectItem>
-            <SelectItem value="LDPE">LDPE</SelectItem>
-            <SelectItem value="Regrind">Regrind</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label htmlFor="is_printed">هل يطبع؟</Label>
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is_printed"
+            checked={customerProductForm.is_printed || false}
+            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, is_printed: e.target.checked }))}
+            className="rounded border-gray-300"
+          />
+          <Label htmlFor="is_printed" className="text-sm">نعم، يطبع</Label>
+        </div>
       </div>
 
       {/* ماستر باتش */}
@@ -934,19 +934,19 @@ export default function Definitions() {
         </Select>
       </div>
 
-      {/* هل يطبع */}
+      {/* المادة الخام */}
       <div className="space-y-2">
-        <Label htmlFor="is_printed">هل يطبع؟</Label>
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="is_printed"
-            checked={customerProductForm.is_printed || false}
-            onChange={(e) => setCustomerProductForm(prev => ({ ...prev, is_printed: e.target.checked }))}
-            className="rounded border-gray-300"
-          />
-          <Label htmlFor="is_printed" className="text-sm">نعم، يطبع</Label>
-        </div>
+        <Label htmlFor="raw_material">المادة الخام *</Label>
+        <Select value={customerProductForm.raw_material} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, raw_material: value }))}>
+          <SelectTrigger>
+            <SelectValue placeholder="اختر المادة الخام" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="HDPE">HDPE</SelectItem>
+            <SelectItem value="LDPE">LDPE</SelectItem>
+            <SelectItem value="Regrind">Regrind</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* وحدة القطع */}
