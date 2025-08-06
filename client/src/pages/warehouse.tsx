@@ -26,10 +26,31 @@ const inventoryFormSchema = z.object({
   cost_per_unit: z.string().transform(val => parseFloat(val))
 });
 
+const locationFormSchema = z.object({
+  name: z.string().min(1, "الاسم الإنجليزي مطلوب"),
+  name_ar: z.string().min(1, "الاسم العربي مطلوب"),
+  coordinates: z.string().optional(),
+  tolerance_range: z.string().optional()
+});
+
+const movementFormSchema = z.object({
+  inventory_id: z.string().transform(val => parseInt(val)),
+  movement_type: z.string().min(1, "نوع الحركة مطلوب"),
+  quantity: z.string().transform(val => parseFloat(val)),
+  unit_cost: z.string().transform(val => parseFloat(val)).optional(),
+  reference_number: z.string().optional(),
+  reference_type: z.string().optional(),
+  notes: z.string().optional()
+});
+
 export default function Warehouse() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+  const [isMovementDialogOpen, setIsMovementDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingLocation, setEditingLocation] = useState<any>(null);
+  const [editingMovement, setEditingMovement] = useState<any>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -64,11 +85,21 @@ export default function Warehouse() {
   });
 
   // Fetch locations for dropdown
-  const { data: locations = [] } = useQuery({
+  const { data: locations = [], isLoading: locationsLoading } = useQuery({
     queryKey: ['/api/locations'],
     queryFn: async () => {
       const response = await fetch('/api/locations');
       if (!response.ok) throw new Error('فشل في جلب المواقع');
+      return response.json();
+    }
+  });
+
+  // Fetch inventory movements
+  const { data: movements = [], isLoading: movementsLoading } = useQuery({
+    queryKey: ['/api/inventory-movements'],
+    queryFn: async () => {
+      const response = await fetch('/api/inventory-movements');
+      if (!response.ok) throw new Error('فشل في جلب حركات المخزون');
       return response.json();
     }
   });
@@ -131,6 +162,114 @@ export default function Warehouse() {
     }
   });
 
+  // Location mutations
+  const locationMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const url = editingLocation ? `/api/locations/${editingLocation.id}` : '/api/locations';
+      const method = editingLocation ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) throw new Error('فشل في حفظ البيانات');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      setIsLocationDialogOpen(false);
+      setEditingLocation(null);
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: editingLocation ? "تم تحديث الموقع" : "تم إضافة الموقع"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ البيانات",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteLocationMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/locations/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('فشل في الحذف');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف الموقع"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف الموقع",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Movement mutations
+  const movementMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/inventory-movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, created_by: 1 }) // Assuming user ID 1 for now
+      });
+      
+      if (!response.ok) throw new Error('فشل في حفظ البيانات');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory-movements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/stats'] });
+      setIsMovementDialogOpen(false);
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: "تم إضافة حركة المخزون"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ البيانات",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const deleteMovementMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const response = await fetch(`/api/inventory-movements/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('فشل في الحذف');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory-movements'] });
+      toast({
+        title: "تم الحذف بنجاح",
+        description: "تم حذف الحركة"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف الحركة",
+        variant: "destructive"
+      });
+    }
+  });
+
   const form = useForm({
     resolver: zodResolver(inventoryFormSchema),
     defaultValues: {
@@ -141,6 +280,29 @@ export default function Warehouse() {
       max_stock: "",
       unit: "كيلو",
       cost_per_unit: ""
+    }
+  });
+
+  const locationForm = useForm({
+    resolver: zodResolver(locationFormSchema),
+    defaultValues: {
+      name: "",
+      name_ar: "",
+      coordinates: "",
+      tolerance_range: ""
+    }
+  });
+
+  const movementForm = useForm({
+    resolver: zodResolver(movementFormSchema),
+    defaultValues: {
+      inventory_id: "",
+      movement_type: "",
+      quantity: "",
+      unit_cost: "",
+      reference_number: "",
+      reference_type: "",
+      notes: ""
     }
   });
 
@@ -186,6 +348,50 @@ export default function Warehouse() {
 
   const onSubmit = (data: any) => {
     mutation.mutate(data);
+  };
+
+  const onLocationSubmit = (data: any) => {
+    locationMutation.mutate(data);
+  };
+
+  const onMovementSubmit = (data: any) => {
+    movementMutation.mutate(data);
+  };
+
+  const handleAddLocation = () => {
+    setEditingLocation(null);
+    locationForm.reset({
+      name: "",
+      name_ar: "",
+      coordinates: "",
+      tolerance_range: ""
+    });
+    setIsLocationDialogOpen(true);
+  };
+
+  const handleEditLocation = (location: any) => {
+    setEditingLocation(location);
+    locationForm.reset({
+      name: location.name || "",
+      name_ar: location.name_ar || "",
+      coordinates: location.coordinates || "",
+      tolerance_range: location.tolerance_range?.toString() || ""
+    });
+    setIsLocationDialogOpen(true);
+  };
+
+  const handleAddMovement = () => {
+    setEditingMovement(null);
+    movementForm.reset({
+      inventory_id: "",
+      movement_type: "",
+      quantity: "",
+      unit_cost: "",
+      reference_number: "",
+      reference_type: "",
+      notes: ""
+    });
+    setIsMovementDialogOpen(true);
   };
 
   return (
@@ -523,13 +729,240 @@ export default function Warehouse() {
             <TabsContent value="movements" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>حركات المخزون</CardTitle>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>حركات المخزون</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">تتبع جميع حركات دخول وخروج المخزون</p>
+                    </div>
+                    <Dialog open={isMovementDialogOpen} onOpenChange={setIsMovementDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={handleAddMovement}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          إضافة حركة
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>إضافة حركة مخزون جديدة</DialogTitle>
+                        </DialogHeader>
+                        <Form {...movementForm}>
+                          <form onSubmit={movementForm.handleSubmit(onMovementSubmit)} className="space-y-4">
+                            <FormField
+                              control={movementForm.control}
+                              name="inventory_id"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>صنف المخزون</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="اختر الصنف" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {inventoryItems.map((item: any) => (
+                                        <SelectItem key={item.id} value={item.id.toString()}>
+                                          {item.item_name_ar} - {item.location_name_ar}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={movementForm.control}
+                              name="movement_type"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>نوع الحركة</FormLabel>
+                                  <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="اختر نوع الحركة" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="in">دخول</SelectItem>
+                                      <SelectItem value="out">خروج</SelectItem>
+                                      <SelectItem value="transfer">نقل</SelectItem>
+                                      <SelectItem value="adjustment">تسوية</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={movementForm.control}
+                                name="quantity"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>الكمية</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} type="number" step="0.01" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={movementForm.control}
+                                name="unit_cost"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>التكلفة للوحدة</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} type="number" step="0.01" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={movementForm.control}
+                                name="reference_number"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>رقم المرجع</FormLabel>
+                                    <FormControl>
+                                      <Input {...field} placeholder="PO-001" />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={movementForm.control}
+                                name="reference_type"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>نوع المرجع</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="اختر النوع" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="purchase">شراء</SelectItem>
+                                        <SelectItem value="sale">بيع</SelectItem>
+                                        <SelectItem value="production">إنتاج</SelectItem>
+                                        <SelectItem value="adjustment">تسوية</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+
+                            <FormField
+                              control={movementForm.control}
+                              name="notes"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>ملاحظات</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="ملاحظات إضافية" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="flex justify-end space-x-2 space-x-reverse">
+                              <Button type="button" variant="outline" onClick={() => setIsMovementDialogOpen(false)}>
+                                إلغاء
+                              </Button>
+                              <Button type="submit" disabled={movementMutation.isPending}>
+                                {movementMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600">سيتم إضافة تتبع حركات المخزون قريباً</p>
-                  </div>
+                  {movementsLoading ? (
+                    <div className="text-center py-8">جاري التحميل...</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نوع الحركة</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكمية</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">رقم المرجع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">التاريخ</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المستخدم</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {movements.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                                لا توجد حركات مخزون مسجلة
+                              </td>
+                            </tr>
+                          ) : (
+                            movements.map((movement: any) => (
+                              <tr key={movement.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{movement.item_name}</div>
+                                    <div className="text-sm text-gray-500">{movement.item_code}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge variant={movement.movement_type === 'in' ? 'default' : movement.movement_type === 'out' ? 'destructive' : 'secondary'}>
+                                    {movement.movement_type === 'in' ? 'دخول' : 
+                                     movement.movement_type === 'out' ? 'خروج' :
+                                     movement.movement_type === 'transfer' ? 'نقل' : 'تسوية'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  {parseFloat(movement.quantity).toLocaleString()}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  {movement.reference_number || '-'}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  {new Date(movement.created_at).toLocaleDateString('ar-SA')}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">
+                                  {movement.user_name || '-'}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm"
+                                    onClick={() => deleteMovementMutation.mutate(movement.id)}
+                                    disabled={deleteMovementMutation.isPending}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -537,13 +970,152 @@ export default function Warehouse() {
             <TabsContent value="locations" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>إدارة المواقع</CardTitle>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>إدارة المواقع</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">إدارة مواقع ومناطق المستودع</p>
+                    </div>
+                    <Dialog open={isLocationDialogOpen} onOpenChange={setIsLocationDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button onClick={handleAddLocation}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          إضافة موقع
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>{editingLocation ? 'تعديل الموقع' : 'إضافة موقع جديد'}</DialogTitle>
+                        </DialogHeader>
+                        <Form {...locationForm}>
+                          <form onSubmit={locationForm.handleSubmit(onLocationSubmit)} className="space-y-4">
+                            <FormField
+                              control={locationForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>اسم الموقع (إنجليزي)</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="Main Warehouse" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            
+                            <FormField
+                              control={locationForm.control}
+                              name="name_ar"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>اسم الموقع (عربي)</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="المستودع الرئيسي" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={locationForm.control}
+                              name="coordinates"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>الإحداثيات</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} placeholder="24.7136, 46.6753" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={locationForm.control}
+                              name="tolerance_range"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>نطاق التسامح (متر)</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="number" placeholder="100" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <div className="flex justify-end space-x-2 space-x-reverse">
+                              <Button type="button" variant="outline" onClick={() => setIsLocationDialogOpen(false)}>
+                                إلغاء
+                              </Button>
+                              <Button type="submit" disabled={locationMutation.isPending}>
+                                {locationMutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600">سيتم إضافة إدارة مواقع المستودعات قريباً</p>
-                  </div>
+                  {locationsLoading ? (
+                    <div className="text-center py-8">جاري التحميل...</div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الموقع</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الإحداثيات</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">نطاق التسامح</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {locations.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                لا توجد مواقع مسجلة
+                              </td>
+                            </tr>
+                          ) : (
+                            locations.map((location: any) => (
+                              <tr key={location.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4">
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-900">{location.name_ar}</div>
+                                    <div className="text-sm text-gray-500">{location.name}</div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-900">{location.coordinates || '-'}</td>
+                                <td className="px-6 py-4 text-sm text-gray-900">{location.tolerance_range || '-'} متر</td>
+                                <td className="px-6 py-4">
+                                  <div className="flex space-x-2 space-x-reverse">
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => handleEditLocation(location)}
+                                    >
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm"
+                                      onClick={() => deleteLocationMutation.mutate(location.id)}
+                                      disabled={deleteLocationMutation.isPending}
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -16,6 +16,7 @@ import {
   locations,
   categories,
   inventory,
+  inventory_movements,
   training_records,
   admin_decisions,
   warehouse_transactions,
@@ -50,6 +51,8 @@ import {
   type Location,
   type Inventory,
   type InsertInventory,
+  type InventoryMovement,
+  type InsertInventoryMovement,
   type TrainingRecord,
   type AdminDecision,
   type WarehouseTransaction,
@@ -1087,12 +1090,167 @@ export class DatabaseStorage implements IStorage {
     const totalValue = await db.select({ total: sum(sql`${inventory.current_stock} * ${inventory.cost_per_unit}`) })
       .from(inventory);
 
+    // Get today's movements
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayMovements = await db.select({ count: count() })
+      .from(inventory_movements)
+      .where(sql`DATE(${inventory_movements.created_at}) = CURRENT_DATE`);
+
     return {
       totalItems: totalItems[0]?.count || 0,
       lowStockItems: lowStockItems[0]?.count || 0,
       totalValue: totalValue[0]?.total || 0,
-      movementsToday: 28 // Placeholder for now
+      movementsToday: todayMovements[0]?.count || 0
     };
+  }
+
+  // ============ Inventory Movements ============
+
+  async getInventoryMovements(): Promise<any[]> {
+    const result = await db
+      .select({
+        id: inventory_movements.id,
+        inventory_id: inventory_movements.inventory_id,
+        item_name: items.name_ar,
+        item_code: items.code,
+        location_name: locations.name_ar,
+        movement_type: inventory_movements.movement_type,
+        quantity: inventory_movements.quantity,
+        unit_cost: inventory_movements.unit_cost,
+        total_cost: inventory_movements.total_cost,
+        reference_number: inventory_movements.reference_number,
+        reference_type: inventory_movements.reference_type,
+        notes: inventory_movements.notes,
+        created_by: inventory_movements.created_by,
+        created_at: inventory_movements.created_at,
+        user_name: users.username
+      })
+      .from(inventory_movements)
+      .leftJoin(inventory, eq(inventory_movements.inventory_id, inventory.id))
+      .leftJoin(items, eq(inventory.item_id, items.id))
+      .leftJoin(locations, eq(inventory.location_id, locations.id))
+      .leftJoin(users, eq(inventory_movements.created_by, users.id))
+      .orderBy(desc(inventory_movements.created_at));
+    
+    return result;
+  }
+
+  async createInventoryMovement(data: InsertInventoryMovement): Promise<InventoryMovement> {
+    const [movement] = await db.insert(inventory_movements).values(data).returning();
+    
+    // Update inventory stock based on movement type
+    if (movement.inventory_id) {
+      const currentInventory = await db.select().from(inventory).where(eq(inventory.id, movement.inventory_id));
+      if (currentInventory.length > 0) {
+        const currentStock = parseFloat(currentInventory[0].current_stock || '0');
+        const movementQty = parseFloat(movement.quantity || '0');
+        
+        let newStock = currentStock;
+        if (movement.movement_type === 'in') {
+          newStock = currentStock + movementQty;
+        } else if (movement.movement_type === 'out') {
+          newStock = currentStock - movementQty;
+        }
+        
+        await db.update(inventory)
+          .set({ current_stock: newStock.toString(), last_updated: new Date() })
+          .where(eq(inventory.id, movement.inventory_id));
+      }
+    }
+    
+    return movement;
+  }
+
+  async deleteInventoryMovement(id: number): Promise<boolean> {
+    const result = await db.delete(inventory_movements).where(eq(inventory_movements.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // ============ Extended Location Management ============
+
+  async createLocationExtended(data: any): Promise<Location> {
+    const [location] = await db.insert(locations).values(data).returning();
+    return location;
+  }
+
+  async updateLocationExtended(id: number, updates: any): Promise<Location> {
+    const [location] = await db
+      .update(locations)
+      .set(updates)
+      .where(eq(locations.id, id))
+      .returning();
+    return location;
+  }
+
+  async deleteLocationExtended(id: number): Promise<void> {
+    await db.delete(locations).where(eq(locations.id, id));
+  }
+
+  // ============ Inventory Movements Management ============
+
+  async getAllInventoryMovements(): Promise<any[]> {
+    const movements = await db
+      .select({
+        id: inventory_movements.id,
+        inventory_id: inventory_movements.inventory_id,
+        movement_type: inventory_movements.movement_type,
+        quantity: inventory_movements.quantity,
+        unit_cost: inventory_movements.unit_cost,
+        total_cost: inventory_movements.total_cost,
+        reference_number: inventory_movements.reference_number,
+        reference_type: inventory_movements.reference_type,
+        notes: inventory_movements.notes,
+        created_at: inventory_movements.created_at,
+        created_by: inventory_movements.created_by,
+        item_name: items.name_ar,
+        item_code: items.code,
+        user_name: users.display_name_ar
+      })
+      .from(inventory_movements)
+      .leftJoin(inventory, eq(inventory_movements.inventory_id, inventory.id))
+      .leftJoin(items, eq(inventory.item_id, items.id))
+      .leftJoin(users, eq(inventory_movements.created_by, users.id))
+      .orderBy(desc(inventory_movements.created_at));
+    
+    return movements;
+  }
+
+  async createInventoryMovement(data: InsertInventoryMovement): Promise<InventoryMovement> {
+    const [movement] = await db.insert(inventory_movements).values(data).returning();
+    
+    // Update inventory stock based on movement type
+    if (movement.movement_type === 'in') {
+      const [currentInventory] = await db
+        .select()
+        .from(inventory)
+        .where(eq(inventory.id, movement.inventory_id));
+        
+      if (currentInventory) {
+        const newStock = parseFloat(currentInventory.current_stock) + movement.quantity;
+        await db.update(inventory)
+          .set({ current_stock: newStock.toString(), last_updated: new Date() })
+          .where(eq(inventory.id, movement.inventory_id));
+      }
+    } else if (movement.movement_type === 'out') {
+      const [currentInventory] = await db
+        .select()
+        .from(inventory)
+        .where(eq(inventory.id, movement.inventory_id));
+        
+      if (currentInventory) {
+        const newStock = parseFloat(currentInventory.current_stock) - movement.quantity;
+        await db.update(inventory)
+          .set({ current_stock: Math.max(0, newStock).toString(), last_updated: new Date() })
+          .where(eq(inventory.id, movement.inventory_id));
+      }
+    }
+    
+    return movement;
+  }
+
+  async deleteInventoryMovement(id: number): Promise<void> {
+    await db.delete(inventory_movements).where(eq(inventory_movements.id, id));
   }
 }
 
