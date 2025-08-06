@@ -855,17 +855,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Assistant routes
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { message, context } = req.body;
+      const { message, context, userId } = req.body;
       
       if (!message) {
         return res.status(400).json({ message: "الرسالة مطلوبة" });
       }
 
-      // Fallback response for factory operations
+      // استخدام المساعد الذكي المتطور
+      const reply = await openaiService.processMessage(message, userId);
+      res.json({ reply });
+    } catch (error) {
+      console.error('AI Chat Error:', error);
       const fallbackResponse = generateFallbackResponse(message);
       res.json({ reply: fallbackResponse });
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في خدمة المساعد الذكي" });
     }
   });
 
@@ -932,6 +934,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Voice Command Error:', error);
       res.status(500).json({ message: "خطأ في معالجة الأمر الصوتي" });
+    }
+  });
+
+  // AI Advanced Features routes
+  app.post("/api/ai/generate-report", async (req, res) => {
+    try {
+      const { reportType, parameters, userId } = req.body;
+      
+      if (!reportType) {
+        return res.status(400).json({ message: "نوع التقرير مطلوب" });
+      }
+
+      const { AIReports } = await import('./services/ai-reports');
+      
+      let report;
+      switch (reportType.toLowerCase()) {
+        case 'production':
+        case 'إنتاج':
+          report = await AIReports.generateProductionReport(parameters);
+          break;
+        case 'quality':
+        case 'جودة':
+          report = await AIReports.generateQualityReport(parameters);
+          break;
+        case 'maintenance':
+        case 'صيانة':
+          report = await AIReports.generateMaintenanceReport(parameters);
+          break;
+        case 'sales':
+        case 'مبيعات':
+          report = await AIReports.generateSalesReport(parameters);
+          break;
+        default:
+          report = await AIReports.generateCustomReport(reportType, parameters);
+      }
+
+      res.json({ report });
+    } catch (error) {
+      console.error('Report Generation Error:', error);
+      res.status(500).json({ message: "خطأ في توليد التقرير الذكي" });
+    }
+  });
+
+  app.get("/api/ai/notifications", async (req, res) => {
+    try {
+      const { AINotifications } = await import('./services/ai-notifications');
+      const notifications = AINotifications.getActiveNotifications();
+      res.json({ notifications });
+    } catch (error) {
+      console.error('Notifications Error:', error);
+      res.status(500).json({ message: "خطأ في جلب الإشعارات" });
+    }
+  });
+
+  app.post("/api/ai/monitor", async (req, res) => {
+    try {
+      const { AINotifications } = await import('./services/ai-notifications');
+      const notifications = await AINotifications.performIntelligentMonitoring();
+      res.json({ notifications, count: notifications.length });
+    } catch (error) {
+      console.error('Monitoring Error:', error);
+      res.status(500).json({ message: "خطأ في النظام الذكي للمراقبة" });
+    }
+  });
+
+  app.get("/api/ai/learning-stats", async (req, res) => {
+    try {
+      const { AILearning } = await import('./services/ai-learning');
+      const stats = AILearning.getLearningStatistics();
+      res.json({ stats });
+    } catch (error) {
+      console.error('Learning Stats Error:', error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات التعلم" });
+    }
+  });
+
+  app.get("/api/ai/recommendations/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { AILearning } = await import('./services/ai-learning');
+      const recommendations = await AILearning.getPersonalizedRecommendations(parseInt(userId));
+      res.json({ recommendations });
+    } catch (error) {
+      console.error('Recommendations Error:', error);
+      res.status(500).json({ message: "خطأ في جلب التوصيات المخصصة" });
+    }
+  });
+
+  app.post("/api/ai/feedback", async (req, res) => {
+    try {
+      const { userId, actionType, context, feedback } = req.body;
+      
+      const { AILearning } = await import('./services/ai-learning');
+      await AILearning.recordLearningData(userId, actionType, context, true, 0, feedback);
+      
+      res.json({ message: "تم تسجيل التعليق بنجاح" });
+    } catch (error) {
+      console.error('Feedback Error:', error);
+      res.status(500).json({ message: "خطأ في تسجيل التعليق" });
     }
   });
 

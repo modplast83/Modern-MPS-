@@ -7,7 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Bot, User, Send, Mic, MicOff, Volume2 } from "lucide-react";
+import { Bot, User, Send, Mic, MicOff, Volume2, FileText, Bell, TrendingUp, Settings } from "lucide-react";
 
 interface Message {
   id: string;
@@ -21,13 +21,58 @@ export default function AIAssistant() {
     {
       id: '1',
       type: 'assistant',
-      content: 'مرحباً! أنا مساعدك الذكي في نظام MPBF. يمكنني مساعدتك في إدارة الإنتاج، الجودة، والصيانة. كيف يمكنني مساعدتك اليوم؟',
+      content: `🤖 مرحباً! أنا مساعدك الذكي المتطور في نظام MPBF Next.
+
+**قدراتي المتقدمة:**
+🗄️ **إدارة قاعدة البيانات الكاملة** - إضافة، تعديل، حذف جميع السجلات
+📊 **التقارير الذكية** - تحليل البيانات وإنشاء تقارير تفاعلية  
+🔔 **النظام الذكي للإشعارات** - تنبيهات تلقائية حسب الحاجة
+🧠 **التعلم المستمر** - تحسين الأداء من خلال تحليل أنماط العمل
+⚙️ **التطوير الذاتي** - تحسين وتطوير وظائف النظام
+
+**أمثلة على ما يمكنني فعله:**
+• "أضف عميل جديد اسمه أحمد محمد من الرياض"
+• "اعرض لي تقرير الإنتاج لهذا الأسبوع"  
+• "حدث حالة الطلب رقم ORD-123 إلى مكتمل"
+• "احذف المكينة رقم 5"
+• "أرسل تنبيه صيانة للمكائن المتوقفة"
+
+كيف يمكنني مساعدتك اليوم؟`,
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [showQuickActions, setShowQuickActions] = useState(true);
   const { toast } = useToast();
+
+  // إجراءات سريعة للمساعد الذكي
+  const quickActions = [
+    { 
+      label: 'تقرير الإنتاج', 
+      icon: TrendingUp, 
+      command: 'اعرض لي تقرير الإنتاج الذكي',
+      description: 'تحليل شامل للإنتاج مع توصيات'
+    },
+    { 
+      label: 'إضافة عميل', 
+      icon: User, 
+      command: 'أضف عميل جديد',
+      description: 'إضافة عميل جديد بالذكاء الاصطناعي'
+    },
+    { 
+      label: 'فحص الإشعارات', 
+      icon: Bell, 
+      command: 'اعرض الإشعارات والتنبيهات النشطة',
+      description: 'مراجعة التنبيهات الذكية'
+    },
+    { 
+      label: 'حالة المكائن', 
+      icon: Settings, 
+      command: 'ما هي حالة المكائن حالياً؟',
+      description: 'مراجعة حالة جميع المكائن'
+    }
+  ];
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
@@ -36,7 +81,7 @@ export default function AIAssistant() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message, context: 'factory_operations' })
+        body: JSON.stringify({ message, context: 'factory_operations', userId: 1 })
       });
       return response.json();
     },
@@ -65,19 +110,25 @@ export default function AIAssistant() {
     }
   });
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = (message?: string) => {
+    const messageToSend = message || inputValue.trim();
+    if (!messageToSend) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       type: 'user',
-      content: inputValue,
+      content: messageToSend,
       timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
-    sendMessageMutation.mutate(inputValue);
+    sendMessageMutation.mutate(messageToSend);
     setInputValue('');
+    setShowQuickActions(false);
+  };
+
+  const handleQuickAction = (command: string) => {
+    handleSendMessage(command);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
