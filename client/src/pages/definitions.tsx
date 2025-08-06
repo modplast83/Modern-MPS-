@@ -1612,7 +1612,6 @@ export default function Definitions() {
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">تاريخ الإنشاء</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
@@ -1641,9 +1640,6 @@ export default function Definitions() {
                                     <Badge variant={group.status === 'active' ? 'default' : 'secondary'}>
                                       {group.status === 'active' ? 'نشط' : 'غير نشط'}
                                     </Badge>
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {group.created_at ? new Date(group.created_at).toLocaleDateString('ar-SA') : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
@@ -1674,7 +1670,7 @@ export default function Definitions() {
                               ))
                             ) : (
                               <tr>
-                                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                                   {quickSearch || statusFilter !== "all" ? 
                                     "لا توجد نتائج مطابقة للفلاتر المحددة" : 
                                     "لا توجد بيانات متاحة"}
