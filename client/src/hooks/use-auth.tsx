@@ -19,8 +19,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem('mpbf_user');
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        // Validate the parsed data structure
+        if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.username) {
+          setUser(parsedUser);
+        } else {
+          // Invalid user data structure
+          localStorage.removeItem('mpbf_user');
+        }
       } catch (error) {
+        console.warn('Invalid user data in localStorage, clearing:', error);
         localStorage.removeItem('mpbf_user');
       }
     }

@@ -52,8 +52,23 @@ class OpenAIService {
       }
 
       return aiResponse;
-    } catch (error) {
-      console.error('OpenAI API Error:', error);
+    } catch (error: any) {
+      console.error('OpenAI API Error:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        type: error?.type
+      });
+      
+      // Provide more specific error messages based on error type
+      if (error?.status === 401) {
+        return "خطأ في التحقق من مفتاح API. يرجى التحقق من إعدادات الخدمة.";
+      } else if (error?.status === 429) {
+        return "تم تجاوز حد الاستخدام. يرجى المحاولة مرة أخرى لاحقاً.";
+      } else if (error?.code === 'network_error') {
+        return "خطأ في الاتصال بالشبكة. يرجى التحقق من اتصال الإنترنت.";
+      }
+      
       return "عذراً، حدث خطأ في المساعد الذكي. يرجى المحاولة مرة أخرى لاحقاً.";
     }
   }

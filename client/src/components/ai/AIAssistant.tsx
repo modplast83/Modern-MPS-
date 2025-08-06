@@ -97,12 +97,20 @@ export default function AIAssistant() {
       });
       
       // Simulate voice recognition (replace with actual implementation)
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         setIsListening(false);
         setInputValue("ما هو حالة الإنتاج اليوم؟");
       }, 3000);
+      
+      // Store timeout ID for cleanup
+      (window as any).__voiceTimeout = timeoutId;
     } else {
       setIsListening(false);
+      // Clear any pending timeout
+      if ((window as any).__voiceTimeout) {
+        clearTimeout((window as any).__voiceTimeout);
+        (window as any).__voiceTimeout = null;
+      }
     }
   };
 
