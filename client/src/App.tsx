@@ -9,6 +9,7 @@ import Production from "@/pages/production";
 import Quality from "@/pages/quality";
 import Maintenance from "@/pages/maintenance";
 import HR from "@/pages/hr";
+import Warehouse from "@/pages/warehouse";
 import Definitions from "@/pages/definitions";
 import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
@@ -60,6 +61,11 @@ function Router() {
       <Route path="/hr">
         <ProtectedRoute>
           <HR />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/warehouse">
+        <ProtectedRoute>
+          <Warehouse />
         </ProtectedRoute>
       </Route>
       <Route path="/definitions">
