@@ -16,6 +16,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Settings, RefreshCw, CheckCircle, XCircle, Clock, AlertTriangle, Plus, Edit, Trash2, TestTube } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
 
 const erpConfigSchema = z.object({
   name: z.string().min(1, "الاسم مطلوب"),
@@ -151,7 +153,7 @@ export default function ERPIntegration() {
       pending: "outline"
     };
     
-    const icons = {
+    const icons: Record<string, React.ReactElement> = {
       success: <CheckCircle className="h-3 w-3" />,
       failed: <XCircle className="h-3 w-3" />,
       partial: <AlertTriangle className="h-3 w-3" />,
@@ -160,14 +162,14 @@ export default function ERPIntegration() {
 
     return (
       <Badge variant={variants[status] || "outline"} className="flex items-center gap-1">
-        {icons[status]}
+        {icons[status] || <Clock className="h-3 w-3" />}
         {status === 'success' ? 'نجح' : status === 'failed' ? 'فشل' : status === 'partial' ? 'جزئي' : 'في الانتظار'}
       </Badge>
     );
   };
 
   const getSystemIcon = (type: string) => {
-    const icons = {
+    const icons: Record<string, string> = {
       SAP: "🏢",
       Oracle: "🔶", 
       Odoo: "🟣",
@@ -178,7 +180,11 @@ export default function ERPIntegration() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 p-6" dir="rtl">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">تكامل أنظمة ERP</h1>
@@ -372,7 +378,7 @@ export default function ERPIntegration() {
             <div className="text-center py-8">جاري التحميل...</div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {configurations.map((config: any) => (
+              {(configurations as any[]).map((config: any) => (
                 <Card key={config.id} className="relative">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -458,8 +464,8 @@ export default function ERPIntegration() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {syncLogs.map((log: any) => {
-                      const config = configurations.find((c: any) => c.id === log.erp_config_id);
+                    {(syncLogs as any[]).map((log: any) => {
+                      const config = (configurations as any[]).find((c: any) => c.id === log.erp_config_id);
                       return (
                         <TableRow key={log.id}>
                           <TableCell>
@@ -511,6 +517,8 @@ export default function ERPIntegration() {
           </Card>
         </TabsContent>
       </Tabs>
+        </main>
+      </div>
     </div>
   );
 }
