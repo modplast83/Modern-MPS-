@@ -43,6 +43,18 @@ MPBF Next is a modern Arabic-first ERP system designed for plastic bag manufactu
   - Cleaned up sample data and resolved fake record display issues
   - Enhanced material group form with description field and proper parent group selection
   - All definition tables now fully functional with add, edit, delete, and validation
+- **Latest Update (Aug 6, 2025)**: Complete Warehouse Management System & Regional Settings
+  - **WAREHOUSE SYSTEM**: Developed comprehensive warehouse management with three main tabs:
+    - Inventory tab with real-time stock tracking and automated calculations
+    - Locations tab with full CRUD operations for warehouse locations
+    - Inventory Movements tab with complete tracking of in/out/transfer/adjustment operations
+  - **DATABASE ENHANCEMENT**: Added inventory_movements table with proper foreign key relationships
+  - **REGIONAL SETTINGS**: Configured system for Saudi Arabia operations only:
+    - Currency locked to Saudi Riyal (SAR) only - removed all other currencies
+    - Calendar system set to Gregorian only - removed Hijri calendar references
+    - Country locked to Kingdom of Saudi Arabia with regional city selections
+    - Phone number format updated to Saudi (+966) format
+    - Timezone set to Riyadh (UTC+3) with read-only configuration
 
 ## Test Accounts
 - admin/admin123 (System Administrator)
