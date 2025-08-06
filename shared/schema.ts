@@ -678,8 +678,45 @@ export type Role = typeof roles.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Violation = typeof violations.$inferSelect;
 export type CompanyProfile = typeof company_profile.$inferSelect;
+// 🔧 جدول إعدادات النظام
+export const system_settings = pgTable('system_settings', {
+  id: serial('id').primaryKey(),
+  setting_key: varchar('setting_key', { length: 100 }).notNull().unique(),
+  setting_value: text('setting_value'),
+  setting_type: varchar('setting_type', { length: 20 }).default('string'), // string / number / boolean / json
+  description: text('description'),
+  is_editable: boolean('is_editable').default(true),
+  updated_at: timestamp('updated_at').defaultNow(),
+  updated_by: integer('updated_by').references(() => users.id)
+});
+
+// 👤 جدول إعدادات المستخدمين
+export const user_settings = pgTable('user_settings', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').references(() => users.id).notNull(),
+  setting_key: varchar('setting_key', { length: 100 }).notNull(),
+  setting_value: text('setting_value'),
+  setting_type: varchar('setting_type', { length: 20 }).default('string'), // string / number / boolean / json
+  updated_at: timestamp('updated_at').defaultNow()
+});
+
+// Insert schemas for settings
+export const insertSystemSettingSchema = createInsertSchema(system_settings).omit({
+  id: true,
+  updated_at: true,
+});
+
+export const insertUserSettingSchema = createInsertSchema(user_settings).omit({
+  id: true,
+  updated_at: true,
+});
+
 export type CustomerProduct = typeof customer_products.$inferSelect;
 export type InsertCustomerProduct = z.infer<typeof insertCustomerProductSchema>;
+export type SystemSetting = typeof system_settings.$inferSelect;
+export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type UserSetting = typeof user_settings.$inferSelect;
+export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
 
 // 🧱 جدول مجموعات المواد
 export const material_groups = pgTable("material_groups", {

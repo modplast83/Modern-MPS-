@@ -30,6 +30,8 @@ import {
   leave_types,
   leave_requests,
   leave_balances,
+  system_settings,
+  user_settings,
   type User, 
   type InsertUser,
   type Order,
@@ -73,6 +75,10 @@ import {
   type InsertLeaveType,
   type LeaveRequest,
   type InsertLeaveRequest,
+  type SystemSetting,
+  type InsertSystemSetting,
+  type UserSetting,
+  type InsertUserSetting,
   type LeaveBalance,
   type InsertLeaveBalance
 } from "@shared/schema";
@@ -1251,6 +1257,79 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInventoryMovement(id: number): Promise<void> {
     await db.delete(inventory_movements).where(eq(inventory_movements.id, id));
+  }
+
+  // ============ Settings Management ============
+  
+  async getSystemSettings(): Promise<SystemSetting[]> {
+    return await db.select().from(system_settings).orderBy(system_settings.setting_key);
+  }
+
+  async getSystemSettingByKey(key: string): Promise<SystemSetting | undefined> {
+    const [setting] = await db.select().from(system_settings).where(eq(system_settings.setting_key, key));
+    return setting || undefined;
+  }
+
+  async createSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting> {
+    const [newSetting] = await db.insert(system_settings).values(setting).returning();
+    return newSetting;
+  }
+
+  async updateSystemSetting(key: string, value: string, updatedBy?: number): Promise<SystemSetting> {
+    const [setting] = await db
+      .update(system_settings)
+      .set({ 
+        setting_value: value, 
+        updated_at: new Date(),
+        updated_by: updatedBy 
+      })
+      .where(eq(system_settings.setting_key, key))
+      .returning();
+    return setting;
+  }
+
+  async getUserSettings(userId: number): Promise<UserSetting[]> {
+    return await db.select().from(user_settings).where(eq(user_settings.user_id, userId));
+  }
+
+  async getUserSettingByKey(userId: number, key: string): Promise<UserSetting | undefined> {
+    const [setting] = await db
+      .select()
+      .from(user_settings)
+      .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`);
+    return setting || undefined;
+  }
+
+  async createUserSetting(setting: InsertUserSetting): Promise<UserSetting> {
+    const [newSetting] = await db.insert(user_settings).values(setting).returning();
+    return newSetting;
+  }
+
+  async updateUserSetting(userId: number, key: string, value: string): Promise<UserSetting> {
+    // Try to update existing setting first
+    const [existingSetting] = await db
+      .select()
+      .from(user_settings)
+      .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`);
+
+    if (existingSetting) {
+      const [setting] = await db
+        .update(user_settings)
+        .set({ 
+          setting_value: value, 
+          updated_at: new Date() 
+        })
+        .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`)
+        .returning();
+      return setting;
+    } else {
+      // Create new setting if it doesn't exist
+      return await this.createUserSetting({
+        user_id: userId,
+        setting_key: key,
+        setting_value: value
+      });
+    }
   }
 }
 

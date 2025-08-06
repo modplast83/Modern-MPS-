@@ -1358,6 +1358,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Settings API ============
+  
+  // System Settings
+  app.get("/api/settings/system", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات النظام" });
+    }
+  });
+
+  app.post("/api/settings/system", async (req, res) => {
+    try {
+      const { settings, userId } = req.body;
+      const results = [];
+      
+      for (const [key, value] of Object.entries(settings)) {
+        try {
+          const existingSetting = await storage.getSystemSettingByKey(key);
+          if (existingSetting) {
+            const updated = await storage.updateSystemSetting(key, String(value), userId);
+            results.push(updated);
+          } else {
+            const created = await storage.createSystemSetting({
+              setting_key: key,
+              setting_value: String(value),
+              updated_by: userId
+            });
+            results.push(created);
+          }
+        } catch (error) {
+          console.error(`Error saving setting ${key}:`, error);
+        }
+      }
+      
+      res.json({ message: "تم حفظ إعدادات النظام بنجاح", settings: results });
+    } catch (error) {
+      console.error("Error saving system settings:", error);
+      res.status(500).json({ message: "خطأ في حفظ إعدادات النظام" });
+    }
+  });
+
+  // User Settings
+  app.get("/api/settings/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const settings = await storage.getUserSettings(userId);
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching user settings:", error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات المستخدم" });
+    }
+  });
+
+  app.post("/api/settings/user/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { settings } = req.body;
+      const results = [];
+      
+      for (const [key, value] of Object.entries(settings)) {
+        try {
+          const updated = await storage.updateUserSetting(userId, key, String(value));
+          results.push(updated);
+        } catch (error) {
+          console.error(`Error saving user setting ${key}:`, error);
+        }
+      }
+      
+      res.json({ message: "تم حفظ إعداداتك الشخصية بنجاح", settings: results });
+    } catch (error) {
+      console.error("Error saving user settings:", error);
+      res.status(500).json({ message: "خطأ في حفظ إعدادات المستخدم" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
