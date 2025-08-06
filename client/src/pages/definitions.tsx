@@ -986,7 +986,7 @@ export default function Definitions() {
         <Input
           id="unit_weight_kg"
           type="number"
-          step="0.001"
+          step="0.01"
           value={customerProductForm.unit_weight_kg || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, unit_weight_kg: e.target.value }))}
           placeholder="وزن الوحدة بالكيلوجرام"
@@ -1891,7 +1891,17 @@ export default function Definitions() {
                                     {cp.unit_quantity || '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.package_weight_kg || '-'}
+                                    {(() => {
+                                      const unitWeight = parseFloat(cp.unit_weight_kg) || 0;
+                                      const unitQuantity = parseInt(cp.unit_quantity) || 0;
+                                      
+                                      if (unitWeight > 0 && unitQuantity > 0) {
+                                        const calculatedWeight = (unitWeight * unitQuantity).toFixed(2);
+                                        return `${calculatedWeight} كيلو`;
+                                      }
+                                      
+                                      return cp.package_weight_kg ? `${cp.package_weight_kg} كيلو` : '-';
+                                    })()}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-1">
