@@ -1998,19 +1998,19 @@ export default function Definitions() {
                             return filteredLocations.length > 0 ? (
                               filteredLocations.map((location) => (
                                 <tr key={location.id} className="hover:bg-gray-50">
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
                                     {location.id}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
                                     {location.name_ar || location.name}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
+                                  <td className="px-6 py-4 whitespace-nowrap text-right">
                                     <Badge variant={location.status === 'active' ? 'default' : 'secondary'}>
                                       {location.status === 'active' ? 'نشط' : 'غير نشط'}
                                     </Badge>
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <div className="flex items-center gap-2">
+                                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div className="flex items-center gap-2 justify-end">
                                       <Button 
                                         variant="outline" 
                                         size="sm"
