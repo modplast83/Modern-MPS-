@@ -15,6 +15,7 @@ import Settings from "@/pages/settings";
 import Reports from "@/pages/reports";
 import MLAnalytics from "@/pages/ml-analytics";
 import ERPIntegration from "@/pages/erp-integration";
+import Orders from "@/pages/orders";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -91,6 +92,11 @@ function Router() {
       <Route path="/erp-integration">
         <ProtectedRoute>
           <ERPIntegration />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/orders">
+        <ProtectedRoute>
+          <Orders />
         </ProtectedRoute>
       </Route>
       <Route path="/">

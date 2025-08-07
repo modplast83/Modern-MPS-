@@ -1,6 +1,7 @@
 import { 
   users, 
   orders, 
+  production_orders,
   job_orders, 
   rolls, 
   machines, 
@@ -34,8 +35,10 @@ import {
   user_settings,
   type User, 
   type InsertUser,
-  type Order,
-  type InsertOrder,
+  type NewOrder,
+  type InsertNewOrder,
+  type ProductionOrder,
+  type InsertProductionOrder,
   type JobOrder,
   type InsertJobOrder,
   type Roll,
@@ -108,9 +111,16 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   
   // Orders
-  getOrders(): Promise<Order[]>;
-  createOrder(order: InsertOrder): Promise<Order>;
-  getOrderById(id: number): Promise<Order | undefined>;
+  getAllOrders(): Promise<NewOrder[]>;
+  createOrder(order: InsertNewOrder): Promise<NewOrder>;
+  updateOrder(id: number, order: Partial<NewOrder>): Promise<NewOrder>;
+  getOrderById(id: number): Promise<NewOrder | undefined>;
+  
+  // Production Orders
+  getAllProductionOrders(): Promise<ProductionOrder[]>;
+  createProductionOrder(productionOrder: InsertProductionOrder): Promise<ProductionOrder>;
+  updateProductionOrder(id: number, productionOrder: Partial<ProductionOrder>): Promise<ProductionOrder>;
+  getProductionOrderById(id: number): Promise<ProductionOrder | undefined>;
   
   // Job Orders
   getJobOrders(): Promise<JobOrder[]>;
@@ -333,22 +343,86 @@ export class DatabaseStorage implements IStorage {
     await db.delete(customers).where(eq(customers.id, id));
   }
 
-  async getOrders(): Promise<Order[]> {
-    return await db.select().from(orders).orderBy(desc(orders.created_at));
+  async getAllOrders(): Promise<NewOrder[]> {
+    return await db.select({
+      id: orders.id,
+      order_number: orders.order_number,
+      customer_id: orders.customer_id,
+      delivery_days: orders.delivery_days,
+      status: orders.status,
+      notes: orders.notes,
+      created_by: orders.created_by,
+      created_at: orders.created_at,
+      delivery_date: orders.delivery_date,
+      customer_name: customers.name_ar,
+      user_name: users.display_name_ar
+    })
+    .from(orders)
+    .leftJoin(customers, eq(orders.customer_id, customers.id))
+    .leftJoin(users, eq(orders.created_by, users.id))
+    .orderBy(desc(orders.created_at));
   }
 
-  async createOrder(insertOrder: InsertOrder): Promise<Order> {
-    const orderNumber = `ORD-${Date.now()}`;
+  async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
     const [order] = await db
       .insert(orders)
-      .values({ ...insertOrder, order_number: orderNumber })
+      .values(insertOrder)
       .returning();
     return order;
   }
 
-  async getOrderById(id: number): Promise<Order | undefined> {
+  async updateOrder(id: number, orderUpdate: Partial<NewOrder>): Promise<NewOrder> {
+    const [order] = await db
+      .update(orders)
+      .set(orderUpdate)
+      .where(eq(orders.id, id))
+      .returning();
+    return order;
+  }
+
+  async getOrderById(id: number): Promise<NewOrder | undefined> {
     const [order] = await db.select().from(orders).where(eq(orders.id, id));
     return order || undefined;
+  }
+
+  async getAllProductionOrders(): Promise<ProductionOrder[]> {
+    return await db.select({
+      id: production_orders.id,
+      production_order_number: production_orders.production_order_number,
+      order_id: production_orders.order_id,
+      customer_product_id: production_orders.customer_product_id,
+      quantity_kg: production_orders.quantity_kg,
+      status: production_orders.status,
+      created_at: production_orders.created_at,
+      order_number: orders.order_number,
+      product_name_ar: customer_products.product_name_ar
+    })
+    .from(production_orders)
+    .leftJoin(orders, eq(production_orders.order_id, orders.id))
+    .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+    .orderBy(desc(production_orders.created_at));
+  }
+
+  async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
+    const [productionOrder] = await db
+      .insert(production_orders)
+      .values(insertProductionOrder)
+      .returning();
+    return productionOrder;
+  }
+
+  async updateProductionOrder(id: number, productionOrderUpdate: Partial<ProductionOrder>): Promise<ProductionOrder> {
+    const [productionOrder] = await db
+      .update(production_orders)
+      .set(productionOrderUpdate)
+      .where(eq(production_orders.id, id))
+      .returning();
+    return productionOrder;
+  }
+
+  async getProductionOrderById(id: number): Promise<ProductionOrder | undefined> {
+    const [productionOrder] = await db.select().from(production_orders).where(eq(production_orders.id, id));
+    return productionOrder || undefined;
   }
 
   async getJobOrders(): Promise<JobOrder[]> {
