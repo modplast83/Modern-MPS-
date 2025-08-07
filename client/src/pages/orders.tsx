@@ -581,51 +581,72 @@ export default function Orders() {
                                         </Button>
                                       </div>
                                       
-                                      <div className="grid grid-cols-3 gap-4">
-                                        <div>
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="col-span-1">
                                           <label className="text-sm font-medium text-gray-700">منتج العميل</label>
                                           <Select 
                                             onValueChange={(value) => updateProductionOrder(index, 'customer_product_id', parseInt(value))}
                                             value={prodOrder.customer_product_id?.toString() || ""}
                                           >
-                                            <SelectTrigger>
+                                            <SelectTrigger className="h-auto min-h-[50px]">
                                               <SelectValue placeholder="اختر المنتج" />
                                             </SelectTrigger>
-                                            <SelectContent>
+                                            <SelectContent className="max-w-[700px]">
                                               {filteredCustomerProducts.map((product: any) => (
                                                 <SelectItem key={product.id} value={product.id.toString()}>
-                                                  {product.customer_name_ar || product.customer_name || 'عميل غير محدد'} - {product.raw_material} {product.width}×{product.thickness} ({product.cutting_unit})
+                                                  <div className="w-full text-right py-2">
+                                                    <div className="font-semibold text-gray-900 mb-1">
+                                                      {product.size_caption ? `المنتج: ${product.size_caption}` : 'منتج غير محدد'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-600 space-y-1">
+                                                      {product.raw_material && (
+                                                        <div>المادة الخام: {product.raw_material}</div>
+                                                      )}
+                                                      {product.master_batch_id && (
+                                                        <div>الماستر باتش: {product.master_batch_id}</div>
+                                                      )}
+                                                      {product.punching && (
+                                                        <div>التخريم: {product.punching}</div>
+                                                      )}
+                                                      {product.width && product.thickness && (
+                                                        <div>المقاس: {product.width}×{product.thickness}</div>
+                                                      )}
+                                                    </div>
+                                                  </div>
                                                 </SelectItem>
                                               ))}
                                             </SelectContent>
                                           </Select>
                                         </div>
                                         
-                                        <div>
-                                          <label className="text-sm font-medium text-gray-700">الكمية (كيلو)</label>
-                                          <Input
-                                            type="number"
-                                            placeholder="الكمية"
-                                            value={prodOrder.quantity_kg || ""}
-                                            onChange={(e) => updateProductionOrder(index, 'quantity_kg', parseFloat(e.target.value) || 0)}
-                                          />
-                                        </div>
-                                        
-                                        <div>
-                                          <label className="text-sm font-medium text-gray-700">الحالة</label>
-                                          <Select 
-                                            onValueChange={(value) => updateProductionOrder(index, 'status', value)}
-                                            value={prodOrder.status || "pending"}
-                                          >
-                                            <SelectTrigger>
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              <SelectItem value="pending">في الانتظار</SelectItem>
-                                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                                              <SelectItem value="completed">مكتمل</SelectItem>
-                                            </SelectContent>
-                                          </Select>
+                                        <div className="grid grid-cols-2 gap-2">
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">الكمية (كيلو)</label>
+                                            <Input
+                                              type="number"
+                                              placeholder="الكمية"
+                                              value={prodOrder.quantity_kg || ""}
+                                              onChange={(e) => updateProductionOrder(index, 'quantity_kg', parseFloat(e.target.value) || 0)}
+                                              className="w-full"
+                                            />
+                                          </div>
+                                          
+                                          <div>
+                                            <label className="text-sm font-medium text-gray-700">الحالة</label>
+                                            <Select 
+                                              onValueChange={(value) => updateProductionOrder(index, 'status', value)}
+                                              value={prodOrder.status || "pending"}
+                                            >
+                                              <SelectTrigger className="w-full">
+                                                <SelectValue />
+                                              </SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="pending">في الانتظار</SelectItem>
+                                                <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                                                <SelectItem value="completed">مكتمل</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
