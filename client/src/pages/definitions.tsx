@@ -364,46 +364,60 @@ export default function Definitions() {
     window.print();
   };
 
-  const handleCopy = (item: any) => {
-    // Set the form data with the copied item's values (excluding id)
-    setCustomerProductForm({
-      customer_id: item.customer_id || 'none',
-      material_group_id: item.material_group_id ? item.material_group_id.toString() : 'none',
-      item_id: item.item_id ? item.item_id.toString() : 'none',
-      size_caption: item.size_caption || '',
-      width: item.width?.toString() || '',
-      left_facing: item.left_facing?.toString() || '',
-      right_facing: item.right_facing?.toString() || '',
-      thickness: item.thickness?.toString() || '',
-      printing_cylinder: item.printing_cylinder || '',
-      length_cm: item.length_cm?.toString() || '',
-      cutting_length_cm: item.cutting_length_cm?.toString() || '',
-      raw_material: item.raw_material || '',
-      master_batch_id: item.master_batch_id || '',
-      is_printed: item.is_printed || false,
-      cutting_unit: item.cutting_unit || '',
-      punching: item.punching || '',
-      unit_weight_kg: item.unit_weight_kg?.toString() || '',
-      unit_quantity: item.unit_quantity?.toString() || '',
-      package_weight_kg: item.package_weight_kg?.toString() || '',
-      cliche_front_design: item.cliche_front_design || '',
-      cliche_back_design: item.cliche_back_design || '',
-      notes: item.notes || '',
-      status: item.status || 'active'
-    });
-    
-    // Clear editing item to create a new entry
-    setEditingItem(null);
-    
-    // Switch to customer-products tab and open dialog
-    setSelectedTab('customer-products');
-    setIsDialogOpen(true);
-    
-    toast({
-      title: "تم النسخ",
-      description: "تم نسخ بيانات المنتج بنجاح. يمكنك الآن تعديلها وحفظها كمنتج جديد.",
-      className: "text-right",
-    });
+  const handleCopy = async (item: any) => {
+    try {
+      // Create duplicate data (excluding id to create new entry)
+      const duplicateData = {
+        customer_id: item.customer_id || null,
+        material_group_id: item.material_group_id || null,
+        item_id: item.item_id || null,
+        size_caption: item.size_caption || '',
+        width: item.width ? parseFloat(item.width) : null,
+        left_facing: item.left_facing ? parseFloat(item.left_facing) : null,
+        right_facing: item.right_facing ? parseFloat(item.right_facing) : null,
+        thickness: item.thickness ? parseFloat(item.thickness) : null,
+        printing_cylinder: item.printing_cylinder || '',
+        length_cm: item.length_cm ? parseFloat(item.length_cm) : null,
+        cutting_length_cm: item.cutting_length_cm ? parseInt(item.cutting_length_cm) : null,
+        raw_material: item.raw_material || '',
+        master_batch_id: item.master_batch_id || '',
+        is_printed: item.is_printed || false,
+        cutting_unit: item.cutting_unit || '',
+        punching: item.punching || '',
+        unit_weight_kg: item.unit_weight_kg ? parseFloat(item.unit_weight_kg) : null,
+        unit_quantity: item.unit_quantity ? parseInt(item.unit_quantity) : null,
+        package_weight_kg: item.package_weight_kg ? parseFloat(item.package_weight_kg) : null,
+        cliche_front_design: item.cliche_front_design || '',
+        cliche_back_design: item.cliche_back_design || '',
+        notes: item.notes ? `نسخة من: ${item.notes}` : 'نسخة مكررة',
+        status: item.status || 'active'
+      };
+
+      // Save the duplicate directly to database
+      await apiRequest('/api/customer-products', {
+        method: 'POST',
+        body: JSON.stringify(duplicateData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      // Refresh the data
+      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+
+      toast({
+        title: "تم الإنشاء",
+        description: "تم إنشاء نسخة مكررة من المنتج بنجاح.",
+        className: "text-right",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إنشاء النسخة المكررة",
+        variant: "destructive",
+        className: "text-right",
+      });
+    }
   };
 
   const handleSubmit = async () => {
