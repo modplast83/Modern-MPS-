@@ -5,6 +5,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, AlertTriangle, Clock } from "lucide-react";
+import { formatNumber, formatPercentage } from '@/lib/formatNumber';
 
 export default function Quality() {
   const { data: qualityChecks, isLoading } = useQuery({
@@ -58,7 +59,7 @@ export default function Quality() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">إجمالي الفحوصات</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {Array.isArray(qualityChecks) ? qualityChecks.length : 0}
+                      {formatNumber(Array.isArray(qualityChecks) ? qualityChecks.length : 0)}
                     </p>
                   </div>
                   <CheckCircle2 className="w-8 h-8 text-blue-500" />
@@ -72,7 +73,7 @@ export default function Quality() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">فحوصات مُجتازة</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {Array.isArray(qualityChecks) ? qualityChecks.filter((q: any) => q.result === 'pass').length : 0}
+                      {formatNumber(Array.isArray(qualityChecks) ? qualityChecks.filter((q: any) => q.result === 'pass').length : 0)}
                     </p>
                   </div>
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
@@ -86,7 +87,7 @@ export default function Quality() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">فحوصات راسبة</p>
                     <p className="text-2xl font-bold text-red-600">
-                      {Array.isArray(qualityChecks) ? qualityChecks.filter((q: any) => q.result === 'fail').length : 0}
+                      {formatNumber(Array.isArray(qualityChecks) ? qualityChecks.filter((q: any) => q.result === 'fail').length : 0)}
                     </p>
                   </div>
                   <XCircle className="w-8 h-8 text-red-500" />
@@ -100,10 +101,9 @@ export default function Quality() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">معدل النجاح</p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {Array.isArray(qualityChecks) && qualityChecks.length > 0
+                      {formatPercentage(Array.isArray(qualityChecks) && qualityChecks.length > 0
                         ? Math.round((qualityChecks.filter((q: any) => q.result === 'pass').length / qualityChecks.length) * 100)
-                        : 0
-                      }%
+                        : 0)}
                     </p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-blue-500" />

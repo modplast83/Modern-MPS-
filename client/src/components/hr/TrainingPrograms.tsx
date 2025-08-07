@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { formatNumber, formatPercentage } from '@/lib/formatNumber';
 import { 
   Play, 
   Clock, 
@@ -135,7 +136,7 @@ export default function TrainingPrograms() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي البرامج</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{programs.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(programs.length)}</p>
               </div>
               <BookOpen className="w-8 h-8 text-blue-600" />
             </div>
@@ -148,7 +149,7 @@ export default function TrainingPrograms() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">البرامج النشطة</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {programs.filter(p => p.is_active).length}
+                  {formatNumber(programs.filter(p => p.is_active).length)}
                 </p>
               </div>
               <Play className="w-8 h-8 text-green-600" />
@@ -161,7 +162,7 @@ export default function TrainingPrograms() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي التسجيلات</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{enrollments.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(enrollments.length)}</p>
               </div>
               <Users className="w-8 h-8 text-purple-600" />
             </div>
@@ -174,9 +175,9 @@ export default function TrainingPrograms() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">معدل الإنجاز</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {enrollments.length > 0 
+                  {formatPercentage(enrollments.length > 0 
                     ? Math.round((enrollments.filter(e => e.completion_status === 'completed').length / enrollments.length) * 100)
-                    : 0}%
+                    : 0)}
                 </p>
               </div>
               <CheckCircle className="w-8 h-8 text-emerald-600" />

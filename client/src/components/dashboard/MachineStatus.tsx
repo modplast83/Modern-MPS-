@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
+import { formatNumber, formatPercentage } from '@/lib/formatNumber';
 import { 
   Settings, 
   Activity, 
@@ -122,16 +123,16 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
         {/* Summary badges */}
         <div className="flex gap-2 mt-3">
           <Badge variant="default" className="bg-green-100 text-green-800">
-            {operationalMachines} يعمل
+            {formatNumber(operationalMachines)} يعمل
           </Badge>
           {maintenanceMachines > 0 && (
             <Badge variant="default" className="bg-yellow-100 text-yellow-800">
-              {maintenanceMachines} صيانة
+              {formatNumber(maintenanceMachines)} صيانة
             </Badge>
           )}
           {downMachines > 0 && (
             <Badge variant="destructive">
-              {downMachines} متوقف
+              {formatNumber(downMachines)} متوقف
             </Badge>
           )}
         </div>
@@ -198,7 +199,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                           <span>الكفاءة</span>
                         </div>
                         <span className="font-medium">
-                          {machine.efficiency || Math.floor(Math.random() * 20 + 80)}%
+                          {formatPercentage(machine.efficiency || Math.floor(Math.random() * 20 + 80))}
                         </span>
                       </div>
                       <Progress 
@@ -210,15 +211,15 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                       <div className="grid grid-cols-3 gap-2 text-xs text-gray-600 mt-2">
                         <div className="flex items-center gap-1">
                           <Thermometer className="w-3 h-3" />
-                          <span>{machine.temperature || Math.floor(Math.random() * 20 + 180)}°</span>
+                          <span>{formatNumber(machine.temperature || Math.floor(Math.random() * 20 + 180))}°</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3" />
-                          <span>{machine.power || Math.floor(Math.random() * 50 + 150)}W</span>
+                          <span>{formatNumber(machine.power || Math.floor(Math.random() * 50 + 150))}W</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Activity className="w-3 h-3" />
-                          <span>{machine.speed || Math.floor(Math.random() * 500 + 1000)} م/د</span>
+                          <span>{formatNumber(machine.speed || Math.floor(Math.random() * 500 + 1000))} م/د</span>
                         </div>
                       </div>
                     </div>

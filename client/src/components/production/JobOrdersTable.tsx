@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Eye, Plus } from "lucide-react";
 import type { JobOrderWithDetails } from "@/types";
+import { formatNumber, formatWeight } from '@/lib/formatNumber';
 
 interface JobOrdersTableProps {
   stage: string;
@@ -82,10 +83,10 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
                   {order.product_name_ar || order.product_name || "غير محدد"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {required.toLocaleString()} كجم
+                  {formatWeight(required)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {produced.toLocaleString()} كجم
+                  {formatWeight(produced)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -95,7 +96,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
                         style={{ width: `${Math.min(progress, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-900">{progress}%</span>
+                    <span className="text-sm text-gray-900">{formatPercentage(progress)}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
