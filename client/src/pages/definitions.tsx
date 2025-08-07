@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User } from "lucide-react";
+import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User, Copy } from "lucide-react";
 
 export default function Definitions() {
   const { toast } = useToast();
@@ -362,6 +362,48 @@ export default function Definitions() {
 
   const handlePrint = (item: any) => {
     window.print();
+  };
+
+  const handleCopy = (item: any) => {
+    // Set the form data with the copied item's values (excluding id)
+    setCustomerProductForm({
+      customer_id: item.customer_id || 'none',
+      material_group_id: item.material_group_id ? item.material_group_id.toString() : 'none',
+      item_id: item.item_id ? item.item_id.toString() : 'none',
+      size_caption: item.size_caption || '',
+      width: item.width?.toString() || '',
+      left_facing: item.left_facing?.toString() || '',
+      right_facing: item.right_facing?.toString() || '',
+      thickness: item.thickness?.toString() || '',
+      printing_cylinder: item.printing_cylinder || '',
+      length_cm: item.length_cm?.toString() || '',
+      cutting_length_cm: item.cutting_length_cm?.toString() || '',
+      raw_material: item.raw_material || '',
+      master_batch_id: item.master_batch_id || '',
+      is_printed: item.is_printed || false,
+      cutting_unit: item.cutting_unit || '',
+      punching: item.punching || '',
+      unit_weight_kg: item.unit_weight_kg?.toString() || '',
+      unit_quantity: item.unit_quantity?.toString() || '',
+      package_weight_kg: item.package_weight_kg?.toString() || '',
+      cliche_front_design: item.cliche_front_design || '',
+      cliche_back_design: item.cliche_back_design || '',
+      notes: item.notes || '',
+      status: item.status || 'active'
+    });
+    
+    // Clear editing item to create a new entry
+    setEditingItem(null);
+    
+    // Switch to customer-products tab and open dialog
+    setSelectedTab('customer-products');
+    setIsDialogOpen(true);
+    
+    toast({
+      title: "تم النسخ",
+      description: "تم نسخ بيانات المنتج بنجاح. يمكنك الآن تعديلها وحفظها كمنتج جديد.",
+      className: "text-right",
+    });
   };
 
   const handleSubmit = async () => {
@@ -1924,13 +1966,24 @@ export default function Definitions() {
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => handleEdit(cp, 'customer-product')}
+                                        title="تعديل"
                                       >
                                         <Edit className="w-3 h-3" />
                                       </Button>
                                       <Button 
                                         variant="outline" 
                                         size="sm"
+                                        onClick={() => handleCopy(cp)}
+                                        title="نسخ المنتج"
+                                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
                                         onClick={() => handleDelete(cp.id, 'customer-product')}
+                                        title="حذف"
                                       >
                                         <Trash2 className="w-3 h-3" />
                                       </Button>
@@ -1938,6 +1991,7 @@ export default function Definitions() {
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => handlePrint(cp)}
+                                        title="طباعة"
                                       >
                                         <Printer className="w-3 h-3" />
                                       </Button>
