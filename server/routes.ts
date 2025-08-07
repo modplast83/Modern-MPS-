@@ -1162,10 +1162,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Material Groups routes
   app.post("/api/material-groups", async (req, res) => {
     try {
-      const materialGroup = await storage.createMaterialGroup(req.body);
+      console.log('Received material group data:', req.body);
+      
+      // Convert empty strings to null for parent_id and code
+      const processedData = {
+        ...req.body,
+        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : parseInt(req.body.parent_id),
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      console.log('Processed material group data:', processedData);
+      const materialGroup = await storage.createMaterialGroup(processedData);
+      console.log('Created material group:', materialGroup);
       res.json(materialGroup);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء مجموعة المواد" });
+      console.error('Material group creation error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ message: "خطأ في إنشاء مجموعة المواد", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

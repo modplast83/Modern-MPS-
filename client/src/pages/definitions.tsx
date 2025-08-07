@@ -382,8 +382,11 @@ export default function Definitions() {
           endpoint = '/api/material-groups';
           data = {
             ...materialGroupForm,
-            parent_id: materialGroupForm.parent_id === 'none' ? null : parseInt(materialGroupForm.parent_id)
+            parent_id: materialGroupForm.parent_id === 'none' || materialGroupForm.parent_id === '' || !materialGroupForm.parent_id 
+              ? null 
+              : parseInt(materialGroupForm.parent_id)
           };
+          console.log('Submitting material group data:', data);
           break;
         case 'items':
           endpoint = '/api/items';
