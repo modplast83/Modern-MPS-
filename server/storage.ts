@@ -633,12 +633,24 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup> {
-    const [updatedMaterialGroup] = await db
-      .update(material_groups)
-      .set(materialGroup)
-      .where(eq(material_groups.id, id))
-      .returning();
-    return updatedMaterialGroup;
+    console.log('Storage: Updating material group', id, materialGroup);
+    try {
+      const [updatedMaterialGroup] = await db
+        .update(material_groups)
+        .set(materialGroup)
+        .where(eq(material_groups.id, id))
+        .returning();
+      
+      if (!updatedMaterialGroup) {
+        throw new Error(`Material group with id ${id} not found`);
+      }
+      
+      console.log('Storage: Updated material group successfully', updatedMaterialGroup);
+      return updatedMaterialGroup;
+    } catch (error) {
+      console.error('Storage: Material group update failed', error);
+      throw error;
+    }
   }
 
   async createItem(item: any): Promise<Item> {
