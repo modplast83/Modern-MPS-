@@ -69,10 +69,28 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: false,
       staleTime: 30000, // 30 seconds instead of Infinity to prevent stale data
-      retry: false,
+      retry: (failureCount, error) => {
+        // Retry network errors up to 2 times, but not auth or client errors
+        if (failureCount > 2) return false;
+        if (error instanceof Error) {
+          // Don't retry auth errors (401, 403) or client errors (4xx)
+          if (error.message.includes('401') || error.message.includes('403') || error.message.includes('4')) {
+            return false;
+          }
+        }
+        return true;
+      },
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
     },
     mutations: {
-      retry: false,
+      retry: (failureCount, error) => {
+        // Only retry network errors for mutations, and max 1 retry
+        if (failureCount > 1) return false;
+        if (error instanceof Error && !error.message.includes('Network')) {
+          return false;
+        }
+        return true;
+      },
     },
   },
 });
