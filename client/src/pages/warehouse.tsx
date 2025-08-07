@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 
 const inventoryFormSchema = z.object({
+  material_group_id: z.string().min(1, "مجموعة المواد مطلوبة"),
   item_id: z.string().min(1, "الصنف مطلوب"),
   location_id: z.string().transform(val => parseInt(val)),
   current_stock: z.string().transform(val => parseFloat(val)),
@@ -86,6 +87,16 @@ export default function Warehouse() {
     queryFn: async () => {
       const response = await fetch('/api/locations');
       if (!response.ok) throw new Error('فشل في جلب المواقع');
+      return response.json();
+    }
+  });
+
+  // Fetch material groups for dropdown
+  const { data: materialGroups = [] } = useQuery({
+    queryKey: ['/api/material-groups'],
+    queryFn: async () => {
+      const response = await fetch('/api/material-groups');
+      if (!response.ok) throw new Error('فشل في جلب مجموعات المواد');
       return response.json();
     }
   });
@@ -269,6 +280,7 @@ export default function Warehouse() {
   const form = useForm({
     resolver: zodResolver(inventoryFormSchema),
     defaultValues: {
+      material_group_id: "",
       item_id: "",
       location_id: "",
       current_stock: "",
@@ -309,6 +321,7 @@ export default function Warehouse() {
   const handleEdit = (item: any) => {
     setEditingItem(item);
     form.reset({
+      material_group_id: item.material_group_id?.toString() || "",
       item_id: item.item_id,
       location_id: item.location_id?.toString() || "",
       current_stock: item.current_stock?.toString() || "0",
@@ -320,6 +333,7 @@ export default function Warehouse() {
   const handleAdd = () => {
     setEditingItem(null);
     form.reset({
+      material_group_id: "",
       item_id: "",
       location_id: "",
       current_stock: "",
@@ -469,6 +483,31 @@ export default function Warehouse() {
                           </DialogHeader>
                           <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                              <FormField
+                                control={form.control}
+                                name="material_group_id"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>مجموعة المواد</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="اختر مجموعة المواد" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        {materialGroups.map((group: any) => (
+                                          <SelectItem key={group.id} value={group.id.toString()}>
+                                            {group.name_ar || group.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              
                               <FormField
                                 control={form.control}
                                 name="item_id"
