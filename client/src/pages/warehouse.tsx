@@ -37,7 +37,6 @@ const movementFormSchema = z.object({
   inventory_id: z.string().transform(val => parseInt(val)),
   movement_type: z.string().min(1, "نوع الحركة مطلوب"),
   quantity: z.string().transform(val => parseFloat(val)),
-  unit_cost: z.string().transform(val => parseFloat(val)).optional(),
   reference_number: z.string().optional(),
   reference_type: z.string().optional(),
   notes: z.string().optional()
@@ -299,7 +298,6 @@ export default function Warehouse() {
       inventory_id: "",
       movement_type: "",
       quantity: "",
-      unit_cost: "",
       reference_number: "",
       reference_type: "",
       notes: ""
@@ -386,7 +384,6 @@ export default function Warehouse() {
       inventory_id: "",
       movement_type: "",
       quantity: "",
-      unit_cost: "",
       reference_number: "",
       reference_type: "",
       notes: ""
@@ -796,35 +793,19 @@ export default function Warehouse() {
                               )}
                             />
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <FormField
-                                control={movementForm.control}
-                                name="quantity"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>الكمية</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="number" step="0.01" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <FormField
-                                control={movementForm.control}
-                                name="unit_cost"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>التكلفة للوحدة</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="number" step="0.01" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
+                            <FormField
+                              control={movementForm.control}
+                              name="quantity"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>الكمية</FormLabel>
+                                  <FormControl>
+                                    <Input {...field} type="number" step="0.01" />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
                             <div className="grid grid-cols-2 gap-4">
                               <FormField
@@ -941,7 +922,7 @@ export default function Warehouse() {
                                   {movement.reference_number || '-'}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-900">
-                                  {new Date(movement.created_at).toLocaleDateString('ar-SA')}
+                                  {new Date(movement.created_at).toLocaleDateString('en-GB')}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-900">
                                   {movement.user_name || '-'}
