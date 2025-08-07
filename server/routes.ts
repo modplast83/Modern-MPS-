@@ -1684,12 +1684,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", async (req, res) => {
     try {
-      const result = insertNewOrderSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
-      }
-      
-      const order = await storage.createOrder(result.data);
+      console.log('Received order data:', req.body);
+      const order = await storage.createOrder(req.body);
       res.status(201).json(order);
     } catch (error) {
       console.error('Error creating order:', error);
@@ -1727,12 +1723,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/production-orders", async (req, res) => {
     try {
-      const result = insertProductionOrderSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
-      }
-      
-      const productionOrder = await storage.createProductionOrder(result.data);
+      console.log('Received production order data:', req.body);
+      const productionOrder = await storage.createProductionOrder(req.body);
       res.status(201).json(productionOrder);
     } catch (error) {
       console.error('Error creating production order:', error);

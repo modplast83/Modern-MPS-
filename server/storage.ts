@@ -344,29 +344,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllOrders(): Promise<NewOrder[]> {
-    return await db.select({
-      id: orders.id,
-      order_number: orders.order_number,
-      customer_id: orders.customer_id,
-      delivery_days: orders.delivery_days,
-      status: orders.status,
-      notes: orders.notes,
-      created_by: orders.created_by,
-      created_at: orders.created_at,
-      delivery_date: orders.delivery_date,
-      customer_name: customers.name_ar,
-      user_name: users.display_name_ar
-    })
-    .from(orders)
-    .leftJoin(customers, eq(orders.customer_id, customers.id))
-    .leftJoin(users, eq(orders.created_by, users.id))
-    .orderBy(desc(orders.created_at));
+    return await db.select()
+      .from(orders)
+      .orderBy(desc(orders.created_at));
   }
 
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
+    // Generate next order number
+    const lastOrder = await db
+      .select({ order_number: orders.order_number })
+      .from(orders)
+      .orderBy(desc(orders.id))
+      .limit(1);
+    
+    let nextOrderNumber = "Or-1";
+    if (lastOrder.length > 0 && lastOrder[0].order_number) {
+      const lastNumber = parseInt(lastOrder[0].order_number.split('-')[1]) || 0;
+      nextOrderNumber = `Or-${lastNumber + 1}`;
+    }
+
+    const orderData = {
+      ...insertOrder,
+      order_number: nextOrderNumber,
+      created_at: new Date()
+    };
+
     const [order] = await db
       .insert(orders)
-      .values(insertOrder)
+      .values(orderData)
       .returning();
     return order;
   }
@@ -386,27 +391,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllProductionOrders(): Promise<ProductionOrder[]> {
-    return await db.select({
-      id: production_orders.id,
-      production_order_number: production_orders.production_order_number,
-      order_id: production_orders.order_id,
-      customer_product_id: production_orders.customer_product_id,
-      quantity_kg: production_orders.quantity_kg,
-      status: production_orders.status,
-      created_at: production_orders.created_at,
-      order_number: orders.order_number,
-      product_name_ar: customer_products.product_name_ar
-    })
-    .from(production_orders)
-    .leftJoin(orders, eq(production_orders.order_id, orders.id))
-    .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
-    .orderBy(desc(production_orders.created_at));
+    return await db.select()
+      .from(production_orders)
+      .orderBy(desc(production_orders.created_at));
   }
 
   async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
+    // Generate next production order number
+    const lastProductionOrder = await db
+      .select({ production_order_number: production_orders.production_order_number })
+      .from(production_orders)
+      .orderBy(desc(production_orders.id))
+      .limit(1);
+    
+    let nextProductionOrderNumber = "JO-101";
+    if (lastProductionOrder.length > 0 && lastProductionOrder[0].production_order_number) {
+      const lastNumber = parseInt(lastProductionOrder[0].production_order_number.split('-')[1]) || 100;
+      nextProductionOrderNumber = `JO-${lastNumber + 1}`;
+    }
+
+    const productionOrderData = {
+      ...insertProductionOrder,
+      production_order_number: nextProductionOrderNumber,
+      created_at: new Date()
+    };
+
     const [productionOrder] = await db
       .insert(production_orders)
-      .values(insertProductionOrder)
+      .values(productionOrderData)
       .returning();
     return productionOrder;
   }
