@@ -3,11 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
-  insertOrderSchema, 
+  insertNewOrderSchema, 
   insertJobOrderSchema, 
   insertRollSchema, 
   insertMaintenanceRequestSchema,
   insertInventoryMovementSchema,
+  insertProductionOrderSchema,
   customers,
   customer_products,
   locations
@@ -1666,6 +1667,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting inventory movement:', error);
       res.status(500).json({ message: "خطأ في حذف الحركة" });
+    }
+  });
+
+  // ============ Orders Management API ============
+  
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      res.status(500).json({ message: "خطأ في جلب الطلبات" });
+    }
+  });
+
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const result = insertNewOrderSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const order = await storage.createOrder(result.data);
+      res.status(201).json(order);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الطلب" });
+    }
+  });
+
+  app.put("/api/orders/:id", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const result = insertNewOrderSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const order = await storage.updateOrder(orderId, result.data);
+      res.json(order);
+    } catch (error) {
+      console.error('Error updating order:', error);
+      res.status(500).json({ message: "خطأ في تحديث الطلب" });
+    }
+  });
+
+  // ============ Production Orders Management API ============
+  
+  app.get("/api/production-orders", async (req, res) => {
+    try {
+      const productionOrders = await storage.getAllProductionOrders();
+      res.json(productionOrders);
+    } catch (error) {
+      console.error('Error fetching production orders:', error);
+      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج" });
+    }
+  });
+
+  app.post("/api/production-orders", async (req, res) => {
+    try {
+      const result = insertProductionOrderSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const productionOrder = await storage.createProductionOrder(result.data);
+      res.status(201).json(productionOrder);
+    } catch (error) {
+      console.error('Error creating production order:', error);
+      res.status(500).json({ message: "خطأ في إنشاء أمر الإنتاج" });
+    }
+  });
+
+  app.put("/api/production-orders/:id", async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      const result = insertProductionOrderSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
+      }
+      
+      const productionOrder = await storage.updateProductionOrder(productionOrderId, result.data);
+      res.json(productionOrder);
+    } catch (error) {
+      console.error('Error updating production order:', error);
+      res.status(500).json({ message: "خطأ في تحديث أمر الإنتاج" });
     }
   });
 
