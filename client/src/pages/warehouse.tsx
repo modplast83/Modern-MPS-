@@ -20,10 +20,7 @@ const inventoryFormSchema = z.object({
   item_id: z.string().min(1, "الصنف مطلوب"),
   location_id: z.string().transform(val => parseInt(val)),
   current_stock: z.string().transform(val => parseFloat(val)),
-  min_stock: z.string().transform(val => parseFloat(val)),
-  max_stock: z.string().transform(val => parseFloat(val)),
-  unit: z.string().min(1, "الوحدة مطلوبة"),
-  cost_per_unit: z.string().transform(val => parseFloat(val))
+  unit: z.string().min(1, "الوحدة مطلوبة")
 });
 
 const locationFormSchema = z.object({
@@ -275,10 +272,7 @@ export default function Warehouse() {
       item_id: "",
       location_id: "",
       current_stock: "",
-      min_stock: "",
-      max_stock: "",
-      unit: "كيلو",
-      cost_per_unit: ""
+      unit: "كيلو"
     }
   });
 
@@ -304,11 +298,7 @@ export default function Warehouse() {
     }
   });
 
-  const getStockStatus = (current: number, min: number, max: number) => {
-    if (current <= min) return { status: "منخفض", color: "destructive", icon: AlertTriangle };
-    if (current >= max) return { status: "مرتفع", color: "warning", icon: TrendingUp };
-    return { status: "طبيعي", color: "success", icon: Package };
-  };
+
 
   const filteredItems = inventoryItems.filter((item: any) => 
     (item.item_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -322,10 +312,7 @@ export default function Warehouse() {
       item_id: item.item_id,
       location_id: item.location_id?.toString() || "",
       current_stock: item.current_stock?.toString() || "0",
-      min_stock: item.min_stock?.toString() || "0",
-      max_stock: item.max_stock?.toString() || "0",
-      unit: item.unit || "كيلو",
-      cost_per_unit: item.cost_per_unit?.toString() || "0"
+      unit: item.unit || "كيلو"
     });
     setIsAddDialogOpen(true);
   };
@@ -336,10 +323,7 @@ export default function Warehouse() {
       item_id: "",
       location_id: "",
       current_stock: "",
-      min_stock: "",
-      max_stock: "",
-      unit: "كيلو",
-      cost_per_unit: ""
+      unit: "كيلو"
     });
     setIsAddDialogOpen(true);
   };
@@ -575,49 +559,7 @@ export default function Warehouse() {
                                 />
                               </div>
 
-                              <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                  control={form.control}
-                                  name="min_stock"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>الحد الأدنى</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="number" step="0.01" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
 
-                                <FormField
-                                  control={form.control}
-                                  name="max_stock"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>الحد الأقصى</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="number" step="0.01" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <FormField
-                                control={form.control}
-                                name="cost_per_unit"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>التكلفة لكل وحدة</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="number" step="0.01" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
 
                               <div className="flex justify-end space-x-2 space-x-reverse">
                                 <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
@@ -645,27 +587,20 @@ export default function Warehouse() {
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون الحالي</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأدنى</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحد الأقصى</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الموقع</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {filteredItems.length === 0 ? (
                             <tr>
-                              <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                              <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                 {searchTerm ? 'لا توجد نتائج للبحث' : 'لا توجد أصناف في المخزون'}
                               </td>
                             </tr>
                           ) : (
                             filteredItems.map((item: any) => {
                               const currentStock = parseFloat(item.current_stock || 0);
-                              const minStock = parseFloat(item.min_stock || 0);
-                              const maxStock = parseFloat(item.max_stock || 0);
-                              const stockInfo = getStockStatus(currentStock, minStock, maxStock);
-                              const StatusIcon = stockInfo.icon;
                               
                               return (
                                 <tr key={item.id} className="hover:bg-gray-50">
@@ -679,19 +614,7 @@ export default function Warehouse() {
                                   <td className="px-6 py-4 text-sm text-gray-900">
                                     {currentStock.toLocaleString()} {item.unit}
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-900">
-                                    {minStock.toLocaleString()} {item.unit}
-                                  </td>
-                                  <td className="px-6 py-4 text-sm text-gray-900">
-                                    {maxStock.toLocaleString()} {item.unit}
-                                  </td>
                                   <td className="px-6 py-4 text-sm text-gray-900">{item.location_name_ar || item.location_name || '-'}</td>
-                                  <td className="px-6 py-4">
-                                    <Badge variant={stockInfo.color === 'success' ? 'default' : stockInfo.color === 'warning' ? 'secondary' : 'destructive'} className="flex items-center space-x-1 w-fit">
-                                      <StatusIcon className="h-3 w-3" />
-                                      <span>{stockInfo.status}</span>
-                                    </Badge>
-                                  </td>
                                   <td className="px-6 py-4">
                                     <div className="flex space-x-2 space-x-reverse">
                                       <Button 

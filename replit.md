@@ -69,6 +69,12 @@ MPBF Next is a modern Arabic-first ERP system designed for plastic bag manufactu
   - **DATE LOCALIZATION**: Changed movement date display to Gregorian calendar format (DD/MM/YYYY) for Arabic users
   - Updated form validation schema to reflect simplified movement tracking requirements
   - Improved user experience with cleaner, more focused inventory movement interface
+- **Inventory Form Streamlining (Aug 6, 2025)**: Simplified Add New Inventory Item Form
+  - **MAJOR SIMPLIFICATION**: Removed minimum stock, maximum stock, and cost per unit fields from inventory creation form
+  - **STREAMLINED UI**: Updated table display to show only essential columns: Item, Category, Current Stock, Location, Actions
+  - **REDUCED COMPLEXITY**: Simplified form validation and data entry process for faster inventory management
+  - **IMPROVED USER EXPERIENCE**: Focus on core inventory tracking without unnecessary complexity
+  - Updated form schema and UI components to reflect streamlined inventory management approach
 - **MAJOR ACHIEVEMENT (Aug 6, 2025)**: Advanced AI Assistant System Complete
   - **COMPREHENSIVE DATABASE MANAGEMENT**: Full CRUD operations with intelligent data extraction from natural language
     - Smart customer creation with AI-powered data parsing
