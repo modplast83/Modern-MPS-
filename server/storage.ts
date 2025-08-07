@@ -616,10 +616,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMaterialGroup(materialGroup: any): Promise<MaterialGroup> {
-    const [newMaterialGroup] = await db
+    const result = await db
       .insert(material_groups)
       .values(materialGroup)
       .returning();
+    const [newMaterialGroup] = result;
     return newMaterialGroup;
   }
 

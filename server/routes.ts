@@ -59,6 +59,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } 
       });
     } catch (error) {
+      console.error("Login error:", error);
       res.status(500).json({ message: "خطأ في الخادم" });
     }
   });
@@ -69,6 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getDashboardStats();
       res.json(stats);
     } catch (error) {
+      console.error("Dashboard stats error:", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
     }
   });
