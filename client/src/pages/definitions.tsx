@@ -30,6 +30,20 @@ export default function Definitions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickSearch, setQuickSearch] = useState("");
 
+  // Automatic calculation for cutting length
+  useEffect(() => {
+    if (customerProductForm.printing_cylinder) {
+      const cylinderValue = parseFloat(customerProductForm.printing_cylinder);
+      if (!isNaN(cylinderValue)) {
+        const calculatedLength = Math.round(cylinderValue * 2.54);
+        setCustomerProductForm(prev => ({ 
+          ...prev, 
+          cutting_length_cm: calculatedLength.toString() 
+        }));
+      }
+    }
+  }, [customerProductForm.printing_cylinder]);
+
   // Form states
   const [customerForm, setCustomerForm] = useState({
     name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', 
@@ -891,19 +905,27 @@ export default function Definitions() {
 
       {/* طول القطع */}
       <div className="space-y-2">
-        <Label htmlFor="cutting_length_cm">طول القطع (سم) *</Label>
+        <Label htmlFor="cutting_length_cm">طول القطع (سم) - محسوب تلقائياً *</Label>
         <Input
           id="cutting_length_cm"
           type="number"
           value={customerProductForm.cutting_length_cm || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, cutting_length_cm: e.target.value }))}
-          placeholder="طول القطع (أرقام صحيحة فقط)"
+          placeholder="يحسب تلقائياً من أسطوانة الطباعة"
+          className="bg-gray-50"
+          readOnly={!!customerProductForm.printing_cylinder}
         />
+        <p className="text-sm text-gray-500">
+          {customerProductForm.printing_cylinder ? 
+            `محسوب: ${customerProductForm.printing_cylinder} × 2.54 = ${customerProductForm.cutting_length_cm} سم` :
+            'اختر أسطوانة الطباعة أولاً للحساب التلقائي'
+          }
+        </p>
       </div>
 
       {/* أسطوانة الطباعة */}
       <div className="space-y-2">
-        <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
+        <Label htmlFor="printing_cylinder">أسطوانة الطباعة (بوصة)</Label>
         <Select value={customerProductForm.printing_cylinder} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, printing_cylinder: value }))}>
           <SelectTrigger>
             <SelectValue placeholder="اختر أسطوانة الطباعة" />
@@ -928,6 +950,7 @@ export default function Definitions() {
             <SelectItem value="39">39"</SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-sm text-gray-500">سيتم حساب طول القطع تلقائياً = أسطوانة الطباعة × 2.54</p>
       </div>
 
       {/* الطول (سم) - محسوب تلقائياً */}
