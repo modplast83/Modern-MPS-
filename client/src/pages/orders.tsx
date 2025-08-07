@@ -20,16 +20,18 @@ import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 const orderFormSchema = z.object({
-  order_number: z.string().min(1, "رقم الطلب مطلوب"),
   customer_id: z.string().min(1, "العميل مطلوب"),
   delivery_days: z.string().transform(val => parseInt(val)),
   notes: z.string().optional(),
-  created_by: z.number().optional()
+  production_orders: z.array(z.object({
+    customer_product_id: z.number(),
+    quantity_kg: z.number(),
+    status: z.string()
+  })).min(1, "يجب إضافة أمر إنتاج واحد على الأقل")
 });
 
 const productionOrderFormSchema = z.object({
   order_id: z.string().transform(val => parseInt(val)),
-  production_order_number: z.string().min(1, "رقم أمر الإنتاج مطلوب"),
   customer_product_id: z.string().transform(val => parseInt(val)),
   quantity_kg: z.string().transform(val => parseFloat(val)),
   status: z.string().min(1, "الحالة مطلوبة"),
@@ -42,6 +44,9 @@ export default function Orders() {
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [editingProductionOrder, setEditingProductionOrder] = useState<any>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [productionOrdersInForm, setProductionOrdersInForm] = useState<any[]>([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -165,12 +170,23 @@ export default function Orders() {
   const orderForm = useForm({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
-      order_number: "",
       customer_id: "",
       delivery_days: "",
-      notes: ""
+      notes: "",
+      production_orders: []
     }
   });
+
+  // Filter customer products by selected customer
+  const filteredCustomerProducts = customerProducts.filter((product: any) => 
+    product.customer_id === selectedCustomerId
+  );
+
+  // Filter customers for search
+  const filteredCustomers = customers.filter((customer: any) =>
+    customer.name_ar?.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+    customer.name?.toLowerCase().includes(customerSearchTerm.toLowerCase())
+  );
 
   const productionOrderForm = useForm({
     resolver: zodResolver(productionOrderFormSchema),
@@ -197,7 +213,7 @@ export default function Orders() {
   const handleAddOrder = () => {
     setEditingOrder(null);
     orderForm.reset({
-      order_number: "",
+
       customer_id: "",
       delivery_days: "",
       notes: ""
@@ -240,13 +256,94 @@ export default function Orders() {
     setIsProductionOrderDialogOpen(true);
   };
 
-  const onOrderSubmit = (data: any) => {
-    // Add current user ID if available
-    const finalData = {
-      ...data,
-      created_by: 1 // For now, hardcode to user 1, should get from auth context
-    };
-    orderMutation.mutate(finalData);
+  const onOrderSubmit = async (data: any) => {
+    try {
+      // Create the order first
+      const orderData = {
+        customer_id: data.customer_id,
+        delivery_days: data.delivery_days,
+        notes: data.notes,
+        created_by: 1
+      };
+      
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      });
+      
+      if (!orderResponse.ok) throw new Error('فشل في إنشاء الطلب');
+      
+      const newOrder = await orderResponse.json();
+      
+      // Create production orders
+      for (const prodOrder of productionOrdersInForm) {
+        await fetch('/api/production-orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            order_id: newOrder.id,
+            customer_product_id: prodOrder.customer_product_id,
+            quantity_kg: prodOrder.quantity_kg,
+            status: prodOrder.status || 'pending'
+          })
+        });
+      }
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      
+      // Reset form
+      setIsOrderDialogOpen(false);
+      setProductionOrdersInForm([]);
+      setSelectedCustomerId("");
+      setCustomerSearchTerm("");
+      orderForm.reset();
+      
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: "تم إضافة الطلب وأوامر الإنتاج"
+      });
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ البيانات",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const addProductionOrder = () => {
+    if (!selectedCustomerId) {
+      toast({
+        title: "تحذير",
+        description: "يجب اختيار العميل أولاً",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setProductionOrdersInForm([
+      ...productionOrdersInForm,
+      {
+        customer_product_id: "",
+        quantity_kg: 0,
+        status: "pending"
+      }
+    ]);
+  };
+
+  const removeProductionOrder = (index: number) => {
+    const updated = productionOrdersInForm.filter((_, i) => i !== index);
+    setProductionOrdersInForm(updated);
+  };
+
+  const updateProductionOrder = (index: number, field: string, value: any) => {
+    const updated = [...productionOrdersInForm];
+    updated[index] = { ...updated[index], [field]: value };
+    setProductionOrdersInForm(updated);
   };
 
   const onProductionOrderSubmit = (data: any) => {
@@ -354,85 +451,201 @@ export default function Orders() {
                             إضافة طلب
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-md">
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>{editingOrder ? 'تعديل الطلب' : 'إضافة طلب جديد'}</DialogTitle>
+                            <DialogTitle>إضافة طلب جديد</DialogTitle>
                           </DialogHeader>
                           <Form {...orderForm}>
-                            <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-4">
-                              <FormField
-                                control={orderForm.control}
-                                name="order_number"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>رقم الطلب</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} placeholder="رقم الطلب" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-                              
+                            <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-6">
+                              {/* Order Info Section */}
+                              <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700">رقم الطلب</label>
+                                  <div className="text-lg font-bold text-blue-600">سيتم توليده تلقائياً</div>
+                                </div>
+                                <div>
+                                  <label className="text-sm font-medium text-gray-700">التاريخ</label>
+                                  <div className="text-lg font-bold text-gray-900">
+                                    {format(new Date(), 'dd/MM/yyyy')}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Customer Selection with Search */}
                               <FormField
                                 control={orderForm.control}
                                 name="customer_id"
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>العميل</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <div className="space-y-2">
+                                      <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <Input
+                                          placeholder="البحث بالاسم العربي أو الإنجليزي..."
+                                          value={customerSearchTerm}
+                                          onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                                          className="pl-10"
+                                        />
+                                      </div>
+                                      <Select 
+                                        onValueChange={(value) => {
+                                          field.onChange(value);
+                                          setSelectedCustomerId(value);
+                                        }} 
+                                        value={field.value}
+                                      >
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="اختر العميل" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {filteredCustomers.map((customer: any) => (
+                                            <SelectItem key={customer.id} value={customer.id.toString()}>
+                                              {customer.name_ar || customer.name} ({customer.id})
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={orderForm.control}
+                                  name="delivery_days"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>مدة التسليم (بالأيام)</FormLabel>
                                       <FormControl>
-                                        <SelectTrigger>
-                                          <SelectValue placeholder="اختر العميل" />
-                                        </SelectTrigger>
+                                        <Input {...field} type="number" placeholder="عدد الأيام" />
                                       </FormControl>
-                                      <SelectContent>
-                                        {customers.map((customer: any) => (
-                                          <SelectItem key={customer.id} value={customer.id.toString()}>
-                                            {customer.name_ar || customer.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={orderForm.control}
+                                  name="notes"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>ملاحظات</FormLabel>
+                                      <FormControl>
+                                        <Textarea {...field} placeholder="ملاحظات إضافية" rows={1} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
 
-                              <FormField
-                                control={orderForm.control}
-                                name="delivery_days"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>مدة التسليم (بالأيام)</FormLabel>
-                                    <FormControl>
-                                      <Input {...field} type="number" placeholder="عدد الأيام" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
+                              {/* Production Orders Section */}
+                              <div className="border-t pt-6">
+                                <div className="flex items-center justify-between mb-4">
+                                  <h3 className="text-lg font-semibold">أوامر الإنتاج</h3>
+                                  <Button
+                                    type="button"
+                                    onClick={addProductionOrder}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    <Plus className="h-4 w-4 mr-2" />
+                                    إضافة أمر إنتاج
+                                  </Button>
+                                </div>
+                                
+                                {productionOrdersInForm.length === 0 && (
+                                  <div className="text-center py-8 text-gray-500">
+                                    يجب إضافة أمر إنتاج واحد على الأقل
+                                  </div>
                                 )}
-                              />
 
-                              <FormField
-                                control={orderForm.control}
-                                name="notes"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>ملاحظات</FormLabel>
-                                    <FormControl>
-                                      <Textarea {...field} placeholder="ملاحظات إضافية" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
+                                <div className="space-y-4">
+                                  {productionOrdersInForm.map((prodOrder, index) => (
+                                    <div key={index} className="p-4 border rounded-lg bg-gray-50">
+                                      <div className="flex items-center justify-between mb-3">
+                                        <h4 className="font-medium">أمر إنتاج #{index + 1}</h4>
+                                        <Button
+                                          type="button"
+                                          onClick={() => removeProductionOrder(index)}
+                                          variant="ghost"
+                                          size="sm"
+                                        >
+                                          <Trash2 className="h-4 w-4 text-red-500" />
+                                        </Button>
+                                      </div>
+                                      
+                                      <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">منتج العميل</label>
+                                          <Select 
+                                            onValueChange={(value) => updateProductionOrder(index, 'customer_product_id', parseInt(value))}
+                                            value={prodOrder.customer_product_id?.toString() || ""}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="اختر المنتج" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {filteredCustomerProducts.map((product: any) => (
+                                                <SelectItem key={product.id} value={product.id.toString()}>
+                                                  {product.product_name_ar || product.product_name_en}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">الكمية (كيلو)</label>
+                                          <Input
+                                            type="number"
+                                            placeholder="الكمية"
+                                            value={prodOrder.quantity_kg || ""}
+                                            onChange={(e) => updateProductionOrder(index, 'quantity_kg', parseFloat(e.target.value) || 0)}
+                                          />
+                                        </div>
+                                        
+                                        <div>
+                                          <label className="text-sm font-medium text-gray-700">الحالة</label>
+                                          <Select 
+                                            onValueChange={(value) => updateProductionOrder(index, 'status', value)}
+                                            value={prodOrder.status || "pending"}
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="pending">في الانتظار</SelectItem>
+                                              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                                              <SelectItem value="completed">مكتمل</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
 
-                              <div className="flex justify-end space-x-2 space-x-reverse">
-                                <Button type="button" variant="outline" onClick={() => setIsOrderDialogOpen(false)}>
-                                  إلغاء
+                              <div className="flex gap-4 pt-6 border-t">
+                                <Button 
+                                  type="submit" 
+                                  className="flex-1"
+                                  disabled={productionOrdersInForm.length === 0}
+                                >
+                                  إنشاء الطلب وأوامر الإنتاج
                                 </Button>
-                                <Button type="submit">
-                                  {editingOrder ? 'تحديث' : 'إضافة'}
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setIsOrderDialogOpen(false)}
+                                  className="flex-1"
+                                >
+                                  إلغاء
                                 </Button>
                               </div>
                             </form>
@@ -459,11 +672,11 @@ export default function Orders() {
                       {filteredOrders.map((order: any) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">{order.order_number}</TableCell>
-                          <TableCell>{order.customer_name}</TableCell>
+                          <TableCell>{order.customer_id}</TableCell>
                           <TableCell>
                             {order.created_at ? format(new Date(order.created_at), 'dd/MM/yyyy') : '-'}
                           </TableCell>
-                          <TableCell>{order.user_name}</TableCell>
+                          <TableCell>{order.created_by}</TableCell>
                           <TableCell>{order.delivery_days} يوم</TableCell>
                           <TableCell>{order.notes || '-'}</TableCell>
                           <TableCell>
