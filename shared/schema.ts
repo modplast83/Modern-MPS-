@@ -736,7 +736,11 @@ export const insertUserSettingSchema = createInsertSchema(user_settings).omit({
   updated_at: true,
 });
 
-export type CustomerProduct = typeof customer_products.$inferSelect;
+export type CustomerProduct = typeof customer_products.$inferSelect & {
+  customer_name?: string;
+  customer_name_ar?: string;
+  customer_code?: string;
+};
 export type InsertCustomerProduct = z.infer<typeof insertCustomerProductSchema>;
 export type SystemSetting = typeof system_settings.$inferSelect;
 export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
