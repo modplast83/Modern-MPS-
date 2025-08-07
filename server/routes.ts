@@ -195,19 +195,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Orders routes
   app.get("/api/orders", async (req, res) => {
     try {
-      const orders = await storage.getOrders();
+      const orders = await storage.getAllOrders();
       res.json(orders);
     } catch (error) {
+      console.error("Orders fetch error:", error);
       res.status(500).json({ message: "خطأ في جلب الطلبات" });
     }
   });
 
   app.post("/api/orders", async (req, res) => {
     try {
-      const validatedData = insertOrderSchema.parse(req.body);
+      const validatedData = insertNewOrderSchema.parse(req.body);
       const order = await storage.createOrder(validatedData);
       res.json(order);
     } catch (error) {
+      console.error("Order creation error:", error);
       res.status(400).json({ message: "بيانات غير صحيحة" });
     }
   });
@@ -367,6 +369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const customerProducts = await storage.getCustomerProducts();
       res.json(customerProducts);
     } catch (error) {
+      console.error("Customer products fetch error:", error);
       res.status(500).json({ message: "خطأ في جلب منتجات العملاء" });
     }
   });

@@ -721,7 +721,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCustomerProducts(): Promise<CustomerProduct[]> {
-    return await db.select().from(customer_products);
+    return await db
+      .select({
+        id: customer_products.id,
+        customer_id: customer_products.customer_id,
+        material_group_id: customer_products.material_group_id,
+        item_id: customer_products.item_id,
+        size_caption: customer_products.size_caption,
+        width: customer_products.width,
+        left_facing: customer_products.left_facing,
+        right_facing: customer_products.right_facing,
+        thickness: customer_products.thickness,
+        printing_cylinder: customer_products.printing_cylinder,
+        length_cm: customer_products.length_cm,
+        cutting_length_cm: customer_products.cutting_length_cm,
+        raw_material: customer_products.raw_material,
+        master_batch_id: customer_products.master_batch_id,
+        is_printed: customer_products.is_printed,
+        cutting_unit: customer_products.cutting_unit,
+        punching: customer_products.punching,
+        unit_weight_kg: customer_products.unit_weight_kg,
+        unit_quantity: customer_products.unit_quantity,
+        package_weight_kg: customer_products.package_weight_kg,
+        cliche_front_design: customer_products.cliche_front_design,
+        cliche_back_design: customer_products.cliche_back_design,
+        notes: customer_products.notes,
+        status: customer_products.status,
+        created_at: customer_products.created_at,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        customer_code: customers.code,
+      })
+      .from(customer_products)
+      .leftJoin(customers, eq(customer_products.customer_id, customers.id))
+      .orderBy(desc(customer_products.created_at));
   }
 
   async getLocations(): Promise<Location[]> {
