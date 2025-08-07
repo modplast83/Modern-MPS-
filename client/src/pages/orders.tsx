@@ -722,7 +722,7 @@ export default function Orders() {
                           إضافة أمر إنتاج
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-md">
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{editingProductionOrder ? 'تعديل أمر الإنتاج' : 'إضافة أمر إنتاج جديد'}</DialogTitle>
                         </DialogHeader>
@@ -779,10 +779,30 @@ export default function Orders() {
                                         <SelectValue placeholder="اختر المنتج" />
                                       </SelectTrigger>
                                     </FormControl>
-                                    <SelectContent>
+                                    <SelectContent className="max-w-[600px]">
                                       {customerProducts.map((product: any) => (
                                         <SelectItem key={product.id} value={product.id.toString()}>
-                                          {product.product_name_ar}
+                                          <div className="flex flex-col gap-1 py-1">
+                                            <div className="font-medium text-right">
+                                              {product.product_name_ar || product.product_name || 'منتج غير محدد'}
+                                            </div>
+                                            <div className="text-sm text-gray-600 text-right">
+                                              {product.raw_material && (
+                                                <span className="ml-2">المادة: {product.raw_material}</span>
+                                              )}
+                                              {product.master_batch_id && (
+                                                <span className="ml-2">الماستر باتش: {product.master_batch_id}</span>
+                                              )}
+                                            </div>
+                                            <div className="text-sm text-gray-600 text-right">
+                                              {product.size_caption && (
+                                                <span className="ml-2">المقاس: {product.size_caption}</span>
+                                              )}
+                                              {product.punching && (
+                                                <span className="ml-2">التخريم: {product.punching}</span>
+                                              )}
+                                            </div>
+                                          </div>
                                         </SelectItem>
                                       ))}
                                     </SelectContent>
@@ -792,43 +812,45 @@ export default function Orders() {
                               )}
                             />
 
-                            <FormField
-                              control={productionOrderForm.control}
-                              name="quantity_kg"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>الكمية (كيلو)</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} type="number" step="0.01" placeholder="الكمية بالكيلو" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={productionOrderForm.control}
-                              name="status"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>الحالة</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={productionOrderForm.control}
+                                name="quantity_kg"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>الكمية (كيلو)</FormLabel>
                                     <FormControl>
-                                      <SelectTrigger>
-                                        <SelectValue placeholder="اختر الحالة" />
-                                      </SelectTrigger>
+                                      <Input {...field} type="number" step="0.01" placeholder="الكمية بالكيلو" className="w-full" />
                                     </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="pending">في الانتظار</SelectItem>
-                                      <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                                      <SelectItem value="completed">مكتمل</SelectItem>
-                                      <SelectItem value="cancelled">ملغي</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={productionOrderForm.control}
+                                name="status"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>الحالة</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                      <FormControl>
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="اختر الحالة" />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="pending">في الانتظار</SelectItem>
+                                        <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                                        <SelectItem value="completed">مكتمل</SelectItem>
+                                        <SelectItem value="cancelled">ملغي</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
 
                             <div className="flex justify-end space-x-2 space-x-reverse">
                               <Button type="button" variant="outline" onClick={() => setIsProductionOrderDialogOpen(false)}>
