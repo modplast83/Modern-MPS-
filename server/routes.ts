@@ -1206,20 +1206,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items routes
   app.post("/api/items", async (req, res) => {
     try {
-      const item = await storage.createItem(req.body);
+      console.log('Received item data:', req.body);
+      
+      // Convert empty strings to null for optional fields
+      const processedData = {
+        ...req.body,
+        category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
+        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      console.log('Processed item data:', processedData);
+      const item = await storage.createItem(processedData);
+      console.log('Created item:', item);
       res.json(item);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء الصنف" });
+      console.error('Item creation error:', error);
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      res.status(500).json({ message: "خطأ في إنشاء الصنف", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
   app.put("/api/items/:id", async (req, res) => {
     try {
       const id = req.params.id;
-      const item = await storage.updateItem(id, req.body);
+      console.log('Updating item:', id, req.body);
+      
+      // Convert empty strings to null for optional fields
+      const processedData = {
+        ...req.body,
+        category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
+        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      console.log('Processed item update data:', processedData);
+      const item = await storage.updateItem(id, processedData);
       res.json(item);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث الصنف" });
+      console.error('Item update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث الصنف", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
