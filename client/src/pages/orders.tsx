@@ -775,31 +775,29 @@ export default function Orders() {
                                   <FormLabel>منتج العميل</FormLabel>
                                   <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
-                                      <SelectTrigger>
+                                      <SelectTrigger className="h-auto min-h-[40px]">
                                         <SelectValue placeholder="اختر المنتج" />
                                       </SelectTrigger>
                                     </FormControl>
-                                    <SelectContent className="max-w-[600px]">
+                                    <SelectContent className="max-w-[700px]">
                                       {customerProducts.map((product: any) => (
                                         <SelectItem key={product.id} value={product.id.toString()}>
-                                          <div className="flex flex-col gap-1 py-1">
-                                            <div className="font-medium text-right">
-                                              {product.product_name_ar || product.product_name || 'منتج غير محدد'}
+                                          <div className="w-full text-right py-2">
+                                            <div className="font-semibold text-gray-900 mb-1">
+                                              {product.size_caption ? `${product.size_caption}` : 'منتج غير محدد'}
                                             </div>
-                                            <div className="text-sm text-gray-600 text-right">
+                                            <div className="text-sm text-gray-600 space-y-1">
                                               {product.raw_material && (
-                                                <span className="ml-2">المادة: {product.raw_material}</span>
+                                                <div>المادة الخام: {product.raw_material}</div>
                                               )}
                                               {product.master_batch_id && (
-                                                <span className="ml-2">الماستر باتش: {product.master_batch_id}</span>
-                                              )}
-                                            </div>
-                                            <div className="text-sm text-gray-600 text-right">
-                                              {product.size_caption && (
-                                                <span className="ml-2">المقاس: {product.size_caption}</span>
+                                                <div>الماستر باتش: {product.master_batch_id}</div>
                                               )}
                                               {product.punching && (
-                                                <span className="ml-2">التخريم: {product.punching}</span>
+                                                <div>التخريم: {product.punching}</div>
+                                              )}
+                                              {product.thickness && (
+                                                <div>السماكة: {product.thickness}</div>
                                               )}
                                             </div>
                                           </div>
