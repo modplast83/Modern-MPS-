@@ -397,9 +397,6 @@ export default function Definitions() {
       await apiRequest('/api/customer-products', {
         method: 'POST',
         body: JSON.stringify(duplicateData),
-        headers: {
-          'Content-Type': 'application/json',
-        },
       });
 
       // Refresh the data
@@ -2178,9 +2175,11 @@ export default function Definitions() {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {machine.section_id ? 
-                                      sections?.find(s => s.id === machine.section_id)?.name_ar || 
-                                      sections?.find(s => s.id === machine.section_id)?.name || 
-                                      machine.section_id 
+                                      Array.isArray(sections) ? 
+                                        sections.find((s: any) => s.id === machine.section_id)?.name_ar || 
+                                        sections.find((s: any) => s.id === machine.section_id)?.name || 
+                                        machine.section_id 
+                                        : machine.section_id
                                       : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
@@ -2290,9 +2289,11 @@ export default function Definitions() {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {user.section_id ? 
-                                      sections?.find(s => s.id === user.section_id)?.name_ar || 
-                                      sections?.find(s => s.id === user.section_id)?.name || 
-                                      user.section_id 
+                                      Array.isArray(sections) ? 
+                                        sections.find((s: any) => s.id === user.section_id)?.name_ar || 
+                                        sections.find((s: any) => s.id === user.section_id)?.name || 
+                                        user.section_id 
+                                        : user.section_id
                                       : '-'}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap">
