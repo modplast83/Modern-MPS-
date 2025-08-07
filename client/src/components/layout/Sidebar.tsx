@@ -8,7 +8,8 @@ import {
   Database, 
   BarChart3,
   Home,
-  Link2
+  Link2,
+  FileText
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -18,6 +19,13 @@ const modules = [
     name_ar: "الرئيسية",
     icon: Home,
     path: "/",
+    active: false
+  },
+  {
+    name: "الطلبات",
+    name_ar: "الطلبات",
+    icon: FileText,
+    path: "/orders",
     active: false
   },
   {
