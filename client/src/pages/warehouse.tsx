@@ -28,7 +28,7 @@ const locationFormSchema = z.object({
   name: z.string().min(1, "الاسم الإنجليزي مطلوب"),
   name_ar: z.string().min(1, "الاسم العربي مطلوب"),
   coordinates: z.string().optional(),
-  tolerance_range: z.string().optional()
+  tolerance_range: z.string().optional().transform(val => val ? parseInt(val) : undefined)
 });
 
 const movementFormSchema = z.object({
