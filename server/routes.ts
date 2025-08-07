@@ -1208,9 +1208,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received item data:', req.body);
       
-      // Convert empty strings to null for optional fields
+      // Generate ID if not provided and convert empty strings to null for optional fields
       const processedData = {
         ...req.body,
+        id: req.body.id || `ITEM${Date.now()}`, // Generate ID if not provided
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
         material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
         code: req.body.code === '' || !req.body.code ? null : req.body.code
