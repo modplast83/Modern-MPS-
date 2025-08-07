@@ -614,7 +614,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(material_groups);
   }
 
-  async getItems(): Promise<Item[]> {
+  async getItems(materialGroupId?: string): Promise<Item[]> {
+    if (materialGroupId) {
+      return await db.select().from(items).where(eq(items.material_group_id, parseInt(materialGroupId)));
+    }
     return await db.select().from(items);
   }
 

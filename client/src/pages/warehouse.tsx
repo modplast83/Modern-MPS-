@@ -71,8 +71,8 @@ export default function Warehouse() {
     }
   });
 
-  // Fetch items for dropdown
-  const { data: items = [] } = useQuery({
+  // Fetch all items initially
+  const { data: allItems = [] } = useQuery({
     queryKey: ['/api/items'],
     queryFn: async () => {
       const response = await fetch('/api/items');
@@ -310,7 +310,13 @@ export default function Warehouse() {
     }
   });
 
-
+  // Watch for material group selection to filter items
+  const selectedMaterialGroupId = form.watch('material_group_id');
+  
+  // Filter items based on selected material group
+  const filteredItemsByGroup = allItems.filter((item: any) => 
+    !selectedMaterialGroupId || item.material_group_id?.toString() === selectedMaterialGroupId
+  );
 
   const filteredItems = inventoryItems.filter((item: any) => 
     (item.item_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -489,7 +495,11 @@ export default function Warehouse() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>مجموعة المواد</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <Select onValueChange={(value) => {
+                                      field.onChange(value);
+                                      // Reset item selection when material group changes
+                                      form.setValue('item_id', '');
+                                    }} value={field.value}>
                                       <FormControl>
                                         <SelectTrigger>
                                           <SelectValue placeholder="اختر مجموعة المواد" />
@@ -514,14 +524,14 @@ export default function Warehouse() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>الصنف</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={!selectedMaterialGroupId}>
                                       <FormControl>
                                         <SelectTrigger>
-                                          <SelectValue placeholder="اختر الصنف" />
+                                          <SelectValue placeholder={selectedMaterialGroupId ? "اختر الصنف" : "اختر مجموعة المواد أولاً"} />
                                         </SelectTrigger>
                                       </FormControl>
                                       <SelectContent>
-                                        {items.map((item: any) => (
+                                        {filteredItemsByGroup.map((item: any) => (
                                           <SelectItem key={item.id} value={item.id}>
                                             {item.name_ar} ({item.code})
                                           </SelectItem>
