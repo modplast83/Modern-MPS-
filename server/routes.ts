@@ -1185,10 +1185,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/material-groups/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const materialGroup = await storage.updateMaterialGroup(id, req.body);
+      console.log('Updating material group:', id, req.body);
+      
+      // Convert empty strings to null for parent_id and code
+      const processedData = {
+        ...req.body,
+        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : parseInt(req.body.parent_id),
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      console.log('Processed update data:', processedData);
+      const materialGroup = await storage.updateMaterialGroup(id, processedData);
       res.json(materialGroup);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث مجموعة المواد" });
+      console.error('Material group update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث مجموعة المواد", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
