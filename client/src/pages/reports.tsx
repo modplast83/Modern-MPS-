@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatNumber, formatPercentage, formatNumberWithCommas } from '@/lib/formatNumber';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -181,7 +182,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">إجمالي الإنتاج</p>
-                        <p className="text-2xl font-bold text-blue-600">{productionData.totalProduction.toLocaleString()}</p>
+                        <p className="text-2xl font-bold text-blue-600">{formatNumberWithCommas(productionData.totalProduction)}</p>
                         <p className="text-xs text-gray-500">قطعة</p>
                       </div>
                       <Package className="w-8 h-8 text-blue-500 opacity-60" />
@@ -194,7 +195,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">الكفاءة</p>
-                        <p className="text-2xl font-bold text-green-600">{productionData.efficiency}%</p>
+                        <p className="text-2xl font-bold text-green-600">{formatPercentage(productionData.efficiency)}</p>
                         <p className="text-xs text-green-500 flex items-center gap-1">
                           <TrendingUp className="w-3 h-3" />
                           +3% من الشهر الماضي
@@ -210,7 +211,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">الطلبات المكتملة</p>
-                        <p className="text-2xl font-bold text-purple-600">{productionData.completedOrders}</p>
+                        <p className="text-2xl font-bold text-purple-600">{formatNumber(productionData.completedOrders)}</p>
                         <p className="text-xs text-gray-500">طلب</p>
                       </div>
                       <CheckCircle2 className="w-8 h-8 text-purple-500 opacity-60" />
@@ -223,7 +224,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">معدل العيوب</p>
-                        <p className="text-2xl font-bold text-red-600">{productionData.defectRate}%</p>
+                        <p className="text-2xl font-bold text-red-600">{formatPercentage(productionData.defectRate)}</p>
                         <p className="text-xs text-red-500">يحتاج تحسين</p>
                       </div>
                       <AlertTriangle className="w-8 h-8 text-red-500 opacity-60" />
@@ -249,7 +250,7 @@ export default function Reports() {
                                 style={{ width: `${85 + index * 3}%` }}
                               ></div>
                             </div>
-                            <span className="text-sm text-gray-600">{85 + index * 3}%</span>
+                            <span className="text-sm text-gray-600">{formatPercentage(85 + index * 3)}</span>
                           </div>
                         </div>
                       ))}
@@ -268,7 +269,7 @@ export default function Reports() {
                           <span className="text-sm font-medium">{day}</span>
                           <div className="flex items-center gap-2">
                             <Badge variant={index === 6 ? 'secondary' : 'default'}>
-                              {index === 6 ? 'عطلة' : `${2000 + index * 200} قطعة`}
+                              {index === 6 ? 'عطلة' : `${formatNumber(2000 + index * 200)} قطعة`}
                             </Badge>
                           </div>
                         </div>
@@ -287,7 +288,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">معدل النجاح</p>
-                        <p className="text-2xl font-bold text-green-600">{qualityData.passRate}%</p>
+                        <p className="text-2xl font-bold text-green-600">{formatPercentage(qualityData.passRate)}</p>
                       </div>
                       <CheckCircle2 className="w-8 h-8 text-green-500 opacity-60" />
                     </div>
@@ -299,7 +300,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">إجمالي الفحوصات</p>
-                        <p className="text-2xl font-bold text-blue-600">{qualityData.totalChecks}</p>
+                        <p className="text-2xl font-bold text-blue-600">{formatNumber(qualityData.totalChecks)}</p>
                       </div>
                       <PieChart className="w-8 h-8 text-blue-500 opacity-60" />
                     </div>
@@ -311,7 +312,7 @@ export default function Reports() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-gray-600">العيوب المكتشفة</p>
-                        <p className="text-2xl font-bold text-red-600">{qualityData.defectsFound}</p>
+                        <p className="text-2xl font-bold text-red-600">{formatNumber(qualityData.defectsFound)}</p>
                       </div>
                       <AlertTriangle className="w-8 h-8 text-red-500 opacity-60" />
                     </div>
@@ -335,7 +336,7 @@ export default function Reports() {
                               style={{ width: `${(defect.count / qualityData.defectsFound) * 100}%` }}
                             ></div>
                           </div>
-                          <span className="text-sm text-gray-600">{defect.count}</span>
+                          <span className="text-sm text-gray-600">{formatNumber(defect.count)}</span>
                         </div>
                       </div>
                     ))}

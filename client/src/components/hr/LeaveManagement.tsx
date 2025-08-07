@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { formatNumber } from '@/lib/formatNumber';
 import { 
   Calendar, 
   Clock, 
@@ -144,7 +145,7 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي الطلبات</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{leaveRequests.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(leaveRequests.length)}</p>
               </div>
               <Calendar className="w-8 h-8 text-blue-600" />
             </div>
@@ -156,7 +157,7 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">قيد المراجعة</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{pendingRequests.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(pendingRequests.length)}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-yellow-600" />
             </div>
@@ -169,7 +170,7 @@ export default function LeaveManagement() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">موافق عليها</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {leaveRequests.filter(r => r.final_status === 'approved').length}
+                  {formatNumber(leaveRequests.filter(r => r.final_status === 'approved').length)}
                 </p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
@@ -183,7 +184,7 @@ export default function LeaveManagement() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">أنواع الإجازات</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {leaveTypes.filter(t => t.is_active).length}
+                  {formatNumber(leaveTypes.filter(t => t.is_active).length)}
                 </p>
               </div>
               <CalendarDays className="w-8 h-8 text-purple-600" />

@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { formatNumber, formatPercentage } from '@/lib/formatNumber';
 import { 
   Target, 
   Star,
@@ -118,7 +119,7 @@ export default function PerformanceReviews() {
   };
 
   const averageScore = reviews.length > 0 
-    ? reviews.filter(r => r.overall_score).reduce((sum, r) => sum + (r.overall_score || 0), 0) / reviews.filter(r => r.overall_score).length
+    ? parseFloat((reviews.filter(r => r.overall_score).reduce((sum, r) => sum + (r.overall_score || 0), 0) / reviews.filter(r => r.overall_score).length).toFixed(1))
     : 0;
 
   if (reviewsLoading || criteriaLoading) {
@@ -157,7 +158,7 @@ export default function PerformanceReviews() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي التقييمات</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{reviews.length}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(reviews.length)}</p>
               </div>
               <Target className="w-8 h-8 text-blue-600" />
             </div>
@@ -170,7 +171,7 @@ export default function PerformanceReviews() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">المتوسط العام</p>
                 <p className={`text-2xl font-bold ${getScoreColor(averageScore)}`}>
-                  {averageScore.toFixed(1)}%
+                  {formatPercentage(averageScore)}
                 </p>
               </div>
               <BarChart3 className="w-8 h-8 text-green-600" />
@@ -184,7 +185,7 @@ export default function PerformanceReviews() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">التقييمات المكتملة</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {reviews.filter(r => r.status === 'completed' || r.status === 'approved').length}
+                  {formatNumber(reviews.filter(r => r.status === 'completed' || r.status === 'approved').length)}
                 </p>
               </div>
               <Award className="w-8 h-8 text-purple-600" />
@@ -198,7 +199,7 @@ export default function PerformanceReviews() {
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">قيد المراجعة</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {reviews.filter(r => r.status === 'in_progress').length}
+                  {formatNumber(reviews.filter(r => r.status === 'in_progress').length)}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-orange-600" />
@@ -221,7 +222,7 @@ export default function PerformanceReviews() {
               <div key={criterion.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="font-medium">{criterion.name_ar || criterion.name}</h4>
-                  <Badge variant="outline">{criterion.weight}%</Badge>
+                  <Badge variant="outline">{formatPercentage(criterion.weight)}</Badge>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {criterion.description_ar || criterion.description || "لا يوجد وصف"}
@@ -287,7 +288,7 @@ export default function PerformanceReviews() {
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">النتيجة الإجمالية</span>
                     <span className={`font-bold ${getScoreColor(review.overall_score)}`}>
-                      {review.overall_score}%
+                      {formatPercentage(review.overall_score)}
                     </span>
                   </div>
                   <Progress value={review.overall_score} className="h-2" />

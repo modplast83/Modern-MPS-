@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatNumber, formatPercentage } from '@/lib/formatNumber';
 import { 
   ShoppingCart, 
   Package, 
@@ -47,7 +48,7 @@ export default function DashboardStats() {
   const dashboardStats: DashboardStat[] = [
     {
       label: "الطلبات النشطة",
-      value: (stats as any)?.activeOrders || 12,
+      value: formatNumber((stats as any)?.activeOrders || 12),
       change: "+12% من الأسبوع الماضي",
       trend: 'up',
       icon: <ShoppingCart className="w-6 h-6" />,
@@ -55,7 +56,7 @@ export default function DashboardStats() {
     },
     {
       label: "معدل الإنتاج",
-      value: `${(stats as any)?.productionRate || 85}%`,
+      value: formatPercentage((stats as any)?.productionRate || 85),
       change: ((stats as any)?.productionRate || 85) >= 85 ? "أداء ممتاز" : ((stats as any)?.productionRate || 85) >= 70 ? "أداء جيد" : "يحتاج تحسين",
       trend: ((stats as any)?.productionRate || 85) >= 85 ? 'up' : ((stats as any)?.productionRate || 85) >= 70 ? 'neutral' : 'down',
       icon: <TrendingUp className="w-6 h-6" />,
@@ -63,15 +64,15 @@ export default function DashboardStats() {
     },
     {
       label: "العمال الحاضرين",
-      value: `${(stats as any)?.presentEmployees || 18}/${(stats as any)?.totalEmployees || 22}`,
-      change: `${Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100)}% معدل الحضور`,
+      value: `${formatNumber((stats as any)?.presentEmployees || 18)}/${formatNumber((stats as any)?.totalEmployees || 22)}`,
+      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} معدل الحضور`,
       trend: 'neutral',
       icon: <Users className="w-6 h-6" />,
       color: "text-purple-600"
     },
     {
       label: "تنبيهات الصيانة",
-      value: (stats as any)?.maintenanceAlerts || 2,
+      value: formatNumber((stats as any)?.maintenanceAlerts || 2),
       change: ((stats as any)?.maintenanceAlerts || 2) > 0 ? "يتطلب انتباه" : "جميع المكائن تعمل بشكل طبيعي",
       trend: ((stats as any)?.maintenanceAlerts || 2) > 0 ? 'down' : 'up',
       icon: <AlertTriangle className="w-6 h-6" />,
