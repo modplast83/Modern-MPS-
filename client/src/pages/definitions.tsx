@@ -30,20 +30,6 @@ export default function Definitions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickSearch, setQuickSearch] = useState("");
 
-  // Automatic calculation for cutting length
-  useEffect(() => {
-    if (customerProductForm.printing_cylinder) {
-      const cylinderValue = parseFloat(customerProductForm.printing_cylinder);
-      if (!isNaN(cylinderValue)) {
-        const calculatedLength = Math.round(cylinderValue * 2.54);
-        setCustomerProductForm(prev => ({ 
-          ...prev, 
-          cutting_length_cm: calculatedLength.toString() 
-        }));
-      }
-    }
-  }, [customerProductForm.printing_cylinder]);
-
   // Form states
   const [customerForm, setCustomerForm] = useState({
     name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', 
@@ -137,6 +123,20 @@ export default function Definitions() {
     queryKey: ['/api/users'],
     staleTime: 0,
   });
+
+  // Automatic calculation for cutting length
+  useEffect(() => {
+    if (customerProductForm.printing_cylinder) {
+      const cylinderValue = parseFloat(customerProductForm.printing_cylinder);
+      if (!isNaN(cylinderValue)) {
+        const calculatedLength = Math.round(cylinderValue * 2.54);
+        setCustomerProductForm(prev => ({ 
+          ...prev, 
+          cutting_length_cm: calculatedLength.toString() 
+        }));
+      }
+    }
+  }, [customerProductForm.printing_cylinder]);
 
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
