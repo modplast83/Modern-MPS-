@@ -1954,7 +1954,7 @@ export default function Definitions() {
                                     {cp.punching || '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.unit_weight_kg || '-'}
+                                    {cp.unit_weight_kg ? formatNumber(cp.unit_weight_kg) : '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.unit_quantity || '-'}
