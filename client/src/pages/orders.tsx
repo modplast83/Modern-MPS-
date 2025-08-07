@@ -182,6 +182,8 @@ export default function Orders() {
     product.customer_id === selectedCustomerId
   );
 
+
+
   // Filter customers for search
   const filteredCustomers = customers.filter((customer: any) =>
     customer.name_ar?.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
@@ -213,10 +215,10 @@ export default function Orders() {
   const handleAddOrder = () => {
     setEditingOrder(null);
     orderForm.reset({
-
       customer_id: "",
       delivery_days: "",
-      notes: ""
+      notes: "",
+      production_orders: []
     });
     setIsOrderDialogOpen(true);
   };
@@ -224,10 +226,10 @@ export default function Orders() {
   const handleEditOrder = (order: any) => {
     setEditingOrder(order);
     orderForm.reset({
-      order_number: order.order_number || "",
       customer_id: order.customer_id?.toString() || "",
       delivery_days: order.delivery_days?.toString() || "",
-      notes: order.notes || ""
+      notes: order.notes || "",
+      production_orders: []
     });
     setIsOrderDialogOpen(true);
   };
@@ -592,7 +594,7 @@ export default function Orders() {
                                             <SelectContent>
                                               {filteredCustomerProducts.map((product: any) => (
                                                 <SelectItem key={product.id} value={product.id.toString()}>
-                                                  {product.product_name_ar || product.product_name_en}
+                                                  {product.customer_name_ar || product.customer_name || 'عميل غير محدد'} - {product.raw_material} {product.width}×{product.thickness} ({product.cutting_unit})
                                                 </SelectItem>
                                               ))}
                                             </SelectContent>
