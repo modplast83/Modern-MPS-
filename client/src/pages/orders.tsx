@@ -596,7 +596,19 @@ export default function Orders() {
                                                 <SelectItem key={product.id} value={product.id.toString()}>
                                                   <div className="w-full text-right py-2">
                                                     <div className="font-semibold text-gray-900 mb-1">
-                                                      {product.size_caption ? `المنتج: ${product.size_caption}` : 'منتج غير محدد'}
+                                                      {(() => {
+                                                        let productName = '';
+                                                        if (product.size_caption) {
+                                                          productName = product.size_caption;
+                                                        } else if (product.raw_material && product.width && product.thickness) {
+                                                          productName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                        } else if (product.raw_material) {
+                                                          productName = product.raw_material;
+                                                        } else {
+                                                          productName = 'منتج غير محدد';
+                                                        }
+                                                        return `المنتج: ${productName}`;
+                                                      })()}
                                                     </div>
                                                     <div className="text-sm text-gray-600 space-y-1">
                                                       {product.raw_material && (
@@ -805,7 +817,19 @@ export default function Orders() {
                                         <SelectItem key={product.id} value={product.id.toString()}>
                                           <div className="w-full text-right py-2">
                                             <div className="font-semibold text-gray-900 mb-1">
-                                              {product.size_caption ? `${product.size_caption}` : 'منتج غير محدد'}
+                                              {(() => {
+                                                let productName = '';
+                                                if (product.size_caption) {
+                                                  productName = product.size_caption;
+                                                } else if (product.raw_material && product.width && product.thickness) {
+                                                  productName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                } else if (product.raw_material) {
+                                                  productName = product.raw_material;
+                                                } else {
+                                                  productName = 'منتج غير محدد';
+                                                }
+                                                return `المنتج: ${productName}`;
+                                              })()}
                                             </div>
                                             <div className="text-sm text-gray-600 space-y-1">
                                               {product.raw_material && (
