@@ -173,6 +173,7 @@ export const violations = pgTable('violations', {
 export const items = pgTable('items', {
   id: varchar('id', { length: 20 }).primaryKey(),
   category_id: varchar('category_id', { length: 20 }),
+  material_group_id: integer('material_group_id').references(() => material_groups.id),
   name: varchar('name', { length: 100 }),
   name_ar: varchar('name_ar', { length: 100 }),
   code: varchar('code', { length: 50 }),
