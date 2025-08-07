@@ -349,7 +349,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items routes
   app.get("/api/items", async (req, res) => {
     try {
-      const items = await storage.getItems();
+      const materialGroupId = req.query.material_group_id;
+      const items = await storage.getItems(materialGroupId);
       res.json(items);
     } catch (error) {
       console.error('Error fetching items:', error);
