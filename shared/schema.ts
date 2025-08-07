@@ -750,6 +750,7 @@ export const material_groups = pgTable("material_groups", {
   name_ar: varchar("name_ar", { length: 100 }).notNull(),
   code: varchar("code", { length: 20 }).unique(),
   description: text("description"),
+  parent_id: integer("parent_id").references(() => material_groups.id),
   status: varchar("status", { length: 20 }).default("active"),
   created_at: timestamp("created_at").defaultNow(),
 });
