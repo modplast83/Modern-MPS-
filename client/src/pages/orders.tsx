@@ -597,17 +597,28 @@ export default function Orders() {
                                                   <div className="w-full text-right py-2">
                                                     <div className="font-semibold text-gray-900 mb-1">
                                                       {(() => {
-                                                        let productName = '';
+                                                        let displayName = '';
+                                                        
+                                                        // Create base product name
+                                                        let baseName = '';
                                                         if (product.size_caption) {
-                                                          productName = product.size_caption;
+                                                          baseName = product.size_caption;
                                                         } else if (product.raw_material && product.width && product.thickness) {
-                                                          productName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                          baseName = `${product.raw_material} ${product.width}×${product.thickness}`;
                                                         } else if (product.raw_material) {
-                                                          productName = product.raw_material;
+                                                          baseName = product.raw_material;
                                                         } else {
-                                                          productName = 'منتج غير محدد';
+                                                          baseName = 'منتج غير محدد';
                                                         }
-                                                        return `المنتج: ${productName}`;
+                                                        
+                                                        // Add cutting length if available
+                                                        if (product.cutting_length_cm) {
+                                                          displayName = `${baseName} × ${product.cutting_length_cm} سم`;
+                                                        } else {
+                                                          displayName = baseName;
+                                                        }
+                                                        
+                                                        return displayName;
                                                       })()}
                                                     </div>
                                                     <div className="text-sm text-gray-600 space-y-1">
@@ -818,17 +829,28 @@ export default function Orders() {
                                           <div className="w-full text-right py-2">
                                             <div className="font-semibold text-gray-900 mb-1">
                                               {(() => {
-                                                let productName = '';
+                                                let displayName = '';
+                                                
+                                                // Create base product name
+                                                let baseName = '';
                                                 if (product.size_caption) {
-                                                  productName = product.size_caption;
+                                                  baseName = product.size_caption;
                                                 } else if (product.raw_material && product.width && product.thickness) {
-                                                  productName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                  baseName = `${product.raw_material} ${product.width}×${product.thickness}`;
                                                 } else if (product.raw_material) {
-                                                  productName = product.raw_material;
+                                                  baseName = product.raw_material;
                                                 } else {
-                                                  productName = 'منتج غير محدد';
+                                                  baseName = 'منتج غير محدد';
                                                 }
-                                                return `المنتج: ${productName}`;
+                                                
+                                                // Add cutting length if available
+                                                if (product.cutting_length_cm) {
+                                                  displayName = `${baseName} × ${product.cutting_length_cm} سم`;
+                                                } else {
+                                                  displayName = baseName;
+                                                }
+                                                
+                                                return displayName;
                                               })()}
                                             </div>
                                             <div className="text-sm text-gray-600 space-y-1">
