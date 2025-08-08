@@ -21,13 +21,13 @@ export const sections = pgTable('sections', {
 
 // 🧑‍💼 جدول المستخدمين
 export const users = pgTable('users', {
-  id: varchar('id', { length: 20 }).primaryKey(),
+  id: serial('id').primaryKey(),
   username: varchar('username', { length: 50 }).notNull().unique(),
   password: varchar('password', { length: 100 }).notNull(),
   display_name: varchar('display_name', { length: 100 }),
   display_name_ar: varchar('display_name_ar', { length: 100 }),
   role_id: integer('role_id').references(() => roles.id),
-  section_id: varchar('section_id', { length: 20 }).references(() => sections.id),
+  section_id: integer('section_id'),
   status: varchar('status', { length: 20 }).default('active'), // active / suspended / deleted
   created_at: timestamp('created_at').defaultNow(),
 });

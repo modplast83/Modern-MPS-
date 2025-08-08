@@ -16,6 +16,7 @@ import {
   customer_products,
   locations,
   categories,
+  roles,
   inventory,
   inventory_movements,
   training_records,
@@ -45,6 +46,7 @@ import {
   type InsertRoll,
   type Machine,
   type Customer,
+  type Role,
   type MaintenanceRequest,
   type InsertMaintenanceRequest,
   type QualityCheck,
@@ -106,7 +108,7 @@ import { eq, desc, and, sql, sum, count } from "drizzle-orm";
 
 export interface IStorage {
   // Users
-  getUser(id: string): Promise<User | undefined>;
+  getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
@@ -281,6 +283,7 @@ export interface IStorage {
   
   // Users list
   getUsers(): Promise<User[]>;
+  getRoles(): Promise<Role[]>;
   
   // Dashboard Stats
   getDashboardStats(): Promise<{
@@ -309,7 +312,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: string): Promise<User | undefined> {
+  async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
@@ -320,20 +323,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Generate a new user ID in format USR001, USR002, etc.
-    const existingUsers = await db.select({ id: users.id }).from(users);
-    const userIds = existingUsers.map(u => u.id);
-    const maxNumber = userIds
-      .filter(id => id.startsWith('USR'))
-      .map(id => parseInt(id.substring(3)))
-      .filter(num => !isNaN(num))
-      .reduce((max, num) => Math.max(max, num), 0);
-    
-    const newId = `USR${String(maxNumber + 1).padStart(3, '0')}`;
-    
     const [user] = await db
       .insert(users)
-      .values({ ...insertUser, id: newId })
+      .values(insertUser)
       .returning();
     return user;
   }
@@ -363,7 +355,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(machines).where(eq(machines.id, id));
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: number): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
   }
 
@@ -574,6 +566,10 @@ export class DatabaseStorage implements IStorage {
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
+  }
+
+  async getRoles(): Promise<Role[]> {
+    return await db.select().from(roles);
   }
 
   // Replaced by createCustomerProduct
