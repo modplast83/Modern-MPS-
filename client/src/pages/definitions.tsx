@@ -16,6 +16,28 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User, Copy } from "lucide-react";
 import { formatNumber } from "@/lib/formatNumber";
 
+// ألوان ماستر باتش
+const masterBatchColors = [
+  { id: 'CLEAR', name: 'بدون لون (شفاف)', color: 'transparent', borderColor: '#E5E7EB' },
+  { id: 'WHITE', name: 'الأبيض', color: '#FFFFFF', borderColor: '#E5E7EB' },
+  { id: 'BLACK', name: 'الأسود', color: '#000000', borderColor: '#000000' },
+  { id: 'YELLOW', name: 'الأصفر', color: '#FFFF00', borderColor: '#FFFF00' },
+  { id: 'RED', name: 'الأحمر', color: '#FF0000', borderColor: '#FF0000' },
+  { id: 'PINK', name: 'الوردي', color: '#FFC0CB', borderColor: '#FFC0CB' },
+  { id: 'BLUE', name: 'الأزرق', color: '#0000FF', borderColor: '#0000FF' },
+  { id: 'GRAY', name: 'الرمادي', color: '#808080', borderColor: '#808080' },
+  { id: 'BEIGE', name: 'البيج', color: '#F5F5DC', borderColor: '#F5F5DC' },
+  { id: 'ORANGE', name: 'البرتقالي', color: '#FFA500', borderColor: '#FFA500' },
+  { id: 'GREEN', name: 'الأخضر', color: '#008000', borderColor: '#008000' },
+  { id: 'VIOLET', name: 'البنفسجي', color: '#8A2BE2', borderColor: '#8A2BE2' },
+  { id: 'CREAM', name: 'الكريمي', color: '#F5F5F0', borderColor: '#F5F5F0' },
+  { id: 'PURPLE', name: 'الأرجواني', color: '#800080', borderColor: '#800080' },
+  { id: 'BROWN', name: 'البني', color: '#A52A2A', borderColor: '#A52A2A' },
+  { id: 'INDIGO', name: 'النيلي', color: '#4B0082', borderColor: '#4B0082' },
+  { id: 'SILVER', name: 'فضي', color: '#C0C0C0', borderColor: '#C0C0C0' },
+  { id: 'GOLD', name: 'ذهبي', color: '#FFD700', borderColor: '#FFD700' }
+];
+
 export default function Definitions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -1068,16 +1090,36 @@ export default function Definitions() {
         <Label htmlFor="master_batch_id">ماستر باتش *</Label>
         <Select value={customerProductForm.master_batch_id} onValueChange={(value) => setCustomerProductForm(prev => ({ ...prev, master_batch_id: value }))}>
           <SelectTrigger>
-            <SelectValue placeholder="اختر ماستر باتش" />
+            <SelectValue placeholder="اختر ماستر باتش">
+              {customerProductForm.master_batch_id && (
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded border" 
+                    style={{ 
+                      backgroundColor: masterBatchColors.find(c => c.id === customerProductForm.master_batch_id)?.color || 'transparent',
+                      borderColor: masterBatchColors.find(c => c.id === customerProductForm.master_batch_id)?.borderColor || '#E5E7EB'
+                    }}
+                  ></div>
+                  <span>{masterBatchColors.find(c => c.id === customerProductForm.master_batch_id)?.name}</span>
+                </div>
+              )}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="CLEAR">CLEAR</SelectItem>
-            <SelectItem value="WHITE">WHITE</SelectItem>
-            <SelectItem value="BLACK">BLACK</SelectItem>
-            <SelectItem value="RED">RED</SelectItem>
-            <SelectItem value="BLUE">BLUE</SelectItem>
-            <SelectItem value="GREEN">GREEN</SelectItem>
-            <SelectItem value="YELLOW">YELLOW</SelectItem>
+            {masterBatchColors.map((color) => (
+              <SelectItem key={color.id} value={color.id}>
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded border" 
+                    style={{ 
+                      backgroundColor: color.color,
+                      borderColor: color.borderColor
+                    }}
+                  ></div>
+                  <span>{color.name}</span>
+                </div>
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -2052,7 +2094,18 @@ export default function Definitions() {
                                     {cp.raw_material || '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.master_batch_id || '-'}
+                                    {cp.master_batch_id ? (
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-4 h-4 rounded border" 
+                                          style={{ 
+                                            backgroundColor: masterBatchColors.find(c => c.id === cp.master_batch_id)?.color || 'transparent',
+                                            borderColor: masterBatchColors.find(c => c.id === cp.master_batch_id)?.borderColor || '#E5E7EB'
+                                          }}
+                                        ></div>
+                                        <span>{masterBatchColors.find(c => c.id === cp.master_batch_id)?.name || cp.master_batch_id}</span>
+                                      </div>
+                                    ) : '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.punching || '-'}
