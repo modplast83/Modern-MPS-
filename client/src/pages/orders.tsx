@@ -214,6 +214,8 @@ export default function Orders() {
 
   const handleAddOrder = () => {
     setEditingOrder(null);
+    setSelectedCustomerId(""); // Reset customer selection
+    setProductionOrdersInForm([]); // Reset production orders
     orderForm.reset({
       customer_id: "",
       delivery_days: "",
@@ -225,6 +227,8 @@ export default function Orders() {
 
   const handleEditOrder = (order: any) => {
     setEditingOrder(order);
+    setSelectedCustomerId(order.customer_id?.toString() || ""); // Set customer for editing
+    setProductionOrdersInForm([]); // Reset production orders
     orderForm.reset({
       customer_id: order.customer_id?.toString() || "",
       delivery_days: order.delivery_days?.toString() || "",
@@ -494,6 +498,8 @@ export default function Orders() {
                                         onValueChange={(value) => {
                                           field.onChange(value);
                                           setSelectedCustomerId(value);
+                                          // Reset production orders when customer changes
+                                          setProductionOrdersInForm([]);
                                         }} 
                                         value={field.value}
                                       >
@@ -515,37 +521,7 @@ export default function Orders() {
                                   </FormItem>
                                 )}
                               />
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                  control={orderForm.control}
-                                  name="delivery_days"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>مدة التسليم (بالأيام)</FormLabel>
-                                      <FormControl>
-                                        <Input {...field} type="number" placeholder="عدد الأيام" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={orderForm.control}
-                                  name="notes"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>ملاحظات</FormLabel>
-                                      <FormControl>
-                                        <Textarea {...field} placeholder="ملاحظات إضافية" rows={1} />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              {/* Production Orders Section */}
+{/* Production Orders Section */}
                               <div className="border-t pt-6">
                                 <div className="flex items-center justify-between mb-4">
                                   <h3 className="text-lg font-semibold">أوامر الإنتاج</h3>
@@ -619,7 +595,7 @@ export default function Orders() {
                                                         }
                                                         
                                                         return displayName;
-                                                      })()}
+                                                      })()} 
                                                     </div>
                                                     <div className="text-sm text-gray-600 space-y-1">
                                                       {product.raw_material && (
@@ -631,8 +607,11 @@ export default function Orders() {
                                                       {product.punching && (
                                                         <div>التخريم: {product.punching}</div>
                                                       )}
-                                                      {product.width && product.thickness && (
-                                                        <div>المقاس: {product.width}×{product.thickness}</div>
+                                                      {product.thickness && (
+                                                        <div>السماكة: {product.thickness}</div>
+                                                      )}
+                                                      {product.width && (
+                                                        <div>المقاس: {product.width}×{product.cutting_length_cm || 0}</div>
                                                       )}
                                                     </div>
                                                   </div>
@@ -676,6 +655,36 @@ export default function Orders() {
                                   ))}
                                 </div>
                               </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                  control={orderForm.control}
+                                  name="delivery_days"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>مدة التسليم (بالأيام)</FormLabel>
+                                      <FormControl>
+                                        <Input {...field} type="number" placeholder="عدد الأيام" />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={orderForm.control}
+                                  name="notes"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>ملاحظات</FormLabel>
+                                      <FormControl>
+                                        <Textarea {...field} placeholder="ملاحظات إضافية" rows={1} />
+                                      </FormControl>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+
+                              
 
                               <div className="flex gap-4 pt-6 border-t">
                                 <Button 
