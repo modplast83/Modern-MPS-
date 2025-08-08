@@ -153,6 +153,17 @@ export default function Definitions() {
     }
   }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.cutting_length_cm]);
 
+  // Automatic calculation for is_printed based on printing_cylinder
+  useEffect(() => {
+    if (customerProductForm.printing_cylinder) {
+      const isPrinted = customerProductForm.printing_cylinder !== 'بدون طباعة';
+      setCustomerProductForm(prev => ({ 
+        ...prev, 
+        is_printed: isPrinted 
+      }));
+    }
+  }, [customerProductForm.printing_cylinder]);
+
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
     if (!Array.isArray(data)) return [];
@@ -1013,17 +1024,29 @@ export default function Definitions() {
 
       {/* هل يطبع */}
       <div className="space-y-2">
-        <Label htmlFor="is_printed">هل يطبع؟</Label>
+        <Label htmlFor="is_printed">هل يطبع؟ - محسوب تلقائياً *</Label>
         <div className="flex items-center space-x-2">
           <input
             type="checkbox"
             id="is_printed"
             checked={customerProductForm.is_printed || false}
             onChange={(e) => setCustomerProductForm(prev => ({ ...prev, is_printed: e.target.checked }))}
-            className="rounded border-gray-300"
+            className="rounded border-gray-300 bg-gray-50"
+            readOnly
+            disabled
           />
-          <Label htmlFor="is_printed" className="text-sm">نعم، يطبع</Label>
+          <Label htmlFor="is_printed" className="text-sm">
+            {customerProductForm.is_printed ? 'نعم، يطبع' : 'لا، بدون طباعة'}
+          </Label>
         </div>
+        <p className="text-xs text-gray-500">
+          {customerProductForm.printing_cylinder === 'بدون طباعة' ? 
+            'محسوب تلقائياً: بدون طباعة = لا' :
+            customerProductForm.printing_cylinder ? 
+              `محسوب تلقائياً: أسطوانة ${customerProductForm.printing_cylinder}" = نعم` :
+              'يتم حسابه حسب أسطوانة الطباعة'
+          }
+        </p>
       </div>
 
       {/* ماستر باتش */}
