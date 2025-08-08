@@ -22,6 +22,11 @@ import {
   Shield, 
   Globe, 
   Database,
+  Download,
+  Upload,
+  Trash2,
+  Archive,
+  HardDrive,
   Moon,
   Sun,
   Volume2,
@@ -47,6 +52,12 @@ export default function Settings() {
   const { data: userSettingsData } = useQuery({
     queryKey: ['/api/settings/user', user?.id],
     enabled: !!user?.id
+  });
+
+  // Fetch database stats
+  const { data: databaseStatsData } = useQuery({
+    queryKey: ['/api/database/stats'],
+    enabled: !!user
   });
 
   // Convert array settings to object format
@@ -76,6 +87,15 @@ export default function Settings() {
       refreshInterval: 30,
       compactView: false
     }
+  });
+
+  // Database settings state
+  const [selectedTable, setSelectedTable] = useState("");
+  const [databaseStats, setDatabaseStats] = useState({
+    tableCount: 8,
+    totalRecords: 1247,
+    databaseSize: '45.2 MB',
+    lastBackup: 'اليوم'
   });
 
   // System settings state
@@ -148,6 +168,134 @@ export default function Settings() {
       }));
     }
   }, [userSettingsData]);
+
+  // Load database stats when data is available
+  useEffect(() => {
+    if (databaseStatsData && typeof databaseStatsData === 'object') {
+      setDatabaseStats(prev => ({
+        ...prev,
+        ...databaseStatsData
+      }));
+    }
+  }, [databaseStatsData]);
+
+  // Database operations mutations
+  const createBackupMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/database/backup', {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/database/stats'] });
+      toast({
+        title: "تم إنشاء النسخة الاحتياطية",
+        description: "تم إنشاء النسخة الاحتياطية بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في إنشاء النسخة الاحتياطية",
+        description: "حدث خطأ أثناء إنشاء النسخة الاحتياطية",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const exportTableMutation = useMutation({
+    mutationFn: async ({ tableName, format }: { tableName: string, format: string }) => {
+      const response = await fetch(`/api/database/export/${tableName}?format=${format}`);
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${tableName}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم تصدير البيانات",
+        description: "تم تصدير بيانات الجدول بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في تصدير البيانات",
+        description: "حدث خطأ أثناء تصدير البيانات",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const optimizeTablesMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/database/optimize', {
+        method: 'POST'
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم تحسين الجداول",
+        description: "تم تحسين جميع الجداول بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في تحسين الجداول",
+        description: "حدث خطأ أثناء تحسين الجداول",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const integrityCheckMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/database/integrity-check', {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "فحص التكامل",
+        description: data.message || "تم فحص تكامل قاعدة البيانات بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في فحص التكامل",
+        description: "حدث خطأ أثناء فحص تكامل قاعدة البيانات",
+        variant: "destructive",
+      });
+    }
+  });
+
+  const cleanupDataMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/database/cleanup', {
+        method: 'POST',
+        body: JSON.stringify({ daysOld: 90 })
+      });
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/database/stats'] });
+      toast({
+        title: "تم تنظيف البيانات",
+        description: data.message || "تم تنظيف البيانات القديمة بنجاح",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ في تنظيف البيانات",
+        description: "حدث خطأ أثناء تنظيف البيانات القديمة",
+        variant: "destructive",
+      });
+    }
+  });
 
   // Mutation for saving user settings
   const saveUserSettingsMutation = useMutation({
@@ -244,7 +392,7 @@ export default function Settings() {
           </div>
 
             <Tabs defaultValue="profile" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="profile" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
                   الملف الشخصي
@@ -256,6 +404,10 @@ export default function Settings() {
                 <TabsTrigger value="system" className="flex items-center gap-2">
                   <SettingsIcon className="w-4 h-4" />
                   النظام
+                </TabsTrigger>
+                <TabsTrigger value="database" className="flex items-center gap-2">
+                  <Database className="w-4 h-4" />
+                  قاعدة البيانات
                 </TabsTrigger>
                 <TabsTrigger value="security" className="flex items-center gap-2">
                   <Shield className="w-4 h-4" />
@@ -608,6 +760,244 @@ export default function Settings() {
                       <Button onClick={handleSaveSystemSettings} disabled={saveSystemSettingsMutation.isPending}>
                         {saveSystemSettingsMutation.isPending ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                         حفظ إعدادات النظام
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="database" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Database className="w-5 h-5" />
+                      إدارة قاعدة البيانات
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Backup Section */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <Archive className="w-4 h-4" />
+                        النسخ الاحتياطية
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <Card className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Download className="w-4 h-4 text-blue-500" />
+                              <Label className="text-sm font-medium">إنشاء نسخة احتياطية</Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              إنشاء نسخة احتياطية من قاعدة البيانات بالكامل
+                            </p>
+                            <Button 
+                              className="w-full" 
+                              size="sm"
+                              disabled={createBackupMutation.isPending}
+                              onClick={() => createBackupMutation.mutate()}
+                            >
+                              {createBackupMutation.isPending ? (
+                                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              ) : (
+                                <Download className="w-4 h-4 mr-2" />
+                              )}
+                              تصدير النسخة الاحتياطية
+                            </Button>
+                          </div>
+                        </Card>
+                        
+                        <Card className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Upload className="w-4 h-4 text-green-500" />
+                              <Label className="text-sm font-medium">استعادة النسخة الاحتياطية</Label>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              استعادة قاعدة البيانات من نسخة احتياطية
+                            </p>
+                            <Button variant="outline" className="w-full" size="sm">
+                              <Upload className="w-4 h-4 mr-2" />
+                              تحميل واستعادة
+                            </Button>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Import/Export Tables */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <HardDrive className="w-4 h-4" />
+                        استيراد وتصدير الجداول
+                      </h4>
+                      
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="tableSelect">اختر الجدول</Label>
+                          <Select value={selectedTable} onValueChange={setSelectedTable}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر جدول للتصدير أو الاستيراد" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="orders">الطلبات (Orders)</SelectItem>
+                              <SelectItem value="customers">العملاء (Customers)</SelectItem>
+                              <SelectItem value="products">المنتجات (Products)</SelectItem>
+                              <SelectItem value="materials">المواد (Materials)</SelectItem>
+                              <SelectItem value="machines">الماكينات (Machines)</SelectItem>
+                              <SelectItem value="users">المستخدمين (Users)</SelectItem>
+                              <SelectItem value="locations">المواقع (Locations)</SelectItem>
+                              <SelectItem value="categories">الفئات (Categories)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center gap-2"
+                            disabled={!selectedTable || exportTableMutation.isPending}
+                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'csv' })}
+                          >
+                            <Download className="w-4 h-4" />
+                            تصدير CSV
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center gap-2"
+                            disabled={!selectedTable || exportTableMutation.isPending}
+                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'json' })}
+                          >
+                            <Download className="w-4 h-4" />
+                            تصدير JSON
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="flex items-center gap-2"
+                            disabled={!selectedTable || exportTableMutation.isPending}
+                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'excel' })}
+                          >
+                            <Download className="w-4 h-4" />
+                            تصدير Excel
+                          </Button>
+                        </div>
+
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                          <p className="text-sm text-gray-600 mb-2">
+                            اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            صيغ مدعومة: CSV, JSON, Excel (.xlsx)
+                          </p>
+                          <Button variant="outline" size="sm" className="mt-3">
+                            اختيار ملف
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Database Statistics */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <HardDrive className="w-4 h-4" />
+                        إحصائيات قاعدة البيانات
+                      </h4>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <Card className="p-3">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">{databaseStats.tableCount}</div>
+                            <div className="text-xs text-muted-foreground">عدد الجداول</div>
+                          </div>
+                        </Card>
+                        <Card className="p-3">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">{databaseStats.totalRecords.toLocaleString('ar-SA')}</div>
+                            <div className="text-xs text-muted-foreground">إجمالي السجلات</div>
+                          </div>
+                        </Card>
+                        <Card className="p-3">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-orange-600">{databaseStats.databaseSize}</div>
+                            <div className="text-xs text-muted-foreground">حجم قاعدة البيانات</div>
+                          </div>
+                        </Card>
+                        <Card className="p-3">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-purple-600">{databaseStats.lastBackup}</div>
+                            <div className="text-xs text-muted-foreground">آخر نسخة احتياطية</div>
+                          </div>
+                        </Card>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Maintenance Operations */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-medium flex items-center gap-2">
+                        <SettingsIcon className="w-4 h-4" />
+                        عمليات الصيانة
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center gap-2"
+                          disabled={optimizeTablesMutation.isPending}
+                          onClick={() => optimizeTablesMutation.mutate()}
+                        >
+                          {optimizeTablesMutation.isPending ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-4 h-4" />
+                          )}
+                          تحسين الجداول
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex items-center gap-2"
+                          disabled={integrityCheckMutation.isPending}
+                          onClick={() => integrityCheckMutation.mutate()}
+                        >
+                          {integrityCheckMutation.isPending ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Database className="w-4 h-4" />
+                          )}
+                          فحص التكامل
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="flex items-center gap-2"
+                          disabled={cleanupDataMutation.isPending}
+                          onClick={() => cleanupDataMutation.mutate()}
+                        >
+                          {cleanupDataMutation.isPending ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                          تنظيف البيانات القديمة
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button>
+                        <Save className="w-4 h-4 mr-2" />
+                        حفظ إعدادات قاعدة البيانات
                       </Button>
                     </div>
                   </CardContent>
