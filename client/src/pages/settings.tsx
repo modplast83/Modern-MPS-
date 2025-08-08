@@ -259,10 +259,10 @@ export default function Settings() {
         method: 'POST'
       });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
         title: "فحص التكامل",
-        description: data.message || "تم فحص تكامل قاعدة البيانات بنجاح",
+        description: "تم فحص تكامل قاعدة البيانات بنجاح",
       });
     },
     onError: () => {
@@ -281,11 +281,11 @@ export default function Settings() {
         body: JSON.stringify({ daysOld: 90 })
       });
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/database/stats'] });
       toast({
         title: "تم تنظيف البيانات",
-        description: data.message || "تم تنظيف البيانات القديمة بنجاح",
+        description: "تم تنظيف البيانات القديمة بنجاح",
       });
     },
     onError: () => {
