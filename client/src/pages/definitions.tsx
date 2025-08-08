@@ -1695,8 +1695,6 @@ export default function Definitions() {
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدير</th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                           </tr>
                         </thead>
@@ -1714,14 +1712,6 @@ export default function Definitions() {
                                   </td>
                                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                                     {section.description || '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {section.manager_id ? `مدير ${section.manager_id}` : '-'}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap">
-                                    <Badge variant={section.status === 'active' ? 'default' : 'secondary'}>
-                                      {section.status === 'active' ? 'نشط' : 'غير نشط'}
-                                    </Badge>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <div className="flex items-center gap-2">
