@@ -53,7 +53,7 @@ export default function Definitions() {
     left_facing: '', 
     right_facing: '', 
     thickness: '', 
-    printing_cylinder: '', 
+    printing_cylinder: 'بدون طباعة', 
     length_cm: '', 
     cutting_length_cm: '', 
     raw_material: '', 
@@ -126,7 +126,7 @@ export default function Definitions() {
 
   // Automatic calculation for cutting length
   useEffect(() => {
-    if (customerProductForm.printing_cylinder) {
+    if (customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة') {
       const cylinderValue = parseFloat(customerProductForm.printing_cylinder);
       if (!isNaN(cylinderValue)) {
         const calculatedLength = Math.round(cylinderValue * 2.54);
@@ -200,7 +200,7 @@ export default function Definitions() {
       left_facing: '', 
       right_facing: '', 
       thickness: '', 
-      printing_cylinder: '', 
+      printing_cylinder: 'بدون طباعة', 
       length_cm: '', 
       cutting_length_cm: '', 
       raw_material: '', 
@@ -943,12 +943,12 @@ export default function Definitions() {
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, cutting_length_cm: e.target.value }))}
           placeholder="يحسب تلقائياً من أسطوانة الطباعة"
           className="bg-gray-50"
-          readOnly={!!customerProductForm.printing_cylinder}
+          readOnly={!!customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة'}
         />
         <p className="text-sm text-gray-500">
-          {customerProductForm.printing_cylinder ? 
+          {customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة' ? 
             `محسوب: ${customerProductForm.printing_cylinder} × 2.54 = ${customerProductForm.cutting_length_cm} سم` :
-            'اختر أسطوانة الطباعة أولاً للحساب التلقائي'
+            customerProductForm.printing_cylinder === 'بدون طباعة' ? 'لا يوجد حساب تلقائي - بدون طباعة' : 'اختر أسطوانة الطباعة أولاً للحساب التلقائي'
           }
         </p>
       </div>
@@ -961,6 +961,7 @@ export default function Definitions() {
             <SelectValue placeholder="اختر أسطوانة الطباعة" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="بدون طباعة">بدون طباعة</SelectItem>
             <SelectItem value="8">8"</SelectItem>
             <SelectItem value="10">10"</SelectItem>
             <SelectItem value="12">12"</SelectItem>
@@ -1989,7 +1990,7 @@ export default function Definitions() {
                                     })()}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {cp.printing_cylinder ? `${cp.printing_cylinder}"` : '-'}
+                                    {cp.printing_cylinder ? (cp.printing_cylinder === 'بدون طباعة' ? 'بدون طباعة' : `${cp.printing_cylinder}"`) : '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.thickness || '-'}
