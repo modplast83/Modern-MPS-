@@ -2073,17 +2073,7 @@ export default function Definitions() {
                                     })()}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {(() => {
-                                      const width = parseFloat(cp.width) || 0;
-                                      const leftFacing = parseFloat(cp.left_facing) || 0;
-                                      const rightFacing = parseFloat(cp.right_facing) || 0;
-                                      
-                                      if (width > 0 || leftFacing > 0 || rightFacing > 0) {
-                                        return `${width} + ${leftFacing} + ${rightFacing} سم`;
-                                      }
-                                      
-                                      return cp.size_caption || '-';
-                                    })()}
+                                    {cp.size_caption || '-'}
                                   </td>
                                   <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {cp.printing_cylinder ? (cp.printing_cylinder === 'بدون طباعة' ? 'بدون طباعة' : `${cp.printing_cylinder}"`) : '-'}
