@@ -35,7 +35,11 @@ const masterBatchColors = [
   { id: 'BROWN', name: 'البني', color: '#A52A2A', borderColor: '#A52A2A' },
   { id: 'INDIGO', name: 'النيلي', color: '#4B0082', borderColor: '#4B0082' },
   { id: 'SILVER', name: 'فضي', color: '#C0C0C0', borderColor: '#C0C0C0' },
-  { id: 'GOLD', name: 'ذهبي', color: '#FFD700', borderColor: '#FFD700' }
+  { id: 'GOLD', name: 'ذهبي', color: '#FFD700', borderColor: '#FFD700' },
+  { id: 'SKY_BLUE', name: 'السماوي', color: '#87CEEB', borderColor: '#87CEEB' },
+  { id: 'TURQUOISE', name: 'تركواز', color: '#40E0D0', borderColor: '#40E0D0' },
+  { id: 'RED_ORANGE', name: 'برتقالي أحمر', color: '#FF4500', borderColor: '#FF4500' },
+  { id: 'MINT', name: 'نعناعي', color: '#98FB98', borderColor: '#98FB98' }
 ];
 
 export default function Definitions() {
