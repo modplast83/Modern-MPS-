@@ -164,6 +164,20 @@ export default function Definitions() {
     }
   }, [customerProductForm.printing_cylinder]);
 
+  // Automatic calculation for package weight (unit_weight_kg * unit_quantity)
+  useEffect(() => {
+    const unitWeight = parseFloat(customerProductForm.unit_weight_kg) || 0;
+    const unitQuantity = parseInt(customerProductForm.unit_quantity) || 0;
+    
+    if (unitWeight > 0 && unitQuantity > 0) {
+      const calculatedWeight = (unitWeight * unitQuantity).toFixed(2);
+      setCustomerProductForm(prev => ({ 
+        ...prev, 
+        package_weight_kg: calculatedWeight 
+      }));
+    }
+  }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
+
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
     if (!Array.isArray(data)) return [];
@@ -1141,16 +1155,29 @@ export default function Definitions() {
 
       {/* وزن الحزمة - محسوب تلقائياً */}
       <div className="space-y-2">
-        <Label htmlFor="package_weight_kg">وزن الحزمة (كيلو) - محسوب تلقائياً</Label>
+        <Label htmlFor="package_weight_kg">وزن الحزمة (كيلو) - محسوب تلقائياً *</Label>
         <Input
           id="package_weight_kg"
           type="number"
           step="0.01"
           value={customerProductForm.package_weight_kg || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, package_weight_kg: e.target.value }))}
-          placeholder="يحسب تلقائياً"
+          placeholder="يحسب تلقائياً من وزن الوحدة × كمية الوحدة"
           className="bg-gray-50"
+          readOnly={!!customerProductForm.unit_weight_kg && !!customerProductForm.unit_quantity}
         />
+        <p className="text-xs text-gray-500">
+          {(() => {
+            const unitWeight = parseFloat(customerProductForm.unit_weight_kg) || 0;
+            const unitQuantity = parseInt(customerProductForm.unit_quantity) || 0;
+            
+            if (unitWeight > 0 && unitQuantity > 0) {
+              const result = (unitWeight * unitQuantity).toFixed(2);
+              return `محسوب: ${unitWeight} × ${unitQuantity} = ${result} كيلو`;
+            }
+            return 'أدخل وزن الوحدة وكمية الوحدة للحساب التلقائي';
+          })()} 
+        </p>
       </div>
 
       {/* تصميم الكليشة الأمامية */}
