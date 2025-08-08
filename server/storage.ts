@@ -733,7 +733,6 @@ export class DatabaseStorage implements IStorage {
         right_facing: customer_products.right_facing,
         thickness: customer_products.thickness,
         printing_cylinder: customer_products.printing_cylinder,
-        length_cm: customer_products.length_cm,
         cutting_length_cm: customer_products.cutting_length_cm,
         raw_material: customer_products.raw_material,
         master_batch_id: customer_products.master_batch_id,
