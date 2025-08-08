@@ -974,7 +974,7 @@ export default function Definitions() {
             if (cuttingLength > 0 && (width > 0 || leftFacing > 0 || rightFacing > 0)) {
               return `مثال: ${width}+${rightFacing}+${leftFacing}X${cuttingLength}`;
             }
-            return 'أدخل العرض ودخلات الجانبين وطول القطع للحساب التلقائي';
+            return '';
           })()} 
         </p>
       </div>
@@ -994,7 +994,7 @@ export default function Definitions() {
         <p className="text-sm text-gray-500">
           {customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة' ? 
             `محسوب: ${customerProductForm.printing_cylinder} × 2.54 = ${customerProductForm.cutting_length_cm} سم` :
-            customerProductForm.printing_cylinder === 'بدون طباعة' ? 'لا يوجد حساب تلقائي - بدون طباعة' : 'اختر أسطوانة الطباعة أولاً للحساب التلقائي'
+            customerProductForm.printing_cylinder === 'بدون طباعة' ? '' : 'اختر أسطوانة الطباعة أولاً للحساب التلقائي'
           }
         </p>
       </div>
@@ -1027,7 +1027,7 @@ export default function Definitions() {
             <SelectItem value="39">39"</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-sm text-gray-500">سيتم حساب طول القطع تلقائياً = أسطوانة الطباعة × 2.54</p>
+        <p className="text-sm text-gray-500"></p>
       </div>
 
       {/* السماكة */}
@@ -1062,7 +1062,7 @@ export default function Definitions() {
         </div>
         <p className="text-xs text-gray-500">
           {customerProductForm.printing_cylinder === 'بدون طباعة' ? 
-            'محسوب تلقائياً: بدون طباعة = لا' :
+            '' :
             customerProductForm.printing_cylinder ? 
               `محسوب تلقائياً: أسطوانة ${customerProductForm.printing_cylinder}" = نعم` :
               'يتم حسابه حسب أسطوانة الطباعة'
@@ -1182,14 +1182,14 @@ export default function Definitions() {
 
       {/* وزن الحزمة - محسوب تلقائياً */}
       <div className="space-y-2">
-        <Label htmlFor="package_weight_kg">وزن الحزمة (كيلو) - محسوب تلقائياً *</Label>
+        <Label htmlFor="package_weight_kg"></Label>
         <Input
           id="package_weight_kg"
           type="number"
           step="0.01"
           value={customerProductForm.package_weight_kg || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, package_weight_kg: e.target.value }))}
-          placeholder="يحسب تلقائياً من وزن الوحدة × كمية الوحدة"
+          placeholder=" وزن الوحدة × كمية الوحدة"
           className="bg-gray-50"
           readOnly={!!customerProductForm.unit_weight_kg && !!customerProductForm.unit_quantity}
         />
@@ -1202,7 +1202,7 @@ export default function Definitions() {
               const result = (unitWeight * unitQuantity).toFixed(2);
               return `محسوب: ${unitWeight} × ${unitQuantity} = ${result} كيلو`;
             }
-            return 'أدخل وزن الوحدة وكمية الوحدة للحساب التلقائي';
+            return '';
           })()} 
         </p>
       </div>
