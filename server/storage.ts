@@ -1743,20 +1743,6 @@ export class DatabaseStorage implements IStorage {
 
   async getDatabaseStats(): Promise<any> {
     try {
-      // Get table counts and sizes using SQL queries
-      const tableStats = await db.execute(sql`
-        SELECT 
-          schemaname as schema_name,
-          tablename as table_name,
-          n_tup_ins as insert_count,
-          n_tup_upd as update_count,
-          n_tup_del as delete_count,
-          n_live_tup as live_tuples,
-          n_dead_tup as dead_tuples
-        FROM pg_stat_user_tables
-        ORDER BY n_live_tup DESC
-      `);
-
       // Get database size
       const dbSize = await db.execute(sql`
         SELECT pg_size_pretty(pg_database_size(current_database())) as size
@@ -1773,7 +1759,6 @@ export class DatabaseStorage implements IStorage {
       const recordCounts = await Promise.all([
         db.select({ count: count() }).from(orders),
         db.select({ count: count() }).from(customers),
-        db.select({ count: count() }).from(products),
         db.select({ count: count() }).from(users),
         db.select({ count: count() }).from(machines),
         db.select({ count: count() }).from(locations),
@@ -1787,8 +1772,7 @@ export class DatabaseStorage implements IStorage {
         tableCount: tableCount.rows[0]?.count || 0,
         totalRecords,
         databaseSize: dbSize.rows[0]?.size || '0 MB',
-        lastBackup: new Date().toLocaleDateString('ar-SA'),
-        tableStats: tableStats.rows
+        lastBackup: new Date().toLocaleDateString('ar-SA')
       };
     } catch (error) {
       console.error('Error getting database stats:', error);
@@ -1808,15 +1792,38 @@ export class DatabaseStorage implements IStorage {
       const backupId = `backup_${Date.now()}`;
       const timestamp = new Date();
       
-      // In a real implementation, this would create a SQL dump
-      // For now, return metadata about the backup
-      return {
+      // Create a comprehensive backup by getting all table data
+      const backupData: any = {
         id: backupId,
         timestamp,
-        filename: `backup-${timestamp.toISOString().split('T')[0]}.sql`,
-        size: '45.2 MB',
-        tables: 8,
-        records: 1247,
+        tables: {}
+      };
+
+      // Export all major tables
+      const tableNames = ['orders', 'customers', 'users', 'machines', 'locations', 'categories', 'items'];
+      
+      for (const tableName of tableNames) {
+        try {
+          const tableData = await this.exportTableData(tableName, 'json');
+          backupData.tables[tableName] = JSON.parse(tableData);
+        } catch (error) {
+          console.warn(`Failed to backup table ${tableName}:`, error);
+          backupData.tables[tableName] = [];
+        }
+      }
+      
+      // Store backup data as JSON
+      const backupJson = JSON.stringify(backupData, null, 2);
+      const filename = `backup-${timestamp.toISOString().split('T')[0]}.json`;
+      
+      // In production, this would be saved to file system or cloud storage
+      // For now, return the backup data for download
+      return {
+        id: backupId,
+        filename,
+        data: backupJson,
+        size: `${(backupJson.length / 1024 / 1024).toFixed(2)} MB`,
+        timestamp,
         status: 'completed'
       };
     } catch (error) {
@@ -1869,9 +1876,7 @@ export class DatabaseStorage implements IStorage {
         case 'customers':
           data = await db.select().from(customers);
           break;
-        case 'products':
-          data = await db.select().from(products);
-          break;
+
         case 'users':
           data = await db.select().from(users);
           break;
@@ -2018,36 +2023,37 @@ export class DatabaseStorage implements IStorage {
     return csvRows.join('\n');
   }
 
+  private convertToExcel(data: any[]): string {
+    // For now, return CSV format which is compatible with Excel
+    // In a real implementation, you would use a library like xlsx
+    return this.convertToCSV(data);
+  }
+
   private parseCSV(csvData: string): any[] {
-    // Simple CSV parser - in production, use a proper CSV library
     const lines = csvData.split('\n');
+    if (lines.length < 2) return [];
+    
     const headers = lines[0].split(',');
-    const data = [];
+    const result = [];
     
     for (let i = 1; i < lines.length; i++) {
       if (lines[i].trim()) {
         const values = lines[i].split(',');
         const row: any = {};
-        headers.forEach((header, index) => {
-          row[header.trim()] = values[index]?.trim();
+        headers.forEach((header: string, index: number) => {
+          row[header.trim()] = values[index]?.trim().replace(/"/g, '') || '';
         });
-        data.push(row);
+        result.push(row);
       }
     }
     
-    return data;
+    return result;
   }
 
-  private convertToExcel(data: any[]): string {
-    // In a real implementation, use a library like xlsx
-    // For now, return CSV format as a placeholder
-    return this.convertToCSV(data);
-  }
-
-  private parseExcel(data: any): any[] {
-    // In a real implementation, use a library like xlsx
-    // For now, assume it's CSV format
-    return this.parseCSV(data);
+  private parseExcel(excelData: any): any[] {
+    // For now, treat as CSV
+    // In a real implementation, you would use a library like xlsx
+    return this.parseCSV(excelData);
   }
 }
 

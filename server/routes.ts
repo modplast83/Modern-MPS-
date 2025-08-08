@@ -2039,11 +2039,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/database/backup", async (req, res) => {
     try {
       const backup = await storage.createDatabaseBackup();
-      res.json({ 
-        message: "تم إنشاء النسخة الاحتياطية بنجاح", 
-        backup,
-        downloadUrl: `/api/database/backup/download/${backup.id}`
-      });
+      
+      // Set headers for file download
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${backup.filename}"`);
+      
+      // Send the backup data directly for download
+      res.send(backup.data);
     } catch (error) {
       console.error("Error creating database backup:", error);
       res.status(500).json({ message: "خطأ في إنشاء النسخة الاحتياطية" });
