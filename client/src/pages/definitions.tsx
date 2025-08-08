@@ -138,19 +138,22 @@ export default function Definitions() {
     }
   }, [customerProductForm.printing_cylinder]);
 
-  // Automatic calculation for product size (width * cutting_length_cm)
+  // Automatic calculation for product size: (width + left_facing + right_facing) * cutting_length_cm
   useEffect(() => {
-    const width = parseFloat(customerProductForm.width);
-    const cuttingLength = parseFloat(customerProductForm.cutting_length_cm);
+    const width = parseFloat(customerProductForm.width) || 0;
+    const leftFacing = parseFloat(customerProductForm.left_facing) || 0;
+    const rightFacing = parseFloat(customerProductForm.right_facing) || 0;
+    const cuttingLength = parseFloat(customerProductForm.cutting_length_cm) || 0;
     
-    if (!isNaN(width) && !isNaN(cuttingLength) && width > 0 && cuttingLength > 0) {
-      const calculatedSize = width * cuttingLength;
+    if (cuttingLength > 0 && (width > 0 || leftFacing > 0 || rightFacing > 0)) {
+      const totalWidth = width + leftFacing + rightFacing;
+      const calculatedSize = totalWidth * cuttingLength;
       setCustomerProductForm(prev => ({ 
         ...prev, 
-        size_caption: `${width} × ${cuttingLength} = ${calculatedSize}` 
+        size_caption: `${width} + ${rightFacing} + ${leftFacing} × ${cuttingLength} = ${calculatedSize}` 
       }));
     }
-  }, [customerProductForm.width, customerProductForm.cutting_length_cm]);
+  }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.cutting_length_cm]);
 
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
@@ -913,15 +916,24 @@ export default function Definitions() {
           id="size_caption"
           value={customerProductForm.size_caption || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
-          placeholder="يحسب تلقائياً من العرض × طول القطع"
+          placeholder="يحسب تلقائياً من: العرض + دخلات الجانبين × طول القطع"
           className="bg-gray-50"
-          readOnly={!!customerProductForm.width && !!customerProductForm.cutting_length_cm}
+          readOnly={!!customerProductForm.cutting_length_cm && (!!customerProductForm.width || !!customerProductForm.left_facing || !!customerProductForm.right_facing)}
         />
         <p className="text-xs text-gray-500">
-          {customerProductForm.width && customerProductForm.cutting_length_cm ? 
-            `محسوب: ${customerProductForm.width} × ${customerProductForm.cutting_length_cm} = ${parseFloat(customerProductForm.width) * parseFloat(customerProductForm.cutting_length_cm)}` :
-            'أدخل العرض وطول القطع للحساب التلقائي'
-          }
+          {(() => {
+            const width = parseFloat(customerProductForm.width) || 0;
+            const leftFacing = parseFloat(customerProductForm.left_facing) || 0;
+            const rightFacing = parseFloat(customerProductForm.right_facing) || 0;
+            const cuttingLength = parseFloat(customerProductForm.cutting_length_cm) || 0;
+            
+            if (cuttingLength > 0 && (width > 0 || leftFacing > 0 || rightFacing > 0)) {
+              const totalWidth = width + leftFacing + rightFacing;
+              const result = totalWidth * cuttingLength;
+              return `محسوب: ${width} + ${rightFacing} + ${leftFacing} × ${cuttingLength} = ${result}`;
+            }
+            return 'أدخل العرض ودخلات الجانبين وطول القطع للحساب التلقائي';
+          })()} 
         </p>
       </div>
 
