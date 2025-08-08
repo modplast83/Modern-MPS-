@@ -13,7 +13,7 @@ export const roles = pgTable('roles', {
 
 // 📁 جدول الأقسام
 export const sections = pgTable('sections', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
   description: text('description')
@@ -27,7 +27,7 @@ export const users = pgTable('users', {
   display_name: varchar('display_name', { length: 100 }),
   display_name_ar: varchar('display_name_ar', { length: 100 }),
   role_id: integer('role_id').references(() => roles.id),
-  section_id: integer('section_id').references(() => sections.id),
+  section_id: varchar('section_id', { length: 20 }).references(() => sections.id),
   status: varchar('status', { length: 20 }).default('active'), // active / suspended / deleted
   created_at: timestamp('created_at').defaultNow(),
 });
@@ -65,7 +65,7 @@ export const machines = pgTable('machines', {
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
   type: varchar('type', { length: 50 }), // extruder / printer / cutter
-  section_id: integer('section_id').references(() => sections.id),
+  section_id: varchar('section_id', { length: 20 }).references(() => sections.id),
   status: varchar('status', { length: 20 }).default('active'), // active / maintenance / down
 });
 
