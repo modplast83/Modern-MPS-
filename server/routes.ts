@@ -1180,12 +1180,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Handle section_id conversion
+      // Handle section_id - convert section string ID to integer
       let sectionId = null;
       if (req.body.section_id && req.body.section_id !== '') {
-        // For now, just use null since sections table is string-based but user table expects integer
-        // This needs to be fixed in the schema
-        sectionId = null;
+        // Simple mapping from section string ID to integer
+        const sectionMapping: { [key: string]: number } = {
+          'SEC01': 1,
+          'SEC02': 2,
+          'SEC03': 3,
+          'SEC04': 4,
+          'SEC05': 5
+        };
+        sectionId = sectionMapping[req.body.section_id] || null;
       }
       
       const processedData = {
