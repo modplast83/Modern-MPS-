@@ -1147,10 +1147,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sections routes
   app.post("/api/sections", async (req, res) => {
     try {
-      const section = await storage.createSection(req.body);
+      console.log('Received section data:', req.body);
+      
+      // Generate sequential ID if not provided
+      let sectionId = req.body.id;
+      if (!sectionId) {
+        // Get the latest section to determine the next sequential number
+        const existingSections = await storage.getSections();
+        const sectionNumbers = existingSections
+          .map(section => section.id)
+          .filter(id => id.startsWith('SEC'))
+          .map(id => parseInt(id.replace('SEC', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = sectionNumbers.length > 0 ? sectionNumbers[0] + 1 : 1;
+        sectionId = `SEC${nextNumber.toString().padStart(2, '0')}`;
+      }
+      
+      const processedData = {
+        ...req.body,
+        id: sectionId
+      };
+      
+      console.log('Processed section data:', processedData);
+      const section = await storage.createSection(processedData);
+      console.log('Created section:', section);
       res.json(section);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء القسم" });
+      console.error('Section creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء القسم", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
