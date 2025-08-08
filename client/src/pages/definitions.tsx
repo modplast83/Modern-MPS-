@@ -138,6 +138,20 @@ export default function Definitions() {
     }
   }, [customerProductForm.printing_cylinder]);
 
+  // Automatic calculation for product size (width * cutting_length_cm)
+  useEffect(() => {
+    const width = parseFloat(customerProductForm.width);
+    const cuttingLength = parseFloat(customerProductForm.cutting_length_cm);
+    
+    if (!isNaN(width) && !isNaN(cuttingLength) && width > 0 && cuttingLength > 0) {
+      const calculatedSize = width * cuttingLength;
+      setCustomerProductForm(prev => ({ 
+        ...prev, 
+        size_caption: `${width} × ${cuttingLength} = ${calculatedSize}` 
+      }));
+    }
+  }, [customerProductForm.width, customerProductForm.cutting_length_cm]);
+
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
     if (!Array.isArray(data)) return [];
@@ -894,13 +908,21 @@ export default function Definitions() {
 
       {/* مقاس المنتج */}
       <div className="space-y-2">
-        <Label htmlFor="size_caption">مقاس المنتج</Label>
+        <Label htmlFor="size_caption">مقاس المنتج - محسوب تلقائياً *</Label>
         <Input
           id="size_caption"
           value={customerProductForm.size_caption || ''}
           onChange={(e) => setCustomerProductForm(prev => ({ ...prev, size_caption: e.target.value }))}
-          placeholder="مثال: 20x30 cm"
+          placeholder="يحسب تلقائياً من العرض × طول القطع"
+          className="bg-gray-50"
+          readOnly={!!customerProductForm.width && !!customerProductForm.cutting_length_cm}
         />
+        <p className="text-xs text-gray-500">
+          {customerProductForm.width && customerProductForm.cutting_length_cm ? 
+            `محسوب: ${customerProductForm.width} × ${customerProductForm.cutting_length_cm} = ${parseFloat(customerProductForm.width) * parseFloat(customerProductForm.cutting_length_cm)}` :
+            'أدخل العرض وطول القطع للحساب التلقائي'
+          }
+        </p>
       </div>
 
       {/* طول القطع */}
