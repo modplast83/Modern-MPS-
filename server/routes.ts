@@ -1213,10 +1213,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received item data:', req.body);
       
-      // Generate ID if not provided and convert empty strings to null for optional fields
+      // Generate sequential ID if not provided
+      let itemId = req.body.id;
+      if (!itemId) {
+        // Get the latest item to determine the next sequential number
+        const existingItems = await storage.getItems();
+        const itemNumbers = existingItems
+          .map(item => item.id)
+          .filter(id => id.startsWith('ITEM'))
+          .map(id => parseInt(id.replace('ITEM', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = itemNumbers.length > 0 ? itemNumbers[0] + 1 : 1;
+        itemId = `ITEM${nextNumber.toString().padStart(3, '0')}`;
+      }
+      
+      // Convert empty strings to null for optional fields
       const processedData = {
         ...req.body,
-        id: req.body.id || `ITEM${Date.now()}`, // Generate ID if not provided
+        id: itemId,
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
         material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
         code: req.body.code === '' || !req.body.code ? null : req.body.code
