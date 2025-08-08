@@ -106,7 +106,7 @@ import { eq, desc, and, sql, sum, count } from "drizzle-orm";
 
 export interface IStorage {
   // Users
-  getUser(id: number): Promise<User | undefined>;
+  getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
@@ -135,7 +135,7 @@ export interface IStorage {
   
   // Machines
   getMachines(): Promise<Machine[]>;
-  getMachineById(id: number): Promise<Machine | undefined>;
+  getMachineById(id: string): Promise<Machine | undefined>;
   
   // Customers
   getCustomers(): Promise<Customer[]>;
@@ -149,7 +149,7 @@ export interface IStorage {
   createMachine(machine: any): Promise<Machine>;
   createSection(section: any): Promise<Section>;
   createMaterialGroup(materialGroup: any): Promise<MaterialGroup>;
-  updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup>;
+  updateMaterialGroup(id: string, materialGroup: any): Promise<MaterialGroup>;
   createItem(item: any): Promise<Item>;
   createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
   createLocation(location: any): Promise<Location>;
@@ -230,13 +230,13 @@ export interface IStorage {
   deleteTrainingMaterial(id: number): Promise<boolean>;
   
   // HR System - Training Enrollments  
-  getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]>;
+  getTrainingEnrollments(employeeId?: string): Promise<TrainingEnrollment[]>;
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
   updateTrainingEnrollment(id: number, updates: Partial<TrainingEnrollment>): Promise<TrainingEnrollment>;
   getEnrollmentsByProgram(programId: number): Promise<TrainingEnrollment[]>;
   
   // HR System - Performance Reviews
-  getPerformanceReviews(employeeId?: number): Promise<PerformanceReview[]>;
+  getPerformanceReviews(employeeId?: string): Promise<PerformanceReview[]>;
   createPerformanceReview(review: InsertPerformanceReview): Promise<PerformanceReview>;
   updatePerformanceReview(id: number, updates: Partial<PerformanceReview>): Promise<PerformanceReview>;
   getPerformanceReviewById(id: number): Promise<PerformanceReview | undefined>;
@@ -257,17 +257,17 @@ export interface IStorage {
   updateLeaveType(id: number, updates: Partial<LeaveType>): Promise<LeaveType>;
   
   // HR System - Leave Requests
-  getLeaveRequests(employeeId?: number): Promise<LeaveRequest[]>;
+  getLeaveRequests(employeeId?: string): Promise<LeaveRequest[]>;
   createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
   updateLeaveRequest(id: number, updates: Partial<LeaveRequest>): Promise<LeaveRequest>;
   getLeaveRequestById(id: number): Promise<LeaveRequest | undefined>;
   getPendingLeaveRequests(): Promise<LeaveRequest[]>;
   
   // HR System - Leave Balances
-  getLeaveBalances(employeeId: number, year?: number): Promise<LeaveBalance[]>;
+  getLeaveBalances(employeeId: string, year?: number): Promise<LeaveBalance[]>;
   createLeaveBalance(balance: InsertLeaveBalance): Promise<LeaveBalance>;
   updateLeaveBalance(id: number, updates: Partial<LeaveBalance>): Promise<LeaveBalance>;
-  getLeaveBalanceByType(employeeId: number, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined>;
+  getLeaveBalanceByType(employeeId: string, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined>;
   
   // Maintenance
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
@@ -303,9 +303,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Generate a new user ID in format USR001, USR002, etc.
+    const existingUsers = await db.select({ id: users.id }).from(users);
+    const userIds = existingUsers.map(u => u.id);
+    const maxNumber = userIds
+      .filter(id => id.startsWith('USR'))
+      .map(id => parseInt(id.substring(3)))
+      .filter(num => !isNaN(num))
+      .reduce((max, num) => Math.max(max, num), 0);
+    
+    const newId = `USR${String(maxNumber + 1).padStart(3, '0')}`;
+    
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values({ ...insertUser, id: newId })
       .returning();
     return user;
   }
@@ -753,7 +764,13 @@ export class DatabaseStorage implements IStorage {
       })
       .from(customer_products)
       .leftJoin(customers, eq(customer_products.customer_id, customers.id))
-      .orderBy(desc(customer_products.created_at));
+      .orderBy(desc(customer_products.created_at))
+      .then(results => results.map(row => ({
+        ...row,
+        customer_name: row.customer_name || undefined,
+        customer_name_ar: row.customer_name_ar || undefined,
+        customer_code: row.customer_code || undefined
+      })));
   }
 
   async getLocations(): Promise<Location[]> {
@@ -1413,7 +1430,7 @@ export class DatabaseStorage implements IStorage {
     return location;
   }
 
-  async updateLocationExtended(id: number, updates: any): Promise<Location> {
+  async updateLocationExtended(id: string, updates: any): Promise<Location> {
     const [location] = await db
       .update(locations)
       .set(updates)
@@ -1422,7 +1439,7 @@ export class DatabaseStorage implements IStorage {
     return location;
   }
 
-  async deleteLocationExtended(id: number): Promise<void> {
+  async deleteLocationExtended(id: string): Promise<void> {
     await db.delete(locations).where(eq(locations.id, id));
   }
 
@@ -1471,7 +1488,7 @@ export class DatabaseStorage implements IStorage {
     return newSetting;
   }
 
-  async updateSystemSetting(key: string, value: string, updatedBy?: number): Promise<SystemSetting> {
+  async updateSystemSetting(key: string, value: string, updatedBy?: string): Promise<SystemSetting> {
     const [setting] = await db
       .update(system_settings)
       .set({ 
@@ -1484,11 +1501,11 @@ export class DatabaseStorage implements IStorage {
     return setting;
   }
 
-  async getUserSettings(userId: number): Promise<UserSetting[]> {
+  async getUserSettings(userId: string): Promise<UserSetting[]> {
     return await db.select().from(user_settings).where(eq(user_settings.user_id, userId));
   }
 
-  async getUserSettingByKey(userId: number, key: string): Promise<UserSetting | undefined> {
+  async getUserSettingByKey(userId: string, key: string): Promise<UserSetting | undefined> {
     const [setting] = await db
       .select()
       .from(user_settings)
@@ -1501,7 +1518,7 @@ export class DatabaseStorage implements IStorage {
     return newSetting;
   }
 
-  async updateUserSetting(userId: number, key: string, value: string): Promise<UserSetting> {
+  async updateUserSetting(userId: string, key: string, value: string): Promise<UserSetting> {
     // Try to update existing setting first
     const [existingSetting] = await db
       .select()
