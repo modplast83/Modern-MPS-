@@ -844,12 +844,15 @@ export default function Settings() {
                             <SelectContent>
                               <SelectItem value="orders">الطلبات (Orders)</SelectItem>
                               <SelectItem value="customers">العملاء (Customers)</SelectItem>
-                              <SelectItem value="products">المنتجات (Products)</SelectItem>
-                              <SelectItem value="materials">المواد (Materials)</SelectItem>
-                              <SelectItem value="machines">الماكينات (Machines)</SelectItem>
                               <SelectItem value="users">المستخدمين (Users)</SelectItem>
+                              <SelectItem value="machines">الماكينات (Machines)</SelectItem>
                               <SelectItem value="locations">المواقع (Locations)</SelectItem>
                               <SelectItem value="categories">الفئات (Categories)</SelectItem>
+                              <SelectItem value="items">الأصناف (Items)</SelectItem>
+                              <SelectItem value="rolls">الرولات (Rolls)</SelectItem>
+                              <SelectItem value="job_orders">أوامر التشغيل (Job Orders)</SelectItem>
+                              <SelectItem value="production_orders">أوامر الإنتاج (Production Orders)</SelectItem>
+                              <SelectItem value="customer_products">منتجات العملاء (Customer Products)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
