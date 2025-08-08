@@ -292,7 +292,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user || undefined;
   }
@@ -311,11 +311,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Delete methods
-  async deleteMaterialGroup(id: number): Promise<void> {
+  async deleteMaterialGroup(id: string): Promise<void> {
     await db.delete(material_groups).where(eq(material_groups.id, id));
   }
 
-  async deleteSection(id: number): Promise<void> {
+  async deleteSection(id: string): Promise<void> {
     await db.delete(sections).where(eq(sections.id, id));
   }
 
@@ -327,15 +327,15 @@ export class DatabaseStorage implements IStorage {
     await db.delete(customer_products).where(eq(customer_products.id, id));
   }
 
-  async deleteLocation(id: number): Promise<void> {
+  async deleteLocation(id: string): Promise<void> {
     await db.delete(locations).where(eq(locations.id, id));
   }
 
-  async deleteMachine(id: number): Promise<void> {
+  async deleteMachine(id: string): Promise<void> {
     await db.delete(machines).where(eq(machines.id, id));
   }
 
-  async deleteUser(id: number): Promise<void> {
+  async deleteUser(id: string): Promise<void> {
     await db.delete(users).where(eq(users.id, id));
   }
 
@@ -504,7 +504,7 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(machines);
   }
 
-  async getMachineById(id: number): Promise<Machine | undefined> {
+  async getMachineById(id: string): Promise<Machine | undefined> {
     const [machine] = await db.select().from(machines).where(eq(machines.id, id));
     return machine || undefined;
   }
@@ -589,7 +589,7 @@ export class DatabaseStorage implements IStorage {
     return newMachine;
   }
 
-  async updateMachine(id: number, updates: any): Promise<Machine> {
+  async updateMachine(id: string, updates: any): Promise<Machine> {
     const [updatedMachine] = await db
       .update(machines)
       .set(updates)
@@ -606,7 +606,7 @@ export class DatabaseStorage implements IStorage {
     return newSection;
   }
 
-  async updateSection(id: number, updates: any): Promise<Section> {
+  async updateSection(id: string, updates: any): Promise<Section> {
     const [updatedSection] = await db
       .update(sections)
       .set(updates)
@@ -624,7 +624,7 @@ export class DatabaseStorage implements IStorage {
     return newMaterialGroup;
   }
 
-  async updateUser(id: number, updates: any): Promise<User> {
+  async updateUser(id: string, updates: any): Promise<User> {
     const [updatedUser] = await db
       .update(users)
       .set(updates)
@@ -633,7 +633,7 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
-  async updateMaterialGroup(id: number, materialGroup: any): Promise<MaterialGroup> {
+  async updateMaterialGroup(id: string, materialGroup: any): Promise<MaterialGroup> {
     console.log('Storage: Updating material group', id, materialGroup);
     try {
       const [updatedMaterialGroup] = await db
@@ -696,7 +696,7 @@ export class DatabaseStorage implements IStorage {
     return newLocation;
   }
 
-  async updateLocation(id: number, updates: any): Promise<Location> {
+  async updateLocation(id: string, updates: any): Promise<Location> {
     const [updatedLocation] = await db
       .update(locations)
       .set(updates)
@@ -715,7 +715,7 @@ export class DatabaseStorage implements IStorage {
 
   async getItems(materialGroupId?: string): Promise<Item[]> {
     if (materialGroupId) {
-      return await db.select().from(items).where(eq(items.material_group_id, parseInt(materialGroupId)));
+      return await db.select().from(items).where(eq(items.material_group_id, materialGroupId));
     }
     return await db.select().from(items);
   }
@@ -1079,7 +1079,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Training Enrollments
-  async getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]> {
+  async getTrainingEnrollments(employeeId?: string): Promise<TrainingEnrollment[]> {
     const query = db.select().from(training_enrollments);
     if (employeeId) {
       return await query.where(eq(training_enrollments.employee_id, employeeId)).orderBy(desc(training_enrollments.enrolled_date));
@@ -1108,7 +1108,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Performance Reviews
-  async getPerformanceReviews(employeeId?: number): Promise<PerformanceReview[]> {
+  async getPerformanceReviews(employeeId?: string): Promise<PerformanceReview[]> {
     const query = db.select().from(performance_reviews);
     if (employeeId) {
       return await query.where(eq(performance_reviews.employee_id, employeeId)).orderBy(desc(performance_reviews.created_at));
@@ -1194,7 +1194,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Leave Requests
-  async getLeaveRequests(employeeId?: number): Promise<LeaveRequest[]> {
+  async getLeaveRequests(employeeId?: string): Promise<LeaveRequest[]> {
     const query = db.select().from(leave_requests);
     if (employeeId) {
       return await query.where(eq(leave_requests.employee_id, employeeId)).orderBy(desc(leave_requests.created_at));
@@ -1228,7 +1228,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Leave Balances
-  async getLeaveBalances(employeeId: number, year?: number): Promise<LeaveBalance[]> {
+  async getLeaveBalances(employeeId: string, year?: number): Promise<LeaveBalance[]> {
     if (year) {
       return await db.select().from(leave_balances).where(and(
         eq(leave_balances.employee_id, employeeId),
@@ -1252,7 +1252,7 @@ export class DatabaseStorage implements IStorage {
     return leaveBalance;
   }
 
-  async getLeaveBalanceByType(employeeId: number, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined> {
+  async getLeaveBalanceByType(employeeId: string, leaveTypeId: number, year: number): Promise<LeaveBalance | undefined> {
     const [balance] = await db.select().from(leave_balances)
       .where(and(
         eq(leave_balances.employee_id, employeeId),

@@ -873,7 +873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ reply });
     } catch (error) {
       console.error('AI Chat Error:', error);
-      const fallbackResponse = generateFallbackResponse(message);
+      const fallbackResponse = generateFallbackResponse(req.body.message);
       res.json({ reply: fallbackResponse });
     }
   });
@@ -1107,40 +1107,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/machines", async (req, res) => {
     try {
-      const machine = await storage.createMachine(req.body);
+      console.log('Received machine data:', req.body);
+      
+      // Generate sequential ID if not provided
+      let machineId = req.body.id;
+      if (!machineId) {
+        // Get the latest machine to determine the next sequential number
+        const existingMachines = await storage.getMachines();
+        const machineNumbers = existingMachines
+          .map(machine => machine.id)
+          .filter(id => id.startsWith('MAC'))
+          .map(id => parseInt(id.replace('MAC', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = machineNumbers.length > 0 ? machineNumbers[0] + 1 : 1;
+        machineId = `MAC${nextNumber.toString().padStart(2, '0')}`;
+      }
+      
+      const processedData = {
+        ...req.body,
+        id: machineId
+      };
+      
+      console.log('Processed machine data:', processedData);
+      const machine = await storage.createMachine(processedData);
+      console.log('Created machine:', machine);
       res.json(machine);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء الماكينة" });
+      console.error('Machine creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الماكينة", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
   app.put("/api/machines/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id; // Now using string ID
+      console.log('Updating machine:', id, req.body);
       const machine = await storage.updateMachine(id, req.body);
       res.json(machine);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث الماكينة" });
+      console.error('Machine update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث الماكينة", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
   // Users routes
   app.post("/api/users", async (req, res) => {
     try {
-      const user = await storage.createUser(req.body);
+      console.log('Received user data:', req.body);
+      
+      // Generate sequential ID if not provided
+      let userId = req.body.id;
+      if (!userId) {
+        // Get the latest user to determine the next sequential number
+        const existingUsers = await storage.getUsers();
+        const userNumbers = existingUsers
+          .map(user => user.id)
+          .filter(id => id.startsWith('U'))
+          .map(id => parseInt(id.replace('U', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = userNumbers.length > 0 ? userNumbers[0] + 1 : 1;
+        userId = `U${nextNumber.toString().padStart(2, '0')}`;
+      }
+      
+      const processedData = {
+        ...req.body,
+        id: userId
+      };
+      
+      console.log('Processed user data:', processedData);
+      const user = await storage.createUser(processedData);
+      console.log('Created user:', user);
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء المستخدم" });
+      console.error('User creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء المستخدم", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
   app.put("/api/users/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id; // Now using string ID
+      console.log('Updating user:', id, req.body);
       const user = await storage.updateUser(id, req.body);
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث المستخدم" });
+      console.error('User update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث المستخدم", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
@@ -1195,10 +1251,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received material group data:', req.body);
       
+      // Generate sequential ID if not provided
+      let materialGroupId = req.body.id;
+      if (!materialGroupId) {
+        // Get the latest material group to determine the next sequential number
+        const existingGroups = await storage.getMaterialGroups();
+        const groupNumbers = existingGroups
+          .map(group => group.id)
+          .filter(id => id.startsWith('CAT'))
+          .map(id => parseInt(id.replace('CAT', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = groupNumbers.length > 0 ? groupNumbers[0] + 1 : 1;
+        materialGroupId = `CAT${nextNumber.toString().padStart(2, '0')}`;
+      }
+      
       // Convert empty strings to null for parent_id and code
       const processedData = {
         ...req.body,
-        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : parseInt(req.body.parent_id),
+        id: materialGroupId,
+        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : req.body.parent_id, // Now expects string ID
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1260,7 +1333,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         id: itemId,
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
+        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : req.body.material_group_id,
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1284,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processedData = {
         ...req.body,
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : parseInt(req.body.material_group_id),
+        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : req.body.material_group_id,
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1320,20 +1393,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Locations routes
   app.post("/api/locations", async (req, res) => {
     try {
-      const location = await storage.createLocation(req.body);
+      console.log('Received location data:', req.body);
+      
+      // Generate sequential ID if not provided
+      let locationId = req.body.id;
+      if (!locationId) {
+        // Get the latest location to determine the next sequential number
+        const existingLocations = await storage.getLocations();
+        const locationNumbers = existingLocations
+          .map(location => location.id)
+          .filter(id => id.startsWith('LOC'))
+          .map(id => parseInt(id.replace('LOC', '')))
+          .filter(num => !isNaN(num))
+          .sort((a, b) => b - a);
+        
+        const nextNumber = locationNumbers.length > 0 ? locationNumbers[0] + 1 : 1;
+        locationId = `LOC${nextNumber.toString().padStart(2, '0')}`;
+      }
+      
+      const processedData = {
+        ...req.body,
+        id: locationId
+      };
+      
+      console.log('Processed location data:', processedData);
+      const location = await storage.createLocation(processedData);
+      console.log('Created location:', location);
       res.json(location);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+      console.error('Location creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الموقع", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
   app.put("/api/locations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id; // Now using string ID
+      console.log('Updating location:', id, req.body);
       const location = await storage.updateLocation(id, req.body);
       res.json(location);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث الموقع" });
+      console.error('Location update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث الموقع", error: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 
