@@ -2025,6 +2025,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database Management routes
+  app.get("/api/database/stats", async (req, res) => {
+    try {
+      const stats = await storage.getDatabaseStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching database stats:", error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات قاعدة البيانات" });
+    }
+  });
+
+  app.post("/api/database/backup", async (req, res) => {
+    try {
+      const backup = await storage.createDatabaseBackup();
+      res.json({ 
+        message: "تم إنشاء النسخة الاحتياطية بنجاح", 
+        backup,
+        downloadUrl: `/api/database/backup/download/${backup.id}`
+      });
+    } catch (error) {
+      console.error("Error creating database backup:", error);
+      res.status(500).json({ message: "خطأ في إنشاء النسخة الاحتياطية" });
+    }
+  });
+
+  app.get("/api/database/backup/download/:backupId", async (req, res) => {
+    try {
+      const backupId = req.params.backupId;
+      const backupFile = await storage.getBackupFile(backupId);
+      
+      res.setHeader('Content-Type', 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="backup-${backupId}.sql"`);
+      res.send(backupFile);
+    } catch (error) {
+      console.error("Error downloading backup:", error);
+      res.status(500).json({ message: "خطأ في تحميل النسخة الاحتياطية" });
+    }
+  });
+
+  app.post("/api/database/restore", async (req, res) => {
+    try {
+      const { backupData } = req.body;
+      const result = await storage.restoreDatabaseBackup(backupData);
+      res.json({ message: "تم استعادة قاعدة البيانات بنجاح", result });
+    } catch (error) {
+      console.error("Error restoring database:", error);
+      res.status(500).json({ message: "خطأ في استعادة قاعدة البيانات" });
+    }
+  });
+
+  app.get("/api/database/export/:tableName", async (req, res) => {
+    try {
+      const tableName = req.params.tableName;
+      const format = req.query.format as string || 'csv';
+      
+      const data = await storage.exportTableData(tableName, format);
+      
+      let contentType = 'text/csv';
+      let fileExtension = 'csv';
+      
+      switch (format) {
+        case 'json':
+          contentType = 'application/json';
+          fileExtension = 'json';
+          break;
+        case 'excel':
+          contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+          fileExtension = 'xlsx';
+          break;
+      }
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${tableName}.${fileExtension}"`);
+      res.send(data);
+    } catch (error) {
+      console.error("Error exporting table data:", error);
+      res.status(500).json({ message: "خطأ في تصدير بيانات الجدول" });
+    }
+  });
+
+  app.post("/api/database/import/:tableName", async (req, res) => {
+    try {
+      const tableName = req.params.tableName;
+      const { data, format } = req.body;
+      
+      const result = await storage.importTableData(tableName, data, format);
+      res.json({ 
+        message: "تم استيراد البيانات بنجاح", 
+        importedRecords: result.count
+      });
+    } catch (error) {
+      console.error("Error importing table data:", error);
+      res.status(500).json({ message: "خطأ في استيراد البيانات" });
+    }
+  });
+
+  app.post("/api/database/optimize", async (req, res) => {
+    try {
+      const result = await storage.optimizeTables();
+      res.json({ message: "تم تحسين الجداول بنجاح", result });
+    } catch (error) {
+      console.error("Error optimizing tables:", error);
+      res.status(500).json({ message: "خطأ في تحسين الجداول" });
+    }
+  });
+
+  app.post("/api/database/integrity-check", async (req, res) => {
+    try {
+      const result = await storage.checkDatabaseIntegrity();
+      res.json({ message: "تم فحص تكامل قاعدة البيانات", result });
+    } catch (error) {
+      console.error("Error checking database integrity:", error);
+      res.status(500).json({ message: "خطأ في فحص تكامل قاعدة البيانات" });
+    }
+  });
+
+  app.post("/api/database/cleanup", async (req, res) => {
+    try {
+      const { daysOld } = req.body;
+      const result = await storage.cleanupOldData(daysOld || 90);
+      res.json({ 
+        message: "تم تنظيف البيانات القديمة بنجاح", 
+        deletedRecords: result.count
+      });
+    } catch (error) {
+      console.error("Error cleaning up old data:", error);
+      res.status(500).json({ message: "خطأ في تنظيف البيانات القديمة" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
