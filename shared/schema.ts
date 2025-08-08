@@ -21,7 +21,7 @@ export const sections = pgTable('sections', {
 
 // 🧑‍💼 جدول المستخدمين
 export const users = pgTable('users', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(),
   username: varchar('username', { length: 50 }).notNull().unique(),
   password: varchar('password', { length: 100 }).notNull(),
   display_name: varchar('display_name', { length: 100 }),
@@ -44,7 +44,7 @@ export const customers = pgTable('customers', {
   address: text('address'),
   tax_number: varchar('tax_number', { length: 20 }),
   phone: varchar('phone', { length: 20 }),
-  sales_rep_id: integer('sales_rep_id').references(() => users.id),
+  sales_rep_id: varchar('sales_rep_id', { length: 20 }).references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -61,7 +61,7 @@ export const categories = pgTable('categories', {
 
 // 🏭 جدول المكائن
 export const machines = pgTable('machines', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
   type: varchar('type', { length: 50 }), // extruder / printer / cutter
@@ -77,7 +77,7 @@ export const orders = pgTable('orders', {
   delivery_days: integer('delivery_days'),
   status: varchar('status', { length: 30 }).default('pending'), // pending / for_production / completed / delivered
   notes: text('notes'),
-  created_by: integer('created_by').references(() => users.id),
+  created_by: varchar('created_by', { length: 20 }).references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
   delivery_date: date('delivery_date')
 });
@@ -113,8 +113,8 @@ export const rolls = pgTable('rolls', {
   weight: decimal('weight', { precision: 8, scale: 2 }),
   status: varchar('status', { length: 30 }).default('for_printing'), // for_printing / for_cutting / done
   current_stage: varchar('current_stage', { length: 30 }).default('film'), // film / printing / cutting
-  machine_id: integer('machine_id').references(() => machines.id),
-  employee_id: integer('employee_id').references(() => users.id),
+  machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
+  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
   qr_code: varchar('qr_code', { length: 255 }),
   created_at: timestamp('created_at').defaultNow(),
   completed_at: timestamp('completed_at'),
@@ -139,14 +139,14 @@ export const quality_checks = pgTable('quality_checks', {
   result: varchar('result', { length: 10 }), // pass / fail
   score: integer('score'), // 1-5 stars
   notes: text('notes'),
-  checked_by: integer('checked_by').references(() => users.id),
+  checked_by: varchar('checked_by', { length: 20 }).references(() => users.id),
   created_at: timestamp('created_at').defaultNow()
 });
 
 // 👥 جدول الحضور والانصراف
 export const attendance = pgTable('attendance', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull().references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).notNull().references(() => users.id),
   check_in_time: timestamp('check_in_time'),
   check_out_time: timestamp('check_out_time'),
   date: date('date').notNull(),
@@ -158,13 +158,13 @@ export const attendance = pgTable('attendance', {
 // 🛠️ جدول طلبات الصيانة
 export const maintenance_requests = pgTable('maintenance_requests', {
   id: serial('id').primaryKey(),
-  machine_id: integer('machine_id').references(() => machines.id),
-  reported_by: integer('reported_by').references(() => users.id),
+  machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
+  reported_by: varchar('reported_by', { length: 20 }).references(() => users.id),
   issue_type: varchar('issue_type', { length: 50 }), // mechanical / electrical / other
   description: text('description'),
   urgency_level: varchar('urgency_level', { length: 20 }).default('normal'), // normal / medium / urgent
   status: varchar('status', { length: 20 }).default('open'), // open / in_progress / resolved
-  assigned_to: integer('assigned_to').references(() => users.id),
+  assigned_to: varchar('assigned_to', { length: 20 }).references(() => users.id),
   action_taken: text('action_taken'),
   date_reported: timestamp('date_reported').defaultNow(),
   date_resolved: timestamp('date_resolved')
@@ -173,19 +173,19 @@ export const maintenance_requests = pgTable('maintenance_requests', {
 // 📋 جدول المخالفات
 export const violations = pgTable('violations', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
   violation_type: varchar('violation_type', { length: 50 }),
   description: text('description'),
   date: date('date').notNull(),
   action_taken: text('action_taken'),
-  reported_by: integer('reported_by').references(() => users.id),
+  reported_by: varchar('reported_by', { length: 20 }).references(() => users.id),
 });
 
 // 📦 جدول الأصناف والمواد
 export const items = pgTable('items', {
   id: varchar('id', { length: 20 }).primaryKey(),
   category_id: varchar('category_id', { length: 20 }),
-  material_group_id: integer('material_group_id').references(() => material_groups.id),
+  material_group_id: varchar('material_group_id', { length: 20 }).references(() => material_groups.id),
   name: varchar('name', { length: 100 }),
   name_ar: varchar('name_ar', { length: 100 }),
   code: varchar('code', { length: 50 }),
@@ -194,7 +194,7 @@ export const items = pgTable('items', {
 
 // 🌍 جدول المواقع الجغرافية
 export const locations = pgTable('locations', {
-  id: serial('id').primaryKey(),
+  id: varchar('id', { length: 20 }).primaryKey(),
   name: varchar('name', { length: 100 }).notNull(),
   name_ar: varchar('name_ar', { length: 100 }),
   coordinates: varchar('coordinates', { length: 100 }),
@@ -216,7 +216,7 @@ export const suppliers = pgTable('suppliers', {
 export const inventory = pgTable('inventory', {
   id: serial('id').primaryKey(),
   item_id: varchar('item_id', { length: 20 }).notNull().references(() => items.id),
-  location_id: integer('location_id').references(() => locations.id),
+  location_id: varchar('location_id', { length: 20 }).references(() => locations.id),
   current_stock: decimal('current_stock', { precision: 10, scale: 2 }).default('0'),
   min_stock: decimal('min_stock', { precision: 10, scale: 2 }).default('0'),
   max_stock: decimal('max_stock', { precision: 10, scale: 2 }).default('0'),
@@ -236,7 +236,7 @@ export const inventory_movements = pgTable('inventory_movements', {
   reference_number: varchar('reference_number', { length: 50 }),
   reference_type: varchar('reference_type', { length: 20 }), // purchase / sale / production / adjustment
   notes: text('notes'),
-  created_by: integer('created_by').references(() => users.id),
+  created_by: varchar('created_by', { length: 20 }).references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -267,7 +267,7 @@ export const mixing_recipes = pgTable('mixing_recipes', {
 // 🧍‍♂️ جدول التدريب
 export const training_records = pgTable('training_records', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
   training_type: varchar('training_type', { length: 100 }),
   training_name: varchar('training_name', { length: 200 }),
   date: date('date').notNull(),
@@ -289,7 +289,7 @@ export const training_programs = pgTable('training_programs', {
   prerequisites: text('prerequisites'),
   learning_objectives: json('learning_objectives').$type<string[]>(),
   materials: json('materials').$type<{title: string, type: string, url?: string}[]>(),
-  instructor_id: integer('instructor_id').references(() => users.id),
+  instructor_id: varchar('instructor_id', { length: 20 }).references(() => users.id),
   status: varchar('status', { length: 20 }).default('active'), // active / inactive / draft
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
@@ -313,7 +313,7 @@ export const training_materials = pgTable('training_materials', {
 export const training_enrollments = pgTable('training_enrollments', {
   id: serial('id').primaryKey(),
   program_id: integer('program_id').references(() => training_programs.id),
-  employee_id: integer('employee_id').references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
   enrolled_date: timestamp('enrolled_date').defaultNow(),
   start_date: date('start_date'),
   completion_date: date('completion_date'),
@@ -326,8 +326,8 @@ export const training_enrollments = pgTable('training_enrollments', {
 // 📊 جدول تقييم الأداء
 export const performance_reviews = pgTable('performance_reviews', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull().references(() => users.id),
-  reviewer_id: integer('reviewer_id').notNull().references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).notNull().references(() => users.id),
+  reviewer_id: varchar('reviewer_id', { length: 20 }).notNull().references(() => users.id),
   review_period_start: date('review_period_start').notNull(),
   review_period_end: date('review_period_end').notNull(),
   review_type: varchar('review_type', { length: 20 }), // annual / semi_annual / quarterly / probation
@@ -389,7 +389,7 @@ export const leave_types = pgTable('leave_types', {
 // 📝 جدول طلبات الإجازات
 export const leave_requests = pgTable('leave_requests', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull().references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).notNull().references(() => users.id),
   leave_type_id: integer('leave_type_id').notNull().references(() => leave_types.id),
   start_date: date('start_date').notNull(),
   end_date: date('end_date').notNull(),
@@ -398,10 +398,10 @@ export const leave_requests = pgTable('leave_requests', {
   medical_certificate_url: varchar('medical_certificate_url', { length: 500 }),
   emergency_contact: varchar('emergency_contact', { length: 100 }),
   work_handover: text('work_handover'), // تسليم العمل
-  replacement_employee_id: integer('replacement_employee_id').references(() => users.id),
+  replacement_employee_id: varchar('replacement_employee_id', { length: 20 }).references(() => users.id),
   
   // Approval workflow
-  direct_manager_id: integer('direct_manager_id').references(() => users.id),
+  direct_manager_id: varchar('direct_manager_id', { length: 20 }).references(() => users.id),
   direct_manager_status: varchar('direct_manager_status', { length: 20 }).default('pending'), // pending / approved / rejected
   direct_manager_comments: text('direct_manager_comments'),
   direct_manager_action_date: timestamp('direct_manager_action_date'),
@@ -409,7 +409,7 @@ export const leave_requests = pgTable('leave_requests', {
   hr_status: varchar('hr_status', { length: 20 }).default('pending'), // pending / approved / rejected
   hr_comments: text('hr_comments'),
   hr_action_date: timestamp('hr_action_date'),
-  hr_reviewed_by: integer('hr_reviewed_by').references(() => users.id),
+  hr_reviewed_by: varchar('hr_reviewed_by', { length: 20 }).references(() => users.id),
   
   final_status: varchar('final_status', { length: 20 }).default('pending'), // pending / approved / rejected / cancelled
   
@@ -420,7 +420,7 @@ export const leave_requests = pgTable('leave_requests', {
 // 💰 جدول رصيد الإجازات
 export const leave_balances = pgTable('leave_balances', {
   id: serial('id').primaryKey(),
-  employee_id: integer('employee_id').notNull().references(() => users.id),
+  employee_id: varchar('employee_id', { length: 20 }).notNull().references(() => users.id),
   leave_type_id: integer('leave_type_id').notNull().references(() => leave_types.id),
   year: integer('year').notNull(),
   allocated_days: integer('allocated_days').notNull(), // الأيام المخصصة
@@ -440,7 +440,7 @@ export const admin_decisions = pgTable('admin_decisions', {
   target_type: varchar('target_type', { length: 20 }), // user / department / company
   target_id: integer('target_id'),
   date: date('date').notNull(),
-  issued_by: integer('issued_by').references(() => users.id),
+  issued_by: varchar('issued_by', { length: 20 }).references(() => users.id),
 });
 
 // 🏢 جدول بيانات المصنع
@@ -461,7 +461,7 @@ export const company_profile = pgTable('company_profile', {
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
   customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  material_group_id: integer('material_group_id').references(() => material_groups.id),
+  material_group_id: varchar('material_group_id', { length: 20 }).references(() => material_groups.id),
   item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   size_caption: varchar('size_caption', { length: 50 }),
   width: decimal('width', { precision: 8, scale: 2 }),
@@ -711,13 +711,13 @@ export const system_settings = pgTable('system_settings', {
   description: text('description'),
   is_editable: boolean('is_editable').default(true),
   updated_at: timestamp('updated_at').defaultNow(),
-  updated_by: integer('updated_by').references(() => users.id)
+  updated_by: varchar('updated_by', { length: 20 }).references(() => users.id)
 });
 
 // 👤 جدول إعدادات المستخدمين
 export const user_settings = pgTable('user_settings', {
   id: serial('id').primaryKey(),
-  user_id: integer('user_id').references(() => users.id).notNull(),
+  user_id: varchar('user_id', { length: 20 }).references(() => users.id).notNull(),
   setting_key: varchar('setting_key', { length: 100 }).notNull(),
   setting_value: text('setting_value'),
   setting_type: varchar('setting_type', { length: 20 }).default('string'), // string / number / boolean / json
@@ -748,12 +748,12 @@ export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
 
 // 🧱 جدول مجموعات المواد
 export const material_groups = pgTable("material_groups", {
-  id: serial("id").primaryKey(),
+  id: varchar("id", { length: 20 }).primaryKey(),
   name: varchar("name", { length: 100 }).notNull(),
   name_ar: varchar("name_ar", { length: 100 }).notNull(),
   code: varchar("code", { length: 20 }).unique(),
   description: text("description"),
-  parent_id: integer("parent_id"),
+  parent_id: varchar("parent_id", { length: 20 }),
   status: varchar("status", { length: 20 }).default("active"),
   created_at: timestamp("created_at").defaultNow(),
 });
