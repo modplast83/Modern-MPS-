@@ -148,7 +148,7 @@ export default function Definitions() {
     if (cuttingLength > 0 && (width > 0 || leftFacing > 0 || rightFacing > 0)) {
       setCustomerProductForm(prev => ({ 
         ...prev, 
-        size_caption: `${width}+${rightFacing}+${leftFacing} X ${cuttingLength} Cm` 
+        size_caption: `${width}+${rightFacing}+${leftFacing}X${cuttingLength}` 
       }));
     }
   }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.cutting_length_cm]);
@@ -926,7 +926,7 @@ export default function Definitions() {
             const cuttingLength = parseFloat(customerProductForm.cutting_length_cm) || 0;
             
             if (cuttingLength > 0 && (width > 0 || leftFacing > 0 || rightFacing > 0)) {
-              return `مثال: ${width}+${rightFacing}+${leftFacing} X ${cuttingLength} Cm`;
+              return `مثال: ${width}+${rightFacing}+${leftFacing}X${cuttingLength}`;
             }
             return 'أدخل العرض ودخلات الجانبين وطول القطع للحساب التلقائي';
           })()} 
