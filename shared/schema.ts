@@ -469,7 +469,6 @@ export const customer_products = pgTable('customer_products', {
   right_facing: decimal('right_facing', { precision: 8, scale: 2 }),
   thickness: decimal('thickness', { precision: 6, scale: 3 }),
   printing_cylinder: varchar('printing_cylinder', { length: 10 }), // 8" to 38" + 39"
-  length_cm: decimal('length_cm', { precision: 10, scale: 2 }),
   cutting_length_cm: integer('cutting_length_cm'),
   raw_material: varchar('raw_material', { length: 20 }), // HDPE-LDPE-Regrind
   master_batch_id: varchar('master_batch_id', { length: 20 }), // CLEAR-WHITE-BLACK etc

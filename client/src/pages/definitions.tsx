@@ -80,7 +80,6 @@ export default function Definitions() {
     right_facing: '', 
     thickness: '', 
     printing_cylinder: 'بدون طباعة', 
-    length_cm: '', 
     cutting_length_cm: '', 
     raw_material: '', 
     master_batch_id: '', 
@@ -252,7 +251,6 @@ export default function Definitions() {
       right_facing: '', 
       thickness: '', 
       printing_cylinder: 'بدون طباعة', 
-      length_cm: '', 
       cutting_length_cm: '', 
       raw_material: '', 
       master_batch_id: '', 
@@ -333,7 +331,6 @@ export default function Definitions() {
         right_facing: item.right_facing?.toString() || '',
         thickness: item.thickness?.toString() || '',
         printing_cylinder: item.printing_cylinder || '',
-        length_cm: item.length_cm?.toString() || '',
         cutting_length_cm: item.cutting_length_cm?.toString() || '',
         raw_material: item.raw_material || '',
         master_batch_id: item.master_batch_id || '',
@@ -458,7 +455,6 @@ export default function Definitions() {
         right_facing: item.right_facing ? parseFloat(item.right_facing) : null,
         thickness: item.thickness ? parseFloat(item.thickness) : null,
         printing_cylinder: item.printing_cylinder || '',
-        length_cm: item.length_cm ? parseFloat(item.length_cm) : null,
         cutting_length_cm: item.cutting_length_cm ? parseInt(item.cutting_length_cm) : null,
         raw_material: item.raw_material || '',
         master_batch_id: item.master_batch_id || '',
@@ -540,7 +536,6 @@ export default function Definitions() {
             left_facing: customerProductForm.left_facing ? parseFloat(customerProductForm.left_facing) : null,
             right_facing: customerProductForm.right_facing ? parseFloat(customerProductForm.right_facing) : null,
             thickness: customerProductForm.thickness ? parseFloat(customerProductForm.thickness) : null,
-            length_cm: customerProductForm.length_cm ? parseFloat(customerProductForm.length_cm) : null,
             cutting_length_cm: customerProductForm.cutting_length_cm ? parseInt(customerProductForm.cutting_length_cm) : null,
             unit_weight_kg: customerProductForm.unit_weight_kg ? parseFloat(customerProductForm.unit_weight_kg) : null,
             unit_quantity: customerProductForm.unit_quantity ? parseInt(customerProductForm.unit_quantity) : null,
@@ -1033,20 +1028,6 @@ export default function Definitions() {
           </SelectContent>
         </Select>
         <p className="text-sm text-gray-500">سيتم حساب طول القطع تلقائياً = أسطوانة الطباعة × 2.54</p>
-      </div>
-
-      {/* الطول (سم) - محسوب تلقائياً */}
-      <div className="space-y-2">
-        <Label htmlFor="length_cm">الطول (سم) - محسوب تلقائياً</Label>
-        <Input
-          id="length_cm"
-          type="number"
-          step="0.01"
-          value={customerProductForm.length_cm || ''}
-          onChange={(e) => setCustomerProductForm(prev => ({ ...prev, length_cm: e.target.value }))}
-          placeholder="يحسب تلقائياً"
-          className="bg-gray-50"
-        />
       </div>
 
       {/* السماكة */}
