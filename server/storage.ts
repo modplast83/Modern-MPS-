@@ -1800,7 +1800,7 @@ export class DatabaseStorage implements IStorage {
       };
 
       // Export all major tables
-      const tableNames = ['orders', 'customers', 'users', 'machines', 'locations', 'categories', 'items'];
+      const tableNames = ['orders', 'customers', 'users', 'machines', 'locations', 'categories'];
       
       for (const tableName of tableNames) {
         try {
@@ -1889,8 +1889,20 @@ export class DatabaseStorage implements IStorage {
         case 'categories':
           data = await db.select().from(categories);
           break;
-        case 'materials':
+        case 'items':
           data = await db.select().from(items);
+          break;
+        case 'rolls':
+          data = await db.select().from(rolls);
+          break;
+        case 'job_orders':
+          data = await db.select().from(job_orders);
+          break;
+        case 'production_orders':
+          data = await db.select().from(production_orders);
+          break;
+        case 'customer_products':
+          data = await db.select().from(customer_products);
           break;
         default:
           throw new Error(`جدول غير مدعوم: ${tableName}`);
@@ -2007,7 +2019,9 @@ export class DatabaseStorage implements IStorage {
 
   // Helper methods for data conversion
   private convertToCSV(data: any[]): string {
-    if (!data || data.length === 0) return '';
+    if (!data || data.length === 0) {
+      return 'no_data\n"لا توجد بيانات في هذا الجدول"';
+    }
     
     const headers = Object.keys(data[0]);
     const csvRows = [headers.join(',')];
@@ -2015,7 +2029,8 @@ export class DatabaseStorage implements IStorage {
     for (const row of data) {
       const values = headers.map(header => {
         const value = row[header];
-        return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value;
+        if (value === null || value === undefined) return '';
+        return typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : String(value);
       });
       csvRows.push(values.join(','));
     }
