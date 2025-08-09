@@ -466,6 +466,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/categories", async (req, res) => {
+    try {
+      console.log('Received category data:', req.body);
+      
+      // Generate sequential ID if not provided
+      let categoryId = req.body.id;
+      if (!categoryId) {
+        const existingCategories = await storage.getCategories();
+        const categoryNumbers = existingCategories
+          .map(cat => cat.id)
+          .filter(id => id && id.startsWith('CAT') && id.length <= 6) // Standard format only
+          .map(id => {
+            const num = id.replace('CAT', '');
+            return isNaN(parseInt(num)) ? 0 : parseInt(num);
+          })
+          .filter(num => num > 0)
+          .sort((a, b) => b - a);
+        
+        const nextNumber = categoryNumbers.length > 0 ? categoryNumbers[0] + 1 : 1;
+        categoryId = nextNumber < 10 ? `CAT0${nextNumber}` : `CAT${nextNumber}`;
+      }
+      
+      const processedData = {
+        ...req.body,
+        id: categoryId,
+        parent_id: req.body.parent_id === 'none' || req.body.parent_id === '' ? null : req.body.parent_id,
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      console.log('Processed category data:', processedData);
+      const category = await storage.createCategory(processedData);
+      console.log('Created category:', category);
+      res.json(category);
+    } catch (error) {
+      console.error('Category creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الفئة", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put("/api/categories/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      console.log('Updating category:', id, req.body);
+      
+      const processedData = {
+        ...req.body,
+        parent_id: req.body.parent_id === 'none' || req.body.parent_id === '' ? null : req.body.parent_id,
+        code: req.body.code === '' || !req.body.code ? null : req.body.code
+      };
+      
+      const category = await storage.updateCategory(id, processedData);
+      res.json(category);
+    } catch (error) {
+      console.error('Category update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث الفئة", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete("/api/categories/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteCategory(id);
+      res.json({ message: "تم حذف الفئة بنجاح" });
+    } catch (error) {
+      console.error('Category deletion error:', error);
+      res.status(500).json({ message: "خطأ في حذف الفئة", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Training Records routes
   app.get("/api/training-records", async (req, res) => {
     try {

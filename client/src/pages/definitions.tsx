@@ -42,8 +42,12 @@ export default function Definitions() {
   const [itemForm, setItemForm] = useState({
     name: '', name_ar: '', code: '', category_id: 'none', status: 'active'
   });
+  const [categoryForm, setCategoryForm] = useState({
+    name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active'
+  });
   const [customerProductForm, setCustomerProductForm] = useState({
     customer_id: 'none', 
+    category_id: 'none',
     item_id: 'none', 
     size_caption: '', 
     width: '', 
@@ -133,19 +137,59 @@ export default function Definitions() {
   // Specific filter functions
   const getFilteredCustomers = () => filterData(customers as any[], ['name', 'name_ar', 'phone', 'email', 'address']);
   const getFilteredSections = () => filterData(sections as any[], ['name', 'name_ar', 'description']);
+  const getFilteredCategories = () => filterData(categories as any[], ['name', 'name_ar', 'code', 'description']);
   const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'code']);
   const getFilteredCustomerProducts = () => filterData(customerProducts as any[], ['customer_code', 'customer_name']);
   const getFilteredLocations = () => filterData(locations as any[], ['name', 'name_ar', 'code', 'description']);
   const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'code', 'type']);
   const getFilteredUsers = () => filterData(users as any[], ['username', 'name', 'name_ar', 'email', 'role']);
 
+  // Category mutations
+  const createCategoryMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/categories", {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء الفئة بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء الفئة:', error);
+      toast({ title: "خطأ في إنشاء الفئة", variant: "destructive" });
+    }
+  });
+
+  const updateCategoryMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest(`/api/categories/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+      headers: { "Content-Type": "application/json" },
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث الفئة بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث الفئة:', error);
+      toast({ title: "خطأ في تحديث الفئة", variant: "destructive" });
+    }
+  });
+
   // Event handlers
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
     setSectionForm({ name: '', name_ar: '', description: '' });
+    setCategoryForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active' });
     setItemForm({ name: '', name_ar: '', code: '', category_id: 'none', status: 'active' });
     setCustomerProductForm({ 
       customer_id: 'none', 
+      category_id: 'none',
       item_id: 'none', 
       size_caption: '', 
       width: '', 
@@ -216,9 +260,10 @@ export default function Definitions() {
 
             {/* Tabs */}
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-7">
+              <TabsList className="grid w-full grid-cols-8">
                 <TabsTrigger value="customers">العملاء</TabsTrigger>
                 <TabsTrigger value="sections">الأقسام</TabsTrigger>
+                <TabsTrigger value="categories">الفئات</TabsTrigger>
                 <TabsTrigger value="items">الأصناف</TabsTrigger>
                 <TabsTrigger value="customer-products">منتجات العملاء</TabsTrigger>
                 <TabsTrigger value="locations">المواقع</TabsTrigger>
@@ -312,8 +357,224 @@ export default function Definitions() {
                 </Card>
               </TabsContent>
 
+              {/* Categories Tab */}
+              <TabsContent value="categories" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Package className="w-5 h-5" />
+                        إدارة الفئات
+                      </CardTitle>
+                      <Button onClick={() => { resetForm(); setSelectedTab('categories'); setIsDialogOpen(true); }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        إضافة فئة
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {categoriesLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {(() => {
+                              const filteredCategories = getFilteredCategories();
+                              return filteredCategories.length > 0 ? (
+                                filteredCategories.map((category: any) => (
+                                  <tr key={category.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                      {category.id}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {category.name_ar || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {category.name || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {category.code || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                      <div className="flex items-center gap-2">
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => {
+                                            setEditingItem(category);
+                                            setCategoryForm({
+                                              name: category.name || '',
+                                              name_ar: category.name_ar || '',
+                                              code: category.code || '',
+                                              parent_id: category.parent_id || 'none',
+                                              description: category.description || '',
+                                              status: category.status || 'active'
+                                            });
+                                            setIsDialogOpen(true);
+                                          }}
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                                    {quickSearch || statusFilter !== "all" ? 
+                                      "لا توجد نتائج مطابقة للفلاتر المحددة" : 
+                                      "لا توجد بيانات متاحة"}
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
               {/* Other tabs would follow similar pattern... */}
             </Tabs>
+            
+            {/* Category Add/Edit Dialog */}
+            {selectedTab === 'categories' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث الفئة" : "إضافة فئة جديدة"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={categoryForm.name_ar}
+                          onChange={(e) => setCategoryForm({...categoryForm, name_ar: e.target.value})}
+                          placeholder="اسم الفئة بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={categoryForm.name}
+                          onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
+                          placeholder="Category Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="code">الكود</Label>
+                        <Input
+                          id="code"
+                          value={categoryForm.code}
+                          onChange={(e) => setCategoryForm({...categoryForm, code: e.target.value})}
+                          placeholder="كود الفئة (اختياري)"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="parent_id">الفئة الرئيسية</Label>
+                        <Select 
+                          value={categoryForm.parent_id} 
+                          onValueChange={(value) => setCategoryForm({...categoryForm, parent_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة الرئيسية" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون فئة رئيسية</SelectItem>
+                            {categories.map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name_ar || cat.name} ({cat.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="description">الوصف</Label>
+                      <Input
+                        id="description"
+                        value={categoryForm.description}
+                        onChange={(e) => setCategoryForm({...categoryForm, description: e.target.value})}
+                        placeholder="وصف الفئة (اختياري)"
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="status">الحالة</Label>
+                      <Select 
+                        value={categoryForm.status} 
+                        onValueChange={(value) => setCategoryForm({...categoryForm, status: value})}
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">نشط</SelectItem>
+                          <SelectItem value="inactive">غير نشط</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateCategoryMutation.mutate({ 
+                            id: editingItem.id, 
+                            data: categoryForm 
+                          });
+                        } else {
+                          createCategoryMutation.mutate(categoryForm);
+                        }
+                      }}
+                      disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                    >
+                      {createCategoryMutation.isPending || updateCategoryMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </main>
       </div>
