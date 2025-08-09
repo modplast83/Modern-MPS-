@@ -97,7 +97,7 @@ export default function Sidebar() {
   const [location] = useLocation();
 
   return (
-    <aside className="fixed right-0 top-16 bottom-0 bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block z-10">
+    <aside className="fixed right-0 top-16 bottom-0 bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block z-10 overflow-y-auto">
       <nav className="p-4">
         <div className="space-y-2">
           {modules.map((module) => {
