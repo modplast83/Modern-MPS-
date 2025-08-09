@@ -201,7 +201,7 @@ export default function Settings() {
       setSelectedFile(null);
       toast({
         title: "تم استيراد البيانات بنجاح",
-        description: `تم استيراد ${data.importedRecords || data.count} سجل من أصل ${data.totalRows || data.count} سجل`,
+        description: `تم استيراد ${data.count || data.importedRecords} سجل من أصل ${data.totalRows || data.count} سجل`,
       });
     },
     onError: (error) => {
