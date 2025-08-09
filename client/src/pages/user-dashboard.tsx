@@ -128,7 +128,7 @@ export default function UserDashboard() {
           status: data.status,
           date: new Date().toISOString().split('T')[0],
           notes: data.notes,
-          ...(data.status === 'حاضر' && { check_in_time: new Date().toISOString() }),
+          ...(data.status === 'حاضر' && !data.action && { check_in_time: new Date().toISOString() }),
           ...(data.status === 'مغادر' && { check_out_time: new Date().toISOString() }),
           ...(data.status === 'استراحة غداء' && data.action === 'start' && { lunch_start_time: new Date().toISOString() }),
           ...(data.status === 'حاضر' && data.action === 'end_lunch' && { lunch_end_time: new Date().toISOString() }),
