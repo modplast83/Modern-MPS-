@@ -264,12 +264,17 @@ export default function Orders() {
 
   const onOrderSubmit = async (data: any) => {
     try {
+      // Generate order number
+      const orderNumberResponse = await fetch('/api/orders/next-number');
+      const { orderNumber } = await orderNumberResponse.json();
+      
       // Create the order first
       const orderData = {
+        order_number: orderNumber,
         customer_id: data.customer_id,
         delivery_days: data.delivery_days,
         notes: data.notes,
-        created_by: 1
+        created_by: "8" // AbuKhalid user ID as string
       };
       
       const orderResponse = await fetch('/api/orders', {

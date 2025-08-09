@@ -203,6 +203,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Generate next order number
+  app.get("/api/orders/next-number", async (req, res) => {
+    try {
+      const orders = await storage.getAllOrders();
+      const orderNumbers = orders
+        .map((order: any) => order.order_number)
+        .filter((num: string) => num && num.startsWith('ORD'))
+        .map((num: string) => {
+          const match = num.match(/^ORD(\d+)$/);
+          return match ? parseInt(match[1]) : 0;
+        });
+      
+      const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
+      const orderNumber = `ORD${nextNumber.toString().padStart(3, '0')}`;
+      
+      res.json({ orderNumber });
+    } catch (error) {
+      console.error("Order number generation error:", error);
+      res.status(500).json({ message: "خطأ في توليد رقم الطلب" });
+    }
+  });
+
   app.post("/api/orders", async (req, res) => {
     try {
       const validatedData = insertNewOrderSchema.parse(req.body);

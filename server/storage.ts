@@ -332,9 +332,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Delete methods
-  async deleteMaterialGroup(id: string): Promise<void> {
-    await db.delete(material_groups).where(eq(material_groups.id, id));
-  }
 
   async deleteSection(id: string): Promise<void> {
     await db.delete(sections).where(eq(sections.id, id));
@@ -371,28 +368,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
-    // Generate next order number
-    const lastOrder = await db
-      .select({ order_number: orders.order_number })
-      .from(orders)
-      .orderBy(desc(orders.id))
-      .limit(1);
-    
-    let nextOrderNumber = "Or-1";
-    if (lastOrder.length > 0 && lastOrder[0].order_number) {
-      const lastNumber = parseInt(lastOrder[0].order_number.split('-')[1]) || 0;
-      nextOrderNumber = `Or-${lastNumber + 1}`;
-    }
-
-    const orderData = {
-      ...insertOrder,
-      order_number: nextOrderNumber,
-      created_at: new Date()
-    };
-
     const [order] = await db
       .insert(orders)
-      .values(orderData)
+      .values(insertOrder)
       .returning();
     return order;
   }
@@ -2089,12 +2067,12 @@ export class DatabaseStorage implements IStorage {
             if (row.customer_id) {
               try {
                 const [newOrder] = await db.insert(orders).values({
+                  order_number: row.order_number || `ORD${Date.now()}`,
                   customer_id: row.customer_id,
-                  order_date: row.order_date || new Date().toISOString(),
-                  delivery_date: row.delivery_date || null,
+                  delivery_days: row.delivery_days || null,
                   status: row.status || 'pending',
                   notes: row.notes || null,
-                  notes_ar: row.notes_ar || row.notes || null
+                  created_by: row.created_by || "8"
                 }).returning();
                 insertedCount++;
                 console.log(`تم إضافة الطلب: ${newOrder.id}`);
