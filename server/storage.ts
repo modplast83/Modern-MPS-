@@ -216,6 +216,9 @@ export interface IStorage {
   
   // Categories
   getCategories(): Promise<any[]>;
+  createCategory(data: any): Promise<any>;
+  updateCategory(id: string, data: any): Promise<any>;
+  deleteCategory(id: string): Promise<void>;
   
   // HR System - Training Programs
   getTrainingPrograms(): Promise<TrainingProgram[]>;
@@ -759,6 +762,24 @@ export class DatabaseStorage implements IStorage {
 
   async getCategories(): Promise<any[]> {
     return await db.select().from(categories);
+  }
+
+  async createCategory(data: any): Promise<any> {
+    const [newCategory] = await db.insert(categories).values(data).returning();
+    return newCategory;
+  }
+
+  async updateCategory(id: string, data: any): Promise<any> {
+    const [updatedCategory] = await db
+      .update(categories)
+      .set(data)
+      .where(eq(categories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    await db.delete(categories).where(eq(categories.id, id));
   }
 
   async getDashboardStats(): Promise<{
