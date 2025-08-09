@@ -1138,17 +1138,17 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الصنف</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وصف المقاس</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الطباعة/القطع</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الماستر باتش</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">التخريم</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن التعبئة</th>
-                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم العميل</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم الصنف</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">وصف المقاس</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الطباعة/القطع</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الماستر باتش</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">التخريم</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الوحدة</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">وزن التعبئة</th>
+                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -1163,44 +1163,44 @@ export default function Definitions() {
                                   
                                   return (
                                     <tr key={product.id} className="hover:bg-gray-50">
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {product.id}
                                       </td>
-                                      <td className="px-3 py-4 text-sm text-gray-900">
-                                        <div className="flex flex-col">
+                                      <td className="px-3 py-4 text-sm text-gray-900 text-center">
+                                        <div className="flex flex-col items-center">
                                           <span className="font-medium">{customer?.name_ar || customer?.name || '-'}</span>
                                           <span className="text-xs text-gray-500">{customer?.name || '-'}</span>
                                         </div>
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {item?.name_ar || item?.name || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.size_caption || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.is_printed ? 
                                           (product.printing_cylinder || 'بدون طباعة') : 
                                           (product.cutting_length_cm ? `${formatNumber(parseFloat(product.cutting_length_cm))} سم` : '-')
                                         }
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.raw_material || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.master_batch_id || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.punching || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.cutting_unit || '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.package_weight_kg ? `${formatNumber(parseFloat(product.package_weight_kg))} كغ` : '-'}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
-                                        <div className="flex items-center gap-1">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-1">
                                           <Button 
                                             variant="outline" 
                                             size="sm"
