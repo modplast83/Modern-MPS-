@@ -1024,7 +1024,7 @@ export default function Settings() {
                                 صيغ مدعومة: CSV, JSON, Excel (.xlsx)
                               </p>
                               <p className="text-xs text-blue-600 mt-1">
-                                ملاحظة: سيتم إنتاج معرفات تلقائية للسجلات التي لا تحتوي على معرف
+                                ملاحظة: سيتم إنتاج معرفات تلقائية بالتنسيق: CAT01, CID001, ITM01
                               </p>
                               <input
                                 type="file"
