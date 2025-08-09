@@ -212,8 +212,8 @@ export default function Definitions() {
   React.useEffect(() => {
     // Auto-set cutting unit based on item category
     const { category_id } = customerProductForm;
-    if (category_id && category_id !== 'none' && categories.length > 0) {
-      const category = categories.find((cat: any) => cat.id === category_id);
+    if (category_id && category_id !== 'none' && Array.isArray(categories) && categories.length > 0) {
+      const category = (categories as any[]).find((cat: any) => cat.id === category_id);
       if (category) {
         let cuttingUnit = 'قطعة';
         if (category.name_ar?.includes('أكياس')) {
@@ -1512,6 +1512,9 @@ export default function Definitions() {
                     <DialogTitle>
                       {editingItem ? "تحديث العميل" : "إضافة عميل جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تعديل بيانات العميل الحالي" : "إضافة عميل جديد إلى النظام"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -1615,6 +1618,9 @@ export default function Definitions() {
                     <DialogTitle>
                       {editingItem ? "تحديث القسم" : "إضافة قسم جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تعديل بيانات القسم الحالي" : "إضافة قسم جديد للمؤسسة"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -1686,6 +1692,9 @@ export default function Definitions() {
                     <DialogTitle>
                       {editingItem ? "تحديث الفئة" : "إضافة فئة جديدة"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تعديل بيانات الفئة الحالية" : "إضافة فئة جديدة لتصنيف المنتجات"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -1809,6 +1818,9 @@ export default function Definitions() {
                     <DialogTitle>
                       {editingItem ? "تحديث الصنف" : "إضافة صنف جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تعديل بيانات الصنف الحالي" : "إضافة صنف جديد إلى المخزون"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -1901,6 +1913,9 @@ export default function Definitions() {
                     <DialogTitle>
                       {editingItem ? "تحديث منتج العميل" : "إضافة منتج عميل جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تعديل بيانات منتج العميل الحالي" : "إضافة منتج جديد لعميل محدد"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-6 py-4">
                     {/* العميل والفئة والصنف */}
