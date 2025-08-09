@@ -264,44 +264,78 @@ export default function Orders() {
 
   const onOrderSubmit = async (data: any) => {
     try {
+      console.log('بدء عملية حفظ الطلب...', { data, productionOrdersInForm });
+      
+      // Check if at least one production order is added
+      if (productionOrdersInForm.length === 0) {
+        toast({
+          title: "تحذير",
+          description: "يجب إضافة أمر إنتاج واحد على الأقل",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Generate order number
+      console.log('توليد رقم الطلب...');
       const orderNumberResponse = await fetch('/api/orders/next-number');
+      if (!orderNumberResponse.ok) throw new Error('فشل في توليد رقم الطلب');
       const { orderNumber } = await orderNumberResponse.json();
+      console.log('رقم الطلب المولد:', orderNumber);
       
       // Create the order first
       const orderData = {
         order_number: orderNumber,
         customer_id: data.customer_id,
-        delivery_days: data.delivery_days,
-        notes: data.notes,
+        delivery_days: parseInt(data.delivery_days) || 7,
+        notes: data.notes || '',
         created_by: "8" // AbuKhalid user ID as string
       };
       
+      console.log('إرسال بيانات الطلب:', orderData);
       const orderResponse = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
       
-      if (!orderResponse.ok) throw new Error('فشل في إنشاء الطلب');
+      if (!orderResponse.ok) {
+        const errorText = await orderResponse.text();
+        console.error('خطأ في إنشاء الطلب:', errorText);
+        throw new Error(`فشل في إنشاء الطلب: ${errorText}`);
+      }
       
       const newOrder = await orderResponse.json();
+      console.log('تم إنشاء الطلب بنجاح:', newOrder);
       
       // Create production orders
-      for (const prodOrder of productionOrdersInForm) {
-        await fetch('/api/production-orders', {
+      console.log('إنشاء أوامر الإنتاج...', productionOrdersInForm.length);
+      for (let i = 0; i < productionOrdersInForm.length; i++) {
+        const prodOrder = productionOrdersInForm[i];
+        console.log(`إنشاء أمر إنتاج ${i + 1}:`, prodOrder);
+        
+        const prodOrderResponse = await fetch('/api/production-orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             order_id: newOrder.id,
-            customer_product_id: prodOrder.customer_product_id,
-            quantity_kg: prodOrder.quantity_kg,
+            customer_product_id: parseInt(prodOrder.customer_product_id),
+            quantity_kg: parseFloat(prodOrder.quantity_kg),
             status: prodOrder.status || 'pending'
           })
         });
+        
+        if (!prodOrderResponse.ok) {
+          const errorText = await prodOrderResponse.text();
+          console.error(`خطأ في إنشاء أمر الإنتاج ${i + 1}:`, errorText);
+        } else {
+          const createdProdOrder = await prodOrderResponse.json();
+          console.log(`تم إنشاء أمر الإنتاج ${i + 1} بنجاح:`, createdProdOrder);
+        }
       }
       
       // Refresh data
+      console.log('تحديث البيانات...');
       queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
       
@@ -312,15 +346,17 @@ export default function Orders() {
       setCustomerSearchTerm("");
       orderForm.reset();
       
+      console.log('تمت عملية الحفظ بنجاح');
       toast({
         title: "تم الحفظ بنجاح",
-        description: "تم إضافة الطلب وأوامر الإنتاج"
+        description: `تم إضافة الطلب رقم ${orderNumber} مع ${productionOrdersInForm.length} أمر إنتاج`
       });
       
     } catch (error) {
+      console.error('خطأ في حفظ الطلب:', error);
       toast({
         title: "خطأ",
-        description: "فشل في حفظ البيانات",
+        description: error instanceof Error ? error.message : "فشل في حفظ البيانات",
         variant: "destructive"
       });
     }
