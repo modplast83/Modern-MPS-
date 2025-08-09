@@ -1992,10 +1992,10 @@ export default function Definitions() {
                       </div>
                     </div>
 
-                    {/* وصف الحجم */}
+                    {/* وصف الحجم والتثقيب */}
                     <div className="space-y-4">
                       <h4 className="text-lg font-medium">مواصفات المنتج</h4>
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="size_caption">وصف الحجم (يُحسب تلقائياً)</Label>
                           <Input
@@ -2005,6 +2005,23 @@ export default function Definitions() {
                             className="mt-1 bg-gray-50"
                             readOnly
                           />
+                        </div>
+                        <div>
+                          <Label htmlFor="punching">التثقيب</Label>
+                          <Select 
+                            value={customerProductForm.punching} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, punching: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر نوع التثقيب" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="بدون">بدون</SelectItem>
+                              <SelectItem value="علاقي">علاقي</SelectItem>
+                              <SelectItem value="علاقي هوك">علاقي هوك</SelectItem>
+                              <SelectItem value="بنانة">بنانة</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
@@ -2122,25 +2139,6 @@ export default function Definitions() {
                               <SelectItem value="رول">رول</SelectItem>
                               <SelectItem value="باكت">باكت</SelectItem>
                               <SelectItem value="كرتون">كرتون</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label htmlFor="punching">التثقيب</Label>
-                          <Select 
-                            value={customerProductForm.punching} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, punching: value})}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="اختر نوع التثقيب" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="بدون">بدون</SelectItem>
-                              <SelectItem value="علاقي">علاقي</SelectItem>
-                              <SelectItem value="علاقي هوك">علاقي هوك</SelectItem>
-                              <SelectItem value="بنانة">بنانة</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
