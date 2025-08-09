@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Dashboard from "@/pages/dashboard";
+import UserDashboard from "@/pages/user-dashboard";
 import Production from "@/pages/production";
 import Quality from "@/pages/quality";
 import Maintenance from "@/pages/maintenance";
@@ -98,6 +99,11 @@ function Router() {
       <Route path="/orders">
         <ProtectedRoute>
           <Orders />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/user-dashboard">
+        <ProtectedRoute>
+          <UserDashboard />
         </ProtectedRoute>
       </Route>
       <Route path="/">

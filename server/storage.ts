@@ -85,9 +85,7 @@ import {
   type UserSetting,
   type InsertUserSetting,
   type LeaveBalance,
-  type InsertLeaveBalance,
-  type Attendance,
-  type InsertAttendance
+  type InsertLeaveBalance
 } from "@shared/schema";
 
 import {
@@ -2246,6 +2244,164 @@ export class DatabaseStorage implements IStorage {
     // For now, treat as CSV
     // In a real implementation, you would use a library like xlsx
     return this.parseCSV(excelData);
+  }
+
+  // ============ User Violations Management ============
+  async getViolations(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`SELECT * FROM user_violations ORDER BY created_at DESC`);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching violations:', error);
+      throw new Error('فشل في جلب المخالفات');
+    }
+  }
+
+  async createViolation(violationData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO user_violations (user_id, type, description, penalty, status, created_by)
+        VALUES (${violationData.user_id}, ${violationData.type}, ${violationData.description}, 
+                ${violationData.penalty}, ${violationData.status || 'معلق'}, ${violationData.created_by})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating violation:', error);
+      throw new Error('فشل في إنشاء المخالفة');
+    }
+  }
+
+  async updateViolation(id: number, violationData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        UPDATE user_violations 
+        SET type = ${violationData.type}, description = ${violationData.description},
+            penalty = ${violationData.penalty}, status = ${violationData.status},
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating violation:', error);
+      throw new Error('فشل في تحديث المخالفة');
+    }
+  }
+
+  async deleteViolation(id: number): Promise<void> {
+    try {
+      await db.execute(sql`DELETE FROM user_violations WHERE id = ${id}`);
+    } catch (error) {
+      console.error('Error deleting violation:', error);
+      throw new Error('فشل في حذف المخالفة');
+    }
+  }
+
+  // ============ User Requests Management ============
+  async getUserRequests(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`SELECT * FROM user_requests ORDER BY date DESC`);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching user requests:', error);
+      throw new Error('فشل في جلب طلبات المستخدمين');
+    }
+  }
+
+  async createUserRequest(requestData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO user_requests (user_id, type, title, description, status)
+        VALUES (${requestData.user_id}, ${requestData.type}, ${requestData.title}, 
+                ${requestData.description}, ${requestData.status || 'معلق'})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating user request:', error);
+      throw new Error('فشل في إنشاء الطلب');
+    }
+  }
+
+  async updateUserRequest(id: number, requestData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        UPDATE user_requests 
+        SET type = ${requestData.type}, title = ${requestData.title},
+            description = ${requestData.description}, status = ${requestData.status},
+            response = ${requestData.response}, updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating user request:', error);
+      throw new Error('فشل في تحديث الطلب');
+    }
+  }
+
+  async deleteUserRequest(id: number): Promise<void> {
+    try {
+      await db.execute(sql`DELETE FROM user_requests WHERE id = ${id}`);
+    } catch (error) {
+      console.error('Error deleting user request:', error);
+      throw new Error('فشل في حذف الطلب');
+    }
+  }
+
+  // ============ User Attendance Management ============
+  async getAttendance(): Promise<any[]> {
+    try {
+      const result = await db.execute(sql`SELECT * FROM attendance ORDER BY date DESC, created_at DESC`);
+      return result.rows;
+    } catch (error) {
+      console.error('Error fetching attendance:', error);
+      throw new Error('فشل في جلب بيانات الحضور');
+    }
+  }
+
+  async createAttendance(attendanceData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        INSERT INTO attendance (user_id, status, check_in_time, check_out_time, lunch_start_time, lunch_end_time, notes, date)
+        VALUES (${attendanceData.user_id}, ${attendanceData.status}, ${attendanceData.check_in_time}, 
+                ${attendanceData.check_out_time}, ${attendanceData.lunch_start_time}, ${attendanceData.lunch_end_time},
+                ${attendanceData.notes}, ${attendanceData.date})
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error creating attendance:', error);
+      throw new Error('فشل في إنشاء سجل الحضور');
+    }
+  }
+
+  async updateAttendance(id: number, attendanceData: any): Promise<any> {
+    try {
+      const result = await db.execute(sql`
+        UPDATE attendance 
+        SET status = ${attendanceData.status}, check_in_time = ${attendanceData.check_in_time},
+            check_out_time = ${attendanceData.check_out_time}, lunch_start_time = ${attendanceData.lunch_start_time},
+            lunch_end_time = ${attendanceData.lunch_end_time}, notes = ${attendanceData.notes},
+            updated_at = NOW()
+        WHERE id = ${id}
+        RETURNING *
+      `);
+      return result.rows[0];
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      throw new Error('فشل في تحديث سجل الحضور');
+    }
+  }
+
+  async deleteAttendance(id: number): Promise<void> {
+    try {
+      await db.execute(sql`DELETE FROM attendance WHERE id = ${id}`);
+    } catch (error) {
+      console.error('Error deleting attendance:', error);
+      throw new Error('فشل في حذف سجل الحضور');
+    }
   }
 }
 
