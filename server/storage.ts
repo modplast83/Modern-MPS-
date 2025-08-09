@@ -1972,7 +1972,11 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if ((row.name || row.name_ar)) {
               try {
-                const [newCustomer] = await db.insert(customers).values({
+                // Generate unique ID if not provided
+                const customerId = row.id || `CID${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                
+                const customerData = {
+                  id: customerId,
                   name: row.name || row.name_ar || '',
                   name_ar: row.name_ar || row.name || '',
                   phone: row.phone || '',
@@ -1981,9 +1985,11 @@ export class DatabaseStorage implements IStorage {
                   email: row.email || '',
                   city: row.city || '',
                   status: row.status || 'active'
-                }).returning();
+                };
+                
+                const [newCustomer] = await db.insert(customers).values(customerData).returning();
                 insertedCount++;
-                console.log(`تم إضافة العميل: ${newCustomer.name}`);
+                console.log(`تم إضافة العميل: ${newCustomer.name} (ID: ${newCustomer.id})`);
               } catch (error) {
                 console.warn(`تم تجاهل العميل ${row.name} - بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
               }
@@ -1993,17 +1999,23 @@ export class DatabaseStorage implements IStorage {
           
         case 'items':
           for (const row of parsedData) {
-            if (row.id && (row.name || row.name_ar)) {
+            if ((row.name || row.name_ar)) {
               try {
-                const [newItem] = await db.insert(items).values({
-                  id: row.id,
+                // Generate unique ID if not provided
+                const itemId = row.id || `ITM${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                
+                const itemData = {
+                  id: itemId,
                   name_ar: row.name_ar || row.name || '',
                   category_id: row.category_id || null,
                   material_group_id: row.material_group_id || null,
                   code: row.code || null,
                   status: row.status || 'active'
-                }).returning();
+                };
+                
+                const [newItem] = await db.insert(items).values(itemData).returning();
                 insertedCount++;
+                console.log(`تم إضافة الصنف: ${newItem.name_ar} (ID: ${newItem.id})`);
               } catch (error) {
                 console.warn(`تم تجاهل الصنف ${row.name} - موجود مسبقاً أو بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
               }
@@ -2015,14 +2027,20 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if ((row.name || row.name_ar)) {
               try {
-                const [newCategory] = await db.insert(categories).values({
+                // Generate unique ID if not provided
+                const categoryId = row.id || `CAT${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                
+                const categoryData = {
+                  id: categoryId,
                   name: row.name || row.name_ar || '',
                   name_ar: row.name_ar || row.name || '',
                   description: row.description || null,
                   description_ar: row.description_ar || row.description || null
-                }).returning();
+                };
+                
+                const [newCategory] = await db.insert(categories).values(categoryData).returning();
                 insertedCount++;
-                console.log(`تم إضافة الفئة: ${newCategory.name}`);
+                console.log(`تم إضافة الفئة: ${newCategory.name} (ID: ${newCategory.id})`);
               } catch (error) {
                 console.warn(`تم تجاهل الفئة ${row.name} - بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
               }

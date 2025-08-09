@@ -1023,6 +1023,9 @@ export default function Settings() {
                               <p className="text-xs text-gray-500">
                                 صيغ مدعومة: CSV, JSON, Excel (.xlsx)
                               </p>
+                              <p className="text-xs text-blue-600 mt-1">
+                                ملاحظة: سيتم إنتاج معرفات تلقائية للسجلات التي لا تحتوي على معرف
+                              </p>
                               <input
                                 type="file"
                                 id="fileInput"
