@@ -124,6 +124,51 @@ export default function Definitions() {
     }
   }, [customerProductForm.printing_cylinder]);
 
+  // Auto-set printing status based on cylinder selection
+  React.useEffect(() => {
+    const isPrinted = customerProductForm.printing_cylinder !== 'بدون طباعة';
+    setCustomerProductForm(prev => ({
+      ...prev,
+      is_printed: isPrinted
+    }));
+  }, [customerProductForm.printing_cylinder]);
+
+  // Auto-generate size caption
+  React.useEffect(() => {
+    const { width, right_facing, left_facing, cutting_length_cm } = customerProductForm;
+    if (width && right_facing && left_facing && cutting_length_cm) {
+      const w = parseFloat(width);
+      const rf = parseFloat(right_facing);
+      const lf = parseFloat(left_facing);
+      const cl = parseFloat(cutting_length_cm);
+      
+      if (w && rf && lf && cl) {
+        const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
+        setCustomerProductForm(prev => ({
+          ...prev,
+          size_caption: sizeCaption
+        }));
+      }
+    }
+  }, [customerProductForm.width, customerProductForm.right_facing, customerProductForm.left_facing, customerProductForm.cutting_length_cm]);
+
+  // Auto-calculate package weight
+  React.useEffect(() => {
+    const { unit_weight_kg, unit_quantity } = customerProductForm;
+    if (unit_weight_kg && unit_quantity) {
+      const unitWeight = parseFloat(unit_weight_kg);
+      const quantity = parseInt(unit_quantity);
+      
+      if (unitWeight && quantity) {
+        const packageWeight = unitWeight * quantity;
+        setCustomerProductForm(prev => ({
+          ...prev,
+          package_weight_kg: packageWeight.toFixed(3)
+        }));
+      }
+    }
+  }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
+
   // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['/api/customers'],
@@ -1952,13 +1997,13 @@ export default function Definitions() {
                       <h4 className="text-lg font-medium">مواصفات المنتج</h4>
                       <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <Label htmlFor="size_caption">وصف الحجم</Label>
+                          <Label htmlFor="size_caption">وصف الحجم (يُحسب تلقائياً)</Label>
                           <Input
                             id="size_caption"
                             value={customerProductForm.size_caption}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, size_caption: e.target.value})}
-                            placeholder="مثال: صغير، متوسط، كبير"
-                            className="mt-1"
+                            placeholder="سيتم إنشاؤه تلقائياً: العرض+الوجه الأيمن+الوجه الأيسر×طول القطع"
+                            className="mt-1 bg-gray-50"
+                            readOnly
                           />
                         </div>
                       </div>
@@ -2094,10 +2139,10 @@ export default function Definitions() {
                             type="checkbox"
                             id="is_printed"
                             checked={customerProductForm.is_printed}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, is_printed: e.target.checked})}
                             className="rounded"
+                            disabled
                           />
-                          <Label htmlFor="is_printed">منتج مطبوع</Label>
+                          <Label htmlFor="is_printed" className="text-gray-600">منتج مطبوع (يتم تحديده تلقائياً)</Label>
                         </div>
                       </div>
                     </div>
@@ -2183,15 +2228,15 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ)</Label>
+                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - محسوب تلقائياً</Label>
                           <Input
                             id="package_weight_kg"
                             type="number"
                             step="0.001"
                             value={customerProductForm.package_weight_kg}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, package_weight_kg: e.target.value})}
-                            placeholder="0.000"
-                            className="mt-1"
+                            placeholder="وزن الوحدة × كمية الوحدة"
+                            className="mt-1 bg-gray-50"
+                            readOnly
                           />
                         </div>
                       </div>
