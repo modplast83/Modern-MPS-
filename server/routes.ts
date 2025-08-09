@@ -49,6 +49,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "الحساب غير نشط" });
       }
 
+      // Save user session
+      req.session = req.session || {};
+      req.session.userId = user.id;
+
       res.json({ 
         user: { 
           id: user.id, 
@@ -60,6 +64,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Login error:", error);
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Get current user
+  app.get("/api/me", async (req, res) => {
+    try {
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+
+      const user = await storage.getUserById(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+
+      res.json({ 
+        user: { 
+          id: user.id, 
+          username: user.username, 
+          display_name: user.display_name,
+          display_name_ar: user.display_name_ar,
+          role_id: user.role_id 
+        } 
+      });
+    } catch (error) {
+      console.error("Get current user error:", error);
+      res.status(500).json({ message: "خطأ في الخادم" });
+    }
+  });
+
+  // Logout
+  app.post("/api/logout", async (req, res) => {
+    try {
+      req.session = null;
+      res.json({ message: "تم تسجيل الخروج بنجاح" });
+    } catch (error) {
+      console.error("Logout error:", error);
       res.status(500).json({ message: "خطأ في الخادم" });
     }
   });
