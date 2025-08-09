@@ -404,26 +404,36 @@ export default function Orders() {
     const user = users.find((u: any) => u.id === parseInt(order.created_by));
     const orderProductionOrders = productionOrders.filter((po: any) => po.order_id === order.id);
     
+    // Fetch categories for proper display
+    const categories = [
+      { id: 'CAT01', name: 'أكياس التسوق', name_ar: 'أكياس التسوق' },
+      { id: 'CAT02', name: 'أكياس القمامة', name_ar: 'أكياس القمامة' },
+      { id: 'CAT03', name: 'أكياس التعبئة', name_ar: 'أكياس التعبئة' }
+    ];
+    
     const printContent = `
       <html dir="rtl">
         <head>
           <meta charset="UTF-8">
           <title>طباعة الطلب ${order.order_number}</title>
           <style>
-            body { font-family: 'Arial', sans-serif; direction: rtl; margin: 20px; line-height: 1.6; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-            .order-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-            .info-box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
-            .production-orders { margin-top: 20px; }
-            .production-order-card { page-break-inside: avoid; }
-            h3 { color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-            h4 { color: #0066cc; margin-bottom: 10px; }
-            h5 { color: #666; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
-            p { margin: 5px 0; }
-            strong { color: #333; }
+            body { font-family: 'Arial', sans-serif; direction: rtl; margin: 20px; line-height: 1.6; font-size: 16px; color: #000; font-weight: bold; }
+            .header { text-align: center; border-bottom: 3px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+            .order-info { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+            .info-box { border: 2px solid #000; padding: 20px; border-radius: 8px; background: #fff; }
+            .production-orders { margin-top: 25px; margin-bottom: 25px; }
+            .production-order-card { page-break-inside: avoid; border: 2px solid #000; margin: 20px 0; padding: 20px; border-radius: 8px; background: #f9f9f9; }
+            .user-info { margin-top: 25px; }
+            h1 { font-size: 24px; font-weight: bold; color: #000; margin: 10px 0; }
+            h3 { color: #000; border-bottom: 2px solid #000; padding-bottom: 8px; font-size: 20px; font-weight: bold; }
+            h4 { color: #000; margin-bottom: 15px; font-size: 18px; font-weight: bold; }
+            h5 { color: #000; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px; font-size: 16px; font-weight: bold; }
+            p { margin: 8px 0; font-size: 14px; }
+            strong { color: #000; font-weight: bold; }
             @media print { 
-              body { margin: 0; font-size: 12px; } 
-              .production-order-card { margin: 10px 0; }
+              body { margin: 0; font-size: 14px; } 
+              .production-order-card { margin: 15px 0; }
+              .info-box { border: 1px solid #000; }
             }
           </style>
         </head>
@@ -452,19 +462,14 @@ export default function Orders() {
             </div>
           </div>
           
-          <div class="info-box">
-            <h3>معلومات المستخدم</h3>
-            <p><strong>اسم المستخدم:</strong> ${user?.username}</p>
-            <p><strong>رقم المستخدم:</strong> ${user?.id}</p>
-          </div>
           
           <div class="production-orders">
             <h3>أوامر الإنتاج</h3>
             ${orderProductionOrders.map(po => {
               const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
               return `
-                <div class="production-order-card" style="border: 1px solid #ddd; margin: 15px 0; padding: 15px; border-radius: 5px; background: #fafafa;">
-                  <h4 style="color: #333; margin-bottom: 10px;">أمر إنتاج: ${po.production_order_number}</h4>
+                <div class="production-order-card">
+                  <h4>أمر إنتاج: ${po.production_order_number}</h4>
                   
                   <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div class="product-details">
@@ -481,10 +486,13 @@ export default function Orders() {
                       <h5>المواصفات الفنية:</h5>
                       <p><strong>التخريم:</strong> ${product?.punching || 'بدون تخريم'}</p>
                       <p><strong>الماستر باتش:</strong> ${product?.master_batch_id || 'غير محدد'}</p>
-                      <p><strong>اللون:</strong> ${product?.color || 'غير محدد'}</p>
-                      <p><strong>نوع الكيس:</strong> ${product?.bag_type || 'غير محدد'}</p>
+                      ${product?.color ? `<p><strong>اللون:</strong> ${product.color}</p>` : ''}
+                      ${product?.bag_type ? `<p><strong>نوع الكيس:</strong> ${product.bag_type}</p>` : ''}
                       <p><strong>الطباعة:</strong> ${product?.print_colors ? `${product.print_colors} لون` : 'بدون طباعة'}</p>
-                      <p><strong>فئة المنتج:</strong> ${product?.category_id || 'غير محدد'}</p>
+                      <p><strong>فئة المنتج:</strong> ${(() => {
+                        const category = categories.find((c: any) => c.id === product?.category_id);
+                        return category?.name_ar || category?.name || 'غير محدد';
+                      })()}</p>
                     </div>
                     
                     <div class="production-details">
@@ -505,6 +513,13 @@ export default function Orders() {
                 </div>
               `;
             }).join('')}
+          </div>
+          
+          <div class="user-info info-box">
+            <h3>معلومات المستخدم</h3>
+            <p><strong>اسم المستخدم:</strong> ${user?.username}</p>
+            <p><strong>رقم المستخدم:</strong> ${user?.id}</p>
+            <p><strong>تاريخ إنشاء الطلب:</strong> ${format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}</p>
           </div>
         </body>
       </html>
