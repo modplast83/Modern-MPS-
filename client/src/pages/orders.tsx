@@ -410,15 +410,21 @@ export default function Orders() {
           <meta charset="UTF-8">
           <title>طباعة الطلب ${order.order_number}</title>
           <style>
-            body { font-family: 'Arial', sans-serif; direction: rtl; margin: 20px; }
+            body { font-family: 'Arial', sans-serif; direction: rtl; margin: 20px; line-height: 1.6; }
             .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
             .order-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
             .info-box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
             .production-orders { margin-top: 20px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
-            th { background-color: #f5f5f5; }
-            @media print { body { margin: 0; } }
+            .production-order-card { page-break-inside: avoid; }
+            h3 { color: #333; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+            h4 { color: #0066cc; margin-bottom: 10px; }
+            h5 { color: #666; margin-bottom: 8px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+            p { margin: 5px 0; }
+            strong { color: #333; }
+            @media print { 
+              body { margin: 0; font-size: 12px; } 
+              .production-order-card { margin: 10px 0; }
+            }
           </style>
         </head>
         <body>
@@ -454,29 +460,51 @@ export default function Orders() {
           
           <div class="production-orders">
             <h3>أوامر الإنتاج</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>رقم أمر الإنتاج</th>
-                  <th>المنتج</th>
-                  <th>الكمية (كيلو)</th>
-                  <th>الحالة</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${orderProductionOrders.map(po => {
-                  const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
-                  return `
-                    <tr>
-                      <td>${po.production_order_number}</td>
-                      <td>${product?.size_caption || 'منتج غير محدد'}</td>
-                      <td>${po.quantity_kg}</td>
-                      <td>${po.status}</td>
-                    </tr>
-                  `;
-                }).join('')}
-              </tbody>
-            </table>
+            ${orderProductionOrders.map(po => {
+              const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
+              return `
+                <div class="production-order-card" style="border: 1px solid #ddd; margin: 15px 0; padding: 15px; border-radius: 5px; background: #fafafa;">
+                  <h4 style="color: #333; margin-bottom: 10px;">أمر إنتاج: ${po.production_order_number}</h4>
+                  
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="product-details">
+                      <h5>تفاصيل المنتج:</h5>
+                      <p><strong>اسم المنتج:</strong> ${product?.size_caption || 'غير محدد'}</p>
+                      <p><strong>المادة الخام:</strong> ${product?.raw_material || 'غير محدد'}</p>
+                      <p><strong>العرض:</strong> ${product?.width || 'غير محدد'} سم</p>
+                      <p><strong>السماكة:</strong> ${product?.thickness || 'غير محدد'} مايكرون</p>
+                      <p><strong>طول القطع:</strong> ${product?.cutting_length_cm || 'غير محدد'} سم</p>
+                      <p><strong>عدد القطع بالكيلو:</strong> ${product?.pieces_per_kg || 'غير محدد'}</p>
+                    </div>
+                    
+                    <div class="product-specs">
+                      <h5>المواصفات الفنية:</h5>
+                      <p><strong>التخريم:</strong> ${product?.punching || 'بدون تخريم'}</p>
+                      <p><strong>الماستر باتش:</strong> ${product?.master_batch_id || 'غير محدد'}</p>
+                      <p><strong>اللون:</strong> ${product?.color || 'غير محدد'}</p>
+                      <p><strong>نوع الكيس:</strong> ${product?.bag_type || 'غير محدد'}</p>
+                      <p><strong>الطباعة:</strong> ${product?.print_colors ? `${product.print_colors} لون` : 'بدون طباعة'}</p>
+                      <p><strong>فئة المنتج:</strong> ${product?.category_id || 'غير محدد'}</p>
+                    </div>
+                    
+                    <div class="production-details">
+                      <h5>تفاصيل الإنتاج:</h5>
+                      <p><strong>الكمية المطلوبة:</strong> ${po.quantity_kg} كيلو</p>
+                      <p><strong>عدد القطع المتوقع:</strong> ${product?.pieces_per_kg ? Math.round(parseFloat(po.quantity_kg) * parseFloat(product.pieces_per_kg)) : 'غير محسوب'} قطعة</p>
+                      <p><strong>حالة الإنتاج:</strong> ${po.status === 'pending' ? 'في الانتظار' : po.status === 'in_progress' ? 'قيد التنفيذ' : po.status === 'completed' ? 'مكتمل' : 'ملغي'}</p>
+                      <p><strong>تاريخ الإنشاء:</strong> ${format(new Date(po.created_at), 'dd/MM/yyyy')}</p>
+                      <p><strong>ملاحظات الإنتاج:</strong> ${product?.production_notes || 'لا توجد'}</p>
+                    </div>
+                  </div>
+                  
+                  ${product?.additional_notes ? `
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                      <p><strong>ملاحظات إضافية:</strong> ${product.additional_notes}</p>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join('')}
           </div>
         </body>
       </html>
