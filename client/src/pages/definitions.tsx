@@ -99,13 +99,23 @@ export default function Definitions() {
     { id: 'transparent', name: 'شفاف', name_ar: 'شفاف', color: 'transparent', textColor: '#000000' },
   ];
 
+  // Generate printing cylinder options
+  const printingCylinderOptions = [
+    { value: 'بدون طباعة', label: 'بدون طباعة' },
+    ...Array.from({ length: 16 }, (_, i) => {
+      const size = (i + 1) * 2 + 6; // 8, 10, 12, ..., 38
+      return { value: `${size}"`, label: `${size}"` };
+    }),
+    { value: '39"', label: '39"' }
+  ];
+
   // Automatic calculations
   React.useEffect(() => {
     // Auto-calculate cutting length based on printing cylinder
     if (customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة') {
       const cylinderNumber = parseInt(customerProductForm.printing_cylinder.replace(/\D/g, ''));
       if (cylinderNumber) {
-        const calculatedLength = Math.round(cylinderNumber * 3.14159); // Cylinder circumference approximation
+        const calculatedLength = Math.round(cylinderNumber * 2.54); // Convert inches to cm
         setCustomerProductForm(prev => ({
           ...prev,
           cutting_length_cm: calculatedLength.toString()
@@ -113,66 +123,6 @@ export default function Definitions() {
       }
     }
   }, [customerProductForm.printing_cylinder]);
-
-  React.useEffect(() => {
-    // Auto-generate size caption based on dimensions
-    const { width, left_facing, right_facing, cutting_length_cm } = customerProductForm;
-    if (width && left_facing && right_facing && cutting_length_cm) {
-      const w = parseFloat(width);
-      const lf = parseFloat(left_facing);
-      const rf = parseFloat(right_facing);
-      const cl = parseFloat(cutting_length_cm);
-      
-      if (w && lf && rf && cl) {
-        const totalWidth = lf + rf;
-        const sizeCaption = `${totalWidth}x${cl} سم (${w} عرض)`;
-        setCustomerProductForm(prev => ({
-          ...prev,
-          size_caption: sizeCaption
-        }));
-      }
-    }
-  }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.cutting_length_cm]);
-
-  React.useEffect(() => {
-    // Auto-calculate unit weight based on dimensions and thickness
-    const { width, left_facing, right_facing, thickness } = customerProductForm;
-    if (width && left_facing && right_facing && thickness) {
-      const w = parseFloat(width);
-      const lf = parseFloat(left_facing);
-      const rf = parseFloat(right_facing);
-      const th = parseFloat(thickness);
-      
-      if (w && lf && rf && th) {
-        const totalArea = (lf + rf) * w; // cm²
-        const volume = totalArea * (th / 10000); // Convert microns to cm
-        const density = 0.92; // PE density g/cm³
-        const weight = (volume * density) / 1000; // Convert to kg
-        
-        setCustomerProductForm(prev => ({
-          ...prev,
-          unit_weight_kg: weight.toFixed(4)
-        }));
-      }
-    }
-  }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.thickness]);
-
-  React.useEffect(() => {
-    // Auto-calculate package weight based on unit weight and quantity
-    const { unit_weight_kg, unit_quantity } = customerProductForm;
-    if (unit_weight_kg && unit_quantity) {
-      const unitWeight = parseFloat(unit_weight_kg);
-      const quantity = parseInt(unit_quantity);
-      
-      if (unitWeight && quantity) {
-        const packageWeight = unitWeight * quantity;
-        setCustomerProductForm(prev => ({
-          ...prev,
-          package_weight_kg: packageWeight.toFixed(3)
-        }));
-      }
-    }
-  }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
 
   // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
@@ -1997,10 +1947,10 @@ export default function Definitions() {
                       </div>
                     </div>
 
-                    {/* وصف الحجم والأبعاد */}
+                    {/* وصف الحجم */}
                     <div className="space-y-4">
                       <h4 className="text-lg font-medium">مواصفات المنتج</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <Label htmlFor="size_caption">وصف الحجم</Label>
                           <Input
@@ -2011,28 +1961,25 @@ export default function Definitions() {
                             className="mt-1"
                           />
                         </div>
-                        <div>
-                          <Label htmlFor="status">الحالة</Label>
-                          <Select 
-                            value={customerProductForm.status} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, status: value})}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="active">نشط</SelectItem>
-                              <SelectItem value="inactive">غير نشط</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
                       </div>
                     </div>
 
-                    {/* الأبعاد الأساسية */}
+                    {/* الأبعاد والقياسات بالترتيب المطلوب */}
                     <div className="space-y-4">
                       <h4 className="text-lg font-medium">الأبعاد والقياسات</h4>
                       <div className="grid grid-cols-4 gap-4">
+                        <div>
+                          <Label htmlFor="right_facing">الوجه الأيمن (سم)</Label>
+                          <Input
+                            id="right_facing"
+                            type="number"
+                            step="0.01"
+                            value={customerProductForm.right_facing}
+                            onChange={(e) => setCustomerProductForm({...customerProductForm, right_facing: e.target.value})}
+                            placeholder="0.00"
+                            className="mt-1"
+                          />
+                        </div>
                         <div>
                           <Label htmlFor="width">العرض (سم)</Label>
                           <Input
@@ -2058,18 +2005,6 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="right_facing">الوجه الأيمن (سم)</Label>
-                          <Input
-                            id="right_facing"
-                            type="number"
-                            step="0.01"
-                            value={customerProductForm.right_facing}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, right_facing: e.target.value})}
-                            placeholder="0.00"
-                            className="mt-1"
-                          />
-                        </div>
-                        <div>
                           <Label htmlFor="thickness">السماكة (ميكرون)</Label>
                           <Input
                             id="thickness"
@@ -2090,13 +2025,21 @@ export default function Definitions() {
                       <div className="grid grid-cols-3 gap-4">
                         <div>
                           <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
-                          <Input
-                            id="printing_cylinder"
-                            value={customerProductForm.printing_cylinder}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, printing_cylinder: e.target.value})}
-                            placeholder="رقم الأسطوانة أو بدون طباعة"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={customerProductForm.printing_cylinder} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, printing_cylinder: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر الأسطوانة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {printingCylinderOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label htmlFor="cutting_length_cm">طول القطع (سم)</Label>
@@ -2105,31 +2048,46 @@ export default function Definitions() {
                             type="number"
                             value={customerProductForm.cutting_length_cm}
                             onChange={(e) => setCustomerProductForm({...customerProductForm, cutting_length_cm: e.target.value})}
-                            placeholder="0"
+                            placeholder="يحسب تلقائياً أو أدخل يدوياً"
                             className="mt-1"
+                            disabled={customerProductForm.printing_cylinder !== 'بدون طباعة'}
                           />
                         </div>
                         <div>
                           <Label htmlFor="cutting_unit">وحدة القطع</Label>
-                          <Input
-                            id="cutting_unit"
-                            value={customerProductForm.cutting_unit}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, cutting_unit: e.target.value})}
-                            placeholder="قطعة، متر، كيس"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={customerProductForm.cutting_unit} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, cutting_unit: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر الوحدة" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="كيلو">كيلو</SelectItem>
+                              <SelectItem value="رول">رول</SelectItem>
+                              <SelectItem value="باكت">باكت</SelectItem>
+                              <SelectItem value="كرتون">كرتون</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="punching">التثقيب</Label>
-                          <Input
-                            id="punching"
-                            value={customerProductForm.punching}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, punching: e.target.value})}
-                            placeholder="نوع التثقيب أو بدون"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={customerProductForm.punching} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, punching: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر نوع التثقيب" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="بدون">بدون</SelectItem>
+                              <SelectItem value="علاقي">علاقي</SelectItem>
+                              <SelectItem value="علاقي هوك">علاقي هوك</SelectItem>
+                              <SelectItem value="بنانة">بنانة</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="flex items-center space-x-2 mt-6">
                           <input
@@ -2150,13 +2108,19 @@ export default function Definitions() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="raw_material">المادة الخام</Label>
-                          <Input
-                            id="raw_material"
-                            value={customerProductForm.raw_material}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, raw_material: e.target.value})}
-                            placeholder="نوع المادة الخام"
-                            className="mt-1"
-                          />
+                          <Select 
+                            value={customerProductForm.raw_material} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, raw_material: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر المادة الخام" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="HDPE">HDPE</SelectItem>
+                              <SelectItem value="LDPE">LDPE</SelectItem>
+                              <SelectItem value="Regrind">Regrind</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label htmlFor="master_batch_id">لون الماستر باتش</Label>
