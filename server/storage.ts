@@ -1969,8 +1969,26 @@ export class DatabaseStorage implements IStorage {
           break;
           
         case 'customers':
-          // For now, simulate import for customers table
-          insertedCount = parsedData.length;
+          for (const row of parsedData) {
+            if ((row.name || row.name_ar)) {
+              try {
+                const [newCustomer] = await db.insert(customers).values({
+                  name: row.name || row.name_ar || '',
+                  name_ar: row.name_ar || row.name || '',
+                  phone: row.phone || '',
+                  address: row.address || '',
+                  contact_person: row.contact_person || '',
+                  email: row.email || '',
+                  city: row.city || '',
+                  status: row.status || 'active'
+                }).returning();
+                insertedCount++;
+                console.log(`تم إضافة العميل: ${newCustomer.name}`);
+              } catch (error) {
+                console.warn(`تم تجاهل العميل ${row.name} - بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+              }
+            }
+          }
           break;
           
         case 'items':
@@ -1994,13 +2012,43 @@ export class DatabaseStorage implements IStorage {
           break;
           
         case 'categories':
-          // For now, simulate import for categories table
-          insertedCount = parsedData.length;
+          for (const row of parsedData) {
+            if ((row.name || row.name_ar)) {
+              try {
+                const [newCategory] = await db.insert(categories).values({
+                  name: row.name || row.name_ar || '',
+                  name_ar: row.name_ar || row.name || '',
+                  description: row.description || null,
+                  description_ar: row.description_ar || row.description || null
+                }).returning();
+                insertedCount++;
+                console.log(`تم إضافة الفئة: ${newCategory.name}`);
+              } catch (error) {
+                console.warn(`تم تجاهل الفئة ${row.name} - بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+              }
+            }
+          }
           break;
           
         case 'orders':
-          // For now, simulate import for orders table
-          insertedCount = parsedData.length;
+          for (const row of parsedData) {
+            if (row.customer_id) {
+              try {
+                const [newOrder] = await db.insert(orders).values({
+                  customer_id: row.customer_id,
+                  order_date: row.order_date || new Date().toISOString(),
+                  delivery_date: row.delivery_date || null,
+                  status: row.status || 'pending',
+                  notes: row.notes || null,
+                  notes_ar: row.notes_ar || row.notes || null
+                }).returning();
+                insertedCount++;
+                console.log(`تم إضافة الطلب: ${newOrder.id}`);
+              } catch (error) {
+                console.warn(`تم تجاهل الطلب - بيانات غير صحيحة: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+              }
+            }
+          }
           break;
           
         default:
@@ -2016,7 +2064,7 @@ export class DatabaseStorage implements IStorage {
       };
     } catch (error) {
       console.error('Error importing table data:', error);
-      throw new Error(`فشل في استيراد البيانات: ${error.message}`);
+      throw new Error(`فشل في استيراد البيانات: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     }
   }
 
