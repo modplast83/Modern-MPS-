@@ -1943,7 +1943,13 @@ export default function Definitions() {
                         <Label htmlFor="category_id">الفئة</Label>
                         <Select 
                           value={customerProductForm.category_id} 
-                          onValueChange={(value) => setCustomerProductForm({...customerProductForm, category_id: value})}
+                          onValueChange={(value) => {
+                            setCustomerProductForm({
+                              ...customerProductForm, 
+                              category_id: value,
+                              item_id: '' // Reset item selection when category changes
+                            });
+                          }}
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر الفئة" />
@@ -1963,17 +1969,29 @@ export default function Definitions() {
                         <Select 
                           value={customerProductForm.item_id} 
                           onValueChange={(value) => setCustomerProductForm({...customerProductForm, item_id: value})}
+                          disabled={!customerProductForm.category_id || customerProductForm.category_id === 'none'}
                         >
                           <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="اختر الصنف" />
+                            <SelectValue placeholder={
+                              !customerProductForm.category_id || customerProductForm.category_id === 'none' 
+                                ? "اختر الفئة أولاً" 
+                                : "اختر الصنف"
+                            } />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر الصنف</SelectItem>
-                            {Array.isArray(items) && items.map((item: any) => (
-                              <SelectItem key={item.id} value={item.id}>
-                                {item.name_ar || item.name} ({item.code})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(items) && items
+                              .filter((item: any) => 
+                                customerProductForm.category_id && 
+                                customerProductForm.category_id !== 'none' && 
+                                item.category_id === customerProductForm.category_id
+                              )
+                              .map((item: any) => (
+                                <SelectItem key={item.id} value={item.id}>
+                                  {item.name_ar || item.name} ({item.code})
+                                </SelectItem>
+                              ))
+                            }
                           </SelectContent>
                         </Select>
                       </div>
