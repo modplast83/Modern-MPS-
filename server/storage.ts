@@ -85,7 +85,9 @@ import {
   type UserSetting,
   type InsertUserSetting,
   type LeaveBalance,
-  type InsertLeaveBalance
+  type InsertLeaveBalance,
+  type Attendance,
+  type InsertAttendance
 } from "@shared/schema";
 
 import {
@@ -280,8 +282,11 @@ export interface IStorage {
   // Quality
   getQualityChecks(): Promise<QualityCheck[]>;
   
-  // Attendance
+  // HR System - Attendance Management
   getAttendance(): Promise<Attendance[]>;
+  createAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  updateAttendance(id: number, attendance: Partial<Attendance>): Promise<Attendance>;
+  deleteAttendance(id: number): Promise<void>;
   
   // Users list
   getUsers(): Promise<User[]>;
@@ -1261,6 +1266,29 @@ export class DatabaseStorage implements IStorage {
         eq(leave_balances.year, year)
       ));
     return balance || undefined;
+  }
+
+  // Attendance Management
+  async getAttendance(): Promise<Attendance[]> {
+    return await db.select().from(attendance).orderBy(desc(attendance.date), desc(attendance.created_at));
+  }
+
+  async createAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
+    const [newAttendance] = await db.insert(attendance).values(attendanceData).returning();
+    return newAttendance;
+  }
+
+  async updateAttendance(id: number, updates: Partial<Attendance>): Promise<Attendance> {
+    const [updatedAttendance] = await db
+      .update(attendance)
+      .set({ ...updates, updated_at: new Date() })
+      .where(eq(attendance.id, id))
+      .returning();
+    return updatedAttendance;
+  }
+
+  async deleteAttendance(id: number): Promise<void> {
+    await db.delete(attendance).where(eq(attendance.id, id));
   }
 
   // ============ Inventory Management ============

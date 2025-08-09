@@ -2225,6 +2225,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ HR Attendance Management API ============
+  
+  app.get("/api/attendance", async (req, res) => {
+    try {
+      const attendance = await storage.getAttendance();
+      res.json(attendance);
+    } catch (error) {
+      console.error('Error fetching attendance:', error);
+      res.status(500).json({ message: "خطأ في جلب بيانات الحضور" });
+    }
+  });
+
+  app.post("/api/attendance", async (req, res) => {
+    try {
+      const attendance = await storage.createAttendance(req.body);
+      res.status(201).json(attendance);
+    } catch (error) {
+      console.error('Error creating attendance:', error);
+      res.status(500).json({ message: "خطأ في إنشاء سجل الحضور" });
+    }
+  });
+
+  app.put("/api/attendance/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const attendance = await storage.updateAttendance(id, req.body);
+      res.json(attendance);
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+      res.status(500).json({ message: "خطأ في تحديث سجل الحضور" });
+    }
+  });
+
+  app.delete("/api/attendance/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteAttendance(id);
+      res.json({ message: "تم حذف سجل الحضور بنجاح" });
+    } catch (error) {
+      console.error('Error deleting attendance:', error);
+      res.status(500).json({ message: "خطأ في حذف سجل الحضور" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
