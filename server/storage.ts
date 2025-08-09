@@ -51,6 +51,7 @@ import {
   type InsertMaintenanceRequest,
   type QualityCheck,
   type Attendance,
+  type InsertAttendance,
   type Section,
 
   type Item,

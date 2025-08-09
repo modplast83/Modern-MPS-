@@ -40,6 +40,8 @@ interface AttendanceRecord {
   lunch_end_time?: string;
   date: string;
   notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 interface Violation {
@@ -115,7 +117,11 @@ export default function UserDashboard() {
   // Current attendance status - get the latest record for today
   const todayAttendance = attendanceRecords?.filter(record => 
     record.date === new Date().toISOString().split('T')[0]
-  ).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  ).sort((a, b) => {
+    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return dateB - dateA;
+  })[0];
 
   // Attendance mutation
   const attendanceMutation = useMutation({

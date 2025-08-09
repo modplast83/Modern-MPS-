@@ -678,7 +678,6 @@ export type InsertMachine = typeof machines.$inferInsert;
 export type MaintenanceRequest = typeof maintenance_requests.$inferSelect;
 export type InsertMaintenanceRequest = z.infer<typeof insertMaintenanceRequestSchema>;
 export type QualityCheck = typeof quality_checks.$inferSelect;
-export type Attendance = typeof attendance.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
 export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
 export type Item = typeof items.$inferSelect;
