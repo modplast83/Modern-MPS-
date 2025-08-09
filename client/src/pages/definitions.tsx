@@ -146,11 +146,13 @@ export default function Definitions() {
 
   // Category mutations
   const createCategoryMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/categories", {
-      method: "POST",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    }),
+    mutationFn: (data: any) => {
+      return fetch("/api/categories", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
       resetForm();
@@ -164,11 +166,13 @@ export default function Definitions() {
   });
 
   const updateCategoryMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => apiRequest(`/api/categories/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" },
-    }),
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/categories/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
       resetForm();
@@ -218,19 +222,19 @@ export default function Definitions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className="flex">
+      <div className="flex min-h-screen">
         <Sidebar />
         <MobileNav />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">التعريفات الأساسية</h1>
+        <main className="flex-1 lg:mr-64 p-4 lg:p-6">
+          <div className="max-w-full space-y-4">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">التعريفات الأساسية</h1>
             </div>
             
             {/* Search and Filter Controls */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -259,17 +263,75 @@ export default function Definitions() {
             </div>
 
             {/* Tabs */}
-            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-8">
-                <TabsTrigger value="customers">العملاء</TabsTrigger>
-                <TabsTrigger value="sections">الأقسام</TabsTrigger>
-                <TabsTrigger value="categories">الفئات</TabsTrigger>
-                <TabsTrigger value="items">الأصناف</TabsTrigger>
-                <TabsTrigger value="customer-products">منتجات العملاء</TabsTrigger>
-                <TabsTrigger value="locations">المواقع</TabsTrigger>
-                <TabsTrigger value="machines">الماكينات</TabsTrigger>
-                <TabsTrigger value="users">المستخدمين</TabsTrigger>
-              </TabsList>
+            <div className="w-full">
+              <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4 w-full">
+                <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full h-auto p-1 bg-white rounded-lg border border-gray-200 shadow-sm gap-1"
+                  dir="rtl">
+                  <TabsTrigger 
+                    value="customers" 
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    العملاء
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="sections"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الأقسام
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="categories"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الفئات
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="items"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الأصناف
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="customer-products"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-2 py-2 text-xs font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    منتجات العملاء
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="locations"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    المواقع
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="machines"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الماكينات
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="users"
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    المستخدمين
+                  </TabsTrigger>
+                </TabsList>
 
               {/* Customers Tab */}
               <TabsContent value="customers" className="space-y-6">
@@ -451,12 +513,13 @@ export default function Definitions() {
               </TabsContent>
               
               {/* Other tabs would follow similar pattern... */}
-            </Tabs>
+              </Tabs>
+            </div>
             
             {/* Category Add/Edit Dialog */}
             {selectedTab === 'categories' && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث الفئة" : "إضافة فئة جديدة"}
@@ -508,7 +571,7 @@ export default function Definitions() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون فئة رئيسية</SelectItem>
-                            {categories.map((cat: any) => (
+                            {Array.isArray(categories) && categories.map((cat: any) => (
                               <SelectItem key={cat.id} value={cat.id}>
                                 {cat.name_ar || cat.name} ({cat.id})
                               </SelectItem>
