@@ -763,12 +763,12 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الهاتف</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المدينة</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الهاتف</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">المدينة</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -777,23 +777,23 @@ export default function Definitions() {
                               return filteredCustomers.length > 0 ? (
                                 filteredCustomers.map((customer: any) => (
                                   <tr key={customer.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {customer.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {customer.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {customer.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {customer.phone || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {customer.city || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -865,11 +865,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الكود</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -878,20 +878,20 @@ export default function Definitions() {
                               return filteredCategories.length > 0 ? (
                                 filteredCategories.map((category: any) => (
                                   <tr key={category.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {category.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {category.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {category.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {category.code || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -958,11 +958,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوصف</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الوصف</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -971,20 +971,20 @@ export default function Definitions() {
                               return filteredSections.length > 0 ? (
                                 filteredSections.map((section: any) => (
                                   <tr key={section.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {section.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {section.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {section.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {section.description || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -1047,11 +1047,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الفئة</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -1060,20 +1060,20 @@ export default function Definitions() {
                               return filteredItems.length > 0 ? (
                                 filteredItems.map((item: any) => (
                                   <tr key={item.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {item.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {item.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {item.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {item.category_id || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -1283,11 +1283,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">النوع</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -1296,20 +1296,20 @@ export default function Definitions() {
                               return filteredLocations.length > 0 ? (
                                 filteredLocations.map((location: any) => (
                                   <tr key={location.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {location.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {location.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {location.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {location.type || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -1375,11 +1375,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">النوع</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -1388,20 +1388,20 @@ export default function Definitions() {
                               return filteredMachines.length > 0 ? (
                                 filteredMachines.map((machine: any) => (
                                   <tr key={machine.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {machine.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {machine.name_ar || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {machine.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {machine.type || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
@@ -1466,11 +1466,11 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الدور</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الدور</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
@@ -1479,20 +1479,20 @@ export default function Definitions() {
                               return filteredUsers.length > 0 ? (
                                 filteredUsers.map((user: any) => (
                                   <tr key={user.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {user.id}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {user.username || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {user.display_name || user.name || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {user.role || '-'}
                                     </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
                                         <Button 
                                           variant="outline" 
                                           size="sm"
