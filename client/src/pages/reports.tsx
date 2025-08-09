@@ -34,7 +34,7 @@ export default function Reports() {
   const [reportType, setReportType] = useState("production");
 
   const { data: reports, isLoading } = useQuery({
-    queryKey: ["/api/reports", { type: reportType, period: selectedPeriod }],
+    queryKey: ["/api/reports", reportType, selectedPeriod],
   });
 
   const reportTypes = [

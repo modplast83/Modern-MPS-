@@ -58,13 +58,16 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
-      const response = await apiRequest('POST', '/api/rolls', {
-        job_order_id: data.job_order_id,
-        weight: parseFloat(data.weight),
-        machine_id: data.machine_id,
-        employee_id: data.employee_id,
-        status: 'for_printing',
-        current_stage: 'film'
+      const response = await apiRequest('/api/rolls', {
+        method: 'POST',
+        body: JSON.stringify({
+          job_order_id: data.job_order_id,
+          weight: parseFloat(data.weight),
+          machine_id: data.machine_id,
+          employee_id: data.employee_id,
+          status: 'for_printing',
+          current_stage: 'film'
+        })
       });
       return response.json();
     },
