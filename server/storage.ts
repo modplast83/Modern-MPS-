@@ -11,7 +11,7 @@ import {
   attendance,
   waste,
   sections,
-  material_groups,
+
   items,
   customer_products,
   locations,
@@ -52,7 +52,7 @@ import {
   type QualityCheck,
   type Attendance,
   type Section,
-  type MaterialGroup,
+
   type Item,
   type CustomerProduct,
   type Location,
@@ -150,8 +150,7 @@ export interface IStorage {
   createCustomer(customer: any): Promise<Customer>;
   createMachine(machine: any): Promise<Machine>;
   createSection(section: any): Promise<Section>;
-  createMaterialGroup(materialGroup: any): Promise<MaterialGroup>;
-  updateMaterialGroup(id: string, materialGroup: any): Promise<MaterialGroup>;
+
   createItem(item: any): Promise<Item>;
   createCustomerProduct(customerProduct: any): Promise<CustomerProduct>;
   createLocation(location: any): Promise<Location>;
@@ -201,8 +200,7 @@ export interface IStorage {
   // Sections
   getSections(): Promise<Section[]>;
   
-  // Material Groups
-  getMaterialGroups(): Promise<MaterialGroup[]>;
+
   
   // Items
   getItems(): Promise<Item[]>;
@@ -639,14 +637,7 @@ export class DatabaseStorage implements IStorage {
     return updatedSection;
   }
 
-  async createMaterialGroup(materialGroup: any): Promise<MaterialGroup> {
-    const result = await db
-      .insert(material_groups)
-      .values(materialGroup)
-      .returning();
-    const [newMaterialGroup] = result;
-    return newMaterialGroup;
-  }
+
 
   async updateUser(id: number, updates: any): Promise<User> {
     const [updatedUser] = await db
@@ -657,26 +648,7 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
-  async updateMaterialGroup(id: string, materialGroup: any): Promise<MaterialGroup> {
-    console.log('Storage: Updating material group', id, materialGroup);
-    try {
-      const [updatedMaterialGroup] = await db
-        .update(material_groups)
-        .set(materialGroup)
-        .where(eq(material_groups.id, id))
-        .returning();
-      
-      if (!updatedMaterialGroup) {
-        throw new Error(`Material group with id ${id} not found`);
-      }
-      
-      console.log('Storage: Updated material group successfully', updatedMaterialGroup);
-      return updatedMaterialGroup;
-    } catch (error) {
-      console.error('Storage: Material group update failed', error);
-      throw error;
-    }
-  }
+
 
   async createItem(item: any): Promise<Item> {
     const [newItem] = await db
@@ -733,14 +705,9 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(sections);
   }
 
-  async getMaterialGroups(): Promise<MaterialGroup[]> {
-    return await db.select().from(material_groups);
-  }
 
-  async getItems(materialGroupId?: string): Promise<Item[]> {
-    if (materialGroupId) {
-      return await db.select().from(items).where(eq(items.material_group_id, materialGroupId));
-    }
+
+  async getItems(): Promise<Item[]> {
     return await db.select().from(items);
   }
 
@@ -2040,7 +2007,6 @@ export class DatabaseStorage implements IStorage {
                   id: itemId,
                   name_ar: row.name_ar || row.name || '',
                   category_id: row.category_id || null,
-                  material_group_id: row.material_group_id || null,
                   code: row.code || null,
                   status: row.status || 'active'
                 };
