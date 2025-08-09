@@ -77,7 +77,7 @@ export default function Reports() {
         <Sidebar />
         <MobileNav />
         
-        <main className="flex-1 p-4 pb-20 lg:pb-4">
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">التقارير والتحليلات</h1>
             <p className="text-gray-600">تقارير شاملة حول الأداء والإنتاجية</p>

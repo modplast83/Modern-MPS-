@@ -320,7 +320,7 @@ export default function ERPIntegration() {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-6" dir="rtl">
+        <main className="flex-1 lg:mr-64 p-6" dir="rtl">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h1 className="text-3xl font-bold">تكامل أنظمة ERP وقواعد البيانات</h1>
