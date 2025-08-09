@@ -725,7 +725,7 @@ export default function Definitions() {
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
                              transition-all duration-200 rounded-md min-w-0 flex-1"
                   >
-                    الماكينات
+                    المكائن
                   </TabsTrigger>
                   <TabsTrigger 
                     value="users"
@@ -1997,23 +1997,23 @@ export default function Definitions() {
                       <h4 className="text-lg font-medium">مواصفات المنتج</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="size_caption">وصف الحجم (يُحسب تلقائياً)</Label>
+                          <Label htmlFor="size_caption">مقاس المنتج (يُحسب تلقائياً)</Label>
                           <Input
                             id="size_caption"
                             value={customerProductForm.size_caption}
-                            placeholder="سيتم إنشاؤه تلقائياً: العرض+الوجه الأيمن+الوجه الأيسر×طول القطع"
+                            placeholder="سيتم إنشاؤه تلقائياً: العرض × الطول"
                             className="mt-1 bg-gray-50"
                             readOnly
                           />
                         </div>
                         <div>
-                          <Label htmlFor="punching">التثقيب</Label>
+                          <Label htmlFor="punching">التخريم</Label>
                           <Select 
                             value={customerProductForm.punching} 
                             onValueChange={(value) => setCustomerProductForm({...customerProductForm, punching: value})}
                           >
                             <SelectTrigger className="mt-1">
-                              <SelectValue placeholder="اختر نوع التثقيب" />
+                              <SelectValue placeholder="اختر نوع التخريم" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="بدون">بدون</SelectItem>
@@ -2031,7 +2031,7 @@ export default function Definitions() {
                       <h4 className="text-lg font-medium">الأبعاد والقياسات</h4>
                       <div className="grid grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="right_facing">الوجه الأيمن (سم)</Label>
+                          <Label htmlFor="right_facing">الجانب الأيمن (سم)</Label>
                           <Input
                             id="right_facing"
                             type="number"
@@ -2055,7 +2055,7 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="left_facing">الوجه الأيسر (سم)</Label>
+                          <Label htmlFor="left_facing">الجانب الأيسر (سم)</Label>
                           <Input
                             id="left_facing"
                             type="number"
@@ -2215,7 +2215,7 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="unit_quantity">كمية الوحدة</Label>
+                          <Label htmlFor="unit_quantity">التعبئة</Label>
                           <Input
                             id="unit_quantity"
                             type="number"
@@ -2226,7 +2226,7 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - محسوب تلقائياً</Label>
+                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - يحسب تلقائياً</Label>
                           <Input
                             id="package_weight_kg"
                             type="number"
@@ -2250,7 +2250,7 @@ export default function Definitions() {
                             id="cliche_front_design"
                             value={customerProductForm.cliche_front_design}
                             onChange={(e) => setCustomerProductForm({...customerProductForm, cliche_front_design: e.target.value})}
-                            placeholder="وصف أو كود التصميم الأمامي"
+                            placeholder="التصميم الأمامي"
                             className="mt-1"
                           />
                         </div>
@@ -2260,7 +2260,7 @@ export default function Definitions() {
                             id="cliche_back_design"
                             value={customerProductForm.cliche_back_design}
                             onChange={(e) => setCustomerProductForm({...customerProductForm, cliche_back_design: e.target.value})}
-                            placeholder="وصف أو كود التصميم الخلفي"
+                            placeholder="التصميم الخلفي"
                             className="mt-1"
                           />
                         </div>
@@ -2441,7 +2441,7 @@ export default function Definitions() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="extruder">بثق</SelectItem>
+                            <SelectItem value="extruder">فيلم</SelectItem>
                             <SelectItem value="cutting">قطع</SelectItem>
                             <SelectItem value="printing">طباعة</SelectItem>
                             <SelectItem value="packaging">تعبئة</SelectItem>
