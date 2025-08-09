@@ -179,6 +179,91 @@ export default function Settings() {
     }
   }, [databaseStatsData]);
 
+  // File import state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [dragActive, setDragActive] = useState(false);
+
+  // Import table data mutation
+  const importTableMutation = useMutation({
+    mutationFn: async ({ tableName, file }: { tableName: string, file: File }) => {
+      const formData = new FormData();
+      const fileText = await file.text();
+      const format = file.name.endsWith('.json') ? 'json' : 
+                    file.name.endsWith('.xlsx') ? 'excel' : 'csv';
+      
+      return await apiRequest(`/api/database/import/${tableName}`, {
+        method: 'POST',
+        body: JSON.stringify({ data: fileText, format })
+      });
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/database/stats'] });
+      setSelectedFile(null);
+      toast({
+        title: "تم استيراد البيانات بنجاح",
+        description: `تم استيراد ${data.importedRecords || data.count} سجل من أصل ${data.totalRows || data.count} سجل`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "خطأ في استيراد البيانات",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء استيراد البيانات",
+        variant: "destructive",
+      });
+    }
+  });
+
+  // Handle file upload
+  const handleFileUpload = (files: FileList | null) => {
+    if (files && files[0]) {
+      const file = files[0];
+      const allowedTypes = ['text/csv', 'application/json', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+      
+      if (allowedTypes.includes(file.type) || file.name.endsWith('.csv') || file.name.endsWith('.json') || file.name.endsWith('.xlsx')) {
+        setSelectedFile(file);
+      } else {
+        toast({
+          title: "نوع ملف غير مدعوم",
+          description: "يرجى اختيار ملف CSV أو JSON أو Excel",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  // Handle drag and drop
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileUpload(e.dataTransfer.files);
+    }
+  };
+
+  // Handle import
+  const handleImportData = () => {
+    if (selectedFile && selectedTable) {
+      importTableMutation.mutate({ tableName: selectedTable, file: selectedFile });
+    } else {
+      toast({
+        title: "بيانات ناقصة",
+        description: "يرجى اختيار الجدول والملف قبل الاستيراد",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Database operations mutations
   const createBackupMutation = useMutation({
     mutationFn: async () => {
@@ -890,17 +975,71 @@ export default function Settings() {
                           </Button>
                         </div>
 
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <div 
+                          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                            dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
+                          }`}
+                          onDragEnter={handleDrag}
+                          onDragLeave={handleDrag}
+                          onDragOver={handleDrag}
+                          onDrop={handleDrop}
+                        >
                           <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                          <p className="text-sm text-gray-600 mb-2">
-                            اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            صيغ مدعومة: CSV, JSON, Excel (.xlsx)
-                          </p>
-                          <Button variant="outline" size="sm" className="mt-3">
-                            اختيار ملف
-                          </Button>
+                          {selectedFile ? (
+                            <div className="space-y-2">
+                              <p className="text-sm text-green-600 font-medium">
+                                تم اختيار الملف: {selectedFile.name}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                الحجم: {(selectedFile.size / 1024).toFixed(1)} KB
+                              </p>
+                              <div className="flex gap-2 justify-center">
+                                <Button 
+                                  size="sm" 
+                                  onClick={handleImportData}
+                                  disabled={!selectedTable || importTableMutation.isPending}
+                                >
+                                  {importTableMutation.isPending ? (
+                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                                  ) : (
+                                    <Upload className="w-4 h-4 mr-2" />
+                                  )}
+                                  استيراد البيانات
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => setSelectedFile(null)}
+                                >
+                                  إلغاء
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-gray-600 mb-2">
+                                اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                صيغ مدعومة: CSV, JSON, Excel (.xlsx)
+                              </p>
+                              <input
+                                type="file"
+                                id="fileInput"
+                                className="hidden"
+                                accept=".csv,.json,.xlsx"
+                                onChange={(e) => handleFileUpload(e.target.files)}
+                              />
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="mt-3"
+                                onClick={() => document.getElementById('fileInput')?.click()}
+                              >
+                                اختيار ملف
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
