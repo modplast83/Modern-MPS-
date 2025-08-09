@@ -21,13 +21,8 @@ import { format } from "date-fns";
 
 const orderFormSchema = z.object({
   customer_id: z.string().min(1, "العميل مطلوب"),
-  delivery_days: z.string().transform(val => parseInt(val)),
-  notes: z.string().optional(),
-  production_orders: z.array(z.object({
-    customer_product_id: z.number(),
-    quantity_kg: z.number(),
-    status: z.string()
-  })).min(1, "يجب إضافة أمر إنتاج واحد على الأقل")
+  delivery_days: z.string().min(1, "عدد أيام التسليم مطلوب").transform(val => parseInt(val)),
+  notes: z.string().optional()
 });
 
 const productionOrderFormSchema = z.object({
@@ -171,9 +166,8 @@ export default function Orders() {
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
       customer_id: "",
-      delivery_days: "",
-      notes: "",
-      production_orders: []
+      delivery_days: "7",
+      notes: ""
     }
   });
 
@@ -218,9 +212,8 @@ export default function Orders() {
     setProductionOrdersInForm([]); // Reset production orders
     orderForm.reset({
       customer_id: "",
-      delivery_days: "",
-      notes: "",
-      production_orders: []
+      delivery_days: "7",
+      notes: ""
     });
     setIsOrderDialogOpen(true);
   };
