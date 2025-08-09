@@ -1,5 +1,12 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
+
+// Extend Express Request type to include session
+declare module 'express-serve-static-core' {
+  interface Request {
+    session?: any;
+  }
+}
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
