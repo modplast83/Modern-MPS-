@@ -557,63 +557,117 @@ export default function Orders() {
                                         </Button>
                                       </div>
                                       
-                                      <div className="grid grid-cols-2 gap-4">
+                                      <div className="grid grid-cols-1 gap-4">
                                         <div className="col-span-1">
                                           <label className="text-sm font-medium text-gray-700">منتج العميل</label>
                                           <Select 
                                             onValueChange={(value) => updateProductionOrder(index, 'customer_product_id', parseInt(value))}
                                             value={prodOrder.customer_product_id?.toString() || ""}
                                           >
-                                            <SelectTrigger className="h-auto min-h-[50px]">
-                                              <SelectValue placeholder="اختر المنتج" />
+                                            <SelectTrigger className="h-auto min-h-[60px] w-full">
+                                              <SelectValue placeholder="اختر المنتج">
+                                                {prodOrder.customer_product_id && filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id) && (
+                                                  <div className="text-right w-full py-1">
+                                                    <div className="font-medium text-gray-900 text-sm leading-relaxed">
+                                                      {(() => {
+                                                        const product = filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id);
+                                                        if (!product) return '';
+                                                        
+                                                        let displayName = '';
+                                                        if (product.size_caption) {
+                                                          displayName = product.size_caption;
+                                                        } else if (product.raw_material && product.width && product.thickness) {
+                                                          displayName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                        } else if (product.raw_material) {
+                                                          displayName = product.raw_material;
+                                                        } else {
+                                                          displayName = 'منتج غير محدد';
+                                                        }
+                                                        
+                                                        if (product.cutting_length_cm) {
+                                                          displayName += ` × ${product.cutting_length_cm} سم`;
+                                                        }
+                                                        
+                                                        return displayName;
+                                                      })()}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 mt-0.5">
+                                                      {(() => {
+                                                        const product = filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id);
+                                                        if (!product) return '';
+                                                        
+                                                        const details = [];
+                                                        if (product.raw_material) details.push(`المادة: ${product.raw_material}`);
+                                                        if (product.thickness) details.push(`السماكة: ${product.thickness}`);
+                                                        if (product.master_batch_id) details.push(`اللون: ${product.master_batch_id}`);
+                                                        
+                                                        return details.slice(0, 2).join(' | ');
+                                                      })()}
+                                                    </div>
+                                                  </div>
+                                                )}
+                                              </SelectValue>
                                             </SelectTrigger>
-                                            <SelectContent className="max-w-[700px]">
+                                            <SelectContent className="max-w-[800px] w-[800px]">
                                               {filteredCustomerProducts.map((product: any) => (
-                                                <SelectItem key={product.id} value={product.id.toString()}>
-                                                  <div className="w-full text-right py-2">
-                                                    <div className="font-semibold text-gray-900 mb-1">
+                                                <SelectItem 
+                                                  key={product.id} 
+                                                  value={product.id.toString()}
+                                                  className="h-auto min-h-[80px] py-3"
+                                                >
+                                                  <div className="w-full text-right py-2 min-w-[700px]">
+                                                    <div className="font-semibold text-gray-900 mb-2 text-base leading-relaxed">
                                                       {(() => {
                                                         let displayName = '';
                                                         
-                                                        // Create base product name
-                                                        let baseName = '';
+                                                        // Create base product name with better formatting
                                                         if (product.size_caption) {
-                                                          baseName = product.size_caption;
+                                                          displayName = product.size_caption;
                                                         } else if (product.raw_material && product.width && product.thickness) {
-                                                          baseName = `${product.raw_material} ${product.width}×${product.thickness}`;
+                                                          displayName = `${product.raw_material} - ${product.width} × ${product.thickness}`;
                                                         } else if (product.raw_material) {
-                                                          baseName = product.raw_material;
+                                                          displayName = product.raw_material;
                                                         } else {
-                                                          baseName = 'منتج غير محدد';
+                                                          displayName = 'منتج غير محدد';
                                                         }
                                                         
                                                         // Add cutting length if available
                                                         if (product.cutting_length_cm) {
-                                                          displayName = `${baseName} × ${product.cutting_length_cm} سم`;
-                                                        } else {
-                                                          displayName = baseName;
+                                                          displayName += ` (طول القطع: ${product.cutting_length_cm} سم)`;
                                                         }
                                                         
                                                         return displayName;
                                                       })()} 
                                                     </div>
-                                                    <div className="text-sm text-gray-600 space-y-1">
-                                                      {product.raw_material && (
-                                                        <div>المادة الخام: {product.raw_material}</div>
-                                                      )}
-                                                      {product.master_batch_id && (
-                                                        <div>الماستر باتش: {product.master_batch_id}</div>
-                                                      )}
-                                                      {product.punching && (
-                                                        <div>التخريم: {product.punching}</div>
-                                                      )}
-                                                      {product.thickness && (
-                                                        <div>السماكة: {product.thickness}</div>
-                                                      )}
-                                                      {product.width && (
-                                                        <div>المقاس: {product.width}×{product.cutting_length_cm || 0}</div>
-                                                      )}
+                                                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                                                      <div className="space-y-1">
+                                                        {product.raw_material && (
+                                                          <div><span className="font-medium">المادة الخام:</span> {product.raw_material}</div>
+                                                        )}
+                                                        {product.master_batch_id && (
+                                                          <div><span className="font-medium">الماستر باتش:</span> {product.master_batch_id}</div>
+                                                        )}
+                                                        {product.punching && (
+                                                          <div><span className="font-medium">التخريم:</span> {product.punching}</div>
+                                                        )}
+                                                      </div>
+                                                      <div className="space-y-1">
+                                                        {product.thickness && (
+                                                          <div><span className="font-medium">السماكة:</span> {product.thickness} ميكرون</div>
+                                                        )}
+                                                        {product.width && (
+                                                          <div><span className="font-medium">العرض:</span> {product.width} سم</div>
+                                                        )}
+                                                        {product.cutting_unit && (
+                                                          <div><span className="font-medium">وحدة القطع:</span> {product.cutting_unit}</div>
+                                                        )}
+                                                      </div>
                                                     </div>
+                                                    {product.notes && (
+                                                      <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded p-2">
+                                                        <span className="font-medium">ملاحظات:</span> {product.notes}
+                                                      </div>
+                                                    )}
                                                   </div>
                                                 </SelectItem>
                                               ))}
@@ -621,7 +675,7 @@ export default function Orders() {
                                           </Select>
                                         </div>
                                         
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-2 gap-4">
                                           <div>
                                             <label className="text-sm font-medium text-gray-700">الكمية (كيلو)</label>
                                             <Input
