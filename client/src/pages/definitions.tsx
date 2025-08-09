@@ -124,6 +124,287 @@ export default function Definitions() {
     }
   }, [customerProductForm.printing_cylinder]);
 
+  // Helper Functions
+  const handleDeleteCustomerProduct = (product: any) => {
+    if (window.confirm(`هل أنت متأكد من حذف منتج العميل "${product.size_caption || 'بدون وصف'}"؟`)) {
+      deleteCustomerProductMutation.mutate(product.id);
+    }
+  };
+
+  const handleCloneCustomerProduct = (product: any) => {
+    // Clone product data and reset form with cloned data
+    const clonedData = {
+      customer_id: product.customer_id || 'none',
+      category_id: product.category_id || 'none',
+      item_id: product.item_id || 'none',
+      size_caption: `نسخة من ${product.size_caption || ''}`,
+      width: product.width || '',
+      left_facing: product.left_facing || '',
+      right_facing: product.right_facing || '',
+      thickness: product.thickness || '',
+      printing_cylinder: product.printing_cylinder || 'بدون طباعة',
+      cutting_length_cm: product.cutting_length_cm || '',
+      raw_material: product.raw_material || '',
+      master_batch_id: product.master_batch_id || '',
+      is_printed: product.is_printed || false,
+      cutting_unit: product.cutting_unit || '',
+      punching: product.punching || '',
+      unit_weight_kg: product.unit_weight_kg || '',
+      unit_quantity: product.unit_quantity || '',
+      package_weight_kg: product.package_weight_kg || '',
+      cliche_front_design: product.cliche_front_design || '',
+      cliche_back_design: product.cliche_back_design || '',
+      notes: product.notes || '',
+      status: 'active'
+    };
+    
+    setCustomerProductForm(clonedData);
+    setEditingItem(null); // Ensure it's a new record
+    setSelectedTab('customer-products');
+    setIsDialogOpen(true);
+    toast({ title: "تم نسخ بيانات المنتج - يمكنك تعديلها والحفظ" });
+  };
+
+  const handlePrintCustomerProduct = (product: any) => {
+    // Create a detailed print view
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      toast({ title: "خطأ في فتح نافذة الطباعة", variant: "destructive" });
+      return;
+    }
+
+    const customerName = Array.isArray(customers) ? 
+      customers.find((c: any) => c.id === product.customer_id)?.name_ar || 
+      customers.find((c: any) => c.id === product.customer_id)?.name || 'غير محدد' : 'غير محدد';
+    
+    const categoryName = Array.isArray(categories) ? 
+      categories.find((c: any) => c.id === product.category_id)?.name_ar || 
+      categories.find((c: any) => c.id === product.category_id)?.name || 'غير محدد' : 'غير محدد';
+    
+    const itemName = Array.isArray(items) ? 
+      items.find((i: any) => i.id === product.item_id)?.name_ar || 
+      items.find((i: any) => i.id === product.item_id)?.name || 'غير محدد' : 'غير محدد';
+
+    const masterBatchColor = masterBatchColors.find(mb => mb.id === product.master_batch_id);
+
+    const printContent = `
+    <!DOCTYPE html>
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <title>تفاصيل منتج العميل</title>
+      <style>
+        body { 
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+          margin: 20px;
+          line-height: 1.6;
+          color: #333;
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 2px solid #007bff; 
+          padding-bottom: 20px; 
+          margin-bottom: 30px;
+        }
+        .header h1 { 
+          color: #007bff; 
+          margin: 0;
+          font-size: 2em;
+        }
+        .header p { 
+          margin: 5px 0; 
+          color: #666;
+          font-size: 1.1em;
+        }
+        .section { 
+          margin-bottom: 25px; 
+          padding: 15px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          background-color: #f9f9f9;
+        }
+        .section h3 { 
+          color: #007bff; 
+          margin-top: 0; 
+          border-bottom: 1px solid #007bff;
+          padding-bottom: 8px;
+        }
+        .detail-row { 
+          display: flex; 
+          justify-content: space-between; 
+          margin: 8px 0;
+          padding: 5px 0;
+          border-bottom: 1px dotted #ccc;
+        }
+        .detail-label { 
+          font-weight: bold; 
+          color: #555;
+          min-width: 150px;
+        }
+        .detail-value { 
+          color: #333;
+          text-align: left;
+        }
+        .color-box { 
+          display: inline-block; 
+          width: 20px; 
+          height: 20px; 
+          border: 1px solid #ccc; 
+          margin-left: 10px;
+          vertical-align: middle;
+        }
+        .print-date {
+          text-align: center;
+          margin-top: 30px;
+          font-size: 0.9em;
+          color: #888;
+        }
+        @media print {
+          body { margin: 10px; }
+          .section { break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>تفاصيل منتج العميل</h1>
+        <p>نظام إدارة مصنع الأكياس البلاستيكية</p>
+        <p>رقم المنتج: ${product.id}</p>
+      </div>
+      
+      <div class="section">
+        <h3>معلومات أساسية</h3>
+        <div class="detail-row">
+          <span class="detail-label">اسم العميل:</span>
+          <span class="detail-value">${customerName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الفئة:</span>
+          <span class="detail-value">${categoryName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الصنف:</span>
+          <span class="detail-value">${itemName}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">وصف المقاس:</span>
+          <span class="detail-value">${product.size_caption || '-'}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>المقاسات والأبعاد</h3>
+        <div class="detail-row">
+          <span class="detail-label">العرض (سم):</span>
+          <span class="detail-value">${product.width || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الوجه الأيسر (سم):</span>
+          <span class="detail-value">${product.left_facing || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الوجه الأيمن (سم):</span>
+          <span class="detail-value">${product.right_facing || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">السمك (ميكرون):</span>
+          <span class="detail-value">${product.thickness || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">طول القطع (سم):</span>
+          <span class="detail-value">${product.cutting_length_cm || '-'}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>الطباعة والإنتاج</h3>
+        <div class="detail-row">
+          <span class="detail-label">اسطوانة الطباعة:</span>
+          <span class="detail-value">${product.printing_cylinder || 'بدون طباعة'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">هل مطبوع:</span>
+          <span class="detail-value">${product.is_printed ? 'نعم' : 'لا'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">المادة الخام:</span>
+          <span class="detail-value">${product.raw_material || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الماستر باتش:</span>
+          <span class="detail-value">
+            ${masterBatchColor ? 
+              `<span class="color-box" style="background-color: ${masterBatchColor.color}; ${masterBatchColor.color === 'transparent' ? 'background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;' : ''}"></span>${masterBatchColor.name_ar}` : 
+              (product.master_batch_id || '-')
+            }
+          </span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">التخريم:</span>
+          <span class="detail-value">${product.punching || '-'}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>الوزن والكميات</h3>
+        <div class="detail-row">
+          <span class="detail-label">وحدة القطع:</span>
+          <span class="detail-value">${product.cutting_unit || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">وزن الوحدة (كيلو):</span>
+          <span class="detail-value">${product.unit_weight_kg || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الكمية لكل وحدة:</span>
+          <span class="detail-value">${product.unit_quantity || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">وزن التعبئة (كيلو):</span>
+          <span class="detail-value">${product.package_weight_kg || '-'}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>التصاميم والملاحظات</h3>
+        <div class="detail-row">
+          <span class="detail-label">تصميم الواجهة الأمامية:</span>
+          <span class="detail-value">${product.cliche_front_design || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">تصميم الواجهة الخلفية:</span>
+          <span class="detail-value">${product.cliche_back_design || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">ملاحظات:</span>
+          <span class="detail-value">${product.notes || '-'}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">الحالة:</span>
+          <span class="detail-value">${product.status === 'active' ? 'نشط' : 'غير نشط'}</span>
+        </div>
+      </div>
+
+      <div class="print-date">
+        تم الطباعة بتاريخ: ${new Date().toLocaleDateString('ar-SA')} - ${new Date().toLocaleTimeString('ar-SA')}
+      </div>
+      
+      <script>
+        window.onload = function() {
+          window.print();
+          window.onafterprint = function() {
+            window.close();
+          };
+        };
+      </script>
+    </body>
+    </html>
+    `;
+
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
   // Auto-set printing status based on cylinder selection
   React.useEffect(() => {
     const isPrinted = customerProductForm.printing_cylinder !== 'بدون طباعة';
@@ -462,6 +743,27 @@ export default function Definitions() {
     onError: (error: any) => {
       console.error('خطأ في تحديث منتج العميل:', error);
       toast({ title: "خطأ في تحديث منتج العميل", variant: "destructive" });
+    }
+  });
+
+  // Delete Customer Product Mutation
+  const deleteCustomerProductMutation = useMutation({
+    mutationFn: (id: string) => {
+      return fetch(`/api/customer-products/${id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to delete');
+        return res.json();
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      toast({ title: "تم حذف منتج العميل بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في حذف منتج العميل:', error);
+      toast({ title: "خطأ في حذف منتج العميل", variant: "destructive" });
     }
   });
 
@@ -1201,6 +1503,7 @@ export default function Definitions() {
                                       </td>
                                       <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-center">
                                         <div className="flex items-center justify-center gap-1">
+                                          {/* Edit Button */}
                                           <Button 
                                             variant="outline" 
                                             size="sm"
@@ -1233,8 +1536,47 @@ export default function Definitions() {
                                               setSelectedTab('customer-products');
                                               setIsDialogOpen(true);
                                             }}
+                                            title="تحديث"
                                           >
                                             <Edit className="w-3 h-3" />
+                                          </Button>
+                                          
+                                          {/* Clone Button */}
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => handleCloneCustomerProduct(product)}
+                                            title="استنساخ"
+                                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                          >
+                                            <Copy className="w-3 h-3" />
+                                          </Button>
+                                          
+                                          {/* Print Button */}
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => handlePrintCustomerProduct(product)}
+                                            title="طباعة"
+                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                          >
+                                            <Printer className="w-3 h-3" />
+                                          </Button>
+                                          
+                                          {/* Delete Button */}
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => handleDeleteCustomerProduct(product)}
+                                            title="حذف"
+                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                            disabled={deleteCustomerProductMutation.isPending}
+                                          >
+                                            {deleteCustomerProductMutation.isPending ? (
+                                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                                            ) : (
+                                              <Trash2 className="w-3 h-3" />
+                                            )}
                                           </Button>
                                         </div>
                                       </td>
