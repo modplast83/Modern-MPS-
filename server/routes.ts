@@ -347,8 +347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items routes
   app.get("/api/items", async (req, res) => {
     try {
-      const materialGroupId = typeof req.query.material_group_id === 'string' ? req.query.material_group_id : undefined;
-      const items = await storage.getItems(materialGroupId);
+      const items = await storage.getItems();
       res.json(items);
     } catch (error) {
       console.error('Error fetching items:', error);
@@ -1296,7 +1295,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         id: itemId,
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : req.body.material_group_id,
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1320,7 +1318,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processedData = {
         ...req.body,
         category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        material_group_id: req.body.material_group_id === '' || req.body.material_group_id === 'none' || !req.body.material_group_id ? null : req.body.material_group_id,
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1336,7 +1333,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer Products routes
   app.post("/api/customer-products", async (req, res) => {
     try {
-      const customerProduct = await storage.createCustomerProduct(req.body);
+      // Convert material_group_id to category_id for backwards compatibility
+      const processedData = {
+        ...req.body,
+        category_id: req.body.material_group_id || req.body.category_id,
+      };
+      delete processedData.material_group_id;
+      
+      const customerProduct = await storage.createCustomerProduct(processedData);
       res.json(customerProduct);
     } catch (error) {
       res.status(500).json({ message: "خطأ في إنشاء منتج العميل" });
@@ -1346,7 +1350,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/customer-products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const customerProduct = await storage.updateCustomerProduct(id, req.body);
+      // Convert material_group_id to category_id for backwards compatibility
+      const processedData = {
+        ...req.body,
+        category_id: req.body.material_group_id || req.body.category_id,
+      };
+      delete processedData.material_group_id;
+      
+      const customerProduct = await storage.updateCustomerProduct(id, processedData);
       res.json(customerProduct);
     } catch (error) {
       res.status(500).json({ message: "خطأ في تحديث منتج العميل" });
