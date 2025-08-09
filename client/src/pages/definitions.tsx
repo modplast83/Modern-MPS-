@@ -1903,18 +1903,18 @@ export default function Definitions() {
             {/* Customer Products Add/Edit Dialog */}
             {selectedTab === 'customer-products' && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] w-full mx-4">
                   <DialogHeader>
-                    <DialogTitle>
+                    <DialogTitle className="text-lg sm:text-xl">
                       {editingItem ? "تحديث منتج العميل" : "إضافة منتج عميل جديد"}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-sm sm:text-base">
                       {editingItem ? "تعديل بيانات منتج العميل الحالي" : "إضافة منتج جديد لعميل محدد"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-6 py-4">
+                  <div className="grid gap-6 py-4 px-2 sm:px-0">
                     {/* العميل والفئة والصنف */}
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="customer_id">العميل *</Label>
                         <Select 
@@ -1994,8 +1994,8 @@ export default function Definitions() {
 
                     {/* وصف الحجم والتثقيب */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">مواصفات المنتج</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">مواصفات المنتج</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="size_caption">مقاس المنتج (يُحسب تلقائياً)</Label>
                           <Input
@@ -2028,8 +2028,8 @@ export default function Definitions() {
 
                     {/* الأبعاد والقياسات بالترتيب المطلوب */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">الأبعاد والقياسات</h4>
-                      <div className="grid grid-cols-4 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الأبعاد والقياسات</h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                         <div>
                           <Label htmlFor="right_facing">الجانب الأيمن (سم)</Label>
                           <Input
@@ -2083,8 +2083,8 @@ export default function Definitions() {
 
                     {/* الطباعة والقطع */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">مواصفات الطباعة والقطع</h4>
-                      <div className="grid grid-cols-4 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">مواصفات الطباعة والقطع</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                           <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
                           <Select 
@@ -2115,15 +2115,15 @@ export default function Definitions() {
                             disabled={customerProductForm.printing_cylinder !== 'بدون طباعة'}
                           />
                         </div>
-                        <div className="flex items-center space-x-2 mt-6">
+                        <div className="flex items-center gap-3 mt-6 p-3 bg-gray-50 rounded-md">
                           <input
                             type="checkbox"
                             id="is_printed"
                             checked={customerProductForm.is_printed}
-                            className="rounded"
+                            className="rounded w-4 h-4"
                             disabled
                           />
-                          <Label htmlFor="is_printed" className="text-gray-600">منتج مطبوع (يتم تحديده تلقائياً)</Label>
+                          <Label htmlFor="is_printed" className="text-gray-600 text-sm">منتج مطبوع (يتم تحديده تلقائياً)</Label>
                         </div>
                         <div>
                           <Label htmlFor="cutting_unit">وحدة القطع</Label>
@@ -2147,8 +2147,8 @@ export default function Definitions() {
 
                     {/* المواد والخامات */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">المواد والخامات</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">المواد والخامات</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="raw_material">المادة الخام</Label>
                           <Select 
@@ -2200,8 +2200,8 @@ export default function Definitions() {
 
                     {/* الأوزان والكميات */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">الأوزان والكميات</h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الأوزان والكميات</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                           <Label htmlFor="unit_weight_kg">وزن الوحدة (كغ)</Label>
                           <Input
@@ -2226,7 +2226,7 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - يحسب تلقائياً</Label>
+                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - محسوب تلقائياً</Label>
                           <Input
                             id="package_weight_kg"
                             type="number"
@@ -2242,8 +2242,8 @@ export default function Definitions() {
 
                     {/* الكليشيهات والتصاميم */}
                     <div className="space-y-4">
-                      <h4 className="text-lg font-medium">الكليشيهات والتصاميم</h4>
-                      <div className="grid grid-cols-2 gap-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الكليشيهات والتصاميم</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="cliche_front_design">تصميم الوجه الأمامي</Label>
                           <Input
@@ -2269,19 +2269,24 @@ export default function Definitions() {
 
                     {/* ملاحظات */}
                     <div>
-                      <Label htmlFor="notes">ملاحظات</Label>
+                      <Label htmlFor="notes" className="text-base">ملاحظات</Label>
                       <textarea
                         id="notes"
                         value={customerProductForm.notes}
                         onChange={(e) => setCustomerProductForm({...customerProductForm, notes: e.target.value})}
                         placeholder="أي ملاحظات إضافية حول المنتج..."
-                        className="mt-1 w-full p-2 border border-gray-300 rounded-md resize-none"
-                        rows={3}
+                        className="mt-2 w-full p-3 border border-gray-300 rounded-md resize-none text-right"
+                        rows={4}
+                        dir="rtl"
                       />
                     </div>
                   </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setIsDialogOpen(false)}
+                      className="w-full sm:w-auto order-2 sm:order-1"
+                    >
                       إلغاء
                     </Button>
                     <Button
@@ -2293,6 +2298,7 @@ export default function Definitions() {
                         }
                       }}
                       disabled={createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending}
+                      className="w-full sm:w-auto order-1 sm:order-2"
                     >
                       {createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending ? (
                         <>
