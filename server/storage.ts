@@ -2347,10 +2347,10 @@ export class DatabaseStorage implements IStorage {
       // Use SQL template literals with proper escaping
       const currentDate = attendanceData.date || new Date().toISOString().split('T')[0];
       
-      // Use pool.query directly
+      // Use pool.query directly with all attendance fields
       const query = `
-        INSERT INTO attendance (user_id, status, check_in_time, notes, date)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO attendance (user_id, status, check_in_time, check_out_time, lunch_start_time, lunch_end_time, notes, date)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *
       `;
       
@@ -2358,6 +2358,9 @@ export class DatabaseStorage implements IStorage {
         attendanceData.user_id,
         attendanceData.status,
         attendanceData.check_in_time || null,
+        attendanceData.check_out_time || null,
+        attendanceData.lunch_start_time || null,
+        attendanceData.lunch_end_time || null,
         attendanceData.notes || '',
         currentDate
       ];
