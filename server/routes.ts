@@ -354,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Items routes
   app.get("/api/items", async (req, res) => {
     try {
-      const materialGroupId = req.query.material_group_id;
+      const materialGroupId = typeof req.query.material_group_id === 'string' ? req.query.material_group_id : undefined;
       const items = await storage.getItems(materialGroupId);
       res.json(items);
     } catch (error) {
@@ -407,7 +407,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/locations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const validatedData = insertLocationSchema.partial().parse(req.body);
       const location = await storage.updateLocationExtended(id, validatedData);
       res.json(location);
@@ -1216,7 +1216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/users/:id", async (req, res) => {
     try {
-      const id = req.params.id; // Now using string ID
+      const id = parseInt(req.params.id);
       console.log('Updating user:', id, req.body);
       const user = await storage.updateUser(id, req.body);
       res.json(user);
@@ -1264,7 +1264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/sections/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       const section = await storage.updateSection(id, req.body);
       res.json(section);
     } catch (error) {
@@ -1314,13 +1314,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/material-groups/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       console.log('Updating material group:', id, req.body);
       
       // Convert empty strings to null for parent_id and code
       const processedData = {
         ...req.body,
-        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : parseInt(req.body.parent_id),
+        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : req.body.parent_id,
         code: req.body.code === '' || !req.body.code ? null : req.body.code
       };
       
@@ -1532,7 +1532,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Training Enrollments  
   app.get("/api/hr/training-enrollments", async (req, res) => {
     try {
-      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const employeeId = req.query.employee_id ? req.query.employee_id as string : undefined;
       const enrollments = await storage.getTrainingEnrollments(employeeId);
       res.json(enrollments);
     } catch (error) {
@@ -1562,7 +1562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Performance Reviews
   app.get("/api/hr/performance-reviews", async (req, res) => {
     try {
-      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const employeeId = req.query.employee_id ? req.query.employee_id as string : undefined;
       const reviews = await storage.getPerformanceReviews(employeeId);
       res.json(reviews);
     } catch (error) {
@@ -1630,7 +1630,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leave Requests
   app.get("/api/hr/leave-requests", async (req, res) => {
     try {
-      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const employeeId = req.query.employee_id ? req.query.employee_id as string : undefined;
       const requests = await storage.getLeaveRequests(employeeId);
       res.json(requests);
     } catch (error) {
@@ -1669,7 +1669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leave Balances
   app.get("/api/hr/leave-balances/:employeeId", async (req, res) => {
     try {
-      const employeeId = parseInt(req.params.employeeId);
+      const employeeId = req.params.employeeId;
       const year = req.query.year ? parseInt(req.query.year as string) : undefined;
       const balances = await storage.getLeaveBalances(employeeId, year);
       res.json(balances);
@@ -1699,7 +1699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/sections/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteSection(id);
       res.json({ message: "تم حذف القسم بنجاح" });
     } catch (error) {
@@ -1709,7 +1709,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/material-groups/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteMaterialGroup(id);
       res.json({ message: "تم حذف مجموعة المواد بنجاح" });
     } catch (error) {
@@ -1738,7 +1738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/locations/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteLocation(id);
       res.json({ message: "تم حذف الموقع بنجاح" });
     } catch (error) {
@@ -1748,7 +1748,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/machines/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
+      const id = req.params.id;
       await storage.deleteMachine(id);
       res.json({ message: "تم حذف الماكينة بنجاح" });
     } catch (error) {
@@ -1843,7 +1843,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/locations/:id", async (req, res) => {
     try {
-      const locationId = parseInt(req.params.id);
+      const locationId = req.params.id;
       const result = insertLocationSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
@@ -2020,7 +2020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Settings
   app.get("/api/settings/user/:userId", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const settings = await storage.getUserSettings(userId);
       res.json(settings);
     } catch (error) {
@@ -2031,7 +2031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/settings/user/:userId", async (req, res) => {
     try {
-      const userId = parseInt(req.params.userId);
+      const userId = req.params.userId;
       const { settings } = req.body;
       const results = [];
       

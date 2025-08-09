@@ -648,7 +648,7 @@ export class DatabaseStorage implements IStorage {
     return newMaterialGroup;
   }
 
-  async updateUser(id: string, updates: any): Promise<User> {
+  async updateUser(id: number, updates: any): Promise<User> {
     const [updatedUser] = await db
       .update(users)
       .set(updates)
