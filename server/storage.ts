@@ -103,7 +103,7 @@ import {
   type InsertDatabaseConfiguration
 } from "@shared/erp-schema";
 
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count } from "drizzle-orm";
 
 export interface IStorage {
@@ -544,12 +544,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(quality_checks.created_at));
   }
 
-  async getAttendance(): Promise<Attendance[]> {
-    return await db
-      .select()
-      .from(attendance)
-      .orderBy(desc(attendance.date));
-  }
+
 
   async getUsers(): Promise<User[]> {
     return await db.select().from(users);
@@ -1266,28 +1261,7 @@ export class DatabaseStorage implements IStorage {
     return balance || undefined;
   }
 
-  // Attendance Management
-  async getAttendance(): Promise<Attendance[]> {
-    return await db.select().from(attendance).orderBy(desc(attendance.date), desc(attendance.created_at));
-  }
 
-  async createAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
-    const [newAttendance] = await db.insert(attendance).values(attendanceData).returning();
-    return newAttendance;
-  }
-
-  async updateAttendance(id: number, updates: Partial<Attendance>): Promise<Attendance> {
-    const [updatedAttendance] = await db
-      .update(attendance)
-      .set({ ...updates, updated_at: new Date() })
-      .where(eq(attendance.id, id))
-      .returning();
-    return updatedAttendance;
-  }
-
-  async deleteAttendance(id: number): Promise<void> {
-    await db.delete(attendance).where(eq(attendance.id, id));
-  }
 
   // ============ Inventory Management ============
 
@@ -2353,7 +2327,12 @@ export class DatabaseStorage implements IStorage {
   // ============ User Attendance Management ============
   async getAttendance(): Promise<any[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM attendance ORDER BY date DESC, created_at DESC`);
+      const result = await pool.query(`
+        SELECT a.*, u.username 
+        FROM attendance a 
+        JOIN users u ON a.user_id = u.id 
+        ORDER BY a.date DESC, a.created_at DESC
+      `);
       return result.rows;
     } catch (error) {
       console.error('Error fetching attendance:', error);
@@ -2363,13 +2342,29 @@ export class DatabaseStorage implements IStorage {
 
   async createAttendance(attendanceData: any): Promise<any> {
     try {
-      const result = await db.execute(sql`
-        INSERT INTO attendance (user_id, status, check_in_time, check_out_time, lunch_start_time, lunch_end_time, notes, date)
-        VALUES (${attendanceData.user_id}, ${attendanceData.status}, ${attendanceData.check_in_time}, 
-                ${attendanceData.check_out_time}, ${attendanceData.lunch_start_time}, ${attendanceData.lunch_end_time},
-                ${attendanceData.notes}, ${attendanceData.date})
+      console.log('Creating attendance with data:', attendanceData);
+      
+      // Use SQL template literals with proper escaping
+      const currentDate = attendanceData.date || new Date().toISOString().split('T')[0];
+      
+      // Use pool.query directly
+      const query = `
+        INSERT INTO attendance (user_id, status, check_in_time, notes, date)
+        VALUES ($1, $2, $3, $4, $5)
         RETURNING *
-      `);
+      `;
+      
+      const values = [
+        attendanceData.user_id,
+        attendanceData.status,
+        attendanceData.check_in_time || null,
+        attendanceData.notes || '',
+        currentDate
+      ];
+      
+      console.log('Executing query:', query, 'with values:', values);
+      const result = await pool.query(query, values);
+      console.log('Created attendance:', result.rows[0]);
       return result.rows[0];
     } catch (error) {
       console.error('Error creating attendance:', error);
@@ -2379,15 +2374,25 @@ export class DatabaseStorage implements IStorage {
 
   async updateAttendance(id: number, attendanceData: any): Promise<any> {
     try {
-      const result = await db.execute(sql`
+      const query = `
         UPDATE attendance 
-        SET status = ${attendanceData.status}, check_in_time = ${attendanceData.check_in_time},
-            check_out_time = ${attendanceData.check_out_time}, lunch_start_time = ${attendanceData.lunch_start_time},
-            lunch_end_time = ${attendanceData.lunch_end_time}, notes = ${attendanceData.notes},
-            updated_at = NOW()
-        WHERE id = ${id}
+        SET status = $1, check_in_time = $2, check_out_time = $3, 
+            lunch_start_time = $4, lunch_end_time = $5, notes = $6, updated_at = NOW()
+        WHERE id = $7
         RETURNING *
-      `);
+      `;
+      
+      const values = [
+        attendanceData.status,
+        attendanceData.check_in_time || null,
+        attendanceData.check_out_time || null,
+        attendanceData.lunch_start_time || null,
+        attendanceData.lunch_end_time || null,
+        attendanceData.notes || '',
+        id
+      ];
+      
+      const result = await pool.query(query, values);
       return result.rows[0];
     } catch (error) {
       console.error('Error updating attendance:', error);
@@ -2397,7 +2402,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAttendance(id: number): Promise<void> {
     try {
-      await db.execute(sql`DELETE FROM attendance WHERE id = ${id}`);
+      await pool.query('DELETE FROM attendance WHERE id = $1', [id]);
     } catch (error) {
       console.error('Error deleting attendance:', error);
       throw new Error('فشل في حذف سجل الحضور');
