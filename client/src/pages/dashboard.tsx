@@ -21,7 +21,7 @@ export default function Dashboard() {
         <Sidebar />
         <MobileNav />
         
-        <main className="flex-1 p-4 pb-20 lg:pb-4">
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <DashboardStats />
           
           <ProductionTabs onCreateRoll={() => setIsRollModalOpen(true)} />
