@@ -1972,8 +1972,24 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if ((row.name || row.name_ar)) {
               try {
-                // Generate unique ID if not provided
-                const customerId = row.id || `CID${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                let customerId = row.id;
+                
+                // Generate sequential ID if not provided
+                if (!customerId) {
+                  console.log('إنتاج معرف جديد للعميل...');
+                  const existingCustomers = await db.select({ id: customers.id }).from(customers).orderBy(customers.id);
+                  
+                  const cidNumbers = existingCustomers
+                    .filter(cust => cust.id.startsWith('CID') && /^CID\d{3}$/.test(cust.id))
+                    .map(cust => parseInt(cust.id.replace('CID', '')))
+                    .filter(num => !isNaN(num) && num >= 1 && num <= 999);
+                  
+                  console.log('أرقام العملاء المعيارية:', cidNumbers);
+                  const maxNum = cidNumbers.length > 0 ? Math.max(...cidNumbers) : 0;
+                  const nextNum = maxNum + 1;
+                  customerId = `CID${nextNum.toString().padStart(3, '0')}`;
+                  console.log('معرف العميل الجديد:', customerId);
+                }
                 
                 const customerData = {
                   id: customerId,
@@ -2001,8 +2017,24 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if ((row.name || row.name_ar)) {
               try {
-                // Generate unique ID if not provided
-                const itemId = row.id || `ITM${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                let itemId = row.id;
+                
+                // Generate sequential ID if not provided
+                if (!itemId) {
+                  console.log('إنتاج معرف جديد للصنف...');
+                  const existingItems = await db.select({ id: items.id }).from(items).orderBy(items.id);
+                  
+                  const itmNumbers = existingItems
+                    .filter(item => item.id.startsWith('ITM') && /^ITM\d{2}$/.test(item.id))
+                    .map(item => parseInt(item.id.replace('ITM', '')))
+                    .filter(num => !isNaN(num) && num >= 1 && num <= 99);
+                  
+                  console.log('أرقام الأصناف المعيارية:', itmNumbers);
+                  const maxNum = itmNumbers.length > 0 ? Math.max(...itmNumbers) : 0;
+                  const nextNum = maxNum + 1;
+                  itemId = `ITM${nextNum.toString().padStart(2, '0')}`;
+                  console.log('معرف الصنف الجديد:', itemId);
+                }
                 
                 const itemData = {
                   id: itemId,
@@ -2027,8 +2059,25 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if ((row.name || row.name_ar)) {
               try {
-                // Generate unique ID if not provided
-                const categoryId = row.id || `CAT${Date.now()}${Math.floor(Math.random() * 1000)}`;
+                let categoryId = row.id;
+                
+                // Generate sequential ID if not provided
+                if (!categoryId) {
+                  console.log('إنتاج معرف جديد للفئة...');
+                  const existingCategories = await db.select({ id: categories.id }).from(categories).orderBy(categories.id);
+                  console.log('الفئات الموجودة:', existingCategories.map(c => c.id));
+                  
+                  const catNumbers = existingCategories
+                    .filter(cat => cat.id.startsWith('CAT') && /^CAT\d{2}$/.test(cat.id))
+                    .map(cat => parseInt(cat.id.replace('CAT', '')))
+                    .filter(num => !isNaN(num) && num >= 1 && num <= 99);
+                  
+                  console.log('أرقام الفئات المعيارية:', catNumbers);
+                  const maxNum = catNumbers.length > 0 ? Math.max(...catNumbers) : 0;
+                  const nextNum = maxNum + 1;
+                  categoryId = `CAT${nextNum.toString().padStart(2, '0')}`;
+                  console.log('المعرف الجديد:', categoryId);
+                }
                 
                 const categoryData = {
                   id: categoryId,
