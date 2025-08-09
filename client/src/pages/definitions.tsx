@@ -227,8 +227,9 @@ export default function Definitions() {
       <div className="flex min-h-screen">
         <Sidebar />
         <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 lg:p-6">
-          <div className="max-w-full space-y-4">
+        <main className="flex-1 lg:mr-64 p-4 lg:p-6"
+              style={{ marginRight: 'calc(16rem + 0.5rem)' }}>
+          <div className="w-full space-y-4">
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">التعريفات الأساسية</h1>
             </div>
