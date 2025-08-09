@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -78,6 +78,124 @@ export default function Definitions() {
   const [userForm, setUserForm] = useState({
     username: '', display_name: '', display_name_ar: '', role_id: '', section_id: 'none', status: 'active'
   });
+
+  // Master Batch Colors
+  const masterBatchColors = [
+    { id: 'white', name: 'أبيض', name_ar: 'أبيض', color: '#FFFFFF', textColor: '#000000' },
+    { id: 'black', name: 'أسود', name_ar: 'أسود', color: '#000000', textColor: '#FFFFFF' },
+    { id: 'red', name: 'أحمر', name_ar: 'أحمر', color: '#DC2626', textColor: '#FFFFFF' },
+    { id: 'blue', name: 'أزرق', name_ar: 'أزرق', color: '#2563EB', textColor: '#FFFFFF' },
+    { id: 'green', name: 'أخضر', name_ar: 'أخضر', color: '#16A34A', textColor: '#FFFFFF' },
+    { id: 'yellow', name: 'أصفر', name_ar: 'أصفر', color: '#EAB308', textColor: '#000000' },
+    { id: 'orange', name: 'برتقالي', name_ar: 'برتقالي', color: '#EA580C', textColor: '#FFFFFF' },
+    { id: 'purple', name: 'بنفسجي', name_ar: 'بنفسجي', color: '#9333EA', textColor: '#FFFFFF' },
+    { id: 'brown', name: 'بني', name_ar: 'بني', color: '#92400E', textColor: '#FFFFFF' },
+    { id: 'pink', name: 'وردي', name_ar: 'وردي', color: '#EC4899', textColor: '#FFFFFF' },
+    { id: 'gray', name: 'رمادي', name_ar: 'رمادي', color: '#6B7280', textColor: '#FFFFFF' },
+    { id: 'navy', name: 'كحلي', name_ar: 'كحلي', color: '#1E3A8A', textColor: '#FFFFFF' },
+    { id: 'gold', name: 'ذهبي', name_ar: 'ذهبي', color: '#D97706', textColor: '#FFFFFF' },
+    { id: 'silver', name: 'فضي', name_ar: 'فضي', color: '#9CA3AF', textColor: '#000000' },
+    { id: 'lime', name: 'ليموني', name_ar: 'ليموني', color: '#65A30D', textColor: '#FFFFFF' },
+    { id: 'transparent', name: 'شفاف', name_ar: 'شفاف', color: 'transparent', textColor: '#000000' },
+  ];
+
+  // Automatic calculations
+  React.useEffect(() => {
+    // Auto-calculate cutting length based on printing cylinder
+    if (customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة') {
+      const cylinderNumber = parseInt(customerProductForm.printing_cylinder.replace(/\D/g, ''));
+      if (cylinderNumber) {
+        const calculatedLength = Math.round(cylinderNumber * 3.14159); // Cylinder circumference approximation
+        setCustomerProductForm(prev => ({
+          ...prev,
+          cutting_length_cm: calculatedLength.toString()
+        }));
+      }
+    }
+  }, [customerProductForm.printing_cylinder]);
+
+  React.useEffect(() => {
+    // Auto-generate size caption based on dimensions
+    const { width, left_facing, right_facing, cutting_length_cm } = customerProductForm;
+    if (width && left_facing && right_facing && cutting_length_cm) {
+      const w = parseFloat(width);
+      const lf = parseFloat(left_facing);
+      const rf = parseFloat(right_facing);
+      const cl = parseFloat(cutting_length_cm);
+      
+      if (w && lf && rf && cl) {
+        const totalWidth = lf + rf;
+        const sizeCaption = `${totalWidth}x${cl} سم (${w} عرض)`;
+        setCustomerProductForm(prev => ({
+          ...prev,
+          size_caption: sizeCaption
+        }));
+      }
+    }
+  }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.cutting_length_cm]);
+
+  React.useEffect(() => {
+    // Auto-calculate unit weight based on dimensions and thickness
+    const { width, left_facing, right_facing, thickness } = customerProductForm;
+    if (width && left_facing && right_facing && thickness) {
+      const w = parseFloat(width);
+      const lf = parseFloat(left_facing);
+      const rf = parseFloat(right_facing);
+      const th = parseFloat(thickness);
+      
+      if (w && lf && rf && th) {
+        const totalArea = (lf + rf) * w; // cm²
+        const volume = totalArea * (th / 10000); // Convert microns to cm
+        const density = 0.92; // PE density g/cm³
+        const weight = (volume * density) / 1000; // Convert to kg
+        
+        setCustomerProductForm(prev => ({
+          ...prev,
+          unit_weight_kg: weight.toFixed(4)
+        }));
+      }
+    }
+  }, [customerProductForm.width, customerProductForm.left_facing, customerProductForm.right_facing, customerProductForm.thickness]);
+
+  React.useEffect(() => {
+    // Auto-calculate package weight based on unit weight and quantity
+    const { unit_weight_kg, unit_quantity } = customerProductForm;
+    if (unit_weight_kg && unit_quantity) {
+      const unitWeight = parseFloat(unit_weight_kg);
+      const quantity = parseInt(unit_quantity);
+      
+      if (unitWeight && quantity) {
+        const packageWeight = unitWeight * quantity;
+        setCustomerProductForm(prev => ({
+          ...prev,
+          package_weight_kg: packageWeight.toFixed(3)
+        }));
+      }
+    }
+  }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
+
+  React.useEffect(() => {
+    // Auto-set cutting unit based on item category
+    const { category_id } = customerProductForm;
+    if (category_id && category_id !== 'none') {
+      const category = categories.find((cat: any) => cat.id === category_id);
+      if (category) {
+        let cuttingUnit = 'قطعة';
+        if (category.name_ar?.includes('أكياس')) {
+          cuttingUnit = 'كيس';
+        } else if (category.name_ar?.includes('رولات')) {
+          cuttingUnit = 'رول';
+        } else if (category.name_ar?.includes('أغطية')) {
+          cuttingUnit = 'غطاء';
+        }
+        
+        setCustomerProductForm(prev => ({
+          ...prev,
+          cutting_unit: cuttingUnit
+        }));
+      }
+    }
+  }, [customerProductForm.category_id, categories]);
 
   // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
@@ -2007,14 +2125,34 @@ export default function Definitions() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor="master_batch_id">الماستر باتش</Label>
-                          <Input
-                            id="master_batch_id"
-                            value={customerProductForm.master_batch_id}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, master_batch_id: e.target.value})}
-                            placeholder="كود الماستر باتش"
-                            className="mt-1"
-                          />
+                          <Label htmlFor="master_batch_id">لون الماستر باتش</Label>
+                          <Select 
+                            value={customerProductForm.master_batch_id} 
+                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, master_batch_id: value})}
+                          >
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر اللون" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">بدون لون</SelectItem>
+                              {masterBatchColors.map((color) => (
+                                <SelectItem key={color.id} value={color.id}>
+                                  <div className="flex items-center gap-3">
+                                    <div 
+                                      className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                                      style={{ 
+                                        backgroundColor: color.color,
+                                        border: color.id === 'transparent' ? '2px dashed #ccc' : `2px solid ${color.color}`
+                                      }}
+                                    >
+                                      {color.id === 'transparent' && <span className="text-xs text-gray-400">⊘</span>}
+                                    </div>
+                                    <span className="font-medium">{color.name_ar}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
                     </div>
