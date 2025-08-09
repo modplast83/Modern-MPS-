@@ -80,8 +80,14 @@ Advanced AI-powered order management system for plastic bag manufacturing, enhan
     - Cleaned up all UI references in `client/src/pages/definitions.tsx`
     - Fixed all foreign key references and relations
   
+  - **MIGRATION TO CATEGORIES TABLE**: Successfully updated system to use categories
+    - **Customer Products Update**: Changed `material_group_id` to `category_id` in customer_products table
+    - **Database Schema**: Updated relations to link customer_products → categories
+    - **API Compatibility**: Added backwards compatibility for material_group_id in API endpoints
+    - **Verified Working**: Customer products now successfully reference categories (CAT01, CAT02)
+  
   - **PERFECT SEQUENTIAL ID SYSTEM**: Final implementation complete
-    - **Verified working formats**: CAT01-CAT010, CID001-CID006, ITM01-ITM03
+    - **Verified working formats**: CAT01-CAT011, CID001-CID007, ITM01-ITM03
     - **Smart filtering**: Ignores non-standard legacy IDs (long timestamp formats)
     - **Proper counting**: Only counts standard format IDs for next sequence
     - **Auto-ID generation**: Works flawlessly for all import operations

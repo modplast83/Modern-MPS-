@@ -716,7 +716,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: customer_products.id,
         customer_id: customer_products.customer_id,
-        material_group_id: customer_products.material_group_id,
+        category_id: customer_products.category_id,
         item_id: customer_products.item_id,
         size_caption: customer_products.size_caption,
         width: customer_products.width,
