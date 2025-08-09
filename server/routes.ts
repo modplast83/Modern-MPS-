@@ -2269,6 +2269,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ User Violations Management API ============
+  
+  app.get("/api/violations", async (req, res) => {
+    try {
+      const violations = await storage.getViolations();
+      res.json(violations);
+    } catch (error) {
+      console.error('Error fetching violations:', error);
+      res.status(500).json({ message: "خطأ في جلب بيانات المخالفات" });
+    }
+  });
+
+  app.post("/api/violations", async (req, res) => {
+    try {
+      const violation = await storage.createViolation(req.body);
+      res.status(201).json(violation);
+    } catch (error) {
+      console.error('Error creating violation:', error);
+      res.status(500).json({ message: "خطأ في إنشاء المخالفة" });
+    }
+  });
+
+  app.put("/api/violations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const violation = await storage.updateViolation(id, req.body);
+      res.json(violation);
+    } catch (error) {
+      console.error('Error updating violation:', error);
+      res.status(500).json({ message: "خطأ في تحديث المخالفة" });
+    }
+  });
+
+  app.delete("/api/violations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteViolation(id);
+      res.json({ message: "تم حذف المخالفة بنجاح" });
+    } catch (error) {
+      console.error('Error deleting violation:', error);
+      res.status(500).json({ message: "خطأ في حذف المخالفة" });
+    }
+  });
+
+  // ============ User Requests Management API ============
+  
+  app.get("/api/user-requests", async (req, res) => {
+    try {
+      const requests = await storage.getUserRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error('Error fetching user requests:', error);
+      res.status(500).json({ message: "خطأ في جلب طلبات المستخدمين" });
+    }
+  });
+
+  app.post("/api/user-requests", async (req, res) => {
+    try {
+      const request = await storage.createUserRequest(req.body);
+      res.status(201).json(request);
+    } catch (error) {
+      console.error('Error creating user request:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الطلب" });
+    }
+  });
+
+  app.put("/api/user-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const request = await storage.updateUserRequest(id, req.body);
+      res.json(request);
+    } catch (error) {
+      console.error('Error updating user request:', error);
+      res.status(500).json({ message: "خطأ في تحديث الطلب" });
+    }
+  });
+
+  app.delete("/api/user-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteUserRequest(id);
+      res.json({ message: "تم حذف الطلب بنجاح" });
+    } catch (error) {
+      console.error('Error deleting user request:', error);
+      res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

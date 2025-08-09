@@ -9,7 +9,8 @@ import {
   BarChart3,
   Home,
   Link2,
-  FileText
+  FileText,
+  LayoutDashboard
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -19,6 +20,13 @@ const modules = [
     name_ar: "الرئيسية",
     icon: Home,
     path: "/",
+    active: false
+  },
+  {
+    name: "لوحة التحكم",
+    name_ar: "لوحة التحكم",
+    icon: LayoutDashboard,
+    path: "/user-dashboard",
     active: false
   },
   {
