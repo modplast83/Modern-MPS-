@@ -236,6 +236,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      await storage.deleteOrder(orderId);
+      res.json({ message: "تم حذف الطلب بنجاح" });
+    } catch (error) {
+      console.error("Order deletion error:", error);
+      res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
   // Job Orders routes
   app.get("/api/job-orders", async (req, res) => {
     try {

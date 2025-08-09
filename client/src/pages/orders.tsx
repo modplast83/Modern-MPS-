@@ -390,6 +390,137 @@ export default function Orders() {
     productionOrderMutation.mutate(data);
   };
 
+  // Order action handlers
+  const handleViewOrder = (order: any) => {
+    setSelectedOrderId(order.id);
+    toast({
+      title: "عرض الطلب",
+      description: `عرض تفاصيل الطلب ${order.order_number}`
+    });
+  };
+
+  const handlePrintOrder = (order: any) => {
+    const customer = customers.find((c: any) => c.id === order.customer_id);
+    const user = users.find((u: any) => u.id === parseInt(order.created_by));
+    const orderProductionOrders = productionOrders.filter((po: any) => po.order_id === order.id);
+    
+    const printContent = `
+      <html dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>طباعة الطلب ${order.order_number}</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; direction: rtl; margin: 20px; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+            .order-info { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+            .info-box { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+            .production-orders { margin-top: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: right; }
+            th { background-color: #f5f5f5; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>طلب رقم: ${order.order_number}</h1>
+            <p>تاريخ الطباعة: ${format(new Date(), 'dd/MM/yyyy HH:mm')}</p>
+          </div>
+          
+          <div class="order-info">
+            <div class="info-box">
+              <h3>معلومات الطلب</h3>
+              <p><strong>رقم الطلب:</strong> ${order.order_number}</p>
+              <p><strong>تاريخ الإنشاء:</strong> ${format(new Date(order.created_at), 'dd/MM/yyyy')}</p>
+              <p><strong>مدة التسليم:</strong> ${order.delivery_days} يوم</p>
+              <p><strong>الحالة:</strong> ${order.status}</p>
+              <p><strong>ملاحظات:</strong> ${order.notes || 'لا توجد ملاحظات'}</p>
+            </div>
+            
+            <div class="info-box">
+              <h3>معلومات العميل</h3>
+              <p><strong>اسم العميل:</strong> ${customer?.name_ar || customer?.name}</p>
+              <p><strong>رقم العميل:</strong> ${customer?.id}</p>
+              <p><strong>الهاتف:</strong> ${customer?.phone || 'غير محدد'}</p>
+              <p><strong>العنوان:</strong> ${customer?.address || 'غير محدد'}</p>
+            </div>
+          </div>
+          
+          <div class="info-box">
+            <h3>معلومات المستخدم</h3>
+            <p><strong>اسم المستخدم:</strong> ${user?.username}</p>
+            <p><strong>رقم المستخدم:</strong> ${user?.id}</p>
+          </div>
+          
+          <div class="production-orders">
+            <h3>أوامر الإنتاج</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>رقم أمر الإنتاج</th>
+                  <th>المنتج</th>
+                  <th>الكمية (كيلو)</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orderProductionOrders.map(po => {
+                  const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
+                  return `
+                    <tr>
+                      <td>${po.production_order_number}</td>
+                      <td>${product?.size_caption || 'منتج غير محدد'}</td>
+                      <td>${po.quantity_kg}</td>
+                      <td>${po.status}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.print();
+    }
+    
+    toast({
+      title: "طباعة الطلب",
+      description: `تم فتح نافذة طباعة للطلب ${order.order_number}`
+    });
+  };
+
+  const handleDeleteOrder = async (order: any) => {
+    if (!confirm(`هل أنت متأكد من حذف الطلب ${order.order_number}؟ هذا الإجراء لا يمكن التراجع عنه.`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/orders/${order.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('فشل في حذف الطلب');
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "تم الحذف بنجاح",
+        description: `تم حذف الطلب ${order.order_number}`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في حذف الطلب",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       pending: { label: "في الانتظار", variant: "secondary" as const },
@@ -802,49 +933,97 @@ export default function Orders() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>رقم الطلب</TableHead>
-                        <TableHead>العميل</TableHead>
-                        <TableHead>تاريخ الإنشاء</TableHead>
-                        <TableHead>المستخدم</TableHead>
-                        <TableHead>مدة التسليم</TableHead>
-                        <TableHead>ملاحظات</TableHead>
-                        <TableHead>الإجراءات</TableHead>
+                        <TableHead className="text-center">رقم الطلب</TableHead>
+                        <TableHead className="text-center">العميل</TableHead>
+                        <TableHead className="text-center">تاريخ الإنشاء</TableHead>
+                        <TableHead className="text-center">المستخدم</TableHead>
+                        <TableHead className="text-center">مدة التسليم المتبقية</TableHead>
+                        <TableHead className="text-center">ملاحظات</TableHead>
+                        <TableHead className="text-center">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredOrders.map((order: any) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">{order.order_number}</TableCell>
-                          <TableCell>{order.customer_id}</TableCell>
-                          <TableCell>
-                            {order.created_at ? format(new Date(order.created_at), 'dd/MM/yyyy') : '-'}
-                          </TableCell>
-                          <TableCell>{order.created_by}</TableCell>
-                          <TableCell>{order.delivery_days} يوم</TableCell>
-                          <TableCell>{order.notes || '-'}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2 space-x-reverse">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedOrderId(order.id);
-                                  handleAddProductionOrder(order.id);
-                                }}
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditOrder(order)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {filteredOrders.map((order: any) => {
+                        // Find customer details
+                        const customer = customers.find((c: any) => c.id === order.customer_id);
+                        // Find user details
+                        const user = users.find((u: any) => u.id === parseInt(order.created_by));
+                        // Calculate delivery time remaining
+                        const createdDate = new Date(order.created_at);
+                        const deliveryDate = new Date(createdDate);
+                        deliveryDate.setDate(deliveryDate.getDate() + order.delivery_days);
+                        const today = new Date();
+                        const daysRemaining = Math.ceil((deliveryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-medium">{order.order_number}</TableCell>
+                            <TableCell>
+                              <div className="text-right">
+                                <div className="font-medium">{customer?.name_ar || customer?.name}</div>
+                                <div className="text-sm text-gray-500">{customer?.id}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {order.created_at ? format(new Date(order.created_at), 'dd/MM/yyyy') : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-right">
+                                <div className="font-medium">{user?.username}</div>
+                                <div className="text-sm text-gray-500">#{user?.id}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-right">
+                                <div className="font-medium">
+                                  {daysRemaining > 0 ? (
+                                    <span className="text-green-600">{daysRemaining} يوم متبقي</span>
+                                  ) : daysRemaining === 0 ? (
+                                    <span className="text-orange-600">يجب التسليم اليوم</span>
+                                  ) : (
+                                    <span className="text-red-600">متأخر {Math.abs(daysRemaining)} يوم</span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  التسليم: {format(deliveryDate, 'dd/MM/yyyy')}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{order.notes || '-'}</TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2 space-x-reverse">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                                  onClick={() => handleViewOrder(order)}
+                                  title="عرض"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  onClick={() => handlePrintOrder(order)}
+                                  title="طباعة"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => handleDeleteOrder(order)}
+                                  title="حذف"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>
