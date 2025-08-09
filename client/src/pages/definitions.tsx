@@ -73,10 +73,10 @@ export default function Definitions() {
     name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active'
   });
   const [machineForm, setMachineForm] = useState({
-    name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active'
+    name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active'
   });
   const [userForm, setUserForm] = useState({
-    username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active'
+    username: '', display_name: '', display_name_ar: '', role_id: '', section_id: 'none', status: 'active'
   });
 
   // Data queries
@@ -144,6 +144,90 @@ export default function Definitions() {
   const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'code', 'type']);
   const getFilteredUsers = () => filterData(users as any[], ['username', 'name', 'name_ar', 'email', 'role']);
 
+  // All mutations for different entities
+  
+  // Customer mutations
+  const createCustomerMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/customers", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء العميل بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء العميل:', error);
+      toast({ title: "خطأ في إنشاء العميل", variant: "destructive" });
+    }
+  });
+
+  const updateCustomerMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/customers/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث العميل بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث العميل:', error);
+      toast({ title: "خطأ في تحديث العميل", variant: "destructive" });
+    }
+  });
+
+  // Section mutations
+  const createSectionMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/sections", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء القسم بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء القسم:', error);
+      toast({ title: "خطأ في إنشاء القسم", variant: "destructive" });
+    }
+  });
+
+  const updateSectionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/sections/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث القسم بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث القسم:', error);
+      toast({ title: "خطأ في تحديث القسم", variant: "destructive" });
+    }
+  });
+
   // Category mutations
   const createCategoryMutation = useMutation({
     mutationFn: (data: any) => {
@@ -185,6 +269,211 @@ export default function Definitions() {
     }
   });
 
+  // Item mutations
+  const createItemMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/items", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء الصنف بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء الصنف:', error);
+      toast({ title: "خطأ في إنشاء الصنف", variant: "destructive" });
+    }
+  });
+
+  const updateItemMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/items/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث الصنف بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث الصنف:', error);
+      toast({ title: "خطأ في تحديث الصنف", variant: "destructive" });
+    }
+  });
+
+  // Customer Product mutations
+  const createCustomerProductMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/customer-products", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء منتج العميل بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء منتج العميل:', error);
+      toast({ title: "خطأ في إنشاء منتج العميل", variant: "destructive" });
+    }
+  });
+
+  const updateCustomerProductMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/customer-products/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث منتج العميل بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث منتج العميل:', error);
+      toast({ title: "خطأ في تحديث منتج العميل", variant: "destructive" });
+    }
+  });
+
+  // Location mutations
+  const createLocationMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/locations", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء الموقع بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء الموقع:', error);
+      toast({ title: "خطأ في إنشاء الموقع", variant: "destructive" });
+    }
+  });
+
+  const updateLocationMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/locations/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث الموقع بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث الموقع:', error);
+      toast({ title: "خطأ في تحديث الموقع", variant: "destructive" });
+    }
+  });
+
+  // Machine mutations
+  const createMachineMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/machines", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء الماكينة بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء الماكينة:', error);
+      toast({ title: "خطأ في إنشاء الماكينة", variant: "destructive" });
+    }
+  });
+
+  const updateMachineMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/machines/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث الماكينة بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث الماكينة:', error);
+      toast({ title: "خطأ في تحديث الماكينة", variant: "destructive" });
+    }
+  });
+
+  // User mutations
+  const createUserMutation = useMutation({
+    mutationFn: (data: any) => {
+      return fetch("/api/users", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم إنشاء المستخدم بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في إنشاء المستخدم:', error);
+      toast({ title: "خطأ في إنشاء المستخدم", variant: "destructive" });
+    }
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => {
+      return fetch(`/api/users/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      resetForm();
+      setIsDialogOpen(false);
+      toast({ title: "تم تحديث المستخدم بنجاح" });
+    },
+    onError: (error: any) => {
+      console.error('خطأ في تحديث المستخدم:', error);
+      toast({ title: "خطأ في تحديث المستخدم", variant: "destructive" });
+    }
+  });
+
   // Event handlers
   const resetForm = () => {
     setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
@@ -216,8 +505,8 @@ export default function Definitions() {
       status: 'active' 
     });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
-    setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: '', status: 'active' });
-    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: '', status: 'active' });
+    setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active' });
+    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: 'none', status: 'active' });
     setEditingItem(null);
   };
 
@@ -394,7 +683,23 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit customer', customer)}
+                                          onClick={() => {
+                                            setEditingItem(customer);
+                                            setCustomerForm({
+                                              name: customer.name || '',
+                                              name_ar: customer.name_ar || '',
+                                              code: customer.code || '',
+                                              user_id: customer.user_id || '',
+                                              plate_drawer_code: customer.plate_drawer_code || '',
+                                              city: customer.city || '',
+                                              address: customer.address || '',
+                                              tax_number: customer.tax_number || '',
+                                              phone: customer.phone || '',
+                                              sales_rep_id: customer.sales_rep_id || ''
+                                            });
+                                            setSelectedTab('customers');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -569,7 +874,16 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit section', section)}
+                                          onClick={() => {
+                                            setEditingItem(section);
+                                            setSectionForm({
+                                              name: section.name || '',
+                                              name_ar: section.name_ar || '',
+                                              description: section.description || ''
+                                            });
+                                            setSelectedTab('sections');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -649,7 +963,18 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit item', item)}
+                                          onClick={() => {
+                                            setEditingItem(item);
+                                            setItemForm({
+                                              name: item.name || '',
+                                              name_ar: item.name_ar || '',
+                                              code: item.code || '',
+                                              category_id: item.category_id || 'none',
+                                              status: item.status || 'active'
+                                            });
+                                            setSelectedTab('items');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -729,7 +1054,35 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit customer product', product)}
+                                          onClick={() => {
+                                            setEditingItem(product);
+                                            setCustomerProductForm({
+                                              customer_id: product.customer_id || 'none',
+                                              category_id: product.category_id || 'none',
+                                              item_id: product.item_id || 'none',
+                                              size_caption: product.size_caption || '',
+                                              width: product.width || '',
+                                              left_facing: product.left_facing || '',
+                                              right_facing: product.right_facing || '',
+                                              thickness: product.thickness || '',
+                                              printing_cylinder: product.printing_cylinder || 'بدون طباعة',
+                                              cutting_length_cm: product.cutting_length_cm || '',
+                                              raw_material: product.raw_material || '',
+                                              master_batch_id: product.master_batch_id || '',
+                                              is_printed: product.is_printed || false,
+                                              cutting_unit: product.cutting_unit || '',
+                                              punching: product.punching || '',
+                                              unit_weight_kg: product.unit_weight_kg || '',
+                                              unit_quantity: product.unit_quantity || '',
+                                              package_weight_kg: product.package_weight_kg || '',
+                                              cliche_front_design: product.cliche_front_design || '',
+                                              cliche_back_design: product.cliche_back_design || '',
+                                              notes: product.notes || '',
+                                              status: product.status || 'active'
+                                            });
+                                            setSelectedTab('customer-products');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -809,7 +1162,19 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit location', location)}
+                                          onClick={() => {
+                                            setEditingItem(location);
+                                            setLocationForm({
+                                              name: location.name || '',
+                                              name_ar: location.name_ar || '',
+                                              type: location.type || 'city',
+                                              parent_id: location.parent_id || '',
+                                              coordinates: location.coordinates || '',
+                                              status: location.status || 'active'
+                                            });
+                                            setSelectedTab('locations');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -889,7 +1254,18 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit machine', machine)}
+                                          onClick={() => {
+                                            setEditingItem(machine);
+                                            setMachineForm({
+                                              name: machine.name || '',
+                                              name_ar: machine.name_ar || '',
+                                              type: machine.type || 'extruder',
+                                              section_id: machine.section_id || '',
+                                              status: machine.status || 'active'
+                                            });
+                                            setSelectedTab('machines');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -969,7 +1345,19 @@ export default function Definitions() {
                                         <Button 
                                           variant="outline" 
                                           size="sm"
-                                          onClick={() => console.log('Edit user', user)}
+                                          onClick={() => {
+                                            setEditingItem(user);
+                                            setUserForm({
+                                              username: user.username || '',
+                                              display_name: user.display_name || '',
+                                              display_name_ar: user.display_name_ar || '',
+                                              role_id: user.role_id || '',
+                                              section_id: user.section_id || '',
+                                              status: user.status || 'active'
+                                            });
+                                            setSelectedTab('users');
+                                            setIsDialogOpen(true);
+                                          }}
                                         >
                                           <Edit className="w-4 h-4" />
                                         </Button>
@@ -995,6 +1383,182 @@ export default function Definitions() {
               </Tabs>
             </div>
             
+            {/* All Dialogs for different entities */}
+            
+            {/* Customer Add/Edit Dialog */}
+            {selectedTab === 'customers' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث العميل" : "إضافة عميل جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={customerForm.name_ar}
+                          onChange={(e) => setCustomerForm({...customerForm, name_ar: e.target.value})}
+                          placeholder="اسم العميل بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={customerForm.name}
+                          onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
+                          placeholder="Customer Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="code">كود العميل</Label>
+                        <Input
+                          id="code"
+                          value={customerForm.code}
+                          onChange={(e) => setCustomerForm({...customerForm, code: e.target.value})}
+                          placeholder="كود العميل"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="phone">الهاتف</Label>
+                        <Input
+                          id="phone"
+                          value={customerForm.phone}
+                          onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
+                          placeholder="رقم الهاتف"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="city">المدينة</Label>
+                        <Input
+                          id="city"
+                          value={customerForm.city}
+                          onChange={(e) => setCustomerForm({...customerForm, city: e.target.value})}
+                          placeholder="المدينة"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="address">العنوان</Label>
+                      <Input
+                        id="address"
+                        value={customerForm.address}
+                        onChange={(e) => setCustomerForm({...customerForm, address: e.target.value})}
+                        placeholder="العنوان كاملاً"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateCustomerMutation.mutate({ id: editingItem.id, data: customerForm });
+                        } else {
+                          createCustomerMutation.mutate(customerForm);
+                        }
+                      }}
+                      disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+                    >
+                      {createCustomerMutation.isPending || updateCustomerMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Section Add/Edit Dialog */}
+            {selectedTab === 'sections' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث القسم" : "إضافة قسم جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={sectionForm.name_ar}
+                          onChange={(e) => setSectionForm({...sectionForm, name_ar: e.target.value})}
+                          placeholder="اسم القسم بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={sectionForm.name}
+                          onChange={(e) => setSectionForm({...sectionForm, name: e.target.value})}
+                          placeholder="Section Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="description">الوصف</Label>
+                      <Input
+                        id="description"
+                        value={sectionForm.description}
+                        onChange={(e) => setSectionForm({...sectionForm, description: e.target.value})}
+                        placeholder="وصف القسم (اختياري)"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateSectionMutation.mutate({ id: editingItem.id, data: sectionForm });
+                        } else {
+                          createSectionMutation.mutate(sectionForm);
+                        }
+                      }}
+                      disabled={createSectionMutation.isPending || updateSectionMutation.isPending}
+                    >
+                      {createSectionMutation.isPending || updateSectionMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
             {/* Category Add/Edit Dialog */}
             {selectedTab === 'categories' && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -1105,6 +1669,510 @@ export default function Definitions() {
                       disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
                     >
                       {createCategoryMutation.isPending || updateCategoryMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Items Add/Edit Dialog */}
+            {selectedTab === 'items' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث الصنف" : "إضافة صنف جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={itemForm.name_ar}
+                          onChange={(e) => setItemForm({...itemForm, name_ar: e.target.value})}
+                          placeholder="اسم الصنف بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={itemForm.name}
+                          onChange={(e) => setItemForm({...itemForm, name: e.target.value})}
+                          placeholder="Item Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="code">كود الصنف</Label>
+                        <Input
+                          id="code"
+                          value={itemForm.code}
+                          onChange={(e) => setItemForm({...itemForm, code: e.target.value})}
+                          placeholder="كود الصنف"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="category_id">الفئة</Label>
+                        <Select 
+                          value={itemForm.category_id} 
+                          onValueChange={(value) => setItemForm({...itemForm, category_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون فئة</SelectItem>
+                            {Array.isArray(categories) && categories.map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name_ar || cat.name} ({cat.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateItemMutation.mutate({ id: editingItem.id, data: itemForm });
+                        } else {
+                          createItemMutation.mutate(itemForm);
+                        }
+                      }}
+                      disabled={createItemMutation.isPending || updateItemMutation.isPending}
+                    >
+                      {createItemMutation.isPending || updateItemMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Customer Products Add/Edit Dialog */}
+            {selectedTab === 'customer-products' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث منتج العميل" : "إضافة منتج عميل جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <Label htmlFor="customer_id">العميل *</Label>
+                        <Select 
+                          value={customerProductForm.customer_id} 
+                          onValueChange={(value) => setCustomerProductForm({...customerProductForm, customer_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر العميل" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">اختر العميل</SelectItem>
+                            {Array.isArray(customers) && customers.map((customer: any) => (
+                              <SelectItem key={customer.id} value={customer.id}>
+                                {customer.name_ar || customer.name} ({customer.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="category_id">الفئة *</Label>
+                        <Select 
+                          value={customerProductForm.category_id} 
+                          onValueChange={(value) => setCustomerProductForm({...customerProductForm, category_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">اختر الفئة</SelectItem>
+                            {Array.isArray(categories) && categories.map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                {cat.name_ar || cat.name} ({cat.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="size_caption">وصف الحجم</Label>
+                        <Input
+                          id="size_caption"
+                          value={customerProductForm.size_caption}
+                          onChange={(e) => setCustomerProductForm({...customerProductForm, size_caption: e.target.value})}
+                          placeholder="وصف الحجم"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-4 gap-4">
+                      <div>
+                        <Label htmlFor="width">العرض (سم)</Label>
+                        <Input
+                          id="width"
+                          value={customerProductForm.width}
+                          onChange={(e) => setCustomerProductForm({...customerProductForm, width: e.target.value})}
+                          placeholder="العرض"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="thickness">السماكة</Label>
+                        <Input
+                          id="thickness"
+                          value={customerProductForm.thickness}
+                          onChange={(e) => setCustomerProductForm({...customerProductForm, thickness: e.target.value})}
+                          placeholder="السماكة"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="cutting_length_cm">طول القطع (سم)</Label>
+                        <Input
+                          id="cutting_length_cm"
+                          value={customerProductForm.cutting_length_cm}
+                          onChange={(e) => setCustomerProductForm({...customerProductForm, cutting_length_cm: e.target.value})}
+                          placeholder="طول القطع"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="unit_weight_kg">وزن الوحدة (كغ)</Label>
+                        <Input
+                          id="unit_weight_kg"
+                          value={customerProductForm.unit_weight_kg}
+                          onChange={(e) => setCustomerProductForm({...customerProductForm, unit_weight_kg: e.target.value})}
+                          placeholder="وزن الوحدة"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateCustomerProductMutation.mutate({ id: editingItem.id, data: customerProductForm });
+                        } else {
+                          createCustomerProductMutation.mutate(customerProductForm);
+                        }
+                      }}
+                      disabled={createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending}
+                    >
+                      {createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Locations Add/Edit Dialog */}
+            {selectedTab === 'locations' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث الموقع" : "إضافة موقع جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={locationForm.name_ar}
+                          onChange={(e) => setLocationForm({...locationForm, name_ar: e.target.value})}
+                          placeholder="اسم الموقع بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={locationForm.name}
+                          onChange={(e) => setLocationForm({...locationForm, name: e.target.value})}
+                          placeholder="Location Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="type">النوع</Label>
+                        <Select 
+                          value={locationForm.type} 
+                          onValueChange={(value) => setLocationForm({...locationForm, type: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="city">مدينة</SelectItem>
+                            <SelectItem value="warehouse">مستودع</SelectItem>
+                            <SelectItem value="factory">مصنع</SelectItem>
+                            <SelectItem value="office">مكتب</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="coordinates">الإحداثيات</Label>
+                        <Input
+                          id="coordinates"
+                          value={locationForm.coordinates}
+                          onChange={(e) => setLocationForm({...locationForm, coordinates: e.target.value})}
+                          placeholder="lat,lng"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateLocationMutation.mutate({ id: editingItem.id, data: locationForm });
+                        } else {
+                          createLocationMutation.mutate(locationForm);
+                        }
+                      }}
+                      disabled={createLocationMutation.isPending || updateLocationMutation.isPending}
+                    >
+                      {createLocationMutation.isPending || updateLocationMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Machines Add/Edit Dialog */}
+            {selectedTab === 'machines' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث الماكينة" : "إضافة ماكينة جديدة"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="name_ar"
+                          value={machineForm.name_ar}
+                          onChange={(e) => setMachineForm({...machineForm, name_ar: e.target.value})}
+                          placeholder="اسم الماكينة بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="name"
+                          value={machineForm.name}
+                          onChange={(e) => setMachineForm({...machineForm, name: e.target.value})}
+                          placeholder="Machine Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="type">النوع</Label>
+                        <Select 
+                          value={machineForm.type} 
+                          onValueChange={(value) => setMachineForm({...machineForm, type: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="extruder">بثق</SelectItem>
+                            <SelectItem value="cutting">قطع</SelectItem>
+                            <SelectItem value="printing">طباعة</SelectItem>
+                            <SelectItem value="packaging">تعبئة</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="section_id">القسم</Label>
+                        <Select 
+                          value={machineForm.section_id} 
+                          onValueChange={(value) => setMachineForm({...machineForm, section_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر القسم" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون قسم</SelectItem>
+                            {Array.isArray(sections) && sections.map((section: any) => (
+                              <SelectItem key={section.id} value={section.id}>
+                                {section.name_ar || section.name} ({section.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateMachineMutation.mutate({ id: editingItem.id, data: machineForm });
+                        } else {
+                          createMachineMutation.mutate(machineForm);
+                        }
+                      }}
+                      disabled={createMachineMutation.isPending || updateMachineMutation.isPending}
+                    >
+                      {createMachineMutation.isPending || updateMachineMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
+                        </>
+                      ) : (
+                        editingItem ? "تحديث" : "حفظ"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {/* Users Add/Edit Dialog */}
+            {selectedTab === 'users' && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingItem ? "تحديث المستخدم" : "إضافة مستخدم جديد"}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="display_name_ar">الاسم بالعربية *</Label>
+                        <Input
+                          id="display_name_ar"
+                          value={userForm.display_name_ar}
+                          onChange={(e) => setUserForm({...userForm, display_name_ar: e.target.value})}
+                          placeholder="اسم المستخدم بالعربية"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="display_name">الاسم بالإنجليزية</Label>
+                        <Input
+                          id="display_name"
+                          value={userForm.display_name}
+                          onChange={(e) => setUserForm({...userForm, display_name: e.target.value})}
+                          placeholder="Display Name"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="username">اسم المستخدم *</Label>
+                        <Input
+                          id="username"
+                          value={userForm.username}
+                          onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                          placeholder="username"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="section_id">القسم</Label>
+                        <Select 
+                          value={userForm.section_id} 
+                          onValueChange={(value) => setUserForm({...userForm, section_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر القسم" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون قسم</SelectItem>
+                            {Array.isArray(sections) && sections.map((section: any) => (
+                              <SelectItem key={section.id} value={section.id}>
+                                {section.name_ar || section.name} ({section.id})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                      إلغاء
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (editingItem) {
+                          updateUserMutation.mutate({ id: editingItem.id, data: userForm });
+                        } else {
+                          createUserMutation.mutate(userForm);
+                        }
+                      }}
+                      disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                    >
+                      {createUserMutation.isPending || updateUserMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
