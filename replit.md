@@ -75,11 +75,12 @@ Advanced AI-powered order management system for plastic bag manufacturing, enhan
 - **August 9, 2025**: Table Import System Implementation & Bug Fixes
   - **MAJOR FEATURE**: Implemented fully functional table import system
     - Real data import (not simulated) for Customers, Categories, and Items tables
+    - **Auto-ID Generation**: Automatic ID generation for records without IDs
     - Support for CSV, JSON, and Excel file formats
     - Drag-and-drop file upload interface in Settings → Database
     - Comprehensive error handling and data validation
     - Success feedback with import statistics
-    - Tested and verified with actual data imports
+    - Tested and verified with actual data imports including auto-ID generation
   
   - **Bug Fixes & Type Safety**:
     - Fixed 15+ TypeScript type mismatches in server routes
