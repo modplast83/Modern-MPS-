@@ -342,14 +342,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Material Groups routes
-  app.get("/api/material-groups", async (req, res) => {
-    try {
-      const materialGroups = await storage.getMaterialGroups();
-      res.json(materialGroups);
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في جلب مجموعات المواد" });
-    }
-  });
+
 
   // Items routes
   app.get("/api/items", async (req, res) => {
@@ -1273,65 +1266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Material Groups routes
-  app.post("/api/material-groups", async (req, res) => {
-    try {
-      console.log('Received material group data:', req.body);
-      
-      // Generate sequential ID if not provided
-      let materialGroupId = req.body.id;
-      if (!materialGroupId) {
-        // Get the latest material group to determine the next sequential number
-        const existingGroups = await storage.getMaterialGroups();
-        const groupNumbers = existingGroups
-          .map(group => group.id)
-          .filter(id => id.startsWith('CAT'))
-          .map(id => parseInt(id.replace('CAT', '')))
-          .filter(num => !isNaN(num))
-          .sort((a, b) => b - a);
-        
-        const nextNumber = groupNumbers.length > 0 ? groupNumbers[0] + 1 : 1;
-        materialGroupId = `CAT${nextNumber.toString().padStart(2, '0')}`;
-      }
-      
-      // Convert empty strings to null for parent_id and code
-      const processedData = {
-        ...req.body,
-        id: materialGroupId,
-        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : req.body.parent_id, // Now expects string ID
-        code: req.body.code === '' || !req.body.code ? null : req.body.code
-      };
-      
-      console.log('Processed material group data:', processedData);
-      const materialGroup = await storage.createMaterialGroup(processedData);
-      console.log('Created material group:', materialGroup);
-      res.json(materialGroup);
-    } catch (error) {
-      console.error('Material group creation error:', error);
-      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-      res.status(500).json({ message: "خطأ في إنشاء مجموعة المواد", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
 
-  app.put("/api/material-groups/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      console.log('Updating material group:', id, req.body);
-      
-      // Convert empty strings to null for parent_id and code
-      const processedData = {
-        ...req.body,
-        parent_id: req.body.parent_id === '' || req.body.parent_id === 'none' || !req.body.parent_id ? null : req.body.parent_id,
-        code: req.body.code === '' || !req.body.code ? null : req.body.code
-      };
-      
-      console.log('Processed update data:', processedData);
-      const materialGroup = await storage.updateMaterialGroup(id, processedData);
-      res.json(materialGroup);
-    } catch (error) {
-      console.error('Material group update error:', error);
-      res.status(500).json({ message: "خطأ في تحديث مجموعة المواد", error: error instanceof Error ? error.message : 'Unknown error' });
-    }
-  });
+
+
 
   // Items routes
   app.post("/api/items", async (req, res) => {
@@ -1707,15 +1644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/material-groups/:id", async (req, res) => {
-    try {
-      const id = req.params.id;
-      await storage.deleteMaterialGroup(id);
-      res.json({ message: "تم حذف مجموعة المواد بنجاح" });
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في حذف مجموعة المواد" });
-    }
-  });
+
 
   app.delete("/api/items/:id", async (req, res) => {
     try {

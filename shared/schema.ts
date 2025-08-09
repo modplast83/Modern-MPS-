@@ -185,7 +185,6 @@ export const violations = pgTable('violations', {
 export const items = pgTable('items', {
   id: varchar('id', { length: 20 }).primaryKey(),
   category_id: varchar('category_id', { length: 20 }),
-  material_group_id: varchar('material_group_id', { length: 20 }).references(() => material_groups.id),
   name: varchar('name', { length: 100 }),
   name_ar: varchar('name_ar', { length: 100 }),
   code: varchar('code', { length: 50 }),
@@ -461,7 +460,7 @@ export const company_profile = pgTable('company_profile', {
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
   customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  material_group_id: varchar('material_group_id', { length: 20 }).references(() => material_groups.id),
+  material_group_id: varchar('material_group_id', { length: 20 }),
   item_id: varchar('item_id', { length: 20 }).references(() => items.id),
   size_caption: varchar('size_caption', { length: 50 }),
   width: decimal('width', { precision: 8, scale: 2 }),
@@ -561,7 +560,7 @@ export const inventoryRelations = relations(inventory, ({ one }) => ({
 
 export const customerProductsRelations = relations(customer_products, ({ one, many }) => ({
   customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
-  materialGroup: one(material_groups, { fields: [customer_products.material_group_id], references: [material_groups.id] }),
+
   item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
   jobOrders: many(job_orders),
 }));
@@ -746,38 +745,7 @@ export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
 export type UserSetting = typeof user_settings.$inferSelect;
 export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
 
-// 🧱 جدول مجموعات المواد
-export const material_groups = pgTable("material_groups", {
-  id: varchar("id", { length: 20 }).primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  name_ar: varchar("name_ar", { length: 100 }).notNull(),
-  code: varchar("code", { length: 20 }).unique(),
-  description: text("description"),
-  parent_id: varchar("parent_id", { length: 20 }),
-  status: varchar("status", { length: 20 }).default("active"),
-  created_at: timestamp("created_at").defaultNow(),
-});
 
-// Self-reference for material groups hierarchy
-export const materialGroupsRelations = relations(material_groups, ({ one, many }) => ({
-  parent: one(material_groups, {
-    fields: [material_groups.parent_id],
-    references: [material_groups.id],
-    relationName: "parent_child",
-  }),
-  children: many(material_groups, {
-    relationName: "parent_child",
-  }),
-}));
-
-export type MaterialGroup = typeof material_groups.$inferSelect;
-export type InsertMaterialGroup = typeof material_groups.$inferInsert;
-
-// Insert schemas for new tables
-export const insertMaterialGroupSchema = createInsertSchema(material_groups).omit({
-  id: true,
-  created_at: true,
-});
 
 export const insertCustomerProductSchema = createInsertSchema(customer_products).omit({
   id: true,
