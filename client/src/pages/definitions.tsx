@@ -2067,7 +2067,7 @@ export default function Definitions() {
                     {/* الطباعة والقطع */}
                     <div className="space-y-4">
                       <h4 className="text-lg font-medium">مواصفات الطباعة والقطع</h4>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-4 gap-4">
                         <div>
                           <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
                           <Select 
@@ -2098,6 +2098,16 @@ export default function Definitions() {
                             disabled={customerProductForm.printing_cylinder !== 'بدون طباعة'}
                           />
                         </div>
+                        <div className="flex items-center space-x-2 mt-6">
+                          <input
+                            type="checkbox"
+                            id="is_printed"
+                            checked={customerProductForm.is_printed}
+                            className="rounded"
+                            disabled
+                          />
+                          <Label htmlFor="is_printed" className="text-gray-600">منتج مطبوع (يتم تحديده تلقائياً)</Label>
+                        </div>
                         <div>
                           <Label htmlFor="cutting_unit">وحدة القطع</Label>
                           <Select 
@@ -2116,7 +2126,7 @@ export default function Definitions() {
                           </Select>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <div>
                           <Label htmlFor="punching">التثقيب</Label>
                           <Select 
@@ -2133,16 +2143,6 @@ export default function Definitions() {
                               <SelectItem value="بنانة">بنانة</SelectItem>
                             </SelectContent>
                           </Select>
-                        </div>
-                        <div className="flex items-center space-x-2 mt-6">
-                          <input
-                            type="checkbox"
-                            id="is_printed"
-                            checked={customerProductForm.is_printed}
-                            className="rounded"
-                            disabled
-                          />
-                          <Label htmlFor="is_printed" className="text-gray-600">منتج مطبوع (يتم تحديده تلقائياً)</Label>
                         </div>
                       </div>
                     </div>
