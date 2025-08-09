@@ -15,24 +15,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored auth data on mount
-    const storedUser = localStorage.getItem('mpbf_user');
-    if (storedUser) {
+    // Check for current user session via API
+    const checkAuth = async () => {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        // Validate the parsed data structure
-        if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.username) {
-          setUser(parsedUser);
+        const response = await fetch('/api/me');
+        if (response.ok) {
+          const data = await response.json();
+          setUser(data.user);
         } else {
-          // Invalid user data structure
+          // No active session
+          setUser(null);
           localStorage.removeItem('mpbf_user');
         }
       } catch (error) {
-        console.warn('Invalid user data in localStorage, clearing:', error);
+        console.warn('Error checking auth session:', error);
+        setUser(null);
         localStorage.removeItem('mpbf_user');
       }
-    }
-    setIsLoading(false);
+      setIsLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (username: string, password: string) => {
@@ -61,7 +64,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch('/api/logout', { method: 'POST' });
+    } catch (error) {
+      console.warn('Error during logout:', error);
+    }
     setUser(null);
     localStorage.removeItem('mpbf_user');
   };

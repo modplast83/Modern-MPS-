@@ -2408,6 +2408,17 @@ export class DatabaseStorage implements IStorage {
       throw new Error('فشل في حذف سجل الحضور');
     }
   }
+
+  // User Management
+  async getUserById(id: number): Promise<any> {
+    try {
+      const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error getting user by ID:', error);
+      throw new Error('فشل في جلب بيانات المستخدم');
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
