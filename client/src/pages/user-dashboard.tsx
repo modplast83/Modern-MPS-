@@ -119,7 +119,7 @@ export default function UserDashboard() {
 
   // Attendance mutation
   const attendanceMutation = useMutation({
-    mutationFn: async (data: { status: string; notes?: string }) => {
+    mutationFn: async (data: { status: string; notes?: string; action?: string }) => {
       const response = await fetch('/api/attendance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,7 +130,8 @@ export default function UserDashboard() {
           notes: data.notes,
           ...(data.status === 'حاضر' && { check_in_time: new Date().toISOString() }),
           ...(data.status === 'مغادر' && { check_out_time: new Date().toISOString() }),
-          ...(data.status === 'استراحة غداء' && { lunch_start_time: new Date().toISOString() }),
+          ...(data.status === 'استراحة غداء' && data.action === 'start' && { lunch_start_time: new Date().toISOString() }),
+          ...(data.status === 'حاضر' && data.action === 'end_lunch' && { lunch_end_time: new Date().toISOString() }),
         })
       });
       return response.json();
@@ -172,8 +173,8 @@ export default function UserDashboard() {
     }
   });
 
-  const handleAttendanceAction = (status: string) => {
-    attendanceMutation.mutate({ status });
+  const handleAttendanceAction = (status: string, action?: string) => {
+    attendanceMutation.mutate({ status, action });
   };
 
   const getStatusColor = (status: string) => {
@@ -297,14 +298,14 @@ export default function UserDashboard() {
                         تسجيل الحضور
                       </Button>
                       <Button 
-                        onClick={() => handleAttendanceAction('استراحة غداء')}
+                        onClick={() => handleAttendanceAction('استراحة غداء', 'start')}
                         className="bg-yellow-600 hover:bg-yellow-700"
                         disabled={todayAttendance?.status === 'استراحة غداء'}
                       >
                         بداية الاستراحة
                       </Button>
                       <Button 
-                        onClick={() => handleAttendanceAction('حاضر')}
+                        onClick={() => handleAttendanceAction('حاضر', 'end_lunch')}
                         className="bg-blue-600 hover:bg-blue-700"
                         disabled={todayAttendance?.status !== 'استراحة غداء'}
                       >
