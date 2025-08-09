@@ -174,29 +174,6 @@ export default function Definitions() {
     }
   }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
 
-  React.useEffect(() => {
-    // Auto-set cutting unit based on item category
-    const { category_id } = customerProductForm;
-    if (category_id && category_id !== 'none') {
-      const category = categories.find((cat: any) => cat.id === category_id);
-      if (category) {
-        let cuttingUnit = 'قطعة';
-        if (category.name_ar?.includes('أكياس')) {
-          cuttingUnit = 'كيس';
-        } else if (category.name_ar?.includes('رولات')) {
-          cuttingUnit = 'رول';
-        } else if (category.name_ar?.includes('أغطية')) {
-          cuttingUnit = 'غطاء';
-        }
-        
-        setCustomerProductForm(prev => ({
-          ...prev,
-          cutting_unit: cuttingUnit
-        }));
-      }
-    }
-  }, [customerProductForm.category_id, categories]);
-
   // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['/api/customers'],
@@ -230,6 +207,30 @@ export default function Definitions() {
     queryKey: ['/api/users'],
     staleTime: 0,
   });
+
+  // Auto-calculations after data is loaded
+  React.useEffect(() => {
+    // Auto-set cutting unit based on item category
+    const { category_id } = customerProductForm;
+    if (category_id && category_id !== 'none' && categories.length > 0) {
+      const category = categories.find((cat: any) => cat.id === category_id);
+      if (category) {
+        let cuttingUnit = 'قطعة';
+        if (category.name_ar?.includes('أكياس')) {
+          cuttingUnit = 'كيس';
+        } else if (category.name_ar?.includes('رولات')) {
+          cuttingUnit = 'رول';
+        } else if (category.name_ar?.includes('أغطية')) {
+          cuttingUnit = 'غطاء';
+        }
+        
+        setCustomerProductForm(prev => ({
+          ...prev,
+          cutting_unit: cuttingUnit
+        }));
+      }
+    }
+  }, [customerProductForm.category_id, categories]);
 
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
