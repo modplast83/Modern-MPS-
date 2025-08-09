@@ -1138,75 +1138,112 @@ export default function Definitions() {
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
                             <tr>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العميل</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحجم</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم العميل</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">اسم الصنف</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وصف المقاس</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الطباعة/القطع</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الماستر باتش</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">التخريم</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">الوحدة</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">وزن التعبئة</th>
+                              <th className="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredCustomerProducts = getFilteredCustomerProducts();
                               return filteredCustomerProducts.length > 0 ? (
-                                filteredCustomerProducts.map((product: any) => (
-                                  <tr key={product.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                      {product.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                      {product.customer_id || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                      {product.category_id || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                      {product.size_caption || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                      <div className="flex items-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(product);
-                                            setCustomerProductForm({
-                                              customer_id: product.customer_id || 'none',
-                                              category_id: product.category_id || 'none',
-                                              item_id: product.item_id || 'none',
-                                              size_caption: product.size_caption || '',
-                                              width: product.width || '',
-                                              left_facing: product.left_facing || '',
-                                              right_facing: product.right_facing || '',
-                                              thickness: product.thickness || '',
-                                              printing_cylinder: product.printing_cylinder || 'بدون طباعة',
-                                              cutting_length_cm: product.cutting_length_cm || '',
-                                              raw_material: product.raw_material || '',
-                                              master_batch_id: product.master_batch_id || '',
-                                              is_printed: product.is_printed || false,
-                                              cutting_unit: product.cutting_unit || '',
-                                              punching: product.punching || '',
-                                              unit_weight_kg: product.unit_weight_kg || '',
-                                              unit_quantity: product.unit_quantity || '',
-                                              package_weight_kg: product.package_weight_kg || '',
-                                              cliche_front_design: product.cliche_front_design || '',
-                                              cliche_back_design: product.cliche_back_design || '',
-                                              notes: product.notes || '',
-                                              status: product.status || 'active'
-                                            });
-                                            setSelectedTab('customer-products');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
+                                filteredCustomerProducts.map((product: any) => {
+                                  // Find customer details
+                                  const customer = Array.isArray(customers) ? customers.find((c: any) => c.id === product.customer_id) : null;
+                                  // Find item details
+                                  const item = Array.isArray(items) ? items.find((i: any) => i.id === product.item_id) : null;
+                                  
+                                  return (
+                                    <tr key={product.id} className="hover:bg-gray-50">
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {product.id}
+                                      </td>
+                                      <td className="px-3 py-4 text-sm text-gray-900">
+                                        <div className="flex flex-col">
+                                          <span className="font-medium">{customer?.name_ar || customer?.name || '-'}</span>
+                                          <span className="text-xs text-gray-500">{customer?.name || '-'}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {item?.name_ar || item?.name || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.size_caption || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.is_printed ? 
+                                          (product.printing_cylinder || 'بدون طباعة') : 
+                                          (product.cutting_length_cm ? `${formatNumber(parseFloat(product.cutting_length_cm))} سم` : '-')
+                                        }
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.raw_material || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.master_batch_id || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.punching || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.cutting_unit || '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900">
+                                        {product.package_weight_kg ? `${formatNumber(parseFloat(product.package_weight_kg))} كغ` : '-'}
+                                      </td>
+                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium">
+                                        <div className="flex items-center gap-1">
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(product);
+                                              setCustomerProductForm({
+                                                customer_id: product.customer_id || 'none',
+                                                category_id: product.category_id || 'none',
+                                                item_id: product.item_id || 'none',
+                                                size_caption: product.size_caption || '',
+                                                width: product.width || '',
+                                                left_facing: product.left_facing || '',
+                                                right_facing: product.right_facing || '',
+                                                thickness: product.thickness || '',
+                                                printing_cylinder: product.printing_cylinder || 'بدون طباعة',
+                                                cutting_length_cm: product.cutting_length_cm || '',
+                                                raw_material: product.raw_material || '',
+                                                master_batch_id: product.master_batch_id || '',
+                                                is_printed: product.is_printed || false,
+                                                cutting_unit: product.cutting_unit || '',
+                                                punching: product.punching || '',
+                                                unit_weight_kg: product.unit_weight_kg || '',
+                                                unit_quantity: product.unit_quantity || '',
+                                                package_weight_kg: product.package_weight_kg || '',
+                                                cliche_front_design: product.cliche_front_design || '',
+                                                cliche_back_design: product.cliche_back_design || '',
+                                                notes: product.notes || '',
+                                                status: product.status || 'active'
+                                              });
+                                              setSelectedTab('customer-products');
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-3 h-3" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  );
+                                })
                               ) : (
                                 <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                  <td colSpan={11} className="px-6 py-8 text-center text-gray-500">
                                     لا توجد منتجات مطابقة للبحث
                                   </td>
                                 </tr>

@@ -438,7 +438,7 @@ export default function Warehouse() {
                 <TrendingUp className="h-4 w-4 text-green-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats?.totalValue ? `${Number(stats.totalValue).toLocaleString()} د.ع` : '0 د.ع'}</div>
+                <div className="text-2xl font-bold">{stats?.totalValue ? `${Number(stats.totalValue).toLocaleString()} ر.س` : '0 ر.س'}</div>
                 <p className="text-xs text-muted-foreground">القيمة الإجمالية</p>
               </CardContent>
             </Card>
@@ -703,7 +703,7 @@ export default function Warehouse() {
                   <div className="flex justify-between items-center">
                     <div>
                       <CardTitle>حركات المخزون</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">تتبع جميع حركات دخول وخروج المخزون</p>
+                      <p className="text-sm text-gray-600 mt-1"> </p>
                     </div>
                     <Dialog open={isMovementDialogOpen} onOpenChange={setIsMovementDialogOpen}>
                       <DialogTrigger asChild>
