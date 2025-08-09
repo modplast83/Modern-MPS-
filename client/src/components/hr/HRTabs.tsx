@@ -1,8 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { GraduationCap, Target, Calendar, Users } from "lucide-react";
+import { GraduationCap, Target, Calendar, Users, Clock } from "lucide-react";
 import TrainingPrograms from "./TrainingPrograms.tsx";
 import PerformanceReviews from "./PerformanceReviews.tsx";
 import LeaveManagement from "./LeaveManagement.tsx";
+import AttendanceManagement from "./AttendanceManagement.tsx";
 
 export default function HRTabs() {
   return (
@@ -16,8 +17,15 @@ export default function HRTabs() {
         </p>
       </div>
 
-      <Tabs defaultValue="training" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800">
+      <Tabs defaultValue="attendance" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
+          <TabsTrigger 
+            value="attendance" 
+            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+          >
+            <Clock className="w-4 h-4" />
+            إدارة الحضور
+          </TabsTrigger>
           <TabsTrigger 
             value="training" 
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
@@ -40,6 +48,10 @@ export default function HRTabs() {
             إدارة الإجازات
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="attendance" className="space-y-4">
+          <AttendanceManagement />
+        </TabsContent>
 
         <TabsContent value="training" className="space-y-4">
           <TrainingPrograms />

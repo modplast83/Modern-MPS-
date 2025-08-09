@@ -32,6 +32,23 @@ export const users = pgTable('users', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+// 📋 جدول الحضور
+export const attendance = pgTable('attendance', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').notNull().references(() => users.id),
+  status: varchar('status', { length: 20 }).notNull().default('غائب'), // حاضر / غائب / استراحة غداء / مغادر
+  check_in_time: timestamp('check_in_time'),
+  check_out_time: timestamp('check_out_time'),
+  lunch_start_time: timestamp('lunch_start_time'),
+  lunch_end_time: timestamp('lunch_end_time'),
+  notes: text('notes'),
+  created_by: integer('created_by').references(() => users.id),
+  updated_by: integer('updated_by').references(() => users.id),
+  date: date('date').notNull().default(sql`CURRENT_DATE`),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // 🧾 جدول العملاء
 export const customers = pgTable('customers', {
   id: varchar('id', { length: 20 }).primaryKey(), // Changed to varchar to match CID001 format
@@ -143,17 +160,7 @@ export const quality_checks = pgTable('quality_checks', {
   created_at: timestamp('created_at').defaultNow()
 });
 
-// 👥 جدول الحضور والانصراف
-export const attendance = pgTable('attendance', {
-  id: serial('id').primaryKey(),
-  employee_id: varchar('employee_id', { length: 20 }).notNull().references(() => users.id),
-  check_in_time: timestamp('check_in_time'),
-  check_out_time: timestamp('check_out_time'),
-  date: date('date').notNull(),
-  overtime_minutes: integer('overtime_minutes').default(0),
-  location: varchar('location', { length: 100 }),
-  status: varchar('status', { length: 20 }).default('present'), // present / absent / late
-});
+
 
 // 🛠️ جدول طلبات الصيانة
 export const maintenance_requests = pgTable('maintenance_requests', {
@@ -803,7 +810,15 @@ export const insertLeaveBalanceSchema = createInsertSchema(leave_balances).omit(
   id: true,
 });
 
+export const insertAttendanceSchema = createInsertSchema(attendance).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // HR System Types
+export type Attendance = typeof attendance.$inferSelect;
+export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
 export type TrainingProgram = typeof training_programs.$inferSelect;
 export type InsertTrainingProgram = z.infer<typeof insertTrainingProgramSchema>;
 export type TrainingMaterial = typeof training_materials.$inferSelect;
