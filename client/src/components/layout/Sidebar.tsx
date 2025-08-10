@@ -10,7 +10,8 @@ import {
   Home,
   Link2,
   FileText,
-  LayoutDashboard
+  LayoutDashboard,
+  Bell
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -90,6 +91,13 @@ const modules = [
     name_ar: "تكامل ERP",
     icon: Link2,
     path: "/erp-integration",
+    active: false
+  },
+  {
+    name: "الإشعارات",
+    name_ar: "الإشعارات",
+    icon: Bell,
+    path: "/notifications",
     active: false
   },
   {

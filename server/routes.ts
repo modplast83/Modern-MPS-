@@ -40,6 +40,10 @@ const insertCustomerProductSchema = createInsertSchema(customer_products).omit({
 const insertLocationSchema = createInsertSchema(locations).omit({ id: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
+import { NotificationService } from "./services/notification-service";
+
+// Initialize notification service
+const notificationService = new NotificationService(storage);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -140,6 +144,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Dashboard stats error:", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
+    }
+  });
+
+  // ==== NOTIFICATIONS API ROUTES ====
+  
+  // Send WhatsApp message
+  app.post("/api/notifications/whatsapp", async (req, res) => {
+    try {
+      const { phone_number, message, title, priority, context_type, context_id } = req.body;
+      
+      if (!phone_number || !message) {
+        return res.status(400).json({ message: "رقم الهاتف والرسالة مطلوبان" });
+      }
+
+      const result = await notificationService.sendWhatsAppMessage(phone_number, message, {
+        title,
+        priority,
+        context_type,
+        context_id
+      });
+
+      if (result.success) {
+        res.json({ 
+          success: true, 
+          messageId: result.messageId,
+          message: "تم إرسال رسالة الواتس اب بنجاح"
+        });
+      } else {
+        res.status(500).json({ 
+          success: false, 
+          error: result.error,
+          message: "فشل في إرسال رسالة الواتس اب"
+        });
+      }
+    } catch (error: any) {
+      console.error("Error sending WhatsApp message:", error);
+      res.status(500).json({ message: "خطأ في إرسال رسالة الواتس اب" });
+    }
+  });
+
+  // Send test message
+  app.post("/api/notifications/test", async (req, res) => {
+    try {
+      const { phone_number } = req.body;
+      
+      if (!phone_number) {
+        return res.status(400).json({ message: "رقم الهاتف مطلوب" });
+      }
+
+      const result = await notificationService.sendTestMessage(phone_number);
+      
+      if (result.success) {
+        res.json({
+          success: true,
+          message: result.message
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: result.error
+        });
+      }
+    } catch (error: any) {
+      console.error("Error sending test message:", error);
+      res.status(500).json({ message: "خطأ في إرسال رسالة الاختبار" });
+    }
+  });
+
+  // Get notifications
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const userId = req.query.user_id ? parseInt(req.query.user_id as string) : undefined;
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error: any) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "خطأ في جلب الإشعارات" });
+    }
+  });
+
+  // Update notification status (Twilio webhook)
+  app.post("/api/notifications/webhook/twilio", async (req, res) => {
+    try {
+      const { MessageSid, MessageStatus, ErrorMessage } = req.body;
+      
+      if (MessageSid) {
+        await notificationService.updateMessageStatus(MessageSid);
+      }
+      
+      res.status(200).send("OK");
+    } catch (error: any) {
+      console.error("Error handling Twilio webhook:", error);
+      res.status(500).send("Error");
+    }
+  });
+
+  // Get notification templates
+  app.get("/api/notification-templates", async (req, res) => {
+    try {
+      const templates = await storage.getNotificationTemplates();
+      res.json(templates);
+    } catch (error: any) {
+      console.error("Error fetching notification templates:", error);
+      res.status(500).json({ message: "خطأ في جلب قوالب الإشعارات" });
+    }
+  });
+
+  // Create notification template
+  app.post("/api/notification-templates", async (req, res) => {
+    try {
+      const template = await storage.createNotificationTemplate(req.body);
+      res.json(template);
+    } catch (error: any) {
+      console.error("Error creating notification template:", error);
+      res.status(500).json({ message: "خطأ في إنشاء قالب الإشعار" });
     }
   });
 
@@ -2322,6 +2441,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/attendance", async (req, res) => {
     try {
       const attendance = await storage.createAttendance(req.body);
+      
+      // Send attendance notification
+      try {
+        const user = await storage.getUserById(req.body.user_id);
+        if (user && user.phone) {
+          let messageTemplate = '';
+          let priority = 'normal';
+          
+          switch (req.body.status) {
+            case 'حاضر':
+              messageTemplate = `مرحباً ${user.display_name_ar || user.username}، تم تسجيل حضورك اليوم بنجاح في ${new Date().toLocaleTimeString('ar-SA')}. نتمنى لك يوم عمل مثمر!`;
+              priority = 'normal';
+              break;
+            case 'في الاستراحة':
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل بدء استراحة الغداء في ${new Date().toLocaleTimeString('ar-SA')}. استمتع بوقت راحتك!`;
+              priority = 'low';
+              break;
+            case 'يعمل':
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انتهاء استراحة الغداء في ${new Date().toLocaleTimeString('ar-SA')}. مرحباً بعودتك للعمل!`;
+              priority = 'normal';
+              break;
+            case 'مغادر':
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انصرافك في ${new Date().toLocaleTimeString('ar-SA')}. شكراً لجهودك اليوم، نراك غداً!`;
+              priority = 'normal';
+              break;
+          }
+          
+          if (messageTemplate) {
+            await notificationService.sendWhatsAppMessage(user.phone, messageTemplate, {
+              title: 'تنبيه الحضور',
+              priority,
+              context_type: 'attendance',
+              context_id: attendance.id?.toString()
+            });
+          }
+        }
+      } catch (notificationError) {
+        console.error("Failed to send attendance notification:", notificationError);
+        // Don't fail the main request if notification fails
+      }
+      
       res.status(201).json(attendance);
     } catch (error) {
       console.error('Error creating attendance:', error);

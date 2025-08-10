@@ -26,6 +26,9 @@ export const users = pgTable('users', {
   password: varchar('password', { length: 100 }).notNull(),
   display_name: varchar('display_name', { length: 100 }),
   display_name_ar: varchar('display_name_ar', { length: 100 }),
+  full_name: varchar('full_name', { length: 200 }),
+  phone: varchar('phone', { length: 20 }), // رقم الهاتف للواتس اب
+  email: varchar('email', { length: 100 }),
   role_id: integer('role_id').references(() => roles.id),
   section_id: integer('section_id'),
   status: varchar('status', { length: 20 }).default('active'), // active / suspended / deleted
@@ -463,6 +466,66 @@ export const company_profile = pgTable('company_profile', {
   default_language: varchar('default_language', { length: 10 }).default('ar'),
 });
 
+// 📢 جدول الإشعارات والرسائل
+export const notifications = pgTable('notifications', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  title_ar: varchar('title_ar', { length: 200 }),
+  message: text('message').notNull(),
+  message_ar: text('message_ar'),
+  type: varchar('type', { length: 30 }).notNull(), // whatsapp / sms / email / push / system
+  priority: varchar('priority', { length: 20 }).default('normal'), // low / normal / high / urgent
+  
+  // Recipients
+  recipient_type: varchar('recipient_type', { length: 20 }).notNull(), // user / group / role / all
+  recipient_id: varchar('recipient_id', { length: 20 }), // user_id, role_id, or null for 'all'
+  phone_number: varchar('phone_number', { length: 20 }),
+  
+  // Status tracking
+  status: varchar('status', { length: 20 }).default('pending'), // pending / sent / delivered / failed / read
+  sent_at: timestamp('sent_at'),
+  delivered_at: timestamp('delivered_at'),
+  read_at: timestamp('read_at'),
+  
+  // Twilio/WhatsApp specific
+  twilio_sid: varchar('twilio_sid', { length: 100 }), // Twilio message SID
+  external_status: varchar('external_status', { length: 30 }), // Twilio status callback
+  error_message: text('error_message'),
+  
+  // Metadata
+  scheduled_for: timestamp('scheduled_for'), // For scheduled messages
+  context_type: varchar('context_type', { length: 30 }), // attendance / order / maintenance / hr
+  context_id: varchar('context_id', { length: 50 }), // Related record ID
+  
+  created_by: integer('created_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// 📋 جدول قوالب الإشعارات
+export const notification_templates = pgTable('notification_templates', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  name_ar: varchar('name_ar', { length: 100 }),
+  
+  // Template content
+  title_template: varchar('title_template', { length: 200 }).notNull(),
+  title_template_ar: varchar('title_template_ar', { length: 200 }),
+  message_template: text('message_template').notNull(),
+  message_template_ar: text('message_template_ar'),
+  
+  // Configuration
+  type: varchar('type', { length: 30 }).notNull(), // whatsapp / sms / email / push
+  trigger_event: varchar('trigger_event', { length: 50 }).notNull(), // order_created / attendance_late / etc
+  is_active: boolean('is_active').default(true),
+  
+  // Variables used in template (JSON array)
+  variables: json('variables').$type<string[]>(), // ["user_name", "order_number", etc.]
+  
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // 🛒 جدول منتجات العملاء (User's Custom Data Integration)
 export const customer_products = pgTable('customer_products', {
   id: serial('id').primaryKey(),
@@ -552,6 +615,24 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   items: many(items),
   customerProducts: many(customer_products),
 }));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+  createdBy: one(users, { fields: [notifications.created_by], references: [users.id] }),
+}));
+
+export const notificationTemplatesRelations = relations(notification_templates, ({ one }) => ({
+  // No direct relations needed for templates
+}));
+
+// Types for notifications
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = typeof notifications.$inferInsert;
+export type NotificationTemplate = typeof notification_templates.$inferSelect;
+export type InsertNotificationTemplate = typeof notification_templates.$inferInsert;
+
+// Insert schemas for notifications
+export const insertNotificationSchema = createInsertSchema(notifications);
+export const insertNotificationTemplateSchema = createInsertSchema(notification_templates);
 
 export const itemsRelations = relations(items, ({ one, many }) => ({
   category: one(categories, { fields: [items.category_id], references: [categories.id] }),
