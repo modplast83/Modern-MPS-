@@ -18,7 +18,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for current user session via API
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/me');
+        const response = await fetch('/api/me', {
+          credentials: 'include' // Include cookies for session validation
+        });
         if (response.ok) {
           const data = await response.json();
           setUser(data.user);
@@ -46,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Ensure cookies are included in requests
         body: JSON.stringify({ username, password }),
       });
 
@@ -66,12 +69,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/logout', { method: 'POST' });
+      await fetch('/api/logout', { 
+        method: 'POST',
+        credentials: 'include' // Ensure cookies are included
+      });
     } catch (error) {
       console.warn('Error during logout:', error);
     }
     setUser(null);
     localStorage.removeItem('mpbf_user');
+    // Clear any cached queries related to user data
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
   };
 
   return (

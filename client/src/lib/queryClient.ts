@@ -74,7 +74,15 @@ export const queryClient = new QueryClient({
         if (failureCount > 2) return false;
         if (error instanceof Error) {
           // Don't retry auth errors (401, 403) or client errors (4xx)
-          if (error.message.includes('401') || error.message.includes('403') || error.message.includes('4')) {
+          if (error.message.includes('401') || error.message.includes('403')) {
+            return false;
+          }
+          // Don't retry on validation errors (400)
+          if (error.message.includes('400')) {
+            return false;
+          }
+          // Don't retry on 404 or other client errors
+          if (error.message.includes('404') || error.message.includes('422')) {
             return false;
           }
         }

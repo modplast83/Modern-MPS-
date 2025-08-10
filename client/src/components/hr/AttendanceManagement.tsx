@@ -134,8 +134,22 @@ export default function AttendanceManagement() {
     return recordDate === today;
   });
 
-  // Create attendance summary for all users
-  const attendanceSummary = users.map((user: any) => {
+  // Create attendance summary for all users with proper typing
+  interface AttendanceSummaryItem {
+    id: number;
+    username: string;
+    display_name?: string;
+    display_name_ar?: string;
+    attendance: {
+      status: string;
+      user_id: number;
+      notes?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
+  }
+
+  const attendanceSummary: AttendanceSummaryItem[] = users.map((user: any) => {
     const userAttendance = todayAttendance.find((record: any) => record.user_id === user.id);
     return {
       ...user,
@@ -256,7 +270,7 @@ export default function AttendanceManagement() {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">الحاضرون</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {attendanceSummary.filter(u => u.attendance.status === 'حاضر').length}
+                  {attendanceSummary.filter((u: AttendanceSummaryItem) => u.attendance.status === 'حاضر').length}
                 </p>
               </div>
             </div>
@@ -270,7 +284,7 @@ export default function AttendanceManagement() {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">الغائبون</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {attendanceSummary.filter(u => u.attendance.status === 'غائب').length}
+                  {attendanceSummary.filter((u: AttendanceSummaryItem) => u.attendance.status === 'غائب').length}
                 </p>
               </div>
             </div>
@@ -284,7 +298,7 @@ export default function AttendanceManagement() {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">استراحة الغداء</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {attendanceSummary.filter(u => u.attendance.status === 'استراحة غداء').length}
+                  {attendanceSummary.filter((u: AttendanceSummaryItem) => u.attendance.status === 'استراحة غداء').length}
                 </p>
               </div>
             </div>
@@ -298,7 +312,7 @@ export default function AttendanceManagement() {
               <div className="mr-4">
                 <p className="text-sm font-medium text-gray-600">المغادرون</p>
                 <p className="text-2xl font-bold text-gray-600">
-                  {attendanceSummary.filter(u => u.attendance.status === 'مغادر').length}
+                  {attendanceSummary.filter((u: AttendanceSummaryItem) => u.attendance.status === 'مغادر').length}
                 </p>
               </div>
             </div>

@@ -114,16 +114,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error("Session destroy error:", err);
             return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
           }
+          // Clear all possible session cookies
           res.clearCookie('connect.sid');
+          res.clearCookie('plastic-bag-session');
           res.json({ message: "تم تسجيل الخروج بنجاح" });
         });
       } else {
+        // Fallback session clearing
         req.session = {} as any;
+        res.clearCookie('connect.sid');
+        res.clearCookie('plastic-bag-session');
         res.json({ message: "تم تسجيل الخروج بنجاح" });
       }
     } catch (error) {
       console.error("Logout error:", error);
-      res.status(500).json({ message: "خطأ في الخادم" });
+      res.status(500).json({ message: "خطأ في تسجيل الخروج" });
     }
   });
 
