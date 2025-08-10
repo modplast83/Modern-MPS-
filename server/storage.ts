@@ -34,6 +34,8 @@ import {
   leave_balances,
   system_settings,
   user_settings,
+  notifications,
+  notification_templates,
   type User, 
   type InsertUser,
   type NewOrder,
@@ -86,7 +88,11 @@ import {
   type UserSetting,
   type InsertUserSetting,
   type LeaveBalance,
-  type InsertLeaveBalance
+  type InsertLeaveBalance,
+  type Notification,
+  type InsertNotification,
+  type NotificationTemplate,
+  type InsertNotificationTemplate
 } from "@shared/schema";
 
 import {
@@ -322,6 +328,17 @@ export interface IStorage {
   optimizeTables(): Promise<any>;
   checkDatabaseIntegrity(): Promise<any>;
   cleanupOldData(daysOld: number): Promise<any>;
+
+  // Notifications
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId?: number): Promise<Notification[]>;
+  updateNotificationStatus(twilioSid: string, updates: Partial<Notification>): Promise<Notification>;
+  getUserById(id: number): Promise<User | undefined>;
+  getUsersByRole(roleId: number): Promise<User[]>;
+  
+  // Notification Templates
+  getNotificationTemplates(): Promise<NotificationTemplate[]>;
+  createNotificationTemplate(template: InsertNotificationTemplate): Promise<NotificationTemplate>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2539,13 +2556,97 @@ export class DatabaseStorage implements IStorage {
   }
 
   // User Management
-  async getUserById(id: number): Promise<any> {
+  async getUserById(id: number): Promise<User | undefined> {
     try {
-      const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-      return result.rows[0] || null;
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user || undefined;
     } catch (error) {
       console.error('Error getting user by ID:', error);
       throw new Error('فشل في جلب بيانات المستخدم');
+    }
+  }
+
+  async getUsersByRole(roleId: number): Promise<User[]> {
+    try {
+      return await db.select().from(users).where(eq(users.role_id, roleId));
+    } catch (error) {
+      console.error('Error getting users by role:', error);
+      throw new Error('فشل في جلب المستخدمين حسب الدور');
+    }
+  }
+
+  // ============ Notifications Management ============
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    try {
+      const [notification] = await db
+        .insert(notifications)
+        .values(notificationData)
+        .returning();
+      return notification;
+    } catch (error) {
+      console.error('Error creating notification:', error);
+      throw new Error('فشل في إنشاء الإشعار');
+    }
+  }
+
+  async getNotifications(userId?: number): Promise<Notification[]> {
+    try {
+      if (userId) {
+        return await db
+          .select()
+          .from(notifications)
+          .where(eq(notifications.recipient_id, userId.toString()))
+          .orderBy(desc(notifications.created_at));
+      } else {
+        return await db
+          .select()
+          .from(notifications)
+          .orderBy(desc(notifications.created_at));
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      throw new Error('فشل في جلب الإشعارات');
+    }
+  }
+
+  async updateNotificationStatus(twilioSid: string, updates: Partial<Notification>): Promise<Notification> {
+    try {
+      const [notification] = await db
+        .update(notifications)
+        .set(updates)
+        .where(eq(notifications.twilio_sid, twilioSid))
+        .returning();
+      return notification;
+    } catch (error) {
+      console.error('Error updating notification status:', error);
+      throw new Error('فشل في تحديث حالة الإشعار');
+    }
+  }
+
+  // ============ Notification Templates Management ============
+  async getNotificationTemplates(): Promise<NotificationTemplate[]> {
+    try {
+      return await db
+        .select()
+        .from(notification_templates)
+        .where(eq(notification_templates.is_active, true))
+        .orderBy(notification_templates.name);
+    } catch (error) {
+      console.error('Error fetching notification templates:', error);
+      throw new Error('فشل في جلب قوالب الإشعارات');
+    }
+  }
+
+  async createNotificationTemplate(templateData: InsertNotificationTemplate): Promise<NotificationTemplate> {
+    try {
+      const [template] = await db
+        .insert(notification_templates)
+        .values(templateData)
+        .returning();
+      return template;
+    } catch (error) {
+      console.error('Error creating notification template:', error);
+      throw new Error('فشل في إنشاء قالب الإشعار');
     }
   }
 }

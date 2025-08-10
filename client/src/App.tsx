@@ -18,6 +18,7 @@ import Reports from "@/pages/reports";
 import MLAnalytics from "@/pages/ml-analytics";
 import ERPIntegration from "@/pages/erp-integration";
 import Orders from "@/pages/orders";
+import Notifications from "@/pages/notifications";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -99,6 +100,11 @@ function Router() {
       <Route path="/orders">
         <ProtectedRoute>
           <Orders />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/notifications">
+        <ProtectedRoute>
+          <Notifications />
         </ProtectedRoute>
       </Route>
       <Route path="/user-dashboard">
