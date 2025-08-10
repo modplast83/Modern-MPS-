@@ -405,19 +405,19 @@ export default function UserDashboard() {
                         >
                           {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4">
+                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
-                            const todayRecord = attendanceRecords?.find(record => 
+                            const todayRecords = attendanceRecords?.filter(record => 
                               record.date === new Date().toISOString().split('T')[0] && 
-                              record.user_id === user?.id && 
-                              record.check_in_time
+                              record.user_id === user?.id
                             );
-                            return todayRecord?.check_in_time ? 
-                              new Date(todayRecord.check_in_time).toLocaleTimeString('en-US', {
+                            const checkInRecord = todayRecords?.find(record => record.check_in_time);
+                            return checkInRecord?.check_in_time ? 
+                              new Date(checkInRecord.check_in_time).toLocaleTimeString('ar-SA', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: true
-                              }) : '';
+                              }).replace('ص', 'ص').replace('م', 'م') : '';
                           })()}
                         </div>
                       </div>
@@ -431,19 +431,19 @@ export default function UserDashboard() {
                         >
                           {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم اخذ استراحة' : 'بدء استراحة'}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4">
+                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
-                            const todayRecord = attendanceRecords?.find(record => 
+                            const todayRecords = attendanceRecords?.filter(record => 
                               record.date === new Date().toISOString().split('T')[0] && 
-                              record.user_id === user?.id && 
-                              record.lunch_start_time
+                              record.user_id === user?.id
                             );
-                            return todayRecord?.lunch_start_time ? 
-                              new Date(todayRecord.lunch_start_time).toLocaleTimeString('en-US', {
+                            const lunchStartRecord = todayRecords?.find(record => record.lunch_start_time);
+                            return lunchStartRecord?.lunch_start_time ? 
+                              new Date(lunchStartRecord.lunch_start_time).toLocaleTimeString('ar-SA', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: true
-                              }) : '';
+                              }).replace('ص', 'ص').replace('م', 'م') : '';
                           })()}
                         </div>
                       </div>
@@ -457,19 +457,19 @@ export default function UserDashboard() {
                         >
                           {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم انهاء الاستراحة' : 'انهاء الاستراحة'}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4">
+                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
-                            const todayRecord = attendanceRecords?.find(record => 
+                            const todayRecords = attendanceRecords?.filter(record => 
                               record.date === new Date().toISOString().split('T')[0] && 
-                              record.user_id === user?.id && 
-                              record.lunch_end_time
+                              record.user_id === user?.id
                             );
-                            return todayRecord?.lunch_end_time ? 
-                              new Date(todayRecord.lunch_end_time).toLocaleTimeString('en-US', {
+                            const lunchEndRecord = todayRecords?.find(record => record.lunch_end_time);
+                            return lunchEndRecord?.lunch_end_time ? 
+                              new Date(lunchEndRecord.lunch_end_time).toLocaleTimeString('ar-SA', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: true
-                              }) : '';
+                              }).replace('ص', 'ص').replace('م', 'م') : '';
                           })()}
                         </div>
                       </div>
@@ -483,19 +483,19 @@ export default function UserDashboard() {
                         >
                           {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'الانصراف'}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4">
+                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
-                            const todayRecord = attendanceRecords?.find(record => 
+                            const todayRecords = attendanceRecords?.filter(record => 
                               record.date === new Date().toISOString().split('T')[0] && 
-                              record.user_id === user?.id && 
-                              record.check_out_time
+                              record.user_id === user?.id
                             );
-                            return todayRecord?.check_out_time ? 
-                              new Date(todayRecord.check_out_time).toLocaleTimeString('en-US', {
+                            const checkOutRecord = todayRecords?.find(record => record.check_out_time);
+                            return checkOutRecord?.check_out_time ? 
+                              new Date(checkOutRecord.check_out_time).toLocaleTimeString('ar-SA', {
                                 hour: '2-digit',
                                 minute: '2-digit',
                                 hour12: true
-                              }) : '';
+                              }).replace('ص', 'ص').replace('م', 'م') : '';
                           })()}
                         </div>
                       </div>
