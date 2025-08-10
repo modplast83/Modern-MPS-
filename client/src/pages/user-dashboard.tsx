@@ -396,34 +396,109 @@ export default function UserDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <Button 
-                        onClick={() => handleAttendanceAction('حاضر')}
-                        className="bg-green-600 hover:bg-green-700"
-                        disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
-                      >
-                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
-                      </Button>
-                      <Button 
-                        onClick={() => handleAttendanceAction('في الاستراحة')}
-                        className="bg-yellow-600 hover:bg-yellow-700"
-                        disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
-                      >
-                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم اخذ استراحة' : 'بدء استراحة'}
-                      </Button>
-                      <Button 
-                        onClick={() => handleAttendanceAction('يعمل', 'end_lunch')}
-                        className="bg-blue-600 hover:bg-blue-700"
-                        disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
-                      >
-                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم انهاء الاستراحة' : 'انهاء الاستراحة'}
-                      </Button>
-                      <Button 
-                        onClick={() => handleAttendanceAction('مغادر')}
-                        className="bg-gray-600 hover:bg-gray-700"
-                        disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasCheckedOut || attendanceMutation.isPending}
-                      >
-                        {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'الانصراف'}
-                      </Button>
+                      {/* Check In Button */}
+                      <div className="flex flex-col items-center">
+                        <Button 
+                          onClick={() => handleAttendanceAction('حاضر')}
+                          className="bg-green-600 hover:bg-green-700 w-full"
+                          disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
+                        >
+                          {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
+                        </Button>
+                        <div className="text-xs text-gray-500 mt-1 h-4">
+                          {(() => {
+                            const todayRecord = attendanceRecords?.find(record => 
+                              record.date === new Date().toISOString().split('T')[0] && 
+                              record.user_id === user?.id && 
+                              record.check_in_time
+                            );
+                            return todayRecord?.check_in_time ? 
+                              new Date(todayRecord.check_in_time).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }) : '';
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Lunch Start Button */}
+                      <div className="flex flex-col items-center">
+                        <Button 
+                          onClick={() => handleAttendanceAction('في الاستراحة')}
+                          className="bg-yellow-600 hover:bg-yellow-700 w-full"
+                          disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
+                        >
+                          {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم اخذ استراحة' : 'بدء استراحة'}
+                        </Button>
+                        <div className="text-xs text-gray-500 mt-1 h-4">
+                          {(() => {
+                            const todayRecord = attendanceRecords?.find(record => 
+                              record.date === new Date().toISOString().split('T')[0] && 
+                              record.user_id === user?.id && 
+                              record.lunch_start_time
+                            );
+                            return todayRecord?.lunch_start_time ? 
+                              new Date(todayRecord.lunch_start_time).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }) : '';
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Lunch End Button */}
+                      <div className="flex flex-col items-center">
+                        <Button 
+                          onClick={() => handleAttendanceAction('يعمل', 'end_lunch')}
+                          className="bg-blue-600 hover:bg-blue-700 w-full"
+                          disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
+                        >
+                          {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم انهاء الاستراحة' : 'انهاء الاستراحة'}
+                        </Button>
+                        <div className="text-xs text-gray-500 mt-1 h-4">
+                          {(() => {
+                            const todayRecord = attendanceRecords?.find(record => 
+                              record.date === new Date().toISOString().split('T')[0] && 
+                              record.user_id === user?.id && 
+                              record.lunch_end_time
+                            );
+                            return todayRecord?.lunch_end_time ? 
+                              new Date(todayRecord.lunch_end_time).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }) : '';
+                          })()}
+                        </div>
+                      </div>
+
+                      {/* Check Out Button */}
+                      <div className="flex flex-col items-center">
+                        <Button 
+                          onClick={() => handleAttendanceAction('مغادر')}
+                          className="bg-gray-600 hover:bg-gray-700 w-full"
+                          disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasCheckedOut || attendanceMutation.isPending}
+                        >
+                          {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'الانصراف'}
+                        </Button>
+                        <div className="text-xs text-gray-500 mt-1 h-4">
+                          {(() => {
+                            const todayRecord = attendanceRecords?.find(record => 
+                              record.date === new Date().toISOString().split('T')[0] && 
+                              record.user_id === user?.id && 
+                              record.check_out_time
+                            );
+                            return todayRecord?.check_out_time ? 
+                              new Date(todayRecord.check_out_time).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                hour12: true
+                              }) : '';
+                          })()}
+                        </div>
+                      </div>
                     </div>
                     
                     {/* Status indicator with timestamps */}
