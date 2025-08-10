@@ -18,21 +18,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check for current user session via API
     const checkAuth = async () => {
       try {
+        // First check localStorage for cached user data
+        const cachedUser = localStorage.getItem('mpbf_user');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+            setIsLoading(false);
+          } catch (e) {
+            localStorage.removeItem('mpbf_user');
+          }
+        }
+
+        // Then verify with server
         const response = await fetch('/api/me', {
           credentials: 'include' // Include cookies for session validation
         });
+        
         if (response.ok) {
           const data = await response.json();
           setUser(data.user);
+          localStorage.setItem('mpbf_user', JSON.stringify(data.user));
         } else {
-          // No active session
+          // No active session on server
           setUser(null);
           localStorage.removeItem('mpbf_user');
         }
       } catch (error) {
         console.warn('Error checking auth session:', error);
-        setUser(null);
-        localStorage.removeItem('mpbf_user');
+        // Keep cached user if server is unreachable, but session might still be valid
+        const cachedUser = localStorage.getItem('mpbf_user');
+        if (!cachedUser) {
+          setUser(null);
+        }
       }
       setIsLoading(false);
     };
