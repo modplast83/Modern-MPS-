@@ -73,6 +73,16 @@ Advanced AI-powered order management system for plastic bag manufacturing, enhan
 
 ## Recent Changes
 
+- **August 10, 2025**: Enhanced Quick Attendance Actions with Time Display - COMPLETED ✅
+  - **Time Display Under Buttons**: Added real-time timestamps under each quick attendance button
+  - **Arabic Time Format**: Displays times in Arabic locale (ar-SA) with AM/PM format (ص/م)
+  - **Individual Action Times**: Shows specific times for check-in, lunch start, lunch end, and check-out
+  - **Centered Layout**: Professional centered text alignment under each button
+  - **Real-time Updates**: Times appear immediately after each action is registered
+  - **Improved UX**: Users can now see exactly when each attendance action was performed
+  - **Fixed Status Updates**: Corrected status transitions (lunch end → "حاضر" instead of "يعمل")
+  - **Session Management**: Fixed browser refresh logout issue with proper session middleware
+
 - **August 10, 2025**: Enhanced Attendance System with Daily Limits and Time Tracking - COMPLETED ✅
   - **Daily Event Limits**: Each user can now register each attendance event only once per day
   - **Logical Sequence Validation**: Enforced proper sequence (check-in → lunch start → lunch end → check-out)
