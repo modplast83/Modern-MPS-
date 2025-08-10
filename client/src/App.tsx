@@ -19,6 +19,8 @@ import MLAnalytics from "@/pages/ml-analytics";
 import ERPIntegration from "@/pages/erp-integration";
 import Orders from "@/pages/orders";
 import Notifications from "@/pages/notifications";
+import WhatsAppSetup from "@/pages/whatsapp-setup";
+import WhatsAppConfig from "@/pages/whatsapp-config";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -105,6 +107,16 @@ function Router() {
       <Route path="/notifications">
         <ProtectedRoute>
           <Notifications />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-setup">
+        <ProtectedRoute>
+          <WhatsAppSetup />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-config">
+        <ProtectedRoute>
+          <WhatsAppConfig />
         </ProtectedRoute>
       </Route>
       <Route path="/user-dashboard">
