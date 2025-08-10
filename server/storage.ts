@@ -2388,11 +2388,11 @@ export class DatabaseStorage implements IStorage {
         }
         if (record.lunch_start_time && !status.hasStartedLunch) {
           status.hasStartedLunch = true;
-          status.currentStatus = 'استراحة غداء';
+          status.currentStatus = 'في الاستراحة';
         }
         if (record.lunch_end_time && !status.hasEndedLunch) {
           status.hasEndedLunch = true;
-          status.currentStatus = 'حاضر';
+          status.currentStatus = 'يعمل';
         }
         if (record.check_out_time && !status.hasCheckedOut) {
           status.hasCheckedOut = true;
@@ -2426,7 +2426,7 @@ export class DatabaseStorage implements IStorage {
         throw new Error('تم تسجيل الحضور مسبقاً لهذا اليوم');
       }
       
-      if (status === 'استراحة غداء' && dailyStatus.hasStartedLunch) {
+      if (status === 'في الاستراحة' && dailyStatus.hasStartedLunch) {
         throw new Error('تم تسجيل بداية استراحة الغداء مسبقاً لهذا اليوم');
       }
       
@@ -2439,7 +2439,7 @@ export class DatabaseStorage implements IStorage {
       }
       
       // Additional validation for logical sequence
-      if (status === 'استراحة غداء' && !dailyStatus.hasCheckedIn) {
+      if (status === 'في الاستراحة' && !dailyStatus.hasCheckedIn) {
         throw new Error('يجب تسجيل الحضور أولاً قبل بداية استراحة الغداء');
       }
       
@@ -2466,11 +2466,11 @@ export class DatabaseStorage implements IStorage {
       // Set the appropriate timestamp based on action
       if (status === 'حاضر' && !action) {
         recordData.check_in_time = attendanceData.check_in_time || new Date().toISOString();
-      } else if (status === 'استراحة غداء') {
+      } else if (status === 'في الاستراحة') {
         recordData.lunch_start_time = attendanceData.lunch_start_time || new Date().toISOString();
       } else if (action === 'end_lunch') {
         recordData.lunch_end_time = attendanceData.lunch_end_time || new Date().toISOString();
-        recordData.status = 'حاضر'; // Return to work status
+        recordData.status = 'يعمل'; // Return to work status
       } else if (status === 'مغادر') {
         recordData.check_out_time = attendanceData.check_out_time || new Date().toISOString();
       }
