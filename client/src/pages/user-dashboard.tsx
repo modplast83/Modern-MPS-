@@ -298,9 +298,9 @@ export default function UserDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
-                        {todayAttendance ? (
-                          <Badge className={getStatusColor(todayAttendance.status)}>
-                            {todayAttendance.status}
+                        {dailyAttendanceStatus?.currentStatus ? (
+                          <Badge className={getStatusColor(dailyAttendanceStatus.currentStatus)}>
+                            {dailyAttendanceStatus.currentStatus}
                           </Badge>
                         ) : (
                           <Badge variant="outline">لم يتم التسجيل</Badge>
@@ -364,7 +364,7 @@ export default function UserDashboard() {
                         className="bg-green-600 hover:bg-green-700"
                         disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ الحضور' : 'الحضور'}
+                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('في الاستراحة')}
