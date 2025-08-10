@@ -260,7 +260,7 @@ export default function UserDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
-                        {new Date().toLocaleDateString('ar-SA', { 
+                        {new Date().toLocaleDateString('en-US', { 
                           weekday: 'long', 
                           year: 'numeric', 
                           month: 'long', 
@@ -268,9 +268,10 @@ export default function UserDashboard() {
                         })}
                       </h2>
                       <p className="text-sm text-blue-600 dark:text-blue-300">
-                        {new Date().toLocaleTimeString('ar-SA', {
+                        {new Date().toLocaleTimeString('en-US', {
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
+                          hour12: true
                         })}
                       </p>
                     </div>
@@ -315,7 +316,7 @@ export default function UserDashboard() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">
-                        {formatNumber(attendanceRecords?.filter(r => r.status === 'حاضر').length || 0)}
+                        {formatNumber(attendanceRecords?.filter(r => r.check_in_time !== null).length || 0)}
                       </div>
                       <p className="text-xs text-muted-foreground">هذا الشهر</p>
                     </CardContent>
@@ -363,28 +364,28 @@ export default function UserDashboard() {
                         className="bg-green-600 hover:bg-green-700"
                         disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'تسجيل الحضور'}
+                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('في الاستراحة')}
                         className="bg-yellow-600 hover:bg-yellow-700"
                         disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم البداية' : 'بداية الاستراحة'}
+                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم البداية' : 'بدء استراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('يعمل', 'end_lunch')}
                         className="bg-blue-600 hover:bg-blue-700"
                         disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم النهاية' : 'نهاية الاستراحة'}
+                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم النهاية' : 'انهاء الاستراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('مغادر')}
                         className="bg-gray-600 hover:bg-gray-700"
                         disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasCheckedOut || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'تسجيل الانصراف'}
+                        {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'الانصراف'}
                       </Button>
                     </div>
                     
@@ -399,9 +400,10 @@ export default function UserDashboard() {
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-green-600">✓ تسجيل الحضور</span>
                               <span className="text-gray-600">
-                                {new Date(record.check_in_time).toLocaleTimeString('ar-SA', {
+                                {new Date(record.check_in_time).toLocaleTimeString('en-US', {
                                   hour: '2-digit',
-                                  minute: '2-digit'
+                                  minute: '2-digit',
+                                  hour12: true
                                 })}
                               </span>
                             </div>
@@ -410,9 +412,10 @@ export default function UserDashboard() {
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-yellow-600">✓ بداية الاستراحة</span>
                               <span className="text-gray-600">
-                                {new Date(record.lunch_start_time).toLocaleTimeString('ar-SA', {
+                                {new Date(record.lunch_start_time).toLocaleTimeString('en-US', {
                                   hour: '2-digit',
-                                  minute: '2-digit'
+                                  minute: '2-digit',
+                                  hour12: true
                                 })}
                               </span>
                             </div>
@@ -421,9 +424,10 @@ export default function UserDashboard() {
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-blue-600">✓ نهاية الاستراحة</span>
                               <span className="text-gray-600">
-                                {new Date(record.lunch_end_time).toLocaleTimeString('ar-SA', {
+                                {new Date(record.lunch_end_time).toLocaleTimeString('en-US', {
                                   hour: '2-digit',
-                                  minute: '2-digit'
+                                  minute: '2-digit',
+                                  hour12: true
                                 })}
                               </span>
                             </div>
@@ -432,9 +436,10 @@ export default function UserDashboard() {
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-gray-600">✓ تسجيل الانصراف</span>
                               <span className="text-gray-600">
-                                {new Date(record.check_out_time).toLocaleTimeString('ar-SA', {
+                                {new Date(record.check_out_time).toLocaleTimeString('en-US', {
                                   hour: '2-digit',
-                                  minute: '2-digit'
+                                  minute: '2-digit',
+                                  hour12: true
                                 })}
                               </span>
                             </div>
@@ -491,10 +496,11 @@ export default function UserDashboard() {
                                 {record.status}
                               </Badge>
                               <span className="font-medium text-gray-700 dark:text-gray-300">
-                                {new Date(record.date).toLocaleDateString('ar-SA', {
+                                {new Date(record.date).toLocaleDateString('en-US', {
                                   weekday: 'short',
                                   month: 'short',
-                                  day: 'numeric'
+                                  day: 'numeric',
+                                  year: 'numeric'
                                 })}
                               </span>
                             </div>
@@ -510,9 +516,10 @@ export default function UserDashboard() {
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">دخول</span>
                                 <span className="font-medium text-green-600">
-                                  {new Date(record.check_in_time).toLocaleTimeString('ar-SA', {
+                                  {new Date(record.check_in_time).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
+                                    hour12: true
                                   })}
                                 </span>
                               </div>
@@ -522,9 +529,10 @@ export default function UserDashboard() {
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">بداية استراحة</span>
                                 <span className="font-medium text-yellow-600">
-                                  {new Date(record.lunch_start_time).toLocaleTimeString('ar-SA', {
+                                  {new Date(record.lunch_start_time).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
+                                    hour12: true
                                   })}
                                 </span>
                               </div>
@@ -534,9 +542,10 @@ export default function UserDashboard() {
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">نهاية استراحة</span>
                                 <span className="font-medium text-blue-600">
-                                  {new Date(record.lunch_end_time).toLocaleTimeString('ar-SA', {
+                                  {new Date(record.lunch_end_time).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
+                                    hour12: true
                                   })}
                                 </span>
                               </div>
@@ -546,9 +555,10 @@ export default function UserDashboard() {
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">خروج</span>
                                 <span className="font-medium text-gray-600">
-                                  {new Date(record.check_out_time).toLocaleTimeString('ar-SA', {
+                                  {new Date(record.check_out_time).toLocaleTimeString('en-US', {
                                     hour: '2-digit',
-                                    minute: '2-digit'
+                                    minute: '2-digit',
+                                    hour12: true
                                   })}
                                 </span>
                               </div>
