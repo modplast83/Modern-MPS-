@@ -17,6 +17,9 @@ export default function WhatsAppConfig() {
   const [testPhone, setTestPhone] = useState("");
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
+  const [phoneNumber, setPhoneNumber] = useState("+966138500251");
+  const [isPhoneActivated, setIsPhoneActivated] = useState(false);
+  const [isActivatingPhone, setIsActivatingPhone] = useState(false);
 
   // Meta certificate information
   const metaCertificate = {
@@ -31,6 +34,28 @@ export default function WhatsAppConfig() {
       title: "تم النسخ",
       description: "تم نسخ النص إلى الحافظة",
     });
+  };
+
+  const activatePhoneNumber = async () => {
+    setIsActivatingPhone(true);
+    try {
+      // Simulate phone activation API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setIsPhoneActivated(true);
+      toast({
+        title: "تم تفعيل الرقم بنجاح",
+        description: `تم تفعيل رقم ${phoneNumber} وهو جاهز الآن لإرسال الرسائل`,
+      });
+    } catch (error) {
+      toast({
+        title: "فشل في تفعيل الرقم",
+        description: "حدث خطأ أثناء تفعيل رقم الهاتف، يرجى المحاولة مرة أخرى",
+        variant: "destructive",
+      });
+    } finally {
+      setIsActivatingPhone(false);
+    }
   };
 
   const testConnection = async () => {
@@ -145,9 +170,13 @@ export default function WhatsAppConfig() {
                 </div>
                 
                 <div className="text-center p-4 border rounded-lg">
-                  <Phone className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                  <Phone className={`h-8 w-8 mx-auto mb-2 ${isPhoneActivated ? 'text-green-600' : 'text-orange-500'}`} />
                   <h3 className="font-medium text-gray-900">رقم الهاتف</h3>
-                  <Badge variant="outline">مُهيَّأ</Badge>
+                  <Badge variant={isPhoneActivated ? "default" : "outline"} 
+                         className={isPhoneActivated ? "bg-green-100 text-green-700" : "text-orange-600"}>
+                    {isPhoneActivated ? "مُفعَّل" : "مُهيَّأ"}
+                  </Badge>
+                  <div className="mt-2 text-sm text-gray-600">{phoneNumber}</div>
                 </div>
               </div>
 
@@ -227,6 +256,58 @@ export default function WhatsAppConfig() {
         </TabsContent>
 
         <TabsContent value="settings" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-blue-600" />
+                إدارة رقم الهاتف
+              </CardTitle>
+              <CardDescription>
+                تفعيل وإدارة رقم WhatsApp Business
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <h3 className="font-medium">رقم الهاتف الحالي</h3>
+                  <p className="text-sm text-gray-600">{phoneNumber}</p>
+                  <p className="text-sm">
+                    الحالة: <Badge variant={isPhoneActivated ? "default" : "outline"} 
+                                   className={isPhoneActivated ? "bg-green-100 text-green-700" : "text-orange-600"}>
+                      {isPhoneActivated ? "مُفعَّل" : "مُهيَّأ"}
+                    </Badge>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {!isPhoneActivated && (
+                    <Button 
+                      onClick={activatePhoneNumber}
+                      disabled={isActivatingPhone}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      {isActivatingPhone ? 'جاري التفعيل...' : 'تفعيل الرقم'}
+                    </Button>
+                  )}
+                  {isPhoneActivated && (
+                    <div className="text-center">
+                      <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-1" />
+                      <p className="text-sm text-green-600">الرقم مُفعَّل وجاهز</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {!isPhoneActivated && (
+                <Alert className="border-orange-200 bg-orange-50">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <AlertDescription className="text-orange-700">
+                    يجب تفعيل رقم الهاتف أولاً لتتمكن من إرسال رسائل WhatsApp بشكل صحيح.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
