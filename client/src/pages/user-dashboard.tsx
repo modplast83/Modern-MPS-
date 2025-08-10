@@ -114,6 +114,13 @@ export default function UserDashboard() {
     select: (data) => data.filter(request => request.user_id === user?.id)
   });
 
+  // Fetch daily attendance status
+  const { data: dailyAttendanceStatus } = useQuery({
+    queryKey: ['/api/attendance/daily-status', user?.id],
+    enabled: !!user?.id,
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
   // Current attendance status - get the latest record for today
   const todayAttendance = attendanceRecords?.filter(record => 
     record.date === new Date().toISOString().split('T')[0]
@@ -132,19 +139,30 @@ export default function UserDashboard() {
         body: JSON.stringify({
           user_id: user?.id,
           status: data.status,
+          action: data.action,
           date: new Date().toISOString().split('T')[0],
           notes: data.notes,
-          ...(data.status === 'حاضر' && !data.action && { check_in_time: new Date().toISOString() }),
-          ...(data.status === 'مغادر' && { check_out_time: new Date().toISOString() }),
-          ...(data.status === 'استراحة غداء' && data.action === 'start' && { lunch_start_time: new Date().toISOString() }),
-          ...(data.status === 'حاضر' && data.action === 'end_lunch' && { lunch_end_time: new Date().toISOString() }),
         })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل في تسجيل الحضور');
+      }
+      
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance/daily-status', user?.id] });
       toast({ title: "تم تسجيل الحضور بنجاح" });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "خطأ في التسجيل", 
+        description: error.message,
+        variant: "destructive"
+      });
     }
   });
 
@@ -293,37 +311,68 @@ export default function UserDashboard() {
                 <Card>
                   <CardHeader>
                     <CardTitle>عمليات الحضور السريعة</CardTitle>
+                    <CardDescription>
+                      الحالة الحالية: {dailyAttendanceStatus?.currentStatus || 'غائب'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <Button 
                         onClick={() => handleAttendanceAction('حاضر')}
                         className="bg-green-600 hover:bg-green-700"
-                        disabled={todayAttendance?.status === 'حاضر'}
+                        disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
                       >
-                        تسجيل الحضور
+                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'تسجيل الحضور'}
                       </Button>
                       <Button 
-                        onClick={() => handleAttendanceAction('استراحة غداء', 'start')}
+                        onClick={() => handleAttendanceAction('استراحة غداء')}
                         className="bg-yellow-600 hover:bg-yellow-700"
-                        disabled={todayAttendance?.status === 'استراحة غداء'}
+                        disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
                       >
-                        بداية الاستراحة
+                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم البداية' : 'بداية الاستراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('حاضر', 'end_lunch')}
                         className="bg-blue-600 hover:bg-blue-700"
-                        disabled={todayAttendance?.status !== 'استراحة غداء'}
+                        disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
                       >
-                        نهاية الاستراحة
+                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم النهاية' : 'نهاية الاستراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('مغادر')}
                         className="bg-gray-600 hover:bg-gray-700"
-                        disabled={todayAttendance?.status === 'مغادر'}
+                        disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasCheckedOut || attendanceMutation.isPending}
                       >
-                        تسجيل الانصراف
+                        {dailyAttendanceStatus?.hasCheckedOut ? '✓ تم الانصراف' : 'تسجيل الانصراف'}
                       </Button>
+                    </div>
+                    
+                    {/* Status indicator */}
+                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>تسجيل الحضور:</span>
+                        <span className={dailyAttendanceStatus?.hasCheckedIn ? 'text-green-600' : 'text-gray-400'}>
+                          {dailyAttendanceStatus?.hasCheckedIn ? '✓ مكتمل' : '⏳ لم يتم'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>بداية الاستراحة:</span>
+                        <span className={dailyAttendanceStatus?.hasStartedLunch ? 'text-yellow-600' : 'text-gray-400'}>
+                          {dailyAttendanceStatus?.hasStartedLunch ? '✓ مكتمل' : '⏳ لم يتم'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>نهاية الاستراحة:</span>
+                        <span className={dailyAttendanceStatus?.hasEndedLunch ? 'text-blue-600' : 'text-gray-400'}>
+                          {dailyAttendanceStatus?.hasEndedLunch ? '✓ مكتمل' : '⏳ لم يتم'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span>تسجيل الانصراف:</span>
+                        <span className={dailyAttendanceStatus?.hasCheckedOut ? 'text-gray-600' : 'text-gray-400'}>
+                          {dailyAttendanceStatus?.hasCheckedOut ? '✓ مكتمل' : '⏳ لم يتم'}
+                        </span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
