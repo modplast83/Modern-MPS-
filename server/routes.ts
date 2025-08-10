@@ -2286,12 +2286,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get daily attendance status for a user
+  app.get("/api/attendance/daily-status/:userId", async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const date = req.query.date as string || new Date().toISOString().split('T')[0];
+      
+      const status = await storage.getDailyAttendanceStatus(userId, date);
+      res.json(status);
+    } catch (error) {
+      console.error('Error fetching daily attendance status:', error);
+      res.status(500).json({ message: "خطأ في جلب حالة الحضور اليومية" });
+    }
+  });
+
   app.post("/api/attendance", async (req, res) => {
     try {
       const attendance = await storage.createAttendance(req.body);
       res.status(201).json(attendance);
     } catch (error) {
       console.error('Error creating attendance:', error);
+      
+      // Return the specific error message for validation errors
+      if (error instanceof Error && error.message.includes('تم تسجيل')) {
+        return res.status(400).json({ message: error.message });
+      }
+      
+      if (error instanceof Error && error.message.includes('يجب')) {
+        return res.status(400).json({ message: error.message });
+      }
+      
       res.status(500).json({ message: "خطأ في إنشاء سجل الحضور" });
     }
   });

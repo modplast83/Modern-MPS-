@@ -286,6 +286,13 @@ export interface IStorage {
   createAttendance(attendance: InsertAttendance): Promise<Attendance>;
   updateAttendance(id: number, attendance: Partial<Attendance>): Promise<Attendance>;
   deleteAttendance(id: number): Promise<void>;
+  getDailyAttendanceStatus(userId: number, date: string): Promise<{
+    hasCheckedIn: boolean;
+    hasStartedLunch: boolean;
+    hasEndedLunch: boolean;
+    hasCheckedOut: boolean;
+    currentStatus: string;
+  }>;
   
   // Users list
   getUsers(): Promise<User[]>;
@@ -2341,14 +2348,133 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Check daily attendance status for a user
+  async getDailyAttendanceStatus(userId: number, date: string): Promise<{
+    hasCheckedIn: boolean;
+    hasStartedLunch: boolean;
+    hasEndedLunch: boolean;
+    hasCheckedOut: boolean;
+    currentStatus: string;
+  }> {
+    try {
+      const query = `
+        SELECT 
+          check_in_time,
+          lunch_start_time,
+          lunch_end_time,
+          check_out_time,
+          status
+        FROM attendance 
+        WHERE user_id = $1 AND date = $2
+        ORDER BY created_at DESC
+      `;
+      
+      const result = await pool.query(query, [userId, date]);
+      const records = result.rows;
+      
+      const status = {
+        hasCheckedIn: false,
+        hasStartedLunch: false,
+        hasEndedLunch: false,
+        hasCheckedOut: false,
+        currentStatus: 'غائب'
+      };
+      
+      // Check each record for the specific actions
+      for (const record of records) {
+        if (record.check_in_time && !status.hasCheckedIn) {
+          status.hasCheckedIn = true;
+          status.currentStatus = 'حاضر';
+        }
+        if (record.lunch_start_time && !status.hasStartedLunch) {
+          status.hasStartedLunch = true;
+          status.currentStatus = 'استراحة غداء';
+        }
+        if (record.lunch_end_time && !status.hasEndedLunch) {
+          status.hasEndedLunch = true;
+          status.currentStatus = 'حاضر';
+        }
+        if (record.check_out_time && !status.hasCheckedOut) {
+          status.hasCheckedOut = true;
+          status.currentStatus = 'مغادر';
+        }
+      }
+      
+      return status;
+    } catch (error) {
+      console.error('Error getting daily attendance status:', error);
+      throw new Error('فشل في جلب حالة الحضور اليومية');
+    }
+  }
+
   async createAttendance(attendanceData: any): Promise<any> {
     try {
       console.log('Creating attendance with data:', attendanceData);
       
-      // Use SQL template literals with proper escaping
       const currentDate = attendanceData.date || new Date().toISOString().split('T')[0];
+      const userId = attendanceData.user_id;
       
-      // Use pool.query directly with all attendance fields
+      // Check current daily attendance status
+      const dailyStatus = await this.getDailyAttendanceStatus(userId, currentDate);
+      
+      // Validate the requested action based on current status
+      const action = attendanceData.action;
+      const status = attendanceData.status;
+      
+      // Validation rules for one-time actions per day
+      if (status === 'حاضر' && !action && dailyStatus.hasCheckedIn) {
+        throw new Error('تم تسجيل الحضور مسبقاً لهذا اليوم');
+      }
+      
+      if (status === 'استراحة غداء' && dailyStatus.hasStartedLunch) {
+        throw new Error('تم تسجيل بداية استراحة الغداء مسبقاً لهذا اليوم');
+      }
+      
+      if (action === 'end_lunch' && dailyStatus.hasEndedLunch) {
+        throw new Error('تم تسجيل نهاية استراحة الغداء مسبقاً لهذا اليوم');
+      }
+      
+      if (status === 'مغادر' && dailyStatus.hasCheckedOut) {
+        throw new Error('تم تسجيل الانصراف مسبقاً لهذا اليوم');
+      }
+      
+      // Additional validation for logical sequence
+      if (status === 'استراحة غداء' && !dailyStatus.hasCheckedIn) {
+        throw new Error('يجب تسجيل الحضور أولاً قبل بداية استراحة الغداء');
+      }
+      
+      if (action === 'end_lunch' && !dailyStatus.hasStartedLunch) {
+        throw new Error('يجب تسجيل بداية استراحة الغداء أولاً');
+      }
+      
+      if (status === 'مغادر' && !dailyStatus.hasCheckedIn) {
+        throw new Error('يجب تسجيل الحضور أولاً قبل الانصراف');
+      }
+      
+      // Prepare the attendance record based on action
+      let recordData = {
+        user_id: userId,
+        status: status,
+        check_in_time: null,
+        check_out_time: null,
+        lunch_start_time: null,
+        lunch_end_time: null,
+        notes: attendanceData.notes || '',
+        date: currentDate
+      };
+      
+      // Set the appropriate timestamp based on action
+      if (status === 'حاضر' && !action) {
+        recordData.check_in_time = attendanceData.check_in_time || new Date().toISOString();
+      } else if (status === 'استراحة غداء') {
+        recordData.lunch_start_time = attendanceData.lunch_start_time || new Date().toISOString();
+      } else if (action === 'end_lunch') {
+        recordData.lunch_end_time = attendanceData.lunch_end_time || new Date().toISOString();
+        recordData.status = 'حاضر'; // Return to work status
+      } else if (status === 'مغادر') {
+        recordData.check_out_time = attendanceData.check_out_time || new Date().toISOString();
+      }
+      
       const query = `
         INSERT INTO attendance (user_id, status, check_in_time, check_out_time, lunch_start_time, lunch_end_time, notes, date)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -2356,14 +2482,14 @@ export class DatabaseStorage implements IStorage {
       `;
       
       const values = [
-        attendanceData.user_id,
-        attendanceData.status,
-        attendanceData.check_in_time || null,
-        attendanceData.check_out_time || null,
-        attendanceData.lunch_start_time || null,
-        attendanceData.lunch_end_time || null,
-        attendanceData.notes || '',
-        currentDate
+        recordData.user_id,
+        recordData.status,
+        recordData.check_in_time,
+        recordData.check_out_time,
+        recordData.lunch_start_time,
+        recordData.lunch_end_time,
+        recordData.notes,
+        recordData.date
       ];
       
       console.log('Executing query:', query, 'with values:', values);
@@ -2372,7 +2498,7 @@ export class DatabaseStorage implements IStorage {
       return result.rows[0];
     } catch (error) {
       console.error('Error creating attendance:', error);
-      throw new Error('فشل في إنشاء سجل الحضور');
+      throw error; // Re-throw to preserve the specific error message
     }
   }
 
