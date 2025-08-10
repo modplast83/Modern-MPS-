@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
@@ -7,12 +8,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Configure CORS for cookies
+// Configure CORS for cookies - must be before session middleware
 app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  
+  // Allow requests from localhost during development
+  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('.replit.dev')) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
+  
   res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma, Cookie, Set-Cookie');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
@@ -20,11 +29,18 @@ app.use((req, res, next) => {
   }
 });
 
-// Configure sessions
+// Configure session store  
+const MemoryStoreSession = MemoryStore(session);
+
+// Configure sessions with proper store
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key-change-in-production-plastic-bag-system',
+  store: new MemoryStoreSession({
+    checkPeriod: 86400000 // prune expired entries every 24h
+  }),
+  secret: process.env.SESSION_SECRET || 'plastic-bag-manufacturing-system-secret-key-2025',
   resave: false,
   saveUninitialized: false,
+  rolling: true, // Reset expiry on activity
   cookie: {
     secure: false, // Set to true if using HTTPS in production
     httpOnly: true,
