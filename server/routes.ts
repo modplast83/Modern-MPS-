@@ -66,6 +66,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Save user session
       req.session.userId = user.id;
+      
+      // Debug session creation
+      console.log("Login successful - Session ID:", req.sessionID);
+      console.log("Login successful - User ID saved to session:", req.session.userId);
+      console.log("Login successful - Session data:", req.session);
 
       res.json({ 
         user: { 
@@ -85,15 +90,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user
   app.get("/api/me", async (req, res) => {
     try {
+      // Debug session information
+      console.log("Session check - Session ID:", req.sessionID);
+      console.log("Session check - User ID in session:", req.session?.userId);
+      console.log("Session check - Session data:", req.session);
+
       if (!req.session?.userId) {
+        console.log("No session or userId found, returning 401");
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
 
       const user = await storage.getUserById(req.session.userId);
       if (!user) {
+        console.log("User not found in database for ID:", req.session.userId);
         return res.status(404).json({ message: "المستخدم غير موجود" });
       }
 
+      console.log("User authenticated successfully:", user.username);
       res.json({ 
         user: { 
           id: user.id, 
