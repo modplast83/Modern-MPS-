@@ -72,6 +72,7 @@ export default function UserDashboard() {
   const queryClient = useQueryClient();
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
   const [locationError, setLocationError] = useState<string>('');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   // Get current location
   useEffect(() => {
@@ -88,6 +89,15 @@ export default function UserDashboard() {
         }
       );
     }
+  }, []);
+
+  // Update time display every minute for live hour calculation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
   }, []);
 
   // Fetch user data
@@ -299,9 +309,36 @@ export default function UserDashboard() {
                     <CardContent>
                       <div className="text-2xl font-bold">
                         {dailyAttendanceStatus?.currentStatus ? (
-                          <Badge className={getStatusColor(dailyAttendanceStatus.currentStatus)}>
-                            {dailyAttendanceStatus.currentStatus}
-                          </Badge>
+                          <div className="flex flex-col gap-2">
+                            <Badge className={getStatusColor(dailyAttendanceStatus.currentStatus)}>
+                              {dailyAttendanceStatus.currentStatus}
+                            </Badge>
+                            {(dailyAttendanceStatus.currentStatus === 'حاضر' || 
+                              dailyAttendanceStatus.currentStatus === 'في الاستراحة' || 
+                              dailyAttendanceStatus.currentStatus === 'يعمل' || 
+                              dailyAttendanceStatus.currentStatus === 'مغادر') && 
+                              dailyAttendanceStatus.hasCheckedIn && (
+                              <span className="text-sm text-gray-600 dark:text-gray-300">
+                                {(() => {
+                                  const todayRecord = attendanceRecords?.find(record => 
+                                    record.date === new Date().toISOString().split('T')[0] && 
+                                    record.user_id === user?.id &&
+                                    record.check_in_time
+                                  );
+                                  
+                                  if (!todayRecord?.check_in_time) return '';
+                                  
+                                  const checkIn = new Date(todayRecord.check_in_time);
+                                  const now = todayRecord.check_out_time ? new Date(todayRecord.check_out_time) : currentTime;
+                                  const diff = now.getTime() - checkIn.getTime();
+                                  const hours = Math.floor(diff / (1000 * 60 * 60));
+                                  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                  
+                                  return `${hours} ساعة ${minutes} دقيقة`;
+                                })()}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <Badge variant="outline">لم يتم التسجيل</Badge>
                         )}
