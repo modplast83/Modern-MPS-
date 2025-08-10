@@ -4,7 +4,11 @@ import { createServer, type Server } from "http";
 // Extend Express Request type to include session
 declare module 'express-serve-static-core' {
   interface Request {
-    session?: any;
+    session: {
+      userId?: number;
+      [key: string]: any;
+      destroy?: (callback: (err?: any) => void) => void;
+    };
   }
 }
 import { storage } from "./storage";
@@ -57,7 +61,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Save user session
-      req.session = req.session || {};
       req.session.userId = user.id;
 
       res.json({ 
@@ -105,8 +108,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Logout
   app.post("/api/logout", async (req, res) => {
     try {
-      req.session = null;
-      res.json({ message: "تم تسجيل الخروج بنجاح" });
+      if (req.session?.destroy) {
+        req.session.destroy((err) => {
+          if (err) {
+            console.error("Session destroy error:", err);
+            return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
+          }
+          res.clearCookie('connect.sid');
+          res.json({ message: "تم تسجيل الخروج بنجاح" });
+        });
+      } else {
+        req.session = {} as any;
+        res.json({ message: "تم تسجيل الخروج بنجاح" });
+      }
     } catch (error) {
       console.error("Logout error:", error);
       res.status(500).json({ message: "خطأ في الخادم" });
