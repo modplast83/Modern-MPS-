@@ -115,7 +115,13 @@ export default function UserDashboard() {
   });
 
   // Fetch daily attendance status
-  const { data: dailyAttendanceStatus } = useQuery({
+  const { data: dailyAttendanceStatus } = useQuery<{
+    hasCheckedIn: boolean;
+    hasStartedLunch: boolean;
+    hasEndedLunch: boolean;
+    hasCheckedOut: boolean;
+    currentStatus: string;
+  }>({
     queryKey: ['/api/attendance/daily-status', user?.id],
     enabled: !!user?.id,
     refetchInterval: 30000 // Refresh every 30 seconds
@@ -248,6 +254,39 @@ export default function UserDashboard() {
 
               {/* Overview Tab */}
               <TabsContent value="overview" className="space-y-6">
+                {/* Current Date Display */}
+                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                        {new Date().toLocaleDateString('ar-SA', { 
+                          weekday: 'long', 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </h2>
+                      <p className="text-sm text-blue-600 dark:text-blue-300">
+                        {new Date().toLocaleTimeString('ar-SA', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">الحالة الحالية</p>
+                      <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
+                        dailyAttendanceStatus?.currentStatus === 'حاضر' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                        dailyAttendanceStatus?.currentStatus === 'استراحة غداء' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        dailyAttendanceStatus?.currentStatus === 'مغادر' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300' :
+                        'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                      }`}>
+                        {dailyAttendanceStatus?.currentStatus || 'غائب'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -347,31 +386,86 @@ export default function UserDashboard() {
                       </Button>
                     </div>
                     
-                    {/* Status indicator */}
+                    {/* Status indicator with timestamps */}
                     <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div className="flex items-center justify-between text-sm">
-                        <span>تسجيل الحضور:</span>
-                        <span className={dailyAttendanceStatus?.hasCheckedIn ? 'text-green-600' : 'text-gray-400'}>
-                          {dailyAttendanceStatus?.hasCheckedIn ? '✓ مكتمل' : '⏳ لم يتم'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>بداية الاستراحة:</span>
-                        <span className={dailyAttendanceStatus?.hasStartedLunch ? 'text-yellow-600' : 'text-gray-400'}>
-                          {dailyAttendanceStatus?.hasStartedLunch ? '✓ مكتمل' : '⏳ لم يتم'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>نهاية الاستراحة:</span>
-                        <span className={dailyAttendanceStatus?.hasEndedLunch ? 'text-blue-600' : 'text-gray-400'}>
-                          {dailyAttendanceStatus?.hasEndedLunch ? '✓ مكتمل' : '⏳ لم يتم'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span>تسجيل الانصراف:</span>
-                        <span className={dailyAttendanceStatus?.hasCheckedOut ? 'text-gray-600' : 'text-gray-400'}>
-                          {dailyAttendanceStatus?.hasCheckedOut ? '✓ مكتمل' : '⏳ لم يتم'}
-                        </span>
+                      <h4 className="font-semibold text-sm mb-2">سجل اليوم:</h4>
+                      {attendanceRecords?.filter(record => 
+                        record.date === new Date().toISOString().split('T')[0] && record.user_id === user?.id
+                      ).map((record, index) => (
+                        <div key={record.id} className="mb-2 last:mb-0">
+                          {record.check_in_time && (
+                            <div className="flex items-center justify-between text-sm py-1">
+                              <span className="text-green-600">✓ تسجيل الحضور</span>
+                              <span className="text-gray-600">
+                                {new Date(record.check_in_time).toLocaleTimeString('ar-SA', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          {record.lunch_start_time && (
+                            <div className="flex items-center justify-between text-sm py-1">
+                              <span className="text-yellow-600">✓ بداية الاستراحة</span>
+                              <span className="text-gray-600">
+                                {new Date(record.lunch_start_time).toLocaleTimeString('ar-SA', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          {record.lunch_end_time && (
+                            <div className="flex items-center justify-between text-sm py-1">
+                              <span className="text-blue-600">✓ نهاية الاستراحة</span>
+                              <span className="text-gray-600">
+                                {new Date(record.lunch_end_time).toLocaleTimeString('ar-SA', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                          {record.check_out_time && (
+                            <div className="flex items-center justify-between text-sm py-1">
+                              <span className="text-gray-600">✓ تسجيل الانصراف</span>
+                              <span className="text-gray-600">
+                                {new Date(record.check_out_time).toLocaleTimeString('ar-SA', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {/* Status indicators for missing actions */}
+                      <div className="mt-2 pt-2 border-t">
+                        {!dailyAttendanceStatus?.hasCheckedIn && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-gray-400">⏳ تسجيل الحضور</span>
+                            <span className="text-gray-400">لم يتم</span>
+                          </div>
+                        )}
+                        {!dailyAttendanceStatus?.hasStartedLunch && dailyAttendanceStatus?.hasCheckedIn && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-gray-400">⏳ بداية الاستراحة</span>
+                            <span className="text-gray-400">لم يتم</span>
+                          </div>
+                        )}
+                        {!dailyAttendanceStatus?.hasEndedLunch && dailyAttendanceStatus?.hasStartedLunch && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-gray-400">⏳ نهاية الاستراحة</span>
+                            <span className="text-gray-400">لم يتم</span>
+                          </div>
+                        )}
+                        {!dailyAttendanceStatus?.hasCheckedOut && dailyAttendanceStatus?.hasCheckedIn && (
+                          <div className="flex items-center justify-between text-sm py-1">
+                            <span className="text-gray-400">⏳ تسجيل الانصراف</span>
+                            <span className="text-gray-400">لم يتم</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -382,35 +476,110 @@ export default function UserDashboard() {
               <TabsContent value="attendance">
                 <Card>
                   <CardHeader>
-                    <CardTitle>سجل الحضور والانصراف</CardTitle>
+                    <CardTitle>سجل الحضور والانصراف التفصيلي</CardTitle>
+                    <CardDescription>عرض شامل لجميع تسجيلات الحضور مع الأوقات</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {attendanceRecords?.slice(0, 10).map((record) => (
-                        <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-4">
-                            <Badge className={getStatusColor(record.status)}>
-                              {record.status}
-                            </Badge>
-                            <div>
-                              <p className="font-medium">{record.date}</p>
-                              {record.check_in_time && (
-                                <p className="text-sm text-gray-600">
-                                  دخول: {new Date(record.check_in_time).toLocaleTimeString('ar-SA')}
-                                </p>
-                              )}
-                              {record.check_out_time && (
-                                <p className="text-sm text-gray-600">
-                                  خروج: {new Date(record.check_out_time).toLocaleTimeString('ar-SA')}
-                                </p>
-                              )}
+                      {attendanceRecords?.slice(0, 15).map((record) => (
+                        <div key={record.id} className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <Badge className={getStatusColor(record.status)} variant="outline">
+                                {record.status}
+                              </Badge>
+                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                                {new Date(record.date).toLocaleDateString('ar-SA', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
                             </div>
+                            {record.notes && (
+                              <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                {record.notes}
+                              </span>
+                            )}
                           </div>
-                          {record.notes && (
-                            <p className="text-sm text-gray-600 max-w-xs">{record.notes}</p>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            {record.check_in_time && (
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-xs">دخول</span>
+                                <span className="font-medium text-green-600">
+                                  {new Date(record.check_in_time).toLocaleTimeString('ar-SA', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {record.lunch_start_time && (
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-xs">بداية استراحة</span>
+                                <span className="font-medium text-yellow-600">
+                                  {new Date(record.lunch_start_time).toLocaleTimeString('ar-SA', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {record.lunch_end_time && (
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-xs">نهاية استراحة</span>
+                                <span className="font-medium text-blue-600">
+                                  {new Date(record.lunch_end_time).toLocaleTimeString('ar-SA', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {record.check_out_time && (
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 text-xs">خروج</span>
+                                <span className="font-medium text-gray-600">
+                                  {new Date(record.check_out_time).toLocaleTimeString('ar-SA', {
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Calculate working hours if both check-in and check-out exist */}
+                          {record.check_in_time && record.check_out_time && (
+                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-500">إجمالي ساعات العمل:</span>
+                                <span className="font-medium text-blue-700 dark:text-blue-300">
+                                  {(() => {
+                                    const checkIn = new Date(record.check_in_time!);
+                                    const checkOut = new Date(record.check_out_time!);
+                                    const diff = checkOut.getTime() - checkIn.getTime();
+                                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                    return `${hours} ساعة ${minutes} دقيقة`;
+                                  })()}
+                                </span>
+                              </div>
+                            </div>
                           )}
                         </div>
                       ))}
+                      
+                      {(!attendanceRecords || attendanceRecords.length === 0) && (
+                        <div className="text-center text-gray-500 py-8">
+                          <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                          <p>لا توجد سجلات حضور مسجلة</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
