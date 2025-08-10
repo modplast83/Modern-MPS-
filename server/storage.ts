@@ -2380,24 +2380,23 @@ export class DatabaseStorage implements IStorage {
         currentStatus: 'غائب'
       };
       
-      // Check each record for the specific actions
+      // Check for each type of action
       for (const record of records) {
-        if (record.check_in_time && !status.hasCheckedIn) {
-          status.hasCheckedIn = true;
-          status.currentStatus = 'حاضر';
-        }
-        if (record.lunch_start_time && !status.hasStartedLunch) {
-          status.hasStartedLunch = true;
-          status.currentStatus = 'في الاستراحة';
-        }
-        if (record.lunch_end_time && !status.hasEndedLunch) {
-          status.hasEndedLunch = true;
-          status.currentStatus = 'يعمل';
-        }
-        if (record.check_out_time && !status.hasCheckedOut) {
-          status.hasCheckedOut = true;
-          status.currentStatus = 'مغادر';
-        }
+        if (record.check_in_time && !status.hasCheckedIn) status.hasCheckedIn = true;
+        if (record.lunch_start_time && !status.hasStartedLunch) status.hasStartedLunch = true;
+        if (record.lunch_end_time && !status.hasEndedLunch) status.hasEndedLunch = true;
+        if (record.check_out_time && !status.hasCheckedOut) status.hasCheckedOut = true;
+      }
+      
+      // Determine current status based on the sequence of actions
+      if (status.hasCheckedOut) {
+        status.currentStatus = 'مغادر';
+      } else if (status.hasEndedLunch) {
+        status.currentStatus = 'حاضر'; // After ending lunch, return to present
+      } else if (status.hasStartedLunch) {
+        status.currentStatus = 'في الاستراحة';
+      } else if (status.hasCheckedIn) {
+        status.currentStatus = 'حاضر';
       }
       
       return status;
@@ -2470,7 +2469,7 @@ export class DatabaseStorage implements IStorage {
         recordData.lunch_start_time = attendanceData.lunch_start_time || new Date().toISOString();
       } else if (action === 'end_lunch') {
         recordData.lunch_end_time = attendanceData.lunch_end_time || new Date().toISOString();
-        recordData.status = 'يعمل'; // Return to work status
+        recordData.status = 'حاضر'; // Return to present status after lunch
       } else if (status === 'مغادر') {
         recordData.check_out_time = attendanceData.check_out_time || new Date().toISOString();
       }

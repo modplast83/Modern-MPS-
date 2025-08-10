@@ -391,7 +391,7 @@ export default function UserDashboard() {
                   <CardHeader>
                     <CardTitle>عمليات الحضور السريعة</CardTitle>
                     <CardDescription>
-                      الحالة الحالية: {dailyAttendanceStatus?.currentStatus || 'غائب'}
+                      الحالة الحالية: {dailyAttendanceStatus?.currentStatus || 'لم يتم تسجيل الحضور'}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -408,14 +408,14 @@ export default function UserDashboard() {
                         className="bg-yellow-600 hover:bg-yellow-700"
                         disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم البداية' : 'بدء استراحة'}
+                        {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم اخذ استراحة' : 'بدء استراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('يعمل', 'end_lunch')}
                         className="bg-blue-600 hover:bg-blue-700"
                         disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم النهاية' : 'انهاء الاستراحة'}
+                        {dailyAttendanceStatus?.hasEndedLunch ? '✓ تم انهاء الاستراحة' : 'انهاء الاستراحة'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('مغادر')}
