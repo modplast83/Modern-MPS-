@@ -364,7 +364,7 @@ export default function UserDashboard() {
                         className="bg-green-600 hover:bg-green-700"
                         disabled={dailyAttendanceStatus?.hasCheckedIn || attendanceMutation.isPending}
                       >
-                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'الحضور'}
+                        {dailyAttendanceStatus?.hasCheckedIn ? '✓ الحضور' : 'الحضور'}
                       </Button>
                       <Button 
                         onClick={() => handleAttendanceAction('في الاستراحة')}
