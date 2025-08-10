@@ -72,6 +72,21 @@ Advanced AI-powered order management system for plastic bag manufacturing, enhan
 - **Network**: Intelligent retry with exponential backoff
 
 ## Recent Changes
+
+- **August 10, 2025**: Enhanced Attendance System with Daily Limits and Time Tracking - COMPLETED ✅
+  - **Daily Event Limits**: Each user can now register each attendance event only once per day
+  - **Logical Sequence Validation**: Enforced proper sequence (check-in → lunch start → lunch end → check-out)
+  - **Status Updates**: Updated status names to match business requirements:
+    - الحضور → "حاضر" (Present)
+    - بدء استراحة الغداء → "في الاستراحة" (On Break)
+    - انهاء استراحة الغداء → "يعمل" (Working)  
+    - الانصراف → "مغادر" (Left)
+  - **Real-time Status Display**: Shows current attendance status with live updates
+  - **Detailed Time Tracking**: Added comprehensive timestamp display for all attendance events
+  - **Working Hours Calculation**: Automatic calculation of daily working hours
+  - **Enhanced UI**: Added today's date display and detailed attendance log with timestamps
+  - **Error Prevention**: Clear Arabic error messages for duplicate registrations and sequence violations
+
 - **August 9, 2025**: HR Attendance Management System - COMPLETED ✅
   - **New Attendance Tab**: Added comprehensive attendance management to HR system
   - **Real-time Status Tracking**: Four status types (حاضر, غائب, استراحة غداء, مغادر)

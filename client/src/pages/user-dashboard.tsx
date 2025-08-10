@@ -211,8 +211,9 @@ export default function UserDashboard() {
     const colors = {
       'حاضر': 'bg-green-500',
       'غائب': 'bg-red-500',
-      'استراحة غداء': 'bg-yellow-500',
-      'مغادر': 'bg-blue-500'
+      'في الاستراحة': 'bg-yellow-500',
+      'يعمل': 'bg-blue-500',
+      'مغادر': 'bg-gray-500'
     };
     return colors[status as keyof typeof colors] || 'bg-gray-500';
   };
@@ -277,7 +278,8 @@ export default function UserDashboard() {
                       <p className="text-sm text-gray-600 dark:text-gray-300">الحالة الحالية</p>
                       <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
                         dailyAttendanceStatus?.currentStatus === 'حاضر' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
-                        dailyAttendanceStatus?.currentStatus === 'استراحة غداء' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        dailyAttendanceStatus?.currentStatus === 'في الاستراحة' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                        dailyAttendanceStatus?.currentStatus === 'يعمل' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
                         dailyAttendanceStatus?.currentStatus === 'مغادر' ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300' :
                         'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
                       }`}>
@@ -364,14 +366,14 @@ export default function UserDashboard() {
                         {dailyAttendanceStatus?.hasCheckedIn ? '✓ تم الحضور' : 'تسجيل الحضور'}
                       </Button>
                       <Button 
-                        onClick={() => handleAttendanceAction('استراحة غداء')}
+                        onClick={() => handleAttendanceAction('في الاستراحة')}
                         className="bg-yellow-600 hover:bg-yellow-700"
                         disabled={!dailyAttendanceStatus?.hasCheckedIn || dailyAttendanceStatus?.hasStartedLunch || attendanceMutation.isPending}
                       >
                         {dailyAttendanceStatus?.hasStartedLunch ? '✓ تم البداية' : 'بداية الاستراحة'}
                       </Button>
                       <Button 
-                        onClick={() => handleAttendanceAction('حاضر', 'end_lunch')}
+                        onClick={() => handleAttendanceAction('يعمل', 'end_lunch')}
                         className="bg-blue-600 hover:bg-blue-700"
                         disabled={!dailyAttendanceStatus?.hasStartedLunch || dailyAttendanceStatus?.hasEndedLunch || attendanceMutation.isPending}
                       >
