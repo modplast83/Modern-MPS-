@@ -1,4 +1,7 @@
 import { useState } from "react";
+import Header from "@/components/layout/Header";
+import Sidebar from "@/components/layout/Sidebar";
+import MobileNav from "@/components/layout/MobileNav";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,11 +48,15 @@ export default function WhatsAppSetup() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl" dir="rtl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">إعداد WhatsApp Business API</h1>
-        <p className="text-gray-600">ضبط إعدادات الواتس اب للأعمال وربطها بـ Meta Business</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1 lg:mr-64 p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">إعداد WhatsApp Business API</h1>
+            <p className="text-gray-600">ضبط إعدادات الواتس اب للأعمال وربطها بـ Meta Business</p>
+          </div>
 
       <Tabs defaultValue="meta" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
@@ -249,6 +256,9 @@ export default function WhatsAppSetup() {
           </Card>
         </TabsContent>
       </Tabs>
+        </main>
+      </div>
+      <MobileNav />
     </div>
   );
 }
