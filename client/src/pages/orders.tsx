@@ -10,7 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Package, Plus, Search, FileText, Clock, User, Edit, Trash2, Eye, Calendar } from "lucide-react";
+import { Package, Plus, Search, FileText, Clock, User, Edit, Trash2, Eye, Calendar, ChevronDown, RefreshCw } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useForm } from "react-hook-form";
@@ -563,12 +564,42 @@ export default function Orders() {
     }
   };
 
+  const handleStatusChange = async (order: any, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/orders/${order.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (!response.ok) throw new Error('فشل في تحديث حالة الطلب');
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      toast({
+        title: "تم التحديث بنجاح",
+        description: `تم تحديث حالة الطلب ${order.order_number}`
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في تحديث حالة الطلب",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusMap = {
       pending: { label: "في الانتظار", variant: "secondary" as const },
+      for_production: { label: "إلى الإنتاج", variant: "default" as const },
+      on_hold: { label: "إيقاف مؤقت", variant: "destructive" as const },
+      waiting: { label: "انتظار", variant: "outline" as const },
       in_progress: { label: "قيد التنفيذ", variant: "default" as const },
       completed: { label: "مكتمل", variant: "default" as const },
-      cancelled: { label: "ملغي", variant: "destructive" as const }
+      cancelled: { label: "ملغي", variant: "destructive" as const },
+      delivered: { label: "تم التسليم", variant: "default" as const }
     };
     const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.pending;
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
@@ -1052,6 +1083,51 @@ export default function Orders() {
                                 >
                                   <FileText className="h-4 w-4" />
                                 </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                                      title="تغيير الحالة"
+                                    >
+                                      <RefreshCw className="h-4 w-4 mr-1" />
+                                      <ChevronDown className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'for_production')}>
+                                      <div className="flex items-center w-full">
+                                        <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                                        إلى الإنتاج
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'on_hold')}>
+                                      <div className="flex items-center w-full">
+                                        <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                                        إيقاف مؤقت
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'waiting')}>
+                                      <div className="flex items-center w-full">
+                                        <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
+                                        انتظار
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'pending')}>
+                                      <div className="flex items-center w-full">
+                                        <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                                        في الانتظار
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'completed')}>
+                                      <div className="flex items-center w-full">
+                                        <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                                        مكتمل
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                                 <Button
                                   variant="outline"
                                   size="sm"

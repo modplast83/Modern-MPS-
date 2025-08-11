@@ -123,6 +123,7 @@ export interface IStorage {
   getAllOrders(): Promise<NewOrder[]>;
   createOrder(order: InsertNewOrder): Promise<NewOrder>;
   updateOrder(id: number, order: Partial<NewOrder>): Promise<NewOrder>;
+  updateOrderStatus(id: number, status: string): Promise<NewOrder>;
   getOrderById(id: number): Promise<NewOrder | undefined>;
   deleteOrder(id: number): Promise<void>;
   
@@ -408,6 +409,15 @@ export class DatabaseStorage implements IStorage {
     const [order] = await db
       .update(orders)
       .set(orderUpdate)
+      .where(eq(orders.id, id))
+      .returning();
+    return order;
+  }
+
+  async updateOrderStatus(id: number, status: string): Promise<NewOrder> {
+    const [order] = await db
+      .update(orders)
+      .set({ status })
       .where(eq(orders.id, id))
       .returning();
     return order;
