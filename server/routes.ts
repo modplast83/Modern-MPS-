@@ -18,6 +18,9 @@ import {
   insertJobOrderSchema, 
   insertRollSchema, 
   insertMaintenanceRequestSchema,
+  insertMaintenanceActionSchema,
+  insertMaintenanceReportSchema,
+  insertOperatorNegligenceReportSchema,
   insertInventoryMovementSchema,
   insertProductionOrderSchema,
   customers,
@@ -1139,6 +1142,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(maintenanceRequests);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب طلبات الصيانة" });
+    }
+  });
+
+  // Maintenance Actions routes
+  app.get("/api/maintenance-actions", async (req, res) => {
+    try {
+      const actions = await storage.getAllMaintenanceActions();
+      res.json(actions);
+    } catch (error) {
+      console.error('Error fetching maintenance actions:', error);
+      res.status(500).json({ message: "خطأ في جلب إجراءات الصيانة" });
+    }
+  });
+
+  app.get("/api/maintenance-actions/request/:requestId", async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const actions = await storage.getMaintenanceActionsByRequestId(requestId);
+      res.json(actions);
+    } catch (error) {
+      console.error('Error fetching maintenance actions by request:', error);
+      res.status(500).json({ message: "خطأ في جلب إجراءات الصيانة للطلب" });
+    }
+  });
+
+  app.post("/api/maintenance-actions", async (req, res) => {
+    try {
+      const data = insertMaintenanceActionSchema.parse(req.body);
+      const action = await storage.createMaintenanceAction(data);
+      res.json(action);
+    } catch (error) {
+      console.error('Error creating maintenance action:', error);
+      res.status(500).json({ message: "خطأ في إنشاء إجراء الصيانة" });
+    }
+  });
+
+  app.put("/api/maintenance-actions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const action = await storage.updateMaintenanceAction(id, req.body);
+      res.json(action);
+    } catch (error) {
+      console.error('Error updating maintenance action:', error);
+      res.status(500).json({ message: "خطأ في تحديث إجراء الصيانة" });
+    }
+  });
+
+  app.delete("/api/maintenance-actions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMaintenanceAction(id);
+      res.json({ message: "تم حذف إجراء الصيانة بنجاح" });
+    } catch (error) {
+      console.error('Error deleting maintenance action:', error);
+      res.status(500).json({ message: "خطأ في حذف إجراء الصيانة" });
+    }
+  });
+
+  // Maintenance Reports routes
+  app.get("/api/maintenance-reports", async (req, res) => {
+    try {
+      const { type } = req.query;
+      const reports = type 
+        ? await storage.getMaintenanceReportsByType(type as string)
+        : await storage.getAllMaintenanceReports();
+      res.json(reports);
+    } catch (error) {
+      console.error('Error fetching maintenance reports:', error);
+      res.status(500).json({ message: "خطأ في جلب بلاغات الصيانة" });
+    }
+  });
+
+  app.post("/api/maintenance-reports", async (req, res) => {
+    try {
+      const data = insertMaintenanceReportSchema.parse(req.body);
+      const report = await storage.createMaintenanceReport(data);
+      res.json(report);
+    } catch (error) {
+      console.error('Error creating maintenance report:', error);
+      res.status(500).json({ message: "خطأ في إنشاء بلاغ الصيانة" });
+    }
+  });
+
+  app.put("/api/maintenance-reports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const report = await storage.updateMaintenanceReport(id, req.body);
+      res.json(report);
+    } catch (error) {
+      console.error('Error updating maintenance report:', error);
+      res.status(500).json({ message: "خطأ في تحديث بلاغ الصيانة" });
+    }
+  });
+
+  app.delete("/api/maintenance-reports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteMaintenanceReport(id);
+      res.json({ message: "تم حذف بلاغ الصيانة بنجاح" });
+    } catch (error) {
+      console.error('Error deleting maintenance report:', error);
+      res.status(500).json({ message: "خطأ في حذف بلاغ الصيانة" });
+    }
+  });
+
+  // Operator Negligence Reports routes
+  app.get("/api/operator-negligence-reports", async (req, res) => {
+    try {
+      const { operator_id } = req.query;
+      const reports = operator_id 
+        ? await storage.getOperatorNegligenceReportsByOperator(operator_id as string)
+        : await storage.getAllOperatorNegligenceReports();
+      res.json(reports);
+    } catch (error) {
+      console.error('Error fetching operator negligence reports:', error);
+      res.status(500).json({ message: "خطأ في جلب بلاغات إهمال المشغلين" });
+    }
+  });
+
+  app.post("/api/operator-negligence-reports", async (req, res) => {
+    try {
+      const data = insertOperatorNegligenceReportSchema.parse(req.body);
+      const report = await storage.createOperatorNegligenceReport(data);
+      res.json(report);
+    } catch (error) {
+      console.error('Error creating operator negligence report:', error);
+      res.status(500).json({ message: "خطأ في إنشاء بلاغ إهمال المشغل" });
+    }
+  });
+
+  app.put("/api/operator-negligence-reports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const report = await storage.updateOperatorNegligenceReport(id, req.body);
+      res.json(report);
+    } catch (error) {
+      console.error('Error updating operator negligence report:', error);
+      res.status(500).json({ message: "خطأ في تحديث بلاغ إهمال المشغل" });
+    }
+  });
+
+  app.delete("/api/operator-negligence-reports/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteOperatorNegligenceReport(id);
+      res.json({ message: "تم حذف بلاغ إهمال المشغل بنجاح" });
+    } catch (error) {
+      console.error('Error deleting operator negligence report:', error);
+      res.status(500).json({ message: "خطأ في حذف بلاغ إهمال المشغل" });
     }
   });
 
