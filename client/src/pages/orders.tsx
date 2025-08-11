@@ -1012,6 +1012,7 @@ export default function Orders() {
                         <TableHead className="text-center">المستخدم</TableHead>
                         <TableHead className="text-center">مدة التسليم المتبقية</TableHead>
                         <TableHead className="text-center">ملاحظات</TableHead>
+                        <TableHead className="text-center">الحالة</TableHead>
                         <TableHead className="text-center">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1063,6 +1064,9 @@ export default function Orders() {
                               </div>
                             </TableCell>
                             <TableCell>{order.notes || '-'}</TableCell>
+                            <TableCell className="text-center">
+                              {getStatusBadge(order.status || 'pending')}
+                            </TableCell>
                             <TableCell>
                               <div className="flex space-x-2 space-x-reverse">
                                 <Button
