@@ -2175,6 +2175,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/orders/:id/status", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ message: "الحالة مطلوبة" });
+      }
+
+      // Validate status values
+      const validStatuses = ['pending', 'for_production', 'on_hold', 'waiting', 'in_progress', 'completed', 'delivered', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ message: "حالة غير صحيحة" });
+      }
+      
+      const order = await storage.updateOrderStatus(orderId, status);
+      res.json(order);
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      res.status(500).json({ message: "خطأ في تحديث حالة الطلب" });
+    }
+  });
+
   // ============ Production Orders Management API ============
   
   app.get("/api/production-orders", async (req, res) => {
