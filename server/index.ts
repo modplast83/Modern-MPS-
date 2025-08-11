@@ -38,13 +38,13 @@ app.use(session({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
   secret: process.env.SESSION_SECRET || 'plastic-bag-manufacturing-system-secret-key-2025',
-  resave: true, // Force session save to store
-  saveUninitialized: false,
+  resave: false, // Don't save session if unmodified
+  saveUninitialized: false, // Don't create session until something stored
   rolling: true, // Reset expiry on activity
   cookie: {
     secure: false, // Set to true if using HTTPS in production
     httpOnly: false, // Allow client-side access for debugging
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days instead of 24 hours
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     sameSite: 'lax' // Allow cookies in same-site requests
   },
   name: 'plastic-bag-session' // Custom session name
