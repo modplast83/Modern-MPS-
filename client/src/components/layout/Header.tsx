@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import factoryLogo from "@/assets/factory-logo.svg";
 
+import FactoryLogoHPNGWg from "@assets/FactoryLogoHPNGWg.png";
+
 export default function Header() {
   const { user, logout } = useAuth();
 
@@ -13,9 +15,9 @@ export default function Header() {
         <div className="flex items-center space-x-4 space-x-reverse">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
             <img 
-              src={factoryLogo} 
+              src={FactoryLogoHPNGWg} 
               alt="شعار مصنع الأكياس البلاستيكية" 
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain mt-[0px] mb-[0px] pt-[0px] pb-[0px]"
             />
           </div>
           <div>
