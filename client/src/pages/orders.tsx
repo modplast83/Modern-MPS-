@@ -1112,12 +1112,6 @@ export default function Orders() {
                                         إيقاف مؤقت
                                       </div>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleStatusChange(order, 'waiting')}>
-                                      <div className="flex items-center w-full">
-                                        <div className="w-3 h-3 bg-gray-500 rounded-full mr-2"></div>
-                                        انتظار
-                                      </div>
-                                    </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleStatusChange(order, 'pending')}>
                                       <div className="flex items-center w-full">
                                         <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
