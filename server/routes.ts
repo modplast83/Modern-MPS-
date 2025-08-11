@@ -64,22 +64,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "الحساب غير نشط" });
       }
 
-      // Save user session
+      // Save user session with explicit save callback
       req.session.userId = user.id;
       
-      // Debug session creation
-      console.log("Login successful - Session ID:", req.sessionID);
-      console.log("Login successful - User ID saved to session:", req.session.userId);
-      console.log("Login successful - Session data:", req.session);
+      // Debug session creation (remove in production)
+      // console.log("Login successful - Session ID:", req.sessionID);
+      // console.log("Login successful - User ID saved to session:", req.session.userId);
 
-      res.json({ 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          display_name: user.display_name,
-          display_name_ar: user.display_name_ar,
-          role_id: user.role_id 
-        } 
+      // Ensure session is saved before responding
+      req.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
+        }
+        
+        // Session saved successfully
+        res.json({ 
+          user: { 
+            id: user.id, 
+            username: user.username, 
+            display_name: user.display_name,
+            display_name_ar: user.display_name_ar,
+            role_id: user.role_id 
+          } 
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -90,23 +98,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user
   app.get("/api/me", async (req, res) => {
     try {
-      // Debug session information
-      console.log("Session check - Session ID:", req.sessionID);
-      console.log("Session check - User ID in session:", req.session?.userId);
-      console.log("Session check - Session data:", req.session);
-
       if (!req.session?.userId) {
-        console.log("No session or userId found, returning 401");
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
 
       const user = await storage.getUserById(req.session.userId);
       if (!user) {
-        console.log("User not found in database for ID:", req.session.userId);
         return res.status(404).json({ message: "المستخدم غير موجود" });
       }
-
-      console.log("User authenticated successfully:", user.username);
       res.json({ 
         user: { 
           id: user.id, 
