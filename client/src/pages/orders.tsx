@@ -36,9 +36,11 @@ export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isProductionOrderDialogOpen, setIsProductionOrderDialogOpen] = useState(false);
+  const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [editingProductionOrder, setEditingProductionOrder] = useState<any>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [productionOrdersInForm, setProductionOrdersInForm] = useState<any[]>([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
@@ -225,8 +227,7 @@ export default function Orders() {
     orderForm.reset({
       customer_id: order.customer_id?.toString() || "",
       delivery_days: order.delivery_days?.toString() || "",
-      notes: order.notes || "",
-      production_orders: []
+      notes: order.notes || ""
     });
     setIsOrderDialogOpen(true);
   };
@@ -392,11 +393,9 @@ export default function Orders() {
 
   // Order action handlers
   const handleViewOrder = (order: any) => {
+    setViewingOrder(order);
     setSelectedOrderId(order.id);
-    toast({
-      title: "عرض الطلب",
-      description: `عرض تفاصيل الطلب ${order.order_number}`
-    });
+    setIsViewOrderDialogOpen(true);
   };
 
   const handlePrintOrder = (order: any) => {
@@ -465,7 +464,7 @@ export default function Orders() {
           
           <div class="production-orders">
             <h3>أوامر الإنتاج</h3>
-            ${orderProductionOrders.map(po => {
+            ${orderProductionOrders.map((po: any) => {
               const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
               return `
                 <div class="production-order-card">
@@ -1291,6 +1290,193 @@ export default function Orders() {
           </Tabs>
         </main>
       </div>
+
+      {/* View Order Dialog */}
+      <Dialog open={isViewOrderDialogOpen} onOpenChange={setIsViewOrderDialogOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>تفاصيل الطلب {viewingOrder?.order_number}</DialogTitle>
+          </DialogHeader>
+          
+          {viewingOrder && (
+            <div className="space-y-6">
+              {/* Order Information */}
+              <div className="grid grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">معلومات الطلب</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="font-medium">رقم الطلب:</span>
+                      <span className="text-blue-600 font-bold">{viewingOrder.order_number}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">تاريخ الإنشاء:</span>
+                      <span>{format(new Date(viewingOrder.created_at), 'dd/MM/yyyy')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">مدة التسليم:</span>
+                      <span>{viewingOrder.delivery_days} يوم</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">الحالة:</span>
+                      <span>{getStatusBadge(viewingOrder.status)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">ملاحظات:</span>
+                      <span>{viewingOrder.notes || 'لا توجد ملاحظات'}</span>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">معلومات العميل</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {(() => {
+                      const customer = customers.find((c: any) => c.id === viewingOrder.customer_id);
+                      return customer ? (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="font-medium">اسم العميل:</span>
+                            <span className="font-semibold">{customer.name_ar || customer.name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">رقم العميل:</span>
+                            <span>{customer.id}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">الهاتف:</span>
+                            <span>{customer.phone || 'غير محدد'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">العنوان:</span>
+                            <span>{customer.address || 'غير محدد'}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-gray-500">معلومات العميل غير متوفرة</div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Production Orders */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">أوامر الإنتاج</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {(() => {
+                      const orderProductionOrders = productionOrders.filter((po: any) => po.order_id === viewingOrder.id);
+                      
+                      if (orderProductionOrders.length === 0) {
+                        return (
+                          <div className="text-center py-8 text-gray-500">
+                            لا توجد أوامر إنتاج لهذا الطلب
+                          </div>
+                        );
+                      }
+
+                      return orderProductionOrders.map((po: any) => {
+                        const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
+                        
+                        return (
+                          <Card key={po.id} className="border-l-4 border-l-blue-500">
+                            <CardHeader>
+                              <div className="flex justify-between items-center">
+                                <CardTitle className="text-base">أمر إنتاج: {po.production_order_number}</CardTitle>
+                                <Badge>{getStatusBadge(po.status)}</Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              {product ? (
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                  {/* Product Details */}
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900 mb-2 border-b pb-1">تفاصيل المنتج</h5>
+                                    <div className="space-y-2 text-sm">
+                                      <div><span className="font-medium">اسم المنتج:</span> {product.size_caption || 'غير محدد'}</div>
+                                      <div><span className="font-medium">المادة الخام:</span> {product.raw_material || 'غير محدد'}</div>
+                                      <div><span className="font-medium">العرض:</span> {product.width || 'غير محدد'} سم</div>
+                                      <div><span className="font-medium">السماكة:</span> {product.thickness || 'غير محدد'} مايكرون</div>
+                                      <div><span className="font-medium">طول القطع:</span> {product.cutting_length_cm || 'غير محدد'} سم</div>
+                                      <div><span className="font-medium">عدد القطع بالكيلو:</span> {product.pieces_per_kg || 'غير محدد'}</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Product Specifications */}
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900 mb-2 border-b pb-1">المواصفات الفنية</h5>
+                                    <div className="space-y-2 text-sm">
+                                      <div><span className="font-medium">التخريم:</span> {product.punching || 'بدون تخريم'}</div>
+                                      <div><span className="font-medium">الماستر باتش:</span> {product.master_batch_id || 'غير محدد'}</div>
+                                      {product.color && <div><span className="font-medium">اللون:</span> {product.color}</div>}
+                                      {product.bag_type && <div><span className="font-medium">نوع الكيس:</span> {product.bag_type}</div>}
+                                      <div><span className="font-medium">الطباعة:</span> {product.print_colors ? `${product.print_colors} لون` : 'بدون طباعة'}</div>
+                                    </div>
+                                  </div>
+
+                                  {/* Production Details */}
+                                  <div>
+                                    <h5 className="font-semibold text-gray-900 mb-2 border-b pb-1">تفاصيل الإنتاج</h5>
+                                    <div className="space-y-2 text-sm">
+                                      <div><span className="font-medium">الكمية المطلوبة:</span> <span className="font-bold text-blue-600">{po.quantity_kg} كيلو</span></div>
+                                      <div><span className="font-medium">عدد القطع المتوقع:</span> {product.pieces_per_kg ? Math.round(parseFloat(po.quantity_kg) * parseFloat(product.pieces_per_kg)).toLocaleString() : 'غير محسوب'} قطعة</div>
+                                      <div><span className="font-medium">تاريخ الإنشاء:</span> {format(new Date(po.created_at), 'dd/MM/yyyy')}</div>
+                                      {product.production_notes && <div><span className="font-medium">ملاحظات الإنتاج:</span> {product.production_notes}</div>}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-red-500">
+                                  خطأ: معلومات المنتج غير متوفرة (رقم المنتج: {po.customer_product_id})
+                                </div>
+                              )}
+                              
+                              {product?.additional_notes && (
+                                <div className="mt-4 p-3 bg-gray-50 rounded-lg border-l-4 border-l-amber-400">
+                                  <span className="font-medium">ملاحظات إضافية:</span>
+                                  <p className="mt-1 text-sm text-gray-700">{product.additional_notes}</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      });
+                    })()}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* User Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">معلومات المستخدم</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const user = users.find((u: any) => u.id === parseInt(viewingOrder.created_by));
+                    return user ? (
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div><span className="font-medium">اسم المستخدم:</span> {user.username}</div>
+                        <div><span className="font-medium">الاسم:</span> {user.display_name_ar || user.display_name}</div>
+                        <div><span className="font-medium">تاريخ إنشاء الطلب:</span> {format(new Date(viewingOrder.created_at), 'dd/MM/yyyy HH:mm')}</div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500">معلومات المستخدم غير متوفرة</div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
