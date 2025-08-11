@@ -168,6 +168,7 @@ export const quality_checks = pgTable('quality_checks', {
 // 🛠️ جدول طلبات الصيانة
 export const maintenance_requests = pgTable('maintenance_requests', {
   id: serial('id').primaryKey(),
+  request_number: varchar('request_number', { length: 50 }).notNull().unique(), // MO001, MO002, etc.
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
   reported_by: varchar('reported_by', { length: 20 }).references(() => users.id),
   issue_type: varchar('issue_type', { length: 50 }), // mechanical / electrical / other
@@ -178,6 +179,80 @@ export const maintenance_requests = pgTable('maintenance_requests', {
   action_taken: text('action_taken'),
   date_reported: timestamp('date_reported').defaultNow(),
   date_resolved: timestamp('date_resolved')
+});
+
+// 🔧 جدول إجراءات الصيانة
+export const maintenance_actions = pgTable('maintenance_actions', {
+  id: serial('id').primaryKey(),
+  action_number: varchar('action_number', { length: 50 }).notNull().unique(), // MA001, MA002, etc.
+  maintenance_request_id: integer('maintenance_request_id').notNull().references(() => maintenance_requests.id),
+  action_type: varchar('action_type', { length: 50 }).notNull(), // فحص مبدئي / تغيير قطعة غيار / إصلاح مكانيكي / إصلاح كهربائي / إيقاف الماكينة
+  description: text('description'),
+  text_report: text('text_report'), // التقرير النصي
+  spare_parts_request: text('spare_parts_request'), // طلب قطع غيار
+  machining_request: text('machining_request'), // طلب مخرطة
+  operator_negligence_report: text('operator_negligence_report'), // تبليغ اهمال المشغل
+  
+  // User tracking
+  performed_by: varchar('performed_by', { length: 20 }).notNull().references(() => users.id), // المستخدم الذي نفذ الإجراء
+  request_created_by: varchar('request_created_by', { length: 20 }).references(() => users.id), // المستخدم الذي أنشأ طلب الصيانة
+  
+  // Status and notifications
+  requires_management_action: boolean('requires_management_action').default(false), // يحتاج موافقة إدارية
+  management_notified: boolean('management_notified').default(false), // تم إبلاغ الإدارة
+  
+  action_date: timestamp('action_date').defaultNow(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// 📋 جدول بلاغات الصيانة (للإدارة)
+export const maintenance_reports = pgTable('maintenance_reports', {
+  id: serial('id').primaryKey(),
+  report_number: varchar('report_number', { length: 50 }).notNull().unique(), // MR001, MR002, etc.
+  maintenance_action_id: integer('maintenance_action_id').notNull().references(() => maintenance_actions.id),
+  report_type: varchar('report_type', { length: 30 }).notNull(), // spare_parts / machining / operator_negligence
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description').notNull(),
+  priority: varchar('priority', { length: 20 }).default('normal'), // low / normal / high / urgent
+  
+  // Status tracking
+  status: varchar('status', { length: 20 }).default('pending'), // pending / reviewed / approved / rejected / completed
+  reviewed_by: varchar('reviewed_by', { length: 20 }).references(() => users.id),
+  review_notes: text('review_notes'),
+  review_date: timestamp('review_date'),
+  
+  created_by: varchar('created_by', { length: 20 }).notNull().references(() => users.id),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// ⚠️ جدول بلاغات إهمال المشغلين
+export const operator_negligence_reports = pgTable('operator_negligence_reports', {
+  id: serial('id').primaryKey(),
+  report_number: varchar('report_number', { length: 50 }).notNull().unique(), // ON001, ON002, etc.
+  maintenance_action_id: integer('maintenance_action_id').references(() => maintenance_actions.id),
+  operator_id: varchar('operator_id', { length: 20 }).notNull().references(() => users.id),
+  machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
+  negligence_type: varchar('negligence_type', { length: 50 }).notNull(), // عدم صيانة / سوء استخدام / عدم اتباع تعليمات
+  description: text('description').notNull(),
+  evidence: text('evidence'), // الأدلة
+  
+  // Impact assessment
+  damage_cost: decimal('damage_cost', { precision: 10, scale: 2 }),
+  downtime_hours: integer('downtime_hours'),
+  
+  // Status and follow-up
+  status: varchar('status', { length: 20 }).default('reported'), // reported / under_investigation / action_taken / closed
+  action_taken: text('action_taken'),
+  disciplinary_action: varchar('disciplinary_action', { length: 50 }), // تحذير / خصم / إيقاف مؤقت
+  
+  reported_by: varchar('reported_by', { length: 20 }).notNull().references(() => users.id),
+  investigated_by: varchar('investigated_by', { length: 20 }).references(() => users.id),
+  report_date: timestamp('report_date').defaultNow(),
+  investigation_date: timestamp('investigation_date'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
 });
 
 // 📋 جدول المخالفات
@@ -691,6 +766,7 @@ export const insertRollSchema = createInsertSchema(rolls).omit({
 
 export const insertMaintenanceRequestSchema = createInsertSchema(maintenance_requests).omit({
   id: true,
+  request_number: true,
   date_reported: true,
   date_resolved: true,
 });
@@ -896,6 +972,28 @@ export const insertAttendanceSchema = createInsertSchema(attendance).omit({
   updated_at: true,
 });
 
+// Maintenance Actions Schemas
+export const insertMaintenanceActionSchema = createInsertSchema(maintenance_actions).omit({
+  id: true,
+  action_number: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertMaintenanceReportSchema = createInsertSchema(maintenance_reports).omit({
+  id: true,
+  report_number: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertOperatorNegligenceReportSchema = createInsertSchema(operator_negligence_reports).omit({
+  id: true,
+  report_number: true,
+  created_at: true,
+  updated_at: true,
+});
+
 // HR System Types
 export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
@@ -917,6 +1015,14 @@ export type LeaveRequest = typeof leave_requests.$inferSelect;
 export type InsertLeaveRequest = z.infer<typeof insertLeaveRequestSchema>;
 export type LeaveBalance = typeof leave_balances.$inferSelect;
 export type InsertLeaveBalance = z.infer<typeof insertLeaveBalanceSchema>;
+
+// Maintenance Types
+export type MaintenanceAction = typeof maintenance_actions.$inferSelect;
+export type InsertMaintenanceAction = z.infer<typeof insertMaintenanceActionSchema>;
+export type MaintenanceReport = typeof maintenance_reports.$inferSelect;
+export type InsertMaintenanceReport = z.infer<typeof insertMaintenanceReportSchema>;
+export type OperatorNegligenceReport = typeof operator_negligence_reports.$inferSelect;
+export type InsertOperatorNegligenceReport = z.infer<typeof insertOperatorNegligenceReportSchema>;
 
 // HR Relations
 export const trainingProgramsRelations = relations(training_programs, ({ one, many }) => ({

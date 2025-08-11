@@ -7,6 +7,9 @@ import {
   machines, 
   customers,
   maintenance_requests,
+  maintenance_actions,
+  maintenance_reports,
+  operator_negligence_reports,
   quality_checks,
   attendance,
   waste,
@@ -92,7 +95,13 @@ import {
   type Notification,
   type InsertNotification,
   type NotificationTemplate,
-  type InsertNotificationTemplate
+  type InsertNotificationTemplate,
+  type MaintenanceAction,
+  type InsertMaintenanceAction,
+  type MaintenanceReport,
+  type InsertMaintenanceReport,
+  type OperatorNegligenceReport,
+  type InsertOperatorNegligenceReport
 } from "@shared/schema";
 
 import {
@@ -340,6 +349,27 @@ export interface IStorage {
   // Notification Templates
   getNotificationTemplates(): Promise<NotificationTemplate[]>;
   createNotificationTemplate(template: InsertNotificationTemplate): Promise<NotificationTemplate>;
+
+  // Maintenance Actions
+  getAllMaintenanceActions(): Promise<MaintenanceAction[]>;
+  getMaintenanceActionsByRequestId(requestId: number): Promise<MaintenanceAction[]>;
+  createMaintenanceAction(action: InsertMaintenanceAction): Promise<MaintenanceAction>;
+  updateMaintenanceAction(id: number, action: Partial<MaintenanceAction>): Promise<MaintenanceAction>;
+  deleteMaintenanceAction(id: number): Promise<void>;
+
+  // Maintenance Reports
+  getAllMaintenanceReports(): Promise<MaintenanceReport[]>;
+  getMaintenanceReportsByType(type: string): Promise<MaintenanceReport[]>;
+  createMaintenanceReport(report: InsertMaintenanceReport): Promise<MaintenanceReport>;
+  updateMaintenanceReport(id: number, report: Partial<MaintenanceReport>): Promise<MaintenanceReport>;
+  deleteMaintenanceReport(id: number): Promise<void>;
+
+  // Operator Negligence Reports
+  getAllOperatorNegligenceReports(): Promise<OperatorNegligenceReport[]>;
+  getOperatorNegligenceReportsByOperator(operatorId: string): Promise<OperatorNegligenceReport[]>;
+  createOperatorNegligenceReport(report: InsertOperatorNegligenceReport): Promise<OperatorNegligenceReport>;
+  updateOperatorNegligenceReport(id: number, report: Partial<OperatorNegligenceReport>): Promise<OperatorNegligenceReport>;
+  deleteOperatorNegligenceReport(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -565,9 +595,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest> {
+    // Generate request number automatically
+    const existingRequests = await db.select().from(maintenance_requests);
+    const nextNumber = existingRequests.length + 1;
+    const requestNumber = `MO${nextNumber.toString().padStart(3, '0')}`;
+    
     const [maintenanceRequest] = await db
       .insert(maintenance_requests)
-      .values(request)
+      .values({
+        ...request,
+        request_number: requestNumber
+      })
       .returning();
     return maintenanceRequest;
   }
@@ -2657,6 +2695,189 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating notification template:', error);
       throw new Error('فشل في إنشاء قالب الإشعار');
+    }
+  }
+
+  // ============ Maintenance Actions Management ============
+  async getAllMaintenanceActions(): Promise<MaintenanceAction[]> {
+    try {
+      return await db.select().from(maintenance_actions).orderBy(desc(maintenance_actions.action_date));
+    } catch (error) {
+      console.error('Error fetching maintenance actions:', error);
+      throw new Error('فشل في جلب إجراءات الصيانة');
+    }
+  }
+
+  async getMaintenanceActionsByRequestId(requestId: number): Promise<MaintenanceAction[]> {
+    try {
+      return await db.select().from(maintenance_actions)
+        .where(eq(maintenance_actions.maintenance_request_id, requestId))
+        .orderBy(desc(maintenance_actions.action_date));
+    } catch (error) {
+      console.error('Error fetching maintenance actions by request:', error);
+      throw new Error('فشل في جلب إجراءات الصيانة للطلب');
+    }
+  }
+
+  async createMaintenanceAction(action: InsertMaintenanceAction): Promise<MaintenanceAction> {
+    try {
+      // Generate action number automatically
+      const existingActions = await db.select().from(maintenance_actions);
+      const nextNumber = existingActions.length + 1;
+      const actionNumber = `MA${nextNumber.toString().padStart(3, '0')}`;
+      
+      const [result] = await db.insert(maintenance_actions).values({
+        ...action,
+        action_number: actionNumber
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating maintenance action:', error);
+      throw new Error('فشل في إنشاء إجراء الصيانة');
+    }
+  }
+
+  async updateMaintenanceAction(id: number, action: Partial<MaintenanceAction>): Promise<MaintenanceAction> {
+    try {
+      const [result] = await db.update(maintenance_actions)
+        .set(action)
+        .where(eq(maintenance_actions.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating maintenance action:', error);
+      throw new Error('فشل في تحديث إجراء الصيانة');
+    }
+  }
+
+  async deleteMaintenanceAction(id: number): Promise<void> {
+    try {
+      await db.delete(maintenance_actions).where(eq(maintenance_actions.id, id));
+    } catch (error) {
+      console.error('Error deleting maintenance action:', error);
+      throw new Error('فشل في حذف إجراء الصيانة');
+    }
+  }
+
+  // ============ Maintenance Reports Management ============
+  async getAllMaintenanceReports(): Promise<MaintenanceReport[]> {
+    try {
+      return await db.select().from(maintenance_reports).orderBy(desc(maintenance_reports.created_at));
+    } catch (error) {
+      console.error('Error fetching maintenance reports:', error);
+      throw new Error('فشل في جلب بلاغات الصيانة');
+    }
+  }
+
+  async getMaintenanceReportsByType(type: string): Promise<MaintenanceReport[]> {
+    try {
+      return await db.select().from(maintenance_reports)
+        .where(eq(maintenance_reports.report_type, type))
+        .orderBy(desc(maintenance_reports.created_at));
+    } catch (error) {
+      console.error('Error fetching maintenance reports by type:', error);
+      throw new Error('فشل في جلب بلاغات الصيانة حسب النوع');
+    }
+  }
+
+  async createMaintenanceReport(report: InsertMaintenanceReport): Promise<MaintenanceReport> {
+    try {
+      // Generate report number automatically
+      const existingReports = await db.select().from(maintenance_reports);
+      const nextNumber = existingReports.length + 1;
+      const reportNumber = `MR${nextNumber.toString().padStart(3, '0')}`;
+      
+      const [result] = await db.insert(maintenance_reports).values({
+        ...report,
+        report_number: reportNumber
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating maintenance report:', error);
+      throw new Error('فشل في إنشاء بلاغ الصيانة');
+    }
+  }
+
+  async updateMaintenanceReport(id: number, report: Partial<MaintenanceReport>): Promise<MaintenanceReport> {
+    try {
+      const [result] = await db.update(maintenance_reports)
+        .set(report)
+        .where(eq(maintenance_reports.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating maintenance report:', error);
+      throw new Error('فشل في تحديث بلاغ الصيانة');
+    }
+  }
+
+  async deleteMaintenanceReport(id: number): Promise<void> {
+    try {
+      await db.delete(maintenance_reports).where(eq(maintenance_reports.id, id));
+    } catch (error) {
+      console.error('Error deleting maintenance report:', error);
+      throw new Error('فشل في حذف بلاغ الصيانة');
+    }
+  }
+
+  // ============ Operator Negligence Reports Management ============
+  async getAllOperatorNegligenceReports(): Promise<OperatorNegligenceReport[]> {
+    try {
+      return await db.select().from(operator_negligence_reports).orderBy(desc(operator_negligence_reports.report_date));
+    } catch (error) {
+      console.error('Error fetching operator negligence reports:', error);
+      throw new Error('فشل في جلب بلاغات إهمال المشغلين');
+    }
+  }
+
+  async getOperatorNegligenceReportsByOperator(operatorId: string): Promise<OperatorNegligenceReport[]> {
+    try {
+      return await db.select().from(operator_negligence_reports)
+        .where(eq(operator_negligence_reports.operator_id, operatorId))
+        .orderBy(desc(operator_negligence_reports.report_date));
+    } catch (error) {
+      console.error('Error fetching operator negligence reports by operator:', error);
+      throw new Error('فشل في جلب بلاغات إهمال المشغل');
+    }
+  }
+
+  async createOperatorNegligenceReport(report: InsertOperatorNegligenceReport): Promise<OperatorNegligenceReport> {
+    try {
+      // Generate report number automatically
+      const existingReports = await db.select().from(operator_negligence_reports);
+      const nextNumber = existingReports.length + 1;
+      const reportNumber = `ON${nextNumber.toString().padStart(3, '0')}`;
+      
+      const [result] = await db.insert(operator_negligence_reports).values({
+        ...report,
+        report_number: reportNumber
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating operator negligence report:', error);
+      throw new Error('فشل في إنشاء بلاغ إهمال المشغل');
+    }
+  }
+
+  async updateOperatorNegligenceReport(id: number, report: Partial<OperatorNegligenceReport>): Promise<OperatorNegligenceReport> {
+    try {
+      const [result] = await db.update(operator_negligence_reports)
+        .set(report)
+        .where(eq(operator_negligence_reports.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating operator negligence report:', error);
+      throw new Error('فشل في تحديث بلاغ إهمال المشغل');
+    }
+  }
+
+  async deleteOperatorNegligenceReport(id: number): Promise<void> {
+    try {
+      await db.delete(operator_negligence_reports).where(eq(operator_negligence_reports.id, id));
+    } catch (error) {
+      console.error('Error deleting operator negligence report:', error);
+      throw new Error('فشل في حذف بلاغ إهمال المشغل');
     }
   }
 }
