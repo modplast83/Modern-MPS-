@@ -182,6 +182,106 @@ export default function UserDashboard() {
     }
   });
 
+  // Calculate working hours, overtime, and break time
+  const calculateDailyHours = (attendanceRecords: AttendanceRecord[] | undefined, userId: number) => {
+    const today = new Date().toISOString().split('T')[0];
+    const todayRecords = attendanceRecords?.filter(record => 
+      record.date === today && record.user_id === userId
+    ) || [];
+
+    if (todayRecords.length === 0) {
+      return {
+        workingHours: 0,
+        overtimeHours: 0,
+        deficitHours: 0,
+        breakMinutes: 0,
+        totalMinutes: 0,
+        isFriday: false
+      };
+    }
+
+    // Get the latest record with check-in time
+    const checkInRecord = todayRecords.find(r => r.check_in_time);
+    if (!checkInRecord?.check_in_time) {
+      return {
+        workingHours: 0,
+        overtimeHours: 0,
+        deficitHours: 0,
+        breakMinutes: 0,
+        totalMinutes: 0,
+        isFriday: false
+      };
+    }
+
+    const checkInTime = new Date(checkInRecord.check_in_time);
+    
+    // Get check-out time (either from record or current time if still working)
+    const checkOutRecord = todayRecords.find(r => r.check_out_time);
+    const checkOutTime = checkOutRecord?.check_out_time ? 
+      new Date(checkOutRecord.check_out_time) : 
+      new Date(); // Current time if still working
+
+    // Calculate total time worked in minutes
+    const totalMinutesWorked = Math.floor((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60));
+
+    // Calculate break time in minutes
+    let breakMinutes = 0;
+    const lunchStartRecord = todayRecords.find(r => r.lunch_start_time);
+    const lunchEndRecord = todayRecords.find(r => r.lunch_end_time);
+    
+    if (lunchStartRecord?.lunch_start_time && lunchEndRecord?.lunch_end_time) {
+      const lunchStart = new Date(lunchStartRecord.lunch_start_time);
+      const lunchEnd = new Date(lunchEndRecord.lunch_end_time);
+      breakMinutes = Math.floor((lunchEnd.getTime() - lunchStart.getTime()) / (1000 * 60));
+    } else if (lunchStartRecord?.lunch_start_time && !lunchEndRecord?.lunch_end_time) {
+      // Still on break - calculate from break start to now
+      const lunchStart = new Date(lunchStartRecord.lunch_start_time);
+      const now = new Date();
+      breakMinutes = Math.floor((now.getTime() - lunchStart.getTime()) / (1000 * 60));
+    }
+
+    // Net working time (excluding break)
+    const netWorkingMinutes = Math.max(0, totalMinutesWorked - breakMinutes);
+    const netWorkingHours = netWorkingMinutes / 60;
+
+    // Check if today is Friday (5 in JavaScript, where Sunday = 0)
+    const isFriday = new Date().getDay() === 5;
+    
+    // Standard working hours (8 hours = 480 minutes)
+    const standardWorkingMinutes = 8 * 60; // 480 minutes
+    
+    let workingHours = 0;
+    let overtimeHours = 0;
+    let deficitHours = 0;
+
+    if (isFriday) {
+      // All hours on Friday are overtime
+      overtimeHours = netWorkingHours;
+      workingHours = 0;
+    } else {
+      if (netWorkingMinutes >= standardWorkingMinutes) {
+        // Normal case: worked 8+ hours
+        workingHours = 8;
+        overtimeHours = (netWorkingMinutes - standardWorkingMinutes) / 60;
+      } else {
+        // Worked less than 8 hours
+        workingHours = netWorkingHours;
+        deficitHours = (standardWorkingMinutes - netWorkingMinutes) / 60;
+      }
+    }
+
+    return {
+      workingHours: Math.round(workingHours * 100) / 100,
+      overtimeHours: Math.round(overtimeHours * 100) / 100,
+      deficitHours: Math.round(deficitHours * 100) / 100,
+      breakMinutes: Math.round(breakMinutes),
+      totalMinutes: totalMinutesWorked,
+      isFriday
+    };
+  };
+
+  const dailyHours = calculateDailyHours(attendanceRecords, user?.id || 0);
+
   // Request form
   const requestForm = useForm({
     defaultValues: {
@@ -559,6 +659,71 @@ export default function UserDashboard() {
                         </div>
                       ))}
                       
+                      {/* Working Hours Summary */}
+                      {dailyAttendanceStatus?.hasCheckedIn && (
+                        <div className="mt-3 pt-3 border-t">
+                          <h5 className="font-medium text-sm mb-2 text-blue-700 dark:text-blue-300">
+                            📊 ملخص ساعات العمل {dailyHours.isFriday ? '(يوم الجمعة)' : ''}:
+                          </h5>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            {/* Working Hours */}
+                            <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                              <div className="flex items-center justify-between">
+                                <span className="text-green-700 dark:text-green-300">⏰ ساعات العمل</span>
+                                <span className="font-medium text-green-800 dark:text-green-200">
+                                  {dailyHours.workingHours.toFixed(1)} ساعة
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Overtime Hours */}
+                            <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                              <div className="flex items-center justify-between">
+                                <span className="text-orange-700 dark:text-orange-300">⚡ ساعات إضافية</span>
+                                <span className="font-medium text-orange-800 dark:text-orange-200">
+                                  {dailyHours.overtimeHours.toFixed(1)} ساعة
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Break Time */}
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
+                              <div className="flex items-center justify-between">
+                                <span className="text-yellow-700 dark:text-yellow-300">☕ وقت الاستراحة</span>
+                                <span className="font-medium text-yellow-800 dark:text-yellow-200">
+                                  {dailyHours.breakMinutes} دقيقة
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Deficit Hours (if any) */}
+                            {dailyHours.deficitHours > 0 && (
+                              <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-red-700 dark:text-red-300">⚠️ ساعات ناقصة</span>
+                                  <span className="font-medium text-red-800 dark:text-red-200">
+                                    {dailyHours.deficitHours.toFixed(1)} ساعة
+                                  </span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Additional Info */}
+                          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            <div className="flex justify-between">
+                              <span>إجمالي الوقت:</span>
+                              <span>{Math.floor(dailyHours.totalMinutes / 60)}:{(dailyHours.totalMinutes % 60).toString().padStart(2, '0')}</span>
+                            </div>
+                            {dailyHours.isFriday && (
+                              <div className="text-orange-600 dark:text-orange-400 mt-1 font-medium">
+                                * يوم الجمعة - جميع الساعات تحسب إضافية
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Status indicators for missing actions */}
                       <div className="mt-2 pt-2 border-t">
                         {!dailyAttendanceStatus?.hasCheckedIn && (
