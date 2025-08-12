@@ -3,6 +3,13 @@
 ## Overview
 This project is an advanced AI-powered order management system specifically designed for plastic bag manufacturing. Its primary purpose is to enhance operational efficiency through intelligent data processing, real-time tracking, and multilingual interfaces. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform for the industry.
 
+## Recent Completed Features (August 2025)
+- ✅ Complete roles and permissions management with direct editing from roles table
+- ✅ Comprehensive work hours calculation system with detailed display (8-hour workday including 1-hour break, overtime calculation, Friday special handling)
+- ✅ Enhanced user dashboard with comprehensive daily work summary and time calculations
+- ✅ Fixed maintenance action form validation issue with executor field ("المنفذ")
+- ✅ Automatic user assignment for maintenance actions with proper form validation
+
 ## User Preferences
 - Language: Arabic (RTL) with English fallback
 - Error handling: User-friendly messages in Arabic
