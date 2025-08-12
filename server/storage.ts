@@ -2843,11 +2843,11 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateSparePart(partId: string, part: Partial<SparePart>): Promise<SparePart> {
+  async updateSparePart(id: number, part: Partial<SparePart>): Promise<SparePart> {
     try {
       const [result] = await db.update(spare_parts)
         .set(part)
-        .where(eq(spare_parts.part_id, partId))
+        .where(eq(spare_parts.id, id))
         .returning();
       return result;
     } catch (error) {
@@ -2856,9 +2856,9 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async deleteSparePart(partId: string): Promise<void> {
+  async deleteSparePart(id: number): Promise<void> {
     try {
-      await db.delete(spare_parts).where(eq(spare_parts.part_id, partId));
+      await db.delete(spare_parts).where(eq(spare_parts.id, id));
     } catch (error) {
       console.error('Error deleting spare part:', error);
       throw new Error('فشل في حذف قطعة الغيار');
