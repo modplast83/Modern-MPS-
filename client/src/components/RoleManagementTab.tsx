@@ -284,9 +284,75 @@ export default function RoleManagementTab() {
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
-                      {role.permissions?.length || 0} صلاحية
-                    </Badge>
+                    {editingRole?.id === role.id ? (
+                      <div className="space-y-2 max-w-[300px]">
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          الصلاحيات المتاحة:
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
+                          {availablePermissions.slice(0, 6).map((permission) => (
+                            <div key={permission.id} className="flex items-center space-x-2 space-x-reverse text-xs">
+                              <Checkbox
+                                id={`table-edit-${permission.id}`}
+                                checked={editingRole.permissions?.includes(permission.id)}
+                                onCheckedChange={(checked) => 
+                                  handlePermissionChange(permission.id, checked as boolean, true)
+                                }
+                                className="w-3 h-3"
+                              />
+                              <label
+                                htmlFor={`table-edit-${permission.id}`}
+                                className="text-xs leading-none cursor-pointer"
+                              >
+                                {permission.name}
+                              </label>
+                            </div>
+                          ))}
+                          {availablePermissions.length > 6 && (
+                            <div className="text-xs text-muted-foreground">
+                              و {availablePermissions.length - 6} صلاحيات أخرى...
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary">
+                          {role.permissions?.length || 0} صلاحية
+                        </Badge>
+                        {role.permissions?.length > 0 && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              toast({
+                                title: `صلاحيات الدور: ${role.name_ar}`,
+                                description: (
+                                  <div className="space-y-1">
+                                    {role.permissions.slice(0, 5).map((permId: string) => {
+                                      const perm = availablePermissions.find(p => p.id === permId);
+                                      return perm ? (
+                                        <div key={permId} className="text-xs">
+                                          • {perm.name}
+                                        </div>
+                                      ) : null;
+                                    })}
+                                    {role.permissions.length > 5 && (
+                                      <div className="text-xs text-muted-foreground">
+                                        و {role.permissions.length - 5} صلاحيات أخرى...
+                                      </div>
+                                    )}
+                                  </div>
+                                ),
+                              });
+                            }}
+                            className="h-6 px-2 text-xs"
+                          >
+                            عرض
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -348,14 +414,17 @@ export default function RoleManagementTab() {
         </CardContent>
       </Card>
 
-      {/* Edit Role Permissions */}
+      {/* Detailed Permissions Editor - Only shown when editing */}
       {editingRole && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
-              تعديل صلاحيات الدور: {editingRole.name_ar}
+              تفاصيل صلاحيات الدور: {editingRole.name_ar}
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              يمكنك تعديل الصلاحيات الأساسية في الجدول أعلاه، أو استخدام هذا القسم لإدارة جميع الصلاحيات
+            </p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -374,8 +443,39 @@ export default function RoleManagementTab() {
                   >
                     {permission.name}
                   </label>
+                  <Badge variant="outline" className="text-xs">
+                    {permission.category}
+                  </Badge>
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-sm text-muted-foreground">
+                المجموع: {editingRole.permissions?.length || 0} صلاحية محددة
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingRole({
+                    ...editingRole,
+                    permissions: availablePermissions.map(p => p.id)
+                  })}
+                >
+                  تحديد الكل
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setEditingRole({
+                    ...editingRole,
+                    permissions: []
+                  })}
+                >
+                  إلغاء تحديد الكل
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
