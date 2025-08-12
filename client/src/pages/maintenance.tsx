@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
@@ -1637,9 +1637,12 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
               إضافة قطعة غيار جديدة
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md" aria-describedby="spare-part-dialog-description">
             <DialogHeader>
               <DialogTitle>إضافة قطعة غيار جديدة</DialogTitle>
+              <div id="spare-part-dialog-description" className="text-sm text-gray-600">
+                أضف قطعة غيار جديدة إلى المخزون
+              </div>
             </DialogHeader>
             <SparePartForm onSubmit={createSparePartMutation.mutate} isLoading={createSparePartMutation.isPending} />
           </DialogContent>
@@ -1736,9 +1739,26 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
 // Spare Part Form Component
 function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
+  const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
+  const { data: machines } = useQuery({ queryKey: ["/api/machines"] });
+
+  // Generate next part ID automatically
+  const generateNextPartId = () => {
+    if (!Array.isArray(spareParts)) return 'SP001';
+    
+    const partNumbers = spareParts
+      .map(part => part.part_id)
+      .filter(id => id && id.match(/^SP\d+$/))
+      .map(id => parseInt(id.replace('SP', '')))
+      .filter(num => !isNaN(num));
+    
+    const nextNumber = partNumbers.length > 0 ? Math.max(...partNumbers) + 1 : 1;
+    return `SP${nextNumber.toString().padStart(3, '0')}`;
+  };
+
   const form = useForm({
     defaultValues: {
-      part_id: '',
+      part_id: generateNextPartId(),
       machine_name: '',
       part_name: '',
       code: '',
@@ -1746,6 +1766,13 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
       specifications: ''
     }
   });
+
+  // Update part_id when spareParts data changes
+  useEffect(() => {
+    if (spareParts) {
+      form.setValue('part_id', generateNextPartId());
+    }
+  }, [spareParts, form]);
 
   const handleSubmit = (data: any) => {
     onSubmit(data);
@@ -1760,9 +1787,9 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
             name="part_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>رقم القطعة</FormLabel>
+                <FormLabel>رقم القطعة (تلقائي)</FormLabel>
                 <FormControl>
-                  <Input placeholder="SP001" {...field} />
+                  <Input {...field} disabled className="bg-gray-100" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -1791,7 +1818,22 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
             <FormItem>
               <FormLabel>اسم الماكينة</FormLabel>
               <FormControl>
-                <Input placeholder="ماكينة اكسترودر A" {...field} />
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الماكينة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(machines) && machines.length > 0 ? (
+                      machines.map((machine: any) => (
+                        <SelectItem key={machine.id} value={machine.name_ar || machine.name}>
+                          {machine.name_ar || machine.name} ({machine.id})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no_machines">لا توجد ماكينات متاحة</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
