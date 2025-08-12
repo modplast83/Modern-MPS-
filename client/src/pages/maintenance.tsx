@@ -528,7 +528,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
 
   // Set current user as performer when dialog opens
   useEffect(() => {
-    if (isDialogOpen && user) {
+    if (isDialogOpen && user && user.id) {
       form.setValue('performed_by', user.id.toString());
     }
   }, [isDialogOpen, user, form]);
@@ -634,7 +634,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormLabel>المنفذ</FormLabel>
                         <FormControl>
                           <Input 
-                            value={user ? (user.full_name || user.display_name || user.username) : ''}
+                            value={user ? (user.full_name || user.display_name || user.username) : 'جاري التحميل...'}
                             disabled
                             className="bg-gray-100 text-gray-700"
                             placeholder="المنفذ الحالي"
