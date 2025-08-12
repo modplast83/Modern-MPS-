@@ -420,15 +420,9 @@ export default function Maintenance() {
                                   </Badge>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <Badge variant={
-                                    request.status === 'completed' ? 'default' : 
-                                    request.status === 'in_progress' ? 'default' : 
-                                    'secondary'
-                                  }>
-                                    {request.status === 'completed' ? 'مكتمل' : 
-                                     request.status === 'in_progress' ? 'قيد التنفيذ' : 
-                                     'مفتوح'}
-                                  </Badge>
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                                    {getStatusText(request.status)}
+                                  </span>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
                                   {request.description}
@@ -437,7 +431,11 @@ export default function Maintenance() {
                                   {assignedName}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                  {new Date(request.date_reported).toLocaleDateString('ar-SA')}
+                                  {new Date(request.date_reported).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit'
+                                  })}
                                 </td>
                               </tr>
                             );
@@ -1177,7 +1175,11 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                   </div>
                   <div>
                     <span className="font-medium">تاريخ الإبلاغ: </span>
-                    {new Date(report.created_at).toLocaleDateString('ar-SA')}
+                    {new Date(report.created_at).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    })}
                   </div>
                 </div>
               </div>
