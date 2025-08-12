@@ -512,21 +512,28 @@ export default function Definitions() {
   const filterData = (data: any[], searchFields: string[]) => {
     if (!Array.isArray(data)) return [];
     
-    return data.filter(item => {
-      // Status filter
-      const statusMatch = statusFilter === "all" || 
-        (statusFilter === "active" && (item.status === "active" || item.status === "operational")) ||
-        (statusFilter === "inactive" && (item.status === "inactive" || item.status === "down" || item.status === "maintenance"));
-      
-      // Search filter
-      const searchMatch = !quickSearch || searchFields.some(field => {
-        const value = item[field];
-        if (value === null || value === undefined) return false;
-        return value.toString().toLowerCase().includes(quickSearch.toLowerCase());
+    return data
+      .filter(item => {
+        // Status filter
+        const statusMatch = statusFilter === "all" || 
+          (statusFilter === "active" && (item.status === "active" || item.status === "operational")) ||
+          (statusFilter === "inactive" && (item.status === "inactive" || item.status === "down" || item.status === "maintenance"));
+        
+        // Search filter
+        const searchMatch = !quickSearch || searchFields.some(field => {
+          const value = item[field];
+          if (value === null || value === undefined) return false;
+          return value.toString().toLowerCase().includes(quickSearch.toLowerCase());
+        });
+        
+        return statusMatch && searchMatch;
+      })
+      .sort((a, b) => {
+        // Sort by ID (number) ascending
+        const aId = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) || 0 : (a.id || 0);
+        const bId = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) || 0 : (b.id || 0);
+        return aId - bId;
       });
-      
-      return statusMatch && searchMatch;
-    });
   };
 
   // Specific filter functions
