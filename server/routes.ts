@@ -2896,6 +2896,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/user-requests/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const request = await storage.updateUserRequest(id, req.body);
+      res.json(request);
+    } catch (error) {
+      console.error('Error updating user request:', error);
+      res.status(500).json({ message: "خطأ في تحديث الطلب" });
+    }
+  });
+
   app.delete("/api/user-requests/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -28,8 +28,8 @@ interface UserRequest {
   type: string;
   title: string;
   description: string;
-  status: 'pending' | 'approved' | 'rejected';
-  priority: 'low' | 'medium' | 'high';
+  status: string; // Allow any status value to handle Arabic statuses
+  priority: string; // Allow any priority value to handle Arabic priorities
   start_date?: string;
   end_date?: string;
   requested_amount?: number;
@@ -59,7 +59,7 @@ export default function LeaveManagement() {
     initialData: []
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
+  const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({
     queryKey: ['/api/users'],
     initialData: []
   });
@@ -93,46 +93,75 @@ export default function LeaveManagement() {
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'rejected': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'pending': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    if (!status) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    // Handle both English and Arabic status values
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'approved' || status === 'موافق عليه' || status === 'موافق') {
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
     }
+    if (lowerStatus === 'rejected' || status === 'مرفوض') {
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+    }
+    if (lowerStatus === 'pending' || status === 'معلق' || status === 'قيد المراجعة') {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    }
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
   };
 
   const getStatusText = (status: string) => {
-    switch (status) {
-      case 'approved': return 'موافق عليه';
-      case 'rejected': return 'مرفوض';
-      case 'pending': return 'قيد المراجعة';
-      default: return status;
+    if (!status) return status;
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'approved' || status === 'موافق عليه' || status === 'موافق') {
+      return 'موافق عليه';
     }
+    if (lowerStatus === 'rejected' || status === 'مرفوض') {
+      return 'مرفوض';
+    }
+    if (lowerStatus === 'pending' || status === 'معلق' || status === 'قيد المراجعة') {
+      return 'قيد المراجعة';
+    }
+    return status;
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved': return <CheckCircle className="w-4 h-4" />;
-      case 'rejected': return <XCircle className="w-4 h-4" />;
-      case 'pending': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+    if (!status) return <Clock className="w-4 h-4" />;
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === 'approved' || status === 'موافق عليه' || status === 'موافق') {
+      return <CheckCircle className="w-4 h-4" />;
     }
+    if (lowerStatus === 'rejected' || status === 'مرفوض') {
+      return <XCircle className="w-4 h-4" />;
+    }
+    if (lowerStatus === 'pending' || status === 'معلق' || status === 'قيد المراجعة') {
+      return <AlertCircle className="w-4 h-4" />;
+    }
+    return <Clock className="w-4 h-4" />;
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case 'عالية': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'medium':
+      case 'متوسطة':
+      case 'عادي':
+      case 'عادية': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'low':
+      case 'منخفضة': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }
   };
 
   const getPriorityText = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'عالية';
-      case 'medium': return 'متوسطة';
-      case 'low': return 'منخفضة';
+    switch (priority.toLowerCase()) {
+      case 'high':
+      case 'عالية': return 'عالية';
+      case 'medium':
+      case 'متوسطة':
+      case 'عادي':
+      case 'عادية': return 'متوسطة';
+      case 'low':
+      case 'منخفضة': return 'منخفضة';
       default: return priority;
     }
   };
@@ -154,6 +183,7 @@ export default function LeaveManagement() {
   };
 
   const getUserDisplayName = (userId: number) => {
+    if (!Array.isArray(users) || users.length === 0) return `المستخدم ${userId}`;
     const user = users.find((u: any) => u.id === userId);
     return user ? (user.display_name_ar || user.display_name || user.username) : `المستخدم ${userId}`;
   };
@@ -169,9 +199,18 @@ export default function LeaveManagement() {
     );
   }
 
-  const pendingRequests = userRequests.filter(req => req.status === 'pending');
-  const approvedRequests = userRequests.filter(req => req.status === 'approved');
-  const rejectedRequests = userRequests.filter(req => req.status === 'rejected');
+  const pendingRequests = userRequests.filter(req => {
+    const status = req.status?.toLowerCase();
+    return status === 'pending' || req.status === 'معلق' || req.status === 'قيد المراجعة';
+  });
+  const approvedRequests = userRequests.filter(req => {
+    const status = req.status?.toLowerCase();
+    return status === 'approved' || req.status === 'موافق عليه' || req.status === 'موافق';
+  });
+  const rejectedRequests = userRequests.filter(req => {
+    const status = req.status?.toLowerCase();
+    return status === 'rejected' || req.status === 'مرفوض';
+  });
 
   return (
     <div className="space-y-6">
@@ -333,7 +372,7 @@ export default function LeaveManagement() {
                             <Eye className="w-4 h-4 mr-1" />
                             عرض
                           </Button>
-                          {request.status === 'pending' && (
+                          {(request.status?.toLowerCase() === 'pending' || request.status === 'معلق' || request.status === 'قيد المراجعة') && (
                             <>
                               <Button
                                 size="sm"
