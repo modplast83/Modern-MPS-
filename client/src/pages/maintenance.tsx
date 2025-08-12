@@ -520,18 +520,18 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
       spare_parts_request: "",
       machining_request: "",
       operator_negligence_report: "",
-      performed_by: "",
+      performed_by: user?.id?.toString() || "",
       requires_management_action: false,
       management_notified: false,
     },
   });
 
-  // Set current user as performer when dialog opens
+  // Set current user as performer when dialog opens or user changes
   useEffect(() => {
-    if (isDialogOpen && user && user.id) {
+    if (user?.id) {
       form.setValue('performed_by', user.id.toString());
     }
-  }, [isDialogOpen, user, form]);
+  }, [user, form]);
 
   const onSubmit = async (data: any) => {
     try {
@@ -634,15 +634,21 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormLabel>المنفذ</FormLabel>
                         <FormControl>
                           <Input 
-                            value={user ? (user.full_name || user.display_name || user.username) : 'جاري التحميل...'}
-                            disabled
-                            className="bg-gray-100 text-gray-700"
-                            placeholder="المنفذ الحالي"
+                            {...field}
+                            value={user?.id ? user.id.toString() : ''}
+                            onChange={(e) => field.onChange(e.target.value)}
+                            type="hidden"
+                            className="hidden"
                           />
                         </FormControl>
-                        <FormDescription>
-                          سيتم تسجيل الإجراء باسم المستخدم الحالي
-                        </FormDescription>
+                        <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded border">
+                          <div className="font-medium text-sm">
+                            {user ? `${user.display_name || user.username} (${user.id})` : 'جاري التحميل...'}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            سيتم تسجيل الإجراء باسم المستخدم الحالي
+                          </div>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
