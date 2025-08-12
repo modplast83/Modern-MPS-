@@ -491,7 +491,7 @@ export default function Maintenance() {
             {/* Spare Parts Tab */}
             <TabsContent value="spare-parts">
               <SparePartsTab 
-                spareParts={spareParts}
+                spareParts={Array.isArray(spareParts) ? spareParts : []}
                 isLoading={false}
               />
             </TabsContent>
@@ -1606,6 +1606,9 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
 function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading: boolean }) {
   const [selectedPart, setSelectedPart] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [partToDelete, setPartToDelete] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -1624,6 +1627,58 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
       toast({ title: "فشل في إنشاء قطعة الغيار", variant: "destructive" });
     },
   });
+
+  // Update spare part mutation
+  const updateSparePartMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: any }) => apiRequest(`/api/spare-parts/${id}`, { 
+      method: "PUT", 
+      body: JSON.stringify(data) 
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
+      toast({ title: "تم تحديث قطعة الغيار بنجاح" });
+      setIsEditDialogOpen(false);
+      setSelectedPart(null);
+    },
+    onError: () => {
+      toast({ title: "فشل في تحديث قطعة الغيار", variant: "destructive" });
+    },
+  });
+
+  // Delete spare part mutation
+  const deleteSparePartMutation = useMutation({
+    mutationFn: (id: number) => apiRequest(`/api/spare-parts/${id}`, { 
+      method: "DELETE" 
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
+      toast({ title: "تم حذف قطعة الغيار بنجاح" });
+      setPartToDelete(null);
+    },
+    onError: () => {
+      toast({ title: "فشل في حذف قطعة الغيار", variant: "destructive" });
+    },
+  });
+
+  const handleView = (part: any) => {
+    setSelectedPart(part);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEdit = (part: any) => {
+    setSelectedPart(part);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (part: any) => {
+    setPartToDelete(part);
+  };
+
+  const confirmDelete = () => {
+    if (partToDelete) {
+      deleteSparePartMutation.mutate(partToDelete.id);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -1708,13 +1763,13 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                         <div className="flex justify-center gap-2">
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleView(part)}>
                             <Eye className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEdit(part)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600" onClick={() => handleDelete(part)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -1733,6 +1788,100 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
           )}
         </CardContent>
       </Card>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="max-w-md" aria-describedby="view-spare-part-dialog-description">
+          <DialogHeader>
+            <DialogTitle>تفاصيل قطعة الغيار</DialogTitle>
+            <div id="view-spare-part-dialog-description" className="text-sm text-gray-600">
+              عرض تفاصيل قطعة الغيار المحددة
+            </div>
+          </DialogHeader>
+          {selectedPart && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">رقم القطعة</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedPart.part_id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">الكود</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedPart.code}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">اسم الماكينة</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedPart.machine_name}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">اسم القطعة</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedPart.part_name}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">الرقم التسلسلي</label>
+                  <p className="text-sm text-gray-900 mt-1">{selectedPart.serial_number}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">المواصفات</label>
+                <p className="text-sm text-gray-900 mt-1">{selectedPart.specifications}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md" aria-describedby="edit-spare-part-dialog-description">
+          <DialogHeader>
+            <DialogTitle>تعديل قطعة الغيار</DialogTitle>
+            <div id="edit-spare-part-dialog-description" className="text-sm text-gray-600">
+              تعديل بيانات قطعة الغيار
+            </div>
+          </DialogHeader>
+          {selectedPart && (
+            <SparePartEditForm 
+              part={selectedPart}
+              onSubmit={(data) => updateSparePartMutation.mutate({ id: selectedPart.id, data })}
+              isLoading={updateSparePartMutation.isPending}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!partToDelete} onOpenChange={() => setPartToDelete(null)}>
+        <DialogContent className="max-w-md" aria-describedby="delete-spare-part-dialog-description">
+          <DialogHeader>
+            <DialogTitle>تأكيد الحذف</DialogTitle>
+            <div id="delete-spare-part-dialog-description" className="text-sm text-gray-600">
+              هل أنت متأكد من حذف قطعة الغيار؟
+            </div>
+          </DialogHeader>
+          {partToDelete && (
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">
+                سيتم حذف قطعة الغيار <strong>{partToDelete.part_id}</strong> - {partToDelete.part_name} نهائياً.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setPartToDelete(null)}>
+                  إلغاء
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={confirmDelete}
+                  disabled={deleteSparePartMutation.isPending}
+                >
+                  {deleteSparePartMutation.isPending ? "جاري الحذف..." : "حذف"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1744,13 +1893,14 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
 
   // Generate next part ID automatically
   const generateNextPartId = () => {
-    if (!Array.isArray(spareParts)) return 'SP001';
+    const { data: currentSpareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
+    if (!Array.isArray(currentSpareParts)) return 'SP001';
     
-    const partNumbers = spareParts
-      .map(part => part.part_id)
-      .filter(id => id && id.match(/^SP\d+$/))
-      .map(id => parseInt(id.replace('SP', '')))
-      .filter(num => !isNaN(num));
+    const partNumbers = currentSpareParts
+      .map((part: any) => part.part_id)
+      .filter((id: string) => id && id.match(/^SP\d+$/))
+      .map((id: string) => parseInt(id.replace('SP', '')))
+      .filter((num: number) => !isNaN(num));
     
     const nextNumber = partNumbers.length > 0 ? Math.max(...partNumbers) + 1 : 1;
     return `SP${nextNumber.toString().padStart(3, '0')}`;
@@ -1767,10 +1917,11 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
     }
   });
 
-  // Update part_id when spareParts data changes
+  // Update part_id when spare parts data changes
   useEffect(() => {
-    if (spareParts) {
-      form.setValue('part_id', generateNextPartId());
+    const nextId = generateNextPartId();
+    if (nextId !== form.getValues('part_id')) {
+      form.setValue('part_id', nextId);
     }
   }, [spareParts, form]);
 
@@ -1891,6 +2042,145 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             {isLoading ? "جاري الحفظ..." : "حفظ"}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
+// Spare Part Edit Form Component
+function SparePartEditForm({ part, onSubmit, isLoading }: { part: any, onSubmit: (data: any) => void, isLoading: boolean }) {
+  const { data: machines } = useQuery({ queryKey: ["/api/machines"] });
+
+  const form = useForm({
+    defaultValues: {
+      part_id: part.part_id || '',
+      machine_name: part.machine_name || '',
+      part_name: part.part_name || '',
+      code: part.code || '',
+      serial_number: part.serial_number || '',
+      specifications: part.specifications || ''
+    }
+  });
+
+  const handleSubmit = (data: any) => {
+    onSubmit(data);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="part_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>رقم القطعة</FormLabel>
+                <FormControl>
+                  <Input {...field} disabled className="bg-gray-100" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الكود</FormLabel>
+                <FormControl>
+                  <Input placeholder="A8908" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="machine_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>اسم الماكينة</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر الماكينة" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(machines) && machines.length > 0 ? (
+                      machines.map((machine: any) => (
+                        <SelectItem key={machine.id} value={machine.name_ar || machine.name}>
+                          {machine.name_ar || machine.name} ({machine.id})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no_machines">لا توجد ماكينات متاحة</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="part_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>اسم القطعة</FormLabel>
+                <FormControl>
+                  <Input placeholder="ماطور" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="serial_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الرقم التسلسلي</FormLabel>
+                <FormControl>
+                  <Input placeholder="E5SH973798" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="specifications"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>المواصفات</FormLabel>
+              <FormControl>
+                <Textarea placeholder="قوة 380 فولت و 10 امبير" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isLoading ? "جاري التحديث..." : "تحديث"}
           </Button>
         </div>
       </form>

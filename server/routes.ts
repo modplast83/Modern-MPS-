@@ -1337,10 +1337,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/spare-parts/:partId", async (req, res) => {
+  app.put("/api/spare-parts/:id", async (req, res) => {
     try {
-      const { partId } = req.params;
-      const sparePart = await storage.updateSparePart(partId, req.body);
+      const id = parseInt(req.params.id);
+      const sparePart = await storage.updateSparePart(id, req.body);
       res.json(sparePart);
     } catch (error) {
       console.error('Error updating spare part:', error);
@@ -1348,10 +1348,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/spare-parts/:partId", async (req, res) => {
+  app.delete("/api/spare-parts/:id", async (req, res) => {
     try {
-      const { partId } = req.params;
-      await storage.deleteSparePart(partId);
+      const id = parseInt(req.params.id);
+      await storage.deleteSparePart(id);
       res.json({ message: "تم حذف قطعة الغيار بنجاح" });
     } catch (error) {
       console.error('Error deleting spare part:', error);
