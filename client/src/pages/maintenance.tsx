@@ -1892,8 +1892,7 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
   const { data: machines } = useQuery({ queryKey: ["/api/machines"] });
 
   // Generate next part ID automatically
-  const generateNextPartId = () => {
-    const { data: currentSpareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
+  const generateNextPartId = (currentSpareParts: any[]) => {
     if (!Array.isArray(currentSpareParts)) return 'SP001';
     
     const partNumbers = currentSpareParts
@@ -1908,7 +1907,7 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
 
   const form = useForm({
     defaultValues: {
-      part_id: generateNextPartId(),
+      part_id: 'SP001',
       machine_name: '',
       part_name: '',
       code: '',
@@ -1919,9 +1918,11 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
 
   // Update part_id when spare parts data changes
   useEffect(() => {
-    const nextId = generateNextPartId();
-    if (nextId !== form.getValues('part_id')) {
-      form.setValue('part_id', nextId);
+    if (spareParts) {
+      const nextId = generateNextPartId(spareParts);
+      if (nextId !== form.getValues('part_id')) {
+        form.setValue('part_id', nextId);
+      }
     }
   }, [spareParts, form]);
 
