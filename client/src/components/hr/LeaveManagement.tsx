@@ -54,10 +54,15 @@ export default function LeaveManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: userRequests = [], isLoading: requestsLoading } = useQuery<UserRequest[]>({
+  const { data: userRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery<UserRequest[]>({
     queryKey: ['/api/user-requests'],
     initialData: []
   });
+
+  // Debug logging
+  console.log('User requests data:', userRequests);
+  console.log('Loading state:', requestsLoading);
+  console.log('Error state:', requestsError);
 
   const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({
     queryKey: ['/api/users'],
@@ -199,18 +204,18 @@ export default function LeaveManagement() {
     );
   }
 
-  const pendingRequests = userRequests.filter(req => {
+  const pendingRequests = Array.isArray(userRequests) ? userRequests.filter((req: any) => {
     const status = req.status?.toLowerCase();
     return status === 'pending' || req.status === 'معلق' || req.status === 'قيد المراجعة';
-  });
-  const approvedRequests = userRequests.filter(req => {
+  }) : [];
+  const approvedRequests = Array.isArray(userRequests) ? userRequests.filter((req: any) => {
     const status = req.status?.toLowerCase();
     return status === 'approved' || req.status === 'موافق عليه' || req.status === 'موافق';
-  });
-  const rejectedRequests = userRequests.filter(req => {
+  }) : [];
+  const rejectedRequests = Array.isArray(userRequests) ? userRequests.filter((req: any) => {
     const status = req.status?.toLowerCase();
     return status === 'rejected' || req.status === 'مرفوض';
-  });
+  }) : [];
 
   return (
     <div className="space-y-6">
@@ -236,7 +241,7 @@ export default function LeaveManagement() {
                   إجمالي الطلبات
                 </p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {userRequests.length}
+                  {Array.isArray(userRequests) ? userRequests.length : 0}
                 </p>
               </div>
               <CalendarDays className="w-8 h-8 text-blue-500" />
@@ -302,10 +307,18 @@ export default function LeaveManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {userRequests.length === 0 ? (
+          {requestsLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل الطلبات...</p>
+            </div>
+          ) : !Array.isArray(userRequests) || userRequests.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>لا توجد طلبات مسجلة</p>
+              {requestsError && (
+                <p className="text-red-500 mt-2">خطأ في تحميل البيانات: {String(requestsError)}</p>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -322,7 +335,7 @@ export default function LeaveManagement() {
                   </tr>
                 </thead>
                 <tbody>
-                  {userRequests.map((request) => (
+                  {Array.isArray(userRequests) && userRequests.map((request: any) => (
                     <tr key={request.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800">
                       <td className="p-3">
                         <div className="flex items-center gap-2">
