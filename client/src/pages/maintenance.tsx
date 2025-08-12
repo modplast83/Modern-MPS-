@@ -762,26 +762,73 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
             <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
           </div>
         ) : Array.isArray(actions) && actions.length > 0 ? (
-          <div className="space-y-4">
-            {actions.map((action: any) => (
-              <div key={action.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{action.action_number} - {action.action_type}</h3>
-                  <Badge>{new Date(action.action_date).toLocaleDateString('ar-SA')}</Badge>
-                </div>
-                <p className="text-sm text-gray-600 mb-2">{action.description}</p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="font-medium">الوقت المستغرق: </span>
-                    {action.time_spent_hours} ساعة
-                  </div>
-                  <div>
-                    <span className="font-medium">تاريخ التنفيذ: </span>
-                    {new Date(action.action_date).toLocaleDateString('ar-SA')}
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">رقم الإجراء</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">نوع الإجراء</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">الوصف</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">المنفذ</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">طلب قطع غيار</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">طلب مخرطة</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">موافقة إدارية</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">تاريخ التنفيذ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {actions.map((action: any) => {
+                  const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === action.performed_by) : null;
+                  
+                  return (
+                    <tr key={action.id} className="hover:bg-gray-50">
+                      <td className="border border-gray-300 px-4 py-2 text-center font-medium text-blue-600">
+                        {action.action_number}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                          {action.action_type}
+                        </Badge>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {action.description || '-'}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center">
+                        {performedByUser ? (performedByUser.full_name || performedByUser.username) : action.performed_by}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {action.spare_parts_request || '-'}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2">
+                        {action.machining_request || '-'}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center">
+                        {action.requires_management_action ? (
+                          <Badge variant="destructive">مطلوب</Badge>
+                        ) : (
+                          <Badge variant="secondary">غير مطلوب</Badge>
+                        )}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center">
+                        {new Date(action.action_date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit'
+                        })}
+                        <br />
+                        <span className="text-xs text-gray-500">
+                          {new Date(action.action_date).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="text-center py-8 text-gray-500">
