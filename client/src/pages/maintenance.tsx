@@ -1931,7 +1931,7 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
 
   // Update part_id when spare parts data changes
   useEffect(() => {
-    if (spareParts) {
+    if (spareParts && Array.isArray(spareParts)) {
       const nextId = generateNextPartId(spareParts);
       if (nextId !== form.getValues('part_id')) {
         form.setValue('part_id', nextId);
