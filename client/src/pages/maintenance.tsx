@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Wrench, AlertTriangle, CheckCircle, Clock, Calendar, Plus, FileText, AlertCircle, Users } from "lucide-react";
+import { Wrench, AlertTriangle, CheckCircle, Clock, Calendar, Plus, FileText, AlertCircle, Users, Eye, Printer, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
@@ -767,6 +767,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
               <thead className="bg-gray-50">
                 <tr>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">رقم الإجراء</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">رقم طلب الصيانة</th>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">نوع الإجراء</th>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">الوصف</th>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">المنفذ</th>
@@ -774,16 +775,70 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">طلب مخرطة</th>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">موافقة إدارية</th>
                   <th className="border border-gray-300 px-4 py-2 text-center font-semibold">تاريخ التنفيذ</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">الإجراءات</th>
                 </tr>
               </thead>
               <tbody>
                 {actions.map((action: any) => {
                   const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === action.performed_by) : null;
+                  const maintenanceRequest = Array.isArray(requests) ? requests.find((r: any) => r.id === action.maintenance_request_id) : null;
+                  
+                  const handleView = () => {
+                    alert(`عرض تفاصيل الإجراء ${action.action_number}`);
+                  };
+
+                  const handlePrint = () => {
+                    const printContent = `
+                      <div style="font-family: Arial; direction: rtl; text-align: right; padding: 20px;">
+                        <h2 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px;">
+                          إجراء صيانة رقم: ${action.action_number}
+                        </h2>
+                        <div style="margin: 20px 0;">
+                          <p><strong>رقم طلب الصيانة:</strong> ${maintenanceRequest?.request_number || action.maintenance_request_id}</p>
+                          <p><strong>نوع الإجراء:</strong> ${action.action_type}</p>
+                          <p><strong>الوصف:</strong> ${action.description || '-'}</p>
+                          <p><strong>المنفذ:</strong> ${performedByUser ? (performedByUser.full_name || performedByUser.username) : action.performed_by}</p>
+                          <p><strong>طلب قطع غيار:</strong> ${action.spare_parts_request || '-'}</p>
+                          <p><strong>طلب مخرطة:</strong> ${action.machining_request || '-'}</p>
+                          <p><strong>تقرير إهمال المشغل:</strong> ${action.operator_negligence_report || '-'}</p>
+                          <p><strong>تقرير نصي:</strong> ${action.text_report || '-'}</p>
+                          <p><strong>موافقة إدارية مطلوبة:</strong> ${action.requires_management_action ? 'نعم' : 'لا'}</p>
+                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString('ar-SA')}</p>
+                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString('ar-SA')}</p>
+                        </div>
+                      </div>
+                    `;
+                    
+                    const printWindow = window.open('', '_blank');
+                    printWindow?.document.write(printContent);
+                    printWindow?.document.close();
+                    printWindow?.print();
+                  };
+
+                  const handleDelete = async () => {
+                    if (confirm(`هل أنت متأكد من حذف الإجراء ${action.action_number}؟`)) {
+                      try {
+                        await fetch(`/api/maintenance-actions/${action.id}`, {
+                          method: 'DELETE',
+                        });
+                        window.location.reload();
+                      } catch (error) {
+                        alert('حدث خطأ في حذف الإجراء');
+                      }
+                    }
+                  };
+
+                  const handleEdit = () => {
+                    alert(`تعديل الإجراء ${action.action_number} - سيتم تطوير هذه الميزة قريباً`);
+                  };
                   
                   return (
                     <tr key={action.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2 text-center font-medium text-blue-600">
                         {action.action_number}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center font-medium text-green-600">
+                        {maintenanceRequest?.request_number || `MO${action.maintenance_request_id.toString().padStart(3, '0')}`}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
@@ -823,6 +878,46 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                             hour12: true
                           })}
                         </span>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-center">
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200 h-8 w-8 p-0"
+                            onClick={handleView}
+                            title="عرض"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200 h-8 w-8 p-0"
+                            onClick={handlePrint}
+                            title="طباعة"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border-yellow-200 h-8 w-8 p-0"
+                            onClick={handleEdit}
+                            title="تعديل"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 h-8 w-8 p-0"
+                            onClick={handleDelete}
+                            title="حذف"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
