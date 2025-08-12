@@ -53,9 +53,19 @@ const operatorNegligenceSchema = z.object({
   immediate_actions_taken: z.string().optional(),
 });
 
+const maintenanceRequestSchema = z.object({
+  machine_id: z.string().min(1, "المعدة مطلوبة"),
+  maintenance_type: z.string().min(1, "نوع الصيانة مطلوب"),
+  priority: z.string().default("medium"),
+  description: z.string().min(1, "الوصف مطلوب"),
+  requested_date: z.string().min(1, "التاريخ المطلوب مطلوب"),
+  assigned_technician: z.string().optional(),
+});
+
 export default function Maintenance() {
   const [currentTab, setCurrentTab] = useState("requests");
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -86,7 +96,10 @@ export default function Maintenance() {
 
   // Mutations for creating new records
   const createActionMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/maintenance-actions", "POST", data),
+    mutationFn: (data: any) => apiRequest("/api/maintenance-actions", { 
+      method: "POST", 
+      body: JSON.stringify(data) 
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-actions"] });
       toast({ title: "تم إنشاء إجراء الصيانة بنجاح" });
@@ -97,7 +110,10 @@ export default function Maintenance() {
   });
 
   const createReportMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/maintenance-reports", "POST", data),
+    mutationFn: (data: any) => apiRequest("/api/maintenance-reports", { 
+      method: "POST", 
+      body: JSON.stringify(data) 
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-reports"] });
       toast({ title: "تم إنشاء بلاغ الصيانة بنجاح" });
@@ -108,13 +124,31 @@ export default function Maintenance() {
   });
 
   const createOperatorReportMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/operator-negligence-reports", "POST", data),
+    mutationFn: (data: any) => apiRequest("/api/operator-negligence-reports", { 
+      method: "POST", 
+      body: JSON.stringify(data) 
+    }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/operator-negligence-reports"] });
       toast({ title: "تم إنشاء بلاغ إهمال المشغل بنجاح" });
     },
     onError: () => {
       toast({ title: "فشل في إنشاء بلاغ إهمال المشغل", variant: "destructive" });
+    },
+  });
+
+  const createRequestMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/maintenance-requests", { 
+      method: "POST", 
+      body: JSON.stringify(data) 
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/maintenance-requests"] });
+      setIsRequestDialogOpen(false);
+      toast({ title: "تم إنشاء طلب الصيانة بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "فشل في إنشاء طلب الصيانة", variant: "destructive" });
     },
   });
 
@@ -271,7 +305,23 @@ export default function Maintenance() {
             <TabsContent value="requests">
               <Card>
                 <CardHeader>
-                  <CardTitle>طلبات الصيانة</CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle>طلبات الصيانة</CardTitle>
+                    <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                          <Plus className="h-4 w-4 mr-2" />
+                          طلب صيانة جديد
+                        </Button>
+                      </DialogTrigger>
+                      <MaintenanceRequestDialog 
+                        machines={machines}
+                        users={users}
+                        onSubmit={createRequestMutation.mutate}
+                        isLoading={createRequestMutation.isPending}
+                      />
+                    </Dialog>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {loadingRequests ? (
@@ -1068,5 +1118,182 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// Maintenance Request Dialog Component
+function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any) {
+  const form = useForm({
+    resolver: zodResolver(maintenanceRequestSchema),
+    defaultValues: {
+      machine_id: "",
+      maintenance_type: "preventive",
+      priority: "medium",
+      description: "",
+      requested_date: new Date().toISOString().split('T')[0],
+      assigned_technician: "",
+    },
+  });
+
+  const handleSubmit = (data: any) => {
+    onSubmit(data);
+    form.reset();
+  };
+
+  return (
+    <DialogContent className="sm:max-w-[600px]">
+      <DialogHeader>
+        <DialogTitle>طلب صيانة جديد</DialogTitle>
+      </DialogHeader>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="machine_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>المعدة</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر المعدة" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Array.isArray(machines) && machines.map((machine: any) => (
+                        <SelectItem key={machine.id} value={machine.id}>
+                          {machine.name_ar}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="maintenance_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>نوع الصيانة</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر نوع الصيانة" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="preventive">صيانة وقائية</SelectItem>
+                      <SelectItem value="corrective">صيانة تصحيحية</SelectItem>
+                      <SelectItem value="emergency">صيانة طارئة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="priority"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>الأولوية</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر الأولوية" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="low">منخفضة</SelectItem>
+                      <SelectItem value="medium">متوسطة</SelectItem>
+                      <SelectItem value="high">عالية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="requested_date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>التاريخ المطلوب</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="assigned_technician"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الفني المكلف (اختياري)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="اختر الفني" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">بدون تكليف</SelectItem>
+                    {Array.isArray(users) && users
+                      .filter((user: any) => user.role === 'technician')
+                      .map((user: any) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.full_name || user.username}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>وصف المشكلة</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="اشرح المشكلة أو نوع الصيانة المطلوبة..."
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="flex justify-end gap-2">
+            <Button 
+              type="submit" 
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isLoading ? "جاري الإنشاء..." : "إنشاء الطلب"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </DialogContent>
   );
 }
