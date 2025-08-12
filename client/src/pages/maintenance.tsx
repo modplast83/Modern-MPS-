@@ -24,12 +24,14 @@ import { useAuth } from "@/hooks/use-auth";
 const maintenanceActionSchema = z.object({
   maintenance_request_id: z.number(),
   action_type: z.string().min(1, "نوع الإجراء مطلوب"),
-  procedures_performed: z.array(z.string()).min(1, "يجب إضافة إجراء واحد على الأقل"),
   description: z.string().min(1, "الوصف مطلوب"),
-  spare_parts_used: z.array(z.string()).optional(),
-  tools_used: z.array(z.string()).optional(),
-  time_spent_hours: z.number().min(0.1, "وقت التنفيذ مطلوب"),
-  notes: z.string().optional(),
+  text_report: z.string().optional(),
+  spare_parts_request: z.string().optional(),
+  machining_request: z.string().optional(),
+  operator_negligence_report: z.string().optional(),
+  performed_by: z.string().min(1, "المنفذ مطلوب"),
+  requires_management_action: z.boolean().optional(),
+  management_notified: z.boolean().optional(),
 });
 
 const maintenanceReportSchema = z.object({
@@ -97,15 +99,20 @@ export default function Maintenance() {
 
   // Mutations for creating new records
   const createActionMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/maintenance-actions", { 
-      method: "POST", 
-      body: JSON.stringify(data) 
-    }),
-    onSuccess: () => {
+    mutationFn: (data: any) => {
+      console.log('Sending maintenance action data:', data);
+      return apiRequest("/api/maintenance-actions", { 
+        method: "POST", 
+        body: JSON.stringify(data) 
+      });
+    },
+    onSuccess: (result) => {
+      console.log('Maintenance action created successfully:', result);
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-actions"] });
       toast({ title: "تم إنشاء إجراء الصيانة بنجاح" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to create maintenance action:', error);
       toast({ title: "فشل في إنشاء إجراء الصيانة", variant: "destructive" });
     },
   });
@@ -489,27 +496,33 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
     defaultValues: {
       maintenance_request_id: 0,
       action_type: "",
-      procedures_performed: [],
       description: "",
-      spare_parts_used: [],
-      tools_used: [],
-      time_spent_hours: 0,
-      notes: "",
+      text_report: "",
+      spare_parts_request: "",
+      machining_request: "",
+      operator_negligence_report: "",
+      performed_by: "",
+      requires_management_action: false,
+      management_notified: false,
     },
   });
 
   const onSubmit = async (data: any) => {
     try {
+      console.log('Form data submitted:', data);
+      
       // Generate action number
       const actionNumber = `MA${Date.now().toString().slice(-6)}`;
       
-      await onCreateAction({
+      const submitData = {
         ...data,
         action_number: actionNumber,
-        performed_by_user_id: 1, // Should be current user
+        request_created_by: "1", // Should be current user
         action_date: new Date().toISOString(),
-        status: 'completed'
-      });
+      };
+      
+      console.log('Submitting action data:', submitData);
+      await onCreateAction(submitData);
       
       setIsDialogOpen(false);
       form.reset();
@@ -575,12 +588,11 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="preventive">صيانة وقائية</SelectItem>
-                              <SelectItem value="corrective">صيانة تصحيحية</SelectItem>
-                              <SelectItem value="emergency">صيانة طارئة</SelectItem>
-                              <SelectItem value="inspection">فحص</SelectItem>
-                              <SelectItem value="repair">إصلاح</SelectItem>
-                              <SelectItem value="replacement">استبدال</SelectItem>
+                              <SelectItem value="فحص مبدئي">فحص مبدئي</SelectItem>
+                              <SelectItem value="تغيير قطعة غيار">تغيير قطعة غيار</SelectItem>
+                              <SelectItem value="إصلاح مكانيكي">إصلاح مكانيكي</SelectItem>
+                              <SelectItem value="إصلاح كهربائي">إصلاح كهربائي</SelectItem>
+                              <SelectItem value="إيقاف الماكينة">إيقاف الماكينة</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -588,6 +600,33 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       )}
                     />
                   </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="performed_by"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>المنفذ</FormLabel>
+                        <Select onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="اختر الفني المنفذ" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.isArray(users) && users
+                              .filter((user: any) => user.role === 'technician' || user.username === 'admin')
+                              .map((user: any) => (
+                                <SelectItem key={user.id} value={user.id.toString()}>
+                                  {user.full_name || user.username}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   
                   <FormField
                     control={form.control}
@@ -606,17 +645,12 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
-                      name="time_spent_hours"
+                      name="text_report"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الوقت المستغرق (ساعات)</FormLabel>
+                          <FormLabel>التقرير النصي</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.1" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
-                            />
+                            <Textarea {...field} placeholder="تقرير مفصل عن العملية" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -625,14 +659,86 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                     
                     <FormField
                       control={form.control}
-                      name="notes"
+                      name="spare_parts_request"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ملاحظات إضافية</FormLabel>
+                          <FormLabel>طلب قطع غيار</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="أي ملاحظات أو توصيات" />
+                            <Textarea {...field} placeholder="قائمة قطع الغيار المطلوبة" />
                           </FormControl>
                           <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="machining_request"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>طلب مخرطة</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="تفاصيل طلب المخرطة إن وجد" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="operator_negligence_report"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>تبليغ إهمال المشغل</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="تقرير عن إهمال المشغل إن وجد" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="requires_management_action"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>يحتاج موافقة إدارية</FormLabel>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="management_notified"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>تم إبلاغ الإدارة</FormLabel>
+                          </div>
                         </FormItem>
                       )}
                     />
