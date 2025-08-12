@@ -1185,12 +1185,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/maintenance-actions", async (req, res) => {
     try {
+      console.log('Creating maintenance action with data:', req.body);
       const data = insertMaintenanceActionSchema.parse(req.body);
+      console.log('Parsed action data:', data);
       const action = await storage.createMaintenanceAction(data);
+      console.log('Created maintenance action:', action);
       res.json(action);
     } catch (error) {
       console.error('Error creating maintenance action:', error);
-      res.status(500).json({ message: "خطأ في إنشاء إجراء الصيانة" });
+      res.status(500).json({ 
+        message: "خطأ في إنشاء إجراء الصيانة",
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
