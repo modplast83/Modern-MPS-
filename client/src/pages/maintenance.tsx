@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -506,8 +506,9 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   
-  // Add spare parts query
+  // Add spare parts query and user context
   const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
+  const { data: user } = useQuery({ queryKey: ["/api/me"] });
 
   const form = useForm({
     resolver: zodResolver(maintenanceActionSchema),
@@ -524,6 +525,13 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
       management_notified: false,
     },
   });
+
+  // Set current user as performer when dialog opens
+  useEffect(() => {
+    if (isDialogOpen && user) {
+      form.setValue('performed_by', user.id.toString());
+    }
+  }, [isDialogOpen, user, form]);
 
   const onSubmit = async (data: any) => {
     try {
@@ -624,22 +632,17 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>المنفذ</FormLabel>
-                        <Select onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر الفني المنفذ" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {Array.isArray(users) && users
-                              .filter((user: any) => user.role === 'technician' || user.username === 'admin')
-                              .map((user: any) => (
-                                <SelectItem key={user.id} value={user.id.toString()}>
-                                  {user.full_name || user.username}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input 
+                            value={user ? (user.full_name || user.display_name || user.username) : ''}
+                            disabled
+                            className="bg-gray-100 text-gray-700"
+                            placeholder="المنفذ الحالي"
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          سيتم تسجيل الإجراء باسم المستخدم الحالي
+                        </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
