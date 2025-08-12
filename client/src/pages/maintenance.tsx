@@ -505,6 +505,9 @@ export default function Maintenance() {
 function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAction }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  
+  // Add spare parts query
+  const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
 
   const form = useForm({
     resolver: zodResolver(maintenanceActionSchema),
@@ -683,7 +686,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                                 <SelectValue placeholder="اختر قطعة الغيار المطلوبة" />
                               </SelectTrigger>
                               <SelectContent>
-                                {spareParts && spareParts.length > 0 ? (
+                                {Array.isArray(spareParts) && spareParts.length > 0 ? (
                                   spareParts.map((part: any) => (
                                     <SelectItem key={part.part_id} value={`${part.part_name} - ${part.code} - ${part.specifications}`}>
                                       {part.part_name} ({part.code}) - {part.machine_name}
