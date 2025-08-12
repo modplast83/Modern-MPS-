@@ -1316,6 +1316,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Spare Parts routes
+  app.get("/api/spare-parts", async (req, res) => {
+    try {
+      const spareParts = await storage.getAllSpareParts();
+      res.json(spareParts);
+    } catch (error) {
+      console.error('Error fetching spare parts:', error);
+      res.status(500).json({ message: "خطأ في جلب قطع الغيار" });
+    }
+  });
+
+  app.post("/api/spare-parts", async (req, res) => {
+    try {
+      const sparePart = await storage.createSparePart(req.body);
+      res.json(sparePart);
+    } catch (error) {
+      console.error('Error creating spare part:', error);
+      res.status(500).json({ message: "خطأ في إنشاء قطعة الغيار" });
+    }
+  });
+
+  app.put("/api/spare-parts/:partId", async (req, res) => {
+    try {
+      const { partId } = req.params;
+      const sparePart = await storage.updateSparePart(partId, req.body);
+      res.json(sparePart);
+    } catch (error) {
+      console.error('Error updating spare part:', error);
+      res.status(500).json({ message: "خطأ في تحديث قطعة الغيار" });
+    }
+  });
+
+  app.delete("/api/spare-parts/:partId", async (req, res) => {
+    try {
+      const { partId } = req.params;
+      await storage.deleteSparePart(partId);
+      res.json({ message: "تم حذف قطعة الغيار بنجاح" });
+    } catch (error) {
+      console.error('Error deleting spare part:', error);
+      res.status(500).json({ message: "خطأ في حذف قطعة الغيار" });
+    }
+  });
+
   // Attendance routes
   app.get("/api/attendance", async (req, res) => {
     try {

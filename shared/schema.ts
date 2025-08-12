@@ -206,6 +206,19 @@ export const maintenance_actions = pgTable('maintenance_actions', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// 🔧 جدول قطع الغيار
+export const spare_parts = pgTable('spare_parts', {
+  id: serial('id').primaryKey(),
+  part_id: varchar('part_id', { length: 50 }).notNull().unique(),
+  machine_name: varchar('machine_name', { length: 100 }).notNull(),
+  part_name: varchar('part_name', { length: 100 }).notNull(),
+  code: varchar('code', { length: 50 }).notNull(),
+  serial_number: varchar('serial_number', { length: 100 }).notNull(),
+  specifications: text('specifications'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // 📋 جدول بلاغات الصيانة (للإدارة)
 export const maintenance_reports = pgTable('maintenance_reports', {
   id: serial('id').primaryKey(),
@@ -825,6 +838,8 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type SparePart = typeof spare_parts.$inferSelect;
+export type InsertSparePart = typeof spare_parts.$inferInsert;
 // Legacy order types - will be phased out
 export type JobOrder = typeof job_orders.$inferSelect;
 export type InsertJobOrder = z.infer<typeof insertJobOrderSchema>;

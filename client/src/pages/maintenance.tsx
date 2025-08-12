@@ -97,6 +97,10 @@ export default function Maintenance() {
     queryKey: ["/api/machines"],
   });
 
+  const { data: spareParts } = useQuery({
+    queryKey: ["/api/spare-parts"],
+  });
+
   // Mutations for creating new records
   const createActionMutation = useMutation({
     mutationFn: (data: any) => {
@@ -298,7 +302,7 @@ export default function Maintenance() {
 
           {/* Main Tabs */}
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="requests" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
                 طلبات الصيانة
@@ -314,6 +318,10 @@ export default function Maintenance() {
               <TabsTrigger value="negligence" className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
                 بلاغات إهمال المشغلين
+              </TabsTrigger>
+              <TabsTrigger value="spare-parts" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                قطع الغيار
               </TabsTrigger>
             </TabsList>
 
@@ -479,6 +487,15 @@ export default function Maintenance() {
                 onCreateReport={createOperatorReportMutation.mutate}
               />
             </TabsContent>
+
+            {/* Spare Parts Tab */}
+            <TabsContent value="spare-parts">
+              <SparePartsTab 
+                spareParts={spareParts}
+                isLoading={false}
+              />
+            </TabsContent>
+
           </Tabs>
         </main>
       </div>
@@ -663,7 +680,22 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormItem>
                           <FormLabel>طلب قطع غيار</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="قائمة قطع الغيار المطلوبة" />
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="اختر قطعة الغيار المطلوبة" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {spareParts && spareParts.length > 0 ? (
+                                  spareParts.map((part: any) => (
+                                    <SelectItem key={part.part_id} value={`${part.part_name} - ${part.code} - ${part.specifications}`}>
+                                      {part.part_name} ({part.code}) - {part.machine_name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no_parts">لا توجد قطع غيار متاحة</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -1567,5 +1599,259 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
         </form>
       </Form>
     </DialogContent>
+  );
+}
+
+// Spare Parts Tab Component
+function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading: boolean }) {
+  const [selectedPart, setSelectedPart] = useState<any>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Create spare part mutation
+  const createSparePartMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("/api/spare-parts", { 
+      method: "POST", 
+      body: JSON.stringify(data) 
+    }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
+      toast({ title: "تم إنشاء قطعة الغيار بنجاح" });
+      setIsCreateDialogOpen(false);
+    },
+    onError: () => {
+      toast({ title: "فشل في إنشاء قطعة الغيار", variant: "destructive" });
+    },
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold text-gray-900">إدارة قطع الغيار</h3>
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="h-4 w-4 ml-2" />
+              إضافة قطعة غيار جديدة
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>إضافة قطعة غيار جديدة</DialogTitle>
+            </DialogHeader>
+            <SparePartForm onSubmit={createSparePartMutation.mutate} isLoading={createSparePartMutation.isPending} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Spare Parts Table */}
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-500">جاري التحميل...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      رقم القطعة
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      اسم الماكينة
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      اسم القطعة
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      الكود
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      الرقم التسلسلي
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      المواصفات
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                      الإجراءات
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {Array.isArray(spareParts) && spareParts.length > 0 ? spareParts.map((part: any) => (
+                    <tr key={part.part_id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                        {part.part_id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {part.machine_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {part.part_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {part.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {part.serial_number}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                        {part.specifications}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <div className="flex justify-center gap-2">
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                        لا توجد قطع غيار مسجلة
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Spare Part Form Component
+function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
+  const form = useForm({
+    defaultValues: {
+      part_id: '',
+      machine_name: '',
+      part_name: '',
+      code: '',
+      serial_number: '',
+      specifications: ''
+    }
+  });
+
+  const handleSubmit = (data: any) => {
+    onSubmit(data);
+  };
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="part_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>رقم القطعة</FormLabel>
+                <FormControl>
+                  <Input placeholder="SP001" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الكود</FormLabel>
+                <FormControl>
+                  <Input placeholder="A8908" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="machine_name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>اسم الماكينة</FormLabel>
+              <FormControl>
+                <Input placeholder="ماكينة اكسترودر A" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="part_name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>اسم القطعة</FormLabel>
+                <FormControl>
+                  <Input placeholder="ماطور" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="serial_number"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الرقم التسلسلي</FormLabel>
+                <FormControl>
+                  <Input placeholder="E5SH973798" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="specifications"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>المواصفات</FormLabel>
+              <FormControl>
+                <Textarea placeholder="قوة 380 فولت و 10 امبير" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            {isLoading ? "جاري الحفظ..." : "حفظ"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 }

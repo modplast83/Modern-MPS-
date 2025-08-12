@@ -10,6 +10,7 @@ import {
   maintenance_actions,
   maintenance_reports,
   operator_negligence_reports,
+  spare_parts,
   quality_checks,
   attendance,
   waste,
@@ -96,6 +97,8 @@ import {
   type InsertNotification,
   type NotificationTemplate,
   type InsertNotificationTemplate,
+  type SparePart,
+  type InsertSparePart,
   type MaintenanceAction,
   type InsertMaintenanceAction,
   type MaintenanceReport,
@@ -2817,6 +2820,48 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting maintenance report:', error);
       throw new Error('فشل في حذف بلاغ الصيانة');
+    }
+  }
+
+  // ============ Spare Parts Management ============
+  async getAllSpareParts(): Promise<SparePart[]> {
+    try {
+      return await db.select().from(spare_parts).orderBy(spare_parts.part_id);
+    } catch (error) {
+      console.error('Error fetching spare parts:', error);
+      throw new Error('فشل في جلب قطع الغيار');
+    }
+  }
+
+  async createSparePart(part: InsertSparePart): Promise<SparePart> {
+    try {
+      const [result] = await db.insert(spare_parts).values(part).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating spare part:', error);
+      throw new Error('فشل في إنشاء قطعة غيار');
+    }
+  }
+
+  async updateSparePart(partId: string, part: Partial<SparePart>): Promise<SparePart> {
+    try {
+      const [result] = await db.update(spare_parts)
+        .set(part)
+        .where(eq(spare_parts.part_id, partId))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating spare part:', error);
+      throw new Error('فشل في تحديث قطعة الغيار');
+    }
+  }
+
+  async deleteSparePart(partId: string): Promise<void> {
+    try {
+      await db.delete(spare_parts).where(eq(spare_parts.part_id, partId));
+    } catch (error) {
+      console.error('Error deleting spare part:', error);
+      throw new Error('فشل في حذف قطعة الغيار');
     }
   }
 
