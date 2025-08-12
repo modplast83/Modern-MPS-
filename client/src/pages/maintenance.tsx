@@ -518,7 +518,6 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
         ...data,
         action_number: actionNumber,
         request_created_by: "1", // Should be current user
-        action_date: new Date().toISOString(),
       };
       
       console.log('Submitting action data:', submitData);
