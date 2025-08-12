@@ -1131,12 +1131,17 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
       priority: "medium",
       description: "",
       requested_date: new Date().toISOString().split('T')[0],
-      assigned_technician: "",
+      assigned_technician: "none",
     },
   });
 
   const handleSubmit = (data: any) => {
-    onSubmit(data);
+    // Convert "none" back to empty string for the API
+    const submitData = {
+      ...data,
+      assigned_technician: data.assigned_technician === "none" ? "" : data.assigned_technician
+    };
+    onSubmit(submitData);
     form.reset();
   };
 
@@ -1250,7 +1255,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">بدون تكليف</SelectItem>
+                    <SelectItem value="none">بدون تكليف</SelectItem>
                     {Array.isArray(users) && users
                       .filter((user: any) => user.role === 'technician')
                       .map((user: any) => (
