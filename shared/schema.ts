@@ -976,6 +976,7 @@ export const insertAttendanceSchema = createInsertSchema(attendance).omit({
 export const insertMaintenanceActionSchema = createInsertSchema(maintenance_actions).omit({
   id: true,
   action_number: true,
+  action_date: true,
   created_at: true,
   updated_at: true,
 });
