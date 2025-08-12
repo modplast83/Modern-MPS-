@@ -45,7 +45,7 @@ export default function HRTabs() {
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Calendar className="w-4 h-4" />
-            إدارة الإجازات
+            إدارة الطلبات
           </TabsTrigger>
         </TabsList>
 
