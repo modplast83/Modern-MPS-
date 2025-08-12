@@ -18,6 +18,7 @@ import { z } from "zod";
 import { Wrench, AlertTriangle, CheckCircle, Clock, Calendar, Plus, FileText, AlertCircle, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 // Schema definitions for forms
 const maintenanceActionSchema = z.object({
@@ -67,6 +68,7 @@ export default function Maintenance() {
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Fetch all data
   const { data: maintenanceRequests, isLoading: loadingRequests } = useQuery({
