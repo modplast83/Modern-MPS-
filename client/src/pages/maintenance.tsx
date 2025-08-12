@@ -343,70 +343,93 @@ export default function Maintenance() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                               رقم الطلب
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                               المعدة
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                              النوع
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                              نوع المشكلة
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                              الأولوية
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                              مستوى الإلحاح
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                               الحالة
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                              المطلوب
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                              وصف المشكلة
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                              الفني
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                              المُكلف
                             </th>
-                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                              التاريخ
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                              تاريخ الإبلاغ
                             </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {Array.isArray(maintenanceRequests) ? maintenanceRequests.map((request: any) => (
-                            <tr key={request.id} className="hover:bg-gray-50">
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {request.request_number}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {request.machine_name_ar}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {request.maintenance_type === 'preventive' ? 'وقائية' : 
-                                 request.maintenance_type === 'corrective' ? 'تصحيحية' : 
-                                 'طارئة'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <Badge className={getPriorityColor(request.priority)}>
-                                  {getPriorityText(request.priority)}
-                                </Badge>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <Badge className={getStatusColor(request.status)}>
-                                  {getStatusText(request.status)}
-                                </Badge>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                                {request.description}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {request.assigned_technician || 'غير محدد'}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(request.requested_date).toLocaleDateString('ar-SA')}
-                              </td>
-                            </tr>
-                          )) : (
+                          {Array.isArray(maintenanceRequests) && maintenanceRequests.length > 0 ? maintenanceRequests.map((request: any) => {
+                            // Get machine name from machines array
+                            const machine = Array.isArray(machines) ? machines.find((m: any) => m.id === request.machine_id) : null;
+                            const machineName = machine ? machine.name_ar || machine.name : request.machine_id;
+                            
+                            // Get assigned user name from users array
+                            const assignedUser = Array.isArray(users) && request.assigned_to ? 
+                              users.find((u: any) => u.id.toString() === request.assigned_to.toString()) : null;
+                            const assignedName = assignedUser ? (assignedUser.full_name || assignedUser.username) : 'غير محدد';
+                            
+                            return (
+                              <tr key={request.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                  {request.request_number}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  {machineName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  {request.issue_type === 'mechanical' ? 'ميكانيكية' : 
+                                   request.issue_type === 'electrical' ? 'كهربائية' : 
+                                   'أخرى'}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <Badge variant={
+                                    request.urgency_level === 'urgent' ? 'destructive' : 
+                                    request.urgency_level === 'medium' ? 'default' : 
+                                    'secondary'
+                                  }>
+                                    {request.urgency_level === 'urgent' ? 'عاجل' : 
+                                     request.urgency_level === 'medium' ? 'متوسط' : 
+                                     'عادي'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <Badge variant={
+                                    request.status === 'completed' ? 'default' : 
+                                    request.status === 'in_progress' ? 'default' : 
+                                    'secondary'
+                                  }>
+                                    {request.status === 'completed' ? 'مكتمل' : 
+                                     request.status === 'in_progress' ? 'قيد التنفيذ' : 
+                                     'مفتوح'}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                                  {request.description}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  {assignedName}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  {new Date(request.date_reported).toLocaleDateString('ar-SA')}
+                                </td>
+                              </tr>
+                            );
+                          }) : (
                             <tr>
                               <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                                لا توجد بيانات متاحة
+                                لا توجد طلبات صيانة مسجلة
                               </td>
                             </tr>
                           )}
@@ -1154,9 +1177,12 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
   };
 
   return (
-    <DialogContent className="sm:max-w-[600px]">
+    <DialogContent className="sm:max-w-[600px]" aria-describedby="maintenance-request-description">
       <DialogHeader>
         <DialogTitle>طلب صيانة جديد</DialogTitle>
+        <p id="maintenance-request-description" className="text-sm text-gray-600">
+          أنشئ طلب صيانة جديد للمعدات التي تحتاج إلى إصلاح أو صيانة
+        </p>
       </DialogHeader>
 
       <Form {...form}>
