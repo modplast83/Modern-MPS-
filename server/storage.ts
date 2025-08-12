@@ -630,6 +630,46 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(roles);
   }
 
+  async createRole(roleData: any): Promise<Role> {
+    try {
+      const [role] = await db.insert(roles).values({
+        name: roleData.name,
+        name_ar: roleData.name_ar,
+        permissions: roleData.permissions || []
+      }).returning();
+      return role;
+    } catch (error) {
+      console.error('Error creating role:', error);
+      throw new Error('فشل في إنشاء الدور');
+    }
+  }
+
+  async updateRole(id: number, roleData: any): Promise<Role> {
+    try {
+      const [role] = await db.update(roles)
+        .set({
+          name: roleData.name,
+          name_ar: roleData.name_ar,
+          permissions: roleData.permissions
+        })
+        .where(eq(roles.id, id))
+        .returning();
+      return role;
+    } catch (error) {
+      console.error('Error updating role:', error);
+      throw new Error('فشل في تحديث الدور');
+    }
+  }
+
+  async deleteRole(id: number): Promise<void> {
+    try {
+      await db.delete(roles).where(eq(roles.id, id));
+    } catch (error) {
+      console.error('Error deleting role:', error);
+      throw new Error('فشل في حذف الدور');
+    }
+  }
+
   // Replaced by createCustomerProduct
 
   async createCustomer(customer: any): Promise<Customer> {

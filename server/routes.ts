@@ -1736,6 +1736,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Roles management routes
+  app.get("/api/roles", async (req, res) => {
+    try {
+      const roles = await storage.getRoles();
+      res.json(roles);
+    } catch (error) {
+      console.error('Roles fetch error:', error);
+      res.status(500).json({ message: "خطأ في جلب الأدوار" });
+    }
+  });
+
+  app.post("/api/roles", async (req, res) => {
+    try {
+      console.log('Received role data:', req.body);
+      const role = await storage.createRole(req.body);
+      console.log('Created role:', role);
+      res.json(role);
+    } catch (error) {
+      console.error('Role creation error:', error);
+      res.status(500).json({ message: "خطأ في إنشاء الدور", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.put("/api/roles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      console.log('Updating role:', id, req.body);
+      const role = await storage.updateRole(id, req.body);
+      res.json(role);
+    } catch (error) {
+      console.error('Role update error:', error);
+      res.status(500).json({ message: "خطأ في تحديث الدور", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  app.delete("/api/roles/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteRole(id);
+      res.json({ message: "تم حذف الدور بنجاح" });
+    } catch (error) {
+      console.error('Role deletion error:', error);
+      res.status(500).json({ message: "خطأ في حذف الدور", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   // Sections routes
   app.post("/api/sections", async (req, res) => {
     try {

@@ -36,6 +36,7 @@ import {
   Save,
   RefreshCw
 } from "lucide-react";
+import RoleManagementTab from "@/components/RoleManagementTab";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -482,6 +483,10 @@ export default function Settings() {
                   <User className="w-4 h-4" />
                   الملف الشخصي
                 </TabsTrigger>
+                <TabsTrigger value="roles" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  الأدوار والصلاحيات
+                </TabsTrigger>
                 <TabsTrigger value="notifications" className="flex items-center gap-2">
                   <Bell className="w-4 h-4" />
                   التنبيهات
@@ -493,10 +498,6 @@ export default function Settings() {
                 <TabsTrigger value="database" className="flex items-center gap-2">
                   <Database className="w-4 h-4" />
                   قاعدة البيانات
-                </TabsTrigger>
-                <TabsTrigger value="security" className="flex items-center gap-2">
-                  <Shield className="w-4 h-4" />
-                  الأمان
                 </TabsTrigger>
               </TabsList>
 
@@ -585,6 +586,23 @@ export default function Settings() {
                         حفظ التغييرات
                       </Button>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="roles" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      إدارة الأدوار والصلاحيات
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      تحديد أدوار المستخدمين وصلاحياتهم في النظام
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <RoleManagementTab />
                   </CardContent>
                 </Card>
               </TabsContent>
