@@ -55,11 +55,10 @@ const operatorNegligenceSchema = z.object({
 
 const maintenanceRequestSchema = z.object({
   machine_id: z.string().min(1, "المعدة مطلوبة"),
-  maintenance_type: z.string().min(1, "نوع الصيانة مطلوب"),
-  priority: z.string().default("medium"),
+  issue_type: z.string().min(1, "نوع المشكلة مطلوب"),
+  urgency_level: z.string().default("normal"),
   description: z.string().min(1, "الوصف مطلوب"),
-  requested_date: z.string().min(1, "التاريخ المطلوب مطلوب"),
-  assigned_technician: z.string().optional(),
+  assigned_to: z.string().optional(),
 });
 
 export default function Maintenance() {
@@ -138,16 +137,24 @@ export default function Maintenance() {
   });
 
   const createRequestMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/maintenance-requests", { 
-      method: "POST", 
-      body: JSON.stringify(data) 
-    }),
+    mutationFn: (data: any) => {
+      // Add current user as reported_by
+      const requestData = {
+        ...data,
+        reported_by: user?.id?.toString() || "",
+      };
+      return apiRequest("/api/maintenance-requests", { 
+        method: "POST", 
+        body: JSON.stringify(requestData) 
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-requests"] });
       setIsRequestDialogOpen(false);
       toast({ title: "تم إنشاء طلب الصيانة بنجاح" });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error creating maintenance request:', error);
       toast({ title: "فشل في إنشاء طلب الصيانة", variant: "destructive" });
     },
   });
@@ -1127,11 +1134,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
     resolver: zodResolver(maintenanceRequestSchema),
     defaultValues: {
       machine_id: "",
-      maintenance_type: "preventive",
-      priority: "medium",
+      issue_type: "mechanical",
+      urgency_level: "normal",
       description: "",
-      requested_date: new Date().toISOString().split('T')[0],
-      assigned_technician: "none",
+      assigned_to: "none",
     },
   });
 
@@ -1139,7 +1145,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
     // Convert "none" back to empty string for the API
     const submitData = {
       ...data,
-      assigned_technician: data.assigned_technician === "none" ? "" : data.assigned_technician
+      assigned_to: data.assigned_to === "none" ? "" : data.assigned_to
     };
     onSubmit(submitData);
     form.reset();
@@ -1181,20 +1187,20 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
 
             <FormField
               control={form.control}
-              name="maintenance_type"
+              name="issue_type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>نوع الصيانة</FormLabel>
+                  <FormLabel>نوع المشكلة</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر نوع الصيانة" />
+                        <SelectValue placeholder="اختر نوع المشكلة" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="preventive">صيانة وقائية</SelectItem>
-                      <SelectItem value="corrective">صيانة تصحيحية</SelectItem>
-                      <SelectItem value="emergency">صيانة طارئة</SelectItem>
+                      <SelectItem value="mechanical">ميكانيكية</SelectItem>
+                      <SelectItem value="electrical">كهربائية</SelectItem>
+                      <SelectItem value="other">أخرى</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -1206,36 +1212,22 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
           <div className="grid grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="priority"
+              name="urgency_level"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الأولوية</FormLabel>
+                  <FormLabel>مستوى الإلحاح</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر الأولوية" />
+                        <SelectValue placeholder="اختر مستوى الإلحاح" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">منخفضة</SelectItem>
-                      <SelectItem value="medium">متوسطة</SelectItem>
-                      <SelectItem value="high">عالية</SelectItem>
+                      <SelectItem value="normal">عادي</SelectItem>
+                      <SelectItem value="medium">متوسط</SelectItem>
+                      <SelectItem value="urgent">عاجل</SelectItem>
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="requested_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>التاريخ المطلوب</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -1244,10 +1236,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
 
           <FormField
             control={form.control}
-            name="assigned_technician"
+            name="assigned_to"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الفني المكلف (اختياري)</FormLabel>
+                <FormLabel>المكلف بالإصلاح (اختياري)</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>

@@ -1145,6 +1145,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/maintenance-requests", async (req, res) => {
+    try {
+      const request = await storage.createMaintenanceRequest(req.body);
+      res.json(request);
+    } catch (error) {
+      console.error('Error creating maintenance request:', error);
+      res.status(500).json({ message: "خطأ في إنشاء طلب الصيانة" });
+    }
+  });
+
   // Maintenance Actions routes
   app.get("/api/maintenance-actions", async (req, res) => {
     try {
