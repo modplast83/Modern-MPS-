@@ -1017,6 +1017,7 @@ export type LeaveBalance = typeof leave_balances.$inferSelect;
 export type InsertLeaveBalance = z.infer<typeof insertLeaveBalanceSchema>;
 
 // Maintenance Types
+export type MaintenanceRequest = typeof maintenance_requests.$inferSelect;
 export type MaintenanceAction = typeof maintenance_actions.$inferSelect;
 export type InsertMaintenanceAction = z.infer<typeof insertMaintenanceActionSchema>;
 export type MaintenanceReport = typeof maintenance_reports.$inferSelect;
