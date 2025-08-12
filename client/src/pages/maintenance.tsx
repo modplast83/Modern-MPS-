@@ -508,7 +508,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
   
   // Add spare parts query and user context
   const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
-  const { data: user } = useQuery({ queryKey: ["/api/me"] });
+  const { user } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(maintenanceActionSchema),
@@ -520,7 +520,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
       spare_parts_request: "",
       machining_request: "",
       operator_negligence_report: "",
-      performed_by: user?.id?.toString() || "",
+      performed_by: "",
       requires_management_action: false,
       management_notified: false,
     },
@@ -636,7 +636,6 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                           <Input 
                             {...field}
                             value={user?.id ? user.id.toString() : ''}
-                            onChange={(e) => field.onChange(e.target.value)}
                             type="hidden"
                             className="hidden"
                           />
