@@ -2867,7 +2867,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get("/api/user-requests", async (req, res) => {
     try {
+      console.log('Fetching user requests - Session ID:', req.sessionID);
+      console.log('Fetching user requests - User ID in session:', req.session.userId);
+      
       const requests = await storage.getUserRequests();
+      console.log('Found', requests.length, 'user requests');
+      
       res.json(requests);
     } catch (error) {
       console.error('Error fetching user requests:', error);

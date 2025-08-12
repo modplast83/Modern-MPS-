@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,15 +54,48 @@ export default function LeaveManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: userRequests = [], isLoading: requestsLoading, error: requestsError } = useQuery<UserRequest[]>({
+  const { 
+    data: userRequests = [], 
+    isLoading: requestsLoading, 
+    error: requestsError,
+    refetch: refetchRequests,
+    isFetching 
+  } = useQuery<UserRequest[]>({
     queryKey: ['/api/user-requests'],
-    initialData: []
+    initialData: [],
+    refetchOnWindowFocus: false,
+    staleTime: 0, // Always refetch
+    retry: 3,
+    enabled: true // Explicitly enable the query
   });
 
   // Debug logging
   console.log('User requests data:', userRequests);
   console.log('Loading state:', requestsLoading);
+  console.log('Is fetching:', isFetching);
   console.log('Error state:', requestsError);
+  
+  // Force refetch when component mounts
+  React.useEffect(() => {
+    console.log('LeaveManagement component mounted, forcing refetch...');
+    queryClient.invalidateQueries({ queryKey: ['/api/user-requests'] });
+  }, [queryClient]);
+
+  // Manual test function
+  const testApiCall = async () => {
+    try {
+      console.log('Testing manual API call...');
+      const response = await fetch('/api/user-requests', {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      console.log('Manual API response:', data);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', [...response.headers.entries()]);
+    } catch (error) {
+      console.error('Manual API error:', error);
+    }
+  };
 
   const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({
     queryKey: ['/api/users'],
@@ -228,6 +261,14 @@ export default function LeaveManagement() {
           <p className="text-gray-600 dark:text-gray-300">
             مراجعة والموافقة على طلبات المستخدمين
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={testApiCall} variant="outline" className="text-sm">
+            اختبار API
+          </Button>
+          <Button onClick={() => refetchRequests()} variant="outline" className="text-sm">
+            إعادة تحميل البيانات
+          </Button>
         </div>
       </div>
 
