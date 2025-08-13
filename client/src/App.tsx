@@ -21,6 +21,7 @@ import Orders from "@/pages/orders";
 import Notifications from "@/pages/notifications";
 import WhatsAppSetup from "@/pages/whatsapp-setup";
 import WhatsAppConfig from "@/pages/whatsapp-config";
+import WhatsAppTest from "@/pages/whatsapp-test";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -117,6 +118,11 @@ function Router() {
       <Route path="/whatsapp-config">
         <ProtectedRoute>
           <WhatsAppConfig />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-test">
+        <ProtectedRoute>
+          <WhatsAppTest />
         </ProtectedRoute>
       </Route>
       <Route path="/user-dashboard">
