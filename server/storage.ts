@@ -1888,7 +1888,8 @@ export class DatabaseStorage implements IStorage {
       for (const tableName of tableNames) {
         try {
           const tableData = await this.exportTableData(tableName, 'json');
-          backupData.tables[tableName] = JSON.parse(tableData);
+          // tableData is string for JSON format, so we can parse it directly
+          backupData.tables[tableName] = JSON.parse(tableData as string);
         } catch (error) {
           console.warn(`Failed to backup table ${tableName}:`, error);
           backupData.tables[tableName] = [];
@@ -1947,7 +1948,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async exportTableData(tableName: string, format: string): Promise<any> {
+  async exportTableData(tableName: string, format: string): Promise<Buffer | string> {
     try {
       let data;
       
@@ -2283,9 +2284,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper methods for data conversion
-  private convertToCSV(data: any[]): string {
+  private convertToCSV(data: any[]): Buffer {
     if (!data || data.length === 0) {
-      return 'no_data\n"لا توجد بيانات في هذا الجدول"';
+      const noDataCsv = 'no_data\n"لا توجد بيانات في هذا الجدول"';
+      return Buffer.from('\uFEFF' + noDataCsv, 'utf8'); // BOM for UTF-8
     }
     
     const headers = Object.keys(data[0]);
@@ -2300,13 +2302,38 @@ export class DatabaseStorage implements IStorage {
       csvRows.push(values.join(','));
     }
     
-    return csvRows.join('\n');
+    const csvContent = csvRows.join('\n');
+    // Add BOM (Byte Order Mark) for proper Arabic text encoding
+    return Buffer.from('\uFEFF' + csvContent, 'utf8');
   }
 
-  private convertToExcel(data: any[]): string {
-    // For now, return CSV format which is compatible with Excel
-    // In a real implementation, you would use a library like xlsx
-    return this.convertToCSV(data);
+  private convertToExcel(data: any[]): Buffer {
+    const XLSX = require('xlsx');
+    
+    if (!data || data.length === 0) {
+      // Create a simple worksheet with no data message
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['no_data'],
+        ['لا توجد بيانات في هذا الجدول']
+      ]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'البيانات');
+      return Buffer.from(XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' }));
+    }
+    
+    // Convert data to worksheet
+    const ws = XLSX.utils.json_to_sheet(data);
+    
+    // Create workbook and add worksheet
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'البيانات');
+    
+    // Return as buffer for proper Excel format
+    return Buffer.from(XLSX.write(wb, { 
+      bookType: 'xlsx', 
+      type: 'buffer',
+      cellStyles: true // Enable proper text formatting
+    }));
   }
 
   private parseCSV(csvData: string): any[] {
