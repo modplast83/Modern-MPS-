@@ -2688,6 +2688,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.setHeader('Content-Type', contentType);
       res.setHeader('Content-Disposition', `attachment; filename="${tableName}.${fileExtension}"`);
+      
+      // Set proper charset for CSV to ensure Arabic text encoding
+      if (format === 'csv') {
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      }
+      
       res.send(data);
     } catch (error) {
       console.error("Error exporting table data:", error);
