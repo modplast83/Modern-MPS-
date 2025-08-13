@@ -100,13 +100,7 @@ const modules = [
     path: "/notifications",
     active: false
   },
-  {
-    name: "إعداد الواتس اب",
-    name_ar: "إعداد الواتس اب",
-    icon: Cog,
-    path: "/whatsapp-config",
-    active: false
-  },
+
   {
     name: "الإعدادات",
     name_ar: "الإعدادات",
