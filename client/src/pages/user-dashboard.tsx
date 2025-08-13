@@ -185,9 +185,20 @@ export default function UserDashboard() {
   // Calculate working hours, overtime, and break time
   const calculateDailyHours = (attendanceRecords: AttendanceRecord[] | undefined, userId: number) => {
     const today = new Date().toISOString().split('T')[0];
-    const todayRecords = attendanceRecords?.filter(record => 
-      record.date === today && record.user_id === userId
-    ) || [];
+    const todayRecords = attendanceRecords?.filter(record => {
+      const recordDate = new Date(record.date).toISOString().split('T')[0];
+      return recordDate === today && record.user_id === userId;
+    }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || [];
+
+    console.log('📊 Today Records for calculation:', todayRecords.map(r => ({
+      id: r.id,
+      status: r.status,
+      check_in_time: r.check_in_time,
+      check_out_time: r.check_out_time,
+      lunch_start_time: r.lunch_start_time,
+      lunch_end_time: r.lunch_end_time,
+      created_at: r.created_at
+    })));
 
     if (todayRecords.length === 0) {
       return {
@@ -200,9 +211,10 @@ export default function UserDashboard() {
       };
     }
 
-    // Get the latest record with check-in time
-    const checkInRecord = todayRecords.find(r => r.check_in_time);
+    // Find check-in time (first "حاضر" record with check_in_time)
+    const checkInRecord = todayRecords.find(r => r.check_in_time && r.status === 'حاضر');
     if (!checkInRecord?.check_in_time) {
+      console.log('❌ No check-in time found');
       return {
         workingHours: 0,
         overtimeHours: 0,
@@ -214,15 +226,21 @@ export default function UserDashboard() {
     }
 
     const checkInTime = new Date(checkInRecord.check_in_time);
+    console.log('✅ Check-in time:', checkInTime);
     
-    // Get check-out time (either from record or current time if still working)
-    const checkOutRecord = todayRecords.find(r => r.check_out_time);
-    const checkOutTime = checkOutRecord?.check_out_time ? 
-      new Date(checkOutRecord.check_out_time) : 
+    // Find check-out time (last "مغادر" record with check_out_time)
+    const checkOutRecord = todayRecords.reverse().find(r => r.check_out_time && r.status === 'مغادر');
+    const hasCheckedOut = checkOutRecord && checkOutRecord.check_out_time;
+    
+    const checkOutTime = hasCheckedOut ? 
+      new Date(checkOutRecord.check_out_time!) : 
       new Date(); // Current time if still working
+      
+    console.log('🏁 Check-out time:', checkOutTime, 'Has checked out:', hasCheckedOut);
 
     // Calculate total time worked in minutes
     const totalMinutesWorked = Math.floor((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60));
+    console.log('⏱️ Total minutes worked:', totalMinutesWorked);
 
     // Calculate break time in minutes
     let breakMinutes = 0;
@@ -233,16 +251,19 @@ export default function UserDashboard() {
       const lunchStart = new Date(lunchStartRecord.lunch_start_time);
       const lunchEnd = new Date(lunchEndRecord.lunch_end_time);
       breakMinutes = Math.floor((lunchEnd.getTime() - lunchStart.getTime()) / (1000 * 60));
+      console.log('☕ Break time (completed):', breakMinutes, 'minutes');
     } else if (lunchStartRecord?.lunch_start_time && !lunchEndRecord?.lunch_end_time) {
-      // Still on break - calculate from break start to now
+      // Still on break - calculate from break start to now or check-out
       const lunchStart = new Date(lunchStartRecord.lunch_start_time);
-      const now = new Date();
-      breakMinutes = Math.floor((now.getTime() - lunchStart.getTime()) / (1000 * 60));
+      const endTime = hasCheckedOut ? checkOutTime : new Date();
+      breakMinutes = Math.floor((endTime.getTime() - lunchStart.getTime()) / (1000 * 60));
+      console.log('☕ Break time (ongoing/until checkout):', breakMinutes, 'minutes');
     }
 
     // Net working time (excluding break)
     const netWorkingMinutes = Math.max(0, totalMinutesWorked - breakMinutes);
     const netWorkingHours = netWorkingMinutes / 60;
+    console.log('💼 Net working minutes:', netWorkingMinutes, 'hours:', netWorkingHours.toFixed(2));
 
     // Check if today is Friday (5 in JavaScript, where Sunday = 0)
     const isFriday = new Date().getDay() === 5;
@@ -258,19 +279,22 @@ export default function UserDashboard() {
       // All hours on Friday are overtime
       overtimeHours = netWorkingHours;
       workingHours = 0;
+      console.log('🕌 Friday: All hours are overtime:', overtimeHours);
     } else {
       if (netWorkingMinutes >= standardWorkingMinutes) {
         // Normal case: worked 8+ hours
         workingHours = 8;
         overtimeHours = (netWorkingMinutes - standardWorkingMinutes) / 60;
+        console.log('💪 Standard + Overtime:', workingHours, 'hours +', overtimeHours.toFixed(2), 'overtime');
       } else {
         // Worked less than 8 hours
         workingHours = netWorkingHours;
         deficitHours = (standardWorkingMinutes - netWorkingMinutes) / 60;
+        console.log('⏳ Partial work day:', workingHours.toFixed(2), 'hours, deficit:', deficitHours.toFixed(2));
       }
     }
 
-    return {
+    const result = {
       workingHours: Math.round(workingHours * 100) / 100,
       overtimeHours: Math.round(overtimeHours * 100) / 100,
       deficitHours: Math.round(deficitHours * 100) / 100,
@@ -278,6 +302,9 @@ export default function UserDashboard() {
       totalMinutes: totalMinutesWorked,
       isFriday
     };
+    
+    console.log('📋 Final calculation result:', result);
+    return result;
   };
 
   const dailyHours = calculateDailyHours(attendanceRecords, user?.id || 0);
