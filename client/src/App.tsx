@@ -23,6 +23,7 @@ import WhatsAppSetup from "@/pages/whatsapp-setup";
 import WhatsAppConfig from "@/pages/whatsapp-config";
 import WhatsAppTest from "@/pages/whatsapp-test";
 import WhatsAppTroubleshoot from "@/pages/whatsapp-troubleshoot";
+import WhatsAppProductionSetup from "@/pages/whatsapp-production-setup";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -129,6 +130,11 @@ function Router() {
       <Route path="/whatsapp-troubleshoot">
         <ProtectedRoute>
           <WhatsAppTroubleshoot />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/whatsapp-production">
+        <ProtectedRoute>
+          <WhatsAppProductionSetup />
         </ProtectedRoute>
       </Route>
       <Route path="/user-dashboard">
