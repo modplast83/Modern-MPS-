@@ -66,6 +66,8 @@ export default function Definitions() {
     package_weight_kg: '', 
     cliche_front_design: '', 
     cliche_back_design: '', 
+    front_design_filename: '',
+    back_design_filename: '',
     notes: '', 
     status: 'active'
   });
@@ -158,7 +160,11 @@ export default function Definitions() {
       status: 'active'
     };
     
-    setCustomerProductForm(clonedData);
+    setCustomerProductForm({
+      ...clonedData,
+      front_design_filename: '',
+      back_design_filename: ''
+    });
     setEditingItem(null); // Ensure it's a new record
     setSelectedTab('customer-products');
     setIsDialogOpen(true);
@@ -924,6 +930,8 @@ export default function Definitions() {
       package_weight_kg: '', 
       cliche_front_design: '', 
       cliche_back_design: '', 
+      front_design_filename: '',
+      back_design_filename: '',
       notes: '', 
       status: 'active' 
     });
@@ -1537,6 +1545,8 @@ export default function Definitions() {
                                                 package_weight_kg: product.package_weight_kg || '',
                                                 cliche_front_design: product.cliche_front_design || '',
                                                 cliche_back_design: product.cliche_back_design || '',
+                                                front_design_filename: '',
+                                                back_design_filename: '',
                                                 notes: product.notes || '',
                                                 status: product.status || 'active'
                                               });
@@ -2596,7 +2606,7 @@ export default function Definitions() {
                             step="0.001"
                             value={customerProductForm.unit_weight_kg}
                             onChange={(e) => setCustomerProductForm({...customerProductForm, unit_weight_kg: e.target.value})}
-                            placeholder="0.000"
+                            placeholder="0.00"
                             className="mt-1"
                           />
                         </div>
@@ -2616,7 +2626,7 @@ export default function Definitions() {
                           <Input
                             id="package_weight_kg"
                             type="number"
-                            step="0.001"
+                            step="0.01"
                             value={customerProductForm.package_weight_kg}
                             placeholder="وزن الوحدة × كمية الوحدة"
                             className="mt-1 bg-gray-50"
@@ -2632,23 +2642,119 @@ export default function Definitions() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="cliche_front_design">تصميم الوجه الأمامي</Label>
-                          <Input
-                            id="cliche_front_design"
-                            value={customerProductForm.cliche_front_design}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, cliche_front_design: e.target.value})}
-                            placeholder="التصميم الأمامي"
-                            className="mt-1"
-                          />
+                          <div className="space-y-2">
+                            <Input
+                              id="cliche_front_design"
+                              type="file"
+                              accept="image/*,.jpeg,.jpg,.png,.gif,.bmp,.webp,.svg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  // Validate file size (max 5MB)
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast({ 
+                                      title: "حجم الملف كبير جداً", 
+                                      description: "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  const reader = new FileReader();
+                                  reader.onload = (e) => {
+                                    const result = e.target?.result as string;
+                                    setCustomerProductForm({
+                                      ...customerProductForm, 
+                                      cliche_front_design: result,
+                                      front_design_filename: file.name
+                                    });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            {customerProductForm.cliche_front_design && (
+                              <div className="relative">
+                                <img
+                                  src={customerProductForm.cliche_front_design}
+                                  alt="التصميم الأمامي"
+                                  className="max-w-full max-h-32 object-contain border rounded-md bg-gray-50"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-6 w-6 p-0"
+                                  onClick={() => setCustomerProductForm({
+                                    ...customerProductForm, 
+                                    cliche_front_design: '',
+                                    front_design_filename: ''
+                                  })}
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <Label htmlFor="cliche_back_design">تصميم الوجه الخلفي</Label>
-                          <Input
-                            id="cliche_back_design"
-                            value={customerProductForm.cliche_back_design}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, cliche_back_design: e.target.value})}
-                            placeholder="التصميم الخلفي"
-                            className="mt-1"
-                          />
+                          <div className="space-y-2">
+                            <Input
+                              id="cliche_back_design"
+                              type="file"
+                              accept="image/*,.jpeg,.jpg,.png,.gif,.bmp,.webp,.svg"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  // Validate file size (max 5MB)
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    toast({ 
+                                      title: "حجم الملف كبير جداً", 
+                                      description: "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  const reader = new FileReader();
+                                  reader.onload = (e) => {
+                                    const result = e.target?.result as string;
+                                    setCustomerProductForm({
+                                      ...customerProductForm, 
+                                      cliche_back_design: result,
+                                      back_design_filename: file.name
+                                    });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                            {customerProductForm.cliche_back_design && (
+                              <div className="relative">
+                                <img
+                                  src={customerProductForm.cliche_back_design}
+                                  alt="التصميم الخلفي"
+                                  className="max-w-full max-h-32 object-contain border rounded-md bg-gray-50"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute top-1 right-1 h-6 w-6 p-0"
+                                  onClick={() => setCustomerProductForm({
+                                    ...customerProductForm, 
+                                    cliche_back_design: '',
+                                    back_design_filename: ''
+                                  })}
+                                >
+                                  ✕
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
