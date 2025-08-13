@@ -17,8 +17,10 @@ export default function TwilioContentTemplate() {
   const currentStatus = {
     metaTemplate: 'welcome_hxc4485f514cb7d4536026fc56250f75e7',
     businessId: '795259496521200',
+    metaBusinessManagerId: '8726984570657839',
     twilioAccountSid: 'ACe4ba2fd2e98be5b019c354539404cc29',
-    twilioPhoneNumber: '+15557911537'
+    twilioPhoneNumber: '+15557911537',
+    allCredentialsReady: true
   };
 
   const contentTemplateSteps = [
@@ -43,6 +45,7 @@ export default function TwilioContentTemplate() {
         'اضغط "Create new template"',
         'اختر "WhatsApp" كنوع المحتوى',
         'اختر "Pre-approved template" كمصدر',
+        'أدخل WhatsApp Business Account ID: 795259496521200',
         'أدخل Meta template name: welcome_hxc4485f514cb7d4536026fc56250f75e7'
       ]
     },
@@ -148,6 +151,21 @@ async sendWhatsAppTemplateMessage(
                 <Label className="font-medium">Twilio Phone Number:</Label>
                 <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                   {currentStatus.twilioPhoneNumber}
+                </div>
+              </div>
+              
+              <div>
+                <Label className="font-medium">Meta Business Manager ID:</Label>
+                <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
+                  {currentStatus.metaBusinessManagerId}
+                </div>
+              </div>
+              
+              <div className="md:col-span-2">
+                <Label className="font-medium">Status:</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-700">جميع بيانات Twilio متوفرة ✅</span>
                 </div>
               </div>
             </div>
