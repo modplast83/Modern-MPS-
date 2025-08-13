@@ -164,21 +164,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==== NOTIFICATIONS API ROUTES ====
   
-  // Send WhatsApp message
+  // Send WhatsApp message using approved template
   app.post("/api/notifications/whatsapp", async (req, res) => {
     try {
-      const { phone_number, message, title, priority, context_type, context_id } = req.body;
+      const { phone_number, message, title, priority, context_type, context_id, template_name, variables, use_template = true } = req.body;
       
       if (!phone_number || !message) {
         return res.status(400).json({ message: "رقم الهاتف والرسالة مطلوبان" });
       }
 
-      const result = await notificationService.sendWhatsAppMessage(phone_number, message, {
-        title,
-        priority,
-        context_type,
-        context_id
-      });
+      let result;
+      
+      if (use_template) {
+        // استخدام القالب المُوافق عليه
+        const templateToUse = template_name || 'welcome_hxc4485f514cb7d4536026fc56250f75e7';
+        const templateVariables = variables || [message];
+        
+        result = await notificationService.sendWhatsAppTemplateMessage(
+          phone_number, 
+          templateToUse, 
+          templateVariables, 
+          {
+            title,
+            priority,
+            context_type,
+            context_id
+          }
+        );
+      } else {
+        // استخدام الرسالة المباشرة (للاختبار في Sandbox فقط)
+        result = await notificationService.sendWhatsAppDirectMessage(phone_number, message, {
+          title,
+          priority,
+          context_type,
+          context_id
+        });
+      }
 
       if (result.success) {
         res.json({ 

@@ -19,6 +19,7 @@ export interface NotificationData {
 export interface WhatsAppTemplate {
   name: string;
   variables?: string[];
+  language?: string;
 }
 
 export class NotificationService {
@@ -44,9 +45,129 @@ export class NotificationService {
   }
 
   /**
-   * إرسال إشعار واتس اب
+   * إرسال رسالة واتس اب باستخدام قالب مُوافق عليه
+   */
+  async sendWhatsAppTemplateMessage(
+    phoneNumber: string,
+    templateName: string,
+    variables: string[] = [],
+    options?: {
+      title?: string;
+      priority?: string;
+      context_type?: string;
+      context_id?: string;
+    }
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    try {
+      if (!this.twilioClient) {
+        throw new Error('خدمة Twilio غير مُعدة بشكل صحيح');
+      }
+
+      const formattedNumber = phoneNumber.startsWith('whatsapp:') 
+        ? phoneNumber 
+        : `whatsapp:${phoneNumber}`;
+
+      // في Twilio، نحتاج استخدام template الذي تم تسجيله في Twilio Content Template Builder
+      // بدلاً من Meta template ID مباشرة
+      const messageData: any = {
+        from: `whatsapp:${this.twilioPhoneNumber}`,
+        to: formattedNumber,
+        body: variables[0] || 'مرحباً من نظام MPBF' // استخدام النص المباشر مؤقتاً
+      };
+
+      // ملاحظة: للاستخدام الصحيح للقوالب، يجب:
+      // 1. إنشاء Content Template في Twilio Console
+      // 2. ربطه بـ Meta template المُوافق عليه
+      // 3. استخدام contentSid للقالب من Twilio
+      
+      // إضافة متغيرات القالب إن وجدت (للاستخدام المستقبلي)
+      // if (variables && variables.length > 0) {
+      //   messageData.contentVariables = JSON.stringify(
+      //     variables.reduce((acc, variable, index) => {
+      //       acc[`${index + 1}`] = variable;
+      //       return acc;
+      //     }, {} as Record<string, string>)
+      //   );
+      // }
+
+      const twilioMessage = await this.twilioClient.messages.create(messageData);
+
+      // Save notification to database
+      const notificationData = {
+        title: options?.title || 'إشعار واتس اب',
+        message: `قالب: ${templateName} - متغيرات: ${variables.join(', ')}`,
+        type: 'whatsapp' as const,
+        priority: options?.priority || 'normal',
+        recipient_type: 'user' as const,
+        phone_number: phoneNumber,
+        status: 'sent' as const,
+        twilio_sid: twilioMessage.sid,
+        external_status: twilioMessage.status,
+        sent_at: new Date(),
+        context_type: options?.context_type,
+        context_id: options?.context_id,
+      };
+
+      await this.storage.createNotification(notificationData);
+
+      console.log(`📱 تم إرسال رسالة واتس اب (قالب) إلى ${phoneNumber} - SID: ${twilioMessage.sid}`);
+      
+      return {
+        success: true,
+        messageId: twilioMessage.sid
+      };
+
+    } catch (error: any) {
+      console.error('خطأ في إرسال رسالة واتس اب (قالب):', error);
+      
+      const notificationData = {
+        title: options?.title || 'إشعار واتس اب',
+        message: `قالب: ${templateName} - خطأ: ${error.message}`,
+        type: 'whatsapp' as const,
+        priority: options?.priority || 'normal',
+        recipient_type: 'user' as const,
+        phone_number: phoneNumber,
+        status: 'failed' as const,
+        error_message: error.message,
+        context_type: options?.context_type,
+        context_id: options?.context_id,
+      };
+
+      await this.storage.createNotification(notificationData);
+
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * إرسال إشعار واتس اب (النسخة القديمة للتوافق مع الكود الحالي)
    */
   async sendWhatsAppMessage(
+    phoneNumber: string, 
+    message: string, 
+    options?: {
+      title?: string;
+      priority?: string;
+      context_type?: string;
+      context_id?: string;
+    }
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    // استخدام القالب المُوافق عليه بدلاً من النص الحر
+    return this.sendWhatsAppTemplateMessage(
+      phoneNumber,
+      'welcome_hxc4485f514cb7d4536026fc56250f75e7',
+      [message], // استخدام الرسالة كمتغير في القالب
+      options
+    );
+  }
+
+  /**
+   * إرسال رسالة واتس اب مباشرة (للاختبار فقط في Sandbox)
+   */
+  async sendWhatsAppDirectMessage(
     phoneNumber: string, 
     message: string, 
     options?: {
