@@ -464,6 +464,10 @@ export default function Maintenance() {
                 users={users}
                 isLoading={loadingActions}
                 onCreateAction={createActionMutation.mutate}
+                onViewAction={(action: any) => {
+                  setSelectedAction(action);
+                  setIsActionViewDialogOpen(true);
+                }}
               />
             </TabsContent>
 
@@ -635,7 +639,7 @@ export default function Maintenance() {
 }
 
 // Maintenance Actions Tab Component
-function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAction }: any) {
+function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAction, onViewAction }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   
@@ -958,8 +962,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                   const maintenanceRequest = Array.isArray(requests) ? requests.find((r: any) => r.id === action.maintenance_request_id) : null;
                   
                   const handleView = () => {
-                    setSelectedAction(action);
-                    setIsActionViewDialogOpen(true);
+                    onViewAction?.(action);
                   };
 
                   const handlePrint = () => {
