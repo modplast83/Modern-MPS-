@@ -635,8 +635,8 @@ export const customer_products = pgTable('customer_products', {
   unit_weight_kg: decimal('unit_weight_kg', { precision: 8, scale: 3 }),
   unit_quantity: integer('unit_quantity'),
   package_weight_kg: decimal('package_weight_kg', { precision: 8, scale: 2 }),
-  cliche_front_design: varchar('cliche_front_design', { length: 500 }), // URL for uploaded photo
-  cliche_back_design: varchar('cliche_back_design', { length: 500 }), // URL for uploaded photo
+  cliche_front_design: text('cliche_front_design'), // Base64 encoded image data
+  cliche_back_design: text('cliche_back_design'), // Base64 encoded image data
   notes: text('notes'),
   status: varchar('status', { length: 20 }).default('active'),
   created_at: timestamp('created_at').defaultNow(),
