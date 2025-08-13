@@ -98,6 +98,16 @@ export default function Orders() {
     }
   });
 
+  // Fetch items for product names
+  const { data: items = [] } = useQuery({
+    queryKey: ['/api/items'],
+    queryFn: async () => {
+      const response = await fetch('/api/items');
+      if (!response.ok) throw new Error('فشل في جلب الأصناف');
+      return response.json();
+    }
+  });
+
   // Order mutations
   const orderMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1425,7 +1435,12 @@ export default function Orders() {
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="font-medium text-sm">
-                                {product?.size_caption || 'غير محدد'}
+                                {(() => {
+                                  if (!product) return 'غير محدد';
+                                  // البحث عن اسم المنتج من جدول items
+                                  const item = items.find((item: any) => item.id === product.item_id);
+                                  return item?.name_ar || item?.name || product?.size_caption || 'غير محدد';
+                                })()}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
@@ -1433,9 +1448,9 @@ export default function Orders() {
                                 {(() => {
                                   if (!product) return 'غير محدد';
                                   const parts = [];
-                                  if (product.width) parts.push(product.width);
-                                  if (product.left_facing) parts.push(product.left_facing);
-                                  if (product.right_facing) parts.push(product.right_facing);
+                                  if (product.width) parts.push(Math.round(parseFloat(product.width)));
+                                  if (product.left_facing) parts.push(Math.round(parseFloat(product.left_facing)));
+                                  if (product.right_facing) parts.push(Math.round(parseFloat(product.right_facing)));
                                   const dimensions = parts.length > 0 ? parts.join('+') : '';
                                   const length = product.cutting_length_cm || '51';
                                   return dimensions ? `${dimensions}X${length}` : `X${length}`;
@@ -1444,7 +1459,7 @@ export default function Orders() {
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="text-sm font-medium">
-                                {product?.printing_cylinder ? `${product.printing_cylinder}"` : 'غير محدد'}
+                                {product?.printing_cylinder ? `${product.printing_cylinder}` : 'غير محدد'}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
