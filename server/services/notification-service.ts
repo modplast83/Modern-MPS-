@@ -82,28 +82,35 @@ export class NotificationService {
         ? phoneNumber 
         : `whatsapp:${phoneNumber}`;
 
-      // في Twilio، نحتاج استخدام template الذي تم تسجيله في Twilio Content Template Builder
-      // بدلاً من Meta template ID مباشرة
-      const messageData: any = {
-        from: `whatsapp:${this.twilioPhoneNumber}`,
-        to: formattedNumber,
-        body: variables[0] || 'مرحباً من نظام MPBF' // استخدام النص المباشر مؤقتاً
-      };
-
-      // ملاحظة: للاستخدام الصحيح للقوالب، يجب:
-      // 1. إنشاء Content Template في Twilio Console
-      // 2. ربطه بـ Meta template المُوافق عليه
-      // 3. استخدام contentSid للقالب من Twilio
+      // التحقق من وجود ContentSid في متغيرات البيئة
+      const contentSid = process.env.TWILIO_CONTENT_SID;
       
-      // إضافة متغيرات القالب إن وجدت (للاستخدام المستقبلي)
-      // if (variables && variables.length > 0) {
-      //   messageData.contentVariables = JSON.stringify(
-      //     variables.reduce((acc, variable, index) => {
-      //       acc[`${index + 1}`] = variable;
-      //       return acc;
-      //     }, {} as Record<string, string>)
-      //   );
-      // }
+      let messageData: any;
+      
+      if (contentSid && templateName.includes('welcome_hxc4485f514cb7d4536026fc56250f75e7')) {
+        // استخدام Content Template المُعد في Twilio Console
+        messageData = {
+          from: `whatsapp:${this.twilioPhoneNumber}`,
+          to: formattedNumber,
+          contentSid: contentSid
+        };
+
+        // إضافة متغيرات القالب
+        if (variables && variables.length > 0) {
+          messageData.contentVariables = JSON.stringify({
+            "1": variables[0] || 'مرحباً من نظام MPBF'
+          });
+        }
+      } else {
+        // استخدام النص المباشر كحل بديل
+        messageData = {
+          from: `whatsapp:${this.twilioPhoneNumber}`,
+          to: formattedNumber,
+          body: variables[0] || 'مرحباً من نظام MPBF'
+        };
+        
+        console.warn('⚠️ TWILIO_CONTENT_SID not configured. Using direct text message. Visit /twilio-content for setup instructions.');
+      }
 
       const twilioMessage = await this.twilioClient.messages.create(messageData);
 
