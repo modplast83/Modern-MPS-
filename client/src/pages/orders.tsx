@@ -204,10 +204,28 @@ export default function Orders() {
     (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Filter production orders for selected order
-  const filteredProductionOrders = selectedOrderId
-    ? productionOrders.filter((po: any) => po.order_id === selectedOrderId)
-    : productionOrders;
+  // Filter production orders with search capability
+  const filteredProductionOrders = productionOrders.filter((po: any) => {
+    if (selectedOrderId && po.order_id !== selectedOrderId) return false;
+    
+    if (searchTerm) {
+      const customer = customers.find((c: any) => {
+        const order = orders.find((o: any) => o.id === po.order_id);
+        return order && c.id === order.customer_id;
+      });
+      const product = customerProducts.find((p: any) => p.id === po.customer_product_id);
+      
+      return (
+        po.production_order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer?.name_ar?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product?.size_caption?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product?.raw_material?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return true;
+  });
 
   const handleAddOrder = () => {
     setEditingOrder(null);
@@ -1149,9 +1167,19 @@ export default function Orders() {
             <TabsContent value="production-orders" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
                     <CardTitle>أوامر الإنتاج</CardTitle>
-                    <Dialog open={isProductionOrderDialogOpen} onOpenChange={setIsProductionOrderDialogOpen}>
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <div className="relative flex-1 sm:flex-none sm:w-64">
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                        <Input
+                          placeholder="البحث في أوامر الإنتاج..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pr-10"
+                        />
+                      </div>
+                      <Dialog open={isProductionOrderDialogOpen} onOpenChange={setIsProductionOrderDialogOpen}>
                       <DialogTrigger asChild>
                         <Button onClick={() => handleAddProductionOrder()}>
                           <Plus className="h-4 w-4 mr-2" />
@@ -1321,41 +1349,124 @@ export default function Orders() {
                         </Form>
                       </DialogContent>
                     </Dialog>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>رقم الأمر</TableHead>
-                        <TableHead>الطلب</TableHead>
-                        <TableHead>المنتج</TableHead>
-                        <TableHead>الكمية (كيلو)</TableHead>
-                        <TableHead>الحالة</TableHead>
-                        <TableHead>الإجراءات</TableHead>
+                        <TableHead className="text-center">الرقم</TableHead>
+                        <TableHead className="text-center min-w-[120px]">اسم العميل</TableHead>
+                        <TableHead className="text-center min-w-[150px]">اسم الصنف</TableHead>
+                        <TableHead className="text-center min-w-[120px]">وصف المقاس</TableHead>
+                        <TableHead className="text-center min-w-[120px]">الطباعة/القطع</TableHead>
+                        <TableHead className="text-center">المادة الخام</TableHead>
+                        <TableHead className="text-center">الماستر باتش</TableHead>
+                        <TableHead className="text-center">التخريم</TableHead>
+                        <TableHead className="text-center">الوحدة</TableHead>
+                        <TableHead className="text-center">وزن التعبئة</TableHead>
+                        <TableHead className="text-center">العمليات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredProductionOrders.map((productionOrder: any) => (
-                        <TableRow key={productionOrder.id}>
-                          <TableCell className="font-medium">{productionOrder.production_order_number}</TableCell>
-                          <TableCell>{productionOrder.order_number}</TableCell>
-                          <TableCell>{productionOrder.product_name_ar}</TableCell>
-                          <TableCell>{productionOrder.quantity_kg}</TableCell>
-                          <TableCell>{getStatusBadge(productionOrder.status)}</TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2 space-x-reverse">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEditProductionOrder(productionOrder)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </div>
+                      {filteredProductionOrders.map((productionOrder: any, index: number) => {
+                        const customer = customers.find((c: any) => {
+                          const order = orders.find((o: any) => o.id === productionOrder.order_id);
+                          return order && c.id === order.customer_id;
+                        });
+                        const product = customerProducts.find((p: any) => p.id === productionOrder.customer_product_id);
+                        
+                        return (
+                          <TableRow key={productionOrder.id} className="hover:bg-gray-50">
+                            <TableCell className="font-medium text-center">{index + 1}</TableCell>
+                            <TableCell className="text-center">
+                              <div className="space-y-1">
+                                <div className="font-medium text-sm">{customer?.name || customer?.name_ar || 'غير محدد'}</div>
+                                <div className="text-xs text-gray-500">{customer?.id || 'غير محدد'}</div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="font-medium text-sm">
+                                {product?.size_caption || 'غير محدد'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm">
+                                {(() => {
+                                  if (!product) return 'غير محدد';
+                                  const dimensions = [];
+                                  if (product.width) dimensions.push(`${product.width}`);
+                                  if (product.left_facing) dimensions.push(`${product.left_facing}`);
+                                  if (product.right_facing) dimensions.push(`${product.right_facing}`);
+                                  if (product.cutting_length_cm) dimensions.push(`${product.cutting_length_cm}`);
+                                  return dimensions.length > 0 ? dimensions.join('+') + 'X' + (product.cutting_length_cm || '51') : 'غير محدد';
+                                })()}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm">
+                                {product?.printing_cylinder ? `${product.printing_cylinder}"` : 'غير محدد'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm font-medium">
+                                {product?.raw_material || 'غير محدد'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm">
+                                {product?.master_batch_id || 'غير محدد'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm">
+                                {product?.punching || 'غير محدد'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm font-medium">
+                                {product?.cutting_unit || 'كيلو'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm font-bold text-blue-600">
+                                {productionOrder.quantity_kg} كغ
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex justify-center space-x-1 space-x-reverse">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleEditProductionOrder(productionOrder)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const order = orders.find((o: any) => o.id === productionOrder.order_id);
+                                    if (order) handleViewOrder(order);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {filteredProductionOrders.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                            لا توجد أوامر إنتاج
                           </TableCell>
                         </TableRow>
-                      ))}
+                      )}
                     </TableBody>
                   </Table>
                 </CardContent>
