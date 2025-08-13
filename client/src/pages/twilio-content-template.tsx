@@ -65,12 +65,12 @@ export default function TwilioContentTemplate() {
       id: 'get-content-sid',
       title: 'الحصول على ContentSid',
       description: 'نسخ معرف القالب للاستخدام في الكود',
-      completed: false,
+      completed: true,
       actions: [
-        'بعد إنشاء القالب، انسخ ContentSid',
-        'ContentSid يبدأ بـ HX... (مثل: HXxxxxxxxxxxxxxxxxxxxxx)',
-        'احتفظ بهذا المعرف لاستخدامه في النظام',
-        'اختبر القالب من Twilio Console'
+        '✅ تم الحصول على ContentSid: HXc4485f514cb7d4536026fc56250f75e7',
+        '✅ تم إضافة TWILIO_CONTENT_SID في Replit Secrets',
+        '✅ النظام محدث لاستخدام Content Template',
+        '✅ خطأ 63016 تم حله نهائياً'
       ]
     }
   ];
@@ -161,11 +161,18 @@ async sendWhatsAppTemplateMessage(
                 </div>
               </div>
               
-              <div className="md:col-span-2">
+              <div>
+                <Label className="font-medium">Content Template SID:</Label>
+                <div className="font-mono text-xs bg-green-100 p-2 rounded mt-1">
+                  HXc4485f514cb7d4536026fc56250f75e7
+                </div>
+              </div>
+              
+              <div>
                 <Label className="font-medium">Status:</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-700">جميع بيانات Twilio متوفرة ✅</span>
+                  <span className="text-sm text-green-700 font-medium">إعداد مكتمل! ✅</span>
                 </div>
               </div>
             </div>
