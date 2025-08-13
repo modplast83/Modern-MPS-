@@ -47,7 +47,7 @@ export default function Login() {
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
             <Factory size={24} />
           </div>
-          <CardTitle className="text-2xl font-bold">MPBF Next</CardTitle>
+          <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">نظام إدارة مصنع الأكياس البلاستيكية</p>
         </CardHeader>
         <CardContent>
