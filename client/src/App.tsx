@@ -20,7 +20,7 @@ import ERPIntegration from "@/pages/erp-integration";
 import Orders from "@/pages/orders";
 import Notifications from "@/pages/notifications";
 import WhatsAppSetup from "@/pages/whatsapp-setup";
-import WhatsAppConfig from "@/pages/whatsapp-config";
+
 import WhatsAppTest from "@/pages/whatsapp-test";
 import WhatsAppTroubleshoot from "@/pages/whatsapp-troubleshoot";
 import WhatsAppProductionSetup from "@/pages/whatsapp-production-setup";
@@ -121,11 +121,7 @@ function Router() {
           <WhatsAppSetup />
         </ProtectedRoute>
       </Route>
-      <Route path="/whatsapp-config">
-        <ProtectedRoute>
-          <WhatsAppConfig />
-        </ProtectedRoute>
-      </Route>
+
       <Route path="/whatsapp-test">
         <ProtectedRoute>
           <WhatsAppTest />
