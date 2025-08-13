@@ -27,6 +27,7 @@ import WhatsAppProductionSetup from "@/pages/whatsapp-production-setup";
 import WhatsAppTemplateTest from "@/pages/whatsapp-template-test";
 import WhatsAppFinalSetup from "@/pages/whatsapp-final-setup";
 import MetaWhatsAppSetup from "@/pages/meta-whatsapp-setup";
+import TwilioContentTemplate from "@/pages/twilio-content-template";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
 
@@ -153,6 +154,11 @@ function Router() {
       <Route path="/meta-whatsapp">
         <ProtectedRoute>
           <MetaWhatsAppSetup />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/twilio-content">
+        <ProtectedRoute>
+          <TwilioContentTemplate />
         </ProtectedRoute>
       </Route>
       <Route path="/user-dashboard">
