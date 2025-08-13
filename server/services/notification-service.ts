@@ -1,5 +1,6 @@
 import twilio from 'twilio';
 import type { IStorage } from '../storage';
+import { MetaWhatsAppService } from './meta-whatsapp';
 
 export interface NotificationData {
   title: string;
@@ -24,11 +25,19 @@ export interface WhatsAppTemplate {
 
 export class NotificationService {
   private twilioClient: twilio.Twilio;
+  public metaWhatsApp: MetaWhatsAppService;
   private storage: IStorage;
   private twilioPhoneNumber: string;
+  private useMetaAPI: boolean;
 
   constructor(storage: IStorage) {
     this.storage = storage;
+    
+    // تحديد استخدام Meta API أو Twilio
+    this.useMetaAPI = !!(process.env.META_ACCESS_TOKEN && process.env.META_PHONE_NUMBER_ID);
+    
+    // تهيئة Meta WhatsApp API
+    this.metaWhatsApp = new MetaWhatsAppService(storage);
     
     // Initialize Twilio client
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -36,11 +45,17 @@ export class NotificationService {
     this.twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '';
 
     if (!accountSid || !authToken) {
-      console.warn('Twilio credentials not found. WhatsApp messaging will be disabled.');
+      console.warn('Twilio credentials not found. WhatsApp messaging via Twilio will be disabled.');
       this.twilioClient = null as any;
     } else {
       this.twilioClient = twilio(accountSid, authToken);
       console.log('✅ Twilio WhatsApp service initialized successfully');
+    }
+
+    if (this.useMetaAPI) {
+      console.log('🚀 Using Meta WhatsApp Business API directly');
+    } else {
+      console.log('📱 Using Twilio as WhatsApp gateway');
     }
   }
 
@@ -143,7 +158,7 @@ export class NotificationService {
   }
 
   /**
-   * إرسال إشعار واتس اب (النسخة القديمة للتوافق مع الكود الحالي)
+   * إرسال إشعار واتس اب (يختار API المناسب تلقائياً)
    */
   async sendWhatsAppMessage(
     phoneNumber: string, 
@@ -153,15 +168,37 @@ export class NotificationService {
       priority?: string;
       context_type?: string;
       context_id?: string;
+      useTemplate?: boolean;
+      templateName?: string;
     }
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    // استخدام القالب المُوافق عليه بدلاً من النص الحر
-    return this.sendWhatsAppTemplateMessage(
-      phoneNumber,
-      'welcome_hxc4485f514cb7d4536026fc56250f75e7',
-      [message], // استخدام الرسالة كمتغير في القالب
-      options
-    );
+    
+    if (this.useMetaAPI) {
+      // استخدام Meta API مباشرة
+      if (options?.useTemplate && options?.templateName) {
+        return this.metaWhatsApp.sendTemplateMessage(
+          phoneNumber,
+          options.templateName,
+          'ar',
+          [message],
+          options
+        );
+      } else {
+        return this.metaWhatsApp.sendTextMessage(phoneNumber, message, options);
+      }
+    } else {
+      // استخدام Twilio (القديم)
+      if (options?.useTemplate) {
+        return this.sendWhatsAppTemplateMessage(
+          phoneNumber,
+          options.templateName || 'welcome_hxc4485f514cb7d4536026fc56250f75e7',
+          [message],
+          options
+        );
+      } else {
+        return this.sendWhatsAppDirectMessage(phoneNumber, message, options);
+      }
+    }
   }
 
   /**
