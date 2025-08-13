@@ -1356,33 +1356,70 @@ export default function Orders() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-center">الرقم</TableHead>
+                        <TableHead className="text-center min-w-[120px]">الرقم</TableHead>
                         <TableHead className="text-center min-w-[120px]">اسم العميل</TableHead>
                         <TableHead className="text-center min-w-[150px]">اسم الصنف</TableHead>
                         <TableHead className="text-center min-w-[120px]">وصف المقاس</TableHead>
-                        <TableHead className="text-center min-w-[120px]">الطباعة/القطع</TableHead>
+                        <TableHead className="text-center">الطباعة</TableHead>
                         <TableHead className="text-center">المادة الخام</TableHead>
                         <TableHead className="text-center">الماستر باتش</TableHead>
                         <TableHead className="text-center">التخريم</TableHead>
                         <TableHead className="text-center">الوحدة</TableHead>
                         <TableHead className="text-center">وزن التعبئة</TableHead>
+                        <TableHead className="text-center">الكمية</TableHead>
                         <TableHead className="text-center">العمليات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredProductionOrders.map((productionOrder: any, index: number) => {
-                        const customer = customers.find((c: any) => {
-                          const order = orders.find((o: any) => o.id === productionOrder.order_id);
-                          return order && c.id === order.customer_id;
-                        });
+                        const order = orders.find((o: any) => o.id === productionOrder.order_id);
+                        const customer = customers.find((c: any) => order && c.id === order.customer_id);
                         const product = customerProducts.find((p: any) => p.id === productionOrder.customer_product_id);
+                        
+                        // دالة لتحديد لون الدائرة حسب الماستر باتش
+                        const getColorCircle = (masterBatch: string) => {
+                          const colorMap: { [key: string]: string } = {
+                            'WHITE': '#FFFFFF',
+                            'BLACK': '#000000',
+                            'CLEAR': '#FFFFFF',
+                            'RED': '#FF0000',
+                            'BLUE': '#0000FF',
+                            'GREEN': '#008000',
+                            'YELLOW': '#FFFF00',
+                            'ORANGE': '#FFA500',
+                            'PURPLE': '#800080',
+                            'PINK': '#FFC0CB',
+                            'BROWN': '#A52A2A'
+                          };
+                          
+                          const color = colorMap[masterBatch?.toUpperCase()] || '#808080';
+                          const borderColor = color === '#FFFFFF' ? '#CCCCCC' : color;
+                          
+                          return (
+                            <div className="flex items-center justify-center gap-2">
+                              <div 
+                                className="w-4 h-4 rounded-full border-2"
+                                style={{ 
+                                  backgroundColor: color,
+                                  borderColor: borderColor
+                                }}
+                                title={masterBatch}
+                              />
+                              <span className="text-xs">{masterBatch || 'غير محدد'}</span>
+                            </div>
+                          );
+                        };
                         
                         return (
                           <TableRow key={productionOrder.id} className="hover:bg-gray-50">
-                            <TableCell className="font-medium text-center">{index + 1}</TableCell>
+                            <TableCell className="font-medium text-center">
+                              <div className="text-sm font-mono">
+                                {order?.order_number || 'غير محدد'}{productionOrder.production_order_number || ''}
+                              </div>
+                            </TableCell>
                             <TableCell className="text-center">
                               <div className="space-y-1">
-                                <div className="font-medium text-sm">{customer?.name || customer?.name_ar || 'غير محدد'}</div>
+                                <div className="font-medium text-sm">{customer?.name_ar || customer?.name || 'غير محدد'}</div>
                                 <div className="text-xs text-gray-500">{customer?.id || 'غير محدد'}</div>
                               </div>
                             </TableCell>
@@ -1392,20 +1429,21 @@ export default function Orders() {
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="text-sm">
+                              <div className="text-sm font-mono">
                                 {(() => {
                                   if (!product) return 'غير محدد';
-                                  const dimensions = [];
-                                  if (product.width) dimensions.push(`${product.width}`);
-                                  if (product.left_facing) dimensions.push(`${product.left_facing}`);
-                                  if (product.right_facing) dimensions.push(`${product.right_facing}`);
-                                  if (product.cutting_length_cm) dimensions.push(`${product.cutting_length_cm}`);
-                                  return dimensions.length > 0 ? dimensions.join('+') + 'X' + (product.cutting_length_cm || '51') : 'غير محدد';
+                                  const parts = [];
+                                  if (product.width) parts.push(product.width);
+                                  if (product.left_facing) parts.push(product.left_facing);
+                                  if (product.right_facing) parts.push(product.right_facing);
+                                  const dimensions = parts.length > 0 ? parts.join('+') : '';
+                                  const length = product.cutting_length_cm || '51';
+                                  return dimensions ? `${dimensions}X${length}` : `X${length}`;
                                 })()}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="text-sm">
+                              <div className="text-sm font-medium">
                                 {product?.printing_cylinder ? `${product.printing_cylinder}"` : 'غير محدد'}
                               </div>
                             </TableCell>
@@ -1415,9 +1453,7 @@ export default function Orders() {
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
-                              <div className="text-sm">
-                                {product?.master_batch_id || 'غير محدد'}
-                              </div>
+                              {getColorCircle(product?.master_batch_id)}
                             </TableCell>
                             <TableCell className="text-center">
                               <div className="text-sm">
@@ -1427,6 +1463,11 @@ export default function Orders() {
                             <TableCell className="text-center">
                               <div className="text-sm font-medium">
                                 {product?.cutting_unit || 'كيلو'}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <div className="text-sm font-medium">
+                                {product?.package_weight_kg ? `${product.package_weight_kg} كغ` : 'غير محدد'}
                               </div>
                             </TableCell>
                             <TableCell className="text-center">
@@ -1448,7 +1489,6 @@ export default function Orders() {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    const order = orders.find((o: any) => o.id === productionOrder.order_id);
                                     if (order) handleViewOrder(order);
                                   }}
                                   className="h-8 w-8 p-0"
@@ -1462,7 +1502,7 @@ export default function Orders() {
                       })}
                       {filteredProductionOrders.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={12} className="text-center py-8 text-gray-500">
                             لا توجد أوامر إنتاج
                           </TableCell>
                         </TableRow>
