@@ -164,42 +164,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==== NOTIFICATIONS API ROUTES ====
   
-  // Send WhatsApp message using approved template
+  // Send WhatsApp message (Meta API or Twilio)
   app.post("/api/notifications/whatsapp", async (req, res) => {
     try {
-      const { phone_number, message, title, priority, context_type, context_id, template_name, variables, use_template = true } = req.body;
+      const { phone_number, message, title, priority, context_type, context_id, template_name, variables, use_template = false } = req.body;
       
       if (!phone_number || !message) {
         return res.status(400).json({ message: "رقم الهاتف والرسالة مطلوبان" });
       }
 
-      let result;
-      
-      if (use_template) {
-        // استخدام القالب المُوافق عليه
-        const templateToUse = template_name || 'welcome_hxc4485f514cb7d4536026fc56250f75e7';
-        const templateVariables = variables || [message];
-        
-        result = await notificationService.sendWhatsAppTemplateMessage(
-          phone_number, 
-          templateToUse, 
-          templateVariables, 
-          {
-            title,
-            priority,
-            context_type,
-            context_id
-          }
-        );
-      } else {
-        // استخدام الرسالة المباشرة (للاختبار في Sandbox فقط)
-        result = await notificationService.sendWhatsAppDirectMessage(phone_number, message, {
-          title,
-          priority,
-          context_type,
-          context_id
-        });
-      }
+      const result = await notificationService.sendWhatsAppMessage(phone_number, message, {
+        title,
+        priority,
+        context_type,
+        context_id,
+        useTemplate: use_template,
+        templateName: template_name
+      });
 
       if (result.success) {
         res.json({ 
@@ -257,6 +238,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching notifications:", error);
       res.status(500).json({ message: "خطأ في جلب الإشعارات" });
+    }
+  });
+
+  // Webhook endpoint for Meta WhatsApp
+  app.get("/api/notifications/webhook/meta", (req, res) => {
+    // Verify webhook (Meta requirement)
+    const VERIFY_TOKEN = process.env.META_WEBHOOK_VERIFY_TOKEN || 'mpbf_webhook_token';
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('✅ Meta Webhook verified successfully');
+      res.status(200).send(challenge);
+    } else {
+      console.log('❌ Meta Webhook verification failed');
+      res.sendStatus(403);
+    }
+  });
+
+  app.post("/api/notifications/webhook/meta", async (req, res) => {
+    try {
+      console.log("📨 Meta Webhook received:", JSON.stringify(req.body, null, 2));
+      
+      // معالجة webhook من Meta
+      if (notificationService.metaWhatsApp) {
+        await notificationService.metaWhatsApp.handleWebhook(req.body);
+      }
+
+      res.status(200).send('OK');
+    } catch (error: any) {
+      console.error("Error processing Meta webhook:", error);
+      res.status(500).json({ message: "خطأ في معالجة Meta webhook" });
     }
   });
 
