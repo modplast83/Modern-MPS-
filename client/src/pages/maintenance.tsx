@@ -68,6 +68,8 @@ export default function Maintenance() {
   const [currentTab, setCurrentTab] = useState("requests");
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [isActionViewDialogOpen, setIsActionViewDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -497,6 +499,137 @@ export default function Maintenance() {
           </Tabs>
         </main>
       </div>
+
+      {/* Action View Dialog */}
+      <Dialog open={isActionViewDialogOpen} onOpenChange={setIsActionViewDialogOpen}>
+        <DialogContent className="max-w-2xl" aria-describedby="action-view-dialog-description">
+          <DialogHeader>
+            <DialogTitle>تفاصيل إجراء الصيانة</DialogTitle>
+            <div id="action-view-dialog-description" className="text-sm text-gray-600">
+              عرض تفاصيل إجراء الصيانة المحدد
+            </div>
+          </DialogHeader>
+          {selectedAction && (() => {
+            const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === selectedAction.performed_by) : null;
+            const maintenanceRequest = Array.isArray(maintenanceRequests) ? maintenanceRequests.find((r: any) => r.id === selectedAction.maintenance_request_id) : null;
+            
+            return (
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">رقم الإجراء</label>
+                    <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">{selectedAction.action_number}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">رقم طلب الصيانة</label>
+                    <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">{maintenanceRequest?.request_number || selectedAction.maintenance_request_id}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">نوع الإجراء</label>
+                    <div className="mt-1">
+                      <Badge variant="outline" className="text-sm">
+                        {selectedAction.action_type}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">المنفذ</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      {performedByUser ? (performedByUser.display_name_ar || performedByUser.display_name || performedByUser.username) : selectedAction.performed_by}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">وصف الإجراء</label>
+                  <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-3 rounded min-h-[60px]">
+                    {selectedAction.description || 'لا يوجد وصف'}
+                  </p>
+                </div>
+
+                {/* Technical Reports */}
+                {selectedAction.text_report && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">التقرير النصي</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-blue-50 p-3 rounded min-h-[60px] border border-blue-200">
+                      {selectedAction.text_report}
+                    </p>
+                  </div>
+                )}
+
+                {/* Spare Parts and Machining Requests */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">طلب قطع غيار</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      {selectedAction.spare_parts_request || 'لا يوجد'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">طلب مخرطة</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      {selectedAction.machining_request || 'لا يوجد'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Management Actions */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">يتطلب إجراء إداري</label>
+                    <div className="mt-1">
+                      <Badge variant={selectedAction.requires_management_action ? "destructive" : "secondary"}>
+                        {selectedAction.requires_management_action ? "نعم" : "لا"}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">تم إشعار الإدارة</label>
+                    <div className="mt-1">
+                      <Badge variant={selectedAction.management_notified ? "default" : "secondary"}>
+                        {selectedAction.management_notified ? "نعم" : "لا"}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">تاريخ التنفيذ</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      {selectedAction.performed_at ? new Date(selectedAction.performed_at).toLocaleDateString('ar-SA') : 'غير محدد'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      {selectedAction.created_at ? new Date(selectedAction.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Machine Information */}
+                {maintenanceRequest && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">معلومات الماكينة</label>
+                    <div className="mt-1 bg-blue-50 p-3 rounded border border-blue-200">
+                      <p className="text-sm"><strong>معرف الماكينة:</strong> {maintenanceRequest.machine_id}</p>
+                      <p className="text-sm"><strong>نوع المشكلة:</strong> {maintenanceRequest.issue_type}</p>
+                      <p className="text-sm"><strong>مستوى الأولوية:</strong> {maintenanceRequest.urgency_level}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -825,7 +958,8 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                   const maintenanceRequest = Array.isArray(requests) ? requests.find((r: any) => r.id === action.maintenance_request_id) : null;
                   
                   const handleView = () => {
-                    alert(`عرض تفاصيل الإجراء ${action.action_number}`);
+                    setSelectedAction(action);
+                    setIsActionViewDialogOpen(true);
                   };
 
                   const handlePrint = () => {
