@@ -179,7 +179,7 @@ export default function Orders() {
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
       customer_id: "",
-      delivery_days: "7",
+      delivery_days: "15",
       notes: ""
     }
   });
@@ -243,7 +243,7 @@ export default function Orders() {
     setProductionOrdersInForm([]); // Reset production orders
     orderForm.reset({
       customer_id: "",
-      delivery_days: "7",
+      delivery_days: "15",
       notes: ""
     });
     setIsOrderDialogOpen(true);
@@ -310,7 +310,7 @@ export default function Orders() {
       const orderData = {
         order_number: orderNumber,
         customer_id: data.customer_id,
-        delivery_days: parseInt(data.delivery_days) || 7,
+        delivery_days: parseInt(data.delivery_days) || 15,
         notes: data.notes || '',
         created_by: "8" // AbuKhalid user ID as string
       };
