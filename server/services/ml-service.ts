@@ -116,7 +116,7 @@ class MachineLearningService {
     // فحص معدل الإنتاج
     const avgRate = recentData.reduce((sum, d) => sum + d.productionRate, 0) / recentData.length;
     const rateStdDev = this.calculateStandardDeviation(recentData.map(d => d.productionRate));
-    const rateZScore = Math.abs((data.productionRate - avgRate) / rateStdDev);
+    const rateZScore = rateStdDev > 0 ? Math.abs((data.productionRate - avgRate) / rateStdDev) : 0;
     
     if (rateZScore > 2) {
       anomalies.push('معدل الإنتاج');
@@ -126,7 +126,7 @@ class MachineLearningService {
     // فحص جودة المنتج
     const avgQuality = recentData.reduce((sum, d) => sum + d.qualityScore, 0) / recentData.length;
     const qualityStdDev = this.calculateStandardDeviation(recentData.map(d => d.qualityScore));
-    const qualityZScore = Math.abs((data.qualityScore - avgQuality) / qualityStdDev);
+    const qualityZScore = qualityStdDev > 0 ? Math.abs((data.qualityScore - avgQuality) / qualityStdDev) : 0;
     
     if (qualityZScore > 2) {
       anomalies.push('مؤشر الجودة');
@@ -136,7 +136,7 @@ class MachineLearningService {
     // فحص نسبة الهدر
     const avgWaste = recentData.reduce((sum, d) => sum + d.wastePercentage, 0) / recentData.length;
     const wasteStdDev = this.calculateStandardDeviation(recentData.map(d => d.wastePercentage));
-    const wasteZScore = Math.abs((data.wastePercentage - avgWaste) / wasteStdDev);
+    const wasteZScore = wasteStdDev > 0 ? Math.abs((data.wastePercentage - avgWaste) / wasteStdDev) : 0;
     
     if (wasteZScore > 2) {
       anomalies.push('نسبة الهدر');
@@ -287,7 +287,8 @@ class MachineLearningService {
       sumXX += i * i;
     }
     
-    return (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const denominator = n * sumXX - sumX * sumX;
+    return denominator !== 0 ? (n * sumXY - sumX * sumY) / denominator : 0;
   }
 
   private calculateVariance(values: number[]): number {

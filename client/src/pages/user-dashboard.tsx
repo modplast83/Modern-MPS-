@@ -186,9 +186,14 @@ export default function UserDashboard() {
   const calculateDailyHours = (attendanceRecords: AttendanceRecord[] | undefined, userId: number) => {
     const today = new Date().toISOString().split('T')[0];
     const todayRecords = attendanceRecords?.filter(record => {
+      if (!record.date || record.user_id !== userId) return false;
       const recordDate = new Date(record.date).toISOString().split('T')[0];
-      return recordDate === today && record.user_id === userId;
-    }).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || [];
+      return recordDate === today;
+    }).sort((a, b) => {
+      const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return timeA - timeB;
+    }) || [];
 
     console.log('📊 Today Records for calculation:', todayRecords.map(r => ({
       id: r.id,
