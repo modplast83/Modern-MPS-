@@ -1734,7 +1734,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'SEC02': 2,
           'SEC03': 3,
           'SEC04': 4,
-          'SEC05': 5
+          'SEC05': 5,
+          'SEC06': 6,
+          'SEC07': 7
         };
         sectionId = sectionMapping[req.body.section_id] || null;
       }
@@ -1773,7 +1775,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'ROLE03': 3,
           'ROLE04': 4,
           'ROLE05': 5,
-          'ROLE06': 6
+          'ROLE06': 6,
+          'ROLE07': 7
         };
         roleId = roleMapping[req.body.role_id as keyof typeof roleMapping] || null;
       }
