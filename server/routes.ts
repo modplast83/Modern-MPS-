@@ -1706,7 +1706,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle role_id conversion - convert role name to role ID
       let roleId = null;
-      if (req.body.role_id && req.body.role_id !== '') {
+      if (req.body.role_id && req.body.role_id !== '' && req.body.role_id !== 'none') {
         if (typeof req.body.role_id === 'string') {
           // If it's a role name like 'admin', convert to role ID
           const roles = await storage.getRoles();
@@ -1727,7 +1727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Handle section_id - convert section string ID to integer
       let sectionId = null;
-      if (req.body.section_id && req.body.section_id !== '') {
+      if (req.body.section_id && req.body.section_id !== '' && req.body.section_id !== 'none') {
         // Simple mapping from section string ID to integer
         const sectionMapping: { [key: string]: number } = {
           'SEC01': 1,
@@ -1764,9 +1764,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       console.log('Updating user:', id, req.body);
       
-      // Process role_id and section_id to convert empty strings to null
+      // Process role_id and section_id to convert empty strings and "none" to null
       let roleId = null;
-      if (req.body.role_id && req.body.role_id !== '') {
+      if (req.body.role_id && req.body.role_id !== '' && req.body.role_id !== 'none') {
         const roleMapping = {
           'ROLE01': 1,
           'ROLE02': 2,
@@ -1778,7 +1778,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       let sectionId = null;
-      if (req.body.section_id && req.body.section_id !== '') {
+      if (req.body.section_id && req.body.section_id !== '' && req.body.section_id !== 'none') {
         const sectionMapping = {
           'SEC01': 1,
           'SEC02': 2,
