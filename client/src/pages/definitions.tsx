@@ -489,6 +489,10 @@ export default function Definitions() {
     queryKey: ['/api/users'],
     staleTime: 0,
   });
+  const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ['/api/roles'],
+    staleTime: 0,
+  });
 
   // Auto-calculations after data is loaded
   React.useEffect(() => {
@@ -1856,7 +1860,11 @@ export default function Definitions() {
                                       })()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {user.role || '-'}
+                                      {(() => {
+                                        if (!user.role_id) return '-';
+                                        const role = Array.isArray(roles) && roles.find((r: any) => r.id === user.role_id);
+                                        return role ? (role.name_ar || role.name) : '-';
+                                      })()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                       <div className="flex items-center justify-center gap-2">
@@ -1869,8 +1877,8 @@ export default function Definitions() {
                                               username: user.username || '',
                                               display_name: user.display_name || '',
                                               display_name_ar: user.display_name_ar || '',
-                                              role_id: user.role_id || '',
-                                              section_id: user.section_id || '',
+                                              role_id: user.role_id ? `ROLE0${user.role_id}` : '',
+                                              section_id: user.section_id || 'none',
                                               status: user.status || 'active'
                                             });
                                             setSelectedTab('users');
@@ -3047,6 +3055,27 @@ export default function Definitions() {
                         />
                       </div>
                       <div>
+                        <Label htmlFor="role_id">الدور</Label>
+                        <Select 
+                          value={userForm.role_id} 
+                          onValueChange={(value) => setUserForm({...userForm, role_id: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الدور" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">بدون دور</SelectItem>
+                            {Array.isArray(roles) && roles.map((role: any) => (
+                              <SelectItem key={role.id} value={`ROLE0${role.id}`}>
+                                {role.name_ar || role.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
                         <Label htmlFor="section_id">القسم</Label>
                         <Select 
                           value={userForm.section_id} 
@@ -3062,6 +3091,21 @@ export default function Definitions() {
                                 {section.name_ar || section.name} ({section.id})
                               </SelectItem>
                             ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="status">الحالة</Label>
+                        <Select 
+                          value={userForm.status} 
+                          onValueChange={(value) => setUserForm({...userForm, status: value})}
+                        >
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الحالة" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="active">نشط</SelectItem>
+                            <SelectItem value="inactive">غير نشط</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
