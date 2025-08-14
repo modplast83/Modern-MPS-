@@ -1888,8 +1888,15 @@ export default function Definitions() {
                                               username: user.username || '',
                                               display_name: user.display_name || '',
                                               display_name_ar: user.display_name_ar || '',
-                                              role_id: user.role_id ? `ROLE0${user.role_id}` : 'none',
-                                              section_id: user.section_id || 'none',
+                                              role_id: user.role_id ? `ROLE0${user.role_id < 10 ? '0' + user.role_id : user.role_id}` : 'none',
+                                              section_id: (() => {
+                                                if (!user.section_id) return 'none';
+                                                const sectionMapping: { [key: number]: string } = {
+                                                  1: 'SEC01', 2: 'SEC02', 3: 'SEC03', 4: 'SEC04', 
+                                                  5: 'SEC05', 6: 'SEC06', 7: 'SEC07'
+                                                };
+                                                return sectionMapping[user.section_id] || 'none';
+                                              })(),
                                               status: user.status || 'active'
                                             });
                                             setSelectedTab('users');
