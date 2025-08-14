@@ -1828,6 +1828,7 @@ export default function Definitions() {
                               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
                               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
                               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">القسم</th>
                               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الدور</th>
                               <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
                             </tr>
@@ -1846,6 +1847,13 @@ export default function Definitions() {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {user.display_name || user.name || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                      {(() => {
+                                        if (!user.section_id) return '-';
+                                        const section = Array.isArray(sections) && sections.find((s: any) => s.id === user.section_id);
+                                        return section ? (section.name_ar || section.name) : '-';
+                                      })()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                       {user.role || '-'}

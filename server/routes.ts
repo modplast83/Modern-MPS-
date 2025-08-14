@@ -1763,7 +1763,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       console.log('Updating user:', id, req.body);
-      const user = await storage.updateUser(id, req.body);
+      
+      // Process role_id and section_id to convert empty strings to null
+      let roleId = null;
+      if (req.body.role_id && req.body.role_id !== '') {
+        const roleMapping = {
+          'ROLE01': 1,
+          'ROLE02': 2,
+          'ROLE03': 3,
+          'ROLE04': 4,
+          'ROLE05': 5
+        };
+        roleId = roleMapping[req.body.role_id as keyof typeof roleMapping] || null;
+      }
+      
+      let sectionId = null;
+      if (req.body.section_id && req.body.section_id !== '') {
+        const sectionMapping = {
+          'SEC01': 1,
+          'SEC02': 2,
+          'SEC03': 3,
+          'SEC04': 4,
+          'SEC05': 5,
+          'SEC06': 6,
+          'SEC07': 7
+        };
+        sectionId = sectionMapping[req.body.section_id as keyof typeof sectionMapping] || null;
+      }
+      
+      const processedData = {
+        ...req.body,
+        role_id: roleId,
+        section_id: sectionId
+      };
+      
+      const user = await storage.updateUser(id, processedData);
       res.json(user);
     } catch (error) {
       console.error('User update error:', error);
