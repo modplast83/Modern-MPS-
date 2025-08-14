@@ -841,9 +841,15 @@ export default function Orders() {
                                                         
                                                         // البحث عن اسم المنتج من جدول items
                                                         const item = items.find((item: any) => item.id === product.item_id);
-                                                        const productName = item?.name_ar || item?.name || product?.size_caption || 'منتج غير محدد';
+                                                        const productName = item?.name_ar || item?.name || 'منتج غير محدد';
                                                         
-                                                        return productName;
+                                                        // إضافة وصف المقاس
+                                                        let fullDisplayName = productName;
+                                                        if (product?.size_caption) {
+                                                          fullDisplayName += ` - ${product.size_caption}`;
+                                                        }
+                                                        
+                                                        return fullDisplayName;
                                                       })()}
                                                     </div>
                                                     <div className="text-xs text-gray-600 space-y-0.5">
@@ -910,7 +916,12 @@ export default function Orders() {
                                                       {(() => {
                                                         // البحث عن اسم المنتج من جدول items
                                                         const item = items.find((item: any) => item.id === product.item_id);
-                                                        let displayName = item?.name_ar || item?.name || product?.size_caption || 'منتج غير محدد';
+                                                        let displayName = item?.name_ar || item?.name || 'منتج غير محدد';
+                                                        
+                                                        // إضافة وصف المقاس
+                                                        if (product?.size_caption) {
+                                                          displayName += ` - ${product.size_caption}`;
+                                                        }
                                                         
                                                         // إضافة طول القطع إذا كان متاحاً
                                                         if (product.cutting_length_cm) {
