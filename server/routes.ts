@@ -1772,7 +1772,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'ROLE02': 2,
           'ROLE03': 3,
           'ROLE04': 4,
-          'ROLE05': 5
+          'ROLE05': 5,
+          'ROLE06': 6
         };
         roleId = roleMapping[req.body.role_id as keyof typeof roleMapping] || null;
       }
@@ -1796,6 +1797,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role_id: roleId,
         section_id: sectionId
       };
+      
+      console.log('Processed role_id:', roleId, 'from:', req.body.role_id);
+      console.log('Processed section_id:', sectionId, 'from:', req.body.section_id);
       
       const user = await storage.updateUser(id, processedData);
       res.json(user);
