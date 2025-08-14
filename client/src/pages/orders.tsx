@@ -833,41 +833,65 @@ export default function Orders() {
                                             <SelectTrigger className="h-auto min-h-[60px] w-full">
                                               <SelectValue placeholder="اختر المنتج">
                                                 {prodOrder.customer_product_id && filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id) && (
-                                                  <div className="text-right w-full py-1">
-                                                    <div className="font-medium text-gray-900 text-sm leading-relaxed">
+                                                  <div className="text-right w-full py-2">
+                                                    <div className="font-medium text-gray-900 text-sm leading-relaxed mb-1">
                                                       {(() => {
                                                         const product = filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id);
                                                         if (!product) return '';
                                                         
-                                                        let displayName = '';
-                                                        if (product.size_caption) {
-                                                          displayName = product.size_caption;
-                                                        } else if (product.raw_material && product.width && product.thickness) {
-                                                          displayName = `${product.raw_material} ${product.width}×${product.thickness}`;
-                                                        } else if (product.raw_material) {
-                                                          displayName = product.raw_material;
-                                                        } else {
-                                                          displayName = 'منتج غير محدد';
-                                                        }
+                                                        // البحث عن اسم المنتج من جدول items
+                                                        const item = items.find((item: any) => item.id === product.item_id);
+                                                        const productName = item?.name_ar || item?.name || product?.size_caption || 'منتج غير محدد';
                                                         
-                                                        if (product.cutting_length_cm) {
-                                                          displayName += ` × ${product.cutting_length_cm} سم`;
-                                                        }
-                                                        
-                                                        return displayName;
+                                                        return productName;
                                                       })()}
                                                     </div>
-                                                    <div className="text-xs text-gray-500 mt-0.5">
+                                                    <div className="text-xs text-gray-600 space-y-0.5">
                                                       {(() => {
                                                         const product = filteredCustomerProducts.find((p: any) => p.id === prodOrder.customer_product_id);
-                                                        if (!product) return '';
+                                                        if (!product) return null;
                                                         
-                                                        const details = [];
-                                                        if (product.raw_material) details.push(`المادة: ${product.raw_material}`);
-                                                        if (product.thickness) details.push(`السماكة: ${product.thickness}`);
-                                                        if (product.master_batch_id) details.push(`اللون: ${product.master_batch_id}`);
-                                                        
-                                                        return details.slice(0, 2).join(' | ');
+                                                        return (
+                                                          <div className="grid grid-cols-1 gap-0.5">
+                                                            {product.thickness && (
+                                                              <div><span className="font-medium text-gray-700">السماكة:</span> <span className="text-blue-600 font-medium">{product.thickness} ميكرون</span></div>
+                                                            )}
+                                                            {product.master_batch_id && (
+                                                              <div className="flex items-center gap-1">
+                                                                <span className="font-medium text-gray-700">الماستر باتش:</span>
+                                                                <div className="flex items-center gap-1">
+                                                                  <div 
+                                                                    className="w-3 h-3 rounded-full border"
+                                                                    style={{ 
+                                                                      backgroundColor: (() => {
+                                                                        const colorMap: { [key: string]: string } = {
+                                                                          'WHITE': '#FFFFFF', 'BLACK': '#000000', 'CLEAR': '#FFFFFF',
+                                                                          'RED': '#FF0000', 'BLUE': '#0000FF', 'GREEN': '#008000',
+                                                                          'YELLOW': '#FFFF00', 'ORANGE': '#FFA500', 'PURPLE': '#800080'
+                                                                        };
+                                                                        const color = colorMap[product.master_batch_id?.toUpperCase()] || '#808080';
+                                                                        return color;
+                                                                      })(),
+                                                                      borderColor: product.master_batch_id?.toUpperCase() === 'WHITE' ? '#CCCCCC' : 
+                                                                                  (() => {
+                                                                                    const colorMap: { [key: string]: string } = {
+                                                                                      'WHITE': '#FFFFFF', 'BLACK': '#000000', 'CLEAR': '#FFFFFF',
+                                                                                      'RED': '#FF0000', 'BLUE': '#0000FF', 'GREEN': '#008000',
+                                                                                      'YELLOW': '#FFFF00', 'ORANGE': '#FFA500', 'PURPLE': '#800080'
+                                                                                    };
+                                                                                    return colorMap[product.master_batch_id?.toUpperCase()] || '#808080';
+                                                                                  })()
+                                                                    }}
+                                                                  />
+                                                                  <span className="text-purple-600 font-medium">{product.master_batch_id}</span>
+                                                                </div>
+                                                              </div>
+                                                            )}
+                                                            {product.raw_material && (
+                                                              <div><span className="font-medium text-gray-700">المادة:</span> <span className="text-green-600 font-medium">{product.raw_material}</span></div>
+                                                            )}
+                                                          </div>
+                                                        );
                                                       })()}
                                                     </div>
                                                   </div>
@@ -884,20 +908,11 @@ export default function Orders() {
                                                   <div className="w-full text-right py-2 min-w-[700px]">
                                                     <div className="font-semibold text-gray-900 mb-2 text-base leading-relaxed">
                                                       {(() => {
-                                                        let displayName = '';
+                                                        // البحث عن اسم المنتج من جدول items
+                                                        const item = items.find((item: any) => item.id === product.item_id);
+                                                        let displayName = item?.name_ar || item?.name || product?.size_caption || 'منتج غير محدد';
                                                         
-                                                        // Create base product name with better formatting
-                                                        if (product.size_caption) {
-                                                          displayName = product.size_caption;
-                                                        } else if (product.raw_material && product.width && product.thickness) {
-                                                          displayName = `${product.raw_material} - ${product.width} × ${product.thickness}`;
-                                                        } else if (product.raw_material) {
-                                                          displayName = product.raw_material;
-                                                        } else {
-                                                          displayName = 'منتج غير محدد';
-                                                        }
-                                                        
-                                                        // Add cutting length if available
+                                                        // إضافة طول القطع إذا كان متاحاً
                                                         if (product.cutting_length_cm) {
                                                           displayName += ` (طول القطع: ${product.cutting_length_cm} سم)`;
                                                         }
@@ -905,27 +920,62 @@ export default function Orders() {
                                                         return displayName;
                                                       })()} 
                                                     </div>
-                                                    <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                                                      <div className="space-y-1">
-                                                        {product.raw_material && (
-                                                          <div><span className="font-medium">المادة الخام:</span> {product.raw_material}</div>
+                                                    <div className="grid grid-cols-2 gap-6 text-sm text-gray-600">
+                                                      <div className="space-y-2">
+                                                        {product.thickness && (
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-700">السماكة:</span> 
+                                                            <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">{product.thickness} ميكرون</span>
+                                                          </div>
                                                         )}
                                                         {product.master_batch_id && (
-                                                          <div><span className="font-medium">الماستر باتش:</span> {product.master_batch_id}</div>
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-700">الماستر باتش:</span>
+                                                            <div className="flex items-center gap-1">
+                                                              <div 
+                                                                className="w-4 h-4 rounded-full border-2"
+                                                                style={{ 
+                                                                  backgroundColor: (() => {
+                                                                    const colorMap: { [key: string]: string } = {
+                                                                      'WHITE': '#FFFFFF', 'BLACK': '#000000', 'CLEAR': '#FFFFFF',
+                                                                      'RED': '#FF0000', 'BLUE': '#0000FF', 'GREEN': '#008000',
+                                                                      'YELLOW': '#FFFF00', 'ORANGE': '#FFA500', 'PURPLE': '#800080',
+                                                                      'PINK': '#FFC0CB', 'BROWN': '#A52A2A'
+                                                                    };
+                                                                    return colorMap[product.master_batch_id?.toUpperCase()] || '#808080';
+                                                                  })(),
+                                                                  borderColor: product.master_batch_id?.toUpperCase() === 'WHITE' ? '#CCCCCC' : 
+                                                                              (() => {
+                                                                                const colorMap: { [key: string]: string } = {
+                                                                                  'WHITE': '#FFFFFF', 'BLACK': '#000000', 'CLEAR': '#FFFFFF',
+                                                                                  'RED': '#FF0000', 'BLUE': '#0000FF', 'GREEN': '#008000',
+                                                                                  'YELLOW': '#FFFF00', 'ORANGE': '#FFA500', 'PURPLE': '#800080',
+                                                                                  'PINK': '#FFC0CB', 'BROWN': '#A52A2A'
+                                                                                };
+                                                                                return colorMap[product.master_batch_id?.toUpperCase()] || '#808080';
+                                                                              })()
+                                                                }}
+                                                              />
+                                                              <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded">{product.master_batch_id}</span>
+                                                            </div>
+                                                          </div>
                                                         )}
-                                                        {product.punching && (
-                                                          <div><span className="font-medium">التخريم:</span> {product.punching}</div>
+                                                        {product.raw_material && (
+                                                          <div className="flex items-center gap-2">
+                                                            <span className="font-medium text-gray-700">المادة الخام:</span> 
+                                                            <span className="text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded">{product.raw_material}</span>
+                                                          </div>
                                                         )}
                                                       </div>
-                                                      <div className="space-y-1">
-                                                        {product.thickness && (
-                                                          <div><span className="font-medium">السماكة:</span> {product.thickness} ميكرون</div>
-                                                        )}
+                                                      <div className="space-y-2">
                                                         {product.width && (
-                                                          <div><span className="font-medium">العرض:</span> {product.width} سم</div>
+                                                          <div><span className="font-medium text-gray-700">العرض:</span> <span className="text-orange-600 font-medium">{product.width} سم</span></div>
+                                                        )}
+                                                        {product.punching && (
+                                                          <div><span className="font-medium text-gray-700">التخريم:</span> <span className="text-teal-600 font-medium">{product.punching}</span></div>
                                                         )}
                                                         {product.cutting_unit && (
-                                                          <div><span className="font-medium">وحدة القطع:</span> {product.cutting_unit}</div>
+                                                          <div><span className="font-medium text-gray-700">وحدة القطع:</span> <span className="text-indigo-600 font-medium">{product.cutting_unit}</span></div>
                                                         )}
                                                       </div>
                                                     </div>
