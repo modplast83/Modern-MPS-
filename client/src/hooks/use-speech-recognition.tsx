@@ -120,16 +120,30 @@ export const useSpeechRecognition = (
   const initializeRecognition = useCallback(() => {
     if (!hasRecognitionSupport) return null;
 
-    const SpeechRecognitionConstructor = 
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    const recognition = new SpeechRecognitionConstructor();
-    
-    // Configure recognition
-    recognition.continuous = options.continuous ?? false;
-    recognition.interimResults = options.interimResults ?? true;
-    recognition.maxAlternatives = options.maxAlternatives ?? 1;
-    recognition.lang = getLanguageCode(options.language || 'ar-SA', options.dialect);
+    try {
+      const SpeechRecognitionConstructor = 
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognitionConstructor) return null;
+      
+      const recognition = new SpeechRecognitionConstructor();
+      
+      // Configure recognition
+      recognition.continuous = options.continuous ?? false;
+      recognition.interimResults = options.interimResults ?? true;
+      recognition.maxAlternatives = options.maxAlternatives ?? 1;
+      recognition.lang = getLanguageCode(options.language || 'ar-SA', options.dialect);
+      
+      return recognition;
+    } catch (e) {
+      console.warn('Failed to initialize speech recognition:', e);
+      return null;
+    }
+  }, [hasRecognitionSupport, options, getLanguageCode]);
+
+  const initializeRecognitionWithHandlers = useCallback(() => {
+    const recognition = initializeRecognition();
+    if (!recognition) return null;
 
     // Event handlers
     recognition.onstart = () => {
@@ -252,20 +266,22 @@ export const useSpeechRecognition = (
 
     try {
       if (!recognitionRef.current) {
-        recognitionRef.current = initializeRecognition();
+        recognitionRef.current = initializeRecognitionWithHandlers();
       }
       
       if (recognitionRef.current) {
         // Update language before starting
         recognitionRef.current.lang = getLanguageCode(options.language || 'ar-SA', options.dialect);
         recognitionRef.current.start();
+      } else {
+        setError('Failed to initialize speech recognition');
       }
     } catch (error) {
       console.error('Failed to start speech recognition:', error);
       setError('Failed to start speech recognition');
       setIsListening(false);
     }
-  }, [hasRecognitionSupport, isListening, initializeRecognition, getLanguageCode, options.language, options.dialect]);
+  }, [hasRecognitionSupport, isListening, initializeRecognitionWithHandlers, getLanguageCode, options.language, options.dialect]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
@@ -303,10 +319,14 @@ export const useSpeechRecognition = (
   // Update recognition when options change
   useEffect(() => {
     if (recognitionRef.current && hasRecognitionSupport) {
-      recognitionRef.current.continuous = options.continuous ?? false;
-      recognitionRef.current.interimResults = options.interimResults ?? true;
-      recognitionRef.current.maxAlternatives = options.maxAlternatives ?? 1;
-      recognitionRef.current.lang = getLanguageCode(options.language || 'ar-SA', options.dialect);
+      try {
+        recognitionRef.current.continuous = options.continuous ?? false;
+        recognitionRef.current.interimResults = options.interimResults ?? true;
+        recognitionRef.current.maxAlternatives = options.maxAlternatives ?? 1;
+        recognitionRef.current.lang = getLanguageCode(options.language || 'ar-SA', options.dialect);
+      } catch (e) {
+        console.warn('Failed to update recognition options:', e);
+      }
     }
   }, [options, hasRecognitionSupport, getLanguageCode]);
 
