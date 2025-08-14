@@ -78,7 +78,7 @@ export default function Definitions() {
     name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active'
   });
   const [userForm, setUserForm] = useState({
-    username: '', display_name: '', display_name_ar: '', role_id: '', section_id: 'none', status: 'active'
+    username: '', display_name: '', display_name_ar: '', role_id: 'none', section_id: 'none', status: 'active'
   });
 
   // Master Batch Colors
@@ -941,7 +941,7 @@ export default function Definitions() {
     });
     setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
     setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active' });
-    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: '', section_id: 'none', status: 'active' });
+    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: 'none', section_id: 'none', status: 'active' });
     setEditingItem(null);
   };
 
@@ -1877,7 +1877,7 @@ export default function Definitions() {
                                               username: user.username || '',
                                               display_name: user.display_name || '',
                                               display_name_ar: user.display_name_ar || '',
-                                              role_id: user.role_id ? `ROLE0${user.role_id}` : '',
+                                              role_id: user.role_id ? `ROLE0${user.role_id}` : 'none',
                                               section_id: user.section_id || 'none',
                                               status: user.status || 'active'
                                             });
@@ -3064,7 +3064,7 @@ export default function Definitions() {
                             <SelectValue placeholder="اختر الدور" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">بدون دور</SelectItem>
+                            <SelectItem value="none">بدون دور</SelectItem>
                             {Array.isArray(roles) && roles.map((role: any) => (
                               <SelectItem key={role.id} value={`ROLE0${role.id}`}>
                                 {role.name_ar || role.name}
