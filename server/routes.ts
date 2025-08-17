@@ -2758,6 +2758,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced batch import endpoint
+  app.post("/api/database/import/:tableName/batch", async (req, res) => {
+    try {
+      const tableName = req.params.tableName;
+      const { data, options } = req.body;
+      
+      if (!Array.isArray(data) || data.length === 0) {
+        return res.status(400).json({ message: "البيانات المرسلة غير صالحة" });
+      }
+
+      console.log(`Processing batch import for ${tableName}: ${data.length} records (Batch ${options?.batchNumber || 1}/${options?.totalBatches || 1})`);
+      
+      const results = {
+        successful: 0,
+        failed: 0,
+        errors: [] as string[],
+        warnings: [] as string[]
+      };
+
+      // Process each record in the batch
+      for (let i = 0; i < data.length; i++) {
+        const record = data[i];
+        
+        try {
+          // Validate and process the record based on table type
+          let processedRecord = { ...record };
+          
+          // Table-specific processing
+          if (tableName === 'customers') {
+            // Generate ID if not provided
+            if (!processedRecord.id) {
+              const existingCustomers = await storage.getCustomers();
+              const lastId = existingCustomers.length > 0 
+                ? Math.max(...existingCustomers.map(c => {
+                    const idNum = parseInt(c.id.replace('CID', ''));
+                    return isNaN(idNum) ? 0 : idNum;
+                  }))
+                : 0;
+              processedRecord.id = `CID${String(lastId + 1).padStart(4, '0')}`;
+            }
+            
+            // Validate using schema
+            const validatedRecord = insertCustomerSchema.parse(processedRecord);
+            await storage.createCustomer(validatedRecord);
+            
+          } else if (tableName === 'categories') {
+            // Generate ID if not provided
+            if (!processedRecord.id) {
+              const existingCategories = await storage.getCategories();
+              const lastId = existingCategories.length > 0 
+                ? Math.max(...existingCategories.map(c => {
+                    const idNum = parseInt(c.id.replace('CAT', ''));
+                    return isNaN(idNum) ? 0 : idNum;
+                  }))
+                : 0;
+              processedRecord.id = `CAT${String(lastId + 1).padStart(2, '0')}`;
+            }
+            
+            await storage.createCategory(processedRecord);
+            
+          } else if (tableName === 'sections') {
+            // Generate ID if not provided
+            if (!processedRecord.id) {
+              const existingSections = await storage.getSections();
+              const lastId = existingSections.length > 0 
+                ? Math.max(...existingSections.map(s => {
+                    const idNum = parseInt(s.id.replace('SEC', ''));
+                    return isNaN(idNum) ? 0 : idNum;
+                  }))
+                : 0;
+              processedRecord.id = `SEC${String(lastId + 1).padStart(2, '0')}`;
+            }
+            
+            await storage.createSection(processedRecord);
+            
+          } else if (tableName === 'items') {
+            // Generate ID if not provided
+            if (!processedRecord.id) {
+              const existingItems = await storage.getItems();
+              const lastId = existingItems.length > 0 
+                ? Math.max(...existingItems.map(i => {
+                    const idNum = parseInt(i.id.replace('ITM', ''));
+                    return isNaN(idNum) ? 0 : idNum;
+                  }))
+                : 0;
+              processedRecord.id = `ITM${String(lastId + 1).padStart(3, '0')}`;
+            }
+            
+            await storage.createItem(processedRecord);
+            
+          } else if (tableName === 'customer_products') {
+            // Auto-increment numeric ID
+            if (!processedRecord.id) {
+              const existingProducts = await storage.getCustomerProducts();
+              const lastId = existingProducts.length > 0 
+                ? Math.max(...existingProducts.map(p => p.id).filter(id => typeof id === 'number'))
+                : 0;
+              processedRecord.id = lastId + 1;
+            }
+            
+            // Validate using schema
+            const validatedRecord = insertCustomerProductSchema.parse(processedRecord);
+            await storage.createCustomerProduct(validatedRecord);
+            
+          } else if (tableName === 'users') {
+            // Auto-increment numeric ID
+            if (!processedRecord.id) {
+              const existingUsers = await storage.getUsers();
+              const lastId = existingUsers.length > 0 
+                ? Math.max(...existingUsers.map(u => u.id))
+                : 0;
+              processedRecord.id = lastId + 1;
+            }
+            
+            // Set default role if not provided
+            if (!processedRecord.role_id) {
+              processedRecord.role_id = 2; // Default user role
+            }
+            
+            // Validate using schema
+            const validatedRecord = insertUserSchema.parse(processedRecord);
+            await storage.createUser(validatedRecord);
+            
+          } else if (tableName === 'machines') {
+            // Generate ID if not provided
+            if (!processedRecord.id) {
+              const existingMachines = await storage.getMachines();
+              const lastId = existingMachines.length > 0 
+                ? Math.max(...existingMachines.map(m => {
+                    const idNum = parseInt(m.id.replace('MAC', ''));
+                    return isNaN(idNum) ? 0 : idNum;
+                  }))
+                : 0;
+              processedRecord.id = `MAC${String(lastId + 1).padStart(2, '0')}`;
+            }
+            
+            await storage.createMachine(processedRecord);
+            
+          } else if (tableName === 'locations') {
+            // Auto-increment numeric ID
+            if (!processedRecord.id) {
+              const existingLocations = await storage.getLocations();
+              const lastId = existingLocations.length > 0 
+                ? Math.max(...existingLocations.map(l => l.id))
+                : 0;
+              processedRecord.id = lastId + 1;
+            }
+            
+            // Validate using schema
+            const validatedRecord = insertLocationSchema.parse(processedRecord);
+            await storage.createLocation(validatedRecord);
+            
+          } else {
+            // Generic handling for other tables
+            await storage.importTableData(tableName, [record], 'json');
+          }
+          
+          results.successful++;
+          
+        } catch (error) {
+          results.failed++;
+          const errorMsg = `السجل ${i + 1}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`;
+          results.errors.push(errorMsg);
+          
+          if (!options?.continueOnError) {
+            // Stop processing if not continuing on error
+            break;
+          }
+        }
+      }
+
+      res.json({
+        successful: results.successful,
+        failed: results.failed,
+        errors: results.errors,
+        warnings: results.warnings,
+        batchNumber: options?.batchNumber || 1,
+        totalBatches: options?.totalBatches || 1
+      });
+      
+    } catch (error) {
+      console.error("Error in batch import:", error);
+      res.status(500).json({ 
+        message: "خطأ في معالجة الدفعة", 
+        error: error instanceof Error ? error.message : "خطأ غير معروف" 
+      });
+    }
+  });
+
   app.post("/api/database/optimize", async (req, res) => {
     try {
       const result = await storage.optimizeTables();

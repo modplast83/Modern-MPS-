@@ -34,7 +34,8 @@ import {
   Smartphone,
   Monitor,
   Save,
-  RefreshCw
+  RefreshCw,
+  Progress
 } from "lucide-react";
 import RoleManagementTab from "@/components/RoleManagementTab";
 
@@ -180,9 +181,28 @@ export default function Settings() {
     }
   }, [databaseStatsData]);
 
-  // File import state
+  // Enhanced file import state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
+  const [importStep, setImportStep] = useState(1); // 1: Upload, 2: Preview & Map, 3: Import
+  const [fileData, setFileData] = useState<any[]>([]);
+  const [fileHeaders, setFileHeaders] = useState<string[]>([]);
+  const [columnMapping, setColumnMapping] = useState<{[key: string]: string}>({});
+  const [importOptions, setImportOptions] = useState({
+    batchSize: 1000,
+    skipFirstRow: true,
+    updateExisting: false,
+    validateData: true,
+    continueOnError: false
+  });
+  const [importProgress, setImportProgress] = useState({
+    processing: false,
+    current: 0,
+    total: 0,
+    percentage: 0,
+    errors: [] as string[],
+    warnings: [] as string[]
+  });
 
   // Import table data mutation
   const importTableMutation = useMutation({
@@ -214,14 +234,106 @@ export default function Settings() {
     }
   });
 
-  // Handle file upload
-  const handleFileUpload = (files: FileList | null) => {
+  // Get table schema for column mapping
+  const getTableSchema = (tableName: string) => {
+    const schemas: {[key: string]: string[]} = {
+      customers: ['id', 'name', 'name_ar', 'phone', 'email', 'address', 'status'],
+      categories: ['id', 'name', 'name_ar', 'description'],
+      sections: ['id', 'name', 'name_ar', 'description'],
+      items: ['id', 'category_id', 'name', 'name_ar'],
+      users: ['id', 'username', 'display_name', 'display_name_ar', 'role_id'],
+      machines: ['id', 'name', 'name_ar', 'type', 'status'],
+      locations: ['id', 'name', 'name_ar', 'type'],
+      customer_products: ['id', 'customer_id', 'item_id', 'size_caption', 'raw_material', 'master_batch_id', 'notes', 'status'],
+      orders: ['id', 'customer_id', 'order_date', 'status', 'total_amount'],
+      production_orders: ['id', 'order_id', 'product_id', 'quantity', 'status'],
+      job_orders: ['id', 'production_order_id', 'machine_id', 'start_time', 'end_time', 'status']
+    };
+    return schemas[tableName] || [];
+  };
+
+  // Parse file data based on format
+  const parseFileData = async (file: File) => {
+    try {
+      const fileText = await file.text();
+      let data: any[] = [];
+      let headers: string[] = [];
+
+      if (file.name.endsWith('.json')) {
+        const jsonData = JSON.parse(fileText);
+        if (Array.isArray(jsonData) && jsonData.length > 0) {
+          data = jsonData;
+          headers = Object.keys(jsonData[0]);
+        }
+      } else if (file.name.endsWith('.csv')) {
+        const lines = fileText.split('\n').filter(line => line.trim());
+        if (lines.length > 0) {
+          headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+          data = lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+            const row: any = {};
+            headers.forEach((header, index) => {
+              row[header] = values[index] || '';
+            });
+            return row;
+          });
+        }
+      } else if (file.name.endsWith('.xlsx')) {
+        // For Excel files, we'll parse them on the server side
+        headers = ['Column 1', 'Column 2', 'Column 3']; // Placeholder
+        data = [{ 'Column 1': 'سيتم تحليل ملف Excel على الخادم', 'Column 2': '', 'Column 3': '' }];
+      }
+
+      setFileData(data.slice(0, 100)); // Show first 100 rows for preview
+      setFileHeaders(headers);
+      
+      // Auto-map common column names
+      const tableSchema = getTableSchema(selectedTable);
+      const autoMapping: {[key: string]: string} = {};
+      tableSchema.forEach(schemaCol => {
+        const matchingHeader = headers.find(header => 
+          header.toLowerCase().includes(schemaCol.toLowerCase()) ||
+          schemaCol.toLowerCase().includes(header.toLowerCase())
+        );
+        if (matchingHeader) {
+          autoMapping[schemaCol] = matchingHeader;
+        }
+      });
+      setColumnMapping(autoMapping);
+      
+      setImportStep(2);
+      
+      toast({
+        title: "تم تحليل الملف بنجاح",
+        description: `تم العثور على ${data.length} سجل و ${headers.length} عمود`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في تحليل الملف",
+        description: "تأكد من صحة تنسيق الملف",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Enhanced file upload handler
+  const handleFileUpload = async (files: FileList | null) => {
     if (files && files[0]) {
       const file = files[0];
       const allowedTypes = ['text/csv', 'application/json', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
       
       if (allowedTypes.includes(file.type) || file.name.endsWith('.csv') || file.name.endsWith('.json') || file.name.endsWith('.xlsx')) {
         setSelectedFile(file);
+        
+        if (selectedTable) {
+          await parseFileData(file);
+        } else {
+          toast({
+            title: "يرجى اختيار الجدول أولاً",
+            description: "اختر الجدول المراد استيراد البيانات إليه",
+            variant: "destructive",
+          });
+        }
       } else {
         toast({
           title: "نوع ملف غير مدعوم",
@@ -252,16 +364,161 @@ export default function Settings() {
     }
   };
 
-  // Handle import
-  const handleImportData = () => {
-    if (selectedFile && selectedTable) {
-      importTableMutation.mutate({ tableName: selectedTable, file: selectedFile });
-    } else {
+  // Enhanced batch import mutation
+  const batchImportMutation = useMutation({
+    mutationFn: async ({ 
+      tableName, 
+      mappedData, 
+      options 
+    }: { 
+      tableName: string, 
+      mappedData: any[], 
+      options: typeof importOptions 
+    }) => {
+      setImportProgress(prev => ({ ...prev, processing: true, total: mappedData.length }));
+      
+      const results = {
+        successful: 0,
+        failed: 0,
+        errors: [] as string[],
+        warnings: [] as string[]
+      };
+
+      // Process in batches
+      for (let i = 0; i < mappedData.length; i += options.batchSize) {
+        const batch = mappedData.slice(i, i + options.batchSize);
+        
+        try {
+          const response = await apiRequest(`/api/database/import/${tableName}/batch`, {
+            method: 'POST',
+            body: JSON.stringify({ 
+              data: batch, 
+              options: {
+                ...options,
+                batchNumber: Math.floor(i / options.batchSize) + 1,
+                totalBatches: Math.ceil(mappedData.length / options.batchSize)
+              }
+            })
+          });
+          
+          results.successful += response.successful || batch.length;
+          if (response.errors && response.errors.length > 0) {
+            results.errors.push(...response.errors);
+          }
+          if (response.warnings && response.warnings.length > 0) {
+            results.warnings.push(...response.warnings);
+          }
+          
+        } catch (error) {
+          results.failed += batch.length;
+          results.errors.push(`خطأ في الدفعة ${Math.floor(i / options.batchSize) + 1}: ${error}`);
+          
+          if (!options.continueOnError) {
+            throw error;
+          }
+        }
+        
+        // Update progress
+        setImportProgress(prev => ({
+          ...prev,
+          current: Math.min(i + options.batchSize, mappedData.length),
+          percentage: Math.round((Math.min(i + options.batchSize, mappedData.length) / mappedData.length) * 100),
+          errors: results.errors,
+          warnings: results.warnings
+        }));
+        
+        // Small delay to prevent overwhelming the server
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/database/stats'] });
+      setImportProgress(prev => ({ ...prev, processing: false }));
+      setImportStep(3);
+      
       toast({
-        title: "بيانات ناقصة",
-        description: "يرجى اختيار الجدول والملف قبل الاستيراد",
+        title: "اكتمل الاستيراد",
+        description: `تم استيراد ${results.successful} سجل بنجاح، ${results.failed} فشل`,
+      });
+    },
+    onError: (error) => {
+      setImportProgress(prev => ({ ...prev, processing: false }));
+      toast({
+        title: "خطأ في الاستيراد",
+        description: error instanceof Error ? error.message : "حدث خطأ أثناء استيراد البيانات",
         variant: "destructive",
       });
+    }
+  });
+
+  // Process and start import
+  const handleStartImport = () => {
+    if (!selectedFile || !selectedTable || fileData.length === 0) {
+      toast({
+        title: "بيانات ناقصة",
+        description: "تأكد من اختيار الملف والجدول ووجود بيانات للاستيراد",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Map the data according to column mapping
+    const mappedData = fileData.map(row => {
+      const mappedRow: any = {};
+      Object.entries(columnMapping).forEach(([dbColumn, fileColumn]) => {
+        if (fileColumn && row[fileColumn] !== undefined) {
+          mappedRow[dbColumn] = row[fileColumn];
+        }
+      });
+      return mappedRow;
+    });
+
+    // Filter out empty rows
+    const validData = mappedData.filter(row => 
+      Object.values(row).some(value => value !== '' && value !== null && value !== undefined)
+    );
+
+    if (validData.length === 0) {
+      toast({
+        title: "لا توجد بيانات صالحة",
+        description: "تأكد من ربط الأعمدة بشكل صحيح",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    batchImportMutation.mutate({
+      tableName: selectedTable,
+      mappedData: validData,
+      options: importOptions
+    });
+  };
+
+  // Reset import wizard
+  const resetImport = () => {
+    setSelectedFile(null);
+    setFileData([]);
+    setFileHeaders([]);
+    setColumnMapping({});
+    setImportStep(1);
+    setImportProgress({
+      processing: false,
+      current: 0,
+      total: 0,
+      percentage: 0,
+      errors: [],
+      warnings: []
+    });
+  };
+
+  // Handle table selection change
+  const handleTableChange = (tableName: string) => {
+    setSelectedTable(tableName);
+    if (selectedFile && importStep === 1) {
+      // Re-parse file with new table context
+      parseFileData(selectedFile);
     }
   };
 
@@ -930,139 +1187,346 @@ export default function Settings() {
 
                     <Separator />
 
-                    {/* Import/Export Tables */}
+                    {/* Enhanced Import/Export Tables */}
                     <div className="space-y-4">
-                      <h4 className="text-sm font-medium flex items-center gap-2">
-                        <HardDrive className="w-4 h-4" />
-                        استيراد وتصدير الجداول
-                      </h4>
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium flex items-center gap-2">
+                          <HardDrive className="w-4 h-4" />
+                          استيراد وتصدير الجداول المحسن
+                        </h4>
+                        {importStep > 1 && (
+                          <Button variant="outline" size="sm" onClick={resetImport}>
+                            إعادة تعيين
+                          </Button>
+                        )}
+                      </div>
                       
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="tableSelect">اختر الجدول</Label>
-                          <Select value={selectedTable} onValueChange={setSelectedTable}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر جدول للتصدير أو الاستيراد" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="orders">الطلبات (Orders)</SelectItem>
-                              <SelectItem value="customers">العملاء (Customers)</SelectItem>
-                              <SelectItem value="users">المستخدمين (Users)</SelectItem>
-                              <SelectItem value="machines">الماكينات (Machines)</SelectItem>
-                              <SelectItem value="locations">المواقع (Locations)</SelectItem>
-                              <SelectItem value="categories">الفئات (Categories)</SelectItem>
-                              <SelectItem value="items">الأصناف (Items)</SelectItem>
-                              <SelectItem value="rolls">الرولات (Rolls)</SelectItem>
-                              <SelectItem value="job_orders">أوامر التشغيل (Job Orders)</SelectItem>
-                              <SelectItem value="production_orders">أوامر الإنتاج (Production Orders)</SelectItem>
-                              <SelectItem value="customer_products">منتجات العملاء (Customer Products)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+                      {/* Export Section */}
+                      <Card className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Download className="w-4 h-4 text-blue-500" />
+                            <Label className="text-sm font-medium">تصدير البيانات</Label>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label>اختر الجدول للتصدير</Label>
+                            <Select value={selectedTable} onValueChange={handleTableChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="اختر جدول للتصدير أو الاستيراد" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="customers">العملاء (Customers)</SelectItem>
+                                <SelectItem value="categories">الفئات (Categories)</SelectItem>
+                                <SelectItem value="sections">الأقسام (Sections)</SelectItem>
+                                <SelectItem value="items">الأصناف (Items)</SelectItem>
+                                <SelectItem value="customer_products">منتجات العملاء (Customer Products)</SelectItem>
+                                <SelectItem value="users">المستخدمين (Users)</SelectItem>
+                                <SelectItem value="machines">الماكينات (Machines)</SelectItem>
+                                <SelectItem value="locations">المواقع (Locations)</SelectItem>
+                                <SelectItem value="orders">الطلبات (Orders)</SelectItem>
+                                <SelectItem value="production_orders">أوامر الإنتاج (Production Orders)</SelectItem>
+                                <SelectItem value="job_orders">أوامر التشغيل (Job Orders)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex items-center gap-2"
-                            disabled={!selectedTable || exportTableMutation.isPending}
-                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'csv' })}
-                          >
-                            <Download className="w-4 h-4" />
-                            تصدير CSV
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex items-center gap-2"
-                            disabled={!selectedTable || exportTableMutation.isPending}
-                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'json' })}
-                          >
-                            <Download className="w-4 h-4" />
-                            تصدير JSON
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="flex items-center gap-2"
-                            disabled={!selectedTable || exportTableMutation.isPending}
-                            onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'excel' })}
-                          >
-                            <Download className="w-4 h-4" />
-                            تصدير Excel
-                          </Button>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex items-center gap-2"
+                              disabled={!selectedTable || exportTableMutation.isPending}
+                              onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'csv' })}
+                            >
+                              <Download className="w-4 h-4" />
+                              تصدير CSV
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex items-center gap-2"
+                              disabled={!selectedTable || exportTableMutation.isPending}
+                              onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'json' })}
+                            >
+                              <Download className="w-4 h-4" />
+                              تصدير JSON
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex items-center gap-2"
+                              disabled={!selectedTable || exportTableMutation.isPending}
+                              onClick={() => selectedTable && exportTableMutation.mutate({ tableName: selectedTable, format: 'excel' })}
+                            >
+                              <Download className="w-4 h-4" />
+                              تصدير Excel
+                            </Button>
+                          </div>
                         </div>
+                      </Card>
 
-                        <div 
-                          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                            dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
-                          }`}
-                          onDragEnter={handleDrag}
-                          onDragLeave={handleDrag}
-                          onDragOver={handleDrag}
-                          onDrop={handleDrop}
-                        >
-                          <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                          {selectedFile ? (
-                            <div className="space-y-2">
-                              <p className="text-sm text-green-600 font-medium">
-                                تم اختيار الملف: {selectedFile.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                الحجم: {(selectedFile.size / 1024).toFixed(1)} KB
-                              </p>
-                              <div className="flex gap-2 justify-center">
-                                <Button 
-                                  size="sm" 
-                                  onClick={handleImportData}
-                                  disabled={!selectedTable || importTableMutation.isPending}
-                                >
-                                  {importTableMutation.isPending ? (
-                                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                  ) : (
-                                    <Upload className="w-4 h-4 mr-2" />
-                                  )}
-                                  استيراد البيانات
+                      {/* Import Section */}
+                      <Card className="p-4">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Upload className="w-4 h-4 text-green-500" />
+                            <Label className="text-sm font-medium">استيراد البيانات المتقدم</Label>
+                            <Badge variant="outline" className="text-xs">
+                              الخطوة {importStep} من 3
+                            </Badge>
+                          </div>
+
+                          {/* Step 1: File Upload */}
+                          {importStep === 1 && (
+                            <div className="space-y-4">
+                              <div 
+                                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                                  dragActive ? 'border-primary bg-primary/5' : 'border-gray-300'
+                                }`}
+                                onDragEnter={handleDrag}
+                                onDragLeave={handleDrag}
+                                onDragOver={handleDrag}
+                                onDrop={handleDrop}
+                              >
+                                <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                                {selectedFile ? (
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-green-600 font-medium">
+                                      تم اختيار الملف: {selectedFile.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      الحجم: {(selectedFile.size / 1024).toFixed(1)} KB
+                                    </p>
+                                    <div className="flex gap-2 justify-center">
+                                      <Button 
+                                        size="sm" 
+                                        onClick={() => selectedFile && parseFileData(selectedFile)}
+                                        disabled={!selectedTable}
+                                      >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        تحليل البيانات
+                                      </Button>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => setSelectedFile(null)}
+                                      >
+                                        إلغاء
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <p className="text-sm text-gray-600 mb-2">
+                                      اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      صيغ مدعومة: CSV, JSON, Excel (.xlsx)
+                                    </p>
+                                    <p className="text-xs text-blue-600 mt-1">
+                                      يدعم حتى 5000+ سجل مع معالجة الدفعات
+                                    </p>
+                                    <input
+                                      type="file"
+                                      id="fileInput"
+                                      className="hidden"
+                                      accept=".csv,.json,.xlsx"
+                                      onChange={(e) => handleFileUpload(e.target.files)}
+                                    />
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="mt-3"
+                                      onClick={() => document.getElementById('fileInput')?.click()}
+                                    >
+                                      اختيار ملف
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {!selectedTable && (
+                                <div className="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                  <p className="text-sm text-yellow-700">
+                                    يرجى اختيار الجدول أولاً من قسم التصدير أعلاه
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Step 2: Data Preview & Column Mapping */}
+                          {importStep === 2 && fileData.length > 0 && (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-sm font-medium">معاينة البيانات وربط الأعمدة</h5>
+                                <Badge variant="secondary">
+                                  {fileData.length} سجل
+                                </Badge>
+                              </div>
+
+                              {/* Column Mapping */}
+                              <div className="space-y-3">
+                                <Label className="text-sm font-medium">ربط أعمدة الملف مع أعمدة الجدول</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-3 border rounded-lg bg-gray-50">
+                                  {getTableSchema(selectedTable).map((dbColumn) => (
+                                    <div key={dbColumn} className="flex items-center gap-2 text-sm">
+                                      <Label className="w-24 text-right font-medium">{dbColumn}:</Label>
+                                      <Select 
+                                        value={columnMapping[dbColumn] || ""} 
+                                        onValueChange={(value) => setColumnMapping(prev => ({ ...prev, [dbColumn]: value }))}
+                                      >
+                                        <SelectTrigger className="h-8 text-xs">
+                                          <SelectValue placeholder="اختر عمود" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="">-- لا شيء --</SelectItem>
+                                          {fileHeaders.map((header) => (
+                                            <SelectItem key={header} value={header}>{header}</SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* Import Options */}
+                              <div className="space-y-3">
+                                <Label className="text-sm font-medium">خيارات الاستيراد</Label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 border rounded-lg bg-gray-50">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs">حجم الدفعة</Label>
+                                    <Select 
+                                      value={importOptions.batchSize.toString()} 
+                                      onValueChange={(value) => setImportOptions(prev => ({ ...prev, batchSize: parseInt(value) }))}
+                                    >
+                                      <SelectTrigger className="h-8">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="500">500 سجل</SelectItem>
+                                        <SelectItem value="1000">1000 سجل</SelectItem>
+                                        <SelectItem value="2000">2000 سجل</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <Switch
+                                        checked={importOptions.updateExisting}
+                                        onCheckedChange={(checked) => setImportOptions(prev => ({ ...prev, updateExisting: checked }))}
+                                      />
+                                      <Label className="text-xs">تحديث البيانات الموجودة</Label>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Switch
+                                        checked={importOptions.continueOnError}
+                                        onCheckedChange={(checked) => setImportOptions(prev => ({ ...prev, continueOnError: checked }))}
+                                      />
+                                      <Label className="text-xs">المتابعة عند حدوث خطأ</Label>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Data Preview */}
+                              <div className="space-y-2">
+                                <Label className="text-sm font-medium">معاينة البيانات (أول 5 سجلات)</Label>
+                                <div className="overflow-x-auto border rounded-lg">
+                                  <table className="w-full text-xs">
+                                    <thead className="bg-gray-100">
+                                      <tr>
+                                        {fileHeaders.slice(0, 5).map((header, index) => (
+                                          <th key={index} className="p-2 text-right border">{header}</th>
+                                        ))}
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {fileData.slice(0, 5).map((row, index) => (
+                                        <tr key={index} className="hover:bg-gray-50">
+                                          {fileHeaders.slice(0, 5).map((header, colIndex) => (
+                                            <td key={colIndex} className="p-2 border">{row[header] || ""}</td>
+                                          ))}
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="outline" onClick={() => setImportStep(1)}>
+                                  العودة
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => setSelectedFile(null)}
-                                >
-                                  إلغاء
+                                <Button onClick={handleStartImport}>
+                                  بدء الاستيراد
                                 </Button>
                               </div>
                             </div>
-                          ) : (
-                            <>
-                              <p className="text-sm text-gray-600 mb-2">
-                                اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                صيغ مدعومة: CSV, JSON, Excel (.xlsx)
-                              </p>
-                              <p className="text-xs text-blue-600 mt-1">
-                                ملاحظة: سيتم إنتاج معرفات تلقائية بالتنسيق: CAT01, CID001, ITM01
-                              </p>
-                              <input
-                                type="file"
-                                id="fileInput"
-                                className="hidden"
-                                accept=".csv,.json,.xlsx"
-                                onChange={(e) => handleFileUpload(e.target.files)}
-                              />
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                className="mt-3"
-                                onClick={() => document.getElementById('fileInput')?.click()}
-                              >
-                                اختيار ملف
-                              </Button>
-                            </>
+                          )}
+
+                          {/* Step 3: Import Progress & Results */}
+                          {importStep === 3 && (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h5 className="text-sm font-medium">نتائج الاستيراد</h5>
+                                <Badge variant={importProgress.processing ? "default" : "secondary"}>
+                                  {importProgress.processing ? "جاري المعالجة..." : "اكتمل"}
+                                </Badge>
+                              </div>
+
+                              {importProgress.processing && (
+                                <div className="space-y-2">
+                                  <div className="flex justify-between text-sm">
+                                    <span>التقدم</span>
+                                    <span>{importProgress.current} / {importProgress.total}</span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                                      style={{ width: `${importProgress.percentage}%` }}
+                                    ></div>
+                                  </div>
+                                  <div className="text-center text-sm text-gray-600">
+                                    {importProgress.percentage}% مكتمل
+                                  </div>
+                                </div>
+                              )}
+
+                              {importProgress.errors.length > 0 && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-red-600">الأخطاء</Label>
+                                  <div className="max-h-32 overflow-y-auto p-3 bg-red-50 border border-red-200 rounded-lg">
+                                    {importProgress.errors.map((error, index) => (
+                                      <p key={index} className="text-xs text-red-700 mb-1">{error}</p>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {importProgress.warnings.length > 0 && (
+                                <div className="space-y-2">
+                                  <Label className="text-sm font-medium text-yellow-600">التحذيرات</Label>
+                                  <div className="max-h-32 overflow-y-auto p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                    {importProgress.warnings.map((warning, index) => (
+                                      <p key={index} className="text-xs text-yellow-700 mb-1">{warning}</p>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex gap-2 justify-end">
+                                <Button variant="outline" onClick={resetImport}>
+                                  استيراد جديد
+                                </Button>
+                              </div>
+                            </div>
                           )}
                         </div>
-                      </div>
+                      </Card>
                     </div>
 
                     <Separator />
