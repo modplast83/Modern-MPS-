@@ -77,7 +77,33 @@ export const categories = pgTable('categories', {
   parent_id: varchar('parent_id', { length: 20 }),
 });
 
-// تم حذف جدول المنتجات واستبداله بجدول منتجات العملاء
+// 🛒 جدول منتجات العملاء (User's Custom Data Integration)
+export const customer_products = pgTable('customer_products', {
+  id: serial('id').primaryKey(),
+  customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
+  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
+  item_id: varchar('item_id', { length: 20 }).references(() => items.id),
+  size_caption: varchar('size_caption', { length: 50 }),
+  width: decimal('width', { precision: 8, scale: 2 }),
+  left_facing: decimal('left_facing', { precision: 8, scale: 2 }),
+  right_facing: decimal('right_facing', { precision: 8, scale: 2 }),
+  thickness: decimal('thickness', { precision: 6, scale: 3 }),
+  printing_cylinder: varchar('printing_cylinder', { length: 10 }), // 8" to 38" + 39"
+  cutting_length_cm: integer('cutting_length_cm'),
+  raw_material: varchar('raw_material', { length: 20 }), // HDPE-LDPE-Regrind
+  master_batch_id: varchar('master_batch_id', { length: 20 }), // CLEAR-WHITE-BLACK etc
+  is_printed: boolean('is_printed').default(false),
+  cutting_unit: varchar('cutting_unit', { length: 10 }), // KG-ROLL-PKT
+  punching: varchar('punching', { length: 20 }), // NON-T-Shirt-T-shirt\Hook-Banana
+  unit_weight_kg: decimal('unit_weight_kg', { precision: 8, scale: 3 }),
+  unit_quantity: integer('unit_quantity'),
+  package_weight_kg: decimal('package_weight_kg', { precision: 8, scale: 2 }),
+  cliche_front_design: text('cliche_front_design'), // Base64 encoded image data
+  cliche_back_design: text('cliche_back_design'), // Base64 encoded image data
+  notes: text('notes'),
+  status: varchar('status', { length: 20 }).default('active'),
+  created_at: timestamp('created_at').defaultNow(),
+});
 
 // 🏭 جدول المكائن
 export const machines = pgTable('machines', {
@@ -612,34 +638,6 @@ export const notification_templates = pgTable('notification_templates', {
   
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
-});
-
-// 🛒 جدول منتجات العملاء (User's Custom Data Integration)
-export const customer_products = pgTable('customer_products', {
-  id: serial('id').primaryKey(),
-  customer_id: varchar('customer_id', { length: 20 }).references(() => customers.id),
-  category_id: varchar('category_id', { length: 20 }).references(() => categories.id),
-  item_id: varchar('item_id', { length: 20 }).references(() => items.id),
-  size_caption: varchar('size_caption', { length: 50 }),
-  width: decimal('width', { precision: 8, scale: 2 }),
-  left_facing: decimal('left_facing', { precision: 8, scale: 2 }),
-  right_facing: decimal('right_facing', { precision: 8, scale: 2 }),
-  thickness: decimal('thickness', { precision: 6, scale: 3 }),
-  printing_cylinder: varchar('printing_cylinder', { length: 10 }), // 8" to 38" + 39"
-  cutting_length_cm: integer('cutting_length_cm'),
-  raw_material: varchar('raw_material', { length: 20 }), // HDPE-LDPE-Regrind
-  master_batch_id: varchar('master_batch_id', { length: 20 }), // CLEAR-WHITE-BLACK etc
-  is_printed: boolean('is_printed').default(false),
-  cutting_unit: varchar('cutting_unit', { length: 10 }), // KG-ROLL-PKT
-  punching: varchar('punching', { length: 20 }), // NON-T-Shirt-T-shirt\Hook-Banana
-  unit_weight_kg: decimal('unit_weight_kg', { precision: 8, scale: 3 }),
-  unit_quantity: integer('unit_quantity'),
-  package_weight_kg: decimal('package_weight_kg', { precision: 8, scale: 2 }),
-  cliche_front_design: text('cliche_front_design'), // Base64 encoded image data
-  cliche_back_design: text('cliche_back_design'), // Base64 encoded image data
-  notes: text('notes'),
-  status: varchar('status', { length: 20 }).default('active'),
-  created_at: timestamp('created_at').defaultNow(),
 });
 
 // Relations
