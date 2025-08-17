@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User, Copy } from "lucide-react";
+import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User, Copy, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatNumber } from "@/lib/formatNumber";
 
 export default function Definitions() {
@@ -30,6 +30,39 @@ export default function Definitions() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickSearch, setQuickSearch] = useState("");
+  
+  // Pagination states for each tab
+  const [currentPages, setCurrentPages] = useState({
+    customers: 1,
+    categories: 1,
+    sections: 1,
+    items: 1,
+    customerProducts: 1,
+    locations: 1,
+    machines: 1,
+    users: 1
+  });
+  const itemsPerPage = 25;
+
+  // Helper function to paginate data
+  const paginateData = (data: any[], page: number) => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // Helper function to get total pages
+  const getTotalPages = (dataLength: number) => {
+    return Math.ceil(dataLength / itemsPerPage);
+  };
+
+  // Helper function to update page for specific tab
+  const updatePage = (tab: string, page: number) => {
+    setCurrentPages(prev => ({
+      ...prev,
+      [tab]: page
+    }));
+  };
 
   // Form states
   const [customerForm, setCustomerForm] = useState({
@@ -570,6 +603,104 @@ const masterBatchColors = [
   const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'code', 'type']);
   const getFilteredUsers = () => filterData(users as any[], ['username', 'name', 'name_ar', 'email', 'role']);
 
+  // Pagination component
+  const PaginationComponent = ({ 
+    currentPage, 
+    totalPages, 
+    onPageChange, 
+    totalItems,
+    itemsPerPage
+  }: {
+    currentPage: number;
+    totalPages: number;
+    onPageChange: (page: number) => void;
+    totalItems: number;
+    itemsPerPage: number;
+  }) => {
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
+    return (
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+        <div className="flex flex-1 justify-between sm:hidden">
+          <Button
+            variant="outline"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            السابق
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            التالي
+          </Button>
+        </div>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm text-gray-700">
+              عرض <span className="font-medium">{startItem}</span> إلى{' '}
+              <span className="font-medium">{endItem}</span> من{' '}
+              <span className="font-medium">{totalItems}</span> نتيجة
+            </p>
+          </div>
+          <div>
+            <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="rounded-l-md"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  return page === 1 || 
+                         page === totalPages || 
+                         (page >= currentPage - 2 && page <= currentPage + 2);
+                })
+                .map((page, index, array) => {
+                  const showEllipsis = index > 0 && array[index - 1] !== page - 1;
+                  return (
+                    <div key={page}>
+                      {showEllipsis && (
+                        <span className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
+                          ...
+                        </span>
+                      )}
+                      <Button
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => onPageChange(page)}
+                        className="min-w-[40px]"
+                      >
+                        {page}
+                      </Button>
+                    </div>
+                  );
+                })}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="rounded-r-md"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </nav>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // All mutations for different entities
   
   // Customer mutations
@@ -1109,8 +1240,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredCustomers = getFilteredCustomers();
-                              return filteredCustomers.length > 0 ? (
-                                filteredCustomers.map((customer: any) => (
+                              const paginatedCustomers = paginateData(filteredCustomers, currentPages.customers);
+                              return paginatedCustomers.length > 0 ? (
+                                paginatedCustomers.map((customer: any) => (
                                   <tr key={customer.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {customer.id}
@@ -1168,6 +1300,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredCustomers = getFilteredCustomers();
+                          const totalPages = getTotalPages(filteredCustomers.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.customers}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('customers', page)}
+                                totalItems={filteredCustomers.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1210,8 +1358,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredCategories = getFilteredCategories();
-                              return filteredCategories.length > 0 ? (
-                                filteredCategories.map((category: any) => (
+                              const paginatedCategories = paginateData(filteredCategories, currentPages.categories);
+                              return paginatedCategories.length > 0 ? (
+                                paginatedCategories.map((category: any) => (
                                   <tr key={category.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {category.id}
@@ -1261,6 +1410,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredCategories = getFilteredCategories();
+                          const totalPages = getTotalPages(filteredCategories.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.categories}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('categories', page)}
+                                totalItems={filteredCategories.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1303,8 +1468,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredSections = getFilteredSections();
-                              return filteredSections.length > 0 ? (
-                                filteredSections.map((section: any) => (
+                              const paginatedSections = paginateData(filteredSections, currentPages.sections);
+                              return paginatedSections.length > 0 ? (
+                                paginatedSections.map((section: any) => (
                                   <tr key={section.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {section.id}
@@ -1350,6 +1516,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredSections = getFilteredSections();
+                          const totalPages = getTotalPages(filteredSections.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.sections}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('sections', page)}
+                                totalItems={filteredSections.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1392,8 +1574,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredItems = getFilteredItems();
-                              return filteredItems.length > 0 ? (
-                                filteredItems.map((item: any) => (
+                              const paginatedItems = paginateData(filteredItems, currentPages.items);
+                              return paginatedItems.length > 0 ? (
+                                paginatedItems.map((item: any) => (
                                   <tr key={item.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {item.id}
@@ -1441,6 +1624,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredItems = getFilteredItems();
+                          const totalPages = getTotalPages(filteredItems.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.items}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('items', page)}
+                                totalItems={filteredItems.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1489,8 +1688,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredCustomerProducts = getFilteredCustomerProducts();
-                              return filteredCustomerProducts.length > 0 ? (
-                                filteredCustomerProducts.map((product: any) => {
+                              const paginatedCustomerProducts = paginateData(filteredCustomerProducts, currentPages.customerProducts);
+                              return paginatedCustomerProducts.length > 0 ? (
+                                paginatedCustomerProducts.map((product: any) => {
                                   // Find customer details
                                   const customer = Array.isArray(customers) ? customers.find((c: any) => c.id === product.customer_id) : null;
                                   // Find item details
@@ -1628,6 +1828,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredCustomerProducts = getFilteredCustomerProducts();
+                          const totalPages = getTotalPages(filteredCustomerProducts.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.customerProducts}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('customerProducts', page)}
+                                totalItems={filteredCustomerProducts.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1670,8 +1886,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredLocations = getFilteredLocations();
-                              return filteredLocations.length > 0 ? (
-                                filteredLocations.map((location: any) => (
+                              const paginatedLocations = paginateData(filteredLocations, currentPages.locations);
+                              return paginatedLocations.length > 0 ? (
+                                paginatedLocations.map((location: any) => (
                                   <tr key={location.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {location.id}
@@ -1720,6 +1937,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredLocations = getFilteredLocations();
+                          const totalPages = getTotalPages(filteredLocations.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.locations}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('locations', page)}
+                                totalItems={filteredLocations.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1762,8 +1995,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredMachines = getFilteredMachines();
-                              return filteredMachines.length > 0 ? (
-                                filteredMachines.map((machine: any) => (
+                              const paginatedMachines = paginateData(filteredMachines, currentPages.machines);
+                              return paginatedMachines.length > 0 ? (
+                                paginatedMachines.map((machine: any) => (
                                   <tr key={machine.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {machine.id}
@@ -1811,6 +2045,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredMachines = getFilteredMachines();
+                          const totalPages = getTotalPages(filteredMachines.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.machines}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('machines', page)}
+                                totalItems={filteredMachines.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
@@ -1854,8 +2104,9 @@ const masterBatchColors = [
                           <tbody className="bg-white divide-y divide-gray-200">
                             {(() => {
                               const filteredUsers = getFilteredUsers();
-                              return filteredUsers.length > 0 ? (
-                                filteredUsers.map((user: any) => (
+                              const paginatedUsers = paginateData(filteredUsers, currentPages.users);
+                              return paginatedUsers.length > 0 ? (
+                                paginatedUsers.map((user: any) => (
                                   <tr key={user.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                       {user.id}
@@ -1933,6 +2184,22 @@ const masterBatchColors = [
                             })()}
                           </tbody>
                         </table>
+                        {(() => {
+                          const filteredUsers = getFilteredUsers();
+                          const totalPages = getTotalPages(filteredUsers.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.users}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('users', page)}
+                                totalItems={filteredUsers.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     )}
                   </CardContent>
