@@ -30,6 +30,8 @@ import {
   training_programs,
   training_materials,
   training_enrollments,
+  training_evaluations,
+  training_certificates,
   performance_reviews,
   performance_criteria,
   performance_ratings,
@@ -77,6 +79,10 @@ import {
   type InsertTrainingMaterial,
   type TrainingEnrollment,
   type InsertTrainingEnrollment,
+  type TrainingEvaluation,
+  type InsertTrainingEvaluation,
+  type TrainingCertificate,
+  type InsertTrainingCertificate,
   type PerformanceReview,
   type InsertPerformanceReview,
   type PerformanceCriteria,
@@ -258,6 +264,18 @@ export interface IStorage {
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
   updateTrainingEnrollment(id: number, updates: Partial<TrainingEnrollment>): Promise<TrainingEnrollment>;
   getEnrollmentsByProgram(programId: number): Promise<TrainingEnrollment[]>;
+  
+  // HR System - Training Evaluations
+  getTrainingEvaluations(employeeId?: number, programId?: number): Promise<TrainingEvaluation[]>;
+  createTrainingEvaluation(evaluation: InsertTrainingEvaluation): Promise<TrainingEvaluation>;
+  updateTrainingEvaluation(id: number, updates: Partial<TrainingEvaluation>): Promise<TrainingEvaluation>;
+  getTrainingEvaluationById(id: number): Promise<TrainingEvaluation | undefined>;
+  
+  // HR System - Training Certificates
+  getTrainingCertificates(employeeId?: number): Promise<TrainingCertificate[]>;
+  createTrainingCertificate(certificate: InsertTrainingCertificate): Promise<TrainingCertificate>;
+  updateTrainingCertificate(id: number, updates: Partial<TrainingCertificate>): Promise<TrainingCertificate>;
+  generateTrainingCertificate(enrollmentId: number): Promise<TrainingCertificate>;
   
   // HR System - Performance Reviews
   getPerformanceReviews(employeeId?: string): Promise<PerformanceReview[]>;
@@ -1220,6 +1238,94 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(training_enrollments)
       .where(eq(training_enrollments.program_id, programId))
       .orderBy(desc(training_enrollments.enrolled_date));
+  }
+
+  // Training Evaluations
+  async getTrainingEvaluations(employeeId?: number, programId?: number): Promise<TrainingEvaluation[]> {
+    let query = db.select().from(training_evaluations);
+    
+    if (employeeId && programId) {
+      return await query
+        .where(and(eq(training_evaluations.employee_id, employeeId), eq(training_evaluations.program_id, programId)))
+        .orderBy(desc(training_evaluations.evaluation_date));
+    } else if (employeeId) {
+      return await query
+        .where(eq(training_evaluations.employee_id, employeeId))
+        .orderBy(desc(training_evaluations.evaluation_date));
+    } else if (programId) {
+      return await query
+        .where(eq(training_evaluations.program_id, programId))
+        .orderBy(desc(training_evaluations.evaluation_date));
+    }
+    
+    return await query.orderBy(desc(training_evaluations.evaluation_date));
+  }
+
+  async createTrainingEvaluation(evaluation: InsertTrainingEvaluation): Promise<TrainingEvaluation> {
+    const [trainingEvaluation] = await db.insert(training_evaluations).values(evaluation).returning();
+    return trainingEvaluation;
+  }
+
+  async updateTrainingEvaluation(id: number, updates: Partial<TrainingEvaluation>): Promise<TrainingEvaluation> {
+    const [trainingEvaluation] = await db
+      .update(training_evaluations)
+      .set(updates)
+      .where(eq(training_evaluations.id, id))
+      .returning();
+    return trainingEvaluation;
+  }
+
+  async getTrainingEvaluationById(id: number): Promise<TrainingEvaluation | undefined> {
+    const [evaluation] = await db.select().from(training_evaluations).where(eq(training_evaluations.id, id));
+    return evaluation || undefined;
+  }
+
+  // Training Certificates
+  async getTrainingCertificates(employeeId?: number): Promise<TrainingCertificate[]> {
+    const query = db.select().from(training_certificates);
+    if (employeeId) {
+      return await query.where(eq(training_certificates.employee_id, employeeId)).orderBy(desc(training_certificates.issue_date));
+    }
+    return await query.orderBy(desc(training_certificates.issue_date));
+  }
+
+  async createTrainingCertificate(certificate: InsertTrainingCertificate): Promise<TrainingCertificate> {
+    const [trainingCertificate] = await db.insert(training_certificates).values(certificate).returning();
+    return trainingCertificate;
+  }
+
+  async updateTrainingCertificate(id: number, updates: Partial<TrainingCertificate>): Promise<TrainingCertificate> {
+    const [trainingCertificate] = await db
+      .update(training_certificates)
+      .set(updates)
+      .where(eq(training_certificates.id, id))
+      .returning();
+    return trainingCertificate;
+  }
+
+  async generateTrainingCertificate(enrollmentId: number): Promise<TrainingCertificate> {
+    // Get enrollment details
+    const [enrollment] = await db.select().from(training_enrollments).where(eq(training_enrollments.id, enrollmentId));
+    if (!enrollment) {
+      throw new Error('Enrollment not found');
+    }
+
+    // Generate certificate number
+    const certificateNumber = `CERT-${Date.now()}-${enrollmentId}`;
+    
+    // Create certificate
+    const certificate: InsertTrainingCertificate = {
+      enrollment_id: enrollmentId,
+      employee_id: enrollment.employee_id,
+      program_id: enrollment.program_id,
+      certificate_number: certificateNumber,
+      issue_date: new Date().toISOString().split('T')[0],
+      final_score: enrollment.final_score,
+      certificate_status: 'active',
+      issued_by: 1 // Default to admin user
+    };
+
+    return await this.createTrainingCertificate(certificate);
   }
 
   // Performance Reviews

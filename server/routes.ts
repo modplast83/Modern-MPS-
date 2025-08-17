@@ -2147,6 +2147,152 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Training Evaluations
+  app.get("/api/hr/training-evaluations", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const programId = req.query.program_id ? parseInt(req.query.program_id as string) : undefined;
+      const evaluations = await storage.getTrainingEvaluations(employeeId, programId);
+      res.json(evaluations);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب التقييمات التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-evaluations", async (req, res) => {
+    try {
+      const evaluation = await storage.createTrainingEvaluation(req.body);
+      res.json(evaluation);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء التقييم التدريبي" });
+    }
+  });
+
+  app.put("/api/hr/training-evaluations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const evaluation = await storage.updateTrainingEvaluation(id, req.body);
+      res.json(evaluation);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث التقييم التدريبي" });
+    }
+  });
+
+  app.get("/api/hr/training-evaluations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const evaluation = await storage.getTrainingEvaluationById(id);
+      if (evaluation) {
+        res.json(evaluation);
+      } else {
+        res.status(404).json({ message: "التقييم التدريبي غير موجود" });
+      }
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب التقييم التدريبي" });
+    }
+  });
+
+  // Training Certificates
+  app.get("/api/hr/training-certificates", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const certificates = await storage.getTrainingCertificates(employeeId);
+      res.json(certificates);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب الشهادات التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-certificates", async (req, res) => {
+    try {
+      const certificate = await storage.createTrainingCertificate(req.body);
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء الشهادة التدريبية" });
+    }
+  });
+
+  app.post("/api/hr/training-certificates/generate/:enrollmentId", async (req, res) => {
+    try {
+      const enrollmentId = parseInt(req.params.enrollmentId);
+      const certificate = await storage.generateTrainingCertificate(enrollmentId);
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إصدار الشهادة التدريبية" });
+    }
+  });
+
+  app.put("/api/hr/training-certificates/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const certificate = await storage.updateTrainingCertificate(id, req.body);
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث الشهادة التدريبية" });
+    }
+  });
+
+  // Training Evaluations
+  app.get("/api/hr/training-evaluations", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const programId = req.query.program_id ? parseInt(req.query.program_id as string) : undefined;
+      const evaluations = await storage.getTrainingEvaluations(employeeId, programId);
+      res.json(evaluations);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب تقييمات التدريب" });
+    }
+  });
+
+  app.post("/api/hr/training-evaluations", async (req, res) => {
+    try {
+      const evaluation = await storage.createTrainingEvaluation(req.body);
+      res.json(evaluation);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء تقييم التدريب" });
+    }
+  });
+
+  app.put("/api/hr/training-evaluations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const evaluation = await storage.updateTrainingEvaluation(id, req.body);
+      res.json(evaluation);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في تحديث تقييم التدريب" });
+    }
+  });
+
+  // Training Certificates
+  app.get("/api/hr/training-certificates", async (req, res) => {
+    try {
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      const certificates = await storage.getTrainingCertificates(employeeId);
+      res.json(certificates);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في جلب شهادات التدريب" });
+    }
+  });
+
+  app.post("/api/hr/training-certificates", async (req, res) => {
+    try {
+      const certificate = await storage.createTrainingCertificate(req.body);
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في إنشاء شهادة التدريب" });
+    }
+  });
+
+  app.get("/api/hr/training-certificates/:id/generate", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const certificate = await storage.generateTrainingCertificate(id);
+      res.json(certificate);
+    } catch (error) {
+      res.status(500).json({ message: "خطأ في توليد شهادة التدريب" });
+    }
+  });
+
   // Performance Reviews
   app.get("/api/hr/performance-reviews", async (req, res) => {
     try {

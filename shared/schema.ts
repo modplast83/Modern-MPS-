@@ -399,20 +399,24 @@ export const training_records = pgTable('training_records', {
   notes: text('notes'),
 });
 
-// 📚 جدول البرامج التدريبية
+// 📚 جدول البرامج التدريبية الميدانية
 export const training_programs = pgTable('training_programs', {
   id: serial('id').primaryKey(),
   title: varchar('title', { length: 200 }).notNull(),
   title_ar: varchar('title_ar', { length: 200 }),
   description: text('description'),
   description_ar: text('description_ar'),
-  category: varchar('category', { length: 50 }), // safety / technical / soft_skills / management
+  type: varchar('type', { length: 20 }).default('field'), // field / online (للمستقبل)
+  category: varchar('category', { length: 50 }), // general / department_specific
+  training_scope: varchar('training_scope', { length: 50 }), // safety / first_aid / fire_safety / technical / film / printing / cutting
   duration_hours: integer('duration_hours'),
   max_participants: integer('max_participants'),
+  location: varchar('location', { length: 200 }), // مكان التدريب الميداني
   prerequisites: text('prerequisites'),
   learning_objectives: json('learning_objectives').$type<string[]>(),
-  materials: json('materials').$type<{title: string, type: string, url?: string}[]>(),
-  instructor_id: varchar('instructor_id', { length: 20 }).references(() => users.id),
+  practical_requirements: text('practical_requirements'), // المتطلبات العملية للتدريب
+  instructor_id: integer('instructor_id').references(() => users.id),
+  department_id: varchar('department_id', { length: 20 }).references(() => sections.id), // للتدريبات الخاصة بالقسم
   status: varchar('status', { length: 20 }).default('active'), // active / inactive / draft
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
@@ -436,14 +440,59 @@ export const training_materials = pgTable('training_materials', {
 export const training_enrollments = pgTable('training_enrollments', {
   id: serial('id').primaryKey(),
   program_id: integer('program_id').references(() => training_programs.id),
-  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
+  employee_id: integer('employee_id').references(() => users.id),
   enrolled_date: timestamp('enrolled_date').defaultNow(),
-  start_date: date('start_date'),
-  completion_date: date('completion_date'),
-  status: varchar('status', { length: 20 }).default('enrolled'), // enrolled / in_progress / completed / cancelled
-  progress_percentage: integer('progress_percentage').default(0),
+  training_date: date('training_date'), // تاريخ التدريب الميداني
+  attendance_status: varchar('attendance_status', { length: 20 }).default('enrolled'), // enrolled / attended / absent / cancelled
+  completion_status: varchar('completion_status', { length: 20 }).default('not_started'), // not_started / completed / failed
+  attendance_notes: text('attendance_notes'), // ملاحظات الحضور
+  practical_performance: varchar('practical_performance', { length: 20 }), // excellent / good / fair / poor
   final_score: integer('final_score'), // 0-100
   certificate_issued: boolean('certificate_issued').default(false),
+  certificate_number: varchar('certificate_number', { length: 50 }),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// 📋 جدول تقييم التدريب الميداني
+export const training_evaluations = pgTable('training_evaluations', {
+  id: serial('id').primaryKey(),
+  enrollment_id: integer('enrollment_id').references(() => training_enrollments.id),
+  program_id: integer('program_id').references(() => training_programs.id),
+  employee_id: integer('employee_id').references(() => users.id),
+  evaluator_id: integer('evaluator_id').references(() => users.id),
+  evaluation_date: date('evaluation_date').notNull(),
+  
+  // معايير التقييم البسيطة
+  theoretical_understanding: integer('theoretical_understanding'), // 1-5 فهم نظري
+  practical_skills: integer('practical_skills'), // 1-5 مهارات عملية
+  safety_compliance: integer('safety_compliance'), // 1-5 الالتزام بالسلامة
+  teamwork: integer('teamwork'), // 1-5 العمل الجماعي
+  communication: integer('communication'), // 1-5 التواصل
+  
+  overall_rating: integer('overall_rating'), // 1-5 التقييم الإجمالي
+  strengths: text('strengths'), // نقاط القوة
+  areas_for_improvement: text('areas_for_improvement'), // مجالات التحسين
+  additional_notes: text('additional_notes'), // ملاحظات إضافية
+  recommendation: varchar('recommendation', { length: 20 }), // pass / fail / needs_retraining
+  
+  created_at: timestamp('created_at').defaultNow(),
+});
+
+// 🎖️ جدول شهادات التدريب
+export const training_certificates = pgTable('training_certificates', {
+  id: serial('id').primaryKey(),
+  enrollment_id: integer('enrollment_id').references(() => training_enrollments.id).unique(),
+  employee_id: integer('employee_id').references(() => users.id),
+  program_id: integer('program_id').references(() => training_programs.id),
+  certificate_number: varchar('certificate_number', { length: 50 }).unique().notNull(),
+  issue_date: date('issue_date').notNull(),
+  expiry_date: date('expiry_date'), // بعض الشهادات تنتهي صلاحيتها
+  final_score: integer('final_score'),
+  certificate_status: varchar('certificate_status', { length: 20 }).default('active'), // active / expired / revoked
+  issued_by: integer('issued_by').references(() => users.id),
+  certificate_file_url: varchar('certificate_file_url', { length: 500 }), // رابط ملف الشهادة
+  created_at: timestamp('created_at').defaultNow(),
 });
 
 // 📊 جدول تقييم الأداء
@@ -947,6 +996,18 @@ export const insertTrainingMaterialSchema = createInsertSchema(training_material
 export const insertTrainingEnrollmentSchema = createInsertSchema(training_enrollments).omit({
   id: true,
   enrolled_date: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertTrainingEvaluationSchema = createInsertSchema(training_evaluations).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertTrainingCertificateSchema = createInsertSchema(training_certificates).omit({
+  id: true,
+  created_at: true,
 });
 
 export const insertPerformanceReviewSchema = createInsertSchema(performance_reviews).omit({
@@ -1017,6 +1078,10 @@ export type TrainingMaterial = typeof training_materials.$inferSelect;
 export type InsertTrainingMaterial = z.infer<typeof insertTrainingMaterialSchema>;
 export type TrainingEnrollment = typeof training_enrollments.$inferSelect;
 export type InsertTrainingEnrollment = z.infer<typeof insertTrainingEnrollmentSchema>;
+export type TrainingEvaluation = typeof training_evaluations.$inferSelect;
+export type InsertTrainingEvaluation = z.infer<typeof insertTrainingEvaluationSchema>;
+export type TrainingCertificate = typeof training_certificates.$inferSelect;
+export type InsertTrainingCertificate = z.infer<typeof insertTrainingCertificateSchema>;
 export type PerformanceReview = typeof performance_reviews.$inferSelect;
 export type InsertPerformanceReview = z.infer<typeof insertPerformanceReviewSchema>;
 export type PerformanceCriteria = typeof performance_criteria.$inferSelect;
@@ -1049,9 +1114,25 @@ export const trainingMaterialsRelations = relations(training_materials, ({ one }
   program: one(training_programs, { fields: [training_materials.program_id], references: [training_programs.id] }),
 }));
 
-export const trainingEnrollmentsRelations = relations(training_enrollments, ({ one }) => ({
+export const trainingEnrollmentsRelations = relations(training_enrollments, ({ one, many }) => ({
   program: one(training_programs, { fields: [training_enrollments.program_id], references: [training_programs.id] }),
   employee: one(users, { fields: [training_enrollments.employee_id], references: [users.id] }),
+  evaluation: one(training_evaluations, { fields: [training_enrollments.id], references: [training_evaluations.enrollment_id] }),
+  certificate: one(training_certificates, { fields: [training_enrollments.id], references: [training_certificates.enrollment_id] }),
+}));
+
+export const trainingEvaluationsRelations = relations(training_evaluations, ({ one }) => ({
+  enrollment: one(training_enrollments, { fields: [training_evaluations.enrollment_id], references: [training_enrollments.id] }),
+  program: one(training_programs, { fields: [training_evaluations.program_id], references: [training_programs.id] }),
+  employee: one(users, { fields: [training_evaluations.employee_id], references: [users.id] }),
+  evaluator: one(users, { fields: [training_evaluations.evaluator_id], references: [users.id] }),
+}));
+
+export const trainingCertificatesRelations = relations(training_certificates, ({ one }) => ({
+  enrollment: one(training_enrollments, { fields: [training_certificates.enrollment_id], references: [training_enrollments.id] }),
+  program: one(training_programs, { fields: [training_certificates.program_id], references: [training_programs.id] }),
+  employee: one(users, { fields: [training_certificates.employee_id], references: [users.id] }),
+  issuer: one(users, { fields: [training_certificates.issued_by], references: [users.id] }),
 }));
 
 export const performanceReviewsRelations = relations(performance_reviews, ({ one, many }) => ({
