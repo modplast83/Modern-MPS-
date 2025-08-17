@@ -1973,6 +1973,9 @@ export class DatabaseStorage implements IStorage {
         case 'categories':
           data = await db.select().from(categories);
           break;
+        case 'sections':
+          data = await db.select().from(sections);
+          break;
         case 'items':
           data = await db.select().from(items);
           break;
@@ -1995,11 +1998,11 @@ export class DatabaseStorage implements IStorage {
       // Format data based on requested format
       switch (format) {
         case 'csv':
-          return this.convertToCSV(data);
+          return this.convertToCSV(data, tableName);
         case 'json':
           return JSON.stringify(data, null, 2);
         case 'excel':
-          return this.convertToExcel(data);
+          return this.convertToExcel(data, tableName);
         default:
           return JSON.stringify(data, null, 2);
       }
@@ -2284,10 +2287,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Helper methods for data conversion
-  private convertToCSV(data: any[]): Buffer {
+  private convertToCSV(data: any[], tableName?: string): Buffer {
     if (!data || data.length === 0) {
-      const noDataCsv = 'no_data\n"لا توجد بيانات في هذا الجدول"';
-      return Buffer.from('\uFEFF' + noDataCsv, 'utf8'); // BOM for UTF-8
+      // Create empty template with proper column headers
+      const templateHeaders = this.getTableTemplate(tableName);
+      const csvContent = templateHeaders.join(',');
+      return Buffer.from('\uFEFF' + csvContent, 'utf8'); // BOM for UTF-8
     }
     
     const headers = Object.keys(data[0]);
@@ -2307,17 +2312,35 @@ export class DatabaseStorage implements IStorage {
     return Buffer.from('\uFEFF' + csvContent, 'utf8');
   }
 
-  private convertToExcel(data: any[]): Buffer {
+  // Get template headers for empty tables
+  private getTableTemplate(tableName?: string): string[] {
+    const templates: Record<string, string[]> = {
+      customers: ['id', 'name', 'name_ar', 'contact_person', 'phone', 'email', 'address', 'country', 'type', 'payment_terms', 'credit_limit', 'sales_rep_id', 'status'],
+      categories: ['id', 'name', 'name_ar', 'description', 'description_ar', 'status'],
+      sections: ['id', 'name', 'name_ar', 'category_id', 'description', 'description_ar'],
+      items: ['id', 'name', 'name_ar', 'description', 'description_ar', 'category_id', 'section_id', 'unit', 'unit_ar', 'price', 'cost', 'status'],
+      customer_products: ['id', 'customer_id', 'item_id', 'customer_item_code', 'notes', 'notes_ar', 'specifications'],
+      users: ['id', 'username', 'password', 'display_name', 'email', 'role_id', 'status', 'department', 'position', 'phone'],
+      machines: ['id', 'name', 'name_ar', 'type', 'type_ar', 'status', 'location_id', 'description', 'description_ar'],
+      locations: ['id', 'name', 'name_ar', 'type', 'description', 'description_ar'],
+      orders: ['id', 'customer_id', 'order_number', 'order_date', 'delivery_date', 'status', 'total_amount', 'notes', 'created_by'],
+      production_orders: ['id', 'order_number', 'customer_id', 'item_id', 'quantity', 'status', 'created_date', 'due_date', 'notes'],
+      job_orders: ['id', 'production_order_id', 'machine_id', 'operator_id', 'status', 'start_time', 'end_time', 'quantity_produced']
+    };
+
+    return templates[tableName || ''] || ['id', 'name', 'description'];
+  }
+
+  private convertToExcel(data: any[], tableName?: string): Buffer {
+    // Use dynamic import for ES modules compatibility
     const XLSX = require('xlsx');
     
     if (!data || data.length === 0) {
-      // Create a simple worksheet with no data message
-      const ws = XLSX.utils.aoa_to_sheet([
-        ['no_data'],
-        ['لا توجد بيانات في هذا الجدول']
-      ]);
+      // Create empty template with proper column headers for the table
+      const templateHeaders = this.getTableTemplate(tableName);
+      const ws = XLSX.utils.aoa_to_sheet([templateHeaders]);
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'البيانات');
+      XLSX.utils.book_append_sheet(wb, ws, 'قالب_البيانات');
       return Buffer.from(XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' }));
     }
     
