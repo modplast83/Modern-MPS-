@@ -594,14 +594,46 @@ const masterBatchColors = [
   };
 
   // Specific filter functions
-  const getFilteredCustomers = () => filterData(customers as any[], ['name', 'name_ar', 'phone', 'email', 'address']);
-  const getFilteredSections = () => filterData(sections as any[], ['name', 'name_ar', 'description']);
-  const getFilteredCategories = () => filterData(categories as any[], ['name', 'name_ar', 'code', 'description']);
-  const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'code']);
-  const getFilteredCustomerProducts = () => filterData(customerProducts as any[], ['customer_code', 'customer_name']);
-  const getFilteredLocations = () => filterData(locations as any[], ['name', 'name_ar', 'code', 'description']);
-  const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'code', 'type']);
-  const getFilteredUsers = () => filterData(users as any[], ['username', 'name', 'name_ar', 'email', 'role']);
+  const getFilteredCustomers = () => filterData(customers as any[], ['name', 'name_ar', 'phone', 'email', 'address', 'id']);
+  const getFilteredSections = () => filterData(sections as any[], ['name', 'name_ar', 'description', 'id']);
+  const getFilteredCategories = () => filterData(categories as any[], ['name', 'name_ar', 'description', 'id']);
+  const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'category_id', 'id']);
+  const getFilteredCustomerProducts = () => {
+    const filtered = customerProducts.filter((product: any) => {
+      // Status filter
+      const statusMatch = statusFilter === "all" || 
+        (statusFilter === "active" && product.status === "active") ||
+        (statusFilter === "inactive" && product.status === "inactive");
+      
+      // Search filter - enhanced for customer products
+      const searchMatch = !quickSearch || [
+        product.size_caption,
+        product.raw_material,
+        product.master_batch_id,
+        product.notes,
+        product.id,
+        // Search in related customer name
+        customers.find((c: any) => c.id === product.customer_id)?.name_ar,
+        customers.find((c: any) => c.id === product.customer_id)?.name,
+        // Search in related item name
+        items.find((i: any) => i.id === product.item_id)?.name_ar,
+        items.find((i: any) => i.id === product.item_id)?.name
+      ].some((field: any) => {
+        if (field === null || field === undefined) return false;
+        return field.toString().toLowerCase().includes(quickSearch.toLowerCase());
+      });
+      
+      return statusMatch && searchMatch;
+    }).sort((a, b) => {
+      const aId = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) || 0 : (a.id || 0);
+      const bId = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) || 0 : (b.id || 0);
+      return aId - bId;
+    });
+    return filtered;
+  };
+  const getFilteredLocations = () => filterData(locations as any[], ['name', 'name_ar', 'type', 'id']);
+  const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'type', 'id']);
+  const getFilteredUsers = () => filterData(users as any[], ['username', 'display_name', 'display_name_ar', 'id']);
 
   // Pagination component
   const PaginationComponent = ({ 
