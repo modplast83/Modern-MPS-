@@ -177,33 +177,38 @@ export default function FieldTrainingPrograms() {
   // Queries
   const { data: programs = [], isLoading: programsLoading } = useQuery<TrainingProgram[]>({
     queryKey: ['/api/hr/training-programs'],
+    enabled: false, // Disable for now to test
     initialData: []
   });
 
   const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<TrainingEnrollment[]>({
     queryKey: ['/api/hr/training-enrollments'],
+    enabled: false, // Disable for now to test
     initialData: []
   });
 
   const { data: evaluations = [], isLoading: evaluationsLoading } = useQuery<TrainingEvaluation[]>({
     queryKey: ['/api/hr/training-evaluations'],
+    enabled: false, // Disable for now to test
     initialData: []
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ['/api/users'],
+    enabled: false, // Disable for now to test
     initialData: []
   });
 
   const { data: sections = [] } = useQuery({
     queryKey: ['/api/sections'],
+    enabled: false, // Disable for now to test
     initialData: []
   });
 
   // Mutations
   const createProgramMutation = useMutation({
     mutationFn: (data: z.infer<typeof trainingProgramSchema>) => 
-      apiRequest('/api/hr/training-programs', 'POST', data),
+      apiRequest('/api/hr/training-programs', { method: 'POST', body: data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hr/training-programs'] });
       setIsCreateProgramOpen(false);
@@ -217,10 +222,13 @@ export default function FieldTrainingPrograms() {
 
   const createEnrollmentMutation = useMutation({
     mutationFn: (data: any) => 
-      apiRequest('/api/hr/training-enrollments', 'POST', {
-        ...data,
-        program_id: parseInt(data.program_id),
-        employee_id: parseInt(data.employee_id)
+      apiRequest('/api/hr/training-enrollments', { 
+        method: 'POST', 
+        body: {
+          ...data,
+          program_id: parseInt(data.program_id),
+          employee_id: parseInt(data.employee_id)
+        }
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hr/training-enrollments'] });
@@ -254,7 +262,7 @@ export default function FieldTrainingPrograms() {
           parseInt(data.communication)
         ) / 5 * 10) / 10
       };
-      return apiRequest('/api/hr/training-evaluations', 'POST', processedData);
+      return apiRequest('/api/hr/training-evaluations', { method: 'POST', body: processedData });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hr/training-evaluations'] });
@@ -741,7 +749,7 @@ export default function FieldTrainingPrograms() {
                                 <SelectValue placeholder="اختر برنامج التدريب" />
                               </SelectTrigger>
                               <SelectContent>
-                                {programs.filter(program => program && program.id).map((program) => (
+                                {programs.filter(program => program && program.id && program.id.toString().trim() !== '').map((program) => (
                                   <SelectItem key={program.id} value={program.id.toString()}>
                                     {program.title_ar || program.title}
                                   </SelectItem>
@@ -766,7 +774,7 @@ export default function FieldTrainingPrograms() {
                                 <SelectValue placeholder="اختر الموظف" />
                               </SelectTrigger>
                               <SelectContent>
-                                {users.filter((user: any) => user && user.id).map((user: any) => (
+                                {users.filter((user: any) => user && user.id && user.id.toString().trim() !== '').map((user: any) => (
                                   <SelectItem key={user.id} value={user.id.toString()}>
                                     {user.display_name_ar || user.display_name || user.username}
                                   </SelectItem>
