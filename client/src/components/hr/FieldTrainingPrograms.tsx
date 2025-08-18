@@ -55,23 +55,23 @@ const trainingProgramSchema = z.object({
 });
 
 const enrollmentSchema = z.object({
-  program_id: z.number(),
-  employee_id: z.number(),
+  program_id: z.string().min(1, "برنامج التدريب مطلوب"),
+  employee_id: z.string().min(1, "الموظف مطلوب"),
   training_date: z.string().min(1, "تاريخ التدريب مطلوب"),
   attendance_notes: z.string().optional()
 });
 
 const evaluationSchema = z.object({
-  enrollment_id: z.number(),
-  program_id: z.number(),
-  employee_id: z.number(),
-  evaluator_id: z.number(),
+  enrollment_id: z.string().min(1, "التسجيل مطلوب"),
+  program_id: z.string().min(1, "البرنامج مطلوب"),
+  employee_id: z.string().min(1, "الموظف مطلوب"),
+  evaluator_id: z.string().default("1"),
   evaluation_date: z.string(),
-  theoretical_understanding: z.number().min(1).max(5),
-  practical_skills: z.number().min(1).max(5),
-  safety_compliance: z.number().min(1).max(5),
-  teamwork: z.number().min(1).max(5),
-  communication: z.number().min(1).max(5),
+  theoretical_understanding: z.string().min(1, "الفهم النظري مطلوب"),
+  practical_skills: z.string().min(1, "المهارات العملية مطلوبة"),
+  safety_compliance: z.string().min(1, "الالتزام بالسلامة مطلوب"),
+  teamwork: z.string().min(1, "العمل الجماعي مطلوب"),
+  communication: z.string().min(1, "التواصل مطلوب"),
   strengths: z.string().optional(),
   areas_for_improvement: z.string().optional(),
   additional_notes: z.string().optional(),
@@ -132,11 +132,11 @@ interface TrainingEvaluation {
 }
 
 export default function FieldTrainingPrograms() {
-  const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [selectedView, setSelectedView] = useState<'programs' | 'enrollments' | 'evaluations'>('programs');
   const [isCreateProgramOpen, setIsCreateProgramOpen] = useState(false);
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
+  const [selectedEnrollment, setSelectedEnrollment] = useState<TrainingEnrollment | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -164,12 +164,13 @@ export default function FieldTrainingPrograms() {
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
       evaluation_date: new Date().toISOString().split('T')[0],
-      theoretical_understanding: 3,
-      practical_skills: 3,
-      safety_compliance: 3,
-      teamwork: 3,
-      communication: 3,
-      recommendation: 'pass'
+      theoretical_understanding: "3",
+      practical_skills: "3",
+      safety_compliance: "3",
+      teamwork: "3",
+      communication: "3",
+      recommendation: 'pass',
+      evaluator_id: "1"
     }
   });
 
@@ -215,8 +216,12 @@ export default function FieldTrainingPrograms() {
   });
 
   const createEnrollmentMutation = useMutation({
-    mutationFn: (data: z.infer<typeof enrollmentSchema>) => 
-      apiRequest('/api/hr/training-enrollments', 'POST', data),
+    mutationFn: (data: any) => 
+      apiRequest('/api/hr/training-enrollments', 'POST', {
+        ...data,
+        program_id: parseInt(data.program_id),
+        employee_id: parseInt(data.employee_id)
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hr/training-enrollments'] });
       setIsEnrollmentOpen(false);
@@ -229,8 +234,28 @@ export default function FieldTrainingPrograms() {
   });
 
   const createEvaluationMutation = useMutation({
-    mutationFn: (data: z.infer<typeof evaluationSchema>) => 
-      apiRequest('/api/hr/training-evaluations', 'POST', data),
+    mutationFn: (data: any) => {
+      const processedData = {
+        ...data,
+        enrollment_id: parseInt(data.enrollment_id),
+        program_id: parseInt(data.program_id),
+        employee_id: parseInt(data.employee_id),
+        evaluator_id: parseInt(data.evaluator_id),
+        theoretical_understanding: parseInt(data.theoretical_understanding),
+        practical_skills: parseInt(data.practical_skills),
+        safety_compliance: parseInt(data.safety_compliance),
+        teamwork: parseInt(data.teamwork),
+        communication: parseInt(data.communication),
+        overall_rating: Math.round((
+          parseInt(data.theoretical_understanding) +
+          parseInt(data.practical_skills) +
+          parseInt(data.safety_compliance) +
+          parseInt(data.teamwork) +
+          parseInt(data.communication)
+        ) / 5 * 10) / 10
+      };
+      return apiRequest('/api/hr/training-evaluations', 'POST', processedData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/hr/training-evaluations'] });
       setIsEvaluationOpen(false);
@@ -370,21 +395,15 @@ export default function FieldTrainingPrograms() {
   };
 
   const onCreateEvaluation = async (data: z.infer<typeof evaluationSchema>) => {
-    // Calculate overall rating
-    const overallRating = Math.round((
-      data.theoretical_understanding +
-      data.practical_skills +
-      data.safety_compliance +
-      data.teamwork +
-      data.communication
-    ) / 5 * 10) / 10;
+    await createEvaluationMutation.mutateAsync(data);
+  };
 
-    const evaluationData = {
-      ...data,
-      overall_rating: overallRating
-    };
-
-    await createEvaluationMutation.mutateAsync(evaluationData);
+  const openEvaluationDialog = (enrollment: TrainingEnrollment) => {
+    setSelectedEnrollment(enrollment);
+    evaluationForm.setValue('enrollment_id', enrollment.id.toString());
+    evaluationForm.setValue('program_id', enrollment.program_id.toString());
+    evaluationForm.setValue('employee_id', enrollment.employee_id.toString());
+    setIsEvaluationOpen(true);
   };
 
   if (programsLoading) {
@@ -461,7 +480,7 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>فئة التدريب</FormLabel>
                         <FormControl>
-                          <Select {...field} onValueChange={field.onChange}>
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger data-testid="select-program-category">
                               <SelectValue />
                             </SelectTrigger>
@@ -482,7 +501,7 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>نوع التدريب</FormLabel>
                         <FormControl>
-                          <Select {...field} onValueChange={field.onChange}>
+                          <Select value={field.value} onValueChange={field.onChange}>
                             <SelectTrigger data-testid="select-program-scope">
                               <SelectValue />
                             </SelectTrigger>
@@ -554,61 +573,6 @@ export default function FieldTrainingPrograms() {
                     )}
                   />
                 </div>
-
-                {programForm.watch('category') === 'department_specific' && (
-                  <FormField
-                    control={programForm.control}
-                    name="department_id"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>القسم</FormLabel>
-                        <FormControl>
-                          <Select {...field} onValueChange={field.onChange}>
-                            <SelectTrigger data-testid="select-program-department">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {sections.map((section: any) => (
-                                <SelectItem key={section.id} value={section.id}>
-                                  {section.name_ar || section.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
-
-                <FormField
-                  control={programForm.control}
-                  name="description_ar"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>وصف التدريب</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-program-description" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={programForm.control}
-                  name="practical_requirements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>المتطلبات العملية</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={2} data-testid="textarea-program-requirements" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <div className="flex justify-end gap-2">
                   <Button 
@@ -720,83 +684,6 @@ export default function FieldTrainingPrograms() {
                   </div>
                   
                   <div className="flex items-center gap-1">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" data-testid={`button-enroll-${program.id}`}>
-                          <Users className="w-4 h-4" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent dir="rtl">
-                        <DialogHeader>
-                          <DialogTitle>تسجيل موظف في التدريب</DialogTitle>
-                        </DialogHeader>
-                        <Form {...enrollmentForm}>
-                          <form onSubmit={enrollmentForm.handleSubmit(onCreateEnrollment)} className="space-y-4">
-                            <input type="hidden" {...enrollmentForm.register('program_id')} value={program.id} />
-                            
-                            <FormField
-                              control={enrollmentForm.control}
-                              name="employee_id"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>الموظف</FormLabel>
-                                  <FormControl>
-                                    <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                      <SelectTrigger data-testid="select-employee">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {users.map((user: any) => (
-                                          <SelectItem key={user.id} value={user.id.toString()}>
-                                            {user.display_name_ar || user.display_name || user.username}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={enrollmentForm.control}
-                              name="training_date"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>تاريخ التدريب</FormLabel>
-                                  <FormControl>
-                                    <Input type="date" {...field} data-testid="input-training-date" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <FormField
-                              control={enrollmentForm.control}
-                              name="attendance_notes"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel>ملاحظات</FormLabel>
-                                  <FormControl>
-                                    <Textarea {...field} rows={2} data-testid="textarea-attendance-notes" />
-                                  </FormControl>
-                                  <FormMessage />
-                                </FormItem>
-                              )}
-                            />
-
-                            <div className="flex justify-end gap-2">
-                              <Button type="submit" disabled={createEnrollmentMutation.isPending} data-testid="button-save-enrollment">
-                                {createEnrollmentMutation.isPending ? "جاري الحفظ..." : "تسجيل"}
-                              </Button>
-                            </div>
-                          </form>
-                        </Form>
-                      </DialogContent>
-                    </Dialog>
-                    
                     <Button size="sm" variant="outline" data-testid={`button-view-${program.id}`}>
                       <Eye className="w-4 h-4" />
                     </Button>
@@ -849,12 +736,12 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>برنامج التدريب</FormLabel>
                           <FormControl>
-                            <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <Select value={field.value} onValueChange={field.onChange}>
                               <SelectTrigger data-testid="select-training-program">
-                                <SelectValue />
+                                <SelectValue placeholder="اختر برنامج التدريب" />
                               </SelectTrigger>
                               <SelectContent>
-                                {programs.map((program) => (
+                                {programs.filter(program => program && program.id).map((program) => (
                                   <SelectItem key={program.id} value={program.id.toString()}>
                                     {program.title_ar || program.title}
                                   </SelectItem>
@@ -874,12 +761,12 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>الموظف</FormLabel>
                           <FormControl>
-                            <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <Select value={field.value} onValueChange={field.onChange}>
                               <SelectTrigger data-testid="select-enrollment-employee">
-                                <SelectValue />
+                                <SelectValue placeholder="اختر الموظف" />
                               </SelectTrigger>
                               <SelectContent>
-                                {users.map((user: any) => (
+                                {users.filter((user: any) => user && user.id).map((user: any) => (
                                   <SelectItem key={user.id} value={user.id.toString()}>
                                     {user.display_name_ar || user.display_name || user.username}
                                   </SelectItem>
@@ -961,229 +848,14 @@ export default function FieldTrainingPrograms() {
                         </Badge>
                       )}
                       
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button size="sm" variant="outline" data-testid={`button-evaluate-${enrollment.id}`}>
-                            <Star className="w-4 h-4" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-3xl" dir="rtl">
-                          <DialogHeader>
-                            <DialogTitle>تقييم التدريب الميداني</DialogTitle>
-                          </DialogHeader>
-                          <Form {...evaluationForm}>
-                            <form onSubmit={evaluationForm.handleSubmit(onCreateEvaluation)} className="space-y-4">
-                              <input type="hidden" {...evaluationForm.register('enrollment_id')} value={enrollment.id} />
-                              <input type="hidden" {...evaluationForm.register('program_id')} value={enrollment.program_id} />
-                              <input type="hidden" {...evaluationForm.register('employee_id')} value={enrollment.employee_id} />
-                              <input type="hidden" {...evaluationForm.register('evaluator_id')} value={1} />
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                  control={evaluationForm.control}
-                                  name="evaluation_date"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>تاريخ التقييم</FormLabel>
-                                      <FormControl>
-                                        <Input type="date" {...field} data-testid="input-evaluation-date" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={evaluationForm.control}
-                                  name="recommendation"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>التوصية</FormLabel>
-                                      <FormControl>
-                                        <Select {...field} onValueChange={field.onChange}>
-                                          <SelectTrigger data-testid="select-recommendation">
-                                            <SelectValue />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            <SelectItem value="pass">نجح</SelectItem>
-                                            <SelectItem value="fail">رسب</SelectItem>
-                                            <SelectItem value="needs_retraining">يحتاج إعادة تدريب</SelectItem>
-                                          </SelectContent>
-                                        </Select>
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <div className="space-y-4">
-                                <h4 className="font-medium">معايير التقييم (1-5)</h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                  <FormField
-                                    control={evaluationForm.control}
-                                    name="theoretical_understanding"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>الفهم النظري</FormLabel>
-                                        <FormControl>
-                                          <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                            <SelectTrigger data-testid="select-theoretical">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[1,2,3,4,5].map(num => (
-                                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={evaluationForm.control}
-                                    name="practical_skills"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>المهارات العملية</FormLabel>
-                                        <FormControl>
-                                          <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                            <SelectTrigger data-testid="select-practical">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[1,2,3,4,5].map(num => (
-                                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={evaluationForm.control}
-                                    name="safety_compliance"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>الالتزام بالسلامة</FormLabel>
-                                        <FormControl>
-                                          <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                            <SelectTrigger data-testid="select-safety">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[1,2,3,4,5].map(num => (
-                                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={evaluationForm.control}
-                                    name="teamwork"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>العمل الجماعي</FormLabel>
-                                        <FormControl>
-                                          <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                            <SelectTrigger data-testid="select-teamwork">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[1,2,3,4,5].map(num => (
-                                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                  <FormField
-                                    control={evaluationForm.control}
-                                    name="communication"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>التواصل</FormLabel>
-                                        <FormControl>
-                                          <Select {...field} onValueChange={(value) => field.onChange(parseInt(value))}>
-                                            <SelectTrigger data-testid="select-communication">
-                                              <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                              {[1,2,3,4,5].map(num => (
-                                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
-                                              ))}
-                                            </SelectContent>
-                                          </Select>
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-4">
-                                <FormField
-                                  control={evaluationForm.control}
-                                  name="strengths"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>نقاط القوة</FormLabel>
-                                      <FormControl>
-                                        <Textarea {...field} rows={3} data-testid="textarea-strengths" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                                <FormField
-                                  control={evaluationForm.control}
-                                  name="areas_for_improvement"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>مجالات التحسين</FormLabel>
-                                      <FormControl>
-                                        <Textarea {...field} rows={3} data-testid="textarea-improvements" />
-                                      </FormControl>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-
-                              <FormField
-                                control={evaluationForm.control}
-                                name="additional_notes"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel>ملاحظات إضافية</FormLabel>
-                                    <FormControl>
-                                      <Textarea {...field} rows={2} data-testid="textarea-additional-notes" />
-                                    </FormControl>
-                                    <FormMessage />
-                                  </FormItem>
-                                )}
-                              />
-
-                              <div className="flex justify-end gap-2">
-                                <Button type="submit" disabled={createEvaluationMutation.isPending} data-testid="button-save-evaluation">
-                                  {createEvaluationMutation.isPending ? "جاري الحفظ..." : "حفظ التقييم"}
-                                </Button>
-                              </div>
-                            </form>
-                          </Form>
-                        </DialogContent>
-                      </Dialog>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => openEvaluationDialog(enrollment)}
+                        data-testid={`button-evaluate-${enrollment.id}`}
+                      >
+                        <Star className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
@@ -1257,34 +929,8 @@ export default function FieldTrainingPrograms() {
                         </div>
                       </div>
 
-                      {(evaluation.strengths || evaluation.areas_for_improvement) && (
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          {evaluation.strengths && (
-                            <div>
-                              <span className="block text-gray-500 mb-1">نقاط القوة:</span>
-                              <p className="text-gray-700 dark:text-gray-300" data-testid={`text-evaluation-strengths-${evaluation.id}`}>
-                                {evaluation.strengths}
-                              </p>
-                            </div>
-                          )}
-                          {evaluation.areas_for_improvement && (
-                            <div>
-                              <span className="block text-gray-500 mb-1">مجالات التحسين:</span>
-                              <p className="text-gray-700 dark:text-gray-300" data-testid={`text-evaluation-improvements-${evaluation.id}`}>
-                                {evaluation.areas_for_improvement}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
                       <div className="text-xs text-gray-500">
                         تاريخ التقييم: {format(new Date(evaluation.evaluation_date), 'dd/MM/yyyy')}
-                        {evaluation.additional_notes && (
-                          <span className="block mt-1">
-                            ملاحظات: {evaluation.additional_notes}
-                          </span>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -1306,6 +952,229 @@ export default function FieldTrainingPrograms() {
           </div>
         </div>
       )}
+
+      {/* Evaluation Dialog */}
+      <Dialog open={isEvaluationOpen} onOpenChange={setIsEvaluationOpen}>
+        <DialogContent className="max-w-3xl" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>تقييم التدريب الميداني</DialogTitle>
+          </DialogHeader>
+          <Form {...evaluationForm}>
+            <form onSubmit={evaluationForm.handleSubmit(onCreateEvaluation)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={evaluationForm.control}
+                  name="evaluation_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>تاريخ التقييم</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} data-testid="input-evaluation-date" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={evaluationForm.control}
+                  name="recommendation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>التوصية</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger data-testid="select-recommendation">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pass">نجح</SelectItem>
+                            <SelectItem value="fail">رسب</SelectItem>
+                            <SelectItem value="needs_retraining">يحتاج إعادة تدريب</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium">معايير التقييم (1-5)</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={evaluationForm.control}
+                    name="theoretical_understanding"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>الفهم النظري</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger data-testid="select-theoretical">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(num => (
+                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={evaluationForm.control}
+                    name="practical_skills"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>المهارات العملية</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger data-testid="select-practical">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(num => (
+                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={evaluationForm.control}
+                    name="safety_compliance"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>الالتزام بالسلامة</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger data-testid="select-safety">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(num => (
+                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={evaluationForm.control}
+                    name="teamwork"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>العمل الجماعي</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger data-testid="select-teamwork">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(num => (
+                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={evaluationForm.control}
+                    name="communication"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>التواصل</FormLabel>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger data-testid="select-communication">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[1,2,3,4,5].map(num => (
+                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={evaluationForm.control}
+                  name="strengths"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>نقاط القوة</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={3} data-testid="textarea-strengths" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={evaluationForm.control}
+                  name="areas_for_improvement"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>مجالات التحسين</FormLabel>
+                      <FormControl>
+                        <Textarea {...field} rows={3} data-testid="textarea-improvements" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={evaluationForm.control}
+                name="additional_notes"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ملاحظات إضافية</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} rows={2} data-testid="textarea-additional-notes" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEvaluationOpen(false)}
+                  data-testid="button-cancel-evaluation"
+                >
+                  إلغاء
+                </Button>
+                <Button type="submit" disabled={createEvaluationMutation.isPending} data-testid="button-save-evaluation">
+                  {createEvaluationMutation.isPending ? "جاري الحفظ..." : "حفظ التقييم"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
