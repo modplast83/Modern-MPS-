@@ -1309,7 +1309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { operator_id } = req.query;
       const reports = operator_id 
-        ? await storage.getOperatorNegligenceReportsByOperator(operator_id as string)
+        ? await storage.getOperatorNegligenceReportsByOperator(parseInt(operator_id as string))
         : await storage.getAllOperatorNegligenceReports();
       res.json(reports);
     } catch (error) {
@@ -2120,7 +2120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Training Enrollments  
   app.get("/api/hr/training-enrollments", async (req, res) => {
     try {
-      const employeeId = req.query.employee_id ? req.query.employee_id as string : undefined;
+      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
       const enrollments = await storage.getTrainingEnrollments(employeeId);
       res.json(enrollments);
     } catch (error) {
@@ -3047,7 +3047,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (!processedRecord.id) {
               const existingLocations = await storage.getLocations();
               const lastId = existingLocations.length > 0 
-                ? Math.max(...existingLocations.map(l => l.id))
+                ? Math.max(...existingLocations.map(l => typeof l.id === 'number' ? l.id : parseInt(l.id)))
                 : 0;
               processedRecord.id = lastId + 1;
             }

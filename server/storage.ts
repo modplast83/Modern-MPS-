@@ -260,7 +260,7 @@ export interface IStorage {
   deleteTrainingMaterial(id: number): Promise<boolean>;
   
   // HR System - Training Enrollments  
-  getTrainingEnrollments(employeeId?: string): Promise<TrainingEnrollment[]>;
+  getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]>;
   createTrainingEnrollment(enrollment: InsertTrainingEnrollment): Promise<TrainingEnrollment>;
   updateTrainingEnrollment(id: number, updates: Partial<TrainingEnrollment>): Promise<TrainingEnrollment>;
   getEnrollmentsByProgram(programId: number): Promise<TrainingEnrollment[]>;
@@ -345,9 +345,9 @@ export interface IStorage {
 
   // Settings
   getSystemSettings(): Promise<SystemSetting[]>;
-  getUserSettings(userId: string): Promise<UserSetting[]>;
-  updateSystemSetting(key: string, value: string, userId: string): Promise<SystemSetting>;
-  updateUserSetting(userId: string, key: string, value: string): Promise<UserSetting>;
+  getUserSettings(userId: number): Promise<UserSetting[]>;
+  updateSystemSetting(key: string, value: string, userId: number): Promise<SystemSetting>;
+  updateUserSetting(userId: number, key: string, value: string): Promise<UserSetting>;
 
   // Database Management
   getDatabaseStats(): Promise<any>;
@@ -387,7 +387,7 @@ export interface IStorage {
 
   // Operator Negligence Reports
   getAllOperatorNegligenceReports(): Promise<OperatorNegligenceReport[]>;
-  getOperatorNegligenceReportsByOperator(operatorId: string): Promise<OperatorNegligenceReport[]>;
+  getOperatorNegligenceReportsByOperator(operatorId: number): Promise<OperatorNegligenceReport[]>;
   createOperatorNegligenceReport(report: InsertOperatorNegligenceReport): Promise<OperatorNegligenceReport>;
   updateOperatorNegligenceReport(id: number, report: Partial<OperatorNegligenceReport>): Promise<OperatorNegligenceReport>;
   deleteOperatorNegligenceReport(id: number): Promise<void>;
@@ -1212,7 +1212,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Training Enrollments
-  async getTrainingEnrollments(employeeId?: string): Promise<TrainingEnrollment[]> {
+  async getTrainingEnrollments(employeeId?: number): Promise<TrainingEnrollment[]> {
     const query = db.select().from(training_enrollments);
     if (employeeId) {
       return await query.where(eq(training_enrollments.employee_id, employeeId)).orderBy(desc(training_enrollments.enrolled_date));
@@ -1694,24 +1694,24 @@ export class DatabaseStorage implements IStorage {
     return newSetting;
   }
 
-  async updateSystemSetting(key: string, value: string, updatedBy?: string): Promise<SystemSetting> {
+  async updateSystemSetting(key: string, value: string, userId: number): Promise<SystemSetting> {
     const [setting] = await db
       .update(system_settings)
       .set({ 
         setting_value: value, 
         updated_at: new Date(),
-        updated_by: updatedBy 
+        updated_by: userId 
       })
       .where(eq(system_settings.setting_key, key))
       .returning();
     return setting;
   }
 
-  async getUserSettings(userId: string): Promise<UserSetting[]> {
+  async getUserSettings(userId: number): Promise<UserSetting[]> {
     return await db.select().from(user_settings).where(eq(user_settings.user_id, userId));
   }
 
-  async getUserSettingByKey(userId: string, key: string): Promise<UserSetting | undefined> {
+  async getUserSettingByKey(userId: number, key: string): Promise<UserSetting | undefined> {
     const [setting] = await db
       .select()
       .from(user_settings)
@@ -1724,7 +1724,7 @@ export class DatabaseStorage implements IStorage {
     return newSetting;
   }
 
-  async updateUserSetting(userId: string, key: string, value: string): Promise<UserSetting> {
+  async updateUserSetting(userId: number, key: string, value: string): Promise<UserSetting> {
     // Try to update existing setting first
     const [existingSetting] = await db
       .select()
@@ -3071,7 +3071,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getOperatorNegligenceReportsByOperator(operatorId: string): Promise<OperatorNegligenceReport[]> {
+  async getOperatorNegligenceReportsByOperator(operatorId: number): Promise<OperatorNegligenceReport[]> {
     try {
       return await db.select().from(operator_negligence_reports)
         .where(eq(operator_negligence_reports.operator_id, operatorId))

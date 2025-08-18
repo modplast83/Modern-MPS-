@@ -64,7 +64,7 @@ export const customers = pgTable('customers', {
   address: text('address'),
   tax_number: varchar('tax_number', { length: 20 }),
   phone: varchar('phone', { length: 20 }),
-  sales_rep_id: varchar('sales_rep_id', { length: 20 }).references(() => users.id),
+  sales_rep_id: integer('sales_rep_id').references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -123,7 +123,7 @@ export const orders = pgTable('orders', {
   delivery_days: integer('delivery_days'),
   status: varchar('status', { length: 30 }).default('pending'), // pending / for_production / completed / delivered
   notes: text('notes'),
-  created_by: varchar('created_by', { length: 20 }).references(() => users.id),
+  created_by: integer('created_by').references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
   delivery_date: date('delivery_date')
 });
@@ -160,7 +160,7 @@ export const rolls = pgTable('rolls', {
   status: varchar('status', { length: 30 }).default('for_printing'), // for_printing / for_cutting / done
   current_stage: varchar('current_stage', { length: 30 }).default('film'), // film / printing / cutting
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
-  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
+  employee_id: integer('employee_id').references(() => users.id),
   qr_code: varchar('qr_code', { length: 255 }),
   created_at: timestamp('created_at').defaultNow(),
   completed_at: timestamp('completed_at'),
@@ -185,7 +185,7 @@ export const quality_checks = pgTable('quality_checks', {
   result: varchar('result', { length: 10 }), // pass / fail
   score: integer('score'), // 1-5 stars
   notes: text('notes'),
-  checked_by: varchar('checked_by', { length: 20 }).references(() => users.id),
+  checked_by: integer('checked_by').references(() => users.id),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -196,12 +196,12 @@ export const maintenance_requests = pgTable('maintenance_requests', {
   id: serial('id').primaryKey(),
   request_number: varchar('request_number', { length: 50 }).notNull().unique(), // MO001, MO002, etc.
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
-  reported_by: varchar('reported_by', { length: 20 }).references(() => users.id),
+  reported_by: integer('reported_by').references(() => users.id),
   issue_type: varchar('issue_type', { length: 50 }), // mechanical / electrical / other
   description: text('description'),
   urgency_level: varchar('urgency_level', { length: 20 }).default('normal'), // normal / medium / urgent
   status: varchar('status', { length: 20 }).default('open'), // open / in_progress / resolved
-  assigned_to: varchar('assigned_to', { length: 20 }).references(() => users.id),
+  assigned_to: integer('assigned_to').references(() => users.id),
   action_taken: text('action_taken'),
   date_reported: timestamp('date_reported').defaultNow(),
   date_resolved: timestamp('date_resolved')
@@ -220,8 +220,8 @@ export const maintenance_actions = pgTable('maintenance_actions', {
   operator_negligence_report: text('operator_negligence_report'), // تبليغ اهمال المشغل
   
   // User tracking
-  performed_by: varchar('performed_by', { length: 20 }).notNull().references(() => users.id), // المستخدم الذي نفذ الإجراء
-  request_created_by: varchar('request_created_by', { length: 20 }).references(() => users.id), // المستخدم الذي أنشأ طلب الصيانة
+  performed_by: integer('performed_by').notNull().references(() => users.id), // المستخدم الذي نفذ الإجراء
+  request_created_by: integer('request_created_by').references(() => users.id), // المستخدم الذي أنشأ طلب الصيانة
   
   // Status and notifications
   requires_management_action: boolean('requires_management_action').default(false), // يحتاج موافقة إدارية
@@ -257,11 +257,11 @@ export const maintenance_reports = pgTable('maintenance_reports', {
   
   // Status tracking
   status: varchar('status', { length: 20 }).default('pending'), // pending / reviewed / approved / rejected / completed
-  reviewed_by: varchar('reviewed_by', { length: 20 }).references(() => users.id),
+  reviewed_by: integer('reviewed_by').references(() => users.id),
   review_notes: text('review_notes'),
   review_date: timestamp('review_date'),
   
-  created_by: varchar('created_by', { length: 20 }).notNull().references(() => users.id),
+  created_by: integer('created_by').notNull().references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow(),
 });
@@ -271,7 +271,7 @@ export const operator_negligence_reports = pgTable('operator_negligence_reports'
   id: serial('id').primaryKey(),
   report_number: varchar('report_number', { length: 50 }).notNull().unique(), // ON001, ON002, etc.
   maintenance_action_id: integer('maintenance_action_id').references(() => maintenance_actions.id),
-  operator_id: varchar('operator_id', { length: 20 }).notNull().references(() => users.id),
+  operator_id: integer('operator_id').notNull().references(() => users.id),
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
   negligence_type: varchar('negligence_type', { length: 50 }).notNull(), // عدم صيانة / سوء استخدام / عدم اتباع تعليمات
   description: text('description').notNull(),
@@ -286,8 +286,8 @@ export const operator_negligence_reports = pgTable('operator_negligence_reports'
   action_taken: text('action_taken'),
   disciplinary_action: varchar('disciplinary_action', { length: 50 }), // تحذير / خصم / إيقاف مؤقت
   
-  reported_by: varchar('reported_by', { length: 20 }).notNull().references(() => users.id),
-  investigated_by: varchar('investigated_by', { length: 20 }).references(() => users.id),
+  reported_by: integer('reported_by').notNull().references(() => users.id),
+  investigated_by: integer('investigated_by').references(() => users.id),
   report_date: timestamp('report_date').defaultNow(),
   investigation_date: timestamp('investigation_date'),
   created_at: timestamp('created_at').defaultNow(),
@@ -297,12 +297,12 @@ export const operator_negligence_reports = pgTable('operator_negligence_reports'
 // 📋 جدول المخالفات
 export const violations = pgTable('violations', {
   id: serial('id').primaryKey(),
-  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
+  employee_id: integer('employee_id').references(() => users.id),
   violation_type: varchar('violation_type', { length: 50 }),
   description: text('description'),
   date: date('date').notNull(),
   action_taken: text('action_taken'),
-  reported_by: varchar('reported_by', { length: 20 }).references(() => users.id),
+  reported_by: integer('reported_by').references(() => users.id),
 });
 
 // 📦 جدول الأصناف والمواد
@@ -359,7 +359,7 @@ export const inventory_movements = pgTable('inventory_movements', {
   reference_number: varchar('reference_number', { length: 50 }),
   reference_type: varchar('reference_type', { length: 20 }), // purchase / sale / production / adjustment
   notes: text('notes'),
-  created_by: varchar('created_by', { length: 20 }).references(() => users.id),
+  created_by: integer('created_by').references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),
 });
 
@@ -390,7 +390,7 @@ export const mixing_recipes = pgTable('mixing_recipes', {
 // 🧍‍♂️ جدول التدريب
 export const training_records = pgTable('training_records', {
   id: serial('id').primaryKey(),
-  employee_id: varchar('employee_id', { length: 20 }).references(() => users.id),
+  employee_id: integer('employee_id').references(() => users.id),
   training_type: varchar('training_type', { length: 100 }),
   training_name: varchar('training_name', { length: 200 }),
   date: date('date').notNull(),
