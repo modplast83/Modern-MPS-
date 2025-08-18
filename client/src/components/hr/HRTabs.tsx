@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Target, Calendar, Users, Clock } from "lucide-react";
-import FieldTrainingPrograms from "./FieldTrainingPrograms.tsx";
+import SimpleFieldTraining from "./SimpleFieldTraining.tsx";
 import PerformanceReviews from "./PerformanceReviews.tsx";
 import LeaveManagement from "./LeaveManagement.tsx";
 import AttendanceManagement from "./AttendanceManagement.tsx";
@@ -54,7 +54,7 @@ export default function HRTabs() {
         </TabsContent>
 
         <TabsContent value="training" className="space-y-4">
-          <FieldTrainingPrograms />
+          <SimpleFieldTraining />
         </TabsContent>
 
         <TabsContent value="performance" className="space-y-4">
