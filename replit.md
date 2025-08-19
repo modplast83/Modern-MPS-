@@ -37,6 +37,13 @@ This project is an advanced AI-powered order management system specifically desi
 - ✅ **Type Safety Improvements**: Resolved all LSP diagnostics errors ensuring complete type consistency
 - ✅ **Runtime Stability**: Eliminated potential database constraint violations and query failures
 - ✅ **Data Consistency**: Ensured referential integrity across all foreign key relationships
+- ✅ **Session Management Enhancement**: Fixed automatic logout issue by improving session persistence
+  - Extended session duration from 7 days to 30 days for better user experience
+  - Enhanced session configuration with `resave: true` and `rolling: true` for automatic session extension
+  - Added middleware to automatically extend sessions on any API activity
+  - Improved `/api/me` endpoint to actively maintain and extend sessions
+  - Enhanced frontend auth handling to preserve user login state on network errors
+  - Added proper session touching and saving mechanisms to prevent premature timeouts
 
 ## User Preferences
 - Language: Arabic (RTL) with English fallback

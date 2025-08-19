@@ -46,11 +46,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.warn('Error checking auth session:', error);
-        // Keep cached user if server is unreachable, but session might still be valid
+        // Keep cached user if server is unreachable - don't logout user on network errors
         const cachedUser = localStorage.getItem('mpbf_user');
-        if (!cachedUser) {
-          setUser(null);
+        if (cachedUser && !user) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+          } catch (e) {
+            localStorage.removeItem('mpbf_user');
+            setUser(null);
+          }
         }
+        // Don't logout on network errors - preserve existing auth state
       }
       setIsLoading(false);
     };

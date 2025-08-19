@@ -101,14 +101,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user
   app.get("/api/me", async (req, res) => {
     try {
+      // Check if session exists and has user ID
       if (!req.session?.userId) {
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
 
       const user = await storage.getUserById(req.session.userId);
       if (!user) {
+        // User doesn't exist in database, clear session
+        if (req.session.destroy) {
+          req.session.destroy((err: any) => {
+            if (err) console.error("Error destroying invalid session:", err);
+          });
+        }
         return res.status(404).json({ message: "المستخدم غير موجود" });
       }
+
+      // User found - extend session by touching it (rolling session will reset expiry)
+      if (req.session.touch) {
+        req.session.touch();
+      }
+      
+      // Save session to ensure it persists
+      if (req.session.save) {
+        req.session.save((err: any) => {
+          if (err) {
+            console.error("Error saving session on /api/me:", err);
+            // Continue anyway, don't break the response
+          }
+        });
+      }
+
       res.json({ 
         user: { 
           id: user.id, 
@@ -2769,7 +2792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User Settings
   app.get("/api/settings/user/:userId", async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const userId = parseInt(req.params.userId);
       const settings = await storage.getUserSettings(userId);
       res.json(settings);
     } catch (error) {
@@ -2780,7 +2803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/settings/user/:userId", async (req, res) => {
     try {
-      const userId = req.params.userId;
+      const userId = parseInt(req.params.userId);
       const { settings } = req.body;
       const results = [];
       
