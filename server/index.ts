@@ -38,17 +38,28 @@ app.use(session({
     checkPeriod: 86400000 // prune expired entries every 24h
   }),
   secret: process.env.SESSION_SECRET || 'plastic-bag-manufacturing-system-secret-key-2025',
-  resave: false, // Don't save session if unmodified
+  resave: true, // Always save session to extend lifetime
   saveUninitialized: false, // Don't create session until something stored
-  rolling: true, // Reset expiry on activity
+  rolling: true, // Reset expiry on activity - crucial for keeping session alive
   cookie: {
     secure: false, // Set to true if using HTTPS in production
     httpOnly: false, // Allow client-side access for debugging
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days instead of 7 days
     sameSite: 'lax' // Allow cookies in same-site requests
   },
-  name: 'plastic-bag-session' // Custom session name
+  name: 'plastic-bag-session', // Custom session name
+  unset: 'keep' // Keep the session even if we unset properties
 }));
+
+// Session extension middleware - extends session on any API call
+app.use((req, res, next) => {
+  // For API requests, extend the session if it exists
+  if (req.path.startsWith("/api") && req.session && req.session.userId) {
+    // Touch the session to reset expiry with rolling sessions
+    req.session.touch();
+  }
+  next();
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
