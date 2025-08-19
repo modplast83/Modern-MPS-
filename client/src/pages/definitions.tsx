@@ -2480,8 +2480,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون فئة رئيسية</SelectItem>
-                            {Array.isArray(categories) && categories.map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id}>
+                            {Array.isArray(categories) && categories
+                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
+                              .map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id.toString()}>
                                 {cat.name_ar || cat.name} ({cat.id})
                               </SelectItem>
                             ))}
@@ -2605,8 +2607,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون فئة</SelectItem>
-                            {Array.isArray(categories) && categories.map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id}>
+                            {Array.isArray(categories) && categories
+                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
+                              .map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id.toString()}>
                                 {cat.name_ar || cat.name} ({cat.id})
                               </SelectItem>
                             ))}
@@ -2669,8 +2673,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر العميل</SelectItem>
-                            {Array.isArray(customers) && customers.map((customer: any) => (
-                              <SelectItem key={customer.id} value={customer.id}>
+                            {Array.isArray(customers) && customers
+                              .filter(customer => customer.id && customer.id !== '' && customer.id !== null && customer.id !== undefined)
+                              .map((customer: any) => (
+                              <SelectItem key={customer.id} value={customer.id.toString()}>
                                 {customer.name_ar || customer.name} ({customer.id})
                               </SelectItem>
                             ))}
@@ -2694,8 +2700,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر الفئة</SelectItem>
-                            {Array.isArray(categories) && categories.map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id}>
+                            {Array.isArray(categories) && categories
+                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
+                              .map((cat: any) => (
+                              <SelectItem key={cat.id} value={cat.id.toString()}>
                                 {cat.name_ar || cat.name} ({cat.id})
                               </SelectItem>
                             ))}
@@ -2724,8 +2732,9 @@ const masterBatchColors = [
                                 customerProductForm.category_id !== 'none' && 
                                 item.category_id === customerProductForm.category_id
                               )
+                              .filter(item => item.id && item.id !== '' && item.id !== null && item.id !== undefined)
                               .map((item: any) => (
-                                <SelectItem key={item.id} value={item.id}>
+                                <SelectItem key={item.id} value={item.id.toString()}>
                                   {item.name_ar || item.name} ({item.code})
                                 </SelectItem>
                               ))
@@ -2919,8 +2928,10 @@ const masterBatchColors = [
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">بدون لون</SelectItem>
-                              {masterBatchColors.map((color) => (
-                                <SelectItem key={color.id} value={color.id}>
+                              {masterBatchColors
+                                .filter(color => color.id && color.id !== '' && color.id !== null && color.id !== undefined)
+                                .map((color) => (
+                                <SelectItem key={color.id} value={color.id.toString()}>
                                   <div className="flex items-center gap-3">
                                     <div 
                                       className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
@@ -3304,8 +3315,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون قسم</SelectItem>
-                            {Array.isArray(sections) && sections.map((section: any) => (
-                              <SelectItem key={section.id} value={section.id}>
+                            {Array.isArray(sections) && sections
+                              .filter(section => section.id && section.id !== '' && section.id !== null && section.id !== undefined)
+                              .map((section: any) => (
+                              <SelectItem key={section.id} value={section.id.toString()}>
                                 {section.name_ar || section.name} ({section.id})
                               </SelectItem>
                             ))}
@@ -3396,7 +3409,9 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون دور</SelectItem>
-                            {Array.isArray(roles) && roles.map((role: any) => (
+                            {Array.isArray(roles) && roles
+                              .filter(role => role.id && role.id !== '' && role.id !== null && role.id !== undefined)
+                              .map((role: any) => (
                               <SelectItem key={role.id} value={`ROLE0${role.id}`}>
                                 {role.name_ar || role.name}
                               </SelectItem>
@@ -3417,8 +3432,10 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون قسم</SelectItem>
-                            {Array.isArray(sections) && sections.map((section: any) => (
-                              <SelectItem key={section.id} value={section.id}>
+                            {Array.isArray(sections) && sections
+                              .filter(section => section.id && section.id !== '' && section.id !== null && section.id !== undefined)
+                              .map((section: any) => (
+                              <SelectItem key={section.id} value={section.id.toString()}>
                                 {section.name_ar || section.name} ({section.id})
                               </SelectItem>
                             ))}
