@@ -599,7 +599,7 @@ const masterBatchColors = [
   const getFilteredCategories = () => filterData(categories as any[], ['name', 'name_ar', 'description', 'id']);
   const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'category_id', 'id']);
   const getFilteredCustomerProducts = () => {
-    const filtered = customerProducts.filter((product: any) => {
+    const filtered = (customerProducts as any[]).filter((product: any) => {
       // Status filter
       const statusMatch = statusFilter === "all" || 
         (statusFilter === "active" && product.status === "active") ||
@@ -613,18 +613,18 @@ const masterBatchColors = [
         product.notes,
         product.id,
         // Search in related customer name
-        customers.find((c: any) => c.id === product.customer_id)?.name_ar,
-        customers.find((c: any) => c.id === product.customer_id)?.name,
+        (customers as any[]).find((c: any) => c.id === product.customer_id)?.name_ar,
+        (customers as any[]).find((c: any) => c.id === product.customer_id)?.name,
         // Search in related item name
-        items.find((i: any) => i.id === product.item_id)?.name_ar,
-        items.find((i: any) => i.id === product.item_id)?.name
+        (items as any[]).find((i: any) => i.id === product.item_id)?.name_ar,
+        (items as any[]).find((i: any) => i.id === product.item_id)?.name
       ].some((field: any) => {
         if (field === null || field === undefined) return false;
         return field.toString().toLowerCase().includes(quickSearch.toLowerCase());
       });
       
       return statusMatch && searchMatch;
-    }).sort((a, b) => {
+    }).sort((a: any, b: any) => {
       const aId = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) || 0 : (a.id || 0);
       const bId = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) || 0 : (b.id || 0);
       return aId - bId;
@@ -2847,8 +2847,10 @@ const masterBatchColors = [
                               <SelectValue placeholder="اختر الأسطوانة" />
                             </SelectTrigger>
                             <SelectContent>
-                              {printingCylinderOptions.map((option) => (
-                                <SelectItem key={option.value} value={option.value}>
+                              {printingCylinderOptions
+                                .filter(option => option.value && option.value !== '' && option.value !== null && option.value !== undefined)
+                                .map((option) => (
+                                <SelectItem key={option.value} value={option.value.toString()}>
                                   {option.label}
                                 </SelectItem>
                               ))}

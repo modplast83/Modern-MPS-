@@ -1630,8 +1630,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Array.isArray(machines) && machines.map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.id}>
+                      {Array.isArray(machines) && machines
+                        .filter(machine => machine.id && machine.id !== '' && machine.id !== null && machine.id !== undefined)
+                        .map((machine: any) => (
+                        <SelectItem key={machine.id} value={machine.id.toString()}>
                           {machine.name_ar}
                         </SelectItem>
                       ))}
@@ -2127,7 +2129,7 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
                       machines.map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.name_ar || machine.name}>
+                        <SelectItem key={machine.id} value={machine.id ? `machine_${machine.id}` : "unknown"}>
                           {machine.name_ar || machine.name} ({machine.id})
                         </SelectItem>
                       ))
@@ -2266,7 +2268,7 @@ function SparePartEditForm({ part, onSubmit, isLoading }: { part: any, onSubmit:
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
                       machines.map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.name_ar || machine.name}>
+                        <SelectItem key={machine.id} value={machine.id ? `machine_${machine.id}` : "unknown"}>
                           {machine.name_ar || machine.name} ({machine.id})
                         </SelectItem>
                       ))
