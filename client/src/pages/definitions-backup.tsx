@@ -2462,7 +2462,7 @@ export default function Definitions() {
 
             {/* Add Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="definitions-dialog-description">
                 <DialogHeader>
                   <DialogTitle>
                     {editingItem ? 
@@ -2485,7 +2485,7 @@ export default function Definitions() {
                        selectedTab === 'users' ? 'إضافة مستخدم جديد' : 'إضافة جديد')
                     }
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="definitions-dialog-description">
                     {editingItem ? 'تحديث بيانات العنصر المحدد' : 'إضافة عنصر جديد إلى النظام'}
                   </DialogDescription>
                 </DialogHeader>

@@ -2245,12 +2245,12 @@ const masterBatchColors = [
             {/* Customer Add/Edit Dialog */}
             {selectedTab === 'customers' && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="customer-dialog-description">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث العميل" : "إضافة عميل جديد"}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription id="customer-dialog-description">
                       {editingItem ? "تعديل بيانات العميل الحالي" : "إضافة عميل جديد إلى النظام"}
                     </DialogDescription>
                   </DialogHeader>

@@ -91,7 +91,7 @@ export default function LeaveManagement() {
       const data = await response.json();
       console.log('Manual API response:', data);
       console.log('Response status:', response.status);
-      console.log('Response headers:', [...response.headers.entries()]);
+      console.log('Response headers:', Array.from(response.headers.entries()));
     } catch (error) {
       console.error('Manual API error:', error);
     }
