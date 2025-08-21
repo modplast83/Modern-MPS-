@@ -47,74 +47,86 @@ class MachineLearningService {
    * التنبؤ بأداء الإنتاج باستخدام خوارزميات التعلم الآلي
    */
   async predictProductionPerformance(machineId: number, hoursAhead: number = 24): Promise<MLPrediction> {
-    const machineData = this.productionHistory.filter(d => d.machineId === machineId);
-    
-    if (machineData.length < 10) {
+    try {
+      const machineData = this.productionHistory.filter(d => d.machineId === machineId);
+      
+      if (machineData.length < 10) {
+        return {
+          predictedRate: 0,
+          qualityForecast: 0,
+          maintenanceAlert: false,
+          confidence: 0,
+          recommendations: [
+            '⚠️ غير قادر على التنبؤ - بيانات غير كافية',
+            `يحتاج إلى ${10 - machineData.length} نقطة بيانات إضافية على الأقل`,
+            'قم بتشغيل الماكينة لفترة أطول لجمع بيانات رقابية'
+          ]
+        };
+      }
+
+      // حساب المتوسطات المتحركة
+      const recentData = machineData.slice(-24); // آخر 24 نقطة بيانات
+      const avgRate = recentData.reduce((sum, d) => sum + (d.productionRate || 0), 0) / Math.max(recentData.length, 1);
+      const avgQuality = recentData.reduce((sum, d) => sum + (d.qualityScore || 0), 0) / Math.max(recentData.length, 1);
+      const avgWaste = recentData.reduce((sum, d) => sum + (d.wastePercentage || 0), 0) / Math.max(recentData.length, 1);
+
+      // اكتشاف الاتجاهات
+      const trend = this.calculateTrend(recentData.map(d => d.productionRate || 0));
+      const qualityTrend = this.calculateTrend(recentData.map(d => d.qualityScore || 0));
+
+      // التنبؤ بناءً على الاتجاهات
+      const predictedRate = Math.max(0, Math.min(100, avgRate + (trend * hoursAhead / 24)));
+      const qualityForecast = Math.max(0, Math.min(100, avgQuality + (qualityTrend * hoursAhead / 24)));
+
+      // تحديد حاجة الصيانة
+      const maintenanceAlert = avgWaste > 8 || avgQuality < 80 || predictedRate < 70;
+
+      // حساب مستوى الثقة
+      const dataVariance = this.calculateVariance(recentData.map(d => d.productionRate || 0));
+      const confidence = Math.max(0.1, Math.min(1.0, 1 - (dataVariance / 100)));
+
+      const recommendations = this.generateRecommendations(
+        predictedRate, qualityForecast, avgWaste, maintenanceAlert
+      );
+
+      return {
+        predictedRate: isNaN(predictedRate) ? 0 : predictedRate,
+        qualityForecast: isNaN(qualityForecast) ? 0 : qualityForecast,
+        maintenanceAlert,
+        confidence: isNaN(confidence) ? 0 : confidence,
+        recommendations
+      };
+    } catch (error) {
+      console.error('Error in predictProductionPerformance:', error);
       return {
         predictedRate: 0,
         qualityForecast: 0,
         maintenanceAlert: false,
         confidence: 0,
-        recommendations: [
-          '⚠️ غير قادر على التنبؤ - بيانات غير كافية',
-          `يحتاج إلى ${10 - machineData.length} نقطة بيانات إضافية على الأقل`,
-          'قم بتشغيل الماكينة لفترة أطول لجمع بيانات رقابية'
-        ]
+        recommendations: ['حدث خطأ في تحليل بيانات الإنتاج']
       };
     }
-
-    // حساب المتوسطات المتحركة
-    const recentData = machineData.slice(-24); // آخر 24 نقطة بيانات
-    const avgRate = recentData.reduce((sum, d) => sum + d.productionRate, 0) / recentData.length;
-    const avgQuality = recentData.reduce((sum, d) => sum + d.qualityScore, 0) / recentData.length;
-    const avgWaste = recentData.reduce((sum, d) => sum + d.wastePercentage, 0) / recentData.length;
-
-    // اكتشاف الاتجاهات
-    const trend = this.calculateTrend(recentData.map(d => d.productionRate));
-    const qualityTrend = this.calculateTrend(recentData.map(d => d.qualityScore));
-
-    // التنبؤ بناءً على الاتجاهات
-    const predictedRate = Math.max(0, Math.min(100, avgRate + (trend * hoursAhead / 24)));
-    const qualityForecast = Math.max(0, Math.min(100, avgQuality + (qualityTrend * hoursAhead / 24)));
-
-    // تحديد حاجة الصيانة
-    const maintenanceAlert = avgWaste > 8 || avgQuality < 80 || predictedRate < 70;
-
-    // حساب مستوى الثقة
-    const dataVariance = this.calculateVariance(recentData.map(d => d.productionRate));
-    const confidence = Math.max(0.1, Math.min(1.0, 1 - (dataVariance / 100)));
-
-    const recommendations = this.generateRecommendations(
-      predictedRate, qualityForecast, avgWaste, maintenanceAlert
-    );
-
-    return {
-      predictedRate,
-      qualityForecast,
-      maintenanceAlert,
-      confidence,
-      recommendations
-    };
   }
 
   /**
    * اكتشاف الشذوذ في بيانات الإنتاج
    */
   async detectAnomalies(data: ProductionData): Promise<AnomalyDetection> {
-    const machineData = this.productionHistory.filter(d => d.machineId === data.machineId);
-    
-    if (machineData.length < 20) {
-      return {
-        isAnomaly: false,
-        anomalyScore: 0,
-        affectedMetrics: [],
-        severity: 'low',
-        recommendations: [
-          '⚠️ لا يمكن فحص الشذوذ - بيانات غير كافية',
-          `يحتاج إلى ${20 - machineData.length} نقطة بيانات إضافية لاكتشاف الشذوذ`
-        ]
-      };
-    }
+    try {
+      const machineData = this.productionHistory.filter(d => d.machineId === data.machineId);
+      
+      if (machineData.length < 20) {
+        return {
+          isAnomaly: false,
+          anomalyScore: 0,
+          affectedMetrics: [],
+          severity: 'low',
+          recommendations: [
+            '⚠️ لا يمكن فحص الشذوذ - بيانات غير كافية',
+            `يحتاج إلى ${20 - machineData.length} نقطة بيانات إضافية لاكتشاف الشذوذ`
+          ]
+        };
+      }
 
     const recentData = machineData.slice(-50);
     const anomalies: string[] = [];
@@ -159,13 +171,23 @@ class MachineLearningService {
 
     const recommendations = this.generateAnomalyRecommendations(anomalies, severity);
 
-    return {
-      isAnomaly,
-      anomalyScore,
-      affectedMetrics: anomalies,
-      severity,
-      recommendations
-    };
+      return {
+        isAnomaly,
+        anomalyScore,
+        affectedMetrics: anomalies,
+        severity,
+        recommendations
+      };
+    } catch (error) {
+      console.error('Error in detectAnomalies:', error);
+      return {
+        isAnomaly: false,
+        anomalyScore: 0,
+        affectedMetrics: [],
+        severity: 'low',
+        recommendations: ['حدث خطأ في تحليل الشذوذ']
+      };
+    }
   }
 
   /**
@@ -177,57 +199,70 @@ class MachineLearningService {
     seasonalTrends: any[];
     efficiencyInsights: string[];
   }> {
-    if (this.productionHistory.length < 100) {
+    try {
+      if (this.productionHistory.length < 100) {
+        return {
+          peakHours: [],
+          optimalShifts: [],
+          seasonalTrends: [],
+          efficiencyInsights: [
+            '⚠️ غير قادر على تحليل الأنماط - بيانات غير كافية',
+            `يحتاج إلى ${100 - this.productionHistory.length} نقطة بيانات إضافية`,
+            'قم بتشغيل المعدات لجمع بيانات كافية'
+          ]
+        };
+      }
+
+      // تحليل أوقات الذروة
+      const hourlyPerformance: { [key: number]: number[] } = {};
+      
+      this.productionHistory.forEach(data => {
+        if (data.timestamp && typeof data.timestamp.getHours === 'function') {
+          const hour = data.timestamp.getHours();
+          if (!hourlyPerformance[hour]) hourlyPerformance[hour] = [];
+          hourlyPerformance[hour].push(data.productionRate || 0);
+        }
+      });
+
+      const peakHours = Object.entries(hourlyPerformance)
+        .map(([hour, rates]) => ({
+          hour: parseInt(hour),
+          avgRate: rates.length > 0 ? rates.reduce((sum, rate) => sum + rate, 0) / rates.length : 0
+        }))
+        .sort((a, b) => b.avgRate - a.avgRate)
+        .slice(0, 6)
+        .map(item => item.hour)
+        .filter(hour => !isNaN(hour));
+
+      // تحديد أفضل نوبات العمل
+      const shiftPerformance = {
+        morning: this.getShiftPerformance(6, 14),
+        afternoon: this.getShiftPerformance(14, 22),
+        night: this.getShiftPerformance(22, 6)
+      };
+
+      const optimalShifts: string[] = [];
+      if (shiftPerformance.morning > 80) optimalShifts.push('الصباحية');
+      if (shiftPerformance.afternoon > 80) optimalShifts.push('المسائية');
+      if (shiftPerformance.night > 75) optimalShifts.push('الليلية');
+
+      const efficiencyInsights = this.generateEfficiencyInsights(shiftPerformance, peakHours);
+
+      return {
+        peakHours,
+        optimalShifts,
+        seasonalTrends: [],
+        efficiencyInsights
+      };
+    } catch (error) {
+      console.error('Error in analyzeProductionPatterns:', error);
       return {
         peakHours: [],
         optimalShifts: [],
         seasonalTrends: [],
-        efficiencyInsights: [
-          '⚠️ غير قادر على تحليل الأنماط - بيانات غير كافية',
-          `يحتاج إلى ${100 - this.productionHistory.length} نقطة بيانات إضافية`,
-          'قم بتشغيل المعدات لجمع بيانات كافية'
-        ]
+        efficiencyInsights: ['حدث خطأ في تحليل أنماط الإنتاج']
       };
     }
-
-    // تحليل أوقات الذروة
-    const hourlyPerformance: { [key: number]: number[] } = {};
-    
-    this.productionHistory.forEach(data => {
-      const hour = data.timestamp.getHours();
-      if (!hourlyPerformance[hour]) hourlyPerformance[hour] = [];
-      hourlyPerformance[hour].push(data.productionRate);
-    });
-
-    const peakHours = Object.entries(hourlyPerformance)
-      .map(([hour, rates]) => ({
-        hour: parseInt(hour),
-        avgRate: rates.reduce((sum, rate) => sum + rate, 0) / rates.length
-      }))
-      .sort((a, b) => b.avgRate - a.avgRate)
-      .slice(0, 6)
-      .map(item => item.hour);
-
-    // تحديد أفضل نوبات العمل
-    const shiftPerformance = {
-      morning: this.getShiftPerformance(6, 14),
-      afternoon: this.getShiftPerformance(14, 22),
-      night: this.getShiftPerformance(22, 6)
-    };
-
-    const optimalShifts: string[] = [];
-    if (shiftPerformance.morning > 80) optimalShifts.push('الصباحية');
-    if (shiftPerformance.afternoon > 80) optimalShifts.push('المسائية');
-    if (shiftPerformance.night > 75) optimalShifts.push('الليلية');
-
-    const efficiencyInsights = this.generateEfficiencyInsights(shiftPerformance, peakHours);
-
-    return {
-      peakHours,
-      optimalShifts,
-      seasonalTrends: [],
-      efficiencyInsights
-    };
   }
 
   /**

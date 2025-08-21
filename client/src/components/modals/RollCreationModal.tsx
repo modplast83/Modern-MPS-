@@ -123,10 +123,10 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="roll-creation-description">
         <DialogHeader>
           <DialogTitle>إنشاء رول جديد</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="roll-creation-description">
             إضافة رول جديد إلى أمر التشغيل المحدد
           </DialogDescription>
         </DialogHeader>

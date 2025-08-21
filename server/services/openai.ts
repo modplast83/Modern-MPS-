@@ -122,11 +122,21 @@ class AdvancedOpenAIService {
       return response.choices[0].message.content || "مرحباً! كيف يمكنني مساعدتك في إدارة المصنع اليوم؟";
       
     } catch (error: any) {
-      console.error('OpenAI API Error:', error);
+      console.error('OpenAI API Error:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        type: error?.type,
+        stack: error?.stack
+      });
       
       // تسجيل الخطأ للتعلم
       if (userId) {
-        await this.recordLearningData(userId, 'general_query', message, false, Date.now() - startTime);
+        try {
+          await this.recordLearningData(userId, 'general_query', message, false, Date.now() - startTime);
+        } catch (learningError) {
+          console.error('Error recording learning data:', learningError);
+        }
       }
       
       return this.handleError(error);
@@ -226,8 +236,13 @@ Respond in JSON format containing:
         parameters: result.parameters || {},
         response: result.response || (language === 'ar-SA' ? 'لم أتمكن من فهم الأمر' : 'I could not understand the command')
       };
-    } catch (error) {
-      console.error('Voice command processing error:', error);
+    } catch (error: any) {
+      console.error('Voice command processing error:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        stack: error?.stack
+      });
       return {
         intent: 'error',
         action: 'none',
@@ -380,8 +395,13 @@ Respond in JSON format containing:
       });
 
       return JSON.parse(response.choices[0].message.content || '{"intent":"unknown","action":"none","requiresDatabase":false,"requestsReport":false,"parameters":{},"confidence":0}');
-    } catch (error) {
-      console.error('Intent analysis error:', error);
+    } catch (error: any) {
+      console.error('Intent analysis error:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        stack: error?.stack
+      });
       return {
         intent: "unknown",
         action: "none", 
@@ -449,11 +469,20 @@ Respond in JSON format containing:
       
       return result.message;
       
-    } catch (error) {
-      console.error('Database operation error:', error);
+    } catch (error: any) {
+      console.error('Database operation error:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        stack: error?.stack
+      });
       
       if (userId) {
-        await this.recordLearningData(userId, intent.action, message, false, Date.now() - startTime);
+        try {
+          await this.recordLearningData(userId, intent.action, message, false, Date.now() - startTime);
+        } catch (learningError) {
+          console.error('Error recording learning data:', learningError);
+        }
       }
       
       return "حدث خطأ أثناء تنفيذ العملية. يرجى المحاولة مرة أخرى أو التواصل مع الدعم الفني.";
