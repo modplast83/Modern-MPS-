@@ -1755,7 +1755,23 @@ const masterBatchColors = [
                                         {product.raw_material || '-'}
                                       </td>
                                       <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.master_batch_id || '-'}
+                                        {(() => {
+                                          const masterBatchColor = masterBatchColors.find(mb => mb.id === product.master_batch_id);
+                                          return masterBatchColor ? (
+                                            <div className="flex items-center justify-center gap-2">
+                                              <div 
+                                                className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                                style={{ backgroundColor: masterBatchColor.color }}
+                                                title={masterBatchColor.name}
+                                              ></div>
+                                              <span className="text-xs font-medium text-gray-700">
+                                                {masterBatchColor.name_ar}
+                                              </span>
+                                            </div>
+                                          ) : (
+                                            product.master_batch_id || '-'
+                                          );
+                                        })()}
                                       </td>
                                       <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                         {product.punching || '-'}
