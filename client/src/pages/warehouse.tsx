@@ -534,7 +534,7 @@ export default function Warehouse() {
                                       </FormControl>
                                       <SelectContent>
                                         {filteredItemsByGroup
-                                          .filter(item => item.id && item.id !== '' && item.id !== null && item.id !== undefined)
+                                          .filter((item: any) => item.id && item.id !== '' && item.id !== null && item.id !== undefined)
                                           .map((item: any) => (
                                           <SelectItem key={item.id} value={item.id.toString()}>
                                             {item.name_ar} ({item.code})
