@@ -1381,7 +1381,7 @@ export default function Settings() {
                                           <SelectValue placeholder="اختر عمود" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="">-- لا شيء --</SelectItem>
+                                          <SelectItem value="none">-- لا شيء --</SelectItem>
                                           {fileHeaders.map((header) => (
                                             <SelectItem key={header} value={header}>{header}</SelectItem>
                                           ))}

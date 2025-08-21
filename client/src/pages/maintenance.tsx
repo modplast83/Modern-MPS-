@@ -832,8 +832,10 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                               </SelectTrigger>
                               <SelectContent>
                                 {Array.isArray(spareParts) && spareParts.length > 0 ? (
-                                  spareParts.map((part: any) => (
-                                    <SelectItem key={part.part_id} value={`${part.part_name} - ${part.code} - ${part.specifications}`}>
+                                  spareParts
+                                    .filter(part => part.part_id && part.part_name && part.code)
+                                    .map((part: any) => (
+                                    <SelectItem key={part.part_id} value={`${part.part_name}_${part.code}_${part.part_id}`}>
                                       {part.part_name} ({part.code}) - {part.machine_name}
                                     </SelectItem>
                                   ))

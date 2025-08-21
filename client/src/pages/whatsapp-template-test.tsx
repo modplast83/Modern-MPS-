@@ -205,8 +205,10 @@ export default function WhatsAppTemplateTest() {
                     <SelectValue placeholder="اختر القالب" />
                   </SelectTrigger>
                   <SelectContent>
-                    {approvedTemplates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
+                    {approvedTemplates
+                      .filter(template => template.id && template.id !== '' && template.id !== null && template.id !== undefined)
+                      .map((template) => (
+                      <SelectItem key={template.id} value={template.id.toString()}>
                         <div className="flex items-center gap-2">
                           <span>{template.name}</span>
                           <Badge variant="secondary" className="text-xs">
