@@ -93,7 +93,7 @@ export const customer_products = pgTable('customer_products', {
   raw_material: varchar('raw_material', { length: 20 }), // HDPE-LDPE-Regrind
   master_batch_id: varchar('master_batch_id', { length: 20 }), // CLEAR-WHITE-BLACK etc
   is_printed: boolean('is_printed').default(false),
-  cutting_unit: varchar('cutting_unit', { length: 10 }), // KG-ROLL-PKT
+  cutting_unit: varchar('cutting_unit', { length: 20 }), // KG-ROLL-PKT
   punching: varchar('punching', { length: 20 }), // NON-T-Shirt-T-shirt\Hook-Banana
   unit_weight_kg: decimal('unit_weight_kg', { precision: 8, scale: 3 }),
   unit_quantity: integer('unit_quantity'),

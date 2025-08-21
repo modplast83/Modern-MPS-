@@ -1700,7 +1700,7 @@ export class DatabaseStorage implements IStorage {
       .set({ 
         setting_value: value, 
         updated_at: new Date(),
-        updated_by: userId 
+        updated_by: userId.toString() 
       })
       .where(eq(system_settings.setting_key, key))
       .returning();
@@ -1708,14 +1708,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserSettings(userId: number): Promise<UserSetting[]> {
-    return await db.select().from(user_settings).where(eq(user_settings.user_id, userId));
+    return await db.select().from(user_settings).where(eq(user_settings.user_id, userId.toString()));
   }
 
   async getUserSettingByKey(userId: number, key: string): Promise<UserSetting | undefined> {
     const [setting] = await db
       .select()
       .from(user_settings)
-      .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`);
+      .where(sql`${user_settings.user_id} = ${userId.toString()} AND ${user_settings.setting_key} = ${key}`);
     return setting || undefined;
   }
 
@@ -1729,7 +1729,7 @@ export class DatabaseStorage implements IStorage {
     const [existingSetting] = await db
       .select()
       .from(user_settings)
-      .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`);
+      .where(sql`${user_settings.user_id} = ${userId.toString()} AND ${user_settings.setting_key} = ${key}`);
 
     if (existingSetting) {
       const [setting] = await db
@@ -1738,13 +1738,13 @@ export class DatabaseStorage implements IStorage {
           setting_value: value, 
           updated_at: new Date() 
         })
-        .where(sql`${user_settings.user_id} = ${userId} AND ${user_settings.setting_key} = ${key}`)
+        .where(sql`${user_settings.user_id} = ${userId.toString()} AND ${user_settings.setting_key} = ${key}`)
         .returning();
       return setting;
     } else {
       // Create new setting if it doesn't exist
       return await this.createUserSetting({
-        user_id: userId,
+        user_id: userId.toString(),
         setting_key: key,
         setting_value: value
       });
