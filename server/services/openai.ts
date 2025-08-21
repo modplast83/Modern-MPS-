@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
 import type { 
-  Customer, Item, Order, JobOrder, Roll, Machine, User,
-  InsertItem, InsertOrder, InsertJobOrder, InsertRoll
+  Customer, Item, NewOrder, JobOrder, Roll, Machine, User,
+  InsertItem, InsertNewOrder, InsertJobOrder, InsertRoll
 } from "../../shared/schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
@@ -47,7 +47,6 @@ interface LearningData {
 }
 
 class AdvancedOpenAIService {
-  private learningData: LearningData[] = [];
   
   async processMessage(message: string, userId?: number): Promise<string> {
     const startTime = Date.now();
@@ -301,7 +300,7 @@ Respond in JSON format containing:
 
   async generateMaintenanceAlert(machineId: number, issueDescription: string): Promise<string> {
     try {
-      const machine = await storage.getMachineById(machineId);
+      const machine = await storage.getMachineById(machineId.toString());
       
       if (!machine) {
         return "لم أتمكن من العثور على بيانات المكينة المحددة.";
@@ -610,13 +609,13 @@ Respond in JSON format containing:
   private async deleteCustomer(params: any): Promise<DatabaseOperation> {
     try {
       const customerId = await this.extractIdFromText(params.text || params.data, 'customer');
-      const success = await storage.deleteCustomer(customerId);
+      await storage.deleteCustomer(customerId);
       
       return {
         operation: 'delete',
         table: 'customers',
-        success: success !== false,
-        message: success !== false ? `تم حذف العميل ${customerId} بنجاح!` : `فشل في حذف العميل ${customerId}`
+        success: true,
+        message: `تم حذف العميل ${customerId} بنجاح!`
       };
     } catch (error: any) {
       return {
@@ -655,7 +654,7 @@ Respond in JSON format containing:
   private async getOrders(params: any): Promise<DatabaseOperation> {
     try {
       const filters = await this.extractFilters(params.text || params.data);
-      const orders = await storage.getOrders() || [];
+      const orders = await storage.getAllOrders() || [];
       
       let message = `تم العثور على ${orders.length} طلب:\n\n`;
       orders.slice(0, 5).forEach((order: any) => {
@@ -847,8 +846,13 @@ Respond in JSON format containing:
 
   // إرسال إشعار ذكي
   private async sendIntelligentNotification(action: string, data: any): Promise<void> {
-    const { AINotifications } = await import('./ai-notifications');
-    await AINotifications.sendIntelligentNotification(action, data);
+    try {
+      const { AINotifications } = await import('./ai-notifications');
+      await AINotifications.sendIntelligentNotification(action, data);
+    } catch (error) {
+      console.error('Error loading AI notifications module:', error);
+      // Gracefully continue without notifications
+    }
   }
 
   // تحديد ما إذا كان يجب إرسال إشعار
@@ -865,14 +869,22 @@ Respond in JSON format containing:
     success: boolean,
     executionTime: number
   ): Promise<void> {
-    const { AILearning } = await import('./ai-learning');
-    await AILearning.recordLearningData(userId, actionType, context, success, executionTime);
+    try {
+      const { AILearning } = await import('./ai-learning');
+      await AILearning.recordLearningData(userId, actionType, context, success, executionTime);
+    } catch (error) {
+      console.error('Error loading AI learning module:', error);
+      // Continue without learning data recording
+    }
   }
 
   // توليد تقرير ذكي
   private async generateIntelligentReport(reportType?: string, parameters?: any): Promise<string> {
     try {
       const { AIReports } = await import('./ai-reports');
+      if (!AIReports) {
+        throw new Error('AIReports module not available');
+      }
       
       let report;
       switch (reportType?.toLowerCase()) {

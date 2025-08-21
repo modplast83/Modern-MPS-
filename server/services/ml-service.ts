@@ -51,11 +51,15 @@ class MachineLearningService {
     
     if (machineData.length < 10) {
       return {
-        predictedRate: 75,
-        qualityForecast: 85,
+        predictedRate: 0,
+        qualityForecast: 0,
         maintenanceAlert: false,
-        confidence: 0.3,
-        recommendations: ['يحتاج المزيد من البيانات لتحسين دقة التنبؤ']
+        confidence: 0,
+        recommendations: [
+          '⚠️ غير قادر على التنبؤ - بيانات غير كافية',
+          `يحتاج إلى ${10 - machineData.length} نقطة بيانات إضافية على الأقل`,
+          'قم بتشغيل الماكينة لفترة أطول لجمع بيانات رقابية'
+        ]
       };
     }
 
@@ -105,7 +109,10 @@ class MachineLearningService {
         anomalyScore: 0,
         affectedMetrics: [],
         severity: 'low',
-        recommendations: []
+        recommendations: [
+          '⚠️ لا يمكن فحص الشذوذ - بيانات غير كافية',
+          `يحتاج إلى ${20 - machineData.length} نقطة بيانات إضافية لاكتشاف الشذوذ`
+        ]
       };
     }
 
@@ -172,10 +179,14 @@ class MachineLearningService {
   }> {
     if (this.productionHistory.length < 100) {
       return {
-        peakHours: [8, 9, 10, 14, 15, 16],
-        optimalShifts: ['الصباحية', 'المسائية'],
+        peakHours: [],
+        optimalShifts: [],
         seasonalTrends: [],
-        efficiencyInsights: ['يحتاج المزيد من البيانات للتحليل الدقيق']
+        efficiencyInsights: [
+          '⚠️ غير قادر على تحليل الأنماط - بيانات غير كافية',
+          `يحتاج إلى ${100 - this.productionHistory.length} نقطة بيانات إضافية`,
+          'قم بتشغيل المعدات لجمع بيانات كافية'
+        ]
       };
     }
 
@@ -233,11 +244,11 @@ class MachineLearningService {
     
     if (machineData.length < 50) {
       return {
-        recommendedSpeed: 85,
-        recommendedTemperature: 180,
-        recommendedPressure: 12,
-        expectedImprovement: 5,
-        confidence: 0.3
+        recommendedSpeed: 0,
+        recommendedTemperature: 0,
+        recommendedPressure: 0,
+        expectedImprovement: 0,
+        confidence: 0
       };
     }
 
@@ -248,11 +259,11 @@ class MachineLearningService {
 
     if (!bestPerformance) {
       return {
-        recommendedSpeed: 85,
-        recommendedTemperature: 180,
-        recommendedPressure: 12,
-        expectedImprovement: 3,
-        confidence: 0.4
+        recommendedSpeed: 0,
+        recommendedTemperature: 0,
+        recommendedPressure: 0,
+        expectedImprovement: 0,
+        confidence: 0
       };
     }
 
