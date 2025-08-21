@@ -1080,8 +1080,10 @@ export default function Definitions() {
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {masterBatchColors.map((color) => (
-              <SelectItem key={color.id} value={color.id}>
+            {masterBatchColors
+              .filter(color => color.id && color.id !== '' && color.id !== null && color.id !== undefined)
+              .map((color) => (
+              <SelectItem key={color.id} value={color.id.toString()}>
                 <div className="flex items-center gap-2">
                   <div 
                     className="w-4 h-4 rounded border" 

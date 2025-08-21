@@ -101,7 +101,7 @@ export default function Reports() {
                     </SelectTrigger>
                     <SelectContent>
                       {reportTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
+                        <SelectItem key={type.value} value={type.value || "unknown"}>
                           <div className="flex items-center gap-2">
                             {type.icon}
                             {type.label}
