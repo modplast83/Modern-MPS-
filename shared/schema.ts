@@ -975,6 +975,48 @@ export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
 export const insertCustomerProductSchema = createInsertSchema(customer_products).omit({
   id: true,
   created_at: true,
+}).extend({
+  // Transform decimal fields to handle both string and number inputs
+  width: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  left_facing: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  right_facing: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  thickness: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  unit_weight_kg: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  package_weight_kg: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? undefined : num.toString();
+  }),
+  cutting_length_cm: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseInt(val) : val;
+    return isNaN(num) ? undefined : num;
+  }),
+  unit_quantity: z.union([z.string(), z.number()]).optional().transform((val) => {
+    if (val === null || val === undefined || val === '') return undefined;
+    const num = typeof val === 'string' ? parseInt(val) : val;
+    return isNaN(num) ? undefined : num;
+  }),
 });
 
 export const insertCategorySchema = createInsertSchema(categories);

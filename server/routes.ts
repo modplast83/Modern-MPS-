@@ -2013,17 +2013,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/customer-products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      // Convert material_group_id to category_id for backwards compatibility
-      const processedData = {
+      
+      // Validate the ID parameter
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "معرف المنتج غير صحيح" });
+      }
+      
+      // Validate request body using Zod schema
+      const validation = insertCustomerProductSchema.safeParse({
         ...req.body,
         category_id: req.body.material_group_id || req.body.category_id,
-      };
-      delete processedData.material_group_id;
+      });
+      
+      if (!validation.success) {
+        console.error('Customer product validation error:', validation.error.errors);
+        return res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: validation.error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }))
+        });
+      }
+      
+      // Remove material_group_id for backwards compatibility
+      const processedData = { ...validation.data };
+      delete (processedData as any).material_group_id;
       
       const customerProduct = await storage.updateCustomerProduct(id, processedData);
+      
+      if (!customerProduct) {
+        return res.status(404).json({ message: "منتج العميل غير موجود" });
+      }
+      
       res.json(customerProduct);
     } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث منتج العميل" });
+      console.error('Customer product update error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ 
+        message: "خطأ في تحديث منتج العميل", 
+        error: errorMessage 
+      });
     }
   });
 
