@@ -3027,6 +3027,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
               processedRecord.id = lastId + 1;
             }
             
+            // Handle cutting_unit field specifically to ensure it's included
+            if (processedRecord.cutting_unit !== undefined && processedRecord.cutting_unit !== null) {
+              // Keep the cutting_unit value as is
+              console.log('Processing cutting_unit:', processedRecord.cutting_unit);
+            }
+            
+            // Convert numeric string fields to proper types
+            const numericFields = ['width', 'left_facing', 'right_facing', 'thickness', 'unit_weight_kg', 'package_weight_kg'];
+            numericFields.forEach(field => {
+              if (processedRecord[field] && typeof processedRecord[field] === 'string') {
+                const numValue = parseFloat(processedRecord[field]);
+                if (!isNaN(numValue)) {
+                  processedRecord[field] = numValue;
+                }
+              }
+            });
+            
+            const integerFields = ['cutting_length_cm', 'unit_quantity'];
+            integerFields.forEach(field => {
+              if (processedRecord[field] && typeof processedRecord[field] === 'string') {
+                const intValue = parseInt(processedRecord[field]);
+                if (!isNaN(intValue)) {
+                  processedRecord[field] = intValue;
+                }
+              }
+            });
+            
+            // Handle boolean fields
+            if (processedRecord.is_printed !== undefined) {
+              processedRecord.is_printed = processedRecord.is_printed === 'true' || processedRecord.is_printed === true;
+            }
+            
             // Validate using schema
             const validatedRecord = insertCustomerProductSchema.parse(processedRecord);
             await storage.createCustomerProduct(validatedRecord);
