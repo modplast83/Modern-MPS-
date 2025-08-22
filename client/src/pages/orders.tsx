@@ -913,24 +913,23 @@ export default function Orders() {
                                                 >
                                                   <div className="w-full text-right py-2 min-w-[700px]">
                                                     <div className="font-semibold text-gray-900 mb-2 text-base leading-relaxed">
-                                                      {(() => {
-                                                        // البحث عن اسم المنتج من جدول items
-                                                        const item = items.find((item: any) => item.id === product.item_id);
-                                                        let displayName = item?.name_ar || item?.name || 'منتج غير محدد';
-                                                        
-                                                        // إضافة وصف المقاس
-                                                        if (product?.size_caption) {
-                                                          displayName += ` - ${product.size_caption}`;
-                                                        }
-                                                        
-                                                        // إضافة طول القطع إذا كان متاحاً
-                                                        if (product.cutting_length_cm) {
-                                                          displayName += ` (طول القطع: ${product.cutting_length_cm} سم)`;
-                                                        }
-                                                        
-                                                        return displayName;
-                                                      })()} 
-                                                    </div>
+  {(() => {
+    const item = items.find((item: any) => item.id === product.item_id);
+
+    return (
+      <>
+        <div>{item?.name_ar || item?.name || 'منتج غير محدد'}</div>
+        {product?.size_caption && (
+          <div>{product.size_caption}</div>
+        )}
+        {product.cutting_length_cm && (
+          <div>طول القطع: {product.cutting_length_cm} سم</div>
+        )}
+      </>
+    );
+  })()}
+</div>
+
                                                     <div className="grid grid-cols-2 gap-6 text-sm text-gray-600">
                                                       <div className="space-y-2">
                                                         {product.thickness && (
