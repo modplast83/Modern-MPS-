@@ -1260,6 +1260,9 @@ export default function Orders() {
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{editingProductionOrder ? 'تعديل أمر الإنتاج' : 'إضافة أمر إنتاج جديد'}</DialogTitle>
+                          <DialogDescription>
+                            {editingProductionOrder ? 'تعديل بيانات أمر الإنتاج المحدد' : 'إضافة أمر إنتاج جديد مع تفاصيل المنتج والكمية المطلوبة'}
+                          </DialogDescription>
                         </DialogHeader>
                         <Form {...productionOrderForm}>
                           <form onSubmit={productionOrderForm.handleSubmit(onProductionOrderSubmit)} className="space-y-4">
