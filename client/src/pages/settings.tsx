@@ -244,7 +244,12 @@ export default function Settings() {
       users: ['id', 'username', 'display_name', 'display_name_ar', 'role_id'],
       machines: ['id', 'name', 'name_ar', 'type', 'status'],
       locations: ['id', 'name', 'name_ar', 'type'],
-      customer_products: ['id', 'customer_id', 'item_id', 'size_caption', 'raw_material', 'master_batch_id', 'notes', 'status'],
+      customer_products: [
+        'id', 'customer_id', 'category_id', 'item_id', 'size_caption', 'width', 'left_facing', 'right_facing', 
+        'thickness', 'printing_cylinder', 'cutting_length_cm', 'raw_material', 'master_batch_id', 'is_printed', 
+        'cutting_unit', 'punching', 'unit_weight_kg', 'unit_quantity', 'package_weight_kg', 'cliche_front_design', 
+        'cliche_back_design', 'notes', 'status', 'created_at'
+      ],
       orders: ['id', 'customer_id', 'order_date', 'status', 'total_amount'],
       production_orders: ['id', 'order_id', 'product_id', 'quantity', 'status'],
       job_orders: ['id', 'production_order_id', 'machine_id', 'start_time', 'end_time', 'status']
