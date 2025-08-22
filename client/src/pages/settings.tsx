@@ -284,7 +284,7 @@ export default function Settings() {
         data = [{ 'Column 1': 'سيتم تحليل ملف Excel على الخادم', 'Column 2': '', 'Column 3': '' }];
       }
 
-      setFileData(data.slice(0, 100)); // Show first 100 rows for preview
+      setFileData(data); // Show all rows for import
       setFileHeaders(headers);
       
       // Auto-map common column names
