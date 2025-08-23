@@ -865,7 +865,10 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to create item');
+        return res.json();
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/items'] });
@@ -885,7 +888,10 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to update item');
+        return res.json();
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/items'] });
@@ -906,7 +912,10 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to create customer product');
+        return res.json();
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
@@ -926,7 +935,10 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then(res => {
+        if (!res.ok) throw new Error('Failed to update customer product');
+        return res.json();
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
