@@ -1476,157 +1476,208 @@ export default function Orders() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-center min-w-[120px]">الرقم</TableHead>
-                        <TableHead className="text-center min-w-[120px]">اسم العميل</TableHead>
-                        <TableHead className="text-center min-w-[150px]">اسم الصنف</TableHead>
-                        <TableHead className="text-center min-w-[120px]">وصف المقاس</TableHead>
-                        <TableHead className="text-center">الطباعة</TableHead>
-                        <TableHead className="text-center">المادة الخام</TableHead>
-                        <TableHead className="text-center">الماستر باتش</TableHead>
-                        <TableHead className="text-center">التخريم</TableHead>
-                        <TableHead className="text-center">الوحدة</TableHead>
-                        <TableHead className="text-center">وزن التعبئة</TableHead>
-                        <TableHead className="text-center">الكمية</TableHead>
-                        <TableHead className="text-center">العمليات</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredProductionOrders.map((productionOrder: any, index: number) => {
-                        const order = orders.find((o: any) => o.id === productionOrder.order_id);
-                        const customer = customers.find((c: any) => order && c.id === order.customer_id);
-                        const product = customerProducts.find((p: any) => p.id === productionOrder.customer_product_id);
-                        
-                        // دالة لتحديد لون الدائرة حسب الماستر باتش
-                        const getColorCircle = (masterBatch: string) => {
-                          if (!masterBatch) return <span className="text-xs">غير محدد</span>;
-                          
-                          const colorInfo = masterBatchColors.find(c => c.id === masterBatch);
-                          const color = colorInfo?.color || '#808080';
-                          const borderColor = color === '#FFFFFF' ? '#CCCCCC' : color;
-                          const arabicName = colorInfo?.name_ar || masterBatch;
+                  {(() => {
+                    // تجميع أوامر الإنتاج حسب رقم الطلب
+                    const groupedProductionOrders = filteredProductionOrders.reduce((groups: any, productionOrder: any) => {
+                      const order = orders.find((o: any) => o.id === productionOrder.order_id);
+                      const orderKey = order?.order_number || 'غير محدد';
+                      
+                      if (!groups[orderKey]) {
+                        groups[orderKey] = {
+                          order: order,
+                          productionOrders: []
+                        };
+                      }
+                      
+                      groups[orderKey].productionOrders.push(productionOrder);
+                      return groups;
+                    }, {});
+
+                    const orderedGroups = Object.keys(groupedProductionOrders).sort((a, b) => b.localeCompare(a)); // ترتيب تنازلي
+
+                    if (orderedGroups.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-gray-500">
+                          لا توجد أوامر إنتاج
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div className="space-y-6">
+                        {orderedGroups.map((orderKey) => {
+                          const group = groupedProductionOrders[orderKey];
+                          const order = group.order;
+                          const customer = customers.find((c: any) => order && c.id === order.customer_id);
                           
                           return (
-                            <div className="flex items-center justify-center gap-2">
-                              <div 
-                                className="w-4 h-4 rounded-full border-2"
-                                style={{ 
-                                  backgroundColor: color,
-                                  borderColor: borderColor
-                                }}
-                                title={arabicName}
-                              />
-                              <span className="text-xs">{arabicName}</span>
+                            <div key={orderKey} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+                              {/* Order Header */}
+                              <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-4">
+                                    <h3 className="text-lg font-bold text-gray-900">
+                                      طلب رقم: {orderKey}
+                                    </h3>
+                                    <span className="text-sm text-gray-600">
+                                      العميل: {customer?.name_ar || customer?.name || 'غير محدد'}
+                                    </span>
+                                    {order && (
+                                      <span className="text-sm text-gray-600">
+                                        تاريخ: {format(new Date(order.created_at), 'dd/MM/yyyy')}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <Badge variant="outline">
+                                    {group.productionOrders.length} أوامر إنتاج
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              {/* Production Orders Table */}
+                              <div className="overflow-x-auto">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="bg-gray-25">
+                                      <TableHead className="text-center min-w-[120px]">رقم أمر الإنتاج</TableHead>
+                                      <TableHead className="text-center min-w-[150px]">اسم الصنف</TableHead>
+                                      <TableHead className="text-center min-w-[120px]">وصف المقاس</TableHead>
+                                      <TableHead className="text-center">الطباعة</TableHead>
+                                      <TableHead className="text-center">المادة الخام</TableHead>
+                                      <TableHead className="text-center">الماستر باتش</TableHead>
+                                      <TableHead className="text-center">التخريم</TableHead>
+                                      <TableHead className="text-center">الوحدة</TableHead>
+                                      <TableHead className="text-center">وزن التعبئة</TableHead>
+                                      <TableHead className="text-center">الكمية</TableHead>
+                                      <TableHead className="text-center">العمليات</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {group.productionOrders.map((productionOrder: any) => {
+                                      const product = customerProducts.find((p: any) => p.id === productionOrder.customer_product_id);
+                                      
+                                      // دالة لتحديد لون الدائرة حسب الماستر باتش
+                                      const getColorCircle = (masterBatch: string) => {
+                                        if (!masterBatch) return <span className="text-xs">غير محدد</span>;
+                                        
+                                        const colorInfo = masterBatchColors.find(c => c.id === masterBatch);
+                                        const color = colorInfo?.color || '#808080';
+                                        const borderColor = color === '#FFFFFF' ? '#CCCCCC' : color;
+                                        const arabicName = colorInfo?.name_ar || masterBatch;
+                                        
+                                        return (
+                                          <div className="flex items-center justify-center gap-2">
+                                            <div 
+                                              className="w-4 h-4 rounded-full border-2"
+                                              style={{ 
+                                                backgroundColor: color,
+                                                borderColor: borderColor
+                                              }}
+                                              title={arabicName}
+                                            />
+                                            <span className="text-xs">{arabicName}</span>
+                                          </div>
+                                        );
+                                      };
+                                      
+                                      return (
+                                        <TableRow key={productionOrder.id} className="hover:bg-gray-50">
+                                          <TableCell className="font-medium text-center">
+                                            <div className="text-sm font-mono">
+                                              {productionOrder.production_order_number || 'غير محدد'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="font-medium text-sm">
+                                              {(() => {
+                                                if (!product) return 'غير محدد';
+                                                // البحث عن اسم المنتج من جدول items
+                                                const item = items.find((item: any) => item.id === product.item_id);
+                                                return item?.name_ar || item?.name || product?.size_caption || 'غير محدد';
+                                              })()}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-mono">
+                                              {(() => {
+                                                if (!product) return 'غير محدد';
+                                                const parts = [];
+                                                if (product.width) parts.push(Math.round(parseFloat(product.width)));
+                                                if (product.left_facing) parts.push(Math.round(parseFloat(product.left_facing)));
+                                                if (product.right_facing) parts.push(Math.round(parseFloat(product.right_facing)));
+                                                const dimensions = parts.length > 0 ? parts.join('+') : '';
+                                                const length = product.cutting_length_cm || '51';
+                                                return dimensions ? `${dimensions}X${length}` : `X${length}`;
+                                              })()}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-medium">
+                                              {product?.printing_cylinder ? `${product.printing_cylinder}` : 'غير محدد'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-medium">
+                                              {product?.raw_material || 'غير محدد'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            {getColorCircle(product?.master_batch_id)}
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm">
+                                              {product?.punching || 'غير محدد'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-medium">
+                                              {product?.cutting_unit || 'كيلو'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-medium">
+                                              {product?.package_weight_kg ? `${product.package_weight_kg} كغ` : 'غير محدد'}
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="text-sm font-bold text-blue-600">
+                                              {productionOrder.quantity_kg} كغ
+                                            </div>
+                                          </TableCell>
+                                          <TableCell className="text-center">
+                                            <div className="flex justify-center space-x-1 space-x-reverse">
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleEditProductionOrder(productionOrder)}
+                                                className="h-8 w-8 p-0"
+                                              >
+                                                <Edit className="h-4 w-4" />
+                                              </Button>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  if (order) handleViewOrder(order);
+                                                }}
+                                                className="h-8 w-8 p-0"
+                                              >
+                                                <Eye className="h-4 w-4" />
+                                              </Button>
+                                            </div>
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </Table>
+                              </div>
                             </div>
                           );
-                        };
-                        
-                        return (
-                          <TableRow key={productionOrder.id} className="hover:bg-gray-50">
-                            <TableCell className="font-medium text-center">
-                              <div className="text-sm font-mono">
-                                {order?.order_number || 'غير محدد'}{productionOrder.production_order_number || ''}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="space-y-1">
-                                <div className="font-medium text-sm">{customer?.name_ar || customer?.name || 'غير محدد'}</div>
-                                <div className="text-xs text-gray-500">{customer?.id || 'غير محدد'}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="font-medium text-sm">
-                                {(() => {
-                                  if (!product) return 'غير محدد';
-                                  // البحث عن اسم المنتج من جدول items
-                                  const item = items.find((item: any) => item.id === product.item_id);
-                                  return item?.name_ar || item?.name || product?.size_caption || 'غير محدد';
-                                })()}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-mono">
-                                {(() => {
-                                  if (!product) return 'غير محدد';
-                                  const parts = [];
-                                  if (product.width) parts.push(Math.round(parseFloat(product.width)));
-                                  if (product.left_facing) parts.push(Math.round(parseFloat(product.left_facing)));
-                                  if (product.right_facing) parts.push(Math.round(parseFloat(product.right_facing)));
-                                  const dimensions = parts.length > 0 ? parts.join('+') : '';
-                                  const length = product.cutting_length_cm || '51';
-                                  return dimensions ? `${dimensions}X${length}` : `X${length}`;
-                                })()}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-medium">
-                                {product?.printing_cylinder ? `${product.printing_cylinder}` : 'غير محدد'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-medium">
-                                {product?.raw_material || 'غير محدد'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {getColorCircle(product?.master_batch_id)}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm">
-                                {product?.punching || 'غير محدد'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-medium">
-                                {product?.cutting_unit || 'كيلو'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-medium">
-                                {product?.package_weight_kg ? `${product.package_weight_kg} كغ` : 'غير محدد'}
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="text-sm font-bold text-blue-600">
-                                {productionOrder.quantity_kg} كغ
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <div className="flex justify-center space-x-1 space-x-reverse">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEditProductionOrder(productionOrder)}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (order) handleViewOrder(order);
-                                  }}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                      {filteredProductionOrders.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={12} className="text-center py-8 text-gray-500">
-                            لا توجد أوامر إنتاج
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                        })}
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
