@@ -20,6 +20,39 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
+// Master batch colors mapping for Arabic display
+const masterBatchColors = [
+  { id: 'PT-111111', name: 'WHITE',       name_ar: 'أبيض',        color: '#FFFFFF', textColor: '#000000' },
+  { id: 'PT-000000', name: 'BLACK',       name_ar: 'أسود',        color: '#000000', textColor: '#FFFFFF' },
+  { id: 'PT-8B0000', name: 'DARK_RED',    name_ar: 'أحمر غامق',   color: '#8B0000', textColor: '#FFFFFF' },
+  { id: 'PT-006400', name: 'DARK_GREEN',  name_ar: 'أخضر غامق',   color: '#006400', textColor: '#FFFFFF' },
+  { id: 'PT-000080', name: 'NAVY_BLUE',   name_ar: 'أزرق بحري',   color: '#000080', textColor: '#FFFFFF' },
+  { id: 'PT-2F4F4F', name: 'DARK_GRAY',   name_ar: 'رمادي غامق',  color: '#2F4F4F', textColor: '#FFFFFF' },
+  { id: 'PT-FF0000', name: 'RED',         name_ar: 'أحمر',        color: '#FF0000', textColor: '#FFFFFF' },
+  { id: 'PT-0000FF', name: 'BLUE',        name_ar: 'أزرق',        color: '#0000FF', textColor: '#FFFFFF' },
+  { id: 'PT-00FF00', name: 'GREEN',       name_ar: 'أخضر',        color: '#00FF00', textColor: '#000000' },
+  { id: 'PT-FFFF00', name: 'YELLOW',      name_ar: 'أصفر',        color: '#FFFF00', textColor: '#000000' },
+  { id: 'PT-FFA500', name: 'ORANGE',      name_ar: 'برتقالي',     color: '#FFA500', textColor: '#000000' },
+  { id: 'PT-800080', name: 'PURPLE',      name_ar: 'بنفسجي',      color: '#800080', textColor: '#FFFFFF' },
+  { id: 'PT-FFC0CB', name: 'PINK',        name_ar: 'وردي',        color: '#FFC0CB', textColor: '#000000' },
+  { id: 'PT-A52A2A', name: 'BROWN',       name_ar: 'بني',         color: '#A52A2A', textColor: '#FFFFFF' },
+  { id: 'PT-C0C0C0', name: 'SILVER',      name_ar: 'فضي',         color: '#C0C0C0', textColor: '#000000' },
+  { id: 'PT-FFD700', name: 'GOLD',        name_ar: 'ذهبي',        color: '#FFD700', textColor: '#000000' },
+  { id: 'PT-E2DCC8', name: 'BEIGE',       name_ar: 'بيج',         color: '#E2DCC8', textColor: '#000000' },
+  { id: 'PT-ADD8E6', name: 'LIGHT_BLUE',  name_ar: 'أزرق فاتح',   color: '#ADD8E6', textColor: '#000000' },
+  { id: 'PT-90EE90', name: 'LIGHT_GREEN', name_ar: 'أخضر فاتح',   color: '#90EE90', textColor: '#000000' },
+  { id: 'PT-D3D3D3', name: 'LIGHT_GRAY',  name_ar: 'رمادي فاتح',  color: '#D3D3D3', textColor: '#000000' },
+  { id: 'PT-MIX', name: 'MIX',       name_ar: 'مخلوط',        color: '#E2DCC8', textColor: '#000000' },
+  { id: 'PT-CLEAR', name: 'CLEAR',       name_ar: 'شفاف',        color: '#E2DCC8', textColor: '#000000' },
+];
+
+// Utility function to get Arabic color name from master batch ID
+const getMasterBatchArabicName = (masterBatchId: string): string => {
+  if (!masterBatchId) return 'غير محدد';
+  const color = masterBatchColors.find(c => c.id === masterBatchId);
+  return color?.name_ar || masterBatchId;
+};
+
 const orderFormSchema = z.object({
   customer_id: z.string().min(1, "العميل مطلوب"),
   delivery_days: z.string().min(1, "عدد أيام التسليم مطلوب").transform(val => parseInt(val)),
@@ -1348,7 +1381,7 @@ export default function Orders() {
                                                 <div>المادة الخام: {product.raw_material}</div>
                                               )}
                                               {product.master_batch_id && (
-                                                <div>الماستر باتش: {product.master_batch_id}</div>
+                                                <div>الماستر باتش: {getMasterBatchArabicName(product.master_batch_id)}</div>
                                               )}
                                               {product.punching && (
                                                 <div>التخريم: {product.punching}</div>
@@ -1448,22 +1481,12 @@ export default function Orders() {
                         
                         // دالة لتحديد لون الدائرة حسب الماستر باتش
                         const getColorCircle = (masterBatch: string) => {
-                          const colorMap: { [key: string]: string } = {
-                            'WHITE': '#FFFFFF',
-                            'BLACK': '#000000',
-                            'CLEAR': '#FFFFFF',
-                            'RED': '#FF0000',
-                            'BLUE': '#0000FF',
-                            'GREEN': '#008000',
-                            'YELLOW': '#FFFF00',
-                            'ORANGE': '#FFA500',
-                            'PURPLE': '#800080',
-                            'PINK': '#FFC0CB',
-                            'BROWN': '#A52A2A'
-                          };
+                          if (!masterBatch) return <span className="text-xs">غير محدد</span>;
                           
-                          const color = colorMap[masterBatch?.toUpperCase()] || '#808080';
+                          const colorInfo = masterBatchColors.find(c => c.id === masterBatch);
+                          const color = colorInfo?.color || '#808080';
                           const borderColor = color === '#FFFFFF' ? '#CCCCCC' : color;
+                          const arabicName = colorInfo?.name_ar || masterBatch;
                           
                           return (
                             <div className="flex items-center justify-center gap-2">
@@ -1473,9 +1496,9 @@ export default function Orders() {
                                   backgroundColor: color,
                                   borderColor: borderColor
                                 }}
-                                title={masterBatch}
+                                title={arabicName}
                               />
-                              <span className="text-xs">{masterBatch || 'غير محدد'}</span>
+                              <span className="text-xs">{arabicName}</span>
                             </div>
                           );
                         };
@@ -1714,7 +1737,7 @@ export default function Orders() {
                                     <h5 className="font-semibold text-gray-900 mb-2 border-b pb-1">المواصفات الفنية</h5>
                                     <div className="space-y-2 text-sm">
                                       <div><span className="font-medium">التخريم:</span> {product.punching || 'بدون تخريم'}</div>
-                                      <div><span className="font-medium">الماستر باتش:</span> {product.master_batch_id || 'غير محدد'}</div>
+                                      <div><span className="font-medium">الماستر باتش:</span> {getMasterBatchArabicName(product.master_batch_id)}</div>
                                       {product.color && <div><span className="font-medium">اللون:</span> {product.color}</div>}
                                       {product.bag_type && <div><span className="font-medium">نوع الكيس:</span> {product.bag_type}</div>}
                                       <div><span className="font-medium">الطباعة:</span> {product.print_colors ? `${product.print_colors} لون` : 'بدون طباعة'}</div>
