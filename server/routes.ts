@@ -487,7 +487,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", async (req, res) => {
     try {
-      const validatedData = insertNewOrderSchema.parse(req.body);
+      // Check if user is authenticated
+      if (!req.session?.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+
+      // Add the created_by field from session (as a number) and ensure other numeric fields are properly converted
+      const orderData = {
+        ...req.body,
+        created_by: req.session.userId, // This is already a number from session
+        delivery_days: req.body.delivery_days ? parseInt(req.body.delivery_days) : null
+      };
+
+      const validatedData = insertNewOrderSchema.parse(orderData);
       const order = await storage.createOrder(validatedData);
       res.json(order);
     } catch (error) {
