@@ -3159,10 +3159,23 @@ const masterBatchColors = [
                     </Button>
                     <Button
                       onClick={() => {
+                        // Convert string fields to numbers for validation
+                        const processedData = {
+                          ...customerProductForm,
+                          cutting_length_cm: customerProductForm.cutting_length_cm ? parseInt(customerProductForm.cutting_length_cm) : undefined,
+                          unit_quantity: customerProductForm.unit_quantity ? parseInt(customerProductForm.unit_quantity) : undefined,
+                          width: customerProductForm.width ? parseFloat(customerProductForm.width) : undefined,
+                          left_facing: customerProductForm.left_facing ? parseFloat(customerProductForm.left_facing) : undefined,
+                          right_facing: customerProductForm.right_facing ? parseFloat(customerProductForm.right_facing) : undefined,
+                          thickness: customerProductForm.thickness ? parseFloat(customerProductForm.thickness) : undefined,
+                          unit_weight_kg: customerProductForm.unit_weight_kg ? parseFloat(customerProductForm.unit_weight_kg) : undefined,
+                          package_weight_kg: customerProductForm.package_weight_kg ? parseFloat(customerProductForm.package_weight_kg) : undefined,
+                        };
+                        
                         if (editingItem) {
-                          updateCustomerProductMutation.mutate({ id: editingItem.id, data: customerProductForm });
+                          updateCustomerProductMutation.mutate({ id: editingItem.id, data: processedData });
                         } else {
-                          createCustomerProductMutation.mutate(customerProductForm);
+                          createCustomerProductMutation.mutate(processedData);
                         }
                       }}
                       disabled={createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending}

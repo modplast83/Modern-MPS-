@@ -34,8 +34,7 @@ import {
   Smartphone,
   Monitor,
   Save,
-  RefreshCw,
-  Progress
+  RefreshCw
 } from "lucide-react";
 import RoleManagementTab from "@/components/RoleManagementTab";
 
@@ -406,12 +405,14 @@ export default function Settings() {
             })
           });
           
-          results.successful += response.successful || batch.length;
-          if (response.errors && response.errors.length > 0) {
-            results.errors.push(...response.errors);
+          const responseData = await response.json();
+          
+          results.successful += responseData.successful || batch.length;
+          if (responseData.errors && responseData.errors.length > 0) {
+            results.errors.push(...responseData.errors);
           }
-          if (response.warnings && response.warnings.length > 0) {
-            results.warnings.push(...response.warnings);
+          if (responseData.warnings && responseData.warnings.length > 0) {
+            results.warnings.push(...responseData.warnings);
           }
           
         } catch (error) {
