@@ -922,7 +922,7 @@ export default function Orders() {
                                                                                   })()
                                                                     }}
                                                                   />
-                                                                  <span className="text-purple-600 font-medium">{product.master_batch_id}</span>
+                                                                  <span className="text-purple-600 font-medium">{getMasterBatchArabicName(product.master_batch_id)}</span>
                                                                 </div>
                                                               </div>
                                                             )}
@@ -999,7 +999,7 @@ export default function Orders() {
                                                                               })()
                                                                 }}
                                                               />
-                                                              <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded">{product.master_batch_id}</span>
+                                                              <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded">{getMasterBatchArabicName(product.master_batch_id)}</span>
                                                             </div>
                                                           </div>
                                                         )}
