@@ -247,7 +247,7 @@ export default function Orders() {
     (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Filter production orders with search capability
+  // Filter and sort production orders with search capability
   const filteredProductionOrders = productionOrders.filter((po: any) => {
     if (selectedOrderId && po.order_id !== selectedOrderId) return false;
     
@@ -268,6 +268,26 @@ export default function Orders() {
     }
     
     return true;
+  }).sort((a: any, b: any) => {
+    // Get order numbers for both production orders
+    const orderA = orders.find((o: any) => o.id === a.order_id);
+    const orderB = orders.find((o: any) => o.id === b.order_id);
+    
+    // Primary sort: by order number descending (تنازليا)
+    if (orderA?.order_number && orderB?.order_number) {
+      const orderNumA = orderA.order_number;
+      const orderNumB = orderB.order_number;
+      if (orderNumA !== orderNumB) {
+        return orderNumB.localeCompare(orderNumA); // Descending order
+      }
+    }
+    
+    // Secondary sort: by production order number ascending (تصاعديا)  
+    if (a.production_order_number && b.production_order_number) {
+      return a.production_order_number.localeCompare(b.production_order_number); // Ascending order
+    }
+    
+    return 0;
   });
 
   const handleAddOrder = () => {
