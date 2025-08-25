@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import JobOrdersTable from "./JobOrdersTable";
+import RollsTable from "./RollsTable";
 import type { ProductionStage } from "@/types";
 
 interface ProductionTabsProps {
@@ -10,8 +11,8 @@ interface ProductionTabsProps {
 
 const stages: ProductionStage[] = [
   { id: "film", name: "Film Stage", name_ar: "مرحلة الفيلم", key: "film", active: true },
-  { id: "printing", name: "Printing Stage", name_ar: "مرحلة الطباعة", key: "printing", active: false },
-  { id: "cutting", name: "Cutting Stage", name_ar: "مرحلة التقطيع", key: "cutting", active: false },
+  { id: "printing", name: "Printing Stage", name_ar: "مرحلة الطباعة", key: "printing", active: true },
+  { id: "cutting", name: "Cutting Stage", name_ar: "مرحلة التقطيع", key: "cutting", active: true },
 ];
 
 export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
@@ -44,6 +45,10 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               </div>
               
               <JobOrdersTable stage={stage.key} onCreateRoll={onCreateRoll} />
+              
+              <div className="mt-6">
+                <RollsTable stage={stage.key} />
+              </div>
             </CardContent>
           </TabsContent>
         ))}

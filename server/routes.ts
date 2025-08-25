@@ -550,8 +550,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rolls routes
   app.get("/api/rolls", async (req, res) => {
     try {
-      const rolls = await storage.getRolls();
-      res.json(rolls);
+      const { stage } = req.query;
+      if (stage) {
+        const rolls = await storage.getRollsByStage(stage as string);
+        res.json(rolls);
+      } else {
+        const rolls = await storage.getRolls();
+        res.json(rolls);
+      }
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب الرولات" });
     }

@@ -159,6 +159,7 @@ export interface IStorage {
   // Rolls
   getRolls(): Promise<Roll[]>;
   getRollsByJobOrder(jobOrderId: number): Promise<Roll[]>;
+  getRollsByStage(stage: string): Promise<Roll[]>;
   createRoll(roll: InsertRoll): Promise<Roll>;
   updateRoll(id: number, updates: Partial<Roll>): Promise<Roll>;
   
@@ -568,6 +569,31 @@ export class DatabaseStorage implements IStorage {
 
   async getRollsByJobOrder(jobOrderId: number): Promise<Roll[]> {
     return await db.select().from(rolls).where(eq(rolls.job_order_id, jobOrderId));
+  }
+
+  async getRollsByStage(stage: string): Promise<Roll[]> {
+    return await db
+      .select({
+        id: rolls.id,
+        roll_number: rolls.roll_number,
+        job_order_id: rolls.job_order_id,
+        weight: rolls.weight,
+        status: rolls.status,
+        current_stage: rolls.current_stage,
+        machine_id: rolls.machine_id,
+        employee_id: rolls.employee_id,
+        qr_code: rolls.qr_code,
+        created_at: rolls.created_at,
+        completed_at: rolls.completed_at,
+        job_order_number: job_orders.job_number,
+        machine_name: machines.name,
+        machine_name_ar: machines.name_ar
+      })
+      .from(rolls)
+      .leftJoin(job_orders, eq(rolls.job_order_id, job_orders.id))
+      .leftJoin(machines, eq(rolls.machine_id, machines.id))
+      .where(eq(rolls.current_stage, stage))
+      .orderBy(desc(rolls.created_at));
   }
 
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
