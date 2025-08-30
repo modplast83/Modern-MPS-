@@ -455,15 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Orders routes
   app.get("/api/orders", async (req, res) => {
     try {
-      const { status } = req.query;
-      let orders;
-      
-      if (status) {
-        orders = await storage.getOrdersByStatus(status as string);
-      } else {
-        orders = await storage.getAllOrders();
-      }
-      
+      const orders = await storage.getAllOrders();
       res.json(orders);
     } catch (error) {
       console.error("Orders fetch error:", error);
@@ -524,23 +516,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Order deletion error:", error);
       res.status(500).json({ message: "خطأ في حذف الطلب" });
-    }
-  });
-
-  app.patch("/api/orders/:id/status", async (req, res) => {
-    try {
-      const orderId = parseInt(req.params.id);
-      const { status } = req.body;
-      
-      if (!status) {
-        return res.status(400).json({ message: "الحالة مطلوبة" });
-      }
-
-      const order = await storage.updateOrderStatus(orderId, status);
-      res.json(order);
-    } catch (error) {
-      console.error("Order status update error:", error);
-      res.status(500).json({ message: "خطأ في تحديث حالة الطلب" });
     }
   });
 

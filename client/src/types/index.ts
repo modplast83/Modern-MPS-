@@ -74,6 +74,6 @@ export interface ProductionStage {
   id: string;
   name: string;
   name_ar: string;
-  key: 'orders' | 'film' | 'printing' | 'cutting';
+  key: 'film' | 'printing' | 'cutting';
   active: boolean;
 }
