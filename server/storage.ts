@@ -490,12 +490,38 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateOrderStatus(id: number, status: string): Promise<NewOrder> {
-    const [order] = await db
-      .update(orders)
-      .set({ status })
-      .where(eq(orders.id, id))
-      .returning();
-    return order;
+    return await db.transaction(async (tx) => {
+      // Update the main order
+      const [order] = await tx
+        .update(orders)
+        .set({ status })
+        .where(eq(orders.id, id))
+        .returning();
+
+      // If order status is changed to in_production or for_production, update related production orders
+      if (status === 'in_production' || status === 'for_production') {
+        // Update all production orders for this order
+        await tx
+          .update(production_orders)
+          .set({ status: 'in_production' })
+          .where(eq(production_orders.order_id, id));
+
+        // Update all job orders for production orders of this order
+        const productionOrderIds = await tx
+          .select({ id: production_orders.id })
+          .from(production_orders)
+          .where(eq(production_orders.order_id, id));
+
+        for (const prodOrder of productionOrderIds) {
+          await tx
+            .update(job_orders)
+            .set({ status: 'in_production' })
+            .where(eq(job_orders.production_order_id, prodOrder.id));
+        }
+      }
+
+      return order;
+    });
   }
 
   async getOrderById(id: number): Promise<NewOrder | undefined> {
