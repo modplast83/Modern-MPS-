@@ -28,17 +28,17 @@ interface RollCreationModalProps {
 
 interface RollFormData {
   job_order_id: number;
-  weight: string;
-  machine_id: number;
-  employee_id: number;
+  weight_kg: string;
+  machine_id: string;
+  final_roll: boolean;
 }
 
 export default function RollCreationModal({ isOpen, onClose }: RollCreationModalProps) {
   const [formData, setFormData] = useState<RollFormData>({
     job_order_id: 0,
-    weight: "",
-    machine_id: 0,
-    employee_id: 0,
+    weight_kg: "",
+    machine_id: "",
+    final_roll: false,
   });
 
   const { toast } = useToast();
@@ -58,17 +58,22 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
-      const response = await apiRequest('/api/rolls', {
+      const response = await fetch('/api/rolls', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           job_order_id: data.job_order_id,
-          weight: parseFloat(data.weight),
+          weight_kg: parseFloat(data.weight_kg),
           machine_id: data.machine_id,
-          employee_id: data.employee_id,
-          status: 'for_printing',
-          current_stage: 'film'
+          final_roll: data.final_roll
         })
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'فشل في إنشاء الرول');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -93,16 +98,16 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
   const resetForm = () => {
     setFormData({
       job_order_id: 0,
-      weight: "",
-      machine_id: 0,
-      employee_id: 0,
+      weight_kg: "",
+      machine_id: "",
+      final_roll: false,
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.job_order_id || !formData.weight || !formData.machine_id || !formData.employee_id) {
+    if (!formData.job_order_id || !formData.weight_kg || !formData.machine_id) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -152,30 +157,31 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="weight">الوزن (كجم) *</Label>
+            <Label htmlFor="weight_kg">الوزن (كجم) *</Label>
             <Input
-              id="weight"
+              id="weight_kg"
               type="number"
               step="0.1"
-              value={formData.weight}
-              onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+              value={formData.weight_kg}
+              onChange={(e) => setFormData({ ...formData, weight_kg: e.target.value })}
               placeholder="45.2"
               className="text-right"
+              data-testid="input-weight_kg"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="machine">المكينة *</Label>
             <Select
-              value={formData.machine_id.toString()}
-              onValueChange={(value) => setFormData({ ...formData, machine_id: parseInt(value) })}
+              value={formData.machine_id}
+              onValueChange={(value) => setFormData({ ...formData, machine_id: value })}
             >
-              <SelectTrigger>
+              <SelectTrigger data-testid="select-machine">
                 <SelectValue placeholder="اختر المكينة" />
               </SelectTrigger>
               <SelectContent>
                 {machines.filter(m => m.status === 'active').map((machine) => (
-                  <SelectItem key={machine.id} value={machine.id.toString()}>
+                  <SelectItem key={machine.id} value={machine.id}>
                     {machine.name_ar || machine.name}
                   </SelectItem>
                 ))}
@@ -183,23 +189,15 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="employee">العامل *</Label>
-            <Select
-              value={formData.employee_id.toString()}
-              onValueChange={(value) => setFormData({ ...formData, employee_id: parseInt(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر العامل" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.filter(u => u.status === 'active').map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.display_name_ar || user.display_name || user.username}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center space-x-2 space-x-reverse">
+            <input
+              type="checkbox"
+              id="final_roll"
+              checked={formData.final_roll}
+              onChange={(e) => setFormData({ ...formData, final_roll: e.target.checked })}
+              data-testid="checkbox-final_roll"
+            />
+            <Label htmlFor="final_roll" className="text-sm">رول نهائي (تجاهل حد التسامح)</Label>
           </div>
 
           <div className="flex justify-end space-x-3 space-x-reverse pt-4">

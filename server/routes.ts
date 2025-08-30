@@ -23,6 +23,9 @@ import {
   insertOperatorNegligenceReportSchema,
   insertInventoryMovementSchema,
   insertProductionOrderSchema,
+  insertCutSchema,
+  insertWarehouseReceiptSchema,
+  insertProductionSettingsSchema,
   customers,
   customer_products,
   locations
@@ -44,6 +47,7 @@ const insertLocationSchema = createInsertSchema(locations).omit({ id: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
+import QRCode from 'qrcode';
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -3448,6 +3452,184 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting user request:', error);
       res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
+  // ============ PRODUCTION FLOW API ENDPOINTS ============
+
+  // Production Settings
+  app.get("/api/production/settings", async (req, res) => {
+    try {
+      const settings = await storage.getProductionSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching production settings:', error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات الإنتاج" });
+    }
+  });
+
+  app.patch("/api/production/settings", async (req, res) => {
+    try {
+      const validationSchema = insertProductionSettingsSchema.pick({
+        overrun_tolerance_percent: true,
+        allow_last_roll_overrun: true,
+        qr_prefix: true
+      }).extend({
+        overrun_tolerance_percent: z.number().min(0).max(10),
+        qr_prefix: z.string().min(1, "بادئة الـ QR مطلوبة")
+      });
+
+      const validated = validationSchema.parse(req.body);
+      const settings = await storage.updateProductionSettings(validated);
+      res.json(settings);
+    } catch (error) {
+      console.error('Error updating production settings:', error);
+      res.status(400).json({ message: "خطأ في تحديث إعدادات الإنتاج" });
+    }
+  });
+
+  // Start Production
+  app.patch("/api/job-orders/:id/start-production", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const jobOrder = await storage.startProduction(id);
+      res.json(jobOrder);
+    } catch (error) {
+      console.error('Error starting production:', error);
+      res.status(400).json({ message: "خطأ في بدء الإنتاج" });
+    }
+  });
+
+  // Create Roll with QR
+  app.post("/api/rolls", async (req, res) => {
+    try {
+      const validationSchema = z.object({
+        job_order_id: z.number(),
+        machine_id: z.string(),
+        weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر"),
+        final_roll: z.boolean().optional().default(false)
+      });
+
+      const validated = validationSchema.parse(req.body);
+      
+      // Generate QR code and roll number
+      const roll = await storage.createRollWithQR(validated);
+      res.status(201).json(roll);
+    } catch (error) {
+      console.error('Error creating roll:', error);
+      if (error.message.includes('تجاوزت الحد المسموح')) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "خطأ في إنشاء الرول" });
+      }
+    }
+  });
+
+  // Printing Operations
+  app.patch("/api/rolls/:id/print", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const roll = await storage.markRollPrinted(id, req.session.userId);
+      res.json(roll);
+    } catch (error) {
+      console.error('Error marking roll printed:', error);
+      res.status(400).json({ message: "خطأ في تسجيل طباعة الرول" });
+    }
+  });
+
+  // Cutting Operations
+  app.post("/api/cuts", async (req, res) => {
+    try {
+      const validationSchema = insertCutSchema.extend({
+        cut_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر"),
+        pieces_count: z.number().positive().optional()
+      });
+
+      const validated = validationSchema.parse(req.body);
+      const cut = await storage.createCut({
+        ...validated,
+        performed_by: req.session.userId
+      });
+      res.status(201).json(cut);
+    } catch (error) {
+      console.error('Error creating cut:', error);
+      if (error.message.includes('الوزن المطلوب أكبر من المتاح')) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "خطأ في تسجيل القطع" });
+      }
+    }
+  });
+
+  // Warehouse Receipts
+  app.post("/api/warehouse/receipts", async (req, res) => {
+    try {
+      const validationSchema = insertWarehouseReceiptSchema.extend({
+        received_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
+      });
+
+      const validated = validationSchema.parse(req.body);
+      const receipt = await storage.createWarehouseReceipt({
+        ...validated,
+        received_by: req.session.userId
+      });
+      res.status(201).json(receipt);
+    } catch (error) {
+      console.error('Error creating warehouse receipt:', error);
+      res.status(500).json({ message: "خطأ في تسجيل استلام المستودع" });
+    }
+  });
+
+  // Production Queues
+  app.get("/api/production/film-queue", async (req, res) => {
+    try {
+      const queue = await storage.getFilmQueue();
+      res.json(queue);
+    } catch (error) {
+      console.error('Error fetching film queue:', error);
+      res.status(500).json({ message: "خطأ في جلب قائمة الفيلم" });
+    }
+  });
+
+  app.get("/api/production/printing-queue", async (req, res) => {
+    try {
+      const queue = await storage.getPrintingQueue();
+      res.json(queue);
+    } catch (error) {
+      console.error('Error fetching printing queue:', error);
+      res.status(500).json({ message: "خطأ في جلب قائمة الطباعة" });
+    }
+  });
+
+  app.get("/api/production/cutting-queue", async (req, res) => {
+    try {
+      const queue = await storage.getCuttingQueue();
+      res.json(queue);
+    } catch (error) {
+      console.error('Error fetching cutting queue:', error);
+      res.status(500).json({ message: "خطأ في جلب قائمة التقطيع" });
+    }
+  });
+
+  app.get("/api/production/order-progress/:jobOrderId", async (req, res) => {
+    try {
+      const jobOrderId = parseInt(req.params.jobOrderId);
+      const progress = await storage.getOrderProgress(jobOrderId);
+      res.json(progress);
+    } catch (error) {
+      console.error('Error fetching order progress:', error);
+      res.status(500).json({ message: "خطأ في جلب تقدم الطلب" });
+    }
+  });
+
+  app.get("/api/rolls/:id/qr", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const qrData = await storage.getRollQR(id);
+      res.json(qrData);
+    } catch (error) {
+      console.error('Error fetching roll QR:', error);
+      res.status(500).json({ message: "خطأ في جلب رمز QR للرول" });
     }
   });
 

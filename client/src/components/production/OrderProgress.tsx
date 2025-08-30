@@ -1,0 +1,309 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Package, Scissors, Archive, Plus, QrCode, Play } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+export default function OrderProgress() {
+  const [selectedJobOrderId, setSelectedJobOrderId] = useState<number | null>(null);
+  const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState({
+    job_order_id: 0,
+    cut_id: "",
+    received_weight_kg: ""
+  });
+
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch all job orders
+  const { data: jobOrders = [] } = useQuery({
+    queryKey: ['/api/job-orders'],
+    refetchInterval: 30000
+  });
+
+  // Fetch progress for selected job order
+  const { data: progress, isLoading: progressLoading } = useQuery({
+    queryKey: ['/api/production/order-progress', selectedJobOrderId],
+    enabled: !!selectedJobOrderId,
+    refetchInterval: 15000
+  });
+
+  // Fetch available cuts for warehouse receipt
+  const { data: availableCuts = [] } = useQuery({
+    queryKey: ['/api/cuts/available'],
+    enabled: warehouseDialogOpen
+  });
+
+  const warehouseReceiptMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/warehouse/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'فشل في تسجيل الاستلام');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم الاستلام بنجاح",
+        description: "تم تسجيل استلام المستودع"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/warehouse/receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/order-progress'] });
+      setWarehouseDialogOpen(false);
+      setReceiptData({ job_order_id: 0, cut_id: "", received_weight_kg: "" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "خطأ",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleWarehouseReceipt = () => {
+    if (!receiptData.job_order_id || !receiptData.received_weight_kg) {
+      toast({
+        title: "خطأ",
+        description: "يرجى ملء جميع الحقول المطلوبة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    warehouseReceiptMutation.mutate({
+      job_order_id: receiptData.job_order_id,
+      cut_id: receiptData.cut_id ? parseInt(receiptData.cut_id) : null,
+      received_weight_kg: parseFloat(receiptData.received_weight_kg)
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Job Order Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>اختيار أمر التشغيل</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={selectedJobOrderId?.toString() || ""}
+            onValueChange={(value) => setSelectedJobOrderId(parseInt(value))}
+          >
+            <SelectTrigger data-testid="select-job-order">
+              <SelectValue placeholder="اختر أمر التشغيل لمتابعة التقدم" />
+            </SelectTrigger>
+            <SelectContent>
+              {jobOrders.filter((order: any) => order.status === 'in_production').map((order: any) => (
+                <SelectItem key={order.id} value={order.id.toString()}>
+                  {order.job_number} - {order.quantity_required} كجم
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* Progress Display */}
+      {selectedJobOrderId && progress && (
+        <div className="space-y-4">
+          {/* Progress Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle>تقدم الطلب - {progress.job_order?.job_number}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="text-center">
+                  <Package className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                  <p className="text-sm text-gray-600">فيلم</p>
+                  <p className="font-bold text-lg">{progress.progress?.film_weight?.toFixed(2) || 0} كجم</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(progress.progress?.film_percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <Play className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-sm text-gray-600">طباعة</p>
+                  <p className="font-bold text-lg">{progress.progress?.printed_weight?.toFixed(2) || 0} كجم</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(progress.progress?.printed_percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <Scissors className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                  <p className="text-sm text-gray-600">تقطيع</p>
+                  <p className="font-bold text-lg">{progress.progress?.cut_weight?.toFixed(2) || 0} كجم</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-orange-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(progress.progress?.cut_percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="text-center">
+                  <Archive className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                  <p className="text-sm text-gray-600">مستودع</p>
+                  <p className="font-bold text-lg">{progress.progress?.warehouse_weight?.toFixed(2) || 0} كجم</p>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(progress.progress?.warehouse_percentage || 0, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rolls Details */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>الرولات</CardTitle>
+                <Dialog open={warehouseDialogOpen} onOpenChange={setWarehouseDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setReceiptData({ ...receiptData, job_order_id: selectedJobOrderId })}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      استلام مستودع
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>تسجيل استلام المستودع</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>الوزن المستلم (كجم) *</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={receiptData.received_weight_kg}
+                          onChange={(e) => setReceiptData({ ...receiptData, received_weight_kg: e.target.value })}
+                          placeholder="45.2"
+                          className="text-right"
+                          data-testid="input-received-weight"
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end space-x-3 space-x-reverse pt-4">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setWarehouseDialogOpen(false)}
+                          disabled={warehouseReceiptMutation.isPending}
+                        >
+                          إلغاء
+                        </Button>
+                        <Button
+                          onClick={handleWarehouseReceipt}
+                          disabled={warehouseReceiptMutation.isPending}
+                          data-testid="button-confirm-receipt"
+                        >
+                          {warehouseReceiptMutation.isPending ? "جاري التسجيل..." : "تسجيل الاستلام"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {progress.rolls?.map((roll: any) => (
+                  <div key={roll.id} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <QrCode className="h-5 w-5 text-gray-400" />
+                      <div>
+                        <p className="font-medium" data-testid={`text-roll-${roll.id}`}>
+                          {roll.roll_number}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {roll.weight_kg?.toFixed(2)} كجم - {roll.machine_id}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 space-x-reverse">
+                      <Badge variant={
+                        roll.stage === 'film' ? 'secondary' :
+                        roll.stage === 'printing' ? 'default' : 'outline'
+                      }>
+                        {roll.stage === 'film' ? 'فيلم' :
+                         roll.stage === 'printing' ? 'مطبوع' : 'مقطع'}
+                      </Badge>
+                      
+                      {roll.printed_at && (
+                        <span className="text-xs text-gray-400">
+                          طُبع: {new Date(roll.printed_at).toLocaleDateString('ar')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Warehouse Receipts */}
+          {progress.warehouse_receipts?.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>إيصالات المستودع</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {progress.warehouse_receipts.map((receipt: any) => (
+                    <div key={receipt.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">استلام #{receipt.id}</p>
+                        <p className="text-sm text-gray-500">
+                          {receipt.received_weight_kg?.toFixed(2)} كجم
+                        </p>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {new Date(receipt.created_at).toLocaleDateString('ar')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {progressLoading && (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-2 text-sm text-gray-500">جاري تحميل التقدم...</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

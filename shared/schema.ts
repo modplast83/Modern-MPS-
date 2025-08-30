@@ -148,22 +148,59 @@ export const job_orders = pgTable('job_orders', {
   quantity_required: decimal('quantity_required', { precision: 10, scale: 2 }).notNull(),
   quantity_produced: decimal('quantity_produced', { precision: 10, scale: 2 }).default('0'),
   status: varchar('status', { length: 30 }).default('pending'),
+  requires_printing: boolean('requires_printing').notNull().default(false),
+  in_production_at: timestamp('in_production_at'),
   created_at: timestamp('created_at').defaultNow()
 });
 
 // 🧵 جدول الرولات
 export const rolls = pgTable('rolls', {
   id: serial('id').primaryKey(),
-  roll_number: varchar('roll_number', { length: 50 }).notNull().unique(),
+  roll_seq: integer('roll_seq').notNull(),
+  roll_number: varchar('roll_number', { length: 64 }).notNull().unique(),
   job_order_id: integer('job_order_id').references(() => job_orders.id),
-  weight: decimal('weight', { precision: 8, scale: 2 }),
-  status: varchar('status', { length: 30 }).default('for_printing'), // for_printing / for_cutting / done
-  current_stage: varchar('current_stage', { length: 30 }).default('film'), // film / printing / cutting
+  qr_code_text: text('qr_code_text').notNull(),
+  qr_png_base64: text('qr_png_base64'),
+  stage: varchar('stage', { length: 20 }).notNull(), // film, printing, cutting, done
+  weight_kg: decimal('weight_kg', { precision: 12, scale: 3 }).notNull(),
+  cut_weight_total_kg: decimal('cut_weight_total_kg', { precision: 12, scale: 3 }).notNull().default('0'),
+  waste_kg: decimal('waste_kg', { precision: 12, scale: 3 }).notNull().default('0'),
+  printed_at: timestamp('printed_at'),
+  cut_completed_at: timestamp('cut_completed_at'),
+  performed_by: integer('performed_by').references(() => users.id),
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
   employee_id: integer('employee_id').references(() => users.id),
   qr_code: varchar('qr_code', { length: 255 }),
   created_at: timestamp('created_at').defaultNow(),
   completed_at: timestamp('completed_at'),
+});
+
+// ✂️ جدول القطع (Cuts)
+export const cuts = pgTable('cuts', {
+  id: serial('id').primaryKey(),
+  roll_id: integer('roll_id').notNull().references(() => rolls.id, { onDelete: 'cascade' }),
+  cut_weight_kg: decimal('cut_weight_kg', { precision: 12, scale: 3 }).notNull(),
+  pieces_count: integer('pieces_count'),
+  performed_by: integer('performed_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow()
+});
+
+// 🏪 جدول إيصالات المستودع (Warehouse Receipts)
+export const warehouse_receipts = pgTable('warehouse_receipts', {
+  id: serial('id').primaryKey(),
+  job_order_id: integer('job_order_id').notNull().references(() => job_orders.id),
+  cut_id: integer('cut_id').references(() => cuts.id),
+  received_weight_kg: decimal('received_weight_kg', { precision: 12, scale: 3 }).notNull(),
+  received_by: integer('received_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow()
+});
+
+// ⚙️ جدول إعدادات الإنتاج (Production Settings)
+export const production_settings = pgTable('production_settings', {
+  id: serial('id').primaryKey(),
+  overrun_tolerance_percent: decimal('overrun_tolerance_percent', { precision: 5, scale: 2 }).notNull().default('3'),
+  allow_last_roll_overrun: boolean('allow_last_roll_overrun').notNull().default(true),
+  qr_prefix: varchar('qr_prefix', { length: 32 }).notNull().default('ROLL')
 });
 
 // 🗑️ جدول الهدر
@@ -719,14 +756,17 @@ export const jobOrdersRelations = relations(job_orders, ({ one, many }) => ({
   customerProduct: one(customer_products, { fields: [job_orders.customer_product_id], references: [customer_products.id] }),
   rolls: many(rolls),
   waste: many(waste),
+  warehouseReceipts: many(warehouse_receipts),
 }));
 
 export const rollsRelations = relations(rolls, ({ one, many }) => ({
   jobOrder: one(job_orders, { fields: [rolls.job_order_id], references: [job_orders.id] }),
   machine: one(machines, { fields: [rolls.machine_id], references: [machines.id] }),
   employee: one(users, { fields: [rolls.employee_id], references: [users.id] }),
+  performedBy: one(users, { fields: [rolls.performed_by], references: [users.id] }),
   waste: many(waste),
   qualityChecks: many(quality_checks),
+  cuts: many(cuts),
 }));
 
 export const machinesRelations = relations(machines, ({ one, many }) => ({
@@ -798,6 +838,18 @@ export const trainingRecordsRelations = relations(training_records, ({ one }) =>
   employee: one(users, { fields: [training_records.employee_id], references: [users.id] }),
 }));
 
+export const cutsRelations = relations(cuts, ({ one, many }) => ({
+  roll: one(rolls, { fields: [cuts.roll_id], references: [rolls.id] }),
+  performedBy: one(users, { fields: [cuts.performed_by], references: [users.id] }),
+  warehouseReceipts: many(warehouse_receipts),
+}));
+
+export const warehouseReceiptsRelations = relations(warehouse_receipts, ({ one }) => ({
+  jobOrder: one(job_orders, { fields: [warehouse_receipts.job_order_id], references: [job_orders.id] }),
+  cut: one(cuts, { fields: [warehouse_receipts.cut_id], references: [cuts.id] }),
+  receivedBy: one(users, { fields: [warehouse_receipts.received_by], references: [users.id] }),
+}));
+
 export const adminDecisionsRelations = relations(admin_decisions, ({ one }) => ({
   issuedBy: one(users, { fields: [admin_decisions.issued_by], references: [users.id] }),
 }));
@@ -822,6 +874,23 @@ export const insertRollSchema = createInsertSchema(rolls).omit({
   created_at: true,
   roll_number: true,
   completed_at: true,
+  roll_seq: true,
+  qr_code_text: true,
+  qr_png_base64: true,
+});
+
+export const insertCutSchema = createInsertSchema(cuts).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertWarehouseReceiptSchema = createInsertSchema(warehouse_receipts).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertProductionSettingsSchema = createInsertSchema(production_settings).omit({
+  id: true,
 });
 
 export const insertMaintenanceRequestSchema = createInsertSchema(maintenance_requests).omit({
@@ -1144,6 +1213,14 @@ export type MaintenanceReport = typeof maintenance_reports.$inferSelect;
 export type InsertMaintenanceReport = z.infer<typeof insertMaintenanceReportSchema>;
 export type OperatorNegligenceReport = typeof operator_negligence_reports.$inferSelect;
 export type InsertOperatorNegligenceReport = z.infer<typeof insertOperatorNegligenceReportSchema>;
+
+// Production Flow Types
+export type Cut = typeof cuts.$inferSelect;
+export type InsertCut = z.infer<typeof insertCutSchema>;
+export type WarehouseReceipt = typeof warehouse_receipts.$inferSelect;
+export type InsertWarehouseReceipt = z.infer<typeof insertWarehouseReceiptSchema>;
+export type ProductionSettings = typeof production_settings.$inferSelect;
+export type InsertProductionSettings = z.infer<typeof insertProductionSettingsSchema>;
 
 // HR Relations
 export const trainingProgramsRelations = relations(training_programs, ({ one, many }) => ({
