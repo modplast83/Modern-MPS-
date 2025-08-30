@@ -449,6 +449,25 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(orders.created_at));
   }
 
+  async getOrdersByStatus(status: string): Promise<any[]> {
+    return await db.select({
+      id: orders.id,
+      order_number: orders.order_number,
+      customer_id: orders.customer_id,
+      customer_name: customers.name,
+      customer_name_ar: customers.name_ar,
+      delivery_days: orders.delivery_days,
+      status: orders.status,
+      notes: orders.notes,
+      created_at: orders.created_at,
+      delivery_date: orders.delivery_date
+    })
+    .from(orders)
+    .leftJoin(customers, eq(orders.customer_id, customers.id))
+    .where(eq(orders.status, status))
+    .orderBy(desc(orders.created_at));
+  }
+
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
     const [order] = await db
       .insert(orders)
