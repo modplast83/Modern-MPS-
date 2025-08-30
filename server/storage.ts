@@ -15,6 +15,9 @@ import {
   attendance,
   waste,
   sections,
+  cuts,
+  warehouse_receipts,
+  production_settings,
 
   items,
   customer_products,
@@ -61,6 +64,12 @@ import {
   type Attendance,
   type InsertAttendance,
   type Section,
+  type Cut,
+  type InsertCut,
+  type WarehouseReceipt,
+  type InsertWarehouseReceipt,
+  type ProductionSettings,
+  type InsertProductionSettings,
 
   type Item,
   type CustomerProduct,
@@ -392,6 +401,20 @@ export interface IStorage {
   createOperatorNegligenceReport(report: InsertOperatorNegligenceReport): Promise<OperatorNegligenceReport>;
   updateOperatorNegligenceReport(id: number, report: Partial<OperatorNegligenceReport>): Promise<OperatorNegligenceReport>;
   deleteOperatorNegligenceReport(id: number): Promise<void>;
+
+  // Production Flow Management
+  getProductionSettings(): Promise<ProductionSettings>;
+  updateProductionSettings(settings: Partial<InsertProductionSettings>): Promise<ProductionSettings>;
+  startProduction(jobOrderId: number): Promise<JobOrder>;
+  createRollWithQR(rollData: { job_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll>;
+  markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
+  createCut(cutData: InsertCut): Promise<Cut>;
+  createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt>;
+  getFilmQueue(): Promise<JobOrder[]>;
+  getPrintingQueue(): Promise<Roll[]>;
+  getCuttingQueue(): Promise<Roll[]>;
+  getOrderProgress(jobOrderId: number): Promise<any>;
+  getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2634,6 +2657,347 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting user request:', error);
       throw new Error('فشل في حذف الطلب');
+    }
+  }
+
+  // ============ PRODUCTION FLOW MANAGEMENT ============
+
+  async getProductionSettings(): Promise<ProductionSettings> {
+    try {
+      const [settings] = await db.select().from(production_settings).limit(1);
+      return settings;
+    } catch (error) {
+      console.error('Error fetching production settings:', error);
+      throw new Error('فشل في جلب إعدادات الإنتاج');
+    }
+  }
+
+  async updateProductionSettings(settingsData: Partial<InsertProductionSettings>): Promise<ProductionSettings> {
+    try {
+      const [settings] = await db
+        .update(production_settings)
+        .set(settingsData)
+        .where(eq(production_settings.id, 1))
+        .returning();
+      return settings;
+    } catch (error) {
+      console.error('Error updating production settings:', error);
+      throw new Error('فشل في تحديث إعدادات الإنتاج');
+    }
+  }
+
+  async startProduction(jobOrderId: number): Promise<JobOrder> {
+    try {
+      const [jobOrder] = await db
+        .update(job_orders)
+        .set({ 
+          status: 'in_production',
+          in_production_at: new Date()
+        })
+        .where(eq(job_orders.id, jobOrderId))
+        .returning();
+      return jobOrder;
+    } catch (error) {
+      console.error('Error starting production:', error);
+      throw new Error('فشل في بدء الإنتاج');
+    }
+  }
+
+  async createRollWithQR(rollData: { job_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll> {
+    try {
+      return await db.transaction(async (tx) => {
+        // Lock the job order to prevent race conditions
+        const [jobOrder] = await tx
+          .select()
+          .from(job_orders)
+          .where(eq(job_orders.id, rollData.job_order_id))
+          .for('update');
+
+        if (!jobOrder) {
+          throw new Error('طلب الإنتاج غير موجود');
+        }
+
+        // Get current total weight
+        const totalWeightResult = await tx
+          .select({ total: sql<number>`COALESCE(SUM(weight_kg), 0)` })
+          .from(rolls)
+          .where(eq(rolls.job_order_id, rollData.job_order_id));
+
+        const totalWeight = totalWeightResult[0]?.total || 0;
+        const newTotal = totalWeight + rollData.weight_kg;
+
+        // Check tolerance unless this is a final roll
+        if (!rollData.final_roll) {
+          const settings = await this.getProductionSettings();
+          const tolerance = jobOrder.quantity_required * (settings.overrun_tolerance_percent / 100);
+          
+          if (newTotal > jobOrder.quantity_required + tolerance) {
+            throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) تجاوزت الحد المسموح (${(jobOrder.quantity_required + tolerance).toFixed(2)} كيلو)`);
+          }
+        }
+
+        // Generate roll sequence number
+        const rollCount = await tx
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(rolls)
+          .where(eq(rolls.job_order_id, rollData.job_order_id));
+
+        const rollSeq = (rollCount[0]?.count || 0) + 1;
+
+        // Generate QR code content
+        const qrCodeText = JSON.stringify({
+          roll_seq: rollSeq,
+          job_order_id: rollData.job_order_id,
+          job_number: jobOrder.job_number,
+          weight_kg: rollData.weight_kg,
+          machine_id: rollData.machine_id,
+          created_at: new Date().toISOString()
+        });
+
+        // Generate QR code image
+        const { default: QRCode } = await import('qrcode');
+        const qrPngBase64 = await QRCode.toDataURL(qrCodeText, {
+          width: 256,
+          margin: 2,
+          color: { dark: '#000000', light: '#FFFFFF' }
+        });
+
+        // Create the roll
+        const [roll] = await tx
+          .insert(rolls)
+          .values({
+            roll_number: `${jobOrder.job_number}-${rollSeq}`,
+            job_order_id: rollData.job_order_id,
+            machine_id: rollData.machine_id,
+            employee_id: 1, // Default for now
+            weight_kg: rollData.weight_kg,
+            stage: 'film',
+            roll_seq: rollSeq,
+            qr_code_text: qrCodeText,
+            qr_png_base64: qrPngBase64,
+            weight: rollData.weight_kg, // Backwards compatibility
+            status: 'for_printing',
+            current_stage: 'film'
+          })
+          .returning();
+
+        return roll;
+      });
+    } catch (error) {
+      console.error('Error creating roll with QR:', error);
+      throw error;
+    }
+  }
+
+  async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {
+    try {
+      const [roll] = await db
+        .update(rolls)
+        .set({
+          stage: 'printing',
+          printed_at: new Date(),
+          performed_by: operatorId,
+          current_stage: 'printing'
+        })
+        .where(eq(rolls.id, rollId))
+        .returning();
+      return roll;
+    } catch (error) {
+      console.error('Error marking roll printed:', error);
+      throw new Error('فشل في تسجيل طباعة الرول');
+    }
+  }
+
+  async createCut(cutData: InsertCut): Promise<Cut> {
+    try {
+      return await db.transaction(async (tx) => {
+        // Get the roll and validate available weight
+        const [roll] = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.id, cutData.roll_id))
+          .for('update');
+
+        if (!roll) {
+          throw new Error('الرول غير موجود');
+        }
+
+        // Calculate total cut weight for this roll
+        const totalCutResult = await tx
+          .select({ total: sql<number>`COALESCE(SUM(cut_weight_kg), 0)` })
+          .from(cuts)
+          .where(eq(cuts.roll_id, cutData.roll_id));
+
+        const totalCutWeight = totalCutResult[0]?.total || 0;
+        const availableWeight = roll.weight_kg - totalCutWeight;
+
+        if (cutData.cut_weight_kg > availableWeight) {
+          throw new Error(`الوزن المطلوب (${cutData.cut_weight_kg} كيلو) أكبر من المتاح (${availableWeight.toFixed(2)} كيلو)`);
+        }
+
+        // Create the cut
+        const [cut] = await tx
+          .insert(cuts)
+          .values(cutData)
+          .returning();
+
+        // Update roll stage if fully cut
+        const newTotalCut = totalCutWeight + cutData.cut_weight_kg;
+        if (newTotalCut >= roll.weight_kg * 0.95) { // 95% threshold for completion
+          await tx
+            .update(rolls)
+            .set({
+              stage: 'cutting',
+              cut_completed_at: new Date(),
+              cut_weight_total_kg: newTotalCut,
+              current_stage: 'cutting'
+            })
+            .where(eq(rolls.id, cutData.roll_id));
+        }
+
+        return cut;
+      });
+    } catch (error) {
+      console.error('Error creating cut:', error);
+      throw error;
+    }
+  }
+
+  async createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt> {
+    try {
+      const [receipt] = await db
+        .insert(warehouse_receipts)
+        .values(receiptData)
+        .returning();
+      return receipt;
+    } catch (error) {
+      console.error('Error creating warehouse receipt:', error);
+      throw new Error('فشل في إنشاء إيصال المستودع');
+    }
+  }
+
+  async getFilmQueue(): Promise<JobOrder[]> {
+    try {
+      return await db
+        .select()
+        .from(job_orders)
+        .where(eq(job_orders.status, 'pending'))
+        .orderBy(job_orders.created_at);
+    } catch (error) {
+      console.error('Error fetching film queue:', error);
+      throw new Error('فشل في جلب قائمة الفيلم');
+    }
+  }
+
+  async getPrintingQueue(): Promise<Roll[]> {
+    try {
+      return await db
+        .select()
+        .from(rolls)
+        .where(and(
+          eq(rolls.stage, 'film'),
+          eq(rolls.status, 'for_printing')
+        ))
+        .orderBy(rolls.created_at);
+    } catch (error) {
+      console.error('Error fetching printing queue:', error);
+      throw new Error('فشل في جلب قائمة الطباعة');
+    }
+  }
+
+  async getCuttingQueue(): Promise<Roll[]> {
+    try {
+      return await db
+        .select()
+        .from(rolls)
+        .where(eq(rolls.stage, 'printing'))
+        .orderBy(rolls.printed_at);
+    } catch (error) {
+      console.error('Error fetching cutting queue:', error);
+      throw new Error('فشل في جلب قائمة التقطيع');
+    }
+  }
+
+  async getOrderProgress(jobOrderId: number): Promise<any> {
+    try {
+      // Get job order details
+      const [jobOrder] = await db
+        .select()
+        .from(job_orders)
+        .where(eq(job_orders.id, jobOrderId));
+
+      if (!jobOrder) {
+        throw new Error('طلب الإنتاج غير موجود');
+      }
+
+      // Get all rolls for this job order
+      const rollsData = await db
+        .select()
+        .from(rolls)
+        .where(eq(rolls.job_order_id, jobOrderId))
+        .orderBy(rolls.roll_seq);
+
+      // Get cuts for all rolls
+      const cutsData = await db
+        .select()
+        .from(cuts)
+        .leftJoin(rolls, eq(cuts.roll_id, rolls.id))
+        .where(eq(rolls.job_order_id, jobOrderId));
+
+      // Get warehouse receipts
+      const receiptsData = await db
+        .select()
+        .from(warehouse_receipts)
+        .where(eq(warehouse_receipts.job_order_id, jobOrderId));
+
+      // Calculate progress statistics
+      const totalFilmWeight = rollsData.reduce((sum, roll) => sum + (roll.weight_kg || 0), 0);
+      const totalPrintedWeight = rollsData
+        .filter(roll => roll.stage === 'printing' || roll.printed_at)
+        .reduce((sum, roll) => sum + (roll.weight_kg || 0), 0);
+      const totalCutWeight = cutsData.reduce((sum, cut) => sum + (cut.cuts?.cut_weight_kg || 0), 0);
+      const totalWarehouseWeight = receiptsData.reduce((sum, receipt) => sum + (receipt.received_weight_kg || 0), 0);
+
+      return {
+        job_order: jobOrder,
+        rolls: rollsData,
+        cuts: cutsData,
+        warehouse_receipts: receiptsData,
+        progress: {
+          film_weight: totalFilmWeight,
+          printed_weight: totalPrintedWeight,
+          cut_weight: totalCutWeight,
+          warehouse_weight: totalWarehouseWeight,
+          film_percentage: (totalFilmWeight / jobOrder.quantity_required) * 100,
+          printed_percentage: (totalPrintedWeight / jobOrder.quantity_required) * 100,
+          cut_percentage: (totalCutWeight / jobOrder.quantity_required) * 100,
+          warehouse_percentage: (totalWarehouseWeight / jobOrder.quantity_required) * 100
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching order progress:', error);
+      throw new Error('فشل في جلب تقدم الطلب');
+    }
+  }
+
+  async getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }> {
+    try {
+      const [roll] = await db
+        .select({ qr_code_text: rolls.qr_code_text, qr_png_base64: rolls.qr_png_base64 })
+        .from(rolls)
+        .where(eq(rolls.id, rollId));
+
+      if (!roll) {
+        throw new Error('الرول غير موجود');
+      }
+
+      return {
+        qr_code_text: roll.qr_code_text || '',
+        qr_png_base64: roll.qr_png_base64 || ''
+      };
+    } catch (error) {
+      console.error('Error fetching roll QR:', error);
+      throw new Error('فشل في جلب رمز QR للرول');
     }
   }
 
