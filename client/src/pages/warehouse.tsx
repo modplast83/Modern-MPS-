@@ -358,7 +358,13 @@ export default function Warehouse() {
   };
 
   const onMovementSubmit = (data: any) => {
-    movementMutation.mutate(data);
+    // Convert numeric fields to strings for decimal schema validation
+    const formattedData = {
+      ...data,
+      quantity: data.quantity?.toString() || "0",
+      inventory_id: parseInt(data.inventory_id)
+    };
+    movementMutation.mutate(formattedData);
   };
 
   const handleAddLocation = () => {
