@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -48,6 +48,7 @@ export default function Warehouse() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [editingLocation, setEditingLocation] = useState<any>(null);
   const [editingMovement, setEditingMovement] = useState<any>(null);
+  const [activeLocationTab, setActiveLocationTab] = useState<string>("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -313,12 +314,30 @@ export default function Warehouse() {
   // Watch for material group selection to filter items
   const selectedMaterialGroupId = form.watch('material_group_id');
   
+  // Set default active location tab when locations are available
+  useEffect(() => {
+    if (locations.length > 0 && !activeLocationTab) {
+      setActiveLocationTab(locations[0].id?.toString() || "");
+    }
+  }, [locations, activeLocationTab]);
+
   // Filter items based on selected material group
   const filteredItemsByGroup = allItems.filter((item: any) => 
     !selectedMaterialGroupId || 
     item.category_id === selectedMaterialGroupId
   );
 
+  // Filter inventory by location for current tab
+  const getInventoryByLocation = (locationId: string) => {
+    return inventoryItems.filter((item: any) => 
+      item.location_id?.toString() === locationId &&
+      ((item.item_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (item.item_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (item.category_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  };
+
+  // Original filtered items for other tabs that need all inventory
   const filteredItems = inventoryItems.filter((item: any) => 
     (item.item_name_ar || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (item.item_code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -460,36 +479,253 @@ export default function Warehouse() {
             </Card>
           </div>
 
-          <Tabs defaultValue="inventory" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="inventory">المخزون الحالي</TabsTrigger>
+          <Tabs defaultValue={activeLocationTab || "movements"} className="space-y-4">
+            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 3, 8)}`}>
+              {locations.map((location: any) => (
+                <TabsTrigger key={location.id} value={location.id.toString()}>
+                  {location.name_ar || location.name}
+                </TabsTrigger>
+              ))}
               <TabsTrigger value="movements">حركات المخزون</TabsTrigger>
-              <TabsTrigger value="locations">المواقع</TabsTrigger>
+              <TabsTrigger value="locations">إدارة المواقع</TabsTrigger>
               <TabsTrigger value="reports">التقارير</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="inventory" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>بيانات المخزون</CardTitle>
-                    <div className="flex space-x-2 space-x-reverse">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          placeholder="البحث في المخزون..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 w-64"
-                        />
+            {/* Dynamic location-based inventory tabs */}
+            {locations.map((location: any) => (
+              <TabsContent key={location.id} value={location.id.toString()} className="space-y-4">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle>مخزون {location.name_ar || location.name}</CardTitle>
+                      <div className="flex space-x-2 space-x-reverse">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="البحث في المخزون..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 w-64"
+                          />
+                        </div>
+                        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button onClick={handleAdd}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              إضافة صنف
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-md">
+                            <DialogHeader>
+                              <DialogTitle>{editingItem ? 'تعديل صنف المخزون' : 'إضافة صنف جديد للمخزون'}</DialogTitle>
+                            </DialogHeader>
+                            <Form {...form}>
+                              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <FormField
+                                  control={form.control}
+                                  name="material_group_id"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>مجموعة المواد</FormLabel>
+                                      <Select onValueChange={(value) => {
+                                        field.onChange(value);
+                                        form.setValue('item_id', '');
+                                      }} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="اختر مجموعة المواد" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {materialGroups.map((group: any) => (
+                                            <SelectItem key={group.id} value={group.id.toString()}>
+                                              {group.name_ar || group.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                <FormField
+                                  control={form.control}
+                                  name="item_id"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>الصنف</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value} disabled={!selectedMaterialGroupId}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder={selectedMaterialGroupId ? "اختر الصنف" : "اختر مجموعة المواد أولاً"} />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {filteredItemsByGroup
+                                            .filter((item: any) => item.id && item.id !== '' && item.id !== null && item.id !== undefined)
+                                            .map((item: any) => (
+                                            <SelectItem key={item.id} value={item.id.toString()}>
+                                              {item.name_ar} ({item.code})
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                
+                                <FormField
+                                  control={form.control}
+                                  name="location_id"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>الموقع</FormLabel>
+                                      <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                          <SelectTrigger>
+                                            <SelectValue placeholder="اختر الموقع" />
+                                          </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                          {locations.map((location: any) => (
+                                            <SelectItem key={location.id} value={location.id.toString()}>
+                                              {location.name_ar}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+
+                                <div className="grid grid-cols-2 gap-4">
+                                  <FormField
+                                    control={form.control}
+                                    name="current_stock"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>المخزون الحالي</FormLabel>
+                                        <FormControl>
+                                          <Input {...field} type="number" step="0.01" />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={form.control}
+                                    name="unit"
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>الوحدة</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                          <FormControl>
+                                            <SelectTrigger>
+                                              <SelectValue />
+                                            </SelectTrigger>
+                                          </FormControl>
+                                          <SelectContent>
+                                            <SelectItem value="كيلو">كيلو</SelectItem>
+                                            <SelectItem value="قطعة">قطعة</SelectItem>
+                                            <SelectItem value="طن">طن</SelectItem>
+                                            <SelectItem value="متر">متر</SelectItem>
+                                          </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+
+                                <div className="flex justify-end space-x-2 space-x-reverse">
+                                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                                    إلغاء
+                                  </Button>
+                                  <Button type="submit" disabled={mutation.isPending}>
+                                    {mutation.isPending ? 'جاري الحفظ...' : 'حفظ'}
+                                  </Button>
+                                </div>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
                       </div>
-                      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button onClick={handleAdd}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            إضافة صنف
-                          </Button>
-                        </DialogTrigger>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {inventoryLoading ? (
+                      <div className="text-center py-8">جاري التحميل...</div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الصنف</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الفئة</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">المخزون الحالي</th>
+                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {getInventoryByLocation(location.id.toString()).length === 0 ? (
+                              <tr>
+                                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                  {searchTerm ? 'لا توجد نتائج للبحث' : 'لا توجد أصناف في هذا المخزون'}
+                                </td>
+                              </tr>
+                            ) : (
+                              getInventoryByLocation(location.id.toString()).map((item: any) => {
+                                const currentStock = parseFloat(item.current_stock || 0);
+                                
+                                return (
+                                  <tr key={item.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4">
+                                      <div>
+                                        <div className="text-sm font-medium text-gray-900">{item.item_name_ar || item.item_name}</div>
+                                        <div className="text-sm text-gray-500">{item.item_code}</div>
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">{item.category_name_ar || item.category_name || '-'}</td>
+                                    <td className="px-6 py-4 text-sm text-gray-900">
+                                      {currentStock.toLocaleString()} {item.unit}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex space-x-2 space-x-reverse">
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => handleEdit(item)}
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => deleteMutation.mutate(item.id)}
+                                          disabled={deleteMutation.isPending}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            ))}
+            
+            <TabsContent value="inventory" className="space-y-4">
                         <DialogContent className="max-w-md">
                           <DialogHeader>
                             <DialogTitle>{editingItem ? 'تعديل صنف المخزون' : 'إضافة صنف جديد للمخزون'}</DialogTitle>
