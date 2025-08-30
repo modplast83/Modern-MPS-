@@ -316,7 +316,6 @@ export default function Warehouse() {
   // Filter items based on selected material group
   const filteredItemsByGroup = allItems.filter((item: any) => 
     !selectedMaterialGroupId || 
-    item.material_group_id?.toString() === selectedMaterialGroupId ||
     item.category_id === selectedMaterialGroupId
   );
 

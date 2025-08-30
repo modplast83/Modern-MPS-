@@ -652,8 +652,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Material Groups routes
-
+  // Material Groups routes (Categories)
+  app.get("/api/material-groups", async (req, res) => {
+    try {
+      const categories = await storage.getCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching material groups:', error);
+      res.status(500).json({ message: "خطأ في جلب مجموعات المواد" });
+    }
+  });
 
   // Items routes
   app.get("/api/items", async (req, res) => {
