@@ -560,21 +560,13 @@ export class DatabaseStorage implements IStorage {
 
   async getJobOrdersByStage(stage: string): Promise<JobOrder[]> {
     return await db
-      .select({
-        id: job_orders.id,
-        job_number: job_orders.job_number,
-        order_id: job_orders.order_id,
-        customer_product_id: job_orders.customer_product_id,
-        quantity_required: job_orders.quantity_required,
-        quantity_produced: job_orders.quantity_produced,
-        status: job_orders.status,
-        created_at: job_orders.created_at
-      })
+      .select()
       .from(job_orders)
       .innerJoin(rolls, eq(job_orders.id, rolls.job_order_id))
-      .where(eq(rolls.current_stage, stage))
+      .where(eq(rolls.stage, stage))
       .groupBy(job_orders.id)
-      .orderBy(desc(job_orders.created_at));
+      .orderBy(desc(job_orders.created_at))
+      .then(results => results.map(r => r.job_orders));
   }
 
   async createJobOrder(insertJobOrder: InsertJobOrder): Promise<JobOrder> {
@@ -596,39 +588,18 @@ export class DatabaseStorage implements IStorage {
 
   async getRollsByStage(stage: string): Promise<Roll[]> {
     return await db
-      .select({
-        id: rolls.id,
-        roll_number: rolls.roll_number,
-        job_order_id: rolls.job_order_id,
-        weight: rolls.weight,
-        status: rolls.status,
-        current_stage: rolls.current_stage,
-        machine_id: rolls.machine_id,
-        employee_id: rolls.employee_id,
-        qr_code: rolls.qr_code,
-        created_at: rolls.created_at,
-        completed_at: rolls.completed_at,
-        job_order_number: job_orders.job_number,
-        machine_name: machines.name,
-        machine_name_ar: machines.name_ar
-      })
+      .select()
       .from(rolls)
-      .leftJoin(job_orders, eq(rolls.job_order_id, job_orders.id))
-      .leftJoin(machines, eq(rolls.machine_id, machines.id))
-      .where(eq(rolls.current_stage, stage))
+      .where(eq(rolls.stage, stage))
       .orderBy(desc(rolls.created_at));
   }
 
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
     const rollNumber = `R-${Date.now()}`;
-    const qrCode = `QR-${rollNumber}`;
+    const qrCodeText = `QR-${rollNumber}`;
     const [roll] = await db
       .insert(rolls)
-      .values({ 
-        ...insertRoll, 
-        roll_number: rollNumber,
-        qr_code: qrCode 
-      })
+      .values(insertRoll)
       .returning();
     return roll;
   }
@@ -2729,10 +2700,12 @@ export class DatabaseStorage implements IStorage {
         // Check tolerance unless this is a final roll
         if (!rollData.final_roll) {
           const settings = await this.getProductionSettings();
-          const tolerance = jobOrder.quantity_required * (settings.overrun_tolerance_percent / 100);
+          const tolerancePercent = parseFloat(settings.overrun_tolerance_percent?.toString() || '5');
+          const quantityRequired = parseFloat(jobOrder.quantity_required?.toString() || '0');
+          const tolerance = quantityRequired * (tolerancePercent / 100);
           
-          if (newTotal > jobOrder.quantity_required + tolerance) {
-            throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) تجاوزت الحد المسموح (${(jobOrder.quantity_required + tolerance).toFixed(2)} كيلو)`);
+          if (newTotal > quantityRequired + tolerance) {
+            throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) تجاوزت الحد المسموح (${(quantityRequired + tolerance).toFixed(2)} كيلو)`);
           }
         }
 
@@ -2769,15 +2742,12 @@ export class DatabaseStorage implements IStorage {
             roll_number: `${jobOrder.job_number}-${rollSeq}`,
             job_order_id: rollData.job_order_id,
             machine_id: rollData.machine_id,
-            employee_id: 1, // Default for now
-            weight_kg: rollData.weight_kg,
+            employee_id: 1, // Default user for now
+            weight_kg: rollData.weight_kg.toString(),
             stage: 'film',
             roll_seq: rollSeq,
             qr_code_text: qrCodeText,
-            qr_png_base64: qrPngBase64,
-            weight: rollData.weight_kg, // Backwards compatibility
-            status: 'for_printing',
-            current_stage: 'film'
+            qr_png_base64: qrPngBase64
           })
           .returning();
 
@@ -2796,8 +2766,7 @@ export class DatabaseStorage implements IStorage {
         .set({
           stage: 'printing',
           printed_at: new Date(),
-          performed_by: operatorId,
-          current_stage: 'printing'
+          performed_by: operatorId
         })
         .where(eq(rolls.id, rollId))
         .returning();
@@ -2829,9 +2798,10 @@ export class DatabaseStorage implements IStorage {
           .where(eq(cuts.roll_id, cutData.roll_id));
 
         const totalCutWeight = totalCutResult[0]?.total || 0;
-        const availableWeight = roll.weight_kg - totalCutWeight;
+        const rollWeight = parseFloat(roll.weight_kg.toString());
+        const availableWeight = rollWeight - totalCutWeight;
 
-        if (cutData.cut_weight_kg > availableWeight) {
+        if (parseFloat(cutData.cut_weight_kg.toString()) > availableWeight) {
           throw new Error(`الوزن المطلوب (${cutData.cut_weight_kg} كيلو) أكبر من المتاح (${availableWeight.toFixed(2)} كيلو)`);
         }
 
@@ -2842,15 +2812,14 @@ export class DatabaseStorage implements IStorage {
           .returning();
 
         // Update roll stage if fully cut
-        const newTotalCut = totalCutWeight + cutData.cut_weight_kg;
-        if (newTotalCut >= roll.weight_kg * 0.95) { // 95% threshold for completion
+        const newTotalCut = totalCutWeight + parseFloat(cutData.cut_weight_kg.toString());
+        if (newTotalCut >= rollWeight * 0.95) { // 95% threshold for completion
           await tx
             .update(rolls)
             .set({
               stage: 'cutting',
               cut_completed_at: new Date(),
-              cut_weight_total_kg: newTotalCut,
-              current_stage: 'cutting'
+              cut_weight_total_kg: newTotalCut.toString()
             })
             .where(eq(rolls.id, cutData.roll_id));
         }
@@ -2881,7 +2850,7 @@ export class DatabaseStorage implements IStorage {
       return await db
         .select()
         .from(job_orders)
-        .where(eq(job_orders.status, 'pending'))
+        .where(eq(job_orders.status, 'in_production'))
         .orderBy(job_orders.created_at);
     } catch (error) {
       console.error('Error fetching film queue:', error);
@@ -2894,10 +2863,7 @@ export class DatabaseStorage implements IStorage {
       return await db
         .select()
         .from(rolls)
-        .where(and(
-          eq(rolls.stage, 'film'),
-          eq(rolls.status, 'for_printing')
-        ))
+        .where(eq(rolls.stage, 'film'))
         .orderBy(rolls.created_at);
     } catch (error) {
       console.error('Error fetching printing queue:', error);
@@ -2951,12 +2917,12 @@ export class DatabaseStorage implements IStorage {
         .where(eq(warehouse_receipts.job_order_id, jobOrderId));
 
       // Calculate progress statistics
-      const totalFilmWeight = rollsData.reduce((sum, roll) => sum + (roll.weight_kg || 0), 0);
+      const totalFilmWeight = rollsData.reduce((sum, roll) => sum + (parseFloat(roll.weight_kg?.toString() || '0') || 0), 0);
       const totalPrintedWeight = rollsData
         .filter(roll => roll.stage === 'printing' || roll.printed_at)
-        .reduce((sum, roll) => sum + (roll.weight_kg || 0), 0);
-      const totalCutWeight = cutsData.reduce((sum, cut) => sum + (cut.cuts?.cut_weight_kg || 0), 0);
-      const totalWarehouseWeight = receiptsData.reduce((sum, receipt) => sum + (receipt.received_weight_kg || 0), 0);
+        .reduce((sum, roll) => sum + (parseFloat(roll.weight_kg?.toString() || '0') || 0), 0);
+      const totalCutWeight = cutsData.reduce((sum, cut) => sum + (parseFloat(cut.cuts?.cut_weight_kg?.toString() || '0') || 0), 0);
+      const totalWarehouseWeight = receiptsData.reduce((sum, receipt) => sum + (parseFloat(receipt.received_weight_kg?.toString() || '0') || 0), 0);
 
       return {
         job_order: jobOrder,
@@ -2968,10 +2934,10 @@ export class DatabaseStorage implements IStorage {
           printed_weight: totalPrintedWeight,
           cut_weight: totalCutWeight,
           warehouse_weight: totalWarehouseWeight,
-          film_percentage: (totalFilmWeight / jobOrder.quantity_required) * 100,
-          printed_percentage: (totalPrintedWeight / jobOrder.quantity_required) * 100,
-          cut_percentage: (totalCutWeight / jobOrder.quantity_required) * 100,
-          warehouse_percentage: (totalWarehouseWeight / jobOrder.quantity_required) * 100
+          film_percentage: (totalFilmWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
+          printed_percentage: (totalPrintedWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
+          cut_percentage: (totalCutWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
+          warehouse_percentage: (totalWarehouseWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100
         }
       };
     } catch (error) {
