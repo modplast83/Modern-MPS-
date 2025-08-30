@@ -5,6 +5,10 @@ import { Eye, Plus } from "lucide-react";
 import type { JobOrderWithDetails } from "@/types";
 import { formatNumber, formatWeight } from '@/lib/formatNumber';
 
+const formatPercentage = (value: number): string => {
+  return `${value}%`;
+};
+
 interface JobOrdersTableProps {
   stage: string;
   onCreateRoll: () => void;
@@ -12,7 +16,7 @@ interface JobOrdersTableProps {
 
 export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTableProps) {
   const { data: jobOrders = [], isLoading } = useQuery<JobOrderWithDetails[]>({
-    queryKey: ['/api/job-orders', stage],
+    queryKey: stage === 'film' ? ['/api/production/film-queue'] : ['/api/job-orders', stage],
   });
 
   if (isLoading) {
@@ -106,6 +110,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
                       size="sm"
                       onClick={onCreateRoll}
                       className="text-primary hover:text-primary/80"
+                      data-testid={`button-create-roll-${order.id}`}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
