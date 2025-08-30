@@ -314,12 +314,22 @@ export default function Warehouse() {
   // Watch for material group selection to filter items
   const selectedMaterialGroupId = form.watch('material_group_id');
   
-  // Set default active location tab when locations are available
+  // Set default active location tab when locations are available - prioritize locations with inventory
   useEffect(() => {
-    if (locations.length > 0 && !activeLocationTab) {
-      setActiveLocationTab(locations[0].id?.toString() || "");
+    if (locations.length > 0 && inventoryItems.length > 0 && !activeLocationTab) {
+      // Find a location that has inventory items
+      const locationWithInventory = locations.find((location: any) => 
+        inventoryItems.some((item: any) => item.location_id?.toString() === location.id?.toString())
+      );
+      
+      if (locationWithInventory) {
+        setActiveLocationTab(locationWithInventory.id?.toString() || "");
+      } else {
+        // Fall back to first location if no inventory items found
+        setActiveLocationTab(locations[0].id?.toString() || "");
+      }
     }
-  }, [locations, activeLocationTab]);
+  }, [locations, inventoryItems, activeLocationTab]);
 
   // Filter items based on selected material group
   const filteredItemsByGroup = allItems.filter((item: any) => 
