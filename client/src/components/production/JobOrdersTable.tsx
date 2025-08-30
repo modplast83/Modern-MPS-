@@ -84,7 +84,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
                   {order.customer_name_ar || order.customer_name || "غير محدد"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {order.product_name_ar || order.product_name || "غير محدد"}
+                  {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatWeight(required)}
