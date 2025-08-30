@@ -851,8 +851,23 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  async getItems(): Promise<Item[]> {
-    return await db.select().from(items);
+  async getItems(): Promise<any[]> {
+    const result = await db
+      .select({
+        id: items.id,
+        category_id: items.category_id,
+        name: items.name,
+        name_ar: items.name_ar,
+        code: items.code,
+        status: items.status,
+        category_name: categories.name,
+        category_name_ar: categories.name_ar,
+      })
+      .from(items)
+      .leftJoin(categories, eq(items.category_id, categories.id))
+      .orderBy(items.name_ar);
+    
+    return result;
   }
 
   async getCustomerProducts(): Promise<CustomerProduct[]> {
