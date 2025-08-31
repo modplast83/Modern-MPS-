@@ -1,5 +1,6 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
+import bcrypt from "bcrypt";
 
 // Extend Express Request type to include session
 declare module 'express-serve-static-core' {
@@ -63,7 +64,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const user = await storage.getUserByUsername(username);
-      if (!user || user.password !== password) {
+      if (!user) {
+        return res.status(401).json({ message: "بيانات تسجيل الدخول غير صحيحة" });
+      }
+
+      // Check password using bcrypt for security
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
         return res.status(401).json({ message: "بيانات تسجيل الدخول غير صحيحة" });
       }
 
@@ -186,6 +193,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Dashboard stats error:", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
+    }
+  });
+
+  // One-time password migration (ADMIN ONLY - for security upgrade)
+  app.post("/api/admin/migrate-passwords", async (req, res) => {
+    try {
+      // Security check - only allow admin users
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user || user.role_id !== 1) { // role_id 1 = admin
+        return res.status(403).json({ message: "تحتاج صلاحيات إدارية" });
+      }
+      
+      // Get all users with potentially plain text passwords
+      const allUsers = await storage.getAllUsers();
+      const saltRounds = 12;
+      let migrated = 0;
+      let skipped = 0;
+      
+      for (const userToMigrate of allUsers) {
+        // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+        if (userToMigrate.password && (userToMigrate.password.startsWith('$2a$') || 
+            userToMigrate.password.startsWith('$2b$') || userToMigrate.password.startsWith('$2y$'))) {
+          skipped++;
+          continue;
+        }
+        
+        // Hash the plain text password
+        const hashedPassword = await bcrypt.hash(userToMigrate.password, saltRounds);
+        
+        // Update with hashed password (direct DB update to avoid double hashing)
+        await db.update(users).set({ password: hashedPassword }).where(eq(users.id, userToMigrate.id));
+        migrated++;
+      }
+      
+      res.json({ 
+        message: "تم ترقية كلمات المرور بنجاح", 
+        migrated, 
+        skipped,
+        total: allUsers.length 
+      });
+      
+    } catch (error) {
+      console.error('Password migration error:', error);
+      res.status(500).json({ message: "خطأ في ترقية كلمات المرور" });
     }
   });
 
@@ -3466,7 +3521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allow_last_roll_overrun: true,
         qr_prefix: true
       }).extend({
-        overrun_tolerance_percent: z.number().min(0).max(10),
+        overrun_tolerance_percent: z.number().min(0).max(10).transform(val => val.toString()),
         qr_prefix: z.string().min(1, "بادئة الـ QR مطلوبة")
       });
 
@@ -3516,7 +3571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           message: "بيانات غير صحيحة", 
           errors: error.errors 
         });
-      } else if (error.message && error.message.includes('تجاوزت الحد المسموح')) {
+      } else if (error instanceof Error && error.message.includes('تجاوزت الحد المسموح')) {
         res.status(400).json({ message: error.message });
       } else {
         res.status(500).json({ message: "خطأ في إنشاء الرول" });
@@ -3528,6 +3583,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/rolls/:id/print", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
       const roll = await storage.markRollPrinted(id, req.session.userId);
       res.json(roll);
     } catch (error) {
@@ -3540,11 +3598,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cuts", async (req, res) => {
     try {
       const validationSchema = insertCutSchema.extend({
-        cut_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر"),
+        cut_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString()),
         pieces_count: z.number().positive().optional()
       });
 
       const validated = validationSchema.parse(req.body);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
       const cut = await storage.createCut({
         ...validated,
         performed_by: req.session.userId
@@ -3552,7 +3613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(cut);
     } catch (error) {
       console.error('Error creating cut:', error);
-      if (error.message.includes('الوزن المطلوب أكبر من المتاح')) {
+      if (error instanceof Error && error.message.includes('الوزن المطلوب أكبر من المتاح')) {
         res.status(400).json({ message: error.message });
       } else {
         res.status(500).json({ message: "خطأ في تسجيل القطع" });
@@ -3564,10 +3625,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/warehouse/receipts", async (req, res) => {
     try {
       const validationSchema = insertWarehouseReceiptSchema.extend({
-        received_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
+        received_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString())
       });
 
       const validated = validationSchema.parse(req.body);
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
       const receipt = await storage.createWarehouseReceipt({
         ...validated,
         received_by: req.session.userId

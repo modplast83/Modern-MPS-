@@ -139,6 +139,7 @@ import {
 
 import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count } from "drizzle-orm";
+import bcrypt from "bcrypt";
 
 export interface IStorage {
   // Users
@@ -429,9 +430,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
+    // Hash password before storing
+    const saltRounds = 12;
+    const hashedPassword = await bcrypt.hash(insertUser.password, saltRounds);
+    
     const [user] = await db
       .insert(users)
-      .values(insertUser)
+      .values({ ...insertUser, password: hashedPassword })
       .returning();
     return user;
   }
@@ -846,6 +851,12 @@ export class DatabaseStorage implements IStorage {
 
 
   async updateUser(id: number, updates: any): Promise<User> {
+    // Hash password if it's being updated
+    if (updates.password) {
+      const saltRounds = 12;
+      updates.password = await bcrypt.hash(updates.password, saltRounds);
+    }
+    
     const [updatedUser] = await db
       .update(users)
       .set(updates)
