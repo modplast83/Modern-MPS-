@@ -567,15 +567,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/rolls", async (req, res) => {
-    try {
-      const validatedData = insertRollSchema.parse(req.body);
-      const roll = await storage.createRoll(validatedData);
-      res.json(roll);
-    } catch (error) {
-      res.status(400).json({ message: "بيانات غير صحيحة" });
-    }
-  });
 
   app.patch("/api/rolls/:id", async (req, res) => {
     try {
@@ -3503,6 +3494,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create Roll with QR
   app.post("/api/rolls", async (req, res) => {
     try {
+      console.log('Roll creation request body:', req.body);
+      
       const validationSchema = z.object({
         job_order_id: z.number(),
         machine_id: z.string(),
@@ -3517,7 +3510,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(roll);
     } catch (error) {
       console.error('Error creating roll:', error);
-      if (error.message.includes('تجاوزت الحد المسموح')) {
+      if (error instanceof z.ZodError) {
+        console.error('Validation errors:', error.errors);
+        res.status(400).json({ 
+          message: "بيانات غير صحيحة", 
+          errors: error.errors 
+        });
+      } else if (error.message && error.message.includes('تجاوزت الحد المسموح')) {
         res.status(400).json({ message: error.message });
       } else {
         res.status(500).json({ message: "خطأ في إنشاء الرول" });
