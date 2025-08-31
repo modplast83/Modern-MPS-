@@ -8,6 +8,7 @@ import { Play, Package, Scissors, Warehouse } from "lucide-react";
 import JobOrdersTable from "./JobOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
+import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import OrderProgress from "./OrderProgress";
 
 interface ProductionTabsProps {
@@ -91,7 +92,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         <TabsContent value="printing" className="mt-0">
           <CardContent className="p-6">
             <CardTitle className="text-lg mb-4">قائمة انتظار الطباعة</CardTitle>
-            <ProductionQueue queueType="printing" items={printingQueue} />
+            <GroupedPrintingQueue items={printingQueue} />
           </CardContent>
         </TabsContent>
 
