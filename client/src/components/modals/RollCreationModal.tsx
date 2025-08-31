@@ -149,7 +149,7 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
               <SelectContent>
                 {jobOrders.map((order) => (
                   <SelectItem key={order.id} value={order.id.toString()}>
-                    {order.job_number}
+                    {order.job_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
                   </SelectItem>
                 ))}
               </SelectContent>
