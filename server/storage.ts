@@ -652,9 +652,22 @@ export class DatabaseStorage implements IStorage {
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
     const rollNumber = `R-${Date.now()}`;
     const qrCodeText = `QR-${rollNumber}`;
+    
+    // Generate roll sequence number
+    const lastRoll = await db.select({ roll_seq: rolls.roll_seq })
+      .from(rolls)
+      .orderBy(desc(rolls.roll_seq))
+      .limit(1);
+    const nextRollSeq = (lastRoll[0]?.roll_seq || 0) + 1;
+    
     const [roll] = await db
       .insert(rolls)
-      .values(insertRoll)
+      .values({ 
+        ...insertRoll, 
+        roll_number: rollNumber, 
+        qr_code_text: qrCodeText,
+        roll_seq: nextRollSeq
+      } as any) // Type assertion to allow additional fields
       .returning();
     return roll;
   }
