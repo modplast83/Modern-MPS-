@@ -7,6 +7,17 @@ import RollCreationModal from "@/components/modals/RollCreationModal";
 
 export default function Production() {
   const [isRollModalOpen, setIsRollModalOpen] = useState(false);
+  const [selectedJobOrderId, setSelectedJobOrderId] = useState<number | undefined>();
+
+  const handleCreateRoll = (jobOrderId?: number) => {
+    setSelectedJobOrderId(jobOrderId);
+    setIsRollModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsRollModalOpen(false);
+    setSelectedJobOrderId(undefined);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,13 +33,14 @@ export default function Production() {
             <p className="text-gray-600">متابعة ومراقبة عمليات الإنتاج والرولات</p>
           </div>
           
-          <ProductionTabs onCreateRoll={() => setIsRollModalOpen(true)} />
+          <ProductionTabs onCreateRoll={handleCreateRoll} />
         </main>
       </div>
       
       <RollCreationModal 
         isOpen={isRollModalOpen} 
-        onClose={() => setIsRollModalOpen(false)} 
+        onClose={handleCloseModal}
+        selectedJobOrderId={selectedJobOrderId}
       />
     </div>
   );
