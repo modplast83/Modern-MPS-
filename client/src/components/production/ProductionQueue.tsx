@@ -141,7 +141,7 @@ export default function ProductionQueue({ queueType, items }: ProductionQueuePro
                     {item.roll_number || `رول ${item.id}`}
                   </p>
                   <p className="text-sm text-gray-500">
-                    الوزن: {item.weight_kg?.toFixed(2) || item.weight?.toFixed(2) || 0} كجم
+                    الوزن: {parseFloat(item.weight_kg || item.weight || 0).toFixed(2)} كجم
                   </p>
                   {item.machine_id && (
                     <p className="text-xs text-gray-400">المكينة: {item.machine_id}</p>
