@@ -2909,7 +2909,7 @@ export class DatabaseStorage implements IStorage {
           order_id: job_orders.order_id,
           customer_product_id: job_orders.customer_product_id,
           quantity_required: job_orders.quantity_required,
-          quantity_produced: job_orders.quantity_produced,
+          quantity_produced: sql<string>`COALESCE(SUM(${rolls.weight_kg}), 0)`.as('quantity_produced'),
           status: job_orders.status,
           requires_printing: job_orders.requires_printing,
           in_production_at: job_orders.in_production_at,
@@ -2927,7 +2927,26 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(customers, eq(orders.customer_id, customers.id))
         .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
         .leftJoin(items, eq(customer_products.item_id, items.id))
+        .leftJoin(rolls, eq(job_orders.id, rolls.job_order_id))
         .where(eq(job_orders.status, 'in_production'))
+        .groupBy(
+          job_orders.id,
+          job_orders.job_number,
+          job_orders.order_id,
+          job_orders.customer_product_id,
+          job_orders.quantity_required,
+          job_orders.status,
+          job_orders.requires_printing,
+          job_orders.in_production_at,
+          job_orders.created_at,
+          customers.name,
+          customers.name_ar,
+          items.name,
+          items.name_ar,
+          customer_products.size_caption,
+          customer_products.width,
+          customer_products.cutting_length_cm
+        )
         .orderBy(job_orders.created_at);
       
       return results as JobOrder[];
