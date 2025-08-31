@@ -2958,11 +2958,38 @@ export class DatabaseStorage implements IStorage {
 
   async getPrintingQueue(): Promise<Roll[]> {
     try {
-      return await db
-        .select()
+      const results = await db
+        .select({
+          id: rolls.id,
+          roll_seq: rolls.roll_seq,
+          roll_number: rolls.roll_number,
+          job_order_id: rolls.job_order_id,
+          weight_kg: rolls.weight_kg,
+          machine_id: rolls.machine_id,
+          stage: rolls.stage,
+          created_at: rolls.created_at,
+          qr_code_text: rolls.qr_code_text,
+          qr_png_base64: rolls.qr_png_base64,
+          job_number: job_orders.job_number,
+          order_id: job_orders.order_id,
+          order_number: orders.order_number,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          item_name: items.name,
+          item_name_ar: items.name_ar,
+          size_caption: customer_products.size_caption,
+          width: customer_products.width
+        })
         .from(rolls)
+        .leftJoin(job_orders, eq(rolls.job_order_id, job_orders.id))
+        .leftJoin(orders, eq(job_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(eq(rolls.stage, 'film'))
-        .orderBy(rolls.created_at);
+        .orderBy(orders.order_number, job_orders.job_number, rolls.roll_seq);
+      
+      return results as any[];
     } catch (error) {
       console.error('Error fetching printing queue:', error);
       throw new Error('فشل في جلب قائمة الطباعة');
