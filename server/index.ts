@@ -33,6 +33,7 @@ app.use((req, res, next) => {
 const MemoryStoreSession = MemoryStore(session);
 
 // Configure sessions with proper store
+const isProduction = process.env.NODE_ENV === 'production';
 app.use(session({
   store: new MemoryStoreSession({
     checkPeriod: 86400000 // prune expired entries every 24h
@@ -42,10 +43,10 @@ app.use(session({
   saveUninitialized: false, // Don't create session until something stored
   rolling: true, // Reset expiry on activity - crucial for keeping session alive
   cookie: {
-    secure: false, // Set to true if using HTTPS in production
-    httpOnly: false, // Allow client-side access for debugging
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days instead of 7 days
-    sameSite: 'lax' // Allow cookies in same-site requests
+    secure: isProduction, // HTTPS-only in production for security
+    httpOnly: isProduction, // Prevent XSS in production
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    sameSite: isProduction ? 'strict' : 'lax' // Stricter CSRF protection in production
   },
   name: 'plastic-bag-session', // Custom session name
   unset: 'keep' // Keep the session even if we unset properties

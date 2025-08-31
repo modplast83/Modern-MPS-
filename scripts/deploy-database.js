@@ -176,6 +176,9 @@ async function deployDatabase() {
 async function handleSchemaConflicts(db) {
   console.log('🔧 Handling schema conflicts...');
   
+  // Start transaction for atomicity
+  await db.execute('BEGIN');
+  
   try {
     // Handle specific known conflicts
     
@@ -219,11 +222,16 @@ async function handleSchemaConflicts(db) {
       }
     }
     
+    // Commit transaction on success
+    await db.execute('COMMIT');
     console.log('✅ Schema conflicts resolved');
     
   } catch (conflictError) {
+    // Rollback transaction on error
+    await db.execute('ROLLBACK');
     console.log('⚠️  Some schema conflicts could not be resolved automatically:', conflictError.message);
     console.log('   Manual intervention may be required');
+    throw conflictError;
   }
 }
 
