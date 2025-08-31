@@ -2794,7 +2794,7 @@ export class DatabaseStorage implements IStorage {
         const [roll] = await tx
           .insert(rolls)
           .values({
-            roll_number: `${jobOrder.job_number}-${rollSeq}`,
+            roll_number: `${jobOrder.job_number}-${rollSeq.toString().padStart(2, '0')}`,
             job_order_id: rollData.job_order_id,
             machine_id: rollData.machine_id,
             employee_id: 1, // Default user for now
