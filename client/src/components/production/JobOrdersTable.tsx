@@ -11,7 +11,7 @@ const formatPercentage = (value: number): string => {
 
 interface JobOrdersTableProps {
   stage: string;
-  onCreateRoll: () => void;
+  onCreateRoll: (jobOrderId?: number) => void;
 }
 
 export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTableProps) {
@@ -108,7 +108,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
                     <Button 
                       variant="ghost" 
                       size="sm"
-                      onClick={onCreateRoll}
+                      onClick={() => onCreateRoll(order.id)}
                       className="text-primary hover:text-primary/80"
                       data-testid={`button-create-roll-${order.id}`}
                     >

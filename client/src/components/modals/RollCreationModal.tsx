@@ -24,6 +24,7 @@ import type { JobOrder, Machine, User } from "@shared/schema";
 interface RollCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedJobOrderId?: number;
 }
 
 interface RollFormData {
@@ -33,9 +34,9 @@ interface RollFormData {
   final_roll: boolean;
 }
 
-export default function RollCreationModal({ isOpen, onClose }: RollCreationModalProps) {
+export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId }: RollCreationModalProps) {
   const [formData, setFormData] = useState<RollFormData>({
-    job_order_id: 0,
+    job_order_id: selectedJobOrderId || 0,
     weight_kg: "",
     machine_id: "",
     final_roll: false,
@@ -97,7 +98,7 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
 
   const resetForm = () => {
     setFormData({
-      job_order_id: 0,
+      job_order_id: selectedJobOrderId || 0,
       weight_kg: "",
       machine_id: "",
       final_roll: false,
@@ -137,24 +138,43 @@ export default function RollCreationModal({ isOpen, onClose }: RollCreationModal
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="jobOrder">أمر التشغيل *</Label>
-            <Select 
-              value={formData.job_order_id.toString()} 
-              onValueChange={(value) => setFormData({ ...formData, job_order_id: parseInt(value) })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="اختر أمر التشغيل" />
-              </SelectTrigger>
-              <SelectContent>
-                {jobOrders.map((order) => (
-                  <SelectItem key={order.id} value={order.id.toString()}>
-                    {order.job_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!selectedJobOrderId && (
+            <div className="space-y-2">
+              <Label htmlFor="jobOrder">أمر التشغيل *</Label>
+              <Select 
+                value={formData.job_order_id.toString()} 
+                onValueChange={(value) => setFormData({ ...formData, job_order_id: parseInt(value) })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر أمر التشغيل" />
+                </SelectTrigger>
+                <SelectContent>
+                  {jobOrders.map((order) => (
+                    <SelectItem key={order.id} value={order.id.toString()}>
+                      {order.job_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {selectedJobOrderId && (
+            <div className="space-y-2">
+              <Label>أمر التشغيل المحدد</Label>
+              <div className="p-3 bg-gray-50 rounded-md border">
+                <p className="font-medium text-sm">
+                  {jobOrders.find(order => order.id === selectedJobOrderId)?.job_number || `JOB-${selectedJobOrderId}`}
+                </p>
+                <p className="text-xs text-gray-600">
+                  {(() => {
+                    const selectedOrder = jobOrders.find(order => order.id === selectedJobOrderId);
+                    return `${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || "غير محدد"} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || "غير محدد"}`;
+                  })()}
+                </p>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="weight_kg">الوزن (كجم) *</Label>

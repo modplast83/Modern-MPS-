@@ -12,7 +12,7 @@ import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import OrderProgress from "./OrderProgress";
 
 interface ProductionTabsProps {
-  onCreateRoll: () => void;
+  onCreateRoll: (jobOrderId?: number) => void;
 }
 
 const stages = [
@@ -79,7 +79,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           <CardContent className="p-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
               <CardTitle className="text-lg">قائمة انتظار الفيلم</CardTitle>
-              <Button onClick={onCreateRoll} className="mt-2 lg:mt-0" data-testid="button-create-roll">
+              <Button onClick={() => onCreateRoll()} className="mt-2 lg:mt-0" data-testid="button-create-roll">
                 إنشاء رول جديد
               </Button>
             </div>
