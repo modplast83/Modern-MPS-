@@ -583,7 +583,34 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getJobOrders(): Promise<JobOrder[]> {
-    return await db.select().from(job_orders).orderBy(desc(job_orders.created_at));
+    const results = await db
+      .select({
+        id: job_orders.id,
+        job_number: job_orders.job_number,
+        order_id: job_orders.order_id,
+        customer_product_id: job_orders.customer_product_id,
+        quantity_required: job_orders.quantity_required,
+        quantity_produced: job_orders.quantity_produced,
+        status: job_orders.status,
+        requires_printing: job_orders.requires_printing,
+        in_production_at: job_orders.in_production_at,
+        created_at: job_orders.created_at,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        item_name: items.name,
+        item_name_ar: items.name_ar,
+        size_caption: customer_products.size_caption,
+        width: customer_products.width,
+        cutting_length_cm: customer_products.cutting_length_cm
+      })
+      .from(job_orders)
+      .leftJoin(orders, eq(job_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+      .leftJoin(items, eq(customer_products.item_id, items.id))
+      .orderBy(desc(job_orders.created_at));
+    
+    return results as JobOrder[];
   }
 
   async getJobOrdersByStage(stage: string): Promise<JobOrder[]> {
