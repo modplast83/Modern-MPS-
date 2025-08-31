@@ -498,20 +498,29 @@ export class DatabaseStorage implements IStorage {
         .where(eq(orders.id, id))
         .returning();
 
-      // If order status is changed to in_production or for_production, update related production orders and job orders
-      if (status === 'in_production' || status === 'for_production') {
-        // Update all production orders for this order
-        await tx
-          .update(production_orders)
-          .set({ status: 'in_production' })
-          .where(eq(production_orders.order_id, id));
-
-        // Update all job orders for this order (job_orders are directly linked to orders, not production_orders)
-        await tx
-          .update(job_orders)
-          .set({ status: 'in_production' })
-          .where(eq(job_orders.order_id, id));
+      // Map order status to production order and job order status
+      let productionStatus = status;
+      if (status === 'for_production' || status === 'in_progress') {
+        productionStatus = 'in_production';
+      } else if (status === 'pending') {
+        productionStatus = 'pending';
+      } else if (status === 'completed') {
+        productionStatus = 'completed';
+      } else if (status === 'cancelled') {
+        productionStatus = 'cancelled';
       }
+
+      // Update all production orders for this order to match the order status
+      await tx
+        .update(production_orders)
+        .set({ status: productionStatus })
+        .where(eq(production_orders.order_id, id));
+
+      // Update all job orders for this order to match the order status
+      await tx
+        .update(job_orders)
+        .set({ status: productionStatus })
+        .where(eq(job_orders.order_id, id));
 
       return order;
     });
