@@ -3674,6 +3674,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/production/orders-for-production", async (req, res) => {
+    try {
+      const orders = await storage.getOrdersForProduction();
+      res.json(orders);
+    } catch (error) {
+      console.error('Error fetching orders for production:', error);
+      res.status(500).json({ message: "خطأ في جلب الطلبات المخصصة للإنتاج" });
+    }
+  });
+
   app.get("/api/production/order-progress/:jobOrderId", async (req, res) => {
     try {
       const jobOrderId = parseInt(req.params.jobOrderId);
