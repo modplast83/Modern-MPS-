@@ -4,18 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Package, Scissors, Warehouse } from "lucide-react";
+import { Play, Package, Scissors, Warehouse, FileText } from "lucide-react";
 import JobOrdersTable from "./JobOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
 import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import OrderProgress from "./OrderProgress";
+import OrdersForProductionTable from "./OrdersForProductionTable";
 
 interface ProductionTabsProps {
   onCreateRoll: (jobOrderId?: number) => void;
 }
 
 const stages = [
+  { id: "orders-for-production", name: "Orders for Production", name_ar: "طلبات للإنتاج", key: "orders-for-production", icon: FileText },
   { id: "film", name: "Film Stage", name_ar: "مرحلة الفيلم", key: "film", icon: Package },
   { id: "printing", name: "Printing Stage", name_ar: "مرحلة الطباعة", key: "printing", icon: Play },
   { id: "cutting", name: "Cutting Stage", name_ar: "مرحلة التقطيع", key: "cutting", icon: Scissors },
@@ -23,9 +25,14 @@ const stages = [
 ];
 
 export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
-  const [activeStage, setActiveStage] = useState<string>("film");
+  const [activeStage, setActiveStage] = useState<string>("orders-for-production");
 
   // Fetch production queues
+  const { data: ordersForProduction = [] } = useQuery<any[]>({
+    queryKey: ['/api/production/orders-for-production'],
+    refetchInterval: 30000 // Refresh every 30 seconds
+  });
+
   const { data: filmQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/film-queue'],
     refetchInterval: 30000 // Refresh every 30 seconds
@@ -45,12 +52,13 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     <Card className="mb-6">
       <Tabs value={activeStage} onValueChange={setActiveStage}>
         <div className="border-b border-gray-200">
-          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
+          <TabsList className="grid w-full grid-cols-5 bg-transparent p-0">
             {stages.map((stage) => {
               const Icon = stage.icon;
               let queueCount = 0;
               
-              if (stage.key === 'film') queueCount = filmQueue.length;
+              if (stage.key === 'orders-for-production') queueCount = ordersForProduction.length;
+              else if (stage.key === 'film') queueCount = filmQueue.length;
               else if (stage.key === 'printing') queueCount = printingQueue.length;
               else if (stage.key === 'cutting') queueCount = cuttingQueue.length;
               
@@ -73,6 +81,14 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
             })}
           </TabsList>
         </div>
+
+        {/* Orders for Production - Orders ready to be sent to production */}
+        <TabsContent value="orders-for-production" className="mt-0">
+          <CardContent className="p-6">
+            <CardTitle className="text-lg mb-4">الطلبات المخصصة للإنتاج</CardTitle>
+            <OrdersForProductionTable orders={ordersForProduction} />
+          </CardContent>
+        </TabsContent>
 
         {/* Film Stage - Job Orders and Roll Creation */}
         <TabsContent value="film" className="mt-0">
