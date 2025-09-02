@@ -414,7 +414,6 @@ export interface IStorage {
   getFilmQueue(): Promise<JobOrder[]>;
   getPrintingQueue(): Promise<Roll[]>;
   getCuttingQueue(): Promise<Roll[]>;
-  getOrdersForProduction(): Promise<any[]>;
   getOrderProgress(jobOrderId: number): Promise<any>;
   getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }>;
 }
@@ -3031,48 +3030,6 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching cutting queue:', error);
       throw new Error('فشل في جلب قائمة التقطيع');
-    }
-  }
-
-  async getOrdersForProduction(): Promise<any[]> {
-    try {
-      const results = await db
-        .select({
-          id: orders.id,
-          order_number: orders.order_number,
-          customer_id: orders.customer_id,
-          delivery_days: orders.delivery_days,
-          delivery_date: orders.delivery_date,
-          status: orders.status,
-          notes: orders.notes,
-          created_at: orders.created_at,
-          customer_name: customers.name,
-          customer_name_ar: customers.name_ar,
-          total_quantity: sql<string>`COALESCE(SUM(${production_orders.quantity_kg}), 0)`.as('total_quantity'),
-          production_orders_count: sql<string>`COUNT(${production_orders.id})`.as('production_orders_count')
-        })
-        .from(orders)
-        .leftJoin(customers, eq(orders.customer_id, customers.id))
-        .leftJoin(production_orders, eq(orders.id, production_orders.order_id))
-        .where(eq(orders.status, 'for_production'))
-        .groupBy(
-          orders.id,
-          orders.order_number,
-          orders.customer_id,
-          orders.delivery_days,
-          orders.delivery_date,
-          orders.status,
-          orders.notes,
-          orders.created_at,
-          customers.name,
-          customers.name_ar
-        )
-        .orderBy(desc(orders.created_at));
-      
-      return results;
-    } catch (error) {
-      console.error('Error fetching orders for production:', error);
-      throw new Error('فشل في جلب الطلبات المخصصة للإنتاج');
     }
   }
 
