@@ -1,7 +1,6 @@
 import { 
   users, 
   orders, 
-  production_orders,
   job_orders, 
   rolls, 
   machines, 
@@ -49,8 +48,6 @@ import {
   type InsertUser,
   type NewOrder,
   type InsertNewOrder,
-  type ProductionOrder,
-  type InsertProductionOrder,
   type JobOrder,
   type InsertJobOrder,
   type Roll,
@@ -138,7 +135,7 @@ import {
 } from "@shared/erp-schema";
 
 import { db, pool } from "./db";
-import { eq, desc, and, sql, sum, count } from "drizzle-orm";
+import { eq, desc, and, sql, sum, count, inArray } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -154,12 +151,10 @@ export interface IStorage {
   updateOrderStatus(id: number, status: string): Promise<NewOrder>;
   getOrderById(id: number): Promise<NewOrder | undefined>;
   deleteOrder(id: number): Promise<void>;
+  getOrdersForProduction(): Promise<any[]>;
+  getHierarchicalOrdersForProduction(): Promise<any[]>;
   
   // Production Orders
-  getAllProductionOrders(): Promise<ProductionOrder[]>;
-  createProductionOrder(productionOrder: InsertProductionOrder): Promise<ProductionOrder>;
-  updateProductionOrder(id: number, productionOrder: Partial<ProductionOrder>): Promise<ProductionOrder>;
-  getProductionOrderById(id: number): Promise<ProductionOrder | undefined>;
   
   // Job Orders
   getJobOrders(): Promise<JobOrder[]>;
@@ -515,11 +510,6 @@ export class DatabaseStorage implements IStorage {
         productionStatus = 'cancelled';
       }
 
-      // Update all production orders for this order to match the order status
-      await tx
-        .update(production_orders)
-        .set({ status: productionStatus })
-        .where(eq(production_orders.order_id, id));
 
       // Update all job orders for this order to match the order status
       await tx
@@ -540,52 +530,118 @@ export class DatabaseStorage implements IStorage {
     await db.delete(orders).where(eq(orders.id, id));
   }
 
-  async getAllProductionOrders(): Promise<ProductionOrder[]> {
-    return await db.select()
-      .from(production_orders)
-      .orderBy(desc(production_orders.created_at));
+  async getOrdersForProduction(): Promise<any[]> {
+    const results = await db
+      .select({
+        id: orders.id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        delivery_days: orders.delivery_days,
+        status: orders.status,
+        notes: orders.notes,
+        created_by: orders.created_by,
+        created_at: orders.created_at,
+        delivery_date: orders.delivery_date,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .where(eq(orders.status, 'for_production'))
+      .orderBy(desc(orders.created_at));
+    
+    return results;
   }
 
-  async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
-    // Generate next production order number
-    const lastProductionOrder = await db
-      .select({ production_order_number: production_orders.production_order_number })
-      .from(production_orders)
-      .orderBy(desc(production_orders.id))
-      .limit(1);
+  async getHierarchicalOrdersForProduction(): Promise<any[]> {
+    // First get all orders with for_production status
+    const ordersData = await db
+      .select({
+        id: orders.id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        delivery_days: orders.delivery_days,
+        status: orders.status,
+        notes: orders.notes,
+        created_by: orders.created_by,
+        created_at: orders.created_at,
+        delivery_date: orders.delivery_date,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .where(eq(orders.status, 'for_production'))
+      .orderBy(desc(orders.created_at));
+
+    // Then get all job orders for these orders with related data
+    const orderIds = ordersData.map(order => order.id);
     
-    let nextProductionOrderNumber = "JO-101";
-    if (lastProductionOrder.length > 0 && lastProductionOrder[0].production_order_number) {
-      const lastNumber = parseInt(lastProductionOrder[0].production_order_number.split('-')[1]) || 100;
-      nextProductionOrderNumber = `JO-${lastNumber + 1}`;
+    if (orderIds.length === 0) {
+      return [];
     }
 
-    const productionOrderData = {
-      ...insertProductionOrder,
-      production_order_number: nextProductionOrderNumber,
-      created_at: new Date()
-    };
+    const jobOrdersData = await db
+      .select({
+        id: job_orders.id,
+        job_number: job_orders.job_number,
+        order_id: job_orders.order_id,
+        customer_product_id: job_orders.customer_product_id,
+        quantity_required: job_orders.quantity_required,
+        quantity_produced: job_orders.quantity_produced,
+        status: job_orders.status,
+        requires_printing: job_orders.requires_printing,
+        in_production_at: job_orders.in_production_at,
+        created_at: job_orders.created_at,
+        item_name: items.name,
+        item_name_ar: items.name_ar,
+        size_caption: customer_products.size_caption,
+        width: customer_products.width,
+        cutting_length_cm: customer_products.cutting_length_cm
+      })
+      .from(job_orders)
+      .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+      .leftJoin(items, eq(customer_products.item_id, items.id))
+      .where(inArray(job_orders.order_id, orderIds))
+      .orderBy(desc(job_orders.created_at));
 
-    const [productionOrder] = await db
-      .insert(production_orders)
-      .values(productionOrderData)
-      .returning();
-    return productionOrder;
+    // Get all rolls for these job orders
+    const jobOrderIds = jobOrdersData.map(jobOrder => jobOrder.id);
+    
+    let rollsData: any[] = [];
+    if (jobOrderIds.length > 0) {
+      rollsData = await db
+        .select({
+          id: rolls.id,
+          roll_number: rolls.roll_number,
+          job_order_id: rolls.job_order_id,
+          stage: rolls.stage,
+          weight_kg: rolls.weight_kg,
+          status: rolls.status,
+          created_at: rolls.created_at
+        })
+        .from(rolls)
+        .where(inArray(rolls.job_order_id, jobOrderIds))
+        .orderBy(desc(rolls.created_at));
+    }
+
+    // Group everything hierarchically
+    const hierarchicalOrders = ordersData.map(order => ({
+      ...order,
+      job_orders: jobOrdersData
+        .filter(jobOrder => jobOrder.order_id === order.id)
+        .map(jobOrder => ({
+          ...jobOrder,
+          rolls: rollsData.filter(roll => roll.job_order_id === jobOrder.id)
+        }))
+    }));
+
+    return hierarchicalOrders;
   }
 
-  async updateProductionOrder(id: number, productionOrderUpdate: Partial<ProductionOrder>): Promise<ProductionOrder> {
-    const [productionOrder] = await db
-      .update(production_orders)
-      .set(productionOrderUpdate)
-      .where(eq(production_orders.id, id))
-      .returning();
-    return productionOrder;
-  }
 
-  async getProductionOrderById(id: number): Promise<ProductionOrder | undefined> {
-    const [productionOrder] = await db.select().from(production_orders).where(eq(production_orders.id, id));
-    return productionOrder || undefined;
-  }
+
+
 
   async getJobOrders(): Promise<JobOrder[]> {
     const results = await db

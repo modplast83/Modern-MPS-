@@ -23,7 +23,6 @@ import {
   insertMaintenanceReportSchema,
   insertOperatorNegligenceReportSchema,
   insertInventoryMovementSchema,
-  insertProductionOrderSchema,
   insertCutSchema,
   insertWarehouseReceiptSchema,
   insertProductionSettingsSchema,
@@ -99,7 +98,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             username: user.username, 
             display_name: user.display_name,
             display_name_ar: user.display_name_ar,
-            role_id: user.role_id 
+            role_id: user.role_id,
+            section_id: user.section_id 
           } 
         });
       });
@@ -149,7 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: user.username, 
           display_name: user.display_name,
           display_name_ar: user.display_name_ar,
-          role_id: user.role_id 
+          role_id: user.role_id,
+          section_id: user.section_id 
         } 
       });
     } catch (error) {
@@ -575,6 +576,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Order deletion error:", error);
       res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
+  // Get orders for production page
+  app.get("/api/production/orders-for-production", async (req, res) => {
+    try {
+      const orders = await storage.getOrdersForProduction();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching orders for production:", error);
+      res.status(500).json({ message: "خطأ في جلب طلبات الإنتاج" });
+    }
+  });
+
+  // Get hierarchical orders for production page
+  app.get("/api/production/hierarchical-orders", async (req, res) => {
+    try {
+      const orders = await storage.getHierarchicalOrdersForProduction();
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching hierarchical orders for production:", error);
+      res.status(500).json({ message: "خطأ في جلب طلبات الإنتاج الهرمية" });
     }
   });
 
@@ -2812,44 +2835,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============ Production Orders Management API ============
-  
-  app.get("/api/production-orders", async (req, res) => {
-    try {
-      const productionOrders = await storage.getAllProductionOrders();
-      res.json(productionOrders);
-    } catch (error) {
-      console.error('Error fetching production orders:', error);
-      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج" });
-    }
-  });
-
-  app.post("/api/production-orders", async (req, res) => {
-    try {
-      console.log('Received production order data:', req.body);
-      const productionOrder = await storage.createProductionOrder(req.body);
-      res.status(201).json(productionOrder);
-    } catch (error) {
-      console.error('Error creating production order:', error);
-      res.status(500).json({ message: "خطأ في إنشاء أمر الإنتاج" });
-    }
-  });
-
-  app.put("/api/production-orders/:id", async (req, res) => {
-    try {
-      const productionOrderId = parseInt(req.params.id);
-      const result = insertProductionOrderSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
-      }
-      
-      const productionOrder = await storage.updateProductionOrder(productionOrderId, result.data);
-      res.json(productionOrder);
-    } catch (error) {
-      console.error('Error updating production order:', error);
-      res.status(500).json({ message: "خطأ في تحديث أمر الإنتاج" });
-    }
-  });
 
   // ============ Settings API ============
   
