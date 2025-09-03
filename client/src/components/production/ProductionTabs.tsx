@@ -1,15 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, Package, Scissors, Warehouse } from "lucide-react";
+import { Play, Package, Scissors } from "lucide-react";
 import JobOrdersTable from "./JobOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
 import GroupedPrintingQueue from "./GroupedPrintingQueue";
-import OrderProgress from "./OrderProgress";
+import HierarchicalOrdersView from "./HierarchicalOrdersView";
 
 interface ProductionTabsProps {
   onCreateRoll: (jobOrderId?: number) => void;
@@ -19,11 +19,55 @@ const stages = [
   { id: "film", name: "Film Stage", name_ar: "مرحلة الفيلم", key: "film", icon: Package },
   { id: "printing", name: "Printing Stage", name_ar: "مرحلة الطباعة", key: "printing", icon: Play },
   { id: "cutting", name: "Cutting Stage", name_ar: "مرحلة التقطيع", key: "cutting", icon: Scissors },
-  { id: "warehouse", name: "Warehouse Stage", name_ar: "مرحلة المستودع", key: "warehouse", icon: Warehouse },
 ];
 
 export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   const [activeStage, setActiveStage] = useState<string>("film");
+
+  // Get current user information
+  const { data: currentUser } = useQuery({
+    queryKey: ['/api/me'],
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+
+  // Get sections to map section IDs to names
+  const { data: sections = [] } = useQuery({
+    queryKey: ['/api/sections'],
+    staleTime: 10 * 60 * 1000 // 10 minutes
+  });
+
+  // Filter stages based on user's role and section
+  const visibleStages = useMemo(() => {
+    if (!currentUser?.user) return stages;
+
+    const userRole = currentUser.user.role_id;
+    const userSectionId = currentUser.user.section_id;
+
+    // Managers and Production Managers can see all tabs
+    if (userRole === 1 || userRole === 2) { // Manager, Production Manager
+      return stages;
+    }
+
+    // Get section information to match with production stages
+    const userSection = sections.find((section: any) => section.id === userSectionId);
+    const sectionName = userSection?.name?.toLowerCase();
+
+    // Map sections to stages
+    if (sectionName?.includes('film') || sectionName?.includes('فيلم')) {
+      return stages.filter(stage => stage.key === 'film');
+    }
+    
+    if (sectionName?.includes('print') || sectionName?.includes('طباعة')) {
+      return stages.filter(stage => stage.key === 'printing');
+    }
+    
+    if (sectionName?.includes('cut') || sectionName?.includes('تقطيع')) {
+      return stages.filter(stage => stage.key === 'cutting');
+    }
+
+    // Default: show all stages if no specific section match
+    return stages;
+  }, [currentUser, sections]);
 
   // Fetch production queues
   const { data: filmQueue = [] } = useQuery<any[]>({
@@ -41,12 +85,23 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     refetchInterval: 30000
   });
 
+  // Set default active stage based on visible stages
+  const defaultStage = visibleStages.length > 0 ? visibleStages[0].id : "film";
+  
+  // Update active stage if it's not visible anymore
+  if (!visibleStages.some(stage => stage.id === activeStage)) {
+    setActiveStage(defaultStage);
+  }
+
   return (
     <Card className="mb-6">
       <Tabs value={activeStage} onValueChange={setActiveStage}>
         <div className="border-b border-gray-200">
-          <TabsList className="grid w-full grid-cols-4 bg-transparent p-0">
-            {stages.map((stage) => {
+          <TabsList className={`grid w-full ${
+            visibleStages.length === 1 ? 'grid-cols-1' :
+            visibleStages.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
+          } bg-transparent p-0`}>
+            {visibleStages.map((stage) => {
               const Icon = stage.icon;
               let queueCount = 0;
               
@@ -74,43 +129,36 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsList>
         </div>
 
-        {/* Film Stage - Job Orders and Roll Creation */}
-        <TabsContent value="film" className="mt-0">
-          <CardContent className="p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
-              <CardTitle className="text-lg">قائمة انتظار الفيلم</CardTitle>
-              <Button onClick={() => onCreateRoll()} className="mt-2 lg:mt-0" data-testid="button-create-roll">
-                إنشاء رول جديد
-              </Button>
-            </div>
-            
-            <JobOrdersTable stage="film" onCreateRoll={onCreateRoll} />
-          </CardContent>
-        </TabsContent>
+        {/* Film Stage - Hierarchical Orders View */}
+        {visibleStages.some(stage => stage.key === 'film') && (
+          <TabsContent value="film" className="mt-0">
+            <CardContent className="p-6">
+              <CardTitle className="text-lg mb-4">طلبات الإنتاج - مرحلة الفيلم</CardTitle>
+              <HierarchicalOrdersView stage="film" onCreateRoll={onCreateRoll} />
+            </CardContent>
+          </TabsContent>
+        )}
 
         {/* Printing Stage - Rolls Ready for Printing */}
-        <TabsContent value="printing" className="mt-0">
-          <CardContent className="p-6">
-            <CardTitle className="text-lg mb-4">قائمة انتظار الطباعة</CardTitle>
-            <GroupedPrintingQueue items={printingQueue} />
-          </CardContent>
-        </TabsContent>
+        {visibleStages.some(stage => stage.key === 'printing') && (
+          <TabsContent value="printing" className="mt-0">
+            <CardContent className="p-6">
+              <CardTitle className="text-lg mb-4">قائمة انتظار الطباعة</CardTitle>
+              <GroupedPrintingQueue items={printingQueue} />
+            </CardContent>
+          </TabsContent>
+        )}
 
         {/* Cutting Stage - Printed Rolls Ready for Cutting */}
-        <TabsContent value="cutting" className="mt-0">
-          <CardContent className="p-6">
-            <CardTitle className="text-lg mb-4">قائمة انتظار التقطيع</CardTitle>
-            <ProductionQueue queueType="cutting" items={cuttingQueue} />
-          </CardContent>
-        </TabsContent>
+        {visibleStages.some(stage => stage.key === 'cutting') && (
+          <TabsContent value="cutting" className="mt-0">
+            <CardContent className="p-6">
+              <CardTitle className="text-lg mb-4">قائمة انتظار التقطيع</CardTitle>
+              <ProductionQueue queueType="cutting" items={cuttingQueue} />
+            </CardContent>
+          </TabsContent>
+        )}
 
-        {/* Warehouse Stage - Cut Items for Storage */}
-        <TabsContent value="warehouse" className="mt-0">
-          <CardContent className="p-6">
-            <CardTitle className="text-lg mb-4">استلام المستودع</CardTitle>
-            <OrderProgress />
-          </CardContent>
-        </TabsContent>
       </Tabs>
     </Card>
   );

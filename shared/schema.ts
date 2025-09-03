@@ -128,18 +128,7 @@ export const orders = pgTable('orders', {
   delivery_date: date('delivery_date')
 });
 
-// ⚙️ جدول أوامر الإنتاج
-export const production_orders = pgTable('production_orders', {
-  id: serial('id').primaryKey(),
-  production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(),
-  order_id: integer('order_id').notNull().references(() => orders.id),
-  customer_product_id: integer('customer_product_id').references(() => customer_products.id),
-  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(),
-  status: varchar('status', { length: 30 }).default('pending'), // pending / in_progress / completed / cancelled
-  created_at: timestamp('created_at').defaultNow()
-});
-
-// ⚙️ جدول أوامر التشغيل (للتوافق مع النظام الموجود)
+// ⚙️ جدول أوامر التشغيل
 export const job_orders = pgTable('job_orders', {
   id: serial('id').primaryKey(),
   job_number: varchar('job_number', { length: 50 }).notNull().unique(),
@@ -946,10 +935,6 @@ export const insertNewOrderSchema = createInsertSchema(orders).omit({
   delivery_date: true,
 });
 
-export const insertProductionOrderSchema = createInsertSchema(production_orders).omit({
-  id: true,
-  created_at: true,
-});
 
 // Types
 export type User = typeof users.$inferSelect;
@@ -985,8 +970,6 @@ export type InsertLocation = z.infer<typeof insertLocationSchema>;
 export type Inventory = typeof inventory.$inferSelect;
 export type NewOrder = typeof orders.$inferSelect;
 export type InsertNewOrder = z.infer<typeof insertNewOrderSchema>;
-export type ProductionOrder = typeof production_orders.$inferSelect;
-export type InsertProductionOrder = z.infer<typeof insertProductionOrderSchema>;
 export type InsertInventory = z.infer<typeof insertInventorySchema>;
 export type InventoryMovement = typeof inventory_movements.$inferSelect;
 export type InsertInventoryMovement = z.infer<typeof insertInventoryMovementSchema>;
