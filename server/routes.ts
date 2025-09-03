@@ -16,6 +16,7 @@ import { storage } from "./storage";
 import { 
   insertUserSchema, 
   insertNewOrderSchema, 
+  insertProductionOrderSchema,
   insertJobOrderSchema, 
   insertRollSchema, 
   insertMaintenanceRequestSchema,
@@ -598,6 +599,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching hierarchical orders for production:", error);
       res.status(500).json({ message: "خطأ في جلب طلبات الإنتاج الهرمية" });
+    }
+  });
+
+  // Production Orders routes
+  app.get("/api/production-orders", async (req, res) => {
+    try {
+      const productionOrders = await storage.getAllProductionOrders();
+      res.json(productionOrders);
+    } catch (error) {
+      console.error("Error fetching production orders:", error);
+      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج" });
+    }
+  });
+
+  app.post("/api/production-orders", async (req, res) => {
+    try {
+      const validatedData = insertProductionOrderSchema.parse(req.body);
+      const productionOrder = await storage.createProductionOrder(validatedData);
+      res.status(201).json(productionOrder);
+    } catch (error) {
+      console.error("Error creating production order:", error);
+      if (error instanceof Error && 'issues' in error) {
+        res.status(400).json({ message: "بيانات غير صحيحة", errors: error });
+      } else {
+        res.status(500).json({ message: "خطأ في إنشاء أمر الإنتاج" });
+      }
+    }
+  });
+
+  app.put("/api/production-orders/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validatedData = insertProductionOrderSchema.partial().parse(req.body);
+      const productionOrder = await storage.updateProductionOrder(id, validatedData);
+      res.json(productionOrder);
+    } catch (error) {
+      console.error("Error updating production order:", error);
+      res.status(500).json({ message: "خطأ في تحديث أمر الإنتاج" });
+    }
+  });
+
+  app.delete("/api/production-orders/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteProductionOrder(id);
+      res.json({ message: "تم حذف أمر الإنتاج بنجاح" });
+    } catch (error) {
+      console.error("Error deleting production order:", error);
+      res.status(500).json({ message: "خطأ في حذف أمر الإنتاج" });
     }
   });
 
