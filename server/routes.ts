@@ -17,7 +17,6 @@ import {
   insertUserSchema, 
   insertNewOrderSchema, 
   insertProductionOrderSchema,
-  insertJobOrderSchema, 
   insertRollSchema, 
   insertMaintenanceRequestSchema,
   insertMaintenanceActionSchema,
@@ -651,33 +650,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Job Orders routes
-  app.get("/api/job-orders", async (req, res) => {
-    try {
-      const { stage } = req.query;
-      let jobOrders;
-      
-      if (stage) {
-        jobOrders = await storage.getJobOrdersByStage(stage as string);
-      } else {
-        jobOrders = await storage.getJobOrders();
-      }
-      
-      res.json(jobOrders);
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في جلب أوامر التشغيل" });
-    }
-  });
-
-  app.post("/api/job-orders", async (req, res) => {
-    try {
-      const validatedData = insertJobOrderSchema.parse(req.body);
-      const jobOrder = await storage.createJobOrder(validatedData);
-      res.json(jobOrder);
-    } catch (error) {
-      res.status(400).json({ message: "بيانات غير صحيحة" });
-    }
-  });
 
   // Rolls routes
   app.get("/api/rolls", async (req, res) => {

@@ -139,26 +139,13 @@ export const production_orders = pgTable('production_orders', {
   created_at: timestamp('created_at').defaultNow()
 });
 
-// ⚙️ جدول أوامر التشغيل
-export const job_orders = pgTable('job_orders', {
-  id: serial('id').primaryKey(),
-  job_number: varchar('job_number', { length: 50 }).notNull().unique(),
-  order_id: integer('order_id').notNull().references(() => orders.id),
-  customer_product_id: integer('customer_product_id').references(() => customer_products.id),
-  quantity_required: decimal('quantity_required', { precision: 10, scale: 2 }).notNull(),
-  quantity_produced: decimal('quantity_produced', { precision: 10, scale: 2 }).default('0'),
-  status: varchar('status', { length: 30 }).default('pending'),
-  requires_printing: boolean('requires_printing').notNull().default(false),
-  in_production_at: timestamp('in_production_at'),
-  created_at: timestamp('created_at').defaultNow()
-});
 
 // 🧵 جدول الرولات
 export const rolls = pgTable('rolls', {
   id: serial('id').primaryKey(),
   roll_seq: integer('roll_seq').notNull(),
   roll_number: varchar('roll_number', { length: 64 }).notNull().unique(),
-  job_order_id: integer('job_order_id').references(() => job_orders.id),
+  production_order_id: integer('production_order_id').references(() => production_orders.id),
   qr_code_text: text('qr_code_text').notNull(),
   qr_png_base64: text('qr_png_base64'),
   stage: varchar('stage', { length: 20 }).notNull(), // film, printing, cutting, done
@@ -188,7 +175,7 @@ export const cuts = pgTable('cuts', {
 // 🏪 جدول إيصالات المستودع (Warehouse Receipts)
 export const warehouse_receipts = pgTable('warehouse_receipts', {
   id: serial('id').primaryKey(),
-  job_order_id: integer('job_order_id').notNull().references(() => job_orders.id),
+  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id),
   cut_id: integer('cut_id').references(() => cuts.id),
   received_weight_kg: decimal('received_weight_kg', { precision: 12, scale: 3 }).notNull(),
   received_by: integer('received_by').references(() => users.id),
@@ -207,7 +194,7 @@ export const production_settings = pgTable('production_settings', {
 export const waste = pgTable('waste', {
   id: serial('id').primaryKey(),
   roll_id: integer('roll_id').references(() => rolls.id),
-  job_order_id: integer('job_order_id').references(() => job_orders.id),
+  production_order_id: integer('production_order_id').references(() => production_orders.id),
   quantity_wasted: decimal('quantity_wasted', { precision: 8, scale: 2 }).notNull(),
   reason: varchar('reason', { length: 100 }),
   stage: varchar('stage', { length: 50 }), // extruder / cutting / printing
@@ -748,19 +735,19 @@ export const customersRelations = relations(customers, ({ one, many }) => ({
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   customer: one(customers, { fields: [orders.customer_id], references: [customers.id] }),
-  jobOrders: many(job_orders),
+  productionOrders: many(production_orders),
 }));
 
-export const jobOrdersRelations = relations(job_orders, ({ one, many }) => ({
-  order: one(orders, { fields: [job_orders.order_id], references: [orders.id] }),
-  customerProduct: one(customer_products, { fields: [job_orders.customer_product_id], references: [customer_products.id] }),
+export const productionOrdersRelations = relations(production_orders, ({ one, many }) => ({
+  order: one(orders, { fields: [production_orders.order_id], references: [orders.id] }),
+  customerProduct: one(customer_products, { fields: [production_orders.customer_product_id], references: [customer_products.id] }),
   rolls: many(rolls),
   waste: many(waste),
   warehouseReceipts: many(warehouse_receipts),
 }));
 
 export const rollsRelations = relations(rolls, ({ one, many }) => ({
-  jobOrder: one(job_orders, { fields: [rolls.job_order_id], references: [job_orders.id] }),
+  productionOrder: one(production_orders, { fields: [rolls.production_order_id], references: [production_orders.id] }),
   machine: one(machines, { fields: [rolls.machine_id], references: [machines.id] }),
   employee: one(users, { fields: [rolls.employee_id], references: [users.id] }),
   performedBy: one(users, { fields: [rolls.performed_by], references: [users.id] }),
@@ -825,7 +812,7 @@ export const customerProductsRelations = relations(customer_products, ({ one, ma
   customer: one(customers, { fields: [customer_products.customer_id], references: [customers.id] }),
   category: one(categories, { fields: [customer_products.category_id], references: [categories.id] }),
   item: one(items, { fields: [customer_products.item_id], references: [items.id] }),
-  jobOrders: many(job_orders),
+  productionOrders: many(production_orders),
 }));
 
 // تم حذف علاقات جدول المنتجات
@@ -845,7 +832,7 @@ export const cutsRelations = relations(cuts, ({ one, many }) => ({
 }));
 
 export const warehouseReceiptsRelations = relations(warehouse_receipts, ({ one }) => ({
-  jobOrder: one(job_orders, { fields: [warehouse_receipts.job_order_id], references: [job_orders.id] }),
+  productionOrder: one(production_orders, { fields: [warehouse_receipts.production_order_id], references: [production_orders.id] }),
   cut: one(cuts, { fields: [warehouse_receipts.cut_id], references: [cuts.id] }),
   receivedBy: one(users, { fields: [warehouse_receipts.received_by], references: [users.id] }),
 }));
@@ -862,12 +849,6 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 // Order schema (legacy - will be phased out)
 
-export const insertJobOrderSchema = createInsertSchema(job_orders).omit({
-  id: true,
-  created_at: true,
-  job_number: true,
-  quantity_produced: true,
-});
 
 export const insertRollSchema = createInsertSchema(rolls).omit({
   id: true,
@@ -959,8 +940,6 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type SparePart = typeof spare_parts.$inferSelect;
 export type InsertSparePart = typeof spare_parts.$inferInsert;
 // Legacy order types - will be phased out
-export type JobOrder = typeof job_orders.$inferSelect;
-export type InsertJobOrder = z.infer<typeof insertJobOrderSchema>;
 export type Roll = typeof rolls.$inferSelect;
 export type InsertRoll = z.infer<typeof insertRollSchema>;
 export type Machine = typeof machines.$inferSelect;

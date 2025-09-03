@@ -19,24 +19,24 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { JobOrder, Machine, User } from "@shared/schema";
+import type { ProductionOrder, Machine, User } from "@shared/schema";
 
 interface RollCreationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedJobOrderId?: number;
+  selectedProductionOrderId?: number;
 }
 
 interface RollFormData {
-  job_order_id: number;
+  production_order_id: number;
   weight_kg: string;
   machine_id: string;
   final_roll: boolean;
 }
 
-export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId }: RollCreationModalProps) {
+export default function RollCreationModal({ isOpen, onClose, selectedProductionOrderId }: RollCreationModalProps) {
   const [formData, setFormData] = useState<RollFormData>({
-    job_order_id: selectedJobOrderId || 0,
+    production_order_id: selectedProductionOrderId || 0,
     weight_kg: "",
     machine_id: "",
     final_roll: false,
@@ -45,8 +45,8 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: jobOrders = [] } = useQuery<JobOrder[]>({
-    queryKey: ['/api/job-orders'],
+  const { data: productionOrders = [] } = useQuery<ProductionOrder[]>({
+    queryKey: ['/api/production-orders'],
   });
 
   const { data: machines = [] } = useQuery<Machine[]>({
@@ -63,7 +63,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          job_order_id: data.job_order_id,
+          production_order_id: data.production_order_id,
           weight_kg: parseFloat(data.weight_kg),
           machine_id: data.machine_id,
           final_roll: data.final_roll
@@ -83,7 +83,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
         description: `رقم الرول: ${data.roll_number}`,
       });
       queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/job-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
       onClose();
       resetForm();
     },
@@ -98,7 +98,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
 
   const resetForm = () => {
     setFormData({
-      job_order_id: selectedJobOrderId || 0,
+      production_order_id: selectedProductionOrderId || 0,
       weight_kg: "",
       machine_id: "",
       final_roll: false,
@@ -108,7 +108,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.job_order_id || !formData.weight_kg || !formData.machine_id) {
+    if (!formData.production_order_id || !formData.weight_kg || !formData.machine_id) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -133,25 +133,25 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
         <DialogHeader>
           <DialogTitle>إنشاء رول جديد</DialogTitle>
           <DialogDescription id="roll-creation-description">
-            إضافة رول جديد إلى أمر التشغيل المحدد
+            إضافة رول جديد إلى أمر الإنتاج المحدد
           </DialogDescription>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!selectedJobOrderId && (
+          {!selectedProductionOrderId && (
             <div className="space-y-2">
-              <Label htmlFor="jobOrder">أمر التشغيل *</Label>
+              <Label htmlFor="productionOrder">أمر الإنتاج *</Label>
               <Select 
-                value={formData.job_order_id.toString()} 
-                onValueChange={(value) => setFormData({ ...formData, job_order_id: parseInt(value) })}
+                value={formData.production_order_id.toString()} 
+                onValueChange={(value) => setFormData({ ...formData, production_order_id: parseInt(value) })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="اختر أمر التشغيل" />
+                  <SelectValue placeholder="اختر أمر الإنتاج" />
                 </SelectTrigger>
                 <SelectContent>
-                  {jobOrders.map((order) => (
+                  {productionOrders.map((order) => (
                     <SelectItem key={order.id} value={order.id.toString()}>
-                      {order.job_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
+                      {order.production_order_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -159,16 +159,16 @@ export default function RollCreationModal({ isOpen, onClose, selectedJobOrderId 
             </div>
           )}
 
-          {selectedJobOrderId && (
+          {selectedProductionOrderId && (
             <div className="space-y-2">
-              <Label>أمر التشغيل المحدد</Label>
+              <Label>أمر الإنتاج المحدد</Label>
               <div className="p-3 bg-gray-50 rounded-md border">
                 <p className="font-medium text-sm">
-                  {jobOrders.find(order => order.id === selectedJobOrderId)?.job_number || `JOB-${selectedJobOrderId}`}
+                  {productionOrders.find(order => order.id === selectedProductionOrderId)?.production_order_number || `PO-${selectedProductionOrderId}`}
                 </p>
                 <p className="text-xs text-gray-600">
                   {(() => {
-                    const selectedOrder = jobOrders.find(order => order.id === selectedJobOrderId);
+                    const selectedOrder = productionOrders.find(order => order.id === selectedProductionOrderId);
                     return `${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || "غير محدد"} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || "غير محدد"}`;
                   })()}
                 </p>

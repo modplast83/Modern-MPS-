@@ -17,9 +17,9 @@ export interface AuthUser extends User {
   token?: string;
 }
 
-export interface JobOrderWithDetails {
+export interface ProductionOrderWithDetails {
   id: number;
-  job_number: string;
+  production_order_number: string;
   order_id: number;
   product_id: number;
   quantity_required: string;
@@ -35,7 +35,7 @@ export interface JobOrderWithDetails {
 export interface RollWithDetails {
   id: number;
   roll_number: string;
-  job_order_id?: number;
+  production_order_id?: number;
   weight?: string;
   status: string;
   current_stage: string;
@@ -43,7 +43,7 @@ export interface RollWithDetails {
   employee_id?: number;
   qr_code?: string;
   created_at: string;
-  job_number?: string;
+  production_order_number?: string;
   product_name?: string;
   product_name_ar?: string;
   machine_name?: string;

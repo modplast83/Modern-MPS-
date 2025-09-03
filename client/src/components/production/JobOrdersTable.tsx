@@ -2,21 +2,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Eye, Plus } from "lucide-react";
-import type { JobOrderWithDetails } from "@/types";
+import type { ProductionOrderWithDetails } from "@/types";
 import { formatNumber, formatWeight } from '@/lib/formatNumber';
 
 const formatPercentage = (value: number): string => {
   return `${value}%`;
 };
 
-interface JobOrdersTableProps {
+interface ProductionOrdersTableProps {
   stage: string;
-  onCreateRoll: (jobOrderId?: number) => void;
+  onCreateRoll: (productionOrderId?: number) => void;
 }
 
-export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTableProps) {
-  const { data: jobOrders = [], isLoading } = useQuery<JobOrderWithDetails[]>({
-    queryKey: stage === 'film' ? ['/api/production/film-queue'] : ['/api/job-orders', stage],
+export default function ProductionOrdersTable({ stage, onCreateRoll }: ProductionOrdersTableProps) {
+  const { data: productionOrders = [], isLoading } = useQuery<ProductionOrderWithDetails[]>({
+    queryKey: stage === 'film' ? ['/api/production/film-queue'] : ['/api/production-orders', stage],
   });
 
   if (isLoading) {
@@ -29,10 +29,10 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
     );
   }
 
-  if (jobOrders.length === 0) {
+  if (productionOrders.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">لا توجد أوامر تشغيل في هذه المرحلة</p>
+        <p className="text-muted-foreground">لا توجد أوامر إنتاج في هذه المرحلة</p>
       </div>
     );
   }
@@ -66,7 +66,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {jobOrders.map((order) => {
+          {productionOrders.map((order) => {
             const required = parseFloat(order.quantity_required) || 0;
             const produced = parseFloat(order.quantity_produced) || 0;
             const progress = required > 0 ? Math.round((produced / required) * 100) : 0;
@@ -78,7 +78,7 @@ export default function JobOrdersTable({ stage, onCreateRoll }: JobOrdersTablePr
             return (
               <tr key={order.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {order.job_number}
+                  {order.production_order_number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {order.customer_name_ar || order.customer_name || "غير محدد"}

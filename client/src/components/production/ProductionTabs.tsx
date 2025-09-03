@@ -5,14 +5,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play, Package, Scissors } from "lucide-react";
-import JobOrdersTable from "./JobOrdersTable";
+import ProductionOrdersTable from "./JobOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
 import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
 
 interface ProductionTabsProps {
-  onCreateRoll: (jobOrderId?: number) => void;
+  onCreateRoll: (productionOrderId?: number) => void;
 }
 
 const stages = [

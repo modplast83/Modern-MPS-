@@ -7,16 +7,16 @@ import RollCreationModal from "@/components/modals/RollCreationModal";
 
 export default function Production() {
   const [isRollModalOpen, setIsRollModalOpen] = useState(false);
-  const [selectedJobOrderId, setSelectedJobOrderId] = useState<number | undefined>();
+  const [selectedProductionOrderId, setSelectedProductionOrderId] = useState<number | undefined>();
 
-  const handleCreateRoll = (jobOrderId?: number) => {
-    setSelectedJobOrderId(jobOrderId);
+  const handleCreateRoll = (productionOrderId?: number) => {
+    setSelectedProductionOrderId(productionOrderId);
     setIsRollModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsRollModalOpen(false);
-    setSelectedJobOrderId(undefined);
+    setSelectedProductionOrderId(undefined);
   };
 
   return (
@@ -40,7 +40,7 @@ export default function Production() {
       <RollCreationModal 
         isOpen={isRollModalOpen} 
         onClose={handleCloseModal}
-        selectedJobOrderId={selectedJobOrderId}
+        selectedProductionOrderId={selectedProductionOrderId}
       />
     </div>
   );

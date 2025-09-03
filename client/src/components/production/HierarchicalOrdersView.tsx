@@ -16,7 +16,7 @@ import { formatNumber, formatWeight } from '@/lib/formatNumber';
 
 interface HierarchicalOrdersViewProps {
   stage: string;
-  onCreateRoll: (jobOrderId?: number) => void;
+  onCreateRoll: (productionOrderId?: number) => void;
 }
 
 const formatPercentage = (value: number): string => {
@@ -25,7 +25,7 @@ const formatPercentage = (value: number): string => {
 
 export default function HierarchicalOrdersView({ stage, onCreateRoll }: HierarchicalOrdersViewProps) {
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-  const [expandedJobOrders, setExpandedJobOrders] = useState<Set<number>>(new Set());
+  const [expandedProductionOrders, setExpandedProductionOrders] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: ordersData = [], isLoading } = useQuery<any[]>({
@@ -43,14 +43,14 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
     setExpandedOrders(newExpanded);
   };
 
-  const toggleJobOrderExpansion = (jobOrderId: number) => {
-    const newExpanded = new Set(expandedJobOrders);
-    if (newExpanded.has(jobOrderId)) {
-      newExpanded.delete(jobOrderId);
+  const toggleProductionOrderExpansion = (productionOrderId: number) => {
+    const newExpanded = new Set(expandedProductionOrders);
+    if (newExpanded.has(productionOrderId)) {
+      newExpanded.delete(productionOrderId);
     } else {
-      newExpanded.add(jobOrderId);
+      newExpanded.add(productionOrderId);
     }
-    setExpandedJobOrders(newExpanded);
+    setExpandedProductionOrders(newExpanded);
   };
 
   // Filter based on search term
@@ -64,21 +64,21 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                       order.customer_name?.toLowerCase().includes(searchLower) ||
                       order.customer_name_ar?.toLowerCase().includes(searchLower);
     
-    // Search in job orders
-    const jobOrderMatch = order.job_orders?.some((jobOrder: any) => 
-      jobOrder.job_number?.toLowerCase().includes(searchLower) ||
-      jobOrder.item_name?.toLowerCase().includes(searchLower) ||
-      jobOrder.item_name_ar?.toLowerCase().includes(searchLower)
+    // Search in production orders
+    const productionOrderMatch = order.production_orders?.some((productionOrder: any) => 
+      productionOrder.production_order_number?.toLowerCase().includes(searchLower) ||
+      productionOrder.item_name?.toLowerCase().includes(searchLower) ||
+      productionOrder.item_name_ar?.toLowerCase().includes(searchLower)
     );
     
     // Search in rolls
-    const rollMatch = order.job_orders?.some((jobOrder: any) =>
-      jobOrder.rolls?.some((roll: any) =>
+    const rollMatch = order.production_orders?.some((productionOrder: any) =>
+      productionOrder.rolls?.some((roll: any) =>
         roll.roll_number?.toLowerCase().includes(searchLower)
       )
     );
     
-    return orderMatch || jobOrderMatch || rollMatch;
+    return orderMatch || productionOrderMatch || rollMatch;
   });
 
   if (isLoading) {
@@ -139,7 +139,7 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    {order.job_orders?.length || 0} أوامر عمل
+                    {order.production_orders?.length || 0} أوامر إنتاج
                   </Badge>
                   <Badge variant="secondary" data-testid={`badge-order-status-${order.id}`}>
                     {order.status === 'for_production' ? 'للإنتاج' : order.status}
@@ -150,34 +150,34 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
 
             {expandedOrders.has(order.id) && (
               <CardContent className="pt-0">
-                {order.job_orders && order.job_orders.length > 0 ? (
+                {order.production_orders && order.production_orders.length > 0 ? (
                   <div className="space-y-3">
-                    {order.job_orders.map((jobOrder: any) => {
-                      const required = parseFloat(jobOrder.quantity_required) || 0;
-                      const produced = parseFloat(jobOrder.quantity_produced) || 0;
+                    {order.production_orders.map((productionOrder: any) => {
+                      const required = parseFloat(productionOrder.quantity_required) || 0;
+                      const produced = parseFloat(productionOrder.quantity_produced) || 0;
                       const progress = required > 0 ? Math.round((produced / required) * 100) : 0;
 
                       return (
-                        <Card key={jobOrder.id} className="border border-gray-200 ml-6">
+                        <Card key={productionOrder.id} className="border border-gray-200 ml-6">
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => toggleJobOrderExpansion(jobOrder.id)}
-                                  data-testid={`button-expand-job-order-${jobOrder.id}`}
+                                  onClick={() => toggleProductionOrderExpansion(productionOrder.id)}
+                                  data-testid={`button-expand-production-order-${productionOrder.id}`}
                                 >
-                                  {expandedJobOrders.has(jobOrder.id) ? (
+                                  {expandedProductionOrders.has(productionOrder.id) ? (
                                     <ChevronDown className="h-4 w-4" />
                                   ) : (
                                     <ChevronRight className="h-4 w-4" />
                                   )}
                                 </Button>
                                 <div>
-                                  <h4 className="font-medium">{jobOrder.job_number}</h4>
+                                  <h4 className="font-medium">{productionOrder.production_order_number}</h4>
                                   <p className="text-sm text-muted-foreground">
-                                    {jobOrder.item_name_ar || jobOrder.item_name || jobOrder.size_caption || "غير محدد"}
+                                    {productionOrder.item_name_ar || productionOrder.item_name || productionOrder.size_caption || "غير محدد"}
                                   </p>
                                 </div>
                               </div>
@@ -193,22 +193,22 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => onCreateRoll(jobOrder.id)}
-                                  data-testid={`button-create-roll-${jobOrder.id}`}
+                                  onClick={() => onCreateRoll(productionOrder.id)}
+                                  data-testid={`button-create-roll-${productionOrder.id}`}
                                 >
                                   <Plus className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
 
-                            {expandedJobOrders.has(jobOrder.id) && jobOrder.rolls && (
+                            {expandedProductionOrders.has(productionOrder.id) && productionOrder.rolls && (
                               <div className="mt-4 ml-6 space-y-2">
-                                <h5 className="text-sm font-medium text-gray-700 mb-2">الرولات ({jobOrder.rolls.length})</h5>
-                                {jobOrder.rolls.length === 0 ? (
+                                <h5 className="text-sm font-medium text-gray-700 mb-2">الرولات ({productionOrder.rolls.length})</h5>
+                                {productionOrder.rolls.length === 0 ? (
                                   <p className="text-sm text-muted-foreground">لا توجد رولات بعد</p>
                                 ) : (
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                    {jobOrder.rolls.map((roll: any) => (
+                                    {productionOrder.rolls.map((roll: any) => (
                                       <div 
                                         key={roll.id} 
                                         className="border rounded p-3 bg-gray-50"
@@ -247,7 +247,7 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                     })}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground ml-6">لا توجد أوامر عمل لهذا الطلب</p>
+                  <p className="text-sm text-muted-foreground ml-6">لا توجد أوامر إنتاج لهذا الطلب</p>
                 )}
               </CardContent>
             )}

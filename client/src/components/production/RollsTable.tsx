@@ -18,7 +18,7 @@ interface RollsTableProps {
 }
 
 interface RollWithDetails extends Roll {
-  job_order_number?: string;
+  production_order_number?: string;
   customer_name?: string;
   customer_name_ar?: string;
   machine_name?: string;
@@ -56,7 +56,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
     },
     onSuccess: (_, { updates }) => {
       queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/job-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
       toast({
         title: "تم تحديث الرول بنجاح",
         description: updates.current_stage ? 
@@ -220,7 +220,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
                     {roll.roll_number || "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {roll.job_order_number || "غير محدد"}
+                    {roll.production_order_number || "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {roll.weight ? parseFloat(roll.weight.toString()).toFixed(1) : "غير محدد"}
