@@ -1,6 +1,7 @@
 import { 
   users, 
   orders, 
+  production_orders,
   job_orders, 
   rolls, 
   machines, 
@@ -50,6 +51,8 @@ import {
   type InsertNewOrder,
   type JobOrder,
   type InsertJobOrder,
+  type ProductionOrder,
+  type InsertProductionOrder,
   type Roll,
   type InsertRoll,
   type Machine,
@@ -153,6 +156,12 @@ export interface IStorage {
   deleteOrder(id: number): Promise<void>;
   getOrdersForProduction(): Promise<any[]>;
   getHierarchicalOrdersForProduction(): Promise<any[]>;
+  
+  // Production Orders
+  getAllProductionOrders(): Promise<ProductionOrder[]>;
+  createProductionOrder(productionOrder: InsertProductionOrder): Promise<ProductionOrder>;
+  updateProductionOrder(id: number, productionOrder: Partial<ProductionOrder>): Promise<ProductionOrder>;
+  deleteProductionOrder(id: number): Promise<void>;
   
   // Production Orders
   
@@ -617,7 +626,6 @@ export class DatabaseStorage implements IStorage {
           job_order_id: rolls.job_order_id,
           stage: rolls.stage,
           weight_kg: rolls.weight_kg,
-          status: rolls.status,
           created_at: rolls.created_at
         })
         .from(rolls)
@@ -639,6 +647,44 @@ export class DatabaseStorage implements IStorage {
     return hierarchicalOrders;
   }
 
+  // Production Orders Implementation
+  async getAllProductionOrders(): Promise<ProductionOrder[]> {
+    return await db.select()
+      .from(production_orders)
+      .orderBy(desc(production_orders.created_at));
+  }
+
+  async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
+    // Generate production order number
+    const existingOrders = await db.select({ production_order_number: production_orders.production_order_number }).from(production_orders);
+    const orderNumbers = existingOrders
+      .map(order => order.production_order_number)
+      .filter(orderNumber => orderNumber.startsWith('PO'))
+      .map(orderNumber => parseInt(orderNumber.replace('PO', '')))
+      .filter(num => !isNaN(num));
+    
+    const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
+    const productionOrderNumber = `PO${nextNumber.toString().padStart(3, '0')}`;
+    
+    const [productionOrder] = await db
+      .insert(production_orders)
+      .values({ ...insertProductionOrder, production_order_number: productionOrderNumber })
+      .returning();
+    return productionOrder;
+  }
+
+  async updateProductionOrder(id: number, productionOrderUpdate: Partial<ProductionOrder>): Promise<ProductionOrder> {
+    const [productionOrder] = await db
+      .update(production_orders)
+      .set(productionOrderUpdate)
+      .where(eq(production_orders.id, id))
+      .returning();
+    return productionOrder;
+  }
+
+  async deleteProductionOrder(id: number): Promise<void> {
+    await db.delete(production_orders).where(eq(production_orders.id, id));
+  }
 
 
 
@@ -2261,6 +2307,9 @@ export class DatabaseStorage implements IStorage {
         case 'job_orders':
           data = await db.select().from(job_orders);
           break;
+        case 'job_orders_view':
+          data = await db.select().from(job_orders);
+          break;
         case 'production_orders':
           data = await db.select().from(production_orders);
           break;
@@ -2600,7 +2649,8 @@ export class DatabaseStorage implements IStorage {
       machines: ['id', 'name', 'name_ar', 'type', 'type_ar', 'status', 'location_id', 'description', 'description_ar'],
       locations: ['id', 'name', 'name_ar', 'type', 'description', 'description_ar'],
       orders: ['id', 'customer_id', 'order_number', 'order_date', 'delivery_date', 'status', 'total_amount', 'notes', 'created_by'],
-      production_orders: ['id', 'order_number', 'customer_id', 'item_id', 'quantity', 'status', 'created_date', 'due_date', 'notes'],
+      job_orders_view: ['id', 'job_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
+      production_orders: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_kg', 'status', 'created_at'],
       job_orders: ['id', 'production_order_id', 'machine_id', 'operator_id', 'status', 'start_time', 'end_time', 'quantity_produced']
     };
 
