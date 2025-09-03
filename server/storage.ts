@@ -2,7 +2,6 @@ import {
   users, 
   orders, 
   production_orders,
-  job_orders, 
   rolls, 
   machines, 
   customers,
@@ -49,8 +48,6 @@ import {
   type InsertUser,
   type NewOrder,
   type InsertNewOrder,
-  type JobOrder,
-  type InsertJobOrder,
   type ProductionOrder,
   type InsertProductionOrder,
   type Roll,
@@ -165,14 +162,10 @@ export interface IStorage {
   
   // Production Orders
   
-  // Job Orders
-  getJobOrders(): Promise<JobOrder[]>;
-  getJobOrdersByStage(stage: string): Promise<JobOrder[]>;
-  createJobOrder(jobOrder: InsertJobOrder): Promise<JobOrder>;
   
   // Rolls
   getRolls(): Promise<Roll[]>;
-  getRollsByJobOrder(jobOrderId: number): Promise<Roll[]>;
+  getRollsByProductionOrder(productionOrderId: number): Promise<Roll[]>;
   getRollsByStage(stage: string): Promise<Roll[]>;
   createRoll(roll: InsertRoll): Promise<Roll>;
   updateRoll(id: number, updates: Partial<Roll>): Promise<Roll>;
@@ -410,15 +403,15 @@ export interface IStorage {
   // Production Flow Management
   getProductionSettings(): Promise<ProductionSettings>;
   updateProductionSettings(settings: Partial<InsertProductionSettings>): Promise<ProductionSettings>;
-  startProduction(jobOrderId: number): Promise<JobOrder>;
-  createRollWithQR(rollData: { job_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll>;
+  startProduction(productionOrderId: number): Promise<ProductionOrder>;
+  createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll>;
   markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt>;
-  getFilmQueue(): Promise<JobOrder[]>;
+  getFilmQueue(): Promise<ProductionOrder[]>;
   getPrintingQueue(): Promise<Roll[]>;
   getCuttingQueue(): Promise<Roll[]>;
-  getOrderProgress(jobOrderId: number): Promise<any>;
+  getOrderProgress(productionOrderId: number): Promise<any>;
   getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }>;
 }
 
@@ -520,11 +513,11 @@ export class DatabaseStorage implements IStorage {
       }
 
 
-      // Update all job orders for this order to match the order status
+      // Update all production orders for this order to match the order status
       await tx
-        .update(job_orders)
+        .update(production_orders)
         .set({ status: productionStatus })
-        .where(eq(job_orders.order_id, id));
+        .where(eq(production_orders.order_id, id));
 
       return order;
     });
@@ -583,64 +576,64 @@ export class DatabaseStorage implements IStorage {
       .where(eq(orders.status, 'for_production'))
       .orderBy(desc(orders.created_at));
 
-    // Then get all job orders for these orders with related data
+    // Then get all production orders for these orders with related data
     const orderIds = ordersData.map(order => order.id);
     
     if (orderIds.length === 0) {
       return [];
     }
 
-    const jobOrdersData = await db
+    const productionOrdersData = await db
       .select({
-        id: job_orders.id,
-        job_number: job_orders.job_number,
-        order_id: job_orders.order_id,
-        customer_product_id: job_orders.customer_product_id,
-        quantity_required: job_orders.quantity_required,
-        quantity_produced: job_orders.quantity_produced,
-        status: job_orders.status,
-        requires_printing: job_orders.requires_printing,
-        in_production_at: job_orders.in_production_at,
-        created_at: job_orders.created_at,
+        id: production_orders.id,
+        production_order_number: production_orders.production_order_number,
+        order_id: production_orders.order_id,
+        customer_product_id: production_orders.customer_product_id,
+        quantity_required: production_orders.quantity_required,
+        quantity_produced: production_orders.quantity_produced,
+        status: production_orders.status,
+        requires_printing: production_orders.requires_printing,
+        in_production_at: production_orders.in_production_at,
+        created_at: production_orders.created_at,
         item_name: items.name,
         item_name_ar: items.name_ar,
         size_caption: customer_products.size_caption,
         width: customer_products.width,
         cutting_length_cm: customer_products.cutting_length_cm
       })
-      .from(job_orders)
-      .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+      .from(production_orders)
+      .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
       .leftJoin(items, eq(customer_products.item_id, items.id))
-      .where(inArray(job_orders.order_id, orderIds))
-      .orderBy(desc(job_orders.created_at));
+      .where(inArray(production_orders.order_id, orderIds))
+      .orderBy(desc(production_orders.created_at));
 
-    // Get all rolls for these job orders
-    const jobOrderIds = jobOrdersData.map(jobOrder => jobOrder.id);
+    // Get all rolls for these production orders
+    const productionOrderIds = productionOrdersData.map(productionOrder => productionOrder.id);
     
     let rollsData: any[] = [];
-    if (jobOrderIds.length > 0) {
+    if (productionOrderIds.length > 0) {
       rollsData = await db
         .select({
           id: rolls.id,
           roll_number: rolls.roll_number,
-          job_order_id: rolls.job_order_id,
+          production_order_id: rolls.production_order_id,
           stage: rolls.stage,
           weight_kg: rolls.weight_kg,
           created_at: rolls.created_at
         })
         .from(rolls)
-        .where(inArray(rolls.job_order_id, jobOrderIds))
+        .where(inArray(rolls.production_order_id, productionOrderIds))
         .orderBy(desc(rolls.created_at));
     }
 
     // Group everything hierarchically
     const hierarchicalOrders = ordersData.map(order => ({
       ...order,
-      job_orders: jobOrdersData
-        .filter(jobOrder => jobOrder.order_id === order.id)
-        .map(jobOrder => ({
-          ...jobOrder,
-          rolls: rollsData.filter(roll => roll.job_order_id === jobOrder.id)
+      production_orders: productionOrdersData
+        .filter(productionOrder => productionOrder.order_id === order.id)
+        .map(productionOrder => ({
+          ...productionOrder,
+          rolls: rollsData.filter(roll => roll.production_order_id === productionOrder.id)
         }))
     }));
 
@@ -689,63 +682,15 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  async getJobOrders(): Promise<JobOrder[]> {
-    const results = await db
-      .select({
-        id: job_orders.id,
-        job_number: job_orders.job_number,
-        order_id: job_orders.order_id,
-        customer_product_id: job_orders.customer_product_id,
-        quantity_required: job_orders.quantity_required,
-        quantity_produced: job_orders.quantity_produced,
-        status: job_orders.status,
-        requires_printing: job_orders.requires_printing,
-        in_production_at: job_orders.in_production_at,
-        created_at: job_orders.created_at,
-        customer_name: customers.name,
-        customer_name_ar: customers.name_ar,
-        item_name: items.name,
-        item_name_ar: items.name_ar,
-        size_caption: customer_products.size_caption,
-        width: customer_products.width,
-        cutting_length_cm: customer_products.cutting_length_cm
-      })
-      .from(job_orders)
-      .leftJoin(orders, eq(job_orders.order_id, orders.id))
-      .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
-      .leftJoin(items, eq(customer_products.item_id, items.id))
-      .orderBy(desc(job_orders.created_at));
-    
-    return results as JobOrder[];
-  }
 
-  async getJobOrdersByStage(stage: string): Promise<JobOrder[]> {
-    return await db
-      .select()
-      .from(job_orders)
-      .innerJoin(rolls, eq(job_orders.id, rolls.job_order_id))
-      .where(eq(rolls.stage, stage))
-      .groupBy(job_orders.id)
-      .orderBy(desc(job_orders.created_at))
-      .then(results => results.map(r => r.job_orders));
-  }
 
-  async createJobOrder(insertJobOrder: InsertJobOrder): Promise<JobOrder> {
-    const jobNumber = `JO-${Date.now()}`;
-    const [jobOrder] = await db
-      .insert(job_orders)
-      .values({ ...insertJobOrder, job_number: jobNumber })
-      .returning();
-    return jobOrder;
-  }
 
   async getRolls(): Promise<Roll[]> {
     return await db.select().from(rolls).orderBy(desc(rolls.created_at));
   }
 
-  async getRollsByJobOrder(jobOrderId: number): Promise<Roll[]> {
-    return await db.select().from(rolls).where(eq(rolls.job_order_id, jobOrderId));
+  async getRollsByProductionOrder(productionOrderId: number): Promise<Roll[]> {
+    return await db.select().from(rolls).where(eq(rolls.production_order_id, productionOrderId));
   }
 
   async getRollsByStage(stage: string): Promise<Roll[]> {
@@ -1127,13 +1072,13 @@ export class DatabaseStorage implements IStorage {
     
     const activeOrders = activeOrdersResult?.count || 0;
 
-    // Get production rate (percentage based on job orders)
+    // Get production rate (percentage based on production orders)
     const [productionResult] = await db
       .select({
-        totalRequired: sum(job_orders.quantity_required),
-        totalProduced: sum(job_orders.quantity_produced)
+        totalRequired: sum(production_orders.quantity_required),
+        totalProduced: sum(production_orders.quantity_produced)
       })
-      .from(job_orders);
+      .from(production_orders);
 
     const productionRate = productionResult?.totalRequired && Number(productionResult.totalRequired) > 0
       ? Math.round((Number(productionResult.totalProduced) / Number(productionResult.totalRequired)) * 100)
@@ -2304,11 +2249,11 @@ export class DatabaseStorage implements IStorage {
         case 'rolls':
           data = await db.select().from(rolls);
           break;
-        case 'job_orders':
-          data = await db.select().from(job_orders);
+        case 'production_orders':
+          data = await db.select().from(production_orders);
           break;
-        case 'job_orders_view':
-          data = await db.select().from(job_orders);
+        case 'production_orders_view':
+          data = await db.select().from(production_orders);
           break;
         case 'production_orders':
           data = await db.select().from(production_orders);
@@ -2649,9 +2594,9 @@ export class DatabaseStorage implements IStorage {
       machines: ['id', 'name', 'name_ar', 'type', 'type_ar', 'status', 'location_id', 'description', 'description_ar'],
       locations: ['id', 'name', 'name_ar', 'type', 'description', 'description_ar'],
       orders: ['id', 'customer_id', 'order_number', 'order_date', 'delivery_date', 'status', 'total_amount', 'notes', 'created_by'],
-      job_orders_view: ['id', 'job_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
-      production_orders: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_kg', 'status', 'created_at'],
-      job_orders: ['id', 'production_order_id', 'machine_id', 'operator_id', 'status', 'start_time', 'end_time', 'quantity_produced']
+      production_orders_view: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
+      production_orders: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
+      rolls: ['id', 'roll_number', 'production_order_id', 'weight_kg', 'stage', 'created_at']
     };
 
     return templates[tableName || ''] || ['id', 'name', 'description'];
@@ -2842,34 +2787,34 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async startProduction(jobOrderId: number): Promise<JobOrder> {
+  async startProduction(productionOrderId: number): Promise<ProductionOrder> {
     try {
-      const [jobOrder] = await db
-        .update(job_orders)
+      const [productionOrder] = await db
+        .update(production_orders)
         .set({ 
           status: 'in_production',
           in_production_at: new Date()
         })
-        .where(eq(job_orders.id, jobOrderId))
+        .where(eq(production_orders.id, productionOrderId))
         .returning();
-      return jobOrder;
+      return productionOrder;
     } catch (error) {
       console.error('Error starting production:', error);
       throw new Error('فشل في بدء الإنتاج');
     }
   }
 
-  async createRollWithQR(rollData: { job_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll> {
+  async createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll> {
     try {
       return await db.transaction(async (tx) => {
-        // Lock the job order to prevent race conditions
-        const [jobOrder] = await tx
+        // Lock the production order to prevent race conditions
+        const [productionOrder] = await tx
           .select()
-          .from(job_orders)
-          .where(eq(job_orders.id, rollData.job_order_id))
+          .from(production_orders)
+          .where(eq(production_orders.id, rollData.production_order_id))
           .for('update');
 
-        if (!jobOrder) {
+        if (!productionOrder) {
           throw new Error('طلب الإنتاج غير موجود');
         }
 
@@ -2877,7 +2822,7 @@ export class DatabaseStorage implements IStorage {
         const totalWeightResult = await tx
           .select({ total: sql<number>`COALESCE(SUM(weight_kg), 0)` })
           .from(rolls)
-          .where(eq(rolls.job_order_id, rollData.job_order_id));
+          .where(eq(rolls.production_order_id, rollData.production_order_id));
 
         const totalWeight = totalWeightResult[0]?.total || 0;
         const newTotal = totalWeight + rollData.weight_kg;
@@ -2886,7 +2831,7 @@ export class DatabaseStorage implements IStorage {
         if (!rollData.final_roll) {
           const settings = await this.getProductionSettings();
           const tolerancePercent = parseFloat(settings.overrun_tolerance_percent?.toString() || '5');
-          const quantityRequired = parseFloat(jobOrder.quantity_required?.toString() || '0');
+          const quantityRequired = parseFloat(productionOrder.quantity_required?.toString() || '0');
           const tolerance = quantityRequired * (tolerancePercent / 100);
           
           if (newTotal > quantityRequired + tolerance) {
@@ -2898,15 +2843,15 @@ export class DatabaseStorage implements IStorage {
         const rollCount = await tx
           .select({ count: sql<number>`COUNT(*)` })
           .from(rolls)
-          .where(eq(rolls.job_order_id, rollData.job_order_id));
+          .where(eq(rolls.production_order_id, rollData.production_order_id));
 
         const rollSeq = (rollCount[0]?.count || 0) + 1;
 
         // Generate QR code content
         const qrCodeText = JSON.stringify({
           roll_seq: rollSeq,
-          job_order_id: rollData.job_order_id,
-          job_number: jobOrder.job_number,
+          production_order_id: rollData.production_order_id,
+          production_order_number: productionOrder.production_order_number,
           weight_kg: rollData.weight_kg,
           machine_id: rollData.machine_id,
           created_at: new Date().toISOString()
@@ -2924,8 +2869,8 @@ export class DatabaseStorage implements IStorage {
         const [roll] = await tx
           .insert(rolls)
           .values({
-            roll_number: `${jobOrder.job_number}-${rollSeq.toString().padStart(2, '0')}`,
-            job_order_id: rollData.job_order_id,
+            roll_number: `${productionOrder.production_order_number}-${rollSeq.toString().padStart(2, '0')}`,
+            production_order_id: rollData.production_order_id,
             machine_id: rollData.machine_id,
             employee_id: 1, // Default user for now
             weight_kg: rollData.weight_kg.toString(),
@@ -3030,20 +2975,20 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getFilmQueue(): Promise<JobOrder[]> {
+  async getFilmQueue(): Promise<ProductionOrder[]> {
     try {
       const results = await db
         .select({
-          id: job_orders.id,
-          job_number: job_orders.job_number,
-          order_id: job_orders.order_id,
-          customer_product_id: job_orders.customer_product_id,
-          quantity_required: job_orders.quantity_required,
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_required: production_orders.quantity_required,
           quantity_produced: sql<string>`COALESCE(SUM(${rolls.weight_kg}), 0)`.as('quantity_produced'),
-          status: job_orders.status,
-          requires_printing: job_orders.requires_printing,
-          in_production_at: job_orders.in_production_at,
-          created_at: job_orders.created_at,
+          status: production_orders.status,
+          requires_printing: production_orders.requires_printing,
+          in_production_at: production_orders.in_production_at,
+          created_at: production_orders.created_at,
           customer_name: customers.name,
           customer_name_ar: customers.name_ar,
           item_name: items.name,
@@ -3052,23 +2997,23 @@ export class DatabaseStorage implements IStorage {
           width: customer_products.width,
           cutting_length_cm: customer_products.cutting_length_cm
         })
-        .from(job_orders)
-        .leftJoin(orders, eq(job_orders.order_id, orders.id))
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
         .leftJoin(customers, eq(orders.customer_id, customers.id))
-        .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .leftJoin(rolls, eq(job_orders.id, rolls.job_order_id))
-        .where(eq(job_orders.status, 'in_production'))
+        .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+        .where(eq(production_orders.status, 'in_production'))
         .groupBy(
-          job_orders.id,
-          job_orders.job_number,
-          job_orders.order_id,
-          job_orders.customer_product_id,
-          job_orders.quantity_required,
-          job_orders.status,
-          job_orders.requires_printing,
-          job_orders.in_production_at,
-          job_orders.created_at,
+          production_orders.id,
+          production_orders.production_order_number,
+          production_orders.order_id,
+          production_orders.customer_product_id,
+          production_orders.quantity_required,
+          production_orders.status,
+          production_orders.requires_printing,
+          production_orders.in_production_at,
+          production_orders.created_at,
           customers.name,
           customers.name_ar,
           items.name,
@@ -3077,9 +3022,9 @@ export class DatabaseStorage implements IStorage {
           customer_products.width,
           customer_products.cutting_length_cm
         )
-        .orderBy(job_orders.created_at);
+        .orderBy(production_orders.created_at);
       
-      return results as JobOrder[];
+      return results as ProductionOrder[];
     } catch (error) {
       console.error('Error fetching film queue:', error);
       throw new Error('فشل في جلب قائمة الفيلم');
@@ -3093,15 +3038,15 @@ export class DatabaseStorage implements IStorage {
           id: rolls.id,
           roll_seq: rolls.roll_seq,
           roll_number: rolls.roll_number,
-          job_order_id: rolls.job_order_id,
+          production_order_id: rolls.production_order_id,
           weight_kg: rolls.weight_kg,
           machine_id: rolls.machine_id,
           stage: rolls.stage,
           created_at: rolls.created_at,
           qr_code_text: rolls.qr_code_text,
           qr_png_base64: rolls.qr_png_base64,
-          job_number: job_orders.job_number,
-          order_id: job_orders.order_id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
           order_number: orders.order_number,
           customer_name: customers.name,
           customer_name_ar: customers.name_ar,
@@ -3111,13 +3056,13 @@ export class DatabaseStorage implements IStorage {
           width: customer_products.width
         })
         .from(rolls)
-        .leftJoin(job_orders, eq(rolls.job_order_id, job_orders.id))
-        .leftJoin(orders, eq(job_orders.order_id, orders.id))
+        .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
         .leftJoin(customers, eq(orders.customer_id, customers.id))
-        .leftJoin(customer_products, eq(job_orders.customer_product_id, customer_products.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(eq(rolls.stage, 'film'))
-        .orderBy(orders.order_number, job_orders.job_number, rolls.roll_seq);
+        .orderBy(orders.order_number, production_orders.production_order_number, rolls.roll_seq);
       
       return results as any[];
     } catch (error) {
@@ -3139,23 +3084,23 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getOrderProgress(jobOrderId: number): Promise<any> {
+  async getOrderProgress(productionOrderId: number): Promise<any> {
     try {
-      // Get job order details
-      const [jobOrder] = await db
+      // Get production order details
+      const [productionOrder] = await db
         .select()
-        .from(job_orders)
-        .where(eq(job_orders.id, jobOrderId));
+        .from(production_orders)
+        .where(eq(production_orders.id, productionOrderId));
 
-      if (!jobOrder) {
+      if (!productionOrder) {
         throw new Error('طلب الإنتاج غير موجود');
       }
 
-      // Get all rolls for this job order
+      // Get all rolls for this production order
       const rollsData = await db
         .select()
         .from(rolls)
-        .where(eq(rolls.job_order_id, jobOrderId))
+        .where(eq(rolls.production_order_id, productionOrderId))
         .orderBy(rolls.roll_seq);
 
       // Get cuts for all rolls
@@ -3163,13 +3108,13 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(cuts)
         .leftJoin(rolls, eq(cuts.roll_id, rolls.id))
-        .where(eq(rolls.job_order_id, jobOrderId));
+        .where(eq(rolls.production_order_id, productionOrderId));
 
       // Get warehouse receipts
       const receiptsData = await db
         .select()
         .from(warehouse_receipts)
-        .where(eq(warehouse_receipts.job_order_id, jobOrderId));
+        .where(eq(warehouse_receipts.production_order_id, productionOrderId));
 
       // Calculate progress statistics
       const totalFilmWeight = rollsData.reduce((sum, roll) => sum + (parseFloat(roll.weight_kg?.toString() || '0') || 0), 0);
@@ -3180,7 +3125,7 @@ export class DatabaseStorage implements IStorage {
       const totalWarehouseWeight = receiptsData.reduce((sum, receipt) => sum + (parseFloat(receipt.received_weight_kg?.toString() || '0') || 0), 0);
 
       return {
-        job_order: jobOrder,
+        production_order: productionOrder,
         rolls: rollsData,
         cuts: cutsData,
         warehouse_receipts: receiptsData,
@@ -3189,10 +3134,10 @@ export class DatabaseStorage implements IStorage {
           printed_weight: totalPrintedWeight,
           cut_weight: totalCutWeight,
           warehouse_weight: totalWarehouseWeight,
-          film_percentage: (totalFilmWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
-          printed_percentage: (totalPrintedWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
-          cut_percentage: (totalCutWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100,
-          warehouse_percentage: (totalWarehouseWeight / parseFloat(jobOrder.quantity_required?.toString() || '1')) * 100
+          film_percentage: (totalFilmWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
+          printed_percentage: (totalPrintedWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
+          cut_percentage: (totalCutWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
+          warehouse_percentage: (totalWarehouseWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100
         }
       };
     } catch (error) {

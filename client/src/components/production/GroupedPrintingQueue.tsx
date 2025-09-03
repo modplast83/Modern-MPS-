@@ -20,9 +20,9 @@ interface GroupedRoll {
   qr_code_text?: string;
 }
 
-interface JobOrderGroup {
-  job_order_id: number;
-  job_number: string;
+interface ProductionOrderGroup {
+  production_order_id: number;
+  production_order_number: string;
   rolls: GroupedRoll[];
   total_weight: number;
   rolls_count: number;
@@ -36,7 +36,7 @@ interface OrderGroup {
   item_name: string;
   item_name_ar: string;
   size_caption: string;
-  job_orders: JobOrderGroup[];
+  production_orders: ProductionOrderGroup[];
   total_weight: number;
   total_rolls: number;
 }
@@ -46,9 +46,9 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-  const [expandedJobOrders, setExpandedJobOrders] = useState<Set<number>>(new Set());
+  const [expandedProductionOrders, setExpandedProductionOrders] = useState<Set<number>>(new Set());
 
-  // Group items by order and job order
+  // Group items by order and production order
   const groupedData: OrderGroup[] = items.reduce((acc: OrderGroup[], item) => {
     let orderGroup = acc.find((group: OrderGroup) => group.order_id === item.order_id);
     
@@ -61,24 +61,24 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
         item_name: item.item_name || "غير محدد",
         item_name_ar: item.item_name_ar || item.item_name || "غير محدد",
         size_caption: item.size_caption || "",
-        job_orders: [],
+        production_orders: [],
         total_weight: 0,
         total_rolls: 0
       };
       acc.push(orderGroup);
     }
 
-    let jobOrderGroup = orderGroup.job_orders.find((job: JobOrderGroup) => job.job_order_id === item.job_order_id);
+    let productionOrderGroup = orderGroup.production_orders.find((po: ProductionOrderGroup) => po.production_order_id === item.production_order_id);
     
-    if (!jobOrderGroup) {
-      jobOrderGroup = {
-        job_order_id: item.job_order_id,
-        job_number: item.job_number || `JOB-${item.job_order_id}`,
+    if (!productionOrderGroup) {
+      productionOrderGroup = {
+        production_order_id: item.production_order_id,
+        production_order_number: item.production_order_number || `PO-${item.production_order_id}`,
         rolls: [],
         total_weight: 0,
         rolls_count: 0
       };
-      orderGroup.job_orders.push(jobOrderGroup);
+      orderGroup.production_orders.push(productionOrderGroup);
     }
 
     const roll: GroupedRoll = {
@@ -90,9 +90,9 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
       qr_code_text: item.qr_code_text
     };
 
-    jobOrderGroup.rolls.push(roll);
-    jobOrderGroup.total_weight += roll.weight_kg;
-    jobOrderGroup.rolls_count += 1;
+    productionOrderGroup.rolls.push(roll);
+    productionOrderGroup.total_weight += roll.weight_kg;
+    productionOrderGroup.rolls_count += 1;
     
     orderGroup.total_weight += roll.weight_kg;
     orderGroup.total_rolls += 1;
@@ -148,14 +148,14 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
     setExpandedOrders(newExpanded);
   };
 
-  const toggleJobOrderExpanded = (jobOrderId: number) => {
-    const newExpanded = new Set(expandedJobOrders);
-    if (newExpanded.has(jobOrderId)) {
-      newExpanded.delete(jobOrderId);
+  const toggleProductionOrderExpanded = (productionOrderId: number) => {
+    const newExpanded = new Set(expandedProductionOrders);
+    if (newExpanded.has(productionOrderId)) {
+      newExpanded.delete(productionOrderId);
     } else {
-      newExpanded.add(jobOrderId);
+      newExpanded.add(productionOrderId);
     }
-    setExpandedJobOrders(newExpanded);
+    setExpandedProductionOrders(newExpanded);
   };
 
   if (groupedData.length === 0) {
@@ -211,28 +211,28 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
             <CollapsibleContent>
               <CardContent className="pt-0">
                 <div className="space-y-3">
-                  {orderGroup.job_orders.map((jobOrderGroup) => (
-                    <Card key={jobOrderGroup.job_order_id} className="bg-gray-50 border-l-2 border-l-orange-400">
+                  {orderGroup.production_orders.map((productionOrderGroup) => (
+                    <Card key={productionOrderGroup.production_order_id} className="bg-gray-50 border-l-2 border-l-orange-400">
                       <Collapsible 
-                        open={expandedJobOrders.has(jobOrderGroup.job_order_id)}
-                        onOpenChange={() => toggleJobOrderExpanded(jobOrderGroup.job_order_id)}
+                        open={expandedProductionOrders.has(productionOrderGroup.production_order_id)}
+                        onOpenChange={() => toggleProductionOrderExpanded(productionOrderGroup.production_order_id)}
                       >
                         <CollapsibleTrigger className="w-full">
                           <CardHeader className="pb-2">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-2 space-x-reverse">
-                                {expandedJobOrders.has(jobOrderGroup.job_order_id) ? 
+                                {expandedProductionOrders.has(productionOrderGroup.production_order_id) ? 
                                   <ChevronDown className="h-4 w-4" /> : 
                                   <ChevronRight className="h-4 w-4" />
                                 }
-                                <span className="font-medium">{jobOrderGroup.job_number}</span>
+                                <span className="font-medium">{productionOrderGroup.production_order_number}</span>
                               </div>
                               <div className="flex items-center space-x-2 space-x-reverse">
                                 <Badge variant="secondary" className="text-xs">
-                                  {jobOrderGroup.rolls_count} رول
+                                  {productionOrderGroup.rolls_count} رول
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
-                                  {jobOrderGroup.total_weight.toFixed(2)} كجم
+                                  {productionOrderGroup.total_weight.toFixed(2)} كجم
                                 </Badge>
                               </div>
                             </div>
@@ -242,7 +242,7 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
                         <CollapsibleContent>
                           <CardContent className="pt-0">
                             <div className="space-y-2">
-                              {jobOrderGroup.rolls.map((roll) => (
+                              {productionOrderGroup.rolls.map((roll) => (
                                 <div key={roll.id} className="flex items-center justify-between p-3 bg-white rounded border">
                                   <div className="flex items-center space-x-3 space-x-reverse">
                                     <QrCode className="h-4 w-4 text-gray-400" />

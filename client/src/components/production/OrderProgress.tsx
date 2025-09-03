@@ -11,10 +11,10 @@ import { Package, Scissors, Archive, Plus, QrCode, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function OrderProgress() {
-  const [selectedJobOrderId, setSelectedJobOrderId] = useState<number | null>(null);
+  const [selectedProductionOrderId, setSelectedProductionOrderId] = useState<number | null>(null);
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
   const [receiptData, setReceiptData] = useState({
-    job_order_id: 0,
+    production_order_id: 0,
     cut_id: "",
     received_weight_kg: ""
   });
@@ -22,16 +22,16 @@ export default function OrderProgress() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch all job orders
-  const { data: jobOrders = [] } = useQuery({
-    queryKey: ['/api/job-orders'],
+  // Fetch all production orders
+  const { data: productionOrders = [] } = useQuery({
+    queryKey: ['/api/production-orders'],
     refetchInterval: 30000
   });
 
-  // Fetch progress for selected job order
+  // Fetch progress for selected production order
   const { data: progress, isLoading: progressLoading } = useQuery({
-    queryKey: ['/api/production/order-progress', selectedJobOrderId],
-    enabled: !!selectedJobOrderId,
+    queryKey: ['/api/production/order-progress', selectedProductionOrderId],
+    enabled: !!selectedProductionOrderId,
     refetchInterval: 15000
   });
 
@@ -64,7 +64,7 @@ export default function OrderProgress() {
       queryClient.invalidateQueries({ queryKey: ['/api/warehouse/receipts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/production/order-progress'] });
       setWarehouseDialogOpen(false);
-      setReceiptData({ job_order_id: 0, cut_id: "", received_weight_kg: "" });
+      setReceiptData({ production_order_id: 0, cut_id: "", received_weight_kg: "" });
     },
     onError: (error: Error) => {
       toast({
@@ -76,7 +76,7 @@ export default function OrderProgress() {
   });
 
   const handleWarehouseReceipt = () => {
-    if (!receiptData.job_order_id || !receiptData.received_weight_kg) {
+    if (!receiptData.production_order_id || !receiptData.received_weight_kg) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -86,7 +86,7 @@ export default function OrderProgress() {
     }
 
     warehouseReceiptMutation.mutate({
-      job_order_id: receiptData.job_order_id,
+      production_order_id: receiptData.production_order_id,
       cut_id: receiptData.cut_id ? parseInt(receiptData.cut_id) : null,
       received_weight_kg: parseFloat(receiptData.received_weight_kg)
     });
@@ -97,20 +97,20 @@ export default function OrderProgress() {
       {/* Job Order Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>اختيار أمر التشغيل</CardTitle>
+          <CardTitle>اختيار أمر الإنتاج</CardTitle>
         </CardHeader>
         <CardContent>
           <Select
-            value={selectedJobOrderId?.toString() || ""}
-            onValueChange={(value) => setSelectedJobOrderId(parseInt(value))}
+            value={selectedProductionOrderId?.toString() || ""}
+            onValueChange={(value) => setSelectedProductionOrderId(parseInt(value))}
           >
             <SelectTrigger data-testid="select-job-order">
-              <SelectValue placeholder="اختر أمر التشغيل لمتابعة التقدم" />
+              <SelectValue placeholder="اختر أمر الإنتاج لمتابعة التقدم" />
             </SelectTrigger>
             <SelectContent>
-              {jobOrders.filter((order: any) => order.status === 'in_production').map((order: any) => (
+              {productionOrders.filter((order: any) => order.status === 'in_production').map((order: any) => (
                 <SelectItem key={order.id} value={order.id.toString()}>
-                  {order.job_number} - {order.quantity_required} كجم
+                  {order.production_order_number} - {order.quantity_required} كجم
                 </SelectItem>
               ))}
             </SelectContent>
@@ -119,12 +119,12 @@ export default function OrderProgress() {
       </Card>
 
       {/* Progress Display */}
-      {selectedJobOrderId && progress && (
+      {selectedProductionOrderId && progress && (
         <div className="space-y-4">
           {/* Progress Summary */}
           <Card>
             <CardHeader>
-              <CardTitle>تقدم الطلب - {progress.job_order?.job_number}</CardTitle>
+              <CardTitle>تقدم الطلب - {progress.production_order?.production_order_number}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
