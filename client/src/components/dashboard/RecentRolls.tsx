@@ -130,7 +130,7 @@ export default function RecentRolls() {
                         <div className="space-y-1 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <Package className="w-3 h-3" />
-                            <span>أمر تشغيل: {roll.job_order_id}</span>
+                            <span>أمر إنتاج: {roll.production_order_id}</span>
                           </div>
                           
                           {roll.machine_id && (

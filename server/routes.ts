@@ -1616,7 +1616,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           actionData = { queryKey: '/api/machines' };
           break;
         case 'refresh_production':
-          actionData = { queryKey: '/api/job-orders' };
+          actionData = { queryKey: '/api/production-orders' };
           break;
       }
 
@@ -3542,11 +3542,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Start Production
-  app.patch("/api/job-orders/:id/start-production", async (req, res) => {
+  app.patch("/api/production-orders/:id/start-production", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const jobOrder = await storage.startProduction(id);
-      res.json(jobOrder);
+      const productionOrder = await storage.startProduction(id);
+      res.json(productionOrder);
     } catch (error) {
       console.error('Error starting production:', error);
       res.status(400).json({ message: "خطأ في بدء الإنتاج" });
