@@ -2821,8 +2821,8 @@ export class DatabaseStorage implements IStorage {
           .from(rolls)
           .where(eq(rolls.production_order_id, rollData.production_order_id));
 
-        const totalWeight = totalWeightResult[0]?.total || 0;
-        const newTotal = totalWeight + rollData.weight_kg;
+        const totalWeight = Number(totalWeightResult[0]?.total || 0);
+        const newTotal = totalWeight + Number(rollData.weight_kg);
 
         // Check tolerance unless this is a final roll
         if (!rollData.final_roll) {
