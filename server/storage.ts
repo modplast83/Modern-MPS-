@@ -589,11 +589,8 @@ export class DatabaseStorage implements IStorage {
         production_order_number: production_orders.production_order_number,
         order_id: production_orders.order_id,
         customer_product_id: production_orders.customer_product_id,
-        quantity_required: production_orders.quantity_required,
-        quantity_produced: production_orders.quantity_produced,
+        quantity_kg: production_orders.quantity_kg,
         status: production_orders.status,
-        requires_printing: production_orders.requires_printing,
-        in_production_at: production_orders.in_production_at,
         created_at: production_orders.created_at,
         item_name: items.name,
         item_name_ar: items.name_ar,
@@ -1075,10 +1072,11 @@ export class DatabaseStorage implements IStorage {
     // Get production rate (percentage based on production orders)
     const [productionResult] = await db
       .select({
-        totalRequired: sum(production_orders.quantity_required),
-        totalProduced: sum(production_orders.quantity_produced)
+        totalRequired: sum(production_orders.quantity_kg),
+        totalProduced: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`
       })
-      .from(production_orders);
+      .from(production_orders)
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id));
 
     const productionRate = productionResult?.totalRequired && Number(productionResult.totalRequired) > 0
       ? Math.round((Number(productionResult.totalProduced) / Number(productionResult.totalRequired)) * 100)
@@ -2594,8 +2592,8 @@ export class DatabaseStorage implements IStorage {
       machines: ['id', 'name', 'name_ar', 'type', 'type_ar', 'status', 'location_id', 'description', 'description_ar'],
       locations: ['id', 'name', 'name_ar', 'type', 'description', 'description_ar'],
       orders: ['id', 'customer_id', 'order_number', 'order_date', 'delivery_date', 'status', 'total_amount', 'notes', 'created_by'],
-      production_orders_view: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
-      production_orders: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_required', 'quantity_produced', 'status', 'created_at'],
+      production_orders_view: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_kg', 'status', 'created_at'],
+      production_orders: ['id', 'production_order_number', 'order_id', 'customer_product_id', 'quantity_kg', 'status', 'created_at'],
       rolls: ['id', 'roll_number', 'production_order_id', 'weight_kg', 'stage', 'created_at']
     };
 
@@ -2792,8 +2790,7 @@ export class DatabaseStorage implements IStorage {
       const [productionOrder] = await db
         .update(production_orders)
         .set({ 
-          status: 'in_production',
-          in_production_at: new Date()
+          status: 'in_production'
         })
         .where(eq(production_orders.id, productionOrderId))
         .returning();
@@ -2831,7 +2828,7 @@ export class DatabaseStorage implements IStorage {
         if (!rollData.final_roll) {
           const settings = await this.getProductionSettings();
           const tolerancePercent = parseFloat(settings.overrun_tolerance_percent?.toString() || '5');
-          const quantityRequired = parseFloat(productionOrder.quantity_required?.toString() || '0');
+          const quantityRequired = parseFloat(productionOrder.quantity_kg?.toString() || '0');
           const tolerance = quantityRequired * (tolerancePercent / 100);
           
           if (newTotal > quantityRequired + tolerance) {
@@ -2983,11 +2980,9 @@ export class DatabaseStorage implements IStorage {
           production_order_number: production_orders.production_order_number,
           order_id: production_orders.order_id,
           customer_product_id: production_orders.customer_product_id,
-          quantity_required: production_orders.quantity_required,
+          quantity_kg: production_orders.quantity_kg,
           quantity_produced: sql<string>`COALESCE(SUM(${rolls.weight_kg}), 0)`.as('quantity_produced'),
           status: production_orders.status,
-          requires_printing: production_orders.requires_printing,
-          in_production_at: production_orders.in_production_at,
           created_at: production_orders.created_at,
           customer_name: customers.name,
           customer_name_ar: customers.name_ar,
@@ -3009,10 +3004,8 @@ export class DatabaseStorage implements IStorage {
           production_orders.production_order_number,
           production_orders.order_id,
           production_orders.customer_product_id,
-          production_orders.quantity_required,
+          production_orders.quantity_kg,
           production_orders.status,
-          production_orders.requires_printing,
-          production_orders.in_production_at,
           production_orders.created_at,
           customers.name,
           customers.name_ar,
@@ -3134,10 +3127,10 @@ export class DatabaseStorage implements IStorage {
           printed_weight: totalPrintedWeight,
           cut_weight: totalCutWeight,
           warehouse_weight: totalWarehouseWeight,
-          film_percentage: (totalFilmWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
-          printed_percentage: (totalPrintedWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
-          cut_percentage: (totalCutWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100,
-          warehouse_percentage: (totalWarehouseWeight / parseFloat(productionOrder.quantity_required?.toString() || '1')) * 100
+          film_percentage: (totalFilmWeight / parseFloat(productionOrder.quantity_kg?.toString() || '1')) * 100,
+          printed_percentage: (totalPrintedWeight / parseFloat(productionOrder.quantity_kg?.toString() || '1')) * 100,
+          cut_percentage: (totalCutWeight / parseFloat(productionOrder.quantity_kg?.toString() || '1')) * 100,
+          warehouse_percentage: (totalWarehouseWeight / parseFloat(productionOrder.quantity_kg?.toString() || '1')) * 100
         }
       };
     } catch (error) {

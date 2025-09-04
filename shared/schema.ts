@@ -931,6 +931,13 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
   id: true,
   created_at: true,
   production_order_number: true,
+}).extend({
+  // Transform decimal fields to handle both string and number inputs
+  quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
+    if (val === null || val === undefined || val === '') return '0';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? '0' : num.toString();
+  })
 });
 
 
