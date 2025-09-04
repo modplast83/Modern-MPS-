@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
@@ -528,6 +528,9 @@ export default function Warehouse() {
                           <DialogContent className="max-w-md">
                             <DialogHeader>
                               <DialogTitle>{editingItem ? 'تعديل صنف المخزون' : 'إضافة صنف جديد للمخزون'}</DialogTitle>
+                              <DialogDescription>
+                                {editingItem ? 'تعديل بيانات وكمية الصنف في المخزون' : 'إضافة صنف جديد إلى مخزون هذا الموقع'}
+                              </DialogDescription>
                             </DialogHeader>
                             <Form {...form}>
                               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -753,6 +756,9 @@ export default function Warehouse() {
                       <DialogContent className="max-w-md">
                         <DialogHeader>
                           <DialogTitle>إضافة حركة مخزون جديدة</DialogTitle>
+                          <DialogDescription>
+                            تسجيل حركة إدخال أو إخراج للمخزون
+                          </DialogDescription>
                         </DialogHeader>
                         <Form {...movementForm}>
                           <form onSubmit={movementForm.handleSubmit(onMovementSubmit)} className="space-y-4">
@@ -978,6 +984,9 @@ export default function Warehouse() {
                       <DialogContent className="max-w-md">
                         <DialogHeader>
                           <DialogTitle>{editingLocation ? 'تعديل الموقع' : 'إضافة موقع جديد'}</DialogTitle>
+                          <DialogDescription>
+                            {editingLocation ? 'تعديل بيانات الموقع المحدد' : 'إضافة موقع جديد لتخزين المواد'}
+                          </DialogDescription>
                         </DialogHeader>
                         <Form {...locationForm}>
                           <form onSubmit={locationForm.handleSubmit(onLocationSubmit)} className="space-y-4">

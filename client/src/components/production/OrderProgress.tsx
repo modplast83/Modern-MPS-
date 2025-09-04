@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Package, Scissors, Archive, Plus, QrCode, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -194,6 +194,9 @@ export default function OrderProgress() {
                   <DialogContent className="max-w-md">
                     <DialogHeader>
                       <DialogTitle>تسجيل استلام المستودع</DialogTitle>
+                      <DialogDescription>
+                        تسجيل استلام المواد في المستودع مع تحديد الوزن المستلم
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
                       <div className="space-y-2">

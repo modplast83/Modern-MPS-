@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -24,11 +25,8 @@ const stages = [
 export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   const [activeStage, setActiveStage] = useState<string>("film");
 
-  // Get current user information
-  const { data: currentUser } = useQuery({
-    queryKey: ['/api/me'],
-    staleTime: 5 * 60 * 1000 // 5 minutes
-  });
+  // Get current user information from auth context
+  const { user: currentUser } = useAuth();
 
   // Get sections to map section IDs to names
   const { data: sections = [] } = useQuery({
@@ -38,10 +36,10 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
 
   // Filter stages based on user's role and section
   const visibleStages = useMemo(() => {
-    if (!currentUser?.user) return stages;
+    if (!currentUser) return stages;
 
-    const userRole = currentUser.user.role_id;
-    const userSectionId = currentUser.user.section_id;
+    const userRole = currentUser.role_id;
+    const userSectionId = currentUser.section_id;
 
     // Managers and Production Managers can see all tabs
     if (userRole === 1 || userRole === 2) { // Manager, Production Manager

@@ -14,12 +14,15 @@ async function throwIfResNotOk(res: Response) {
         try {
           const errorData = JSON.parse(text);
           errorMessage = errorData.message || errorData.error || text;
-        } catch {
+        } catch (jsonError) {
+          // JSON parsing failed, use text as-is
           errorMessage = text;
+          console.warn('Failed to parse error response as JSON:', jsonError);
         }
       }
-    } catch {
+    } catch (textError) {
       // If we can't read the response, use statusText
+      console.warn('Failed to read error response text:', textError);
       errorMessage = res.statusText;
     }
     
@@ -34,17 +37,23 @@ export async function apiRequest(
     body?: string;
   }
 ): Promise<Response> {
-  const { method = 'GET', body } = options || {};
-  
-  const res = await fetch(url, {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : {},
-    body,
-    credentials: "include",
-  });
+  try {
+    const { method = 'GET', body } = options || {};
+    
+    const res = await fetch(url, {
+      method,
+      headers: body ? { "Content-Type": "application/json" } : {},
+      body,
+      credentials: "include",
+    });
 
-  await throwIfResNotOk(res);
-  return res;
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    // Ensure all promise rejections are properly thrown
+    console.warn('API request error:', error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -53,16 +62,28 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(queryKey.join("/") as string, {
+        credentials: "include",
+      });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
+      if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+        return null;
+      }
+
+      await throwIfResNotOk(res);
+      
+      try {
+        return await res.json();
+      } catch (jsonError) {
+        console.warn('Failed to parse response as JSON:', jsonError);
+        throw new Error('Invalid JSON response from server');
+      }
+    } catch (error) {
+      // Ensure all promise rejections are properly thrown
+      console.warn('Query function error:', error);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export function getQueryClient(): QueryClient {
