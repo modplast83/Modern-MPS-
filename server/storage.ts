@@ -2827,7 +2827,7 @@ export class DatabaseStorage implements IStorage {
         // Check tolerance unless this is a final roll
         if (!rollData.final_roll) {
           const settings = await this.getProductionSettings();
-          const tolerancePercent = parseFloat(settings.overrun_tolerance_percent?.toString() || '5');
+          const tolerancePercent = parseFloat(settings?.overrun_tolerance_percent?.toString() || '5');
           const quantityRequired = parseFloat(productionOrder.quantity_kg?.toString() || '0');
           const tolerance = quantityRequired * (tolerancePercent / 100);
           
