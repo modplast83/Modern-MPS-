@@ -396,7 +396,7 @@ export default function Orders() {
           body: JSON.stringify({
             order_id: newOrder.id,
             customer_product_id: parseInt(prodOrder.customer_product_id),
-            quantity_kg: parseFloat(prodOrder.quantity_kg),
+            quantity_kg: prodOrder.quantity_kg.toString(),
             status: prodOrder.status || 'pending'
           })
         });
