@@ -145,6 +145,26 @@ app.use((req, res, next) => {
 
   const server = await registerRoutes(app);
 
+  // API-specific middleware to ensure JSON responses
+  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+    // Set JSON content type for all API responses
+    res.setHeader('Content-Type', 'application/json');
+    next();
+  });
+
+  // Error handling middleware for API routes
+  app.use('/api/*', (err: any, req: Request, res: Response, next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+    
+    // Ensure we always return JSON for API routes
+    if (!res.headersSent) {
+      res.status(status).json({ message });
+    }
+    console.error('API Error:', err);
+  });
+
+  // General error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
