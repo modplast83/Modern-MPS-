@@ -3561,17 +3561,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validationSchema = z.object({
         production_order_id: z.number(),
         machine_id: z.string(),
-        weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر"),
-        final_roll: z.boolean().optional().default(false)
+        weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
       });
 
       const validated = validationSchema.parse(req.body);
       
+      if (!req.session.userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول" });
+      }
+
       const rollData = {
         production_order_id: validated.production_order_id,
         machine_id: validated.machine_id,
         weight_kg: validated.weight_kg,
-        final_roll: validated.final_roll
+        created_by: req.session.userId
       };
       
       // Generate QR code and roll number
