@@ -396,7 +396,7 @@ export const warehouse_transactions = pgTable('warehouse_transactions', {
   from_location: varchar('from_location', { length: 100 }),
   to_location: varchar('to_location', { length: 100 }),
   date: timestamp('date').defaultNow(),
-  reference_id: integer('reference_id'), // order_id, job_order_id, etc.
+  reference_id: integer('reference_id'), // order_id, production_order_id, etc.
   notes: text('notes'),
 });
 

@@ -250,8 +250,7 @@ export default function Settings() {
         'cliche_back_design', 'notes', 'status', 'created_at'
       ],
       orders: ['id', 'customer_id', 'order_date', 'status', 'total_amount'],
-      production_orders: ['id', 'order_id', 'product_id', 'quantity', 'status'],
-      job_orders: ['id', 'production_order_id', 'machine_id', 'start_time', 'end_time', 'status']
+      production_orders: ['id', 'order_id', 'customer_product_id', 'quantity_kg', 'status']
     };
     return schemas[tableName] || [];
   };
@@ -1232,7 +1231,6 @@ export default function Settings() {
                                 <SelectItem value="locations">المواقع (Locations)</SelectItem>
                                 <SelectItem value="orders">الطلبات (Orders)</SelectItem>
                                 <SelectItem value="production_orders">أوامر الإنتاج (Production Orders)</SelectItem>
-                                <SelectItem value="job_orders">أوامر التشغيل (Job Orders)</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>

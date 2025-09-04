@@ -354,7 +354,7 @@ export class AINotifications {
   // تحديد ما إذا كان يجب إرسال إشعار
   static shouldSendNotification(action: string): boolean {
     const notificationActions = [
-      'add_customer', 'add_order', 'add_job_order', 'add_machine',
+      'add_customer', 'add_order', 'add_production_order', 'add_machine',
       'update_order', 'update_machine', 'delete_customer', 'delete_order',
       'machine_down', 'quality_issue', 'low_inventory', 'production_delay'
     ];

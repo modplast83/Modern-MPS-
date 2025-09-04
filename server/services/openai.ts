@@ -83,7 +83,7 @@ class AdvancedOpenAIService {
 الجداول المتاحة:
 - العملاء (customers)
 - الطلبات (orders) 
-- أوامر التشغيل (job_orders)
+- أوامر الإنتاج (production_orders)
 - الرولات (rolls)
 - المكائن (machines)
 - المستخدمين (users)
@@ -426,8 +426,8 @@ Respond in JSON format containing:
         case 'add_order':
           result = await this.createOrder(intent.parameters);
           break;
-        case 'add_job_order':
-          result = await this.createJobOrder(intent.parameters);
+        case 'add_production_order':
+          result = await this.createProductionOrder(intent.parameters);
           break;
         case 'add_machine':
           result = await this.createMachine(intent.parameters);
@@ -547,7 +547,7 @@ Respond in JSON format containing:
       
       return {
         operation: 'create',
-        table: 'job_orders',
+        table: 'production_orders',
         data: jobOrderData,
         success: true,
         message: `تم إنشاء أمر التشغيل بنجاح! رقم أمر التشغيل: ${jobOrder.job_number}`,
@@ -556,7 +556,7 @@ Respond in JSON format containing:
     } catch (error: any) {
       return {
         operation: 'create',
-        table: 'job_orders',
+        table: 'production_orders',
         success: false,
         message: `فشل في إنشاء أمر التشغيل: ${error.message}`
       };

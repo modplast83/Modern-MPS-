@@ -186,7 +186,7 @@ export default function OrderProgress() {
                 <CardTitle>الرولات</CardTitle>
                 <Dialog open={warehouseDialogOpen} onOpenChange={setWarehouseDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setReceiptData({ ...receiptData, job_order_id: selectedJobOrderId })}>
+                    <Button onClick={() => setReceiptData({ ...receiptData, production_order_id: selectedProductionOrderId })}>
                       <Plus className="h-4 w-4 mr-2" />
                       استلام مستودع
                     </Button>
