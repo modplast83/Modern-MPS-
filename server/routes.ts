@@ -3559,7 +3559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Roll creation request body:', req.body);
       
       const validationSchema = z.object({
-        job_order_id: z.number(),
+        production_order_id: z.number(),
         machine_id: z.string(),
         weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر"),
         final_roll: z.boolean().optional().default(false)
@@ -3567,9 +3567,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validated = validationSchema.parse(req.body);
       
-      // Convert job_order_id to production_order_id for storage layer compatibility
       const rollData = {
-        production_order_id: validated.job_order_id,
+        production_order_id: validated.production_order_id,
         machine_id: validated.machine_id,
         weight_kg: validated.weight_kg,
         final_roll: validated.final_roll
