@@ -86,7 +86,7 @@
 
 - `users`, `roles`, `sections`
 - `customers`, `customer_products`, `cliches`
-- `orders`, `job_orders`, `rolls`, `waste`
+- `orders`, `production_orders`, `rolls`, `waste`
 - `quality_checks`, `maintenance_requests`
 - `violations`, `admin_decisions`, `training_records`
 - `machines`, `warehouse_transactions`, `suppliers`
@@ -193,7 +193,7 @@
 
 ---
 
-### 📋 أوامر التشغيل (job_orders):
+### 📋 أوامر التشغيل (production_orders):
 - يتم توليد الكمية المطلوبة تلقائيًا باستخدام نسبة احتياطية حسب نوع المنتج:
   - علاقي / علاقي بخطاف = 20٪
   - بنانة = 10٪

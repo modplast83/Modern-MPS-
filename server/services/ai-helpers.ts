@@ -362,7 +362,7 @@ export class AIHelpers {
             content: `حول النص التالي إلى استعلام SQL آمن للجداول التالية:
 - customers (العملاء)
 - orders (الطلبات)
-- job_orders (أوامر التشغيل)
+- production_orders (أوامر التشغيل)
 - rolls (الرولات)
 - machines (المكائن)
 - users (المستخدمين)

@@ -6,7 +6,7 @@ Goal: Implement a roll-based flow Film → Printing → Cutting → Warehouse wi
 Keep Arabic labels + RTL. Do NOT break existing APIs; extend minimally.
 
 ## 0) Config & assumptions
-- Existing tables: job_orders, rolls, machines.
+- Existing tables: production_orders, rolls, machines.
 - An order is visible in production when moved to "in_production".
 - Add a small settings table to control tolerance and QR prefix.
 
@@ -16,7 +16,7 @@ Keep Arabic labels + RTL. Do NOT break existing APIs; extend minimally.
   - overrun_tolerance_percent numeric NOT NULL DEFAULT 3      -- e.g., 3% allowed over planned weight
   - allow_last_roll_overrun boolean NOT NULL DEFAULT true      -- only the last roll may exceed
   - qr_prefix varchar(32) NOT NULL DEFAULT 'ROLL'
-- job_orders (if missing):
+- production_orders (if missing):
   - requires_printing boolean NOT NULL DEFAULT false
   - in_production_at timestamp NULL
 - rolls (extend if missing):
@@ -40,7 +40,7 @@ Keep Arabic labels + RTL. Do NOT break existing APIs; extend minimally.
 
 - NEW table `warehouse_receipts`:
   - id serial pk
-  - job_order_id int fk -> job_orders(id)
+  - job_order_id int fk -> production_orders(id)
   - cut_id int fk -> cuts(id) NULL
   - received_weight_kg numeric NOT NULL
   - received_by int NULL
@@ -75,7 +75,7 @@ Logic:
   Example JSON: {"type":"roll","job_order_id":123,"roll_seq":5,"roll_number":"ROLL-123-5"}
 - Generate `qr_png_base64` server-side (use a QR library).
 - Set `stage` auto-route:
-  - If job_orders.requires_printing = true → 'printing'
+  - If production_orders.requires_printing = true → 'printing'
   - Else → 'cutting'
 - Insert roll and return it (with qr fields).
 

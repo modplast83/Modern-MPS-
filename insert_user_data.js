@@ -19,7 +19,7 @@ async function insertUserData() {
     console.log('Clearing existing data...');
     await client.query('DELETE FROM waste');
     await client.query('DELETE FROM rolls');
-    await client.query('DELETE FROM job_orders'); 
+    await client.query('DELETE FROM production_orders'); 
     await client.query('DELETE FROM orders');
     await client.query('DELETE FROM products');
     await client.query('DELETE FROM warehouse_transactions');
