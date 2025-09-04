@@ -3612,8 +3612,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cuts", async (req, res) => {
     try {
       const validationSchema = insertCutSchema.extend({
-        cut_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString()),
-        pieces_count: z.number().positive().optional()
+        cut_weight_kg: z.coerce.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString()),
+        pieces_count: z.coerce.number().positive().optional()
       });
 
       const validated = validationSchema.parse(req.body);
@@ -3639,7 +3639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/warehouse/receipts", async (req, res) => {
     try {
       const validationSchema = insertWarehouseReceiptSchema.extend({
-        received_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString())
+        received_weight_kg: z.coerce.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString())
       });
 
       const validated = validationSchema.parse(req.body);
