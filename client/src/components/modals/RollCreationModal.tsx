@@ -62,7 +62,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
       const response = await apiRequest('/api/rolls', {
         method: 'POST',
         body: JSON.stringify({
-          job_order_id: data.production_order_id,
+          production_order_id: data.production_order_id,
           weight_kg: parseFloat(data.weight_kg),
           machine_id: data.machine_id,
           final_roll: data.final_roll

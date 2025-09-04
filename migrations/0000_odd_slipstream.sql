@@ -100,7 +100,7 @@ CREATE TABLE "items" (
 	"price" numeric(10, 2)
 );
 --> statement-breakpoint
-CREATE TABLE "job_orders" (
+CREATE TABLE "production_orders" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"job_number" varchar(50) NOT NULL,
 	"order_id" integer NOT NULL,
@@ -109,7 +109,7 @@ CREATE TABLE "job_orders" (
 	"quantity_produced" numeric(10, 2) DEFAULT '0',
 	"status" varchar(30) DEFAULT 'pending',
 	"created_at" timestamp DEFAULT now(),
-	CONSTRAINT "job_orders_job_number_unique" UNIQUE("job_number")
+	CONSTRAINT "production_orders_job_number_unique" UNIQUE("job_number")
 );
 --> statement-breakpoint
 CREATE TABLE "leave_balances" (
@@ -513,8 +513,8 @@ ALTER TABLE "customer_products" ADD CONSTRAINT "customer_products_category_id_ca
 ALTER TABLE "customer_products" ADD CONSTRAINT "customer_products_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "customers" ADD CONSTRAINT "customers_sales_rep_id_users_id_fk" FOREIGN KEY ("sales_rep_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "items" ADD CONSTRAINT "items_category_id_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "job_orders" ADD CONSTRAINT "job_orders_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "job_orders" ADD CONSTRAINT "job_orders_customer_product_id_customer_products_id_fk" FOREIGN KEY ("customer_product_id") REFERENCES "public"."customer_products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "production_orders" ADD CONSTRAINT "production_orders_order_id_orders_id_fk" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "production_orders" ADD CONSTRAINT "production_orders_customer_product_id_customer_products_id_fk" FOREIGN KEY ("customer_product_id") REFERENCES "public"."customer_products"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_balances" ADD CONSTRAINT "leave_balances_employee_id_users_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_balances" ADD CONSTRAINT "leave_balances_leave_type_id_leave_types_id_fk" FOREIGN KEY ("leave_type_id") REFERENCES "public"."leave_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "leave_requests" ADD CONSTRAINT "leave_requests_employee_id_users_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -532,7 +532,7 @@ ALTER TABLE "performance_ratings" ADD CONSTRAINT "performance_ratings_criteria_i
 ALTER TABLE "performance_reviews" ADD CONSTRAINT "performance_reviews_employee_id_users_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "performance_reviews" ADD CONSTRAINT "performance_reviews_reviewer_id_users_id_fk" FOREIGN KEY ("reviewer_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "quality_checks" ADD CONSTRAINT "quality_checks_checked_by_users_id_fk" FOREIGN KEY ("checked_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rolls" ADD CONSTRAINT "rolls_job_order_id_job_orders_id_fk" FOREIGN KEY ("job_order_id") REFERENCES "public"."job_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "rolls" ADD CONSTRAINT "rolls_job_order_id_production_orders_id_fk" FOREIGN KEY ("job_order_id") REFERENCES "public"."production_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rolls" ADD CONSTRAINT "rolls_machine_id_machines_id_fk" FOREIGN KEY ("machine_id") REFERENCES "public"."machines"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rolls" ADD CONSTRAINT "rolls_employee_id_users_id_fk" FOREIGN KEY ("employee_id") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "training_enrollments" ADD CONSTRAINT "training_enrollments_program_id_training_programs_id_fk" FOREIGN KEY ("program_id") REFERENCES "public"."training_programs"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -546,7 +546,7 @@ ALTER TABLE "violations" ADD CONSTRAINT "violations_employee_id_users_id_fk" FOR
 ALTER TABLE "violations" ADD CONSTRAINT "violations_reported_by_users_id_fk" FOREIGN KEY ("reported_by") REFERENCES "public"."users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "warehouse_transactions" ADD CONSTRAINT "warehouse_transactions_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "waste" ADD CONSTRAINT "waste_roll_id_rolls_id_fk" FOREIGN KEY ("roll_id") REFERENCES "public"."rolls"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "waste" ADD CONSTRAINT "waste_job_order_id_job_orders_id_fk" FOREIGN KEY ("job_order_id") REFERENCES "public"."job_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "waste" ADD CONSTRAINT "waste_job_order_id_production_orders_id_fk" FOREIGN KEY ("job_order_id") REFERENCES "public"."production_orders"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "erp_entity_mappings" ADD CONSTRAINT "erp_entity_mappings_erp_config_id_erp_configurations_id_fk" FOREIGN KEY ("erp_config_id") REFERENCES "public"."erp_configurations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "erp_field_mappings" ADD CONSTRAINT "erp_field_mappings_erp_config_id_erp_configurations_id_fk" FOREIGN KEY ("erp_config_id") REFERENCES "public"."erp_configurations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "erp_sync_logs" ADD CONSTRAINT "erp_sync_logs_erp_config_id_erp_configurations_id_fk" FOREIGN KEY ("erp_config_id") REFERENCES "public"."erp_configurations"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

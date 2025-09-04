@@ -4,13 +4,13 @@ Keep Arabic labels (RTL). Extend schema/routes minimally without breaking existi
 
 ====================================================
 ## 0) Assumptions
-- Existing: job_orders, rolls, machines.
-- Rolls already linked to job_orders.
+- Existing: production_orders, rolls, machines.
+- Rolls already linked to production_orders.
 - Orders become visible when moved to "in_production".
 ====================================================
 
 ## 1) Schema changes (Drizzle migrations)
-### job_orders
+### production_orders
 - requires_printing boolean NOT NULL DEFAULT false
 - in_production_at timestamp NULL
 
@@ -37,7 +37,7 @@ Keep Arabic labels (RTL). Extend schema/routes minimally without breaking existi
 
 ### warehouse_receipts (new table)
 - id serial pk
-- job_order_id int fk -> job_orders(id)
+- job_order_id int fk -> production_orders(id)
 - cut_id int fk -> cuts(id) NULL
 - received_weight_kg decimal(12,3) NOT NULL
 - received_by int NULL

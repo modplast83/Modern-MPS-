@@ -684,8 +684,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.job_orders": {
-      "name": "job_orders",
+    "public.production_orders": {
+      "name": "production_orders",
       "schema": "",
       "columns": {
         "id": {
@@ -742,9 +742,9 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "job_orders_order_id_orders_id_fk": {
-          "name": "job_orders_order_id_orders_id_fk",
-          "tableFrom": "job_orders",
+        "production_orders_order_id_orders_id_fk": {
+          "name": "production_orders_order_id_orders_id_fk",
+          "tableFrom": "production_orders",
           "tableTo": "orders",
           "columnsFrom": [
             "order_id"
@@ -755,9 +755,9 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "job_orders_customer_product_id_customer_products_id_fk": {
-          "name": "job_orders_customer_product_id_customer_products_id_fk",
-          "tableFrom": "job_orders",
+        "production_orders_customer_product_id_customer_products_id_fk": {
+          "name": "production_orders_customer_product_id_customer_products_id_fk",
+          "tableFrom": "production_orders",
           "tableTo": "customer_products",
           "columnsFrom": [
             "customer_product_id"
@@ -771,8 +771,8 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "job_orders_job_number_unique": {
-          "name": "job_orders_job_number_unique",
+        "production_orders_job_number_unique": {
+          "name": "production_orders_job_number_unique",
           "nullsNotDistinct": false,
           "columns": [
             "job_number"
@@ -2118,10 +2118,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "rolls_job_order_id_job_orders_id_fk": {
-          "name": "rolls_job_order_id_job_orders_id_fk",
+        "rolls_job_order_id_production_orders_id_fk": {
+          "name": "rolls_job_order_id_production_orders_id_fk",
           "tableFrom": "rolls",
-          "tableTo": "job_orders",
+          "tableTo": "production_orders",
           "columnsFrom": [
             "job_order_id"
           ],
@@ -2984,10 +2984,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "waste_job_order_id_job_orders_id_fk": {
-          "name": "waste_job_order_id_job_orders_id_fk",
+        "waste_job_order_id_production_orders_id_fk": {
+          "name": "waste_job_order_id_production_orders_id_fk",
           "tableFrom": "waste",
-          "tableTo": "job_orders",
+          "tableTo": "production_orders",
           "columnsFrom": [
             "job_order_id"
           ],

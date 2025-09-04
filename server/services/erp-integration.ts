@@ -1,5 +1,5 @@
 import { db } from "../db";
-import { orders, customers, products, job_orders, items, warehouse_transactions } from "@shared/schema";
+import { orders, customers, products, production_orders, items, warehouse_transactions } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 // ERP Integration Types

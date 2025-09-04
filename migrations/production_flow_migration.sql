@@ -1,8 +1,8 @@
 -- Production Flow Schema Migration
 -- Add new columns to existing tables and create new tables
 
--- Add new columns to job_orders table
-ALTER TABLE job_orders 
+-- Add new columns to production_orders table
+ALTER TABLE production_orders 
 ADD COLUMN IF NOT EXISTS requires_printing boolean NOT NULL DEFAULT false,
 ADD COLUMN IF NOT EXISTS in_production_at timestamp;
 
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS cuts (
 -- Create warehouse_receipts table
 CREATE TABLE IF NOT EXISTS warehouse_receipts (
   id serial PRIMARY KEY,
-  job_order_id integer NOT NULL REFERENCES job_orders(id),
+  job_order_id integer NOT NULL REFERENCES production_orders(id),
   cut_id integer REFERENCES cuts(id),
   received_weight_kg decimal(12,3) NOT NULL,
   received_by integer REFERENCES users(id),

@@ -96,7 +96,7 @@ export const orders = pgTable('orders', {
 });
 
 // ⚙️ جدول أوامر التشغيل
-export const job_orders = pgTable('job_orders', {
+export const production_orders = pgTable('production_orders', {
   id: serial('id').primaryKey(),
   order_id: integer('order_id').notNull(),
   product_id: integer('product_id').notNull(),
@@ -185,9 +185,9 @@ export const suppliers = pgTable('suppliers', {
 // users مرتبط بـ sections و roles
 // customers مرتبط بـ users (مندوب مبيعات)
 // machines مرتبط بـ sections
-// rolls مرتبط بـ job_orders, machines, employees, sections
-// waste مرتبط بـ rolls و job_orders
-// job_orders مرتبط بـ orders و customer_products
+// rolls مرتبط بـ production_orders, machines, employees, sections
+// waste مرتبط بـ rolls و production_orders
+// production_orders مرتبط بـ orders و customer_products
 // orders مرتبط بـ customers
 // quality_checks مرتبط بـ users (checked_by)
 // training_records مرتبط بـ users
