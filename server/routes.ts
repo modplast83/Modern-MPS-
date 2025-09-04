@@ -3567,8 +3567,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validated = validationSchema.parse(req.body);
       
+      // Convert job_order_id to production_order_id for storage layer compatibility
+      const rollData = {
+        production_order_id: validated.job_order_id,
+        machine_id: validated.machine_id,
+        weight_kg: validated.weight_kg,
+        final_roll: validated.final_roll
+      };
+      
       // Generate QR code and roll number
-      const roll = await storage.createRollWithQR(validated);
+      const roll = await storage.createRollWithQR(rollData);
       res.status(201).json(roll);
     } catch (error) {
       console.error('Error creating roll:', error);

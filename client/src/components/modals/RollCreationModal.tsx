@@ -59,21 +59,15 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
-      const response = await fetch('/api/rolls', {
+      const response = await apiRequest('/api/rolls', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          production_order_id: data.production_order_id,
+          job_order_id: data.production_order_id,
           weight_kg: parseFloat(data.weight_kg),
           machine_id: data.machine_id,
           final_roll: data.final_roll
         })
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'فشل في إنشاء الرول');
-      }
       
       return response.json();
     },
@@ -88,9 +82,10 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
       resetForm();
     },
     onError: (error) => {
+      console.error('Roll creation error:', error);
       toast({
         title: "خطأ",
-        description: "فشل في إنشاء الرول",
+        description: error instanceof Error ? error.message : "فشل في إنشاء الرول",
         variant: "destructive",
       });
     },
