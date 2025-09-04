@@ -529,7 +529,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteOrder(id: number): Promise<void> {
-    await db.delete(orders).where(eq(orders.id, id));
+    await db.transaction(async (tx) => {
+      // First, get all production orders for this order
+      const productionOrdersToDelete = await tx
+        .select({ id: production_orders.id })
+        .from(production_orders)
+        .where(eq(production_orders.order_id, id));
+
+      // Delete all rolls for each production order
+      for (const prodOrder of productionOrdersToDelete) {
+        await tx
+          .delete(rolls)
+          .where(eq(rolls.production_order_id, prodOrder.id));
+      }
+
+      // Delete all production orders for this order
+      await tx
+        .delete(production_orders)
+        .where(eq(production_orders.order_id, id));
+
+      // Finally, delete the order itself
+      await tx.delete(orders).where(eq(orders.id, id));
+    });
   }
 
   async getOrdersForProduction(): Promise<any[]> {
