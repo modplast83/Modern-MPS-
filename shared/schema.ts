@@ -154,9 +154,12 @@ export const rolls = pgTable('rolls', {
   waste_kg: decimal('waste_kg', { precision: 12, scale: 3 }).notNull().default('0'),
   printed_at: timestamp('printed_at'),
   cut_completed_at: timestamp('cut_completed_at'),
-  performed_by: integer('performed_by').references(() => users.id),
+  performed_by: integer('performed_by').references(() => users.id), // Legacy field, kept for backward compatibility
   machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
-  employee_id: integer('employee_id').references(() => users.id),
+  employee_id: integer('employee_id').references(() => users.id), // Legacy field, kept for backward compatibility
+  created_by: integer('created_by').references(() => users.id), // المستخدم الذي أنشأ الرول
+  printed_by: integer('printed_by').references(() => users.id), // المستخدم الذي طبع الرول
+  cut_by: integer('cut_by').references(() => users.id), // المستخدم الذي قطع الرول
   qr_code: varchar('qr_code', { length: 255 }),
   created_at: timestamp('created_at').defaultNow(),
   completed_at: timestamp('completed_at'),

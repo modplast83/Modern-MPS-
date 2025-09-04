@@ -404,7 +404,7 @@ export interface IStorage {
   getProductionSettings(): Promise<ProductionSettings>;
   updateProductionSettings(settings: Partial<InsertProductionSettings>): Promise<ProductionSettings>;
   startProduction(productionOrderId: number): Promise<ProductionOrder>;
-  createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll>;
+  createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; created_by: number }): Promise<Roll>;
   markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt>;
@@ -2822,7 +2822,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; final_roll?: boolean }): Promise<Roll> {
+  async createRollWithQR(rollData: { production_order_id: number; machine_id: string; weight_kg: number; created_by: number }): Promise<Roll> {
     try {
       return await db.transaction(async (tx) => {
         // Lock the production order to prevent race conditions
@@ -2845,19 +2845,14 @@ export class DatabaseStorage implements IStorage {
         const totalWeight = Number(totalWeightResult[0]?.total || 0);
         const newTotal = totalWeight + Number(rollData.weight_kg);
 
-        // Check tolerance unless this is a final roll
-        if (!rollData.final_roll) {
-          const settings = await this.getProductionSettings();
-          const tolerancePercent = parseFloat(settings?.overrun_tolerance_percent?.toString() || '5');
-          const quantityRequired = parseFloat(productionOrder.quantity_kg?.toString() || '0');
-          const tolerance = quantityRequired * (tolerancePercent / 100);
-          
-          if (newTotal > quantityRequired + tolerance) {
-            throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) تجاوزت الحد المسموح (${(quantityRequired + tolerance).toFixed(2)} كيلو)`);
-          }
+        // Always check tolerance - no final roll exceptions
+        const quantityRequired = parseFloat(productionOrder.quantity_kg?.toString() || '0');
+        
+        if (newTotal > quantityRequired) {
+          throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) يتجاوز كمية أمر الإنتاج (${quantityRequired.toFixed(2)} كيلو)`);
         }
 
-        // Generate roll sequence number
+        // Generate roll sequence number (sequential: 1, 2, 3, 4...)
         const rollCount = await tx
           .select({ count: sql<number>`COUNT(*)` })
           .from(rolls)
@@ -2887,10 +2882,10 @@ export class DatabaseStorage implements IStorage {
         const [roll] = await tx
           .insert(rolls)
           .values({
-            roll_number: `${productionOrder.production_order_number}-${rollSeq.toString().padStart(2, '0')}`,
+            roll_number: `${productionOrder.production_order_number}-${rollSeq}`,
             production_order_id: rollData.production_order_id,
             machine_id: rollData.machine_id,
-            employee_id: 1, // Default user for now
+            created_by: rollData.created_by,
             weight_kg: rollData.weight_kg.toString(),
             stage: 'film',
             roll_seq: rollSeq,
@@ -2914,7 +2909,7 @@ export class DatabaseStorage implements IStorage {
         .set({
           stage: 'printing',
           printed_at: new Date(),
-          performed_by: operatorId
+          printed_by: operatorId
         })
         .where(eq(rolls.id, rollId))
         .returning();
@@ -2967,6 +2962,7 @@ export class DatabaseStorage implements IStorage {
             .set({
               stage: 'cutting',
               cut_completed_at: new Date(),
+              cut_by: cutData.performed_by,
               cut_weight_total_kg: newTotalCut.toString()
             })
             .where(eq(rolls.id, cutData.roll_id));

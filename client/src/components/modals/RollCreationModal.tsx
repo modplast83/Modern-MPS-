@@ -31,7 +31,6 @@ interface RollFormData {
   production_order_id: number;
   weight_kg: string;
   machine_id: string;
-  final_roll: boolean;
 }
 
 export default function RollCreationModal({ isOpen, onClose, selectedProductionOrderId }: RollCreationModalProps) {
@@ -39,7 +38,6 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
     production_order_id: selectedProductionOrderId || 0,
     weight_kg: "",
     machine_id: "",
-    final_roll: false,
   });
 
   const { toast } = useToast();
@@ -64,8 +62,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
         body: JSON.stringify({
           production_order_id: data.production_order_id,
           weight_kg: parseFloat(data.weight_kg),
-          machine_id: data.machine_id,
-          final_roll: data.final_roll
+          machine_id: data.machine_id
         })
       });
       
@@ -96,7 +93,6 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
       production_order_id: selectedProductionOrderId || 0,
       weight_kg: "",
       machine_id: "",
-      final_roll: false,
     });
   };
 
@@ -204,16 +200,6 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
             </Select>
           </div>
 
-          <div className="flex items-center space-x-2 space-x-reverse">
-            <input
-              type="checkbox"
-              id="final_roll"
-              checked={formData.final_roll}
-              onChange={(e) => setFormData({ ...formData, final_roll: e.target.checked })}
-              data-testid="checkbox-final_roll"
-            />
-            <Label htmlFor="final_roll" className="text-sm">رول نهائي (تجاهل حد التسامح)</Label>
-          </div>
 
           <div className="flex justify-end space-x-3 space-x-reverse pt-4">
             <Button
