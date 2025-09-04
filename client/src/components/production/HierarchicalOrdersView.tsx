@@ -153,8 +153,10 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                 {order.production_orders && order.production_orders.length > 0 ? (
                   <div className="space-y-3">
                     {order.production_orders.map((productionOrder: any) => {
-                      const required = parseFloat(productionOrder.quantity_required) || 0;
-                      const produced = parseFloat(productionOrder.quantity_produced) || 0;
+                      const required = parseFloat(productionOrder.quantity_kg) || 0;
+                      const produced = productionOrder.rolls 
+                        ? productionOrder.rolls.reduce((sum: number, roll: any) => sum + (parseFloat(roll.weight_kg) || 0), 0)
+                        : 0;
                       const progress = required > 0 ? Math.round((produced / required) * 100) : 0;
 
                       return (
