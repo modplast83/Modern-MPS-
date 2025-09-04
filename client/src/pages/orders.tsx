@@ -779,6 +779,9 @@ export default function Orders() {
                         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>إضافة طلب جديد</DialogTitle>
+                            <DialogDescription>
+                              إضافة طلب جديد مع أوامر الإنتاج والمواصفات المطلوبة
+                            </DialogDescription>
                           </DialogHeader>
                           <Form {...orderForm}>
                             <form onSubmit={orderForm.handleSubmit(onOrderSubmit)} className="space-y-6">
@@ -1312,6 +1315,9 @@ export default function Orders() {
                       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{editingProductionOrder ? 'تعديل أمر الإنتاج' : 'إضافة أمر إنتاج جديد'}</DialogTitle>
+                          <DialogDescription>
+                            {editingProductionOrder ? 'تعديل تفاصيل أمر الإنتاج والمواصفات' : 'إضافة أمر إنتاج جديد مع المواصفات المطلوبة'}
+                          </DialogDescription>
                         </DialogHeader>
                         <Form {...productionOrderForm}>
                           <form onSubmit={productionOrderForm.handleSubmit(onProductionOrderSubmit)} className="space-y-4">
@@ -1690,6 +1696,9 @@ export default function Orders() {
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>تفاصيل الطلب {viewingOrder?.order_number}</DialogTitle>
+            <DialogDescription>
+              عرض جميع تفاصيل الطلب وأوامر الإنتاج المرتبطة به
+            </DialogDescription>
           </DialogHeader>
           
           {viewingOrder && (
