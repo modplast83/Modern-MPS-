@@ -2846,8 +2846,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "الحالة مطلوبة" });
       }
 
-      // Validate status values
-      const validStatuses = ['pending', 'for_production', 'on_hold', 'waiting', 'in_progress', 'completed', 'delivered', 'cancelled'];
+      // Validate status values (new and legacy statuses)
+      const validStatuses = ['waiting', 'in_production', 'paused', 'completed', 'cancelled', 'pending', 'for_production', 'on_hold', 'in_progress', 'delivered'];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ message: "حالة غير صحيحة" });
       }

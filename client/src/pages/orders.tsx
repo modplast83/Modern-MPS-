@@ -673,16 +673,19 @@ export default function Orders() {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      pending: { label: "في الانتظار", variant: "secondary" as const },
-      for_production: { label: "إلى الإنتاج", variant: "default" as const },
-      on_hold: { label: "إيقاف مؤقت", variant: "destructive" as const },
-      waiting: { label: "انتظار", variant: "outline" as const },
-      in_progress: { label: "قيد التنفيذ", variant: "default" as const },
-      completed: { label: "مكتمل", variant: "default" as const },
+      waiting: { label: "بالإنتظار", variant: "secondary" as const },
+      in_production: { label: "قيد الانتاج", variant: "default" as const },
+      paused: { label: "ايقاف الانتاج مؤقتا", variant: "destructive" as const },
       cancelled: { label: "ملغي", variant: "destructive" as const },
-      delivered: { label: "تم التسليم", variant: "default" as const }
+      completed: { label: "مكتمل", variant: "default" as const },
+      // Legacy statuses for backward compatibility
+      pending: { label: "بالإنتظار", variant: "secondary" as const },
+      for_production: { label: "قيد الانتاج", variant: "default" as const },
+      on_hold: { label: "ايقاف الانتاج مؤقتا", variant: "destructive" as const },
+      in_progress: { label: "قيد الانتاج", variant: "default" as const },
+      delivered: { label: "مكتمل", variant: "default" as const }
     };
-    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.pending;
+    const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.waiting;
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 
