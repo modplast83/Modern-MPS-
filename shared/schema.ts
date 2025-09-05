@@ -121,7 +121,7 @@ export const orders = pgTable('orders', {
   order_number: varchar('order_number', { length: 50 }).notNull().unique(),
   customer_id: varchar('customer_id', { length: 20 }).notNull().references(() => customers.id),
   delivery_days: integer('delivery_days'),
-  status: varchar('status', { length: 30 }).default('pending'), // pending / for_production / completed / delivered
+  status: varchar('status', { length: 30 }).default('waiting'), // waiting / in_production / paused / cancelled / completed
   notes: text('notes'),
   created_by: integer('created_by').references(() => users.id),
   created_at: timestamp('created_at').defaultNow(),

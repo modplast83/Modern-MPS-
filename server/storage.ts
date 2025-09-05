@@ -502,10 +502,12 @@ export class DatabaseStorage implements IStorage {
 
       // Map order status to production order and job order status
       let productionStatus = status;
-      if (status === 'for_production' || status === 'in_progress') {
+      if (status === 'in_production' || status === 'for_production') {
         productionStatus = 'in_production';
-      } else if (status === 'pending') {
+      } else if (status === 'waiting' || status === 'pending') {
         productionStatus = 'pending';
+      } else if (status === 'paused' || status === 'on_hold') {
+        productionStatus = 'paused';
       } else if (status === 'completed') {
         productionStatus = 'completed';
       } else if (status === 'cancelled') {
@@ -570,7 +572,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .where(eq(orders.status, 'for_production'))
+      .where(eq(orders.status, 'in_production'))
       .orderBy(desc(orders.created_at));
     
     return results;
@@ -594,7 +596,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .where(eq(orders.status, 'for_production'))
+      .where(eq(orders.status, 'in_production'))
       .orderBy(desc(orders.created_at));
 
     // Then get all production orders for these orders with related data
@@ -685,12 +687,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProductionOrder(id: number, productionOrderUpdate: Partial<ProductionOrder>): Promise<ProductionOrder> {
-    const [productionOrder] = await db
-      .update(production_orders)
-      .set(productionOrderUpdate)
-      .where(eq(production_orders.id, id))
-      .returning();
-    return productionOrder;
+    return await db.transaction(async (tx) => {
+      // Update the production order
+      const [productionOrder] = await tx
+        .update(production_orders)
+        .set(productionOrderUpdate)
+        .where(eq(production_orders.id, id))
+        .returning();
+
+      // If this production order was marked as completed, check if all production orders for the parent order are completed
+      if (productionOrderUpdate.status === 'completed') {
+        const orderId = productionOrder.order_id;
+        
+        // Get all production orders for this order
+        const allProductionOrders = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.order_id, orderId));
+        
+        // Check if all production orders are completed
+        const allCompleted = allProductionOrders.every(po => 
+          po.id === id ? productionOrderUpdate.status === 'completed' : po.status === 'completed'
+        );
+        
+        // If all production orders are completed, automatically mark the order as completed
+        if (allCompleted) {
+          await tx
+            .update(orders)
+            .set({ status: 'completed' })
+            .where(eq(orders.id, orderId));
+          
+          console.log(`Order ${orderId} automatically completed - all production orders finished`);
+        }
+      }
+
+      return productionOrder;
+    });
   }
 
   async deleteProductionOrder(id: number): Promise<void> {
@@ -1086,7 +1118,7 @@ export class DatabaseStorage implements IStorage {
     const [activeOrdersResult] = await db
       .select({ count: count() })
       .from(orders)
-      .where(eq(orders.status, 'for_production'));
+      .where(eq(orders.status, 'in_production'));
     
     const activeOrders = activeOrdersResult?.count || 0;
 
