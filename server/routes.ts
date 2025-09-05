@@ -873,6 +873,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.getUserById(id);
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error('Error fetching user by ID:', error);
+      res.status(500).json({ message: "خطأ في جلب بيانات المستخدم" });
+    }
+  });
+
   // Categories routes (for material groups)
   app.get("/api/categories", async (req, res) => {
     try {
