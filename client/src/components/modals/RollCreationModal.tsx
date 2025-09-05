@@ -99,7 +99,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.production_order_id || !formData.weight_kg || !formData.machine_id) {
+    if (!formData.production_order_id || formData.production_order_id === 0 || !formData.weight_kg || !formData.machine_id) {
       toast({
         title: "خطأ",
         description: "يرجى ملء جميع الحقول المطلوبة",
@@ -140,7 +140,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
                   <SelectValue placeholder="اختر أمر الإنتاج" />
                 </SelectTrigger>
                 <SelectContent>
-                  {productionOrders.map((order) => (
+                  {productionOrders.filter(order => order.id).map((order) => (
                     <SelectItem key={order.id} value={order.id.toString()}>
                       {order.production_order_number} - {(order as any).customer_name_ar || (order as any).customer_name || "غير محدد"} - {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
                     </SelectItem>
@@ -191,7 +191,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
                 <SelectValue placeholder="اختر المكينة" />
               </SelectTrigger>
               <SelectContent>
-                {machines.filter(m => m.status === 'active').map((machine) => (
+                {machines.filter(m => m.status === 'active' && m.id).map((machine) => (
                   <SelectItem key={machine.id} value={machine.id}>
                     {machine.name_ar || machine.name}
                   </SelectItem>
