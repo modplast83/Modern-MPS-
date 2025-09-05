@@ -135,7 +135,7 @@ import {
 } from "@shared/erp-schema";
 
 import { db, pool } from "./db";
-import { eq, desc, and, sql, sum, count, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 export interface IStorage {
@@ -572,14 +572,14 @@ export class DatabaseStorage implements IStorage {
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .where(eq(orders.status, 'in_production'))
+      .where(or(eq(orders.status, 'in_production'), eq(orders.status, 'waiting'), eq(orders.status, 'pending')))
       .orderBy(desc(orders.created_at));
     
     return results;
   }
 
   async getHierarchicalOrdersForProduction(): Promise<any[]> {
-    // First get all orders with for_production status
+    // First get all orders with production status (including new orders ready for production)
     const ordersData = await db
       .select({
         id: orders.id,
@@ -596,7 +596,12 @@ export class DatabaseStorage implements IStorage {
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .where(eq(orders.status, 'in_production'))
+      .where(or(
+        eq(orders.status, 'in_production'), 
+        eq(orders.status, 'waiting'), 
+        eq(orders.status, 'pending'), 
+        eq(orders.status, 'for_production')
+      ))
       .orderBy(desc(orders.created_at));
 
     // Then get all production orders for these orders with related data
@@ -1118,7 +1123,7 @@ export class DatabaseStorage implements IStorage {
     const [activeOrdersResult] = await db
       .select({ count: count() })
       .from(orders)
-      .where(eq(orders.status, 'in_production'));
+      .where(or(eq(orders.status, 'in_production'), eq(orders.status, 'waiting'), eq(orders.status, 'pending')));
     
     const activeOrders = activeOrdersResult?.count || 0;
 
@@ -3047,7 +3052,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
-        .where(eq(production_orders.status, 'in_production'))
+        .where(or(eq(production_orders.status, 'in_production'), eq(production_orders.status, 'pending')))
         .groupBy(
           production_orders.id,
           production_orders.production_order_number,
