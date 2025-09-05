@@ -2931,6 +2931,41 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
+        // Check if production order quantity is now completed
+        if (newTotal >= quantityRequired && productionOrder.status !== 'completed') {
+          // Update production order status to completed
+          await tx
+            .update(production_orders)
+            .set({ status: 'completed' })
+            .where(eq(production_orders.id, rollData.production_order_id));
+          
+          console.log(`Production order ${productionOrder.production_order_number} automatically completed - required quantity reached (${newTotal}/${quantityRequired} kg)`);
+          
+          // Check if all production orders for the parent order are now completed
+          const orderId = productionOrder.order_id;
+          
+          // Get all production orders for this order
+          const allProductionOrders = await tx
+            .select()
+            .from(production_orders)
+            .where(eq(production_orders.order_id, orderId));
+          
+          // Check if all production orders are completed
+          const allCompleted = allProductionOrders.every(po => 
+            po.id === rollData.production_order_id ? true : po.status === 'completed'
+          );
+          
+          // If all production orders are completed, automatically mark the order as completed
+          if (allCompleted) {
+            await tx
+              .update(orders)
+              .set({ status: 'completed' })
+              .where(eq(orders.id, orderId));
+            
+            console.log(`Order ${orderId} automatically completed - all production orders finished`);
+          }
+        }
+
         return roll;
       });
     } catch (error) {
