@@ -13,6 +13,7 @@ declare module 'express-serve-static-core' {
   }
 }
 import { storage } from "./storage";
+import { db } from "./db";
 import { 
   insertUserSchema, 
   insertNewOrderSchema, 
@@ -28,8 +29,10 @@ import {
   insertProductionSettingsSchema,
   customers,
   customer_products,
-  locations
+  locations,
+  users
 } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
 import { z } from "zod";
@@ -211,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get all users with potentially plain text passwords
-      const allUsers = await storage.getAllUsers();
+      const allUsers = await storage.getUsers();
       const saltRounds = 12;
       let migrated = 0;
       let skipped = 0;

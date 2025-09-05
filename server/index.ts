@@ -143,16 +143,25 @@ app.use((req, res, next) => {
     }
   }
 
-  const server = await registerRoutes(app);
-
-  // API-specific middleware to ensure JSON responses
+  // API-specific middleware to ensure JSON responses (MUST be before routes)
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
     // Set JSON content type for all API responses
     res.setHeader('Content-Type', 'application/json');
     next();
   });
 
-  // Error handling middleware for API routes
+  const server = await registerRoutes(app);
+
+  // 404 handler for unmatched API routes (MUST be after routes)
+  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+    // If no route matched, send 404 JSON response instead of falling through to HTML
+    if (!res.headersSent) {
+      return res.status(404).json({ message: "API endpoint not found" });
+    }
+    next();
+  });
+
+  // Error handling middleware for API routes (MUST be after routes)
   app.use('/api/*', (err: any, req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
