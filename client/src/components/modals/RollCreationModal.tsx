@@ -175,7 +175,7 @@ export default function RollCreationModal({ isOpen, onClose, selectedProductionO
               step="0.1"
               value={formData.weight_kg}
               onChange={(e) => setFormData({ ...formData, weight_kg: e.target.value })}
-              placeholder="45.2"
+              placeholder="150"
               className="text-right"
               data-testid="input-weight_kg"
             />
