@@ -624,7 +624,11 @@ export class DatabaseStorage implements IStorage {
         item_name_ar: items.name_ar,
         size_caption: customer_products.size_caption,
         width: customer_products.width,
-        cutting_length_cm: customer_products.cutting_length_cm
+        cutting_length_cm: customer_products.cutting_length_cm,
+        thickness: customer_products.thickness,
+        raw_material: customer_products.raw_material,
+        master_batch_id: customer_products.master_batch_id,
+        is_printed: customer_products.is_printed
       })
       .from(production_orders)
       .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))

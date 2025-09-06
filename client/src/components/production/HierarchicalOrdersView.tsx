@@ -142,7 +142,8 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                     {order.production_orders?.length || 0} أوامر إنتاج
                   </Badge>
                   <Badge variant="secondary" data-testid={`badge-order-status-${order.id}`}>
-                    {order.status === 'for_production' ? 'للإنتاج' : order.status}
+                    {order.status === 'for_production' ? 'للإنتاج' : 
+                     order.status === 'pending' ? 'بالإنتظار' : order.status}
                   </Badge>
                 </div>
               </div>
@@ -179,8 +180,40 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                                 <div>
                                   <h4 className="font-medium">{productionOrder.production_order_number}</h4>
                                   <p className="text-sm text-muted-foreground">
-                                    {productionOrder.item_name_ar || productionOrder.item_name || productionOrder.size_caption || "غير محدد"}
+                                    {productionOrder.item_name_ar || productionOrder.item_name || "غير محدد"}
                                   </p>
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
+                                    {productionOrder.size_caption && (
+                                      <div>
+                                        <span className="font-medium">المقاس: </span>
+                                        <span className="text-muted-foreground">{productionOrder.size_caption}</span>
+                                      </div>
+                                    )}
+                                    {productionOrder.thickness && (
+                                      <div>
+                                        <span className="font-medium">السماكة: </span>
+                                        <span className="text-muted-foreground">{productionOrder.thickness}</span>
+                                      </div>
+                                    )}
+                                    {productionOrder.raw_material && (
+                                      <div>
+                                        <span className="font-medium">الخامة: </span>
+                                        <span className="text-muted-foreground">{productionOrder.raw_material}</span>
+                                      </div>
+                                    )}
+                                    {productionOrder.master_batch_id && (
+                                      <div>
+                                        <span className="font-medium">لون ماستر باتش: </span>
+                                        <span className="text-muted-foreground">{productionOrder.master_batch_id}</span>
+                                      </div>
+                                    )}
+                                    <div>
+                                      <span className="font-medium">طباعة: </span>
+                                      <span className="text-muted-foreground">
+                                        {productionOrder.is_printed ? 'نعم' : 'لا'}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-4">
