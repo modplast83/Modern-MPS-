@@ -2886,12 +2886,16 @@ export class DatabaseStorage implements IStorage {
         const totalWeight = Number(totalWeightResult[0]?.total || 0);
         const newTotal = totalWeight + Number(rollData.weight_kg);
 
-        // Always check tolerance - no final roll exceptions
+        // Check quantity limits - allow final roll to exceed required quantity
         const quantityRequired = parseFloat(productionOrder.quantity_kg?.toString() || '0');
         
-        if (newTotal > quantityRequired) {
-          throw new Error(`الوزن الجديد (${newTotal.toFixed(2)} كيلو) يتجاوز كمية أمر الإنتاج (${quantityRequired.toFixed(2)} كيلو)`);
+        // إذا كان إجمالي الوزن الحالي يساوي أو يزيد عن الكمية المطلوبة، لا نسمح بإنشاء رولات إضافية
+        if (totalWeight >= quantityRequired) {
+          throw new Error(`تم الوصول للكمية المطلوبة (${quantityRequired.toFixed(2)} كيلو). لا يمكن إنشاء رولات إضافية`);
         }
+        
+        // السماح بتجاوز الكمية في آخر رول فقط
+        // إذا كان الوزن الحالي أقل من المطلوب والرول الجديد سيتجاوز الكمية، فهذا مقبول
 
         // Generate roll sequence number (sequential: 1, 2, 3, 4...)
         const rollCount = await tx
