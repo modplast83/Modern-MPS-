@@ -234,7 +234,7 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
                                           >
                                             {roll.status === 'completed' ? 'مكتمل' :
                                              roll.status === 'in_progress' ? 'قيد التنفيذ' :
-                                             roll.status === 'pending' ? 'في الانتظار' : roll.status}
+                                             roll.status === 'pending' ? 'بالإنتظار' : roll.status}
                                           </Badge>
                                         </div>
                                       </div>
