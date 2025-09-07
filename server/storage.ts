@@ -411,6 +411,7 @@ export interface IStorage {
   getFilmQueue(): Promise<ProductionOrder[]>;
   getPrintingQueue(): Promise<Roll[]>;
   getCuttingQueue(): Promise<Roll[]>;
+  getGroupedCuttingQueue(): Promise<any[]>;
   getOrderProgress(productionOrderId: number): Promise<any>;
   getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }>;
 }
@@ -3172,6 +3173,132 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching cutting queue:', error);
       throw new Error('فشل في جلب قائمة التقطيع');
+    }
+  }
+
+  async getGroupedCuttingQueue(): Promise<any[]> {
+    try {
+      // جلب جميع الطلبات التي بها رولات جاهزة للتقطيع
+      const ordersData = await db
+        .select({
+          id: orders.id,
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          status: orders.status,
+          created_at: orders.created_at,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar
+        })
+        .from(orders)
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .where(
+          exists(
+            db
+              .select()
+              .from(production_orders)
+              .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+              .where(
+                and(
+                  eq(production_orders.order_id, orders.id),
+                  eq(rolls.stage, 'printing')
+                )
+              )
+          )
+        )
+        .orderBy(desc(orders.created_at));
+
+      if (ordersData.length === 0) {
+        return [];
+      }
+
+      const orderIds = ordersData.map(order => order.id);
+
+      // جلب أوامر الإنتاج مع تفاصيل المنتج
+      const productionOrdersData = await db
+        .select({
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          status: production_orders.status,
+          created_at: production_orders.created_at,
+          item_name: items.name,
+          item_name_ar: items.name_ar,
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          master_batch_id: customer_products.master_batch_id,
+          is_printed: customer_products.is_printed
+        })
+        .from(production_orders)
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
+        .where(
+          and(
+            inArray(production_orders.order_id, orderIds),
+            exists(
+              db
+                .select()
+                .from(rolls)
+                .where(
+                  and(
+                    eq(rolls.production_order_id, production_orders.id),
+                    eq(rolls.stage, 'printing')
+                  )
+                )
+            )
+          )
+        )
+        .orderBy(desc(production_orders.created_at));
+
+      const productionOrderIds = productionOrdersData.map(po => po.id);
+
+      // جلب الرولات الجاهزة للتقطيع مع ترتيب صحيح
+      let rollsData: any[] = [];
+      if (productionOrderIds.length > 0) {
+        rollsData = await db
+          .select({
+            id: rolls.id,
+            roll_seq: rolls.roll_seq,
+            roll_number: rolls.roll_number,
+            production_order_id: rolls.production_order_id,
+            stage: rolls.stage,
+            weight_kg: rolls.weight_kg,
+            cut_weight_total_kg: rolls.cut_weight_total_kg,
+            waste_kg: rolls.waste_kg,
+            printed_at: rolls.printed_at,
+            created_at: rolls.created_at
+          })
+          .from(rolls)
+          .where(
+            and(
+              inArray(rolls.production_order_id, productionOrderIds),
+              eq(rolls.stage, 'printing')
+            )
+          )
+          .orderBy(rolls.roll_seq); // ترتيب حسب التسلسل
+      }
+
+      // تجميع البيانات بشكل هرمي
+      const hierarchicalOrders = ordersData.map(order => ({
+        ...order,
+        production_orders: productionOrdersData
+          .filter(productionOrder => productionOrder.order_id === order.id)
+          .map(productionOrder => ({
+            ...productionOrder,
+            rolls: rollsData
+              .filter(roll => roll.production_order_id === productionOrder.id)
+              .sort((a, b) => a.roll_seq - b.roll_seq) // ترتيب إضافي للتأكيد
+          }))
+      }));
+
+      return hierarchicalOrders;
+    } catch (error) {
+      console.error('Error fetching grouped cutting queue:', error);
+      throw new Error('فشل في جلب قائمة التقطيع المجمعة');
     }
   }
 
