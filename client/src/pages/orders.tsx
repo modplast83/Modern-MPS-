@@ -352,6 +352,23 @@ export default function Orders() {
         return;
       }
 
+      // Validate that all production orders have complete data
+      const invalidOrders = productionOrdersInForm.filter(order => 
+        !order.customer_product_id || 
+        order.customer_product_id === "" ||
+        !order.quantity_kg || 
+        order.quantity_kg <= 0
+      );
+
+      if (invalidOrders.length > 0) {
+        toast({
+          title: "خطأ في البيانات",
+          description: "يرجى التأكد من اكتمال جميع أوامر الإنتاج (اختيار المنتج وإدخال الكمية)",
+          variant: "destructive"
+        });
+        return;
+      }
+
       // Generate order number
       console.log('توليد رقم الطلب...');
       const orderNumberResponse = await fetch('/api/orders/next-number');
