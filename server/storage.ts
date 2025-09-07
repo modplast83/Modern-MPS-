@@ -3192,18 +3192,11 @@ export class DatabaseStorage implements IStorage {
         .from(orders)
         .leftJoin(customers, eq(orders.customer_id, customers.id))
         .where(
-          exists(
-            db
-              .select()
-              .from(production_orders)
-              .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
-              .where(
-                and(
-                  eq(production_orders.order_id, orders.id),
-                  eq(rolls.stage, 'printing')
-                )
-              )
-          )
+          sql`EXISTS (
+            SELECT 1 FROM production_orders po
+            LEFT JOIN rolls r ON po.id = r.production_order_id
+            WHERE po.order_id = orders.id AND r.stage = 'printing'
+          )`
         )
         .orderBy(desc(orders.created_at));
 
@@ -3239,17 +3232,10 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             inArray(production_orders.order_id, orderIds),
-            exists(
-              db
-                .select()
-                .from(rolls)
-                .where(
-                  and(
-                    eq(rolls.production_order_id, production_orders.id),
-                    eq(rolls.stage, 'printing')
-                  )
-                )
-            )
+            sql`EXISTS (
+              SELECT 1 FROM rolls
+              WHERE production_order_id = production_orders.id AND stage = 'printing'
+            )`
           )
         )
         .orderBy(desc(production_orders.created_at));

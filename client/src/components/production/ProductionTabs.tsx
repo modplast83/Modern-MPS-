@@ -10,6 +10,7 @@ import ProductionOrdersTable from "./ProductionOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
 import GroupedPrintingQueue from "./GroupedPrintingQueue";
+import GroupedCuttingQueue from "./GroupedCuttingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
 
 interface ProductionTabsProps {
@@ -83,6 +84,11 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     refetchInterval: 30000
   });
 
+  const { data: groupedCuttingQueue = [] } = useQuery<any[]>({
+    queryKey: ['/api/production/grouped-cutting-queue'],
+    refetchInterval: 30000
+  });
+
   // Set default active stage based on visible stages
   const defaultStage = visibleStages.length > 0 ? visibleStages[0].id : "film";
   
@@ -152,7 +158,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           <TabsContent value="cutting" className="mt-0">
             <CardContent className="p-6">
               <CardTitle className="text-lg mb-4">قائمة انتظار التقطيع</CardTitle>
-              <ProductionQueue queueType="cutting" items={cuttingQueue} />
+              <GroupedCuttingQueue items={groupedCuttingQueue} />
             </CardContent>
           </TabsContent>
         )}
