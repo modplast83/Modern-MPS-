@@ -3708,6 +3708,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/production/grouped-cutting-queue", async (req, res) => {
+    try {
+      const queue = await storage.getGroupedCuttingQueue();
+      res.json(queue);
+    } catch (error) {
+      console.error('Error fetching grouped cutting queue:', error);
+      res.status(500).json({ message: "خطأ في جلب قائمة التقطيع المجمعة" });
+    }
+  });
+
   app.get("/api/production/order-progress/:jobOrderId", async (req, res) => {
     try {
       const jobOrderId = parseInt(req.params.jobOrderId);
