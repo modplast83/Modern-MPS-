@@ -384,10 +384,17 @@ export default function Orders() {
       const newOrder = await orderResponse.json();
       console.log('تم إنشاء الطلب بنجاح:', newOrder);
       
-      // Create production orders
-      console.log('إنشاء أوامر الإنتاج...', productionOrdersInForm.length);
-      for (let i = 0; i < productionOrdersInForm.length; i++) {
-        const prodOrder = productionOrdersInForm[i];
+      // Filter out empty production orders and create valid ones
+      const validProductionOrders = productionOrdersInForm.filter(prodOrder => 
+        prodOrder.customer_product_id && 
+        prodOrder.customer_product_id !== "" &&
+        prodOrder.quantity_kg &&
+        prodOrder.quantity_kg > 0
+      );
+      
+      console.log('إنشاء أوامر الإنتاج...', validProductionOrders.length);
+      for (let i = 0; i < validProductionOrders.length; i++) {
+        const prodOrder = validProductionOrders[i];
         console.log(`إنشاء أمر إنتاج ${i + 1}:`, prodOrder);
         
         const prodOrderResponse = await fetch('/api/production-orders', {
