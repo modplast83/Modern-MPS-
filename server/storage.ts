@@ -3016,18 +3016,16 @@ export class DatabaseStorage implements IStorage {
           throw new Error('الرول غير موجود');
         }
 
-        // Calculate total cut weight for this roll
-        const totalCutResult = await tx
-          .select({ total: sql<number>`COALESCE(SUM(cut_weight_kg), 0)` })
-          .from(cuts)
-          .where(eq(cuts.roll_id, cutData.roll_id));
-
-        const totalCutWeight = totalCutResult[0]?.total || 0;
+        // التحقق من أن الكمية الصافية لا تتجاوز وزن الرول الأصلي
         const rollWeight = parseFloat(roll.weight_kg.toString());
-        const availableWeight = rollWeight - totalCutWeight;
+        const cutWeight = parseFloat(cutData.cut_weight_kg.toString());
 
-        if (parseFloat(cutData.cut_weight_kg.toString()) > availableWeight) {
-          throw new Error(`الوزن المطلوب (${cutData.cut_weight_kg} كيلو) أكبر من المتاح (${availableWeight.toFixed(2)} كيلو)`);
+        if (cutWeight > rollWeight) {
+          throw new Error(`الكمية الصافية (${cutWeight.toFixed(2)} كيلو) لا يمكن أن تتجاوز وزن الرول (${rollWeight.toFixed(2)} كيلو)`);
+        }
+
+        if (cutWeight <= 0) {
+          throw new Error('الكمية الصافية يجب أن تكون أكبر من صفر');
         }
 
         // Create the cut
@@ -3036,21 +3034,19 @@ export class DatabaseStorage implements IStorage {
           .values(cutData)
           .returning();
 
-        // Update roll with cut totals and waste calculation
-        const newTotalCut = totalCutWeight + parseFloat(cutData.cut_weight_kg.toString());
-        const waste = rollWeight - newTotalCut;
+        // حساب الهدر والكمية الصافية الإجمالية
+        const totalCutWeight = cutWeight;
+        const waste = rollWeight - totalCutWeight;
 
-        // Always update the roll's cut weight and waste
+        // تحديث بيانات الرول مع الكمية الصافية والهدر
         await tx
           .update(rolls)
           .set({
-            cut_weight_total_kg: newTotalCut.toString(),
+            cut_weight_total_kg: totalCutWeight.toString(),
             waste_kg: waste.toString(),
-            ...(newTotalCut >= rollWeight * 0.95 ? {
-              stage: 'cutting',
-              cut_completed_at: new Date(),
-              cut_by: cutData.performed_by
-            } : {})
+            stage: 'cutting', // تحديث المرحلة إلى تم التقطيع
+            cut_completed_at: new Date(),
+            cut_by: cutData.performed_by
           })
           .where(eq(rolls.id, cutData.roll_id));
 
