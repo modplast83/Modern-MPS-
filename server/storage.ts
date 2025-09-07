@@ -3036,19 +3036,23 @@ export class DatabaseStorage implements IStorage {
           .values(cutData)
           .returning();
 
-        // Update roll stage if fully cut
+        // Update roll with cut totals and waste calculation
         const newTotalCut = totalCutWeight + parseFloat(cutData.cut_weight_kg.toString());
-        if (newTotalCut >= rollWeight * 0.95) { // 95% threshold for completion
-          await tx
-            .update(rolls)
-            .set({
+        const waste = rollWeight - newTotalCut;
+
+        // Always update the roll's cut weight and waste
+        await tx
+          .update(rolls)
+          .set({
+            cut_weight_total_kg: newTotalCut.toString(),
+            waste_kg: waste.toString(),
+            ...(newTotalCut >= rollWeight * 0.95 ? {
               stage: 'cutting',
               cut_completed_at: new Date(),
-              cut_by: cutData.performed_by,
-              cut_weight_total_kg: newTotalCut.toString()
-            })
-            .where(eq(rolls.id, cutData.roll_id));
-        }
+              cut_by: cutData.performed_by
+            } : {})
+          })
+          .where(eq(rolls.id, cutData.roll_id));
 
         return cut;
       });
