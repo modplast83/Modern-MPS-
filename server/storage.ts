@@ -3097,7 +3097,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
-        .where(or(eq(production_orders.status, 'in_production'), eq(production_orders.status, 'pending')))
+        .where(eq(production_orders.status, 'in_production'))
         .groupBy(
           production_orders.id,
           production_orders.production_order_number,
