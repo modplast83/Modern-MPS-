@@ -68,6 +68,7 @@ const productionOrderFormSchema = z.object({
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("pending"); // Default to pending orders
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isProductionOrderDialogOpen, setIsProductionOrderDialogOpen] = useState(false);
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
@@ -241,11 +242,20 @@ export default function Orders() {
     }
   });
 
-  // Filter orders
-  const filteredOrders = orders.filter((order: any) =>
-    (order.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter orders by search term and status
+  const filteredOrders = orders.filter((order: any) => {
+    // Search filter
+    const matchesSearch = searchTerm === "" || 
+      (order.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customers.find((c: any) => c.id === order.customer_id)?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customers.find((c: any) => c.id === order.customer_id)?.name_ar?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status filter
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   // Filter and sort production orders with search capability
   const filteredProductionOrders = productionOrders.filter((po: any) => {
@@ -728,12 +738,23 @@ export default function Orders() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">إجمالي الطلبات</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {statusFilter === "all" ? "إجمالي الطلبات" : 
+                   statusFilter === "pending" || statusFilter === "waiting" ? "الطلبات بالانتظار" :
+                   statusFilter === "in_production" || statusFilter === "for_production" || statusFilter === "in_progress" ? "قيد الانتاج" :
+                   statusFilter === "completed" || statusFilter === "delivered" ? "الطلبات المكتملة" :
+                   statusFilter === "cancelled" ? "الطلبات الملغية" :
+                   statusFilter === "paused" || statusFilter === "on_hold" ? "الطلبات المتوقفة" :
+                   "الطلبات المفلترة"}
+                </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{orders.length}</div>
-                <p className="text-xs text-muted-foreground">طلب نشط</p>
+                <div className="text-2xl font-bold">{filteredOrders.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {statusFilter === "all" ? `من أصل ${orders.length} طلب` : 
+                   `من أصل ${orders.length} طلب إجمالي`}
+                </p>
               </CardContent>
             </Card>
 
@@ -796,6 +817,24 @@ export default function Orders() {
                           className="pl-10 w-64"
                         />
                       </div>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="فلترة حسب الحالة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">جميع الطلبات</SelectItem>
+                          <SelectItem value="pending">بالانتظار</SelectItem>
+                          <SelectItem value="waiting">بالانتظار</SelectItem>
+                          <SelectItem value="in_production">قيد الانتاج</SelectItem>
+                          <SelectItem value="for_production">للإنتاج</SelectItem>
+                          <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                          <SelectItem value="paused">متوقف مؤقتاً</SelectItem>
+                          <SelectItem value="on_hold">معلق</SelectItem>
+                          <SelectItem value="completed">مكتمل</SelectItem>
+                          <SelectItem value="delivered">مسلم</SelectItem>
+                          <SelectItem value="cancelled">ملغي</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
                         <DialogTrigger asChild>
                           <Button onClick={handleAddOrder}>
