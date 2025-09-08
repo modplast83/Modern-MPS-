@@ -1158,7 +1158,7 @@ function ProductionHallContent() {
   const { toast } = useToast();
 
   // Fetch production orders ready for receipt
-  const { data: productionOrders = [], isLoading } = useQuery({
+  const { data: productionOrders = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/warehouse/production-hall'],
     staleTime: 30000 // Refresh every 30 seconds
   });
