@@ -3718,6 +3718,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Production hall - get production orders ready for warehouse receipt
+  app.get("/api/warehouse/production-hall", async (req, res) => {
+    try {
+      const productionOrders = await storage.getProductionOrdersForReceipt();
+      res.json(productionOrders);
+    } catch (error) {
+      console.error('Error fetching production hall data:', error);
+      res.status(500).json({ message: "خطأ في جلب بيانات صالة الإنتاج" });
+    }
+  });
+
+  // Create warehouse receipt from production hall
+  app.post("/api/warehouse/receipts", async (req, res) => {
+    try {
+      const receiptData = req.body;
+      const receipt = await storage.createWarehouseReceipt(receiptData);
+      res.json(receipt);
+    } catch (error) {
+      console.error('Error creating warehouse receipt:', error);
+      res.status(500).json({ message: "خطأ في تسجيل استلام المستودع" });
+    }
+  });
+
   app.get("/api/production/order-progress/:jobOrderId", async (req, res) => {
     try {
       const jobOrderId = parseInt(req.params.jobOrderId);

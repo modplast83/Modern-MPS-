@@ -160,6 +160,9 @@ export interface IStorage {
   updateProductionOrder(id: number, productionOrder: Partial<ProductionOrder>): Promise<ProductionOrder>;
   deleteProductionOrder(id: number): Promise<void>;
   
+  // Warehouse - Production Hall
+  getProductionOrdersForReceipt(): Promise<any[]>;
+  
   // Production Orders
   
   
@@ -3068,6 +3071,95 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating warehouse receipt:', error);
       throw new Error('فشل في إنشاء إيصال المستودع');
+    }
+  }
+
+  // Get production orders ready for warehouse receipt (with cut quantities)
+  async getProductionOrdersForReceipt(): Promise<any[]> {
+    try {
+      // Get production orders that have cuts but haven't been fully received
+      const result = await db
+        .select({
+          order_id: production_orders.order_id,
+          order_number: orders.order_number,
+          production_order_id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          quantity_required: production_orders.quantity_kg,
+          item_name: items.name,
+          item_name_ar: items.name_ar,
+          size_caption: customer_products.size_caption,
+          raw_material: customer_products.raw_material,
+          master_batch_id: customer_products.master_batch_id,
+          // Calculate total film production (sum of all roll weights for this production order)
+          total_film_weight: sql<string>`
+            COALESCE((
+              SELECT SUM(weight_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0)
+          `,
+          // Calculate total cut weight (sum of all cuts for this production order)
+          total_cut_weight: sql<string>`
+            COALESCE((
+              SELECT SUM(c.cut_weight_kg)::decimal(12,3)
+              FROM cuts c
+              INNER JOIN rolls r ON c.roll_id = r.id
+              WHERE r.production_order_id = ${production_orders.id}
+            ), 0)
+          `,
+          // Calculate total received weight (sum of all warehouse receipts for this production order)
+          total_received_weight: sql<string>`
+            COALESCE((
+              SELECT SUM(received_weight_kg)::decimal(12,3)
+              FROM warehouse_receipts
+              WHERE production_order_id = ${production_orders.id}
+            ), 0)
+          `,
+          // Calculate waste (film production - cut weight)
+          waste_weight: sql<string>`
+            COALESCE((
+              SELECT SUM(weight_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0) - COALESCE((
+              SELECT SUM(c.cut_weight_kg)::decimal(12,3)
+              FROM cuts c
+              INNER JOIN rolls r ON c.roll_id = r.id
+              WHERE r.production_order_id = ${production_orders.id}
+            ), 0)
+          `
+        })
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
+        .where(
+          // Only include production orders that have cuts but haven't been fully received
+          sql`EXISTS (
+            SELECT 1 FROM cuts c
+            INNER JOIN rolls r ON c.roll_id = r.id
+            WHERE r.production_order_id = ${production_orders.id}
+          ) AND COALESCE((
+            SELECT SUM(c.cut_weight_kg)
+            FROM cuts c
+            INNER JOIN rolls r ON c.roll_id = r.id
+            WHERE r.production_order_id = ${production_orders.id}
+          ), 0) > COALESCE((
+            SELECT SUM(received_weight_kg)
+            FROM warehouse_receipts
+            WHERE production_order_id = ${production_orders.id}
+          ), 0)`
+        )
+        .orderBy(desc(orders.created_at));
+
+      return result;
+    } catch (error) {
+      console.error('Error fetching production orders for receipt:', error);
+      throw new Error('فشل في جلب أوامر الإنتاج القابلة للاستلام');
     }
   }
 

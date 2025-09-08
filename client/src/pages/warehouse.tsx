@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2 } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2, Truck, Factory, CheckCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import { useForm } from "react-hook-form";
@@ -489,8 +489,9 @@ export default function Warehouse() {
             </Card>
           </div>
 
-          <Tabs defaultValue={activeLocationTab || "movements"} className="space-y-4">
-            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 3, 8)}`}>
+          <Tabs defaultValue={activeLocationTab || "production-hall"} className="space-y-4">
+            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 4, 8)}`}>
+              <TabsTrigger value="production-hall">صالة الإنتاج</TabsTrigger>
               {locations.map((location: any) => (
                 <TabsTrigger key={location.id} value={location.id.toString()}>
                   {location.name_ar || location.name}
@@ -500,6 +501,11 @@ export default function Warehouse() {
               <TabsTrigger value="locations">إدارة المواقع</TabsTrigger>
               <TabsTrigger value="reports">التقارير</TabsTrigger>
             </TabsList>
+
+            {/* Production Hall Tab */}
+            <TabsContent value="production-hall" className="space-y-4">
+              <ProductionHallContent />
+            </TabsContent>
 
             {/* Dynamic location-based inventory tabs */}
             {locations.map((location: any) => (
@@ -1139,5 +1145,294 @@ export default function Warehouse() {
         </main>
       </div>
     </div>
+  );
+}
+
+// Production Hall Component
+function ProductionHallContent() {
+  const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
+  const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
+  const [receiptWeight, setReceiptWeight] = useState("");
+  const [receiptNotes, setReceiptNotes] = useState("");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch production orders ready for receipt
+  const { data: productionOrders = [], isLoading } = useQuery({
+    queryKey: ['/api/warehouse/production-hall'],
+    staleTime: 30000 // Refresh every 30 seconds
+  });
+
+  // Receipt mutation
+  const receiptMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await fetch('/api/warehouse/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!response.ok) throw new Error('فشل في حفظ الاستلام');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/warehouse/production-hall'] });
+      setReceiptDialogOpen(false);
+      setSelectedOrders(new Set());
+      setReceiptWeight("");
+      setReceiptNotes("");
+      toast({
+        title: "تم الاستلام بنجاح",
+        description: "تم تسجيل استلام المواد في المستودع"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "خطأ",
+        description: "فشل في تسجيل الاستلام",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSelectOrder = (orderId: number) => {
+    const newSelection = new Set(selectedOrders);
+    if (newSelection.has(orderId)) {
+      newSelection.delete(orderId);
+    } else {
+      newSelection.add(orderId);
+    }
+    setSelectedOrders(newSelection);
+  };
+
+  const handleReceiptSubmit = () => {
+    if (selectedOrders.size === 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى اختيار أمر إنتاج واحد على الأقل",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!receiptWeight || parseFloat(receiptWeight) <= 0) {
+      toast({
+        title: "خطأ",
+        description: "يرجى إدخال وزن الاستلام",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const selectedOrdersList = Array.from(selectedOrders);
+    
+    // Create receipts for all selected orders
+    selectedOrdersList.forEach(orderId => {
+      receiptMutation.mutate({
+        production_order_id: orderId,
+        received_weight_kg: parseFloat(receiptWeight),
+        received_by: 1, // Assuming current user ID
+        notes: receiptNotes
+      });
+    });
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Factory className="h-5 w-5" />
+            صالة الإنتاج - المواد الجاهزة للاستلام
+          </CardTitle>
+          <div className="flex space-x-2 space-x-reverse">
+            <Dialog open={receiptDialogOpen} onOpenChange={setReceiptDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  disabled={selectedOrders.size === 0}
+                  data-testid="button-receive-materials"
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  استلام المواد ({selectedOrders.size})
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>استلام مواد من صالة الإنتاج</DialogTitle>
+                  <DialogDescription>
+                    تسجيل استلام المواد المقطعة من صالة الإنتاج إلى المستودع الرئيسي
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium">الوزن المستلم (كيلو)</label>
+                    <Input
+                      type="number"
+                      step="0.001"
+                      value={receiptWeight}
+                      onChange={(e) => setReceiptWeight(e.target.value)}
+                      placeholder="أدخل الوزن المستلم"
+                      data-testid="input-receipt-weight"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">ملاحظات (اختيارية)</label>
+                    <textarea
+                      value={receiptNotes}
+                      onChange={(e) => setReceiptNotes(e.target.value)}
+                      placeholder="أضف ملاحظات حول الاستلام"
+                      className="w-full min-h-[60px] p-2 border rounded-md"
+                      data-testid="textarea-receipt-notes"
+                    />
+                  </div>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <Button 
+                      onClick={handleReceiptSubmit}
+                      disabled={receiptMutation.isPending}
+                      data-testid="button-confirm-receipt"
+                    >
+                      {receiptMutation.isPending ? "جاري الحفظ..." : "تأكيد الاستلام"}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setReceiptDialogOpen(false)}
+                      data-testid="button-cancel-receipt"
+                    >
+                      إلغاء
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex justify-center py-8">جاري التحميل...</div>
+        ) : productionOrders.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Factory className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>لا توجد مواد جاهزة للاستلام حالياً</p>
+            <p className="text-sm">ستظهر أوامر الإنتاج التي تم تقطيعها هنا</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-right py-3 px-4 font-medium">
+                    <input
+                      type="checkbox"
+                      checked={selectedOrders.size === productionOrders.length && productionOrders.length > 0}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedOrders(new Set(productionOrders.map((po: any) => po.production_order_id)));
+                        } else {
+                          setSelectedOrders(new Set());
+                        }
+                      }}
+                      data-testid="checkbox-select-all"
+                    />
+                  </th>
+                  <th className="text-right py-3 px-4 font-medium">رقم الطلب</th>
+                  <th className="text-right py-3 px-4 font-medium">رقم أمر الإنتاج</th>
+                  <th className="text-right py-3 px-4 font-medium">العميل</th>
+                  <th className="text-right py-3 px-4 font-medium">الصنف</th>
+                  <th className="text-right py-3 px-4 font-medium">الحجم</th>
+                  <th className="text-right py-3 px-4 font-medium">الكمية المطلوبة</th>
+                  <th className="text-right py-3 px-4 font-medium">الفيلم المنتج</th>
+                  <th className="text-right py-3 px-4 font-medium">الكمية المقطعة</th>
+                  <th className="text-right py-3 px-4 font-medium">المستلم سابقاً</th>
+                  <th className="text-right py-3 px-4 font-medium">المتبقي للاستلام</th>
+                  <th className="text-right py-3 px-4 font-medium">الهدر</th>
+                  <th className="text-right py-3 px-4 font-medium">الحالة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {productionOrders.map((order: any) => {
+                  const cutWeight = parseFloat(order.total_cut_weight) || 0;
+                  const receivedWeight = parseFloat(order.total_received_weight) || 0;
+                  const remainingWeight = cutWeight - receivedWeight;
+                  const filmWeight = parseFloat(order.total_film_weight) || 0;
+                  const wasteWeight = parseFloat(order.waste_weight) || 0;
+                  
+                  return (
+                    <tr 
+                      key={order.production_order_id} 
+                      className={`border-b hover:bg-gray-50 ${selectedOrders.has(order.production_order_id) ? 'bg-blue-50' : ''}`}
+                    >
+                      <td className="py-3 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrders.has(order.production_order_id)}
+                          onChange={() => handleSelectOrder(order.production_order_id)}
+                          data-testid={`checkbox-select-${order.production_order_id}`}
+                        />
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-order-number-${order.production_order_id}`}>
+                        {order.order_number}
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-production-order-${order.production_order_id}`}>
+                        {order.production_order_number}
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-customer-${order.production_order_id}`}>
+                        {order.customer_name_ar || order.customer_name}
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-item-${order.production_order_id}`}>
+                        {order.item_name_ar || order.item_name}
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-size-${order.production_order_id}`}>
+                        {order.size_caption}
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-required-${order.production_order_id}`}>
+                        {parseFloat(order.quantity_required).toFixed(2)} كيلو
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-film-${order.production_order_id}`}>
+                        <span className="text-blue-600 font-medium">
+                          {filmWeight.toFixed(2)} كيلو
+                        </span>
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-cut-${order.production_order_id}`}>
+                        <span className="text-green-600 font-medium">
+                          {cutWeight.toFixed(2)} كيلو
+                        </span>
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-received-${order.production_order_id}`}>
+                        <span className="text-orange-600 font-medium">
+                          {receivedWeight.toFixed(2)} كيلو
+                        </span>
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-remaining-${order.production_order_id}`}>
+                        <span className="text-purple-600 font-bold">
+                          {remainingWeight.toFixed(2)} كيلو
+                        </span>
+                      </td>
+                      <td className="py-3 px-4" data-testid={`text-waste-${order.production_order_id}`}>
+                        <span className="text-red-600">
+                          {wasteWeight.toFixed(2)} كيلو
+                        </span>
+                      </td>
+                      <td className="py-3 px-4" data-testid={`status-${order.production_order_id}`}>
+                        {remainingWeight > 0 ? (
+                          <Badge variant="outline" className="text-orange-600 border-orange-600">
+                            جزئي
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-green-600 border-green-600">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            مكتمل
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
