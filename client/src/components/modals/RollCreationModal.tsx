@@ -69,6 +69,12 @@ export default function RollCreationModal({
     staleTime: 1 * 60 * 1000 // 1 minute
   });
 
+  const selectedOrder = useMemo(
+    () =>
+      productionOrders.find((o) => o.id === selectedProductionOrderId) || null,
+    [productionOrders, selectedProductionOrderId]
+  );
+
   // مزامنة قيمة أمر الإنتاج المختار من الـprop عند تغييره/فتح المودال
   useEffect(() => {
     if (isOpen) {
@@ -189,12 +195,6 @@ export default function RollCreationModal({
       resetForm();
     }
   };
-
-  const selectedOrder = useMemo(
-    () =>
-      productionOrders.find((o) => o.id === selectedProductionOrderId) || null,
-    [productionOrders, selectedProductionOrderId]
-  );
 
   // Calculate remaining quantity for a production order
   const calculateRemainingQuantity = (order: any) => {
