@@ -44,6 +44,7 @@ import {
   user_settings,
   notifications,
   notification_templates,
+  user_requests,
   type User, 
   type InsertUser,
   type NewOrder,
@@ -2776,8 +2777,8 @@ export class DatabaseStorage implements IStorage {
   // ============ User Requests Management ============
   async getUserRequests(): Promise<any[]> {
     try {
-      const result = await db.execute(sql`SELECT * FROM user_requests ORDER BY date DESC`);
-      return result.rows;
+      const requests = await db.select().from(user_requests).orderBy(desc(user_requests.date));
+      return requests;
     } catch (error) {
       console.error('Error fetching user requests:', error);
       throw new Error('فشل في جلب طلبات المستخدمين');
@@ -2801,15 +2802,19 @@ export class DatabaseStorage implements IStorage {
 
   async updateUserRequest(id: number, requestData: any): Promise<any> {
     try {
-      const result = await db.execute(sql`
-        UPDATE user_requests 
-        SET type = ${requestData.type}, title = ${requestData.title},
-            description = ${requestData.description}, status = ${requestData.status},
-            response = ${requestData.response}, updated_at = NOW()
-        WHERE id = ${id}
-        RETURNING *
-      `);
-      return result.rows[0];
+      const [updatedRequest] = await db
+        .update(user_requests)
+        .set({
+          type: requestData.type,
+          title: requestData.title,
+          description: requestData.description,
+          status: requestData.status,
+          response: requestData.response,
+          updated_at: new Date()
+        })
+        .where(eq(user_requests.id, id))
+        .returning();
+      return updatedRequest;
     } catch (error) {
       console.error('Error updating user request:', error);
       throw new Error('فشل في تحديث الطلب');
