@@ -53,8 +53,14 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
     setExpandedProductionOrders(newExpanded);
   };
 
-  // Filter based on search term
+  // Filter based on search term and stage requirements
   const filteredOrders = ordersData.filter(order => {
+    // For film stage, exclude orders with pending status
+    if (stage === "film" && order.status === "pending") {
+      return false;
+    }
+    
+    // Apply search filter if search term is provided
     if (!searchTerm) return true;
     
     const searchLower = searchTerm.toLowerCase();
