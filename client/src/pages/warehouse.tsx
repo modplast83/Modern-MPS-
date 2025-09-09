@@ -1150,7 +1150,7 @@ export default function Warehouse() {
 
 // Production Hall Component
 function ProductionHallContent() {
-  const [selectedOrders, setSelectedOrders] = useState<Set<number>>(new Set());
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set());
   const [receiptDialogOpen, setReceiptDialogOpen] = useState(false);
   const [receiptWeight, setReceiptWeight] = useState("");
   const [receiptNotes, setReceiptNotes] = useState("");
@@ -1162,6 +1162,43 @@ function ProductionHallContent() {
     queryKey: ['/api/warehouse/production-hall'],
     staleTime: 30000 // Refresh every 30 seconds
   });
+
+  // Group production orders by main order number
+  const groupedOrders = React.useMemo(() => {
+    const groups: { [key: string]: any } = {};
+    
+    productionOrders.forEach((order: any) => {
+      const orderNumber = order.order_number;
+      
+      if (!groups[orderNumber]) {
+        groups[orderNumber] = {
+          order_number: orderNumber,
+          customer_name: order.customer_name,
+          customer_name_ar: order.customer_name_ar,
+          production_orders: [],
+          totals: {
+            quantity_required: 0,
+            total_film_weight: 0,
+            total_cut_weight: 0,
+            total_received_weight: 0,
+            waste_weight: 0
+          }
+        };
+      }
+      
+      // Add production order to group
+      groups[orderNumber].production_orders.push(order);
+      
+      // Calculate totals
+      groups[orderNumber].totals.quantity_required += parseFloat(order.quantity_required) || 0;
+      groups[orderNumber].totals.total_film_weight += parseFloat(order.total_film_weight) || 0;
+      groups[orderNumber].totals.total_cut_weight += parseFloat(order.total_cut_weight) || 0;
+      groups[orderNumber].totals.total_received_weight += parseFloat(order.total_received_weight) || 0;
+      groups[orderNumber].totals.waste_weight += parseFloat(order.waste_weight) || 0;
+    });
+    
+    return Object.values(groups);
+  }, [productionOrders]);
 
   // Receipt mutation
   const receiptMutation = useMutation({
@@ -1195,12 +1232,12 @@ function ProductionHallContent() {
     }
   });
 
-  const handleSelectOrder = (orderId: number) => {
+  const handleSelectOrder = (orderNumber: string) => {
     const newSelection = new Set(selectedOrders);
-    if (newSelection.has(orderId)) {
-      newSelection.delete(orderId);
+    if (newSelection.has(orderNumber)) {
+      newSelection.delete(orderNumber);
     } else {
-      newSelection.add(orderId);
+      newSelection.add(orderNumber);
     }
     setSelectedOrders(newSelection);
   };
@@ -1226,14 +1263,19 @@ function ProductionHallContent() {
 
     const selectedOrdersList = Array.from(selectedOrders);
     
-    // Create receipts for all selected orders
-    selectedOrdersList.forEach(orderId => {
-      receiptMutation.mutate({
-        production_order_id: orderId,
-        received_weight_kg: parseFloat(receiptWeight),
-        received_by: 1, // Assuming current user ID
-        notes: receiptNotes
-      });
+    // Create receipts for all production orders in selected main orders
+    selectedOrdersList.forEach(orderNumber => {
+      const groupedOrder = groupedOrders.find(go => go.order_number === orderNumber);
+      if (groupedOrder) {
+        groupedOrder.production_orders.forEach((productionOrder: any) => {
+          receiptMutation.mutate({
+            production_order_id: productionOrder.production_order_id,
+            received_weight_kg: parseFloat(receiptWeight) / groupedOrder.production_orders.length, // Split weight equally among production orders
+            received_by: 1, // Assuming current user ID
+            notes: receiptNotes
+          });
+        });
+      }
     });
   };
 
@@ -1310,7 +1352,7 @@ function ProductionHallContent() {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">جاري التحميل...</div>
-        ) : productionOrders.length === 0 ? (
+        ) : groupedOrders.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Factory className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>لا توجد مواد جاهزة للاستلام حالياً</p>
@@ -1324,10 +1366,10 @@ function ProductionHallContent() {
                   <th className="text-right py-3 px-4 font-medium">
                     <input
                       type="checkbox"
-                      checked={selectedOrders.size === productionOrders.length && productionOrders.length > 0}
+                      checked={selectedOrders.size === groupedOrders.length && groupedOrders.length > 0}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedOrders(new Set(productionOrders.map((po: any) => po.production_order_id)));
+                          setSelectedOrders(new Set(groupedOrders.map((go: any) => go.order_number)));
                         } else {
                           setSelectedOrders(new Set());
                         }
@@ -1336,10 +1378,8 @@ function ProductionHallContent() {
                     />
                   </th>
                   <th className="text-right py-3 px-4 font-medium">رقم الطلب</th>
-                  <th className="text-right py-3 px-4 font-medium">رقم أمر الإنتاج</th>
                   <th className="text-right py-3 px-4 font-medium">العميل</th>
-                  <th className="text-right py-3 px-4 font-medium">الصنف</th>
-                  <th className="text-right py-3 px-4 font-medium">الحجم</th>
+                  <th className="text-right py-3 px-4 font-medium">عدد أوامر الإنتاج</th>
                   <th className="text-right py-3 px-4 font-medium">الكمية المطلوبة</th>
                   <th className="text-right py-3 px-4 font-medium">الفيلم المنتج</th>
                   <th className="text-right py-3 px-4 font-medium">الكمية المقطعة</th>
@@ -1350,70 +1390,63 @@ function ProductionHallContent() {
                 </tr>
               </thead>
               <tbody>
-                {productionOrders.map((order: any) => {
-                  const cutWeight = parseFloat(order.total_cut_weight) || 0;
-                  const receivedWeight = parseFloat(order.total_received_weight) || 0;
-                  const remainingWeight = cutWeight - receivedWeight;
-                  const filmWeight = parseFloat(order.total_film_weight) || 0;
-                  const wasteWeight = parseFloat(order.waste_weight) || 0;
+                {groupedOrders.map((groupedOrder: any) => {
+                  const totals = groupedOrder.totals;
+                  const remainingWeight = totals.total_cut_weight - totals.total_received_weight;
                   
                   return (
                     <tr 
-                      key={order.production_order_id} 
-                      className={`border-b hover:bg-gray-50 ${selectedOrders.has(order.production_order_id) ? 'bg-blue-50' : ''}`}
+                      key={groupedOrder.order_number} 
+                      className={`border-b hover:bg-gray-50 ${selectedOrders.has(groupedOrder.order_number) ? 'bg-blue-50' : ''}`}
                     >
                       <td className="py-3 px-4">
                         <input
                           type="checkbox"
-                          checked={selectedOrders.has(order.production_order_id)}
-                          onChange={() => handleSelectOrder(order.production_order_id)}
-                          data-testid={`checkbox-select-${order.production_order_id}`}
+                          checked={selectedOrders.has(groupedOrder.order_number)}
+                          onChange={() => handleSelectOrder(groupedOrder.order_number)}
+                          data-testid={`checkbox-select-${groupedOrder.order_number}`}
                         />
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-order-number-${order.production_order_id}`}>
-                        {order.order_number}
+                      <td className="py-3 px-4" data-testid={`text-order-number-${groupedOrder.order_number}`}>
+                        <div className="font-medium">{groupedOrder.order_number}</div>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-production-order-${order.production_order_id}`}>
-                        {order.production_order_number}
+                      <td className="py-3 px-4" data-testid={`text-customer-${groupedOrder.order_number}`}>
+                        {groupedOrder.customer_name_ar || groupedOrder.customer_name}
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-customer-${order.production_order_id}`}>
-                        {order.customer_name_ar || order.customer_name}
+                      <td className="py-3 px-4" data-testid={`text-production-count-${groupedOrder.order_number}`}>
+                        <Badge variant="outline" className="text-blue-600">
+                          {groupedOrder.production_orders.length} أوامر
+                        </Badge>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-item-${order.production_order_id}`}>
-                        {order.item_name_ar || order.item_name}
+                      <td className="py-3 px-4" data-testid={`text-required-${groupedOrder.order_number}`}>
+                        {totals.quantity_required.toFixed(2)} كيلو
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-size-${order.production_order_id}`}>
-                        {order.size_caption}
-                      </td>
-                      <td className="py-3 px-4" data-testid={`text-required-${order.production_order_id}`}>
-                        {parseFloat(order.quantity_required).toFixed(2)} كيلو
-                      </td>
-                      <td className="py-3 px-4" data-testid={`text-film-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`text-film-${groupedOrder.order_number}`}>
                         <span className="text-blue-600 font-medium">
-                          {filmWeight.toFixed(2)} كيلو
+                          {totals.total_film_weight.toFixed(2)} كيلو
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-cut-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`text-cut-${groupedOrder.order_number}`}>
                         <span className="text-green-600 font-medium">
-                          {cutWeight.toFixed(2)} كيلو
+                          {totals.total_cut_weight.toFixed(2)} كيلو
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-received-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`text-received-${groupedOrder.order_number}`}>
                         <span className="text-orange-600 font-medium">
-                          {receivedWeight.toFixed(2)} كيلو
+                          {totals.total_received_weight.toFixed(2)} كيلو
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-remaining-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`text-remaining-${groupedOrder.order_number}`}>
                         <span className="text-purple-600 font-bold">
                           {remainingWeight.toFixed(2)} كيلو
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-testid={`text-waste-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`text-waste-${groupedOrder.order_number}`}>
                         <span className="text-red-600">
-                          {wasteWeight.toFixed(2)} كيلو
+                          {totals.waste_weight.toFixed(2)} كيلو
                         </span>
                       </td>
-                      <td className="py-3 px-4" data-testid={`status-${order.production_order_id}`}>
+                      <td className="py-3 px-4" data-testid={`status-${groupedOrder.order_number}`}>
                         {remainingWeight > 0 ? (
                           <Badge variant="outline" className="text-orange-600 border-orange-600">
                             جزئي
