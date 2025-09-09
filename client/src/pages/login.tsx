@@ -47,7 +47,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src={FactoryLogoHPNGWg} alt="Logo" className="w-24 h-24" />
+            <img src={FactoryLogoHPNGWg} alt="Logo" className="w-34 h-34" />
           </div>
           <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">نظام إدارة مصنع الأكياس البلاستيكية</p>
