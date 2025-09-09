@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import type { Section } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   const { user: currentUser } = useAuth();
 
   // Get sections to map section IDs to names
-  const { data: sections = [] } = useQuery({
+  const { data: sections = [] } = useQuery<Section[]>({
     queryKey: ['/api/sections'],
     staleTime: 10 * 60 * 1000 // 10 minutes
   });
@@ -48,7 +49,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     }
 
     // Get section information to match with production stages
-    const userSection = sections.find((section: any) => section.id === userSectionId);
+    const userSection = sections.find((section) => section.id === String(userSectionId));
     const sectionName = userSection?.name?.toLowerCase();
 
     // Map sections to stages

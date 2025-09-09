@@ -11,6 +11,7 @@ export interface User {
   display_name?: string;
   display_name_ar?: string;
   role_id?: number;
+  section_id?: number;
 }
 
 export interface AuthUser extends User {
@@ -76,4 +77,11 @@ export interface ProductionStage {
   name_ar: string;
   key: 'film' | 'printing' | 'cutting';
   active: boolean;
+}
+
+export interface Section {
+  id: string;
+  name: string;
+  name_ar?: string;
+  description?: string;
 }
