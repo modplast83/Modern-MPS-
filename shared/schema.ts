@@ -35,6 +35,23 @@ export const users = pgTable('users', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
+// 📋 جدول طلبات المستخدمين
+export const user_requests = pgTable('user_requests', {
+  id: serial('id').primaryKey(),
+  user_id: integer('user_id').notNull().references(() => users.id),
+  type: varchar('type', { length: 50 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description'),
+  status: varchar('status', { length: 20 }).notNull().default('معلق'),
+  priority: varchar('priority', { length: 20 }).default('عادي'),
+  response: text('response'),
+  reviewed_by: integer('reviewed_by').references(() => users.id),
+  date: timestamp('date').defaultNow(),
+  reviewed_date: timestamp('reviewed_date'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
 // 📋 جدول الحضور
 export const attendance = pgTable('attendance', {
   id: serial('id').primaryKey(),
