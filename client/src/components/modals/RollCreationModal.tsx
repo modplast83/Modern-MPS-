@@ -59,6 +59,16 @@ export default function RollCreationModal({
     queryKey: ["/api/machines"],
   });
 
+  const { data: sections = [] } = useQuery<any[]>({
+    queryKey: ["/api/sections"],
+    staleTime: 10 * 60 * 1000 // 10 minutes
+  });
+
+  const { data: rolls = [] } = useQuery<any[]>({
+    queryKey: ["/api/rolls"],
+    staleTime: 1 * 60 * 1000 // 1 minute
+  });
+
   // مزامنة قيمة أمر الإنتاج المختار من الـprop عند تغييره/فتح المودال
   useEffect(() => {
     if (isOpen) {
@@ -66,8 +76,17 @@ export default function RollCreationModal({
         ...prev,
         production_order_id: selectedProductionOrderId || 0,
       }));
+      
+      // Set default weight to remaining quantity if a production order is selected
+      if (selectedProductionOrderId && selectedOrder) {
+        const remainingQuantity = calculateRemainingQuantity(selectedOrder);
+        setFormData((prev) => ({
+          ...prev,
+          weight_kg: remainingQuantity > 0 ? remainingQuantity.toString() : "",
+        }));
+      }
     }
-  }, [isOpen, selectedProductionOrderId]);
+  }, [isOpen, selectedProductionOrderId, selectedOrder, rolls]);
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
@@ -176,6 +195,35 @@ export default function RollCreationModal({
       productionOrders.find((o) => o.id === selectedProductionOrderId) || null,
     [productionOrders, selectedProductionOrderId]
   );
+
+  // Calculate remaining quantity for a production order
+  const calculateRemainingQuantity = (order: any) => {
+    if (!order || !order.quantity_kg) return 0;
+    
+    const required = parseFloat(order.quantity_kg) || 0;
+    const orderRolls = rolls.filter((roll: any) => roll.production_order_id === order.id);
+    const produced = orderRolls.reduce((sum: number, roll: any) => sum + (parseFloat(roll.weight_kg) || 0), 0);
+    
+    return Math.max(0, required - produced);
+  };
+
+  // Filter machines to show only film section machines
+  const filmSectionMachines = useMemo(() => {
+    if (!sections.length || !machines.length) return machines;
+    
+    // Find film section
+    const filmSection = sections.find((section: any) => 
+      section.name?.toLowerCase().includes('film') || 
+      section.name?.toLowerCase().includes('فيلم') ||
+      section.name_ar?.toLowerCase().includes('فيلم') ||
+      section.name_ar?.toLowerCase().includes('film')
+    );
+    
+    if (!filmSection) return machines;
+    
+    // Filter machines that belong to film section
+    return machines.filter((machine: any) => machine.section_id === filmSection.id);
+  }, [machines, sections]);
 
   // قيمة Select لأمر الإنتاج عند عدم تمرير selectedProductionOrderId
   const productionOrderValue =
@@ -303,8 +351,8 @@ export default function RollCreationModal({
                   <SelectItem value="loading" disabled>
                     جارِ التحميل...
                   </SelectItem>
-                ) : machines.length ? (
-                  machines
+                ) : filmSectionMachines.length ? (
+                  filmSectionMachines
                     .filter((m) => (m as any).status === "active" && (m as any).id)
                     .map((machine) => (
                       <SelectItem
@@ -316,7 +364,7 @@ export default function RollCreationModal({
                     ))
                 ) : (
                   <SelectItem value="empty" disabled>
-                    لا توجد مكائن متاحة
+                    لا توجد مكائن متاحة في قسم الفيلم
                   </SelectItem>
                 )}
               </SelectContent>
