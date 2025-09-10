@@ -51,19 +51,18 @@ import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import QRCode from 'qrcode';
+import { validateRequest, commonSchemas, requireAuth, requireAdmin, z } from './middleware/validation';
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
-  app.post("/api/login", async (req, res) => {
+  app.post("/api/login", 
+    validateRequest({ body: commonSchemas.loginCredentials }),
+    async (req, res) => {
     try {
       const { username, password } = req.body;
-      
-      if (!username || !password) {
-        return res.status(400).json({ message: "اسم المستخدم وكلمة المرور مطلوبان" });
-      }
 
       const user = await storage.getUserByUsername(username);
       if (!user) {
@@ -113,52 +112,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get current user
-  app.get("/api/me", async (req, res) => {
+  app.get("/api/me", requireAuth, async (req, res) => {
     try {
-      // Check if session exists and has user ID
-      if (!req.session?.userId) {
-        return res.status(401).json({ message: "غير مسجل الدخول" });
+      // Double-check session (redundant with requireAuth but safer)
+      if (!req.session?.userId || typeof req.session.userId !== 'number') {
+        return res.status(401).json({ 
+          message: "جلسة غير صحيحة",
+          success: false
+        });
       }
 
       const user = await storage.getUserById(req.session.userId);
       if (!user) {
-        // User doesn't exist in database, clear session
-        if (req.session.destroy) {
-          req.session.destroy((err: any) => {
-            if (err) console.error("Error destroying invalid session:", err);
-          });
-        }
-        return res.status(404).json({ message: "المستخدم غير موجود" });
-      }
-
-      // User found - extend session by touching it (rolling session will reset expiry)
-      if (req.session.touch) {
-        req.session.touch();
-      }
-      
-      // Save session to ensure it persists
-      if (req.session.save) {
-        req.session.save((err: any) => {
-          if (err) {
-            console.error("Error saving session on /api/me:", err);
-            // Continue anyway, don't break the response
+        // User doesn't exist in database, clear invalid session
+        try {
+          if (req.session?.destroy) {
+            req.session.destroy((err: any) => {
+              if (err) console.error("Error destroying invalid session:", err);
+            });
           }
+        } catch (destroyError) {
+          console.error("Failed to destroy invalid session:", destroyError);
+        }
+        return res.status(404).json({ 
+          message: "المستخدم غير موجود",
+          success: false
         });
       }
 
+      // Validate user status
+      if (user.status !== 'active') {
+        return res.status(403).json({
+          message: "الحساب غير نشط",
+          success: false
+        });
+      }
+
+      // User found - extend session safely
+      try {
+        if (req.session?.touch) {
+          req.session.touch();
+        }
+        
+        // Save session to ensure it persists (non-blocking)
+        if (req.session?.save) {
+          req.session.save((err: any) => {
+            if (err) {
+              console.error("Error saving session on /api/me:", err);
+              // Continue anyway, don't break the response
+            }
+          });
+        }
+      } catch (sessionError) {
+        console.error("Session management error:", sessionError);
+        // Don't fail the request for session issues
+      }
+
+      // Return sanitized user data
+      const userData = {
+        id: user.id || null,
+        username: user.username || '',
+        display_name: user.display_name || '',
+        display_name_ar: user.display_name_ar || '',
+        role_id: user.role_id || null,
+        section_id: user.section_id || null
+      };
+
       res.json({ 
-        user: { 
-          id: user.id, 
-          username: user.username, 
-          display_name: user.display_name,
-          display_name_ar: user.display_name_ar,
-          role_id: user.role_id,
-          section_id: user.section_id 
-        } 
+        user: userData,
+        success: true
       });
     } catch (error) {
       console.error("Get current user error:", error);
-      res.status(500).json({ message: "خطأ في الخادم" });
+      res.status(500).json({ 
+        message: "خطأ في الخادم",
+        success: false
+      });
     }
   });
 
@@ -251,39 +280,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ==== NOTIFICATIONS API ROUTES ====
   
   // Send WhatsApp message (Meta API or Twilio)
-  app.post("/api/notifications/whatsapp", async (req, res) => {
+  app.post("/api/notifications/whatsapp", 
+    requireAuth,
+    validateRequest({ body: commonSchemas.whatsappMessage }),
+    async (req, res) => {
     try {
       const { phone_number, message, title, priority, context_type, context_id, template_name, variables, use_template = false } = req.body;
-      
-      if (!phone_number || !message) {
-        return res.status(400).json({ message: "رقم الهاتف والرسالة مطلوبان" });
+
+      let result;
+      try {
+        result = await notificationService.sendWhatsAppMessage(phone_number, message, {
+          title,
+          priority,
+          context_type,
+          context_id,
+          useTemplate: use_template,
+          templateName: template_name
+        });
+      } catch (serviceError: any) {
+        console.error('Notification service error:', serviceError);
+        return res.status(503).json({
+          message: "خدمة الإشعارات غير متوفرة مؤقتاً",
+          success: false,
+          error: 'SERVICE_UNAVAILABLE'
+        });
       }
 
-      const result = await notificationService.sendWhatsAppMessage(phone_number, message, {
-        title,
-        priority,
-        context_type,
-        context_id,
-        useTemplate: use_template,
-        templateName: template_name
-      });
+      if (!result) {
+        return res.status(500).json({
+          message: "لم يتم الحصول على رد من خدمة الإشعارات",
+          success: false
+        });
+      }
 
       if (result.success) {
         res.json({ 
-          success: true, 
-          messageId: result.messageId,
-          message: "تم إرسال رسالة الواتس اب بنجاح"
+          data: {
+            messageId: result.messageId,
+            phone_number,
+            message: message.substring(0, 100) + (message.length > 100 ? '...' : ''),
+            timestamp: new Date().toISOString()
+          },
+          message: "تم إرسال رسالة الواتس اب بنجاح",
+          success: true
         });
       } else {
-        res.status(500).json({ 
-          success: false, 
+        // Handle specific notification service errors
+        let statusCode = 500;
+        let errorMessage = "فشل في إرسال رسالة الواتس اب";
+        
+        if (result.error?.includes('Invalid phone number')) {
+          statusCode = 400;
+          errorMessage = "رقم الهاتف غير صحيح";
+        } else if (result.error?.includes('Rate limit')) {
+          statusCode = 429;
+          errorMessage = "تم تجاوز حد عدد الرسائل المسموح";
+        } else if (result.error?.includes('Template not found')) {
+          statusCode = 404;
+          errorMessage = "قالب الرسالة غير موجود";
+        }
+        
+        res.status(statusCode).json({ 
+          message: errorMessage,
           error: result.error,
-          message: "فشل في إرسال رسالة الواتس اب"
+          success: false
         });
       }
     } catch (error: any) {
       console.error("Error sending WhatsApp message:", error);
-      res.status(500).json({ message: "خطأ في إرسال رسالة الواتس اب" });
+      
+      // Handle different types of errors gracefully
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ 
+          message: "بيانات الطلب غير صحيحة",
+          success: false
+        });
+      }
+      
+      if (error.message?.includes('timeout')) {
+        return res.status(504).json({
+          message: "انتهت مهلة الاتصال بخدمة الواتس اب",
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ غير متوقع في إرسال رسالة الواتس اب",
+        success: false
+      });
     }
   });
 
@@ -406,16 +490,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Machine Learning API routes
-  app.get("/api/ml/predictions/:machineId", async (req, res) => {
+  app.get("/api/ml/predictions/:machineId", 
+    requireAuth,
+    validateRequest({ 
+      params: commonSchemas.idParam.extend({ machineId: z.string().regex(/^\d+$/).transform(Number) }),
+      query: z.object({ hours: z.string().regex(/^\d+$/).transform(Number).optional() })
+    }),
+    async (req, res) => {
     try {
-      const machineId = parseInt(req.params.machineId);
-      const hoursAhead = parseInt(req.query.hours as string) || 24;
+      const machineId = req.params.machineId;
+      const hoursAhead = req.query.hours || 24;
+      
+      if (!machineId || machineId <= 0) {
+        return res.status(400).json({
+          message: "معرف المكينة غير صحيح",
+          success: false
+        });
+      }
+
+      if (hoursAhead < 1 || hoursAhead > 168) { // Max 1 week
+        return res.status(400).json({
+          message: "عدد الساعات يجب أن يكون بين 1 و 168",
+          success: false
+        });
+      }
       
       const prediction = await mlService.predictProductionPerformance(machineId, hoursAhead);
-      res.json(prediction);
-    } catch (error) {
+      
+      if (!prediction) {
+        return res.status(404).json({
+          message: "لم يتم العثور على تنبؤات لهذه المكينة",
+          success: false
+        });
+      }
+
+      res.json({
+        data: prediction,
+        success: true
+      });
+    } catch (error: any) {
       console.error('ML prediction error:', error);
-      res.status(500).json({ message: "خطأ في تحليل التنبؤات" });
+      
+      // Handle specific ML service errors
+      if (error.message?.includes('Machine not found')) {
+        return res.status(404).json({
+          message: "المكينة غير موجودة",
+          success: false
+        });
+      }
+      
+      if (error.message?.includes('Insufficient data')) {
+        return res.status(422).json({
+          message: "بيانات غير كافية لإجراء التنبؤ",
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في خدمة الذكاء الاصطناعي",
+        success: false
+      });
     }
   });
 
@@ -523,13 +657,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Orders routes
-  app.get("/api/orders", async (req, res) => {
+  app.get("/api/orders", 
+    requireAuth,
+    async (req, res) => {
     try {
       const orders = await storage.getAllOrders();
-      res.json(orders);
-    } catch (error) {
+      
+      if (!Array.isArray(orders)) {
+        return res.status(500).json({
+          message: "خطأ في تحميل الطلبات",
+          success: false
+        });
+      }
+
+      res.json({
+        data: orders,
+        count: orders.length,
+        success: true
+      });
+    } catch (error: any) {
       console.error("Orders fetch error:", error);
-      res.status(500).json({ message: "خطأ في جلب الطلبات" });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(500).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في جلب الطلبات",
+        success: false
+      });
     }
   });
 
@@ -555,37 +714,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/orders", async (req, res) => {
+  app.post("/api/orders", 
+    requireAuth,
+    validateRequest({ body: commonSchemas.createOrder }),
+    async (req, res) => {
     try {
-      // Check if user is authenticated
-      if (!req.session?.userId) {
-        return res.status(401).json({ message: "غير مسجل الدخول" });
+      // Session is already validated by requireAuth middleware
+      const userId = req.session.userId;
+      if (!userId || typeof userId !== 'number') {
+        return res.status(401).json({ 
+          message: "معرف المستخدم غير صحيح",
+          success: false
+        });
       }
 
-      // Add the created_by field from session (as a number) and ensure other numeric fields are properly converted
+      // Validate required fields are present
+      const { customer_id, order_number } = req.body;
+      if (!customer_id?.trim()) {
+        return res.status(400).json({
+          message: "معرف العميل مطلوب",
+          success: false
+        });
+      }
+
+      if (!order_number?.trim()) {
+        return res.status(400).json({
+          message: "رقم الطلب مطلوب",
+          success: false
+        });
+      }
+
+      // Prepare order data with safe defaults
       const orderData = {
         ...req.body,
-        created_by: req.session.userId, // This is already a number from session
-        delivery_days: req.body.delivery_days ? parseInt(req.body.delivery_days) : null
+        created_by: userId,
+        delivery_days: req.body.delivery_days ? parseInt(req.body.delivery_days) : null,
+        customer_id: customer_id.trim(),
+        order_number: order_number.trim(),
+        notes: req.body.notes?.trim() || null
       };
 
       const validatedData = insertNewOrderSchema.parse(orderData);
       const order = await storage.createOrder(validatedData);
-      res.json(order);
-    } catch (error) {
+      
+      if (!order) {
+        return res.status(500).json({
+          message: "فشل في إنشاء الطلب",
+          success: false
+        });
+      }
+
+      res.status(201).json({
+        data: order,
+        message: "تم إنشاء الطلب بنجاح",
+        success: true
+      });
+    } catch (error: any) {
       console.error("Order creation error:", error);
-      res.status(400).json({ message: "بيانات غير صحيحة" });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في إنشاء الطلب",
+        success: false
+      });
     }
   });
 
-  app.delete("/api/orders/:id", async (req, res) => {
+  app.delete("/api/orders/:id", 
+    requireAuth,
+    validateRequest({ params: commonSchemas.idParam }),
+    async (req, res) => {
     try {
-      const orderId = parseInt(req.params.id);
+      const orderId = req.params.id;
+      
+      if (!orderId || isNaN(orderId) || orderId <= 0) {
+        return res.status(400).json({
+          message: "معرف الطلب غير صحيح",
+          success: false
+        });
+      }
+
+      // Check if order exists before deletion
+      const existingOrder = await storage.getOrderById(orderId);
+      if (!existingOrder) {
+        return res.status(404).json({
+          message: "الطلب غير موجود",
+          success: false
+        });
+      }
+
       await storage.deleteOrder(orderId);
-      res.json({ message: "تم حذف الطلب بنجاح" });
-    } catch (error) {
+      
+      res.json({ 
+        message: "تم حذف الطلب بنجاح",
+        success: true
+      });
+    } catch (error: any) {
       console.error("Order deletion error:", error);
-      res.status(500).json({ message: "خطأ في حذف الطلب" });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في حذف الطلب",
+        success: false
+      });
     }
   });
 

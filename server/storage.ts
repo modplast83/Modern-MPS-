@@ -139,6 +139,77 @@ import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
+// Database error handling utilities
+class DatabaseError extends Error {
+  public code?: string;
+  public constraint?: string;
+  public table?: string;
+
+  constructor(message: string, originalError?: any) {
+    super(message);
+    this.name = 'DatabaseError';
+    
+    if (originalError) {
+      this.code = originalError.code;
+      this.constraint = originalError.constraint;
+      this.table = originalError.table;
+    }
+  }
+}
+
+function handleDatabaseError(error: any, operation: string, context?: string): never {
+  console.error(`Database error during ${operation}:`, error);
+  
+  // Handle specific database errors
+  if (error.code === '23505') {
+    // Unique constraint violation
+    throw new DatabaseError(`البيانات مكررة - ${context || 'العنصر موجود مسبقاً'}`, error);
+  }
+  
+  if (error.code === '23503') {
+    // Foreign key constraint violation
+    throw new DatabaseError(`خطأ في الربط - ${context || 'البيانات المرجعية غير موجودة'}`, error);
+  }
+  
+  if (error.code === '23502') {
+    // Not null constraint violation
+    throw new DatabaseError(`بيانات مطلوبة مفقودة - ${context || 'يرجى إدخال جميع البيانات المطلوبة'}`, error);
+  }
+  
+  if (error.code === '42P01') {
+    // Table does not exist
+    throw new DatabaseError('خطأ في النظام - جدول البيانات غير موجود', error);
+  }
+  
+  if (error.code === '53300') {
+    // Too many connections
+    throw new DatabaseError('الخادم مشغول - يرجى المحاولة لاحقاً', error);
+  }
+  
+  if (error.code === '08006' || error.code === '08003') {
+    // Connection failure
+    throw new DatabaseError('خطأ في الاتصال بقاعدة البيانات - يرجى المحاولة لاحقاً', error);
+  }
+  
+  // Generic database error
+  throw new DatabaseError(
+    `خطأ في قاعدة البيانات أثناء ${operation} - ${context || 'يرجى المحاولة لاحقاً'}`,
+    error
+  );
+}
+
+async function withDatabaseErrorHandling<T>(
+  operation: () => Promise<T>,
+  operationName: string,
+  context?: string
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    handleDatabaseError(error, operationName, context);
+  }
+}
+
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
@@ -422,25 +493,64 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== 'number' || id <= 0) {
+          throw new Error('معرف المستخدم غير صحيح');
+        }
+        
+        const [user] = await db.select().from(users).where(eq(users.id, id));
+        return user || undefined;
+      },
+      'جلب بيانات المستخدم',
+      `المستخدم رقم ${id}`
+    );
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user || undefined;
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!username || typeof username !== 'string' || username.trim() === '') {
+          throw new Error('اسم المستخدم مطلوب');
+        }
+        
+        const [user] = await db.select().from(users).where(eq(users.username, username.trim()));
+        return user || undefined;
+      },
+      'البحث عن المستخدم',
+      `اسم المستخدم: ${username}`
+    );
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Hash password before storing
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(insertUser.password, saltRounds);
-    
-    const [user] = await db
-      .insert(users)
-      .values({ ...insertUser, password: hashedPassword })
-      .returning();
-    return user;
+    return withDatabaseErrorHandling(
+      async () => {
+        // Validate input
+        if (!insertUser.username || !insertUser.password) {
+          throw new Error('اسم المستخدم وكلمة المرور مطلوبان');
+        }
+        
+        if (insertUser.username.length < 3) {
+          throw new Error('اسم المستخدم يجب أن يكون 3 أحرف على الأقل');
+        }
+        
+        if (insertUser.password.length < 6) {
+          throw new Error('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+        }
+        
+        // Hash password before storing
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(insertUser.password, saltRounds);
+        
+        const [user] = await db
+          .insert(users)
+          .values({ ...insertUser, password: hashedPassword })
+          .returning();
+        return user;
+      },
+      'إنشاء مستخدم جديد',
+      `اسم المستخدم: ${insertUser.username}`
+    );
   }
 
   // Delete methods
@@ -480,54 +590,127 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
-    const [order] = await db
-      .insert(orders)
-      .values(insertOrder)
-      .returning();
-    return order;
+    return withDatabaseErrorHandling(
+      async () => {
+        // Validate required fields
+        if (!insertOrder.customer_id) {
+          throw new Error('معرف العميل مطلوب');
+        }
+        
+        if (!insertOrder.order_number || insertOrder.order_number.trim() === '') {
+          throw new Error('رقم الطلب مطلوب');
+        }
+        
+        if (!insertOrder.created_by) {
+          throw new Error('معرف منشئ الطلب مطلوب');
+        }
+        
+        const [order] = await db
+          .insert(orders)
+          .values(insertOrder)
+          .returning();
+        return order;
+      },
+      'إنشاء طلب جديد',
+      `رقم الطلب: ${insertOrder.order_number}`
+    );
   }
 
   async updateOrder(id: number, orderUpdate: Partial<NewOrder>): Promise<NewOrder> {
-    const [order] = await db
-      .update(orders)
-      .set(orderUpdate)
-      .where(eq(orders.id, id))
-      .returning();
-    return order;
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== 'number' || id <= 0) {
+          throw new Error('معرف الطلب غير صحيح');
+        }
+        
+        // Check if order exists first
+        const existingOrder = await db.select().from(orders).where(eq(orders.id, id)).limit(1);
+        if (existingOrder.length === 0) {
+          throw new Error('الطلب غير موجود');
+        }
+        
+        const [order] = await db
+          .update(orders)
+          .set(orderUpdate)
+          .where(eq(orders.id, id))
+          .returning();
+        
+        if (!order) {
+          throw new Error('فشل في تحديث الطلب');
+        }
+        
+        return order;
+      },
+      'تحديث الطلب',
+      `معرف الطلب: ${id}`
+    );
   }
 
   async updateOrderStatus(id: number, status: string): Promise<NewOrder> {
-    return await db.transaction(async (tx) => {
-      // Update the main order
-      const [order] = await tx
-        .update(orders)
-        .set({ status })
-        .where(eq(orders.id, id))
-        .returning();
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== 'number' || id <= 0) {
+          throw new Error('معرف الطلب غير صحيح');
+        }
+        
+        if (!status || typeof status !== 'string' || status.trim() === '') {
+          throw new Error('حالة الطلب مطلوبة');
+        }
+        
+        const validStatuses = ['pending', 'waiting', 'in_production', 'for_production', 'paused', 'on_hold', 'completed', 'cancelled'];
+        if (!validStatuses.includes(status)) {
+          throw new Error(`حالة الطلب غير صحيحة: ${status}`);
+        }
+        
+        return await db.transaction(async (tx) => {
+          try {
+            // Check if order exists
+            const existingOrder = await tx.select().from(orders).where(eq(orders.id, id)).limit(1);
+            if (existingOrder.length === 0) {
+              throw new Error('الطلب غير موجود');
+            }
+            
+            // Update the main order
+            const [order] = await tx
+              .update(orders)
+              .set({ status })
+              .where(eq(orders.id, id))
+              .returning();
 
-      // Map order status to production order and job order status
-      let productionStatus = status;
-      if (status === 'in_production' || status === 'for_production') {
-        productionStatus = 'in_production';
-      } else if (status === 'waiting' || status === 'pending') {
-        productionStatus = 'pending';
-      } else if (status === 'paused' || status === 'on_hold') {
-        productionStatus = 'paused';
-      } else if (status === 'completed') {
-        productionStatus = 'completed';
-      } else if (status === 'cancelled') {
-        productionStatus = 'cancelled';
-      }
+            if (!order) {
+              throw new Error('فشل في تحديث حالة الطلب');
+            }
 
+            // Map order status to production order status
+            let productionStatus = status;
+            if (status === 'in_production' || status === 'for_production') {
+              productionStatus = 'in_production';
+            } else if (status === 'waiting' || status === 'pending') {
+              productionStatus = 'pending';
+            } else if (status === 'paused' || status === 'on_hold') {
+              productionStatus = 'paused';
+            } else if (status === 'completed') {
+              productionStatus = 'completed';
+            } else if (status === 'cancelled') {
+              productionStatus = 'cancelled';
+            }
 
-      // Update all production orders for this order to match the order status
-      await tx
-        .update(production_orders)
-        .set({ status: productionStatus })
-        .where(eq(production_orders.order_id, id));
+            // Update all production orders for this order to match the order status
+            await tx
+              .update(production_orders)
+              .set({ status: productionStatus })
+              .where(eq(production_orders.order_id, id));
 
-      return order;
-    });
+            return order;
+          } catch (error) {
+            // Transaction will automatically rollback on error
+            throw error;
+          }
+        });
+      },
+      'تحديث حالة الطلب',
+      `معرف الطلب: ${id}, الحالة الجديدة: ${status}`
+    );
   }
 
   async getOrderById(id: number): Promise<NewOrder | undefined> {
