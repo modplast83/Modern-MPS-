@@ -88,7 +88,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/orders');
       if (!response.ok) throw new Error('فشل في جلب الطلبات');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -98,7 +100,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/production-orders');
       if (!response.ok) throw new Error('فشل في جلب أوامر الإنتاج');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -108,7 +112,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/customers');
       if (!response.ok) throw new Error('فشل في جلب العملاء');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -118,7 +124,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/customer-products');
       if (!response.ok) throw new Error('فشل في جلب منتجات العملاء');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -128,7 +136,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/users');
       if (!response.ok) throw new Error('فشل في جلب المستخدمين');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
@@ -138,7 +148,9 @@ export default function Orders() {
     queryFn: async () => {
       const response = await fetch('/api/items');
       if (!response.ok) throw new Error('فشل في جلب الأصناف');
-      return response.json();
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
     }
   });
 
