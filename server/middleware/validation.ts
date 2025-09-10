@@ -169,6 +169,12 @@ export function validateRequest<T extends Record<string, ZodSchema>>(
   };
 }
 
+// Phone number validation schema (defined separately to avoid circular dependency)
+const phoneNumberSchema = z.string()
+  .min(10, 'رقم الهاتف يجب أن يحتوي على 10 أرقام على الأقل')
+  .max(15, 'رقم الهاتف يجب أن لا يتجاوز 15 رقم')
+  .regex(/^[\+]?[0-9\-\(\)\s]+$/, 'رقم الهاتف غير صحيح');
+
 // Common validation schemas
 export const commonSchemas = {
   // ID parameter validation
@@ -184,10 +190,7 @@ export const commonSchemas = {
   }),
 
   // Phone number validation
-  phoneNumber: z.string()
-    .min(10, 'رقم الهاتف يجب أن يحتوي على 10 أرقام على الأقل')
-    .max(15, 'رقم الهاتف يجب أن لا يتجاوز 15 رقم')
-    .regex(/^[\+]?[0-9\-\(\)\s]+$/, 'رقم الهاتف غير صحيح'),
+  phoneNumber: phoneNumberSchema,
 
   // User authentication
   loginCredentials: z.object({
@@ -228,7 +231,7 @@ export const commonSchemas = {
 
   // WhatsApp message validation
   whatsappMessage: z.object({
-    phone_number: commonSchemas.phoneNumber,
+    phone_number: phoneNumberSchema,
     message: z.string()
       .min(1, 'الرسالة مطلوبة')
       .max(4096, 'الرسالة طويلة جداً'),
