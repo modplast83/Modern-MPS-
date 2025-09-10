@@ -64,8 +64,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
 
-      const user = await storage.getUserByUsername(username);
+      // Enhanced validation
+      if (!username?.trim() || !password?.trim()) {
+        return res.status(400).json({ message: "اسم المستخدم وكلمة المرور مطلوبان" });
+      }
+
+      const user = await storage.getUserByUsername(username.trim());
       if (!user) {
+        return res.status(401).json({ message: "بيانات تسجيل الدخول غير صحيحة" });
+      }
+
+      // Enhanced null checks for user properties
+      if (!user.password) {
+        console.error('User found but password is null/undefined:', user.id);
         return res.status(401).json({ message: "بيانات تسجيل الدخول غير صحيحة" });
       }
 
@@ -93,15 +104,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
         }
         
-        // Session saved successfully
+        // Session saved successfully - safe property access
         res.json({ 
           user: { 
-            id: user.id, 
-            username: user.username, 
-            display_name: user.display_name,
-            display_name_ar: user.display_name_ar,
-            role_id: user.role_id,
-            section_id: user.section_id 
+            id: user.id ?? null, 
+            username: user.username ?? '', 
+            display_name: user.display_name ?? '',
+            display_name_ar: user.display_name_ar ?? '',
+            role_id: user.role_id ?? null,
+            section_id: user.section_id ?? null 
           } 
         });
       });
@@ -238,7 +249,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = await storage.getUser(req.session.userId);
-      if (!user || user.role_id !== 1) { // role_id 1 = admin
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
+      
+      if (!user.role_id || user.role_id !== 1) { // role_id 1 = admin
         return res.status(403).json({ message: "تحتاج صلاحيات إدارية" });
       }
       
@@ -249,9 +264,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let skipped = 0;
       
       for (const userToMigrate of allUsers) {
+        // Enhanced null checks for user and password
+        if (!userToMigrate?.password) {
+          console.warn('User migration: Skipping user with missing password:', userToMigrate?.id);
+          skipped++;
+          continue;
+        }
+        
         // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-        if (userToMigrate.password && (userToMigrate.password.startsWith('$2a$') || 
-            userToMigrate.password.startsWith('$2b$') || userToMigrate.password.startsWith('$2y$'))) {
+        if (userToMigrate.password.startsWith('$2a$') || 
+            userToMigrate.password.startsWith('$2b$') || userToMigrate.password.startsWith('$2y$')) {
           skipped++;
           continue;
         }
@@ -402,13 +424,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get notifications
   app.get("/api/notifications", async (req, res) => {
     try {
-      const userId = req.query.user_id ? parseInt(req.query.user_id as string) : undefined;
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      // Enhanced parameter validation with null checks
+      let userId: number | undefined;
+      if (req.query.user_id) {
+        const userIdParam = parseInt(req.query.user_id as string);
+        userId = !isNaN(userIdParam) && userIdParam > 0 ? userIdParam : undefined;
+      }
       
-      // Validate pagination parameters
-      const validLimit = Math.min(Math.max(limit, 1), 100); // Between 1 and 100
-      const validOffset = Math.max(offset, 0); // Non-negative
+      const limitParam = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const offsetParam = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      // Validate pagination parameters with enhanced null safety
+      const validLimit = Math.min(Math.max(isNaN(limitParam) ? 50 : limitParam, 1), 100);
+      const validOffset = Math.max(isNaN(offsetParam) ? 0 : offsetParam, 0);
       
       const notifications = await storage.getNotifications(userId, validLimit, validOffset);
       res.json(notifications);
@@ -498,8 +526,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }),
     async (req, res) => {
     try {
+      // Enhanced parameter validation with null safety
+      if (!req.params?.machineId) {
+        return res.status(400).json({
+          message: "معرف المكينة مطلوب",
+          success: false
+        });
+      }
+      
       const machineId = req.params.machineId;
-      const hoursAhead = req.query.hours || 24;
+      const hoursParam = req.query?.hours;
+      let hoursAhead = 24; // default
+      
+      if (hoursParam !== undefined) {
+        const hours = typeof hoursParam === 'number' ? hoursParam : parseInt(hoursParam as string);
+        hoursAhead = !isNaN(hours) && hours > 0 ? hours : 24;
+      }
       
       if (!machineId || machineId <= 0) {
         return res.status(400).json({
@@ -555,7 +597,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/ml/anomalies/:machineId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.machineId) {
+        return res.status(400).json({ message: "معرف المكينة مطلوب" });
+      }
+      
       const machineId = parseInt(req.params.machineId);
+      if (isNaN(machineId) || machineId <= 0) {
+        return res.status(400).json({ message: "معرف المكينة غير صحيح" });
+      }
       
       // استخدام آخر بيانات متاحة للمكينة
       const mockData = {
@@ -589,7 +639,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/ml/optimization/:machineId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.machineId) {
+        return res.status(400).json({ message: "معرف المكينة مطلوب" });
+      }
+      
       const machineId = parseInt(req.params.machineId);
+      if (isNaN(machineId) || machineId <= 0) {
+        return res.status(400).json({ message: "معرف المكينة غير صحيح" });
+      }
+      
       const optimization = await mlService.optimizeProductionParameters(machineId);
       res.json(optimization);
     } catch (error) {
@@ -600,7 +659,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ml/train/:machineId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.machineId) {
+        return res.status(400).json({ message: "معرف المكينة مطلوب" });
+      }
+      
       const machineId = parseInt(req.params.machineId);
+      if (isNaN(machineId) || machineId <= 0) {
+        return res.status(400).json({ message: "معرف المكينة غير صحيح" });
+      }
       
       // محاكاة تدريب النموذج بإضافة بيانات عشوائية
       for (let i = 0; i < 50; i++) {
@@ -630,8 +697,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ml/apply-optimization/:machineId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.machineId) {
+        return res.status(400).json({ message: "معرف المكينة مطلوب" });
+      }
+      
       const machineId = parseInt(req.params.machineId);
-      const optimization = req.body;
+      if (isNaN(machineId) || machineId <= 0) {
+        return res.status(400).json({ message: "معرف المكينة غير صحيح" });
+      }
+      
+      const optimization = req.body || {};
       
       // محاكاة تطبيق التحسينات
       res.json({ 
@@ -647,6 +723,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/ml/production-data", async (req, res) => {
     try {
+      // Enhanced null safety for request body
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات الإنتاج مطلوبة" });
+      }
+      
       const productionData = req.body;
       await mlService.addProductionData(productionData);
       res.json({ success: true, message: "تم إضافة البيانات بنجاح" });
@@ -1100,7 +1181,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/inventory-movements/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف الحركة مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف الحركة غير صحيح" });
+      }
+      
       const success = await storage.deleteInventoryMovement(id);
       if (success) {
         res.json({ message: "تم حذف الحركة بنجاح" });
@@ -1125,7 +1215,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف المستخدم مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف المستخدم غير صحيح" });
+      }
+      
       const user = await storage.getUserById(id);
       if (!user) {
         return res.status(404).json({ message: "المستخدم غير موجود" });
@@ -1151,16 +1250,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received category data:', req.body);
       
-      // Generate sequential ID if not provided
-      let categoryId = req.body.id;
+      // Generate sequential ID if not provided with enhanced null safety
+      let categoryId = req.body?.id;
       if (!categoryId) {
-        const existingCategories = await storage.getCategories();
+        const existingCategories = await storage.getCategories() || [];
         const categoryNumbers = existingCategories
-          .map(cat => cat.id)
-          .filter(id => id && id.startsWith('CAT') && id.length <= 6) // Standard format only
+          .map(cat => cat?.id)
+          .filter(id => id && typeof id === 'string' && id.startsWith('CAT') && id.length <= 6) // Standard format only
           .map(id => {
             const num = id.replace('CAT', '');
-            return isNaN(parseInt(num)) ? 0 : parseInt(num);
+            const parsed = parseInt(num);
+            return isNaN(parsed) ? 0 : parsed;
           })
           .filter(num => num > 0)
           .sort((a, b) => b - a);
@@ -1169,11 +1269,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         categoryId = nextNumber < 10 ? `CAT0${nextNumber}` : `CAT${nextNumber}`;
       }
       
+      // Enhanced null safety for request body processing
       const processedData = {
         ...req.body,
         id: categoryId,
-        parent_id: req.body.parent_id === 'none' || req.body.parent_id === '' ? null : req.body.parent_id,
-        code: req.body.code === '' || !req.body.code ? null : req.body.code
+        parent_id: (!req.body?.parent_id || req.body.parent_id === 'none' || req.body.parent_id === '') ? null : req.body.parent_id,
+        code: (!req.body?.code || req.body.code === '') ? null : req.body.code
       };
       
       console.log('Processed category data:', processedData);
@@ -1313,7 +1414,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/erp/configurations/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف الإعداد مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف الإعداد غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
       const configuration = await storage.updateERPConfiguration(id, req.body);
       res.json(configuration);
     } catch (error) {
@@ -1323,7 +1437,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/erp/configurations/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف الإعداد مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف الإعداد غير صحيح" });
+      }
+      
       const success = await storage.deleteERPConfiguration(id);
       res.json({ success });
     } catch (error) {
@@ -1333,8 +1456,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/erp/sync-logs", async (req, res) => {
     try {
-      const configId = req.query.configId ? parseInt(req.query.configId as string) : undefined;
+      // Enhanced query parameter validation
+      let configId: number | undefined;
+      if (req.query?.configId) {
+        const configIdParam = parseInt(req.query.configId as string);
+        configId = !isNaN(configIdParam) && configIdParam > 0 ? configIdParam : undefined;
+      }
+      
       const logs = await storage.getERPSyncLogs(configId);
+      if (!logs) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(logs);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب سجلات المزامنة" });
@@ -1343,8 +1475,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/erp/sync/:configId/:entityType", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.configId || !req.params?.entityType) {
+        return res.status(400).json({ message: "معرف الإعداد ونوع الكيان مطلوبان" });
+      }
+      
       const configId = parseInt(req.params.configId);
-      const entityType = req.params.entityType;
+      if (isNaN(configId) || configId <= 0) {
+        return res.status(400).json({ message: "معرف الإعداد غير صحيح" });
+      }
+      
+      const entityType = req.params.entityType.trim();
+      if (!entityType) {
+        return res.status(400).json({ message: "نوع الكيان مطلوب" });
+      }
       
       // Mock sync operation
       const syncResult = {
@@ -1374,9 +1518,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/erp/entity-mappings/:configId/:entityType", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.configId || !req.params?.entityType) {
+        return res.status(400).json({ message: "معرف الإعداد ونوع الكيان مطلوبان" });
+      }
+      
       const configId = parseInt(req.params.configId);
-      const entityType = req.params.entityType;
+      if (isNaN(configId) || configId <= 0) {
+        return res.status(400).json({ message: "معرف الإعداد غير صحيح" });
+      }
+      
+      const entityType = req.params.entityType.trim();
+      if (!entityType) {
+        return res.status(400).json({ message: "نوع الكيان مطلوب" });
+      }
+      
       const mappings = await storage.getERPEntityMappings(configId, entityType);
+      if (!mappings) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(mappings);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب ربط الكيانات" });
@@ -1404,8 +1564,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/database/configurations/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف إعداد قاعدة البيانات مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف إعداد قاعدة البيانات غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
       const configuration = await storage.updateDatabaseConfiguration(id, req.body);
+      if (!configuration) {
+        return res.status(404).json({ message: "إعداد قاعدة البيانات غير موجود" });
+      }
       res.json(configuration);
     } catch (error) {
       res.status(400).json({ message: "خطأ في تحديث إعدادات قاعدة البيانات" });
@@ -1414,9 +1590,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/database/configurations/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف إعداد قاعدة البيانات مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف إعداد قاعدة البيانات غير صحيح" });
+      }
+      
       const success = await storage.deleteDatabaseConfiguration(id);
-      res.json({ success });
+      res.json({ success: success ?? false });
     } catch (error) {
       res.status(400).json({ message: "خطأ في حذف إعدادات قاعدة البيانات" });
     }
@@ -1455,8 +1640,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Data mapping endpoints
   app.get("/api/database/mappings/:configId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.configId) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات مطلوب" });
+      }
+      
       const configId = parseInt(req.params.configId);
+      if (isNaN(configId) || configId <= 0) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات غير صحيح" });
+      }
+      
       const mappings = await storage.getDataMappings(configId);
+      if (!mappings) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(mappings);
     } catch (error) {
       console.error("Error fetching data mappings:", error);
@@ -1476,8 +1673,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/database/mappings/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ error: "معرف خريطة البيانات مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: "معرف خريطة البيانات غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ error: "بيانات التحديث مطلوبة" });
+      }
+      
       const mapping = await storage.updateDataMapping(id, req.body);
+      if (!mapping) {
+        return res.status(404).json({ error: "خريطة البيانات غير موجودة" });
+      }
       res.json(mapping);
     } catch (error) {
       console.error("Error updating data mapping:", error);
@@ -1487,9 +1700,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/database/mappings/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ error: "معرف خريطة البيانات مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: "معرف خريطة البيانات غير صحيح" });
+      }
+      
       const success = await storage.deleteDataMapping(id);
-      res.json({ success });
+      res.json({ success: success ?? false });
     } catch (error) {
       console.error("Error deleting data mapping:", error);
       res.status(500).json({ error: "فشل في حذف خريطة البيانات" });
@@ -1499,10 +1721,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Data synchronization endpoints
   app.post("/api/database/sync/:configId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.configId) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات مطلوب" });
+      }
+      
       const configId = parseInt(req.params.configId);
+      if (isNaN(configId) || configId <= 0) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ error: "بيانات المزامنة مطلوبة" });
+      }
+      
       const { entity_type, direction } = req.body;
+      if (!entity_type?.trim() || !direction?.trim()) {
+        return res.status(400).json({ error: "نوع الكيان واتجاه المزامنة مطلوبان" });
+      }
+      
       const result = await storage.syncData(configId, entity_type, direction);
-      res.json(result);
+      res.json(result ?? { success: false, message: "فشل في المزامنة" });
     } catch (error) {
       console.error("Error syncing data:", error);
       res.status(500).json({ error: "فشل في مزامنة البيانات" });
@@ -1511,8 +1750,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/database/sync-logs/:configId", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.configId) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات مطلوب" });
+      }
+      
       const configId = parseInt(req.params.configId);
+      if (isNaN(configId) || configId <= 0) {
+        return res.status(400).json({ error: "معرف إعداد قاعدة البيانات غير صحيح" });
+      }
+      
       const logs = await storage.getSyncLogs(configId);
+      if (!logs) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(logs);
     } catch (error) {
       console.error("Error fetching sync logs:", error);
@@ -2065,16 +2316,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received machine data:', req.body);
       
-      // Generate sequential ID if not provided
-      let machineId = req.body.id;
+      // Generate sequential ID if not provided with enhanced null safety
+      let machineId = req.body?.id;
       if (!machineId) {
         // Get the latest machine to determine the next sequential number
-        const existingMachines = await storage.getMachines();
+        const existingMachines = await storage.getMachines() || [];
         const machineNumbers = existingMachines
-          .map(machine => machine.id)
-          .filter(id => id.startsWith('MAC'))
-          .map(id => parseInt(id.replace('MAC', '')))
-          .filter(num => !isNaN(num))
+          .map(machine => machine?.id)
+          .filter(id => id && typeof id === 'string' && id.startsWith('MAC'))
+          .map(id => {
+            const num = id.replace('MAC', '');
+            const parsed = parseInt(num);
+            return isNaN(parsed) ? 0 : parsed;
+          })
+          .filter(num => num > 0)
           .sort((a, b) => b - a);
         
         const nextNumber = machineNumbers.length > 0 ? machineNumbers[0] + 1 : 1;
@@ -2174,12 +2429,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/users/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف المستخدم مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف المستخدم غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
       console.log('Updating user:', id, req.body);
       
-      // Process role_id and section_id to convert empty strings and "none" to null
+      // Process role_id and section_id to convert empty strings and "none" to null with enhanced null safety
       let roleId = null;
-      if (req.body.role_id && req.body.role_id !== '' && req.body.role_id !== 'none') {
+      if (req.body?.role_id && req.body.role_id !== '' && req.body.role_id !== 'none') {
         const roleMapping = {
           'ROLE01': 1,
           'ROLE02': 2,
@@ -2189,11 +2457,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'ROLE06': 6,
           'ROLE07': 7
         };
-        roleId = roleMapping[req.body.role_id as keyof typeof roleMapping] || null;
+        roleId = roleMapping[req.body.role_id as keyof typeof roleMapping] ?? null;
       }
       
       let sectionId = null;
-      if (req.body.section_id && req.body.section_id !== '' && req.body.section_id !== 'none') {
+      if (req.body?.section_id && req.body.section_id !== '' && req.body.section_id !== 'none') {
         const sectionMapping = {
           'SEC01': 1,
           'SEC02': 2,
@@ -2203,7 +2471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'SEC06': 6,
           'SEC07': 7
         };
-        sectionId = sectionMapping[req.body.section_id as keyof typeof sectionMapping] || null;
+        sectionId = sectionMapping[req.body.section_id as keyof typeof sectionMapping] ?? null;
       }
       
       const processedData = {
@@ -2216,6 +2484,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Processed section_id:', sectionId, 'from:', req.body.section_id);
       
       const user = await storage.updateUser(id, processedData);
+      if (!user) {
+        return res.status(404).json({ message: "المستخدم غير موجود" });
+      }
       res.json(user);
     } catch (error) {
       console.error('User update error:', error);
@@ -2248,9 +2519,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/roles/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف الدور مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف الدور غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
       console.log('Updating role:', id, req.body);
       const role = await storage.updateRole(id, req.body);
+      if (!role) {
+        return res.status(404).json({ message: "الدور غير موجود" });
+      }
       res.json(role);
     } catch (error) {
       console.error('Role update error:', error);
@@ -2260,8 +2547,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/roles/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف الدور مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
-      await storage.deleteRole(id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف الدور غير صحيح" });
+      }
+      
+      const success = await storage.deleteRole(id);
+      if (!success) {
+        return res.status(404).json({ message: "الدور غير موجود" });
+      }
       res.json({ message: "تم حذف الدور بنجاح" });
     } catch (error) {
       console.error('Role deletion error:', error);
@@ -2274,16 +2573,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received section data:', req.body);
       
-      // Generate sequential ID if not provided
-      let sectionId = req.body.id;
+      // Generate sequential ID if not provided with enhanced null safety
+      let sectionId = req.body?.id;
       if (!sectionId) {
         // Get the latest section to determine the next sequential number
-        const existingSections = await storage.getSections();
+        const existingSections = await storage.getSections() || [];
         const sectionNumbers = existingSections
-          .map(section => section.id)
-          .filter(id => id.startsWith('SEC'))
-          .map(id => parseInt(id.replace('SEC', '')))
-          .filter(num => !isNaN(num))
+          .map(section => section?.id)
+          .filter(id => id && typeof id === 'string' && id.startsWith('SEC'))
+          .map(id => {
+            const num = id.replace('SEC', '');
+            const parsed = parseInt(num);
+            return isNaN(parsed) ? 0 : parsed;
+          })
+          .filter(num => num > 0)
           .sort((a, b) => b - a);
         
         const nextNumber = sectionNumbers.length > 0 ? sectionNumbers[0] + 1 : 1;
@@ -2307,8 +2610,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/sections/:id", async (req, res) => {
     try {
-      const id = req.params.id;
+      // Enhanced parameter validation
+      if (!req.params?.id?.trim()) {
+        return res.status(400).json({ message: "معرف القسم مطلوب" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
+      const id = req.params.id.trim();
       const section = await storage.updateSection(id, req.body);
+      if (!section) {
+        return res.status(404).json({ message: "القسم غير موجود" });
+      }
       res.json(section);
     } catch (error) {
       res.status(500).json({ message: "خطأ في تحديث القسم" });
@@ -2325,28 +2640,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('Received item data:', req.body);
       
-      // Generate sequential ID if not provided
-      let itemId = req.body.id;
+      // Generate sequential ID if not provided with enhanced null safety
+      let itemId = req.body?.id;
       if (!itemId) {
         // Get the latest item to determine the next sequential number
-        const existingItems = await storage.getItems();
+        const existingItems = await storage.getItems() || [];
         const itemNumbers = existingItems
-          .map(item => item.id)
-          .filter(id => id.startsWith('ITEM'))
-          .map(id => parseInt(id.replace('ITEM', '')))
-          .filter(num => !isNaN(num))
+          .map(item => item?.id)
+          .filter(id => id && typeof id === 'string' && id.startsWith('ITEM'))
+          .map(id => {
+            const num = id.replace('ITEM', '');
+            const parsed = parseInt(num);
+            return isNaN(parsed) ? 0 : parsed;
+          })
+          .filter(num => num > 0)
           .sort((a, b) => b - a);
         
         const nextNumber = itemNumbers.length > 0 ? itemNumbers[0] + 1 : 1;
         itemId = `ITEM${nextNumber.toString().padStart(3, '0')}`;
       }
       
-      // Convert empty strings to null for optional fields
+      // Convert empty strings to null for optional fields with enhanced null safety
       const processedData = {
         ...req.body,
         id: itemId,
-        category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        code: req.body.code === '' || !req.body.code ? null : req.body.code
+        category_id: (!req.body?.category_id || req.body.category_id === '' || req.body.category_id === 'none') ? null : req.body.category_id,
+        code: (!req.body?.code || req.body.code === '') ? null : req.body.code
       };
       
       console.log('Processed item data:', processedData);
@@ -2362,18 +2681,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/items/:id", async (req, res) => {
     try {
-      const id = req.params.id;
+      // Enhanced parameter validation
+      if (!req.params?.id?.trim()) {
+        return res.status(400).json({ message: "معرف الصنف مطلوب" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
+      const id = req.params.id.trim();
       console.log('Updating item:', id, req.body);
       
-      // Convert empty strings to null for optional fields
+      // Convert empty strings to null for optional fields with enhanced null safety
       const processedData = {
         ...req.body,
-        category_id: req.body.category_id === '' || req.body.category_id === 'none' || !req.body.category_id ? null : req.body.category_id,
-        code: req.body.code === '' || !req.body.code ? null : req.body.code
+        category_id: (!req.body?.category_id || req.body.category_id === '' || req.body.category_id === 'none') ? null : req.body.category_id,
+        code: (!req.body?.code || req.body.code === '') ? null : req.body.code
       };
       
       console.log('Processed item update data:', processedData);
       const item = await storage.updateItem(id, processedData);
+      if (!item) {
+        return res.status(404).json({ message: "الصنف غير موجود" });
+      }
       res.json(item);
     } catch (error) {
       console.error('Item update error:', error);
@@ -2516,8 +2847,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/hr/training-programs/:id", async (req, res) => {
     try {
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف البرنامج التدريبي مطلوب" });
+      }
+      
       const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف البرنامج التدريبي غير صحيح" });
+      }
+      
+      if (!req.body || typeof req.body !== 'object') {
+        return res.status(400).json({ message: "بيانات التحديث مطلوبة" });
+      }
+      
       const program = await storage.updateTrainingProgram(id, req.body);
+      if (!program) {
+        return res.status(404).json({ message: "البرنامج التدريبي غير موجود" });
+      }
       res.json(program);
     } catch (error) {
       res.status(500).json({ message: "خطأ في تحديث البرنامج التدريبي" });
@@ -2526,13 +2873,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/hr/training-programs/:id", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const program = await storage.getTrainingProgramById(id);
-      if (program) {
-        res.json(program);
-      } else {
-        res.status(404).json({ message: "البرنامج التدريبي غير موجود" });
+      // Enhanced parameter validation
+      if (!req.params?.id) {
+        return res.status(400).json({ message: "معرف البرنامج التدريبي مطلوب" });
       }
+      
+      const id = parseInt(req.params.id);
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ message: "معرف البرنامج التدريبي غير صحيح" });
+      }
+      
+      const program = await storage.getTrainingProgramById(id);
+      if (!program) {
+        return res.status(404).json({ message: "البرنامج التدريبي غير موجود" });
+      }
+      res.json(program);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب البرنامج التدريبي" });
     }
@@ -2541,8 +2896,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Training Materials
   app.get("/api/hr/training-materials", async (req, res) => {
     try {
-      const programId = req.query.program_id ? parseInt(req.query.program_id as string) : undefined;
+      // Enhanced query parameter validation
+      let programId: number | undefined;
+      if (req.query?.program_id) {
+        const programIdParam = parseInt(req.query.program_id as string);
+        programId = !isNaN(programIdParam) && programIdParam > 0 ? programIdParam : undefined;
+      }
+      
       const materials = await storage.getTrainingMaterials(programId);
+      if (!materials) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(materials);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب المواد التدريبية" });
@@ -2561,8 +2925,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Training Enrollments  
   app.get("/api/hr/training-enrollments", async (req, res) => {
     try {
-      const employeeId = req.query.employee_id ? parseInt(req.query.employee_id as string) : undefined;
+      // Enhanced query parameter validation
+      let employeeId: number | undefined;
+      if (req.query?.employee_id) {
+        const employeeIdParam = parseInt(req.query.employee_id as string);
+        employeeId = !isNaN(employeeIdParam) && employeeIdParam > 0 ? employeeIdParam : undefined;
+      }
+      
       const enrollments = await storage.getTrainingEnrollments(employeeId);
+      if (!enrollments) {
+        return res.json([]); // Return empty array instead of null
+      }
       res.json(enrollments);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب التسجيلات التدريبية" });
