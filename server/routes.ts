@@ -51,7 +51,7 @@ import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import QRCode from 'qrcode';
-import { validateRequest, commonSchemas, requireAuth, requireAdmin, z } from './middleware/validation';
+import { validateRequest, commonSchemas, requireAuth, requireAdmin } from './middleware/validation';
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -240,64 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // One-time password migration (ADMIN ONLY - for security upgrade)
-  app.post("/api/admin/migrate-passwords", async (req, res) => {
-    try {
-      // Security check - only allow admin users
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "غير مسجل الدخول" });
-      }
-      
-      const user = await storage.getUser(req.session.userId);
-      if (!user) {
-        return res.status(404).json({ message: "المستخدم غير موجود" });
-      }
-      
-      if (!user.role_id || user.role_id !== 1) { // role_id 1 = admin
-        return res.status(403).json({ message: "تحتاج صلاحيات إدارية" });
-      }
-      
-      // Get all users with potentially plain text passwords
-      const allUsers = await storage.getUsers();
-      const saltRounds = 12;
-      let migrated = 0;
-      let skipped = 0;
-      
-      for (const userToMigrate of allUsers) {
-        // Enhanced null checks for user and password
-        if (!userToMigrate?.password) {
-          console.warn('User migration: Skipping user with missing password:', userToMigrate?.id);
-          skipped++;
-          continue;
-        }
-        
-        // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-        if (userToMigrate.password.startsWith('$2a$') || 
-            userToMigrate.password.startsWith('$2b$') || userToMigrate.password.startsWith('$2y$')) {
-          skipped++;
-          continue;
-        }
-        
-        // Hash the plain text password
-        const hashedPassword = await bcrypt.hash(userToMigrate.password, saltRounds);
-        
-        // Update with hashed password (direct DB update to avoid double hashing)
-        await db.update(users).set({ password: hashedPassword }).where(eq(users.id, userToMigrate.id));
-        migrated++;
-      }
-      
-      res.json({ 
-        message: "تم ترقية كلمات المرور بنجاح", 
-        migrated, 
-        skipped,
-        total: allUsers.length 
-      });
-      
-    } catch (error) {
-      console.error('Password migration error:', error);
-      res.status(500).json({ message: "خطأ في ترقية كلمات المرور" });
-    }
-  });
+
 
   // ==== NOTIFICATIONS API ROUTES ====
   
@@ -534,7 +477,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      const machineId = req.params.machineId;
+      const machineId = parseInt(req.params.machineId);
       const hoursParam = req.query?.hours;
       let hoursAhead = 24; // default
       
@@ -543,7 +486,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hoursAhead = !isNaN(hours) && hours > 0 ? hours : 24;
       }
       
-      if (!machineId || machineId <= 0) {
+      if (!machineId || isNaN(machineId) || machineId <= 0) {
         return res.status(400).json({
           message: "معرف المكينة غير صحيح",
           success: false
@@ -872,7 +815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     validateRequest({ params: commonSchemas.idParam }),
     async (req, res) => {
     try {
-      const orderId = req.params.id;
+      const orderId = parseInt(req.params.id);
       
       if (!orderId || isNaN(orderId) || orderId <= 0) {
         return res.status(400).json({
@@ -2557,10 +2500,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف الدور غير صحيح" });
       }
       
-      const success = await storage.deleteRole(id);
-      if (!success) {
-        return res.status(404).json({ message: "الدور غير موجود" });
-      }
+      await storage.deleteRole(id);
+      // If no error thrown, deletion was successful
       res.json({ message: "تم حذف الدور بنجاح" });
     } catch (error) {
       console.error('Role deletion error:', error);

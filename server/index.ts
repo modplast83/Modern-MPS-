@@ -3,10 +3,72 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { db } from "./db";
+import { users } from "@shared/schema";
+import bcrypt from "bcrypt";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+
+// Security function to check for plaintext passwords
+async function performPasswordSecurityCheck(): Promise<void> {
+  try {
+    console.log("🔒 Performing startup password security check...");
+    
+    const allUsers = await db.select().from(users);
+    let plaintextPasswordsFound = 0;
+    const problematicUserIds: number[] = [];
+    
+    for (const user of allUsers) {
+      if (!user.password) {
+        console.warn(`⚠️ User ${user.id} (${user.username}) has no password set`);
+        continue;
+      }
+      
+      // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+      const isHashedPassword = user.password.startsWith('$2a$') || 
+                             user.password.startsWith('$2b$') || 
+                             user.password.startsWith('$2y$');
+      
+      if (!isHashedPassword) {
+        plaintextPasswordsFound++;
+        problematicUserIds.push(user.id);
+        console.error(`🚨 SECURITY ALERT: User ${user.id} (${user.username}) has plaintext password!`);
+      }
+    }
+    
+    if (plaintextPasswordsFound > 0) {
+      console.error(`🚨 CRITICAL SECURITY ISSUE: Found ${plaintextPasswordsFound} user(s) with plaintext passwords!`);
+      console.error(`🚨 Affected user IDs: [${problematicUserIds.join(', ')}]`);
+      console.error(`🚨 This is a security vulnerability that must be addressed immediately!`);
+      console.error(`🚨 All passwords should be hashed with bcrypt before storage.`);
+      
+      // In production, you might want to take more drastic action:
+      // - Exit the application
+      // - Send alerts to administrators
+      // - Disable affected accounts
+      
+      if (app.get("env") === "production") {
+        console.error(`🚨 PRODUCTION SECURITY VIOLATION: Application startup blocked due to plaintext passwords`);
+        process.exit(1); // Exit in production to prevent security risk
+      }
+    } else {
+      console.log(`✅ Password security check passed: All ${allUsers.length} user passwords are properly hashed`);
+    }
+    
+  } catch (error) {
+    console.error("❌ Password security check failed:", error);
+    
+    // In production, fail-safe approach
+    if (app.get("env") === "production") {
+      console.error("🚨 Production security check failure - shutting down for safety");
+      process.exit(1);
+    } else {
+      console.warn("⚠️ Development mode: continuing despite security check failure");
+    }
+  }
+}
 
 // Configure CORS for cookies - must be before session middleware
 app.use((req, res, next) => {
@@ -142,6 +204,9 @@ app.use((req, res, next) => {
       // Don't exit - let the server start and handle database issues gracefully
     }
   }
+
+  // Security check: Verify no plaintext passwords remain
+  await performPasswordSecurityCheck();
 
   // API-specific middleware to ensure JSON responses (MUST be before routes)
   app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
