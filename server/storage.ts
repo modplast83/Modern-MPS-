@@ -138,6 +138,7 @@ import {
 import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { generateRollNumber, generateUUID, generateCertificateNumber } from "@shared/id-generator";
 
 // Database error handling utilities
 class DatabaseError extends Error {
@@ -985,7 +986,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
-    const rollNumber = `R-${Date.now()}`;
+    const rollNumber = generateRollNumber();
     const qrCodeText = `QR-${rollNumber}`;
     
     // Generate roll sequence number
@@ -1513,9 +1514,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createERPConfiguration(config: any): Promise<any> {
-    // Mock implementation
+    // Mock implementation - using incremental ID instead of timestamp
+    // In real implementation, this would use database auto-increment
+    const existingConfigs = await this.getERPConfigurations();
+    const nextId = Math.max(...existingConfigs.map(c => c.id || 0)) + 1;
     const newConfig = {
-      id: Date.now(),
+      id: nextId,
       ...config,
       created_at: new Date(),
       updated_at: new Date()
@@ -1583,9 +1587,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createERPSyncLog(log: any): Promise<any> {
-    // Mock implementation
+    // Mock implementation - using incremental ID instead of timestamp
+    // In real implementation, this would use database auto-increment
+    const existingLogs = await this.getERPSyncLogs();
+    const nextId = Math.max(...existingLogs.map(l => l.id || 0)) + 1;
     return {
-      id: Date.now(),
+      id: nextId,
       ...log,
       created_at: new Date()
     };
@@ -1616,9 +1623,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createERPEntityMapping(mapping: any): Promise<any> {
-    // Mock implementation
+    // Mock implementation - using incremental ID instead of timestamp
+    // In real implementation, this would use database auto-increment
+    const existingMappings = await this.getERPEntityMappings(mapping.erp_config_id, mapping.local_entity_type);
+    const nextId = Math.max(...existingMappings.map(m => m.id || 0)) + 1;
     return {
-      id: Date.now(),
+      id: nextId,
       ...mapping,
       created_at: new Date(),
       last_synced: new Date()
@@ -1779,7 +1789,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Generate certificate number
-    const certificateNumber = `CERT-${Date.now()}-${enrollmentId}`;
+    const certificateNumber = generateCertificateNumber(enrollmentId);
     
     // Create certificate
     const certificate: InsertTrainingCertificate = {

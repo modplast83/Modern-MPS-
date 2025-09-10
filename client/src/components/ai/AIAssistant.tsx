@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Bot, User, Send, Mic, MicOff, Volume2, FileText, Bell, TrendingUp, Settings } from "lucide-react";
+import { generateMessageId } from "@shared/id-generator";
 
 interface Message {
   id: string;
@@ -87,7 +88,7 @@ export default function AIAssistant() {
     },
     onSuccess: (response: any) => {
       const assistantMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         type: 'assistant',
         content: response.reply || 'عذراً، لم أستطع معالجة طلبك في الوقت الحالي.',
         timestamp: new Date()
@@ -96,7 +97,7 @@ export default function AIAssistant() {
     },
     onError: () => {
       const errorMessage: Message = {
-        id: Date.now().toString(),
+        id: generateMessageId(),
         type: 'assistant',
         content: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
         timestamp: new Date()
@@ -115,7 +116,7 @@ export default function AIAssistant() {
     if (!messageToSend) return;
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       type: 'user',
       content: messageToSend,
       timestamp: new Date()
