@@ -319,7 +319,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/notifications", async (req, res) => {
     try {
       const userId = req.query.user_id ? parseInt(req.query.user_id as string) : undefined;
-      const notifications = await storage.getNotifications(userId);
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      
+      // Validate pagination parameters
+      const validLimit = Math.min(Math.max(limit, 1), 100); // Between 1 and 100
+      const validOffset = Math.max(offset, 0); // Non-negative
+      
+      const notifications = await storage.getNotifications(userId, validLimit, validOffset);
       res.json(notifications);
     } catch (error: any) {
       console.error("Error fetching notifications:", error);
