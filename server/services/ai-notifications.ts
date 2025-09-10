@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
+import { generateNotificationId } from "@shared/id-generator";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -97,7 +98,7 @@ export class AINotifications {
       }
       
       const notification: SmartNotification = {
-        id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: generateNotificationId('notif'),
         type: result.type || 'info',
         priority: result.priority || 'medium',
         title: result.title || 'إشعار النظام',
@@ -187,7 +188,7 @@ export class AINotifications {
       
       if (downMachines.length > 0) {
         notifications.push({
-          id: `machine_down_${Date.now()}`,
+          id: generateNotificationId('machine_down'),
           type: 'error',
           priority: 'high',
           title: 'مكائن متوقفة',
@@ -202,7 +203,7 @@ export class AINotifications {
       
       if (maintenanceMachines.length > 3) {
         notifications.push({
-          id: `machine_maintenance_${Date.now()}`,
+          id: generateNotificationId('machine_maintenance'),
           type: 'warning',
           priority: 'medium',
           title: 'عدد كبير من المكائن في الصيانة',
@@ -229,7 +230,7 @@ export class AINotifications {
       
       if (stats.productionRate < 60) {
         notifications.push({
-          id: `production_low_${Date.now()}`,
+          id: generateNotificationId('production_low'),
           type: 'warning',
           priority: 'high',
           title: 'معدل الإنتاج منخفض',
@@ -243,7 +244,7 @@ export class AINotifications {
       
       if (stats.activeOrders > 20) {
         notifications.push({
-          id: `orders_high_${Date.now()}`,
+          id: generateNotificationId('orders_high'),
           type: 'info',
           priority: 'medium',
           title: 'عدد كبير من الطلبات النشطة',
@@ -270,7 +271,7 @@ export class AINotifications {
       
       if (stats.qualityScore < 80) {
         notifications.push({
-          id: `quality_low_${Date.now()}`,
+          id: generateNotificationId('quality_low'),
           type: 'warning',
           priority: 'high',
           title: 'انخفاض مؤشر الجودة',
@@ -284,7 +285,7 @@ export class AINotifications {
       
       if (stats.wastePercentage > 5) {
         notifications.push({
-          id: `waste_high_${Date.now()}`,
+          id: generateNotificationId('waste_high'),
           type: 'warning',
           priority: 'medium',
           title: 'ارتفاع نسبة الهدر',
@@ -316,7 +317,7 @@ export class AINotifications {
       
       if (lowStockItems.length > 0) {
         notifications.push({
-          id: `inventory_low_${Date.now()}`,
+          id: generateNotificationId('inventory_low'),
           type: 'warning',
           priority: 'medium',
           title: 'نقص في المخزون',

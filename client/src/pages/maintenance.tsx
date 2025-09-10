@@ -19,6 +19,7 @@ import { Wrench, AlertTriangle, CheckCircle, Clock, Calendar, Plus, FileText, Al
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { generateActionNumber, generateMaintenanceReportNumber, generateOperatorReportNumber } from "@shared/id-generator";
 
 // Schema definitions for forms
 const maintenanceActionSchema = z.object({
@@ -675,7 +676,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
       console.log('Form data submitted:', data);
       
       // Generate action number
-      const actionNumber = `MA${Date.now().toString().slice(-6)}`;
+      const actionNumber = generateActionNumber();
       
       const submitData = {
         ...data,
@@ -1139,7 +1140,7 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
 
   const onSubmit = async (data: any) => {
     try {
-      const reportNumber = `MR${Date.now().toString().slice(-6)}`;
+      const reportNumber = generateMaintenanceReportNumber();
       
       await onCreateReport({
         ...data,
@@ -1369,7 +1370,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
 
   const onSubmit = async (data: any) => {
     try {
-      const reportNumber = `ON${Date.now().toString().slice(-6)}`;
+      const reportNumber = generateOperatorReportNumber();
       
       await onCreateReport({
         ...data,

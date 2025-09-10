@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { generateCustomerId, generateOrderNumber, generateJobOrderNumber } from "@shared/id-generator";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -41,7 +42,7 @@ export class AIHelpers {
       
       // إنشاء ID تلقائي إذا لم يكن موجوداً
       if (!result.id) {
-        result.id = `CID${String(Date.now()).slice(-3)}`;
+        result.id = generateCustomerId();
       }
       
       return result;
@@ -83,7 +84,7 @@ export class AIHelpers {
       
       // إنشاء رقم طلب تلقائي
       if (!result.order_number) {
-        result.order_number = `ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+        result.order_number = generateOrderNumber();
       }
       
       // حالة افتراضية
@@ -130,7 +131,7 @@ export class AIHelpers {
       
       // إنشاء رقم أمر تشغيل تلقائي
       if (!result.job_number) {
-        result.job_number = `JO-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+        result.job_number = generateJobOrderNumber();
       }
       
       // حالة افتراضية
