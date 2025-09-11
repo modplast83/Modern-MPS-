@@ -133,11 +133,16 @@ export const getQueryFn: <T>(options: {
       }
       
     } catch (error: any) {
-      // Handle specific error types for better user experience
+      // Handle AbortError from query cancellation
       if (error.name === 'AbortError') {
-        // Query was cancelled - this is normal when components unmount
-        // Don't treat as an unhandled error, just re-throw silently
-        throw error;
+        // This is a normal cancellation (navigation, unmount, etc.)
+        // React Query handles these internally, so we suppress the error
+        // to prevent "unhandled promise rejection" warnings in console
+        const suppressedError = new Error('Query cancelled');
+        suppressedError.name = 'QueryCancellationError';
+        (suppressedError as any).cause = 'query_cancelled';
+        (suppressedError as any).suppressUnhandledRejectionWarning = true;
+        throw suppressedError;
       }
       
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
@@ -161,6 +166,9 @@ export function getQueryClient(): QueryClient {
           retry: (failureCount, error: any) => {
             // Don't retry after 3 attempts
             if (failureCount > 2) return false;
+            
+            // Never retry cancelled queries
+            if (error?.name === 'QueryCancellationError' || error?.name === 'AbortError') return false;
             
             // Don't retry client errors (4xx)
             if (error?.status >= 400 && error?.status < 500) return false;
