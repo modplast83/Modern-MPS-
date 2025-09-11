@@ -1,22 +1,29 @@
-import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Global handler for React Query AbortError unhandled rejections
+// Safe, targeted error suppression for specific devtools issues only
+// This only handles the specific "signal is aborted without reason" from eruda.js
 window.addEventListener('unhandledrejection', (event) => {
-  // Check if this is a React Query cancellation error
-  if (event.reason?.name === 'QueryCancellationError' || 
-      (event.reason?.name === 'AbortError' && 
-       (event.reason?.message?.includes('signal is aborted') || 
-        event.reason?.message === 'Query cancelled'))) {
-    // Suppress the unhandled rejection warning for query cancellations
+  const reason = event.reason;
+  
+  // Only suppress very specific eruda.js devtools errors that don't affect functionality
+  if (reason?.name === 'AbortError' && 
+      reason?.message === 'signal is aborted without reason' &&
+      (reason?.stack?.includes('eruda.js') || reason?.stack?.includes('eruda.min.js'))) {
     event.preventDefault();
-    console.debug('Suppressed React Query cancellation error:', event.reason?.message || 'Query cancelled');
     return;
   }
   
-  // Let other unhandled rejections bubble up normally
+  // Handle DOMException errors that originate specifically from eruda.js devtools
+  if (reason?.name === 'DOMException' &&
+      (reason?.stack?.includes('eruda.js') || reason?.stack?.includes('eruda.min.js'))) {
+    event.preventDefault();
+    return;
+  }
+  
+  // Let all other errors (including React Query AbortErrors) propagate normally
+  // This preserves proper error handling and debugging capabilities
 });
 
 createRoot(document.getElementById("root")!).render(<App />);

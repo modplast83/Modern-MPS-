@@ -35,18 +35,18 @@ async function throwIfResNotOk(res: Response) {
 
 function getStatusMessage(status: number): string {
   switch (status) {
-    case 400: return 'طلب غير صحيح - البيانات المرسلة غير صالحة';
-    case 401: return 'غير مصرح - يرجى تسجيل الدخول مرة أخرى';
-    case 403: return 'ممنوع - ليس لديك صلاحية للوصول';
-    case 404: return 'غير موجود - الموقع المطلوب غير موجود';
-    case 409: return 'تعارض - البيانات متعارضة';
-    case 422: return 'بيانات غير صالحة - يرجى مراجعة البيانات المدخلة';
-    case 429: return 'كثرة الطلبات - يرجى المحاولة لاحقاً';
-    case 500: return 'خطأ في الخادم - يرجى المحاولة لاحقاً';
-    case 502: return 'خطأ في البوابة - الخدمة غير متوفرة مؤقتاً';
-    case 503: return 'الخدمة غير متوفرة - يرجى المحاولة لاحقاً';
-    case 504: return 'انتهت مهلة الاتصال - يرجى المحاولة لاحقاً';
-    default: return `خطأ ${status} - حدث خطأ غير متوقع`;
+    case 400: return 'Bad request - invalid data submitted';
+    case 401: return 'Unauthorized - please log in again';
+    case 403: return 'Forbidden - insufficient permissions';
+    case 404: return 'Not found - resource does not exist';
+    case 409: return 'Conflict - data conflicts with existing records';
+    case 422: return 'Invalid data - please check your input';
+    case 429: return 'Too many requests - please try again later';
+    case 500: return 'Server error - please try again later';
+    case 502: return 'Gateway error - service temporarily unavailable';
+    case 503: return 'Service unavailable - please try again later';
+    case 504: return 'Timeout - please try again later';
+    default: return `Error ${status} - unexpected error occurred`;
   }
 }
 
@@ -78,20 +78,20 @@ export async function apiRequest(
     return res;
     
   } catch (error: any) {
-    // Handle specific error types
+    // Handle specific error types with meaningful messages
     if (error.name === 'AbortError') {
-      const timeoutError = new Error('انتهت مهلة الطلب - يرجى المحاولة لاحقاً');
+      const timeoutError = new Error('Request timeout - please try again');
       (timeoutError as any).type = 'timeout';
       throw timeoutError;
     }
     
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      const networkError = new Error('خطأ في الاتصال - يرجى فحص الاتصال بالإنترنت');
+      const networkError = new Error('Network error - please check your connection');
       (networkError as any).type = 'network';
       throw networkError;
     }
     
-    // Re-throw error with additional context
+    // Re-throw error as-is
     throw error;
   }
 }
@@ -107,7 +107,7 @@ export const getQueryFn: <T>(options: {
       
       const res = await fetch(url, {
         credentials: "include",
-        signal, // Support query cancellation
+        signal, // Let React Query handle cancellation properly
       });
 
       if (unauthorizedBehavior === "returnNull" && res.status === 401) {
@@ -122,34 +122,24 @@ export const getQueryFn: <T>(options: {
         if (res.status === 204) return null; // No Content
         const text = await res.text();
         if (!text.trim()) return null; // Empty response
-        throw new Error('استجابة غير صالحة - النوع المتوقع JSON');
+        throw new Error('Invalid response - expected JSON');
       }
       
       try {
         const data = await res.json();
         return data;
       } catch (jsonError) {
-        throw new Error('استجابة غير صالحة - البيانات المستلمة تالفة');
+        throw new Error('Invalid response - malformed data');
       }
       
     } catch (error: any) {
-      // Handle AbortError from query cancellation
-      if (error.name === 'AbortError') {
-        // This is a normal cancellation (navigation, unmount, etc.)
-        // React Query handles these internally, so we suppress the error
-        // to prevent "unhandled promise rejection" warnings in console
-        const suppressedError = new Error('Query cancelled');
-        suppressedError.name = 'QueryCancellationError';
-        (suppressedError as any).cause = 'query_cancelled';
-        (suppressedError as any).suppressUnhandledRejectionWarning = true;
-        throw suppressedError;
-      }
-      
+      // Let AbortError propagate naturally - React Query handles these properly
+      // Don't interfere with React Query's native cancellation handling
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        throw new Error('خطأ في الاتصال - يرجى فحص الاتصال بالإنترنت');
+        throw new Error('Network error - please check your connection');
       }
       
-      // Re-throw with context
+      // Re-throw all other errors as-is for proper error handling
       throw error;
     }
   };
@@ -162,40 +152,32 @@ export function getQueryClient(): QueryClient {
           queryFn: getQueryFn({ on401: "throw" }),
           refetchInterval: false,
           refetchOnWindowFocus: false,
-          staleTime: 30000, // 30 seconds instead of Infinity to prevent stale data
+          staleTime: 30000, // 30 seconds
           retry: (failureCount, error: any) => {
             // Don't retry after 3 attempts
             if (failureCount > 2) return false;
             
-            // Never retry cancelled queries
-            if (error?.name === 'QueryCancellationError' || error?.name === 'AbortError') return false;
-            
-            // Don't retry client errors (4xx)
+            // Don't retry client errors (4xx) - these need user action
             if (error?.status >= 400 && error?.status < 500) return false;
             
-            // Don't retry auth errors specifically
-            if (error?.status === 401 || error?.status === 403) return false;
-            
-            // Don't retry validation errors
-            if (error?.status === 400 || error?.status === 422) return false;
-            
-            // Don't retry timeout errors immediately
+            // Don't retry timeout errors more than once
             if (error?.type === 'timeout') return failureCount < 1;
             
-            // Only retry network errors and server errors (5xx)
+            // Retry network errors and server errors (5xx) up to 3 times
             if (error?.type === 'network' || (error?.status >= 500)) return true;
             
-            // For all other errors, only retry once
+            // For all other errors, retry once
             return failureCount < 1;
           },
           retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+          // Remove dangerous throwOnError - let React Query handle errors naturally
         },
         mutations: {
           retry: (failureCount, error: any) => {
             // Only retry mutations once to avoid duplicate operations
-            if (failureCount > 1) return false;
+            if (failureCount > 0) return false;
             
-            // Don't retry client errors (mutations should fail fast on validation errors)
+            // Don't retry client errors for mutations
             if (error?.status >= 400 && error?.status < 500) return false;
             
             // Only retry network errors and server errors (5xx) for mutations
