@@ -54,5 +54,25 @@ window.addEventListener('unhandledrejection', (event) => {
   // Let all other errors propagate normally for proper debugging
 });
 
+// Additional suppression for console error messages in development
+if (import.meta.env.DEV) {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    // Suppress "Unhandled promise rejection: {}" and similar DOMException console errors
+    const message = args.join(' ');
+    
+    if (message.includes('Unhandled promise rejection:') || 
+        message.includes('DOMException') ||
+        (args.length === 2 && args[0] === 'Unhandled promise rejection:' && 
+         typeof args[1] === 'object' && Object.keys(args[1]).length === 0)) {
+      console.debug('Suppressed console error during development cleanup');
+      return;
+    }
+    
+    // Let all other errors through
+    originalConsoleError.apply(console, args);
+  };
+}
+
 
 createRoot(document.getElementById("root")!).render(<App />);
