@@ -18,9 +18,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import type { ProductionOrder, Machine } from "@shared/schema";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 interface RollCreationModalProps {
   isOpen: boolean;
@@ -28,25 +33,35 @@ interface RollCreationModalProps {
   selectedProductionOrderId?: number;
 }
 
-interface RollFormData {
-  production_order_id: number;
-  weight_kg: string; // إبقاءه نصيًا لتجميع الإدخال ثم التحويل عند الإرسال
-  machine_id: string; // Select يُرجِع string؛ نحافظ عليه كذلك
-}
+const rollFormSchema = z.object({
+  production_order_id: z.number().min(1, "يرجى اختيار أمر الإنتاج"),
+  weight_kg: z.string()
+    .min(1, "يرجى إدخال الوزن")
+    .refine((val) => {
+      const num = Number.parseFloat(val);
+      return !isNaN(num) && num > 0;
+    }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
+  machine_id: z.string().min(1, "يرجى اختيار المكينة")
+});
+
+type RollFormData = z.infer<typeof rollFormSchema>;
 
 export default function RollCreationModal({
   isOpen,
   onClose,
   selectedProductionOrderId,
 }: RollCreationModalProps) {
-  const [formData, setFormData] = useState<RollFormData>({
-    production_order_id: selectedProductionOrderId || 0,
-    weight_kg: "",
-    machine_id: "",
-  });
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  const form = useForm<RollFormData>({
+    resolver: zodResolver(rollFormSchema),
+    defaultValues: {
+      production_order_id: selectedProductionOrderId || 0,
+      weight_kg: "",
+      machine_id: "",
+    }
+  });
 
   const {
     data: productionOrders = [],
@@ -78,35 +93,26 @@ export default function RollCreationModal({
   // مزامنة قيمة أمر الإنتاج المختار من الـprop عند تغييره/فتح المودال
   useEffect(() => {
     if (isOpen) {
-      setFormData((prev) => ({
-        ...prev,
-        production_order_id: selectedProductionOrderId || 0,
-      }));
+      form.setValue("production_order_id", selectedProductionOrderId || 0);
       
       // Set default weight to remaining quantity if a production order is selected
       if (selectedProductionOrderId && selectedOrder) {
         const remainingQuantity = calculateRemainingQuantity(selectedOrder);
-        setFormData((prev) => ({
-          ...prev,
-          weight_kg: remainingQuantity > 0 ? remainingQuantity.toString() : "",
-        }));
+        form.setValue("weight_kg", remainingQuantity > 0 ? remainingQuantity.toString() : "");
       }
     }
-  }, [isOpen, selectedProductionOrderId, selectedOrder, rolls]);
+  }, [isOpen, selectedProductionOrderId, selectedOrder, rolls, form]);
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
       const weightParsed = Number.parseFloat(data.weight_kg);
-      if (!Number.isFinite(weightParsed) || weightParsed <= 0) {
-        throw new Error("قيمة الوزن غير صحيحة"); // لماذا: منع إرسال بيانات غير صالحة
-      }
 
       const response = await apiRequest("/api/rolls", {
         method: "POST",
         body: JSON.stringify({
           production_order_id: data.production_order_id,
           weight_kg: weightParsed,
-          machine_id: data.machine_id, // احتفظ بها كنص (قد تكون UUID)
+          machine_id: data.machine_id,
         }),
       });
 
@@ -125,74 +131,42 @@ export default function RollCreationModal({
       queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
       onClose();
-      resetForm();
+      form.reset();
     },
     onError: (error) => {
       console.error("Roll creation error:", error);
+      
+      let errorMessage = "فشل في إنشاء الرول";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Handle specific error types with better user messages
+        if (errorMessage.includes('Network error') || errorMessage.includes('Failed to fetch')) {
+          errorMessage = "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.";
+        } else if (errorMessage.includes('Validation') || errorMessage.includes('Invalid')) {
+          errorMessage = "البيانات المدخلة غير صحيحة. يرجى مراجعة الحقول والمحاولة مرة أخرى.";
+        } else if (errorMessage.includes('Conflict') || errorMessage.includes('already exists')) {
+          errorMessage = "الرول موجود مسبقاً أو يوجد تضارب في البيانات.";
+        }
+      }
+      
       toast({
-        title: "خطأ",
-        description:
-          error instanceof Error ? error.message : "فشل في إنشاء الرول",
+        title: "خطأ في إنشاء الرول",
+        description: errorMessage,
         variant: "destructive",
       });
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      production_order_id: selectedProductionOrderId || 0,
-      weight_kg: "",
-      machine_id: "",
-    });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.production_order_id) {
-      toast({
-        title: "خطأ",
-        description: "يرجى اختيار أمر الإنتاج",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.weight_kg.trim()) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال الوزن",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.machine_id) {
-      toast({
-        title: "خطأ",
-        description: "يرجى اختيار المكينة",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const weightParsed = Number.parseFloat(formData.weight_kg);
-    if (!Number.isFinite(weightParsed) || weightParsed <= 0) {
-      toast({
-        title: "خطأ",
-        description: "الوزن يجب أن يكون رقمًا أكبر من 0",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createRollMutation.mutate(formData);
+  const onSubmit = (data: RollFormData) => {
+    createRollMutation.mutate(data);
   };
 
   const handleClose = () => {
     if (!createRollMutation.isPending) {
       onClose();
-      resetForm();
+      form.reset();
     }
   };
 

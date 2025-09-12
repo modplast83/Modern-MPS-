@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Bot, User, Send, Mic, MicOff, Volume2, FileText, Bell, TrendingUp, Settings } from "lucide-react";
 import { generateMessageId } from "@shared/id-generator";
 
