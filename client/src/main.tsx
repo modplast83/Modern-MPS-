@@ -2,8 +2,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
-// Safe, targeted error suppression for specific devtools issues only
-// This only handles the specific "signal is aborted without reason" from eruda.js
+// Safe, targeted error suppression for specific development issues only
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason;
   
@@ -22,8 +21,43 @@ window.addEventListener('unhandledrejection', (event) => {
     return;
   }
   
-  // Let all other errors (including React Query AbortErrors) propagate normally
-  // This preserves proper error handling and debugging capabilities
+  // Suppress React Query AbortErrors during component cleanup in development
+  // These occur when components unmount and React Query cancels ongoing requests
+  if (import.meta.env.DEV &&
+      reason?.name === 'AbortError' && 
+      reason?.message === 'signal is aborted without reason' &&
+      (reason?.stack?.includes('tanstack_react-query.js') ||
+       reason?.stack?.includes('@tanstack_react-query.js'))) {
+    console.debug('Suppressed React Query AbortError during development cleanup');
+    event.preventDefault();
+    return;
+  }
+  
+  // Let all other errors propagate normally for proper debugging
 });
+
+// DEBUG: Instrument fetch to catch /api requests in development
+if (import.meta.env.DEV) {
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init) {
+    const url = typeof input === 'string' ? input : input instanceof Request ? input.url : String(input);
+    const resolvedUrl = new URL(url, location.href);
+    
+    if (resolvedUrl.pathname === '/api') {
+      console.error('🚨 FOUND IT! Fetch request to /api detected:', {
+        url,
+        resolvedUrl: resolvedUrl.href,
+        stack: new Error().stack,
+        input,
+        init
+      });
+      debugger; // This will pause execution so we can examine the call stack
+    }
+    
+    return originalFetch.apply(this, arguments as any);
+  };
+  
+  console.log('🔍 Fetch instrumentation active - will catch /api requests');
+}
 
 createRoot(document.getElementById("root")!).render(<App />);
