@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -7,13 +7,23 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertTriangle, Phone, MessageCircle, Settings, ExternalLink } from 'lucide-react';
 
 export default function WhatsAppTroubleshoot() {
+  const queryClient = useQueryClient();
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
-  // استعلام الإشعارات للتحقق من أخطاء Twilio
+  // استعلام الإشعارات للتحقق من أخطاء Twilio مع cleanup مناسب
   const { data: notifications } = useQuery({
     queryKey: ['/api/notifications'],
-    refetchInterval: 10000
+    refetchInterval: 10000,
+    gcTime: 60 * 1000, // 1 minute garbage collection for fast cleanup
   });
+
+  // تنظيف الاستعلامات عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      // Cancel all queries for this component when unmounting
+      queryClient.cancelQueries({ queryKey: ['/api/notifications'] });
+    };
+  }, [queryClient]);
 
   const notificationsList = Array.isArray(notifications) ? notifications : [];
   const failedMessages = notificationsList.filter((n: any) => n.status === 'failed' || n.external_status === 'undelivered');

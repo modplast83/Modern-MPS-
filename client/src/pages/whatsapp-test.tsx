@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,25 @@ import { Send, Phone, MessageCircle, CheckCircle, XCircle, Clock, Loader2 } from
 
 export default function WhatsAppTest() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [phoneNumber, setPhoneNumber] = useState('+966');
   const [message, setMessage] = useState('مرحباً! هذه رسالة اختبار من نظام MPBF.');
   const [testResults, setTestResults] = useState<any[]>([]);
 
-  // استعلام الإشعارات
+  // استعلام الإشعارات مع cleanup مناسب
   const { data: notifications, refetch: refetchNotifications } = useQuery({
     queryKey: ['/api/notifications'],
-    refetchInterval: 5000 // تحديث كل 5 ثوان
+    refetchInterval: 5000, // تحديث كل 5 ثوان
+    gcTime: 60 * 1000, // 1 minute garbage collection for fast cleanup
   });
+
+  // تنظيف الاستعلامات عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      // Cancel all queries for this component when unmounting
+      queryClient.cancelQueries({ queryKey: ['/api/notifications'] });
+    };
+  }, [queryClient]);
 
   // تحويل البيانات إلى مصفوفة
   const notificationsList = Array.isArray(notifications) ? notifications : [];
