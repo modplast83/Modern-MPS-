@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +24,24 @@ const formatPercentage = (value: number): string => {
 };
 
 export default function HierarchicalOrdersView({ stage, onCreateRoll }: HierarchicalOrdersViewProps) {
+  const queryClient = useQueryClient();
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [expandedProductionOrders, setExpandedProductionOrders] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: ordersData = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/production/hierarchical-orders'],
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes garbage collection
   });
+
+  // تنظيف الاستعلامات عند إلغاء تحميل المكون
+  useEffect(() => {
+    return () => {
+      // Cancel all queries for this component when unmounting
+      queryClient.cancelQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+    };
+  }, [queryClient]);
 
   const toggleOrderExpansion = (orderId: number) => {
     const newExpanded = new Set(expandedOrders);

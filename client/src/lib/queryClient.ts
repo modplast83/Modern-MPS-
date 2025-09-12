@@ -133,8 +133,14 @@ export const getQueryFn: <T>(options: {
       }
       
     } catch (error: any) {
-      // Let AbortError propagate naturally - React Query handles these properly
-      // Don't interfere with React Query's native cancellation handling
+      // Handle AbortError gracefully during query cancellation
+      if (error.name === 'AbortError') {
+        // If signal was aborted, this is normal during component cleanup
+        // Log debug info but don't create console noise
+        console.debug('Query cancelled during cleanup:', queryKey);
+        throw error; // Still throw to signal cancellation to React Query
+      }
+      
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
         throw new Error('Network error - please check your connection');
       }
@@ -153,9 +159,13 @@ export function getQueryClient(): QueryClient {
           refetchInterval: false,
           refetchOnWindowFocus: false,
           staleTime: 30000, // 30 seconds
+          gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
           retry: (failureCount, error: any) => {
             // Don't retry after 3 attempts
             if (failureCount > 2) return false;
+            
+            // Never retry AbortError (query cancellation)
+            if (error?.name === 'AbortError') return false;
             
             // Don't retry client errors (4xx) - these need user action
             if (error?.status >= 400 && error?.status < 500) return false;
