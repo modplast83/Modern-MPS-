@@ -36,28 +36,5 @@ window.addEventListener('unhandledrejection', (event) => {
   // Let all other errors propagate normally for proper debugging
 });
 
-// DEBUG: Instrument fetch to catch /api requests in development
-if (import.meta.env.DEV) {
-  const originalFetch = window.fetch;
-  window.fetch = function(input, init) {
-    const url = typeof input === 'string' ? input : input instanceof Request ? input.url : String(input);
-    const resolvedUrl = new URL(url, location.href);
-    
-    if (resolvedUrl.pathname === '/api') {
-      console.error('🚨 FOUND IT! Fetch request to /api detected:', {
-        url,
-        resolvedUrl: resolvedUrl.href,
-        stack: new Error().stack,
-        input,
-        init
-      });
-      debugger; // This will pause execution so we can examine the call stack
-    }
-    
-    return originalFetch.apply(this, arguments as any);
-  };
-  
-  console.log('🔍 Fetch instrumentation active - will catch /api requests');
-}
 
 createRoot(document.getElementById("root")!).render(<App />);
