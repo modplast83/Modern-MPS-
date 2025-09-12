@@ -105,16 +105,6 @@ export const getQueryFn: <T>(options: {
     try {
       const url = queryKey.join("/") as string;
       
-      // DEBUG: Log React Query requests to /api in development
-      if (import.meta.env.DEV && url === '/api') {
-        console.error('🚨 FOUND IT! React Query request to /api detected:', {
-          queryKey,
-          url,
-          stack: new Error().stack
-        });
-        debugger; // This will pause execution so we can examine the call stack
-      }
-      
       const res = await fetch(url, {
         credentials: "include",
         signal, // Let React Query handle cancellation properly
