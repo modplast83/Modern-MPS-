@@ -46,6 +46,7 @@ import {
   notification_templates,
   user_requests,
   type User, 
+  type SafeUser,
   type InsertUser,
   type NewOrder,
   type InsertNewOrder,
@@ -212,10 +213,15 @@ async function withDatabaseErrorHandling<T>(
 }
 
 export interface IStorage {
-  // Users
+  // Users (with sensitive data)
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Safe users (without sensitive data like passwords)
+  getSafeUser(id: number): Promise<SafeUser | undefined>;
+  getSafeUsers(): Promise<SafeUser[]>;
+  getSafeUsersByRole(roleId: number): Promise<SafeUser[]>;
   
   // Orders
   getAllOrders(): Promise<NewOrder[]>;
@@ -551,6 +557,82 @@ export class DatabaseStorage implements IStorage {
       },
       'إنشاء مستخدم جديد',
       `اسم المستخدم: ${insertUser.username}`
+    );
+  }
+
+  // Safe user methods that exclude password and other sensitive fields
+  async getSafeUser(id: number): Promise<SafeUser | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== 'number' || id <= 0) {
+          throw new Error('معرف المستخدم غير صحيح');
+        }
+        
+        const [user] = await db.select({
+          id: users.id,
+          username: users.username,
+          display_name: users.display_name,
+          display_name_ar: users.display_name_ar,
+          full_name: users.full_name,
+          phone: users.phone,
+          email: users.email,
+          role_id: users.role_id,
+          section_id: users.section_id,
+          status: users.status,
+          created_at: users.created_at
+        }).from(users).where(eq(users.id, id));
+        return user || undefined;
+      },
+      'جلب بيانات المستخدم الآمنة',
+      `المستخدم رقم ${id}`
+    );
+  }
+
+  async getSafeUsers(): Promise<SafeUser[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.select({
+          id: users.id,
+          username: users.username,
+          display_name: users.display_name,
+          display_name_ar: users.display_name_ar,
+          full_name: users.full_name,
+          phone: users.phone,
+          email: users.email,
+          role_id: users.role_id,
+          section_id: users.section_id,
+          status: users.status,
+          created_at: users.created_at
+        }).from(users);
+      },
+      'جلب قائمة المستخدمين الآمنة',
+      'جميع المستخدمين'
+    );
+  }
+
+  async getSafeUsersByRole(roleId: number): Promise<SafeUser[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!roleId || typeof roleId !== 'number' || roleId <= 0) {
+          throw new Error('معرف الدور غير صحيح');
+        }
+        
+        return await db.select({
+          id: users.id,
+          username: users.username,
+          display_name: users.display_name,
+          display_name_ar: users.display_name_ar,
+          full_name: users.full_name,
+          phone: users.phone,
+          email: users.email,
+          role_id: users.role_id,
+          section_id: users.section_id,
+          status: users.status,
+          created_at: users.created_at
+        }).from(users).where(eq(users.role_id, roleId));
+      },
+      'جلب المستخدمين حسب الدور',
+      `الدور رقم ${roleId}`
     );
   }
 
@@ -1065,6 +1147,8 @@ export class DatabaseStorage implements IStorage {
 
 
   async getUsers(): Promise<User[]> {
+    // DEPRECATED: This method returns sensitive data including passwords
+    // Use getSafeUsers() instead for client-facing operations
     return await db.select().from(users);
   }
 
@@ -3921,6 +4005,8 @@ export class DatabaseStorage implements IStorage {
 
   // User Management
   async getUserById(id: number): Promise<User | undefined> {
+    // DEPRECATED: This method returns sensitive data including passwords
+    // Use getSafeUser() instead for client-facing operations
     try {
       const [user] = await db.select().from(users).where(eq(users.id, id));
       return user || undefined;

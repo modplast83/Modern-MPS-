@@ -1171,9 +1171,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes
   app.get("/api/users", async (req, res) => {
     try {
-      const users = await storage.getUsers();
+      const users = await storage.getSafeUsers();
       res.json(users);
     } catch (error) {
+      console.error('Error fetching safe users:', error);
       res.status(500).json({ message: "خطأ في جلب المستخدمين" });
     }
   });
@@ -1190,13 +1191,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف المستخدم غير صحيح" });
       }
       
-      const user = await storage.getUserById(id);
+      const user = await storage.getSafeUser(id);
       if (!user) {
         return res.status(404).json({ message: "المستخدم غير موجود" });
       }
       res.json(user);
     } catch (error) {
-      console.error('Error fetching user by ID:', error);
+      console.error('Error fetching safe user by ID:', error);
       res.status(500).json({ message: "خطأ في جلب بيانات المستخدم" });
     }
   });
@@ -3782,7 +3783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (tableName === 'users') {
             // Auto-increment numeric ID
             if (!processedRecord.id) {
-              const existingUsers = await storage.getUsers();
+              const existingUsers = await storage.getSafeUsers();
               const lastId = existingUsers.length > 0 
                 ? Math.max(...existingUsers.map(u => u.id))
                 : 0;
