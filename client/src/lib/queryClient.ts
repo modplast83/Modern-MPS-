@@ -35,18 +35,18 @@ async function throwIfResNotOk(res: Response) {
 
 function getStatusMessage(status: number): string {
   switch (status) {
-    case 400: return 'Bad request - invalid data submitted';
-    case 401: return 'Unauthorized - please log in again';
-    case 403: return 'Forbidden - insufficient permissions';
-    case 404: return 'Not found - resource does not exist';
-    case 409: return 'Conflict - data conflicts with existing records';
-    case 422: return 'Invalid data - please check your input';
-    case 429: return 'Too many requests - please try again later';
-    case 500: return 'Server error - please try again later';
-    case 502: return 'Gateway error - service temporarily unavailable';
-    case 503: return 'Service unavailable - please try again later';
-    case 504: return 'Timeout - please try again later';
-    default: return `Error ${status} - unexpected error occurred`;
+    case 400: return 'البيانات المُرسلة غير صحيحة. يرجى مراجعة المدخلات.';
+    case 401: return 'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.';
+    case 403: return 'ليس لديك صلاحية للوصول إلى هذا المورد.';
+    case 404: return 'المورد المطلوب غير موجود.';
+    case 409: return 'تعارض في البيانات. قد يكون المورد موجود مسبقاً.';
+    case 422: return 'البيانات غير صالحة. يرجى التحقق من صحة المدخلات.';
+    case 429: return 'طلبات كثيرة جداً. يرجى المحاولة مرة أخرى بعد قليل.';
+    case 500: return 'خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.';
+    case 502: return 'الخدمة غير متاحة مؤقتاً. يرجى المحاولة مرة أخرى.';
+    case 503: return 'الخدمة غير متاحة حالياً. يرجى المحاولة مرة أخرى لاحقاً.';
+    case 504: return 'انتهت مهلة الاتصال. يرجى المحاولة مرة أخرى.';
+    default: return `خطأ ${status} - حدث خطأ غير متوقع`;
   }
 }
 
@@ -80,13 +80,13 @@ export async function apiRequest(
   } catch (error: any) {
     // Handle specific error types with meaningful messages
     if (error.name === 'AbortError') {
-      const timeoutError = new Error('Request timeout - please try again');
+      const timeoutError = new Error('انتهت مهلة الطلب - يرجى المحاولة مرة أخرى');
       (timeoutError as any).type = 'timeout';
       throw timeoutError;
     }
     
     if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      const networkError = new Error('Network error - please check your connection');
+      const networkError = new Error('خطأ في الشبكة - يرجى التحقق من اتصال الإنترنت');
       (networkError as any).type = 'network';
       throw networkError;
     }
@@ -142,7 +142,7 @@ export const getQueryFn: <T>(options: {
       }
       
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        throw new Error('Network error - please check your connection');
+        throw new Error('خطأ في الشبكة - يرجى التحقق من اتصال الإنترنت');
       }
       
       // Re-throw all other errors as-is for proper error handling

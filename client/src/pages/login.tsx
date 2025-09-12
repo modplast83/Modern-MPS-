@@ -1,42 +1,58 @@
-import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Factory } from "lucide-react";
 
 import FactoryLogoHPNGWg from "@assets/FactoryLogoHPNGWg.png";
 
+const loginSchema = z.object({
+  username: z.string().min(1, "اسم المستخدم مطلوب").min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
+  password: z.string().min(1, "كلمة المرور مطلوبة").min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل")
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!username || !password) {
-      toast({
-        title: "خطأ",
-        description: "يرجى إدخال اسم المستخدم وكلمة المرور",
-        variant: "destructive",
-      });
-      return;
+  
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: ""
     }
+  });
 
+  const onSubmit = async (values: LoginFormValues) => {
     try {
-      await login(username, password);
+      await login(values.username, values.password);
       toast({
         title: "مرحباً بك",
         description: "تم تسجيل الدخول بنجاح",
       });
     } catch (error) {
+      let errorMessage = "حدث خطأ غير متوقع";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // If it's a network error, provide helpful message
+      if (errorMessage.includes('Network error') || errorMessage.includes('Failed to fetch')) {
+        errorMessage = "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.";
+      }
+      
       toast({
         title: "خطأ في تسجيل الدخول",
-        description: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -53,41 +69,59 @@ export default function Login() {
           <p className="text-muted-foreground">نظام إدارة مصنع الأكياس البلاستيكية</p>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">اسم المستخدم</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="أدخل اسم المستخدم"
-                disabled={isLoading}
-                className="text-right"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>اسم المستخدم</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="أدخل اسم المستخدم"
+                        className="text-right"
+                        disabled={isLoading}
+                        data-testid="input-username"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="أدخل كلمة المرور"
-                disabled={isLoading}
-                className="text-right"
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>كلمة المرور</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="password"
+                        placeholder="أدخل كلمة المرور"
+                        className="text-right"
+                        disabled={isLoading}
+                        data-testid="input-password"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full btn-primary" 
-              disabled={isLoading}
-            >
-              {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
-            </Button>
-          </form>
+              
+              <Button 
+                type="submit" 
+                className="w-full btn-primary" 
+                disabled={isLoading}
+                data-testid="button-login"
+              >
+                {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+              </Button>
+            </form>
+          </Form>
           
           <div className="mt-6 pt-6 border-t border-border">
             <p className="text-xs text-muted-foreground text-center">جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ</p>

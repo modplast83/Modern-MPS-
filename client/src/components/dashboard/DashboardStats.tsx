@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatNumber, formatPercentage } from '@/lib/formatNumber';
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { 
   ShoppingCart, 
   Package, 
@@ -22,8 +23,8 @@ interface DashboardStat {
   color: string;
 }
 
-export default function DashboardStats() {
-  const { data: stats = {}, isLoading } = useQuery({
+function DashboardStatsContent() {
+  const { data: stats = {}, isLoading, error } = useQuery({
     queryKey: ["/api/dashboard/stats"],
   });
 
@@ -83,21 +84,21 @@ export default function DashboardStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {dashboardStats.map((stat, index) => (
-        <Card key={index} className="hover:shadow-md transition-shadow">
+        <Card key={index} className="hover:shadow-md transition-shadow" data-testid={`stat-card-${index}`}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-600 mb-1">
+                <p className="text-sm font-medium text-gray-600 mb-1" data-testid={`stat-label-${index}`}>
                   {stat.label}
                 </p>
-                <p className={`text-2xl font-bold ${stat.color} mb-1`}>
+                <p className={`text-2xl font-bold ${stat.color} mb-1`} data-testid={`stat-value-${index}`}>
                   {stat.value}
                 </p>
                 <div className="flex items-center gap-1">
                   {stat.trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
                   {stat.trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
                   {stat.trend === 'neutral' && <Activity className="w-3 h-3 text-gray-500" />}
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500" data-testid={`stat-change-${index}`}>
                     {stat.change}
                   </p>
                 </div>
@@ -116,6 +117,7 @@ export default function DashboardStats() {
                   'secondary'
                 }
                 className="text-xs"
+                data-testid={`stat-badge-${index}`}
               >
                 {stat.trend === 'up' ? 'ممتاز' : 
                  stat.trend === 'down' ? 'يحتاج انتباه' : 
@@ -127,5 +129,20 @@ export default function DashboardStats() {
         </Card>
       ))}
     </div>
+  );
+}
+
+export default function DashboardStats() {
+  return (
+    <ErrorBoundary 
+      fallback="component"
+      title="خطأ في تحميل الإحصائيات"
+      description="تعذر تحميل إحصائيات لوحة التحكم. يرجى المحاولة مرة أخرى."
+      onError={(error, errorInfo) => {
+        console.error('Dashboard stats error:', error, errorInfo);
+      }}
+    >
+      <DashboardStatsContent />
+    </ErrorBoundary>
   );
 }
