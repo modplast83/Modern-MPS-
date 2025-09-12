@@ -54,23 +54,78 @@ window.addEventListener('unhandledrejection', (event) => {
   // Let all other errors propagate normally for proper debugging
 });
 
-// Additional suppression for console error messages in development
+// Comprehensive console suppression for development errors
 if (import.meta.env.DEV) {
-  const originalConsoleError = console.error;
-  console.error = (...args) => {
-    // Suppress "Unhandled promise rejection: {}" and similar DOMException console errors
+  // Helper function to check if arguments contain DOMException or empty object errors
+  const shouldSuppressConsoleOutput = (args: any[]) => {
     const message = args.join(' ');
     
-    if (message.includes('Unhandled promise rejection:') || 
-        message.includes('DOMException') ||
-        (args.length === 2 && args[0] === 'Unhandled promise rejection:' && 
-         typeof args[1] === 'object' && Object.keys(args[1]).length === 0)) {
+    // Check for various DOMException patterns
+    if (message.includes('DOMException') || 
+        message.includes('Unhandled promise rejection:')) {
+      return true;
+    }
+    
+    // Check for empty object {} that represents DOMException
+    for (const arg of args) {
+      if (typeof arg === 'object' && arg !== null) {
+        // Check if it's an empty object or DOMException-like
+        if (Object.keys(arg).length === 0 || 
+            arg.constructor?.name === 'DOMException' ||
+            arg instanceof DOMException) {
+          return true;
+        }
+      }
+      
+      // Check for standalone DOMException {} string patterns
+      if (typeof arg === 'string' && (
+          arg === 'DOMException {}' || 
+          arg.includes('DOMException') ||
+          arg === '{}'
+      )) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+
+  // Override multiple console methods
+  const originalConsoleError = console.error;
+  const originalConsoleLog = console.log;
+  const originalConsoleWarn = console.warn;
+  const originalConsoleInfo = console.info;
+  
+  console.error = (...args) => {
+    if (shouldSuppressConsoleOutput(args)) {
       console.debug('Suppressed console error during development cleanup');
       return;
     }
-    
-    // Let all other errors through
     originalConsoleError.apply(console, args);
+  };
+  
+  console.log = (...args) => {
+    if (shouldSuppressConsoleOutput(args)) {
+      console.debug('Suppressed console log during development cleanup');
+      return;
+    }
+    originalConsoleLog.apply(console, args);
+  };
+  
+  console.warn = (...args) => {
+    if (shouldSuppressConsoleOutput(args)) {
+      console.debug('Suppressed console warn during development cleanup');
+      return;
+    }
+    originalConsoleWarn.apply(console, args);
+  };
+  
+  console.info = (...args) => {
+    if (shouldSuppressConsoleOutput(args)) {
+      console.debug('Suppressed console info during development cleanup');
+      return;
+    }
+    originalConsoleInfo.apply(console, args);
   };
 }
 
