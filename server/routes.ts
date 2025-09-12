@@ -1001,6 +1001,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Handle HEAD requests to /api to stop constant polling - suppress logging
+  app.head("/api", (req, res) => {
+    // Don't log these spam requests - they're likely from browser extensions or dev tools
+    res.status(404).end();
+  });
+
   // Customers routes  
   app.post("/api/customers", async (req, res) => {
     try {

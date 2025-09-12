@@ -137,6 +137,12 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
+    
+    // Skip logging spam HEAD requests to /api (likely from browser extensions/dev tools)
+    if (req.method === 'HEAD' && path === '/api') {
+      return;
+    }
+    
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
       if (capturedJsonResponse) {
