@@ -1295,5 +1295,8 @@ export const leaveBalancesRelations = relations(leave_balances, ({ one }) => ({
   leaveType: one(leave_types, { fields: [leave_balances.leave_type_id], references: [leave_types.id] }),
 }));
 
+// Sanitized user type that excludes sensitive fields like password
+export type SafeUser = Omit<User, 'password'>;
+
 // Import ERP schemas
 export * from './erp-schema';
