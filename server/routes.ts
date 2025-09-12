@@ -985,6 +985,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Base API endpoint - return 404 instead of serving HTML
+  app.get("/api", (req, res) => {
+    // DEBUG: Log details about the /api request to help identify the source
+    console.log('🚨 GET /api request details:', {
+      userAgent: req.headers['user-agent'],
+      referer: req.headers.referer,
+      origin: req.headers.origin,
+      headers: req.headers,
+      ip: req.ip,
+      method: req.method,
+      timestamp: new Date().toISOString()
+    });
+    
+    res.status(404).json({ 
+      message: "API endpoint not found", 
+      availableEndpoints: [
+        "/api/health",
+        "/api/me", 
+        "/api/login",
+        "/api/logout",
+        "/api/orders",
+        "/api/production-orders",
+        "/api/notifications"
+      ]
+    });
+  });
+
   // Customers routes  
   app.post("/api/customers", async (req, res) => {
     try {
