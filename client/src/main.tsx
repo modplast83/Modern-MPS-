@@ -6,21 +6,6 @@ import "./index.css";
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event.reason;
   
-  // Only suppress very specific eruda.js devtools errors that don't affect functionality
-  if (reason?.name === 'AbortError' && 
-      reason?.message === 'signal is aborted without reason' &&
-      (reason?.stack?.includes('eruda.js') || reason?.stack?.includes('eruda.min.js'))) {
-    event.preventDefault();
-    return;
-  }
-  
-  // Handle DOMException errors that originate specifically from eruda.js devtools
-  if (reason?.name === 'DOMException' &&
-      (reason?.stack?.includes('eruda.js') || reason?.stack?.includes('eruda.min.js'))) {
-    event.preventDefault();
-    return;
-  }
-  
   // Suppress React Query AbortErrors during component cleanup in development
   // These occur when components unmount and React Query cancels ongoing requests
   if (import.meta.env.DEV &&
@@ -31,6 +16,33 @@ window.addEventListener('unhandledrejection', (event) => {
     console.debug('Suppressed React Query AbortError during development cleanup');
     event.preventDefault();
     return;
+  }
+  
+  // Suppress DOMException errors and empty object rejections related to React Query in development
+  // These can manifest during request cancellation in various forms
+  if (import.meta.env.DEV) {
+    // Check for DOMException in various forms
+    const isDOMException = reason?.name === 'DOMException' || 
+                          (reason && typeof reason === 'object' && reason.constructor?.name === 'DOMException') ||
+                          (reason && reason.toString && reason.toString() === '[object DOMException]');
+    
+    // Check for empty objects that are likely related to React Query cancellation
+    const isEmptyObject = reason && 
+                         typeof reason === 'object' && 
+                         Object.keys(reason).length === 0 && 
+                         reason.constructor === Object;
+    
+    // Check if JSON stringify produces empty object
+    const isEmptyJSON = reason && JSON.stringify(reason) === '{}';
+    
+    if (isDOMException || isEmptyObject || isEmptyJSON) {
+      console.debug('Suppressed development error during cleanup:', { 
+        type: isDOMException ? 'DOMException' : 'EmptyObject',
+        reason: typeof reason
+      });
+      event.preventDefault();
+      return;
+    }
   }
   
   // Let all other errors propagate normally for proper debugging
