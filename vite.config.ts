@@ -33,5 +33,11 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
-  },
+     hmr: {
+        overlay: false, // 👈 هذا يمنع ظهور الـ ErrorOverlay
+      },
+    },
+    optimizeDeps: {
+        exclude: ["@replit/vite-plugin-runtime-error-modal"],
+      }
 });
