@@ -58,32 +58,60 @@ window.addEventListener('unhandledrejection', (event) => {
 if (import.meta.env.DEV) {
   // Helper function to check if arguments contain DOMException or empty object errors
   const shouldSuppressConsoleOutput = (args: any[]) => {
-    const message = args.join(' ');
+    // Join all arguments to check for patterns
+    const message = args.map(arg => 
+      typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+    ).join(' ');
     
     // Check for various DOMException patterns
     if (message.includes('DOMException') || 
-        message.includes('Unhandled promise rejection:')) {
+        message.includes('Unhandled promise rejection:') ||
+        message.includes('signal is aborted without reason')) {
       return true;
     }
     
-    // Check for empty object {} that represents DOMException
+    // Check each argument individually for more robust detection
     for (const arg of args) {
+      // Direct DOMException instance check
+      if (arg instanceof DOMException) {
+        return true;
+      }
+      
+      // Check if it's an object that looks like DOMException
       if (typeof arg === 'object' && arg !== null) {
-        // Check if it's an empty object or DOMException-like
-        if (Object.keys(arg).length === 0 || 
-            arg.constructor?.name === 'DOMException' ||
-            arg instanceof DOMException) {
+        // Check constructor name
+        if (arg.constructor?.name === 'DOMException') {
+          return true;
+        }
+        
+        // Check if it's an empty object (common DOMException representation)
+        if (Object.keys(arg).length === 0 && arg.constructor === Object) {
+          return true;
+        }
+        
+        // Check for object with stack property containing React Query
+        if (arg.stack && typeof arg.stack === 'string' && 
+            (arg.stack.includes('tanstack_react-query.js') || 
+             arg.stack.includes('@tanstack_react-query.js'))) {
+          return true;
+        }
+        
+        // Check for AbortError objects
+        if (arg.name === 'AbortError' || arg.message === 'signal is aborted without reason') {
           return true;
         }
       }
       
       // Check for standalone DOMException {} string patterns
-      if (typeof arg === 'string' && (
-          arg === 'DOMException {}' || 
-          arg.includes('DOMException') ||
-          arg === '{}'
-      )) {
-        return true;
+      if (typeof arg === 'string') {
+        const cleanArg = arg.trim();
+        if (cleanArg === 'DOMException {}' || 
+            cleanArg === '{}' ||
+            cleanArg.includes('DOMException') ||
+            cleanArg.includes('AbortError') ||
+            cleanArg.includes('signal is aborted')) {
+          return true;
+        }
       }
     }
     
