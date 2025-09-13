@@ -201,8 +201,8 @@ export default function RollCreationModal({
 
   // قيمة Select لأمر الإنتاج عند عدم تمرير selectedProductionOrderId
   const productionOrderValue =
-    formData.production_order_id && !selectedProductionOrderId
-      ? String(formData.production_order_id)
+    form.watch("production_order_id") && !selectedProductionOrderId
+      ? String(form.watch("production_order_id"))
       : undefined;
 
   return (
@@ -223,53 +223,58 @@ export default function RollCreationModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           {!selectedProductionOrderId && (
-            <div className="space-y-2">
-              <Label htmlFor="productionOrder">أمر الإنتاج *</Label>
-              <Select
-                value={productionOrderValue}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    production_order_id: Number.parseInt(value, 10),
-                  })
-                }
-                disabled={productionOrdersLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="اختر أمر الإنتاج" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productionOrdersLoading ? (
-                    <SelectItem value="loading" disabled>
-                      جارِ التحميل...
-                    </SelectItem>
-                  ) : productionOrders.length ? (
-                    productionOrders
-                      .filter((order) => order.id)
-                      .map((order) => (
-                        <SelectItem key={order.id} value={String(order.id)}>
-                          {order.production_order_number} -
-                          {" "}
-                          {(order as any).customer_name_ar ||
-                            (order as any).customer_name ||
-                            "غير محدد"}
-                          {" "}- {" "}
-                          {(order as any).item_name_ar ||
-                            (order as any).item_name ||
-                            (order as any).size_caption ||
-                            "غير محدد"}
+            <FormField
+              control={form.control}
+              name="production_order_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>أمر الإنتاج *</FormLabel>
+                  <Select
+                    value={field.value ? String(field.value) : undefined}
+                    onValueChange={(value) => field.onChange(Number.parseInt(value, 10))}
+                    disabled={productionOrdersLoading}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر أمر الإنتاج" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {productionOrdersLoading ? (
+                        <SelectItem value="loading" disabled>
+                          جارِ التحميل...
                         </SelectItem>
-                      ))
-                  ) : (
-                    <SelectItem value="empty" disabled>
-                      لا توجد أوامر إنتاج متاحة
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+                      ) : productionOrders.length ? (
+                        productionOrders
+                          .filter((order) => order.id)
+                          .map((order) => (
+                            <SelectItem key={order.id} value={String(order.id)}>
+                              {order.production_order_number} -
+                              {" "}
+                              {(order as any).customer_name_ar ||
+                                (order as any).customer_name ||
+                                "غير محدد"}
+                              {" "}- {" "}
+                              {(order as any).item_name_ar ||
+                                (order as any).item_name ||
+                                (order as any).size_caption ||
+                                "غير محدد"}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        <SelectItem value="empty" disabled>
+                          لا توجد أوامر إنتاج متاحة
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
 
           {selectedProductionOrderId && (
@@ -292,58 +297,72 @@ export default function RollCreationModal({
             </div>
           )}
 
-          <div className="space-y-2">
-            <Label htmlFor="weight_kg">الوزن (كجم) *</Label>
-            <Input
-              id="weight_kg"
-              type="number"
-              step="0.1"
-              min="0.1"
-              inputMode="decimal"
-              value={formData.weight_kg}
-              onChange={(e) =>
-                setFormData({ ...formData, weight_kg: e.target.value })
-              }
-              placeholder="45.2"
-              className="text-right"
-              data-testid="input-weight_kg"
-            />
-          </div>
+          <FormField
+            control={form.control}
+            name="weight_kg"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>الوزن (كجم) *</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    inputMode="decimal"
+                    placeholder="45.2"
+                    className="text-right"
+                    data-testid="input-weight_kg"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-          <div className="space-y-2">
-            <Label htmlFor="machine">المكينة *</Label>
-            <Select
-              value={formData.machine_id || undefined}
-              onValueChange={(value) => setFormData({ ...formData, machine_id: value })}
-              disabled={machinesLoading}
-            >
-              <SelectTrigger data-testid="select-machine">
-                <SelectValue placeholder="اختر المكينة" />
-              </SelectTrigger>
-              <SelectContent>
-                {machinesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    جارِ التحميل...
-                  </SelectItem>
-                ) : filmSectionMachines.length ? (
-                  filmSectionMachines
-                    .filter((m) => (m as any).status === "active" && (m as any).id)
-                    .map((machine) => (
-                      <SelectItem
-                        key={String((machine as any).id)}
-                        value={String((machine as any).id)}
-                      >
-                        {(machine as any).name_ar || (machine as any).name}
+          <FormField
+            control={form.control}
+            name="machine_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>المكينة *</FormLabel>
+                <Select
+                  value={field.value || undefined}
+                  onValueChange={field.onChange}
+                  disabled={machinesLoading}
+                >
+                  <FormControl>
+                    <SelectTrigger data-testid="select-machine">
+                      <SelectValue placeholder="اختر المكينة" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {machinesLoading ? (
+                      <SelectItem value="loading" disabled>
+                        جارِ التحميل...
                       </SelectItem>
-                    ))
-                ) : (
-                  <SelectItem value="empty" disabled>
-                    لا توجد مكائن متاحة في قسم الفيلم
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+                    ) : filmSectionMachines.length ? (
+                      filmSectionMachines
+                        .filter((m) => (m as any).status === "active" && (m as any).id)
+                        .map((machine) => (
+                          <SelectItem
+                            key={String((machine as any).id)}
+                            value={String((machine as any).id)}
+                          >
+                            {(machine as any).name_ar || (machine as any).name}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <SelectItem value="empty" disabled>
+                        لا توجد مكائن متاحة في قسم الفيلم
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <div className="flex justify-end space-x-3 space-x-reverse pt-4">
             <Button
@@ -362,7 +381,8 @@ export default function RollCreationModal({
               {createRollMutation.isPending ? "جاري الإنشاء..." : "إنشاء رول"}
             </Button>
           </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
