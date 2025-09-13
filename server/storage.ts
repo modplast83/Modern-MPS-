@@ -3800,13 +3800,27 @@ export class DatabaseStorage implements IStorage {
   // ============ User Attendance Management ============
   async getAttendance(): Promise<any[]> {
     try {
-      const result = await pool.query(`
-        SELECT a.*, u.username 
-        FROM attendance a 
-        JOIN users u ON a.user_id = u.id 
-        ORDER BY a.date DESC, a.created_at DESC
-      `);
-      return result.rows;
+      const result = await db
+        .select({
+          id: attendance.id,
+          user_id: attendance.user_id,
+          status: attendance.status,
+          check_in_time: attendance.check_in_time,
+          check_out_time: attendance.check_out_time,
+          lunch_start_time: attendance.lunch_start_time,
+          lunch_end_time: attendance.lunch_end_time,
+          notes: attendance.notes,
+          created_by: attendance.created_by,
+          updated_by: attendance.updated_by,
+          date: attendance.date,
+          created_at: attendance.created_at,
+          updated_at: attendance.updated_at,
+          username: users.username
+        })
+        .from(attendance)
+        .innerJoin(users, eq(attendance.user_id, users.id))
+        .orderBy(desc(attendance.date), desc(attendance.created_at));
+      return result;
     } catch (error) {
       console.error('Error fetching attendance:', error);
       throw new Error('فشل في جلب بيانات الحضور');
@@ -3822,20 +3836,17 @@ export class DatabaseStorage implements IStorage {
     currentStatus: string;
   }> {
     try {
-      const query = `
-        SELECT 
-          check_in_time,
-          lunch_start_time,
-          lunch_end_time,
-          check_out_time,
-          status
-        FROM attendance 
-        WHERE user_id = $1 AND date = $2
-        ORDER BY created_at DESC
-      `;
-      
-      const result = await pool.query(query, [userId, date]);
-      const records = result.rows;
+      const records = await db
+        .select({
+          check_in_time: attendance.check_in_time,
+          lunch_start_time: attendance.lunch_start_time,
+          lunch_end_time: attendance.lunch_end_time,
+          check_out_time: attendance.check_out_time,
+          status: attendance.status
+        })
+        .from(attendance)
+        .where(and(eq(attendance.user_id, userId), eq(attendance.date, date)))
+        .orderBy(desc(attendance.created_at));
       
       const status = {
         hasCheckedIn: false,
