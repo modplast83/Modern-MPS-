@@ -819,7 +819,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           deliveryDays = parseIntSafe(req.body.delivery_days, "Delivery days", { min: 1, max: 365 });
         } catch (error) {
           return res.status(400).json({
-            message: `Invalid delivery days: ${error.message}`,
+            message: `Invalid delivery days: ${error instanceof Error ? error.message : 'Invalid value'}`,
             success: false
           });
         }

@@ -146,7 +146,7 @@ export const extractNumericId = (
   try {
     return parseIntSafe(numericPart, `${fieldName} numeric part`, { min: 1 });
   } catch (error) {
-    throw new Error(`Invalid ${fieldName}: ${idString} - ${error.message}`);
+    throw new Error(`Invalid ${fieldName}: ${idString} - ${error instanceof Error ? error.message : 'Invalid format'}`);
   }
 };
 
