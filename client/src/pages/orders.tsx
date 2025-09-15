@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { parseIntSafe, coercePositiveInt, parseFloatSafe } from "@shared/validation-utils";
 
 // Master batch colors mapping for Arabic display
 const masterBatchColors = [
@@ -55,14 +56,14 @@ const getMasterBatchArabicName = (masterBatchId: string): string => {
 
 const orderFormSchema = z.object({
   customer_id: z.string().min(1, "العميل مطلوب"),
-  delivery_days: z.string().min(1, "عدد أيام التسليم مطلوب").transform(val => parseInt(val)),
+  delivery_days: z.coerce.number().int().positive().max(365, "عدد أيام التسليم يجب أن يكون بين 1 و 365"),
   notes: z.string().optional()
 });
 
 const productionOrderFormSchema = z.object({
-  order_id: z.string().transform(val => parseInt(val)),
-  customer_product_id: z.string().transform(val => parseInt(val)),
-  quantity_kg: z.string().transform(val => parseFloat(val)),
+  order_id: z.coerce.number().int().positive(),
+  customer_product_id: z.coerce.number().int().positive(),
+  quantity_kg: z.coerce.number().positive(),
   status: z.string().min(1, "الحالة مطلوبة"),
 });
 
@@ -402,7 +403,7 @@ export default function Orders() {
       const orderData = {
         order_number: orderNumber,
         customer_id: data.customer_id,
-        delivery_days: parseInt(data.delivery_days) || 15,
+        delivery_days: parseIntSafe(data.delivery_days, "Delivery days", { min: 1, max: 365 }),
         notes: data.notes || '',
         created_by: "8" // AbuKhalid user ID as string
       };
