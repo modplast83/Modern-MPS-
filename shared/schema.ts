@@ -2,6 +2,7 @@ import { sql, relations } from "drizzle-orm";
 import { pgTable, serial, varchar, integer, boolean, date, timestamp, json, text, decimal } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import { parseIntSafe, parseFloatSafe } from "./validation-utils";
 
 // 🔐 جدول الصلاحيات
 export const roles = pgTable('roles', {
@@ -1092,13 +1093,21 @@ export const insertCustomerProductSchema = createInsertSchema(customer_products)
   }),
   cutting_length_cm: z.union([z.string(), z.number()]).optional().transform((val) => {
     if (val === null || val === undefined || val === '') return undefined;
-    const num = typeof val === 'string' ? parseInt(val) : val;
-    return isNaN(num) ? undefined : num;
+    try {
+      const num = typeof val === 'string' ? parseIntSafe(val, "Cutting length", { min: 1, max: 10000 }) : val;
+      return num;
+    } catch {
+      return undefined; // Return undefined for invalid values instead of NaN
+    }
   }),
   unit_quantity: z.union([z.string(), z.number()]).optional().transform((val) => {
     if (val === null || val === undefined || val === '') return undefined;
-    const num = typeof val === 'string' ? parseInt(val) : val;
-    return isNaN(num) ? undefined : num;
+    try {
+      const num = typeof val === 'string' ? parseIntSafe(val, "Unit quantity", { min: 1, max: 1000000 }) : val;
+      return num;
+    } catch {
+      return undefined; // Return undefined for invalid values instead of NaN
+    }
   }),
 });
 

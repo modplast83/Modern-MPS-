@@ -36,13 +36,34 @@ import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
 import { z } from "zod";
+import { parseIntSafe, coercePositiveInt, coerceNonNegativeInt, extractNumericId, generateNextId } from "@shared/validation-utils";
+
+// Helper functions for safe route parameter parsing
+const parseRouteParam = (param: string | undefined, paramName: string): number => {
+  if (!param) {
+    throw new Error(`${paramName} parameter is required`);
+  }
+  return parseIntSafe(param, paramName, { min: 1 });
+};
+
+const parseOptionalQueryParam = (param: any, paramName: string, defaultValue: number): number => {
+  if (!param) return defaultValue;
+  try {
+    return parseIntSafe(param, paramName, { min: 1 });
+  } catch {
+    return defaultValue;
+  }
+};
 
 const insertCustomerSchema = createInsertSchema(customers).omit({ id: true, created_at: true }).extend({
   sales_rep_id: z.union([z.string(), z.number(), z.null()]).optional().transform(val => {
     if (val === '' || val === null || val === undefined) return null;
     if (typeof val === 'number') return val;
-    const num = parseInt(val as string);
-    return isNaN(num) ? null : num;
+    try {
+      return parseIntSafe(val as string, "Sales Rep ID", { min: 1 });
+    } catch {
+      return null; // Return null for invalid values instead of NaN
+    }
   })
 });
 const insertCustomerProductSchema = createInsertSchema(customer_products).omit({ id: true, created_at: true });
@@ -367,15 +388,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get notifications
   app.get("/api/notifications", async (req, res) => {
     try {
-      // Enhanced parameter validation with null checks
+      // Enhanced parameter validation with safe parsing
       let userId: number | undefined;
       if (req.query.user_id) {
-        const userIdParam = parseInt(req.query.user_id as string);
-        userId = !isNaN(userIdParam) && userIdParam > 0 ? userIdParam : undefined;
+        try {
+          userId = parseIntSafe(req.query.user_id as string, "User ID", { min: 1 });
+        } catch {
+          userId = undefined; // Invalid user ID parameter
+        }
       }
       
-      const limitParam = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const offsetParam = req.query.offset ? parseInt(req.query.offset as string) : 0;
+      let limitParam = 50;
+      if (req.query.limit) {
+        try {
+          limitParam = parseIntSafe(req.query.limit as string, "Limit", { min: 1, max: 100 });
+        } catch {
+          limitParam = 50; // Default to 50 for invalid limit
+        }
+      }
+      
+      let offsetParam = 0;
+      if (req.query.offset) {
+        try {
+          offsetParam = parseIntSafe(req.query.offset as string, "Offset", { min: 0 });
+        } catch {
+          offsetParam = 0; // Default to 0 for invalid offset
+        }
+      }
       
       // Validate pagination parameters with enhanced null safety
       const validLimit = Math.min(Math.max(isNaN(limitParam) ? 50 : limitParam, 1), 100);
@@ -725,7 +764,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .filter((num: string) => num && num.startsWith('ORD'))
         .map((num: string) => {
           const match = num.match(/^ORD(\d+)$/);
-          return match ? parseInt(match[1]) : 0;
+          if (!match || !match[1]) return 0;
+          try {
+            return parseIntSafe(match[1], "Order number", { min: 1 });
+          } catch {
+            return 0; // Invalid order number format
+          }
         });
       
       const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
@@ -769,10 +813,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Prepare order data with safe defaults
+      let deliveryDays: number | null = null;
+      if (req.body.delivery_days) {
+        try {
+          deliveryDays = parseIntSafe(req.body.delivery_days, "Delivery days", { min: 1, max: 365 });
+        } catch (error) {
+          return res.status(400).json({
+            message: `Invalid delivery days: ${error.message}`,
+            success: false
+          });
+        }
+      }
+      
       const orderData = {
         ...req.body,
         created_by: userId,
-        delivery_days: req.body.delivery_days ? parseInt(req.body.delivery_days) : null,
+        delivery_days: deliveryDays,
         customer_id: customer_id.trim(),
         order_number: order_number.trim(),
         notes: req.body.notes?.trim() || null
