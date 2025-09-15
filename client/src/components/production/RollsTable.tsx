@@ -59,8 +59,8 @@ export default function RollsTable({ stage }: RollsTableProps) {
       queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
       toast({
         title: "تم تحديث الرول بنجاح",
-        description: updates.current_stage ? 
-          `تم نقل الرول إلى ${stageLabels[updates.current_stage as keyof typeof stageLabels]}` :
+        description: updates.stage ? 
+          `تم نقل الرول إلى ${stageLabels[updates.stage as keyof typeof stageLabels]}` :
           "تم تحديث بيانات الرول"
       });
     },
@@ -80,53 +80,52 @@ export default function RollsTable({ stage }: RollsTableProps) {
       updateRollMutation.mutate({
         id: rollId,
         updates: { 
-          status: 'completed',
-          completed_at: new Date().toISOString()
+          stage: 'done',
+          cut_completed_at: new Date().toISOString()
         }
       });
     } else {
       updateRollMutation.mutate({
         id: rollId,
         updates: { 
-          current_stage: next,
-          status: next === 'cutting' ? 'in_progress' : 'for_' + next
+          stage: next
         }
       });
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
+  const getStatusColor = (stage: string) => {
+    switch (stage) {
+      case 'done':
         return 'bg-green-100 text-green-800';
-      case 'in_progress':
+      case 'cutting':
         return 'bg-blue-100 text-blue-800';
-      case 'for_printing':
-      case 'for_cutting':
+      case 'printing':
+      case 'film':
         return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'مكتمل';
-      case 'in_progress': return 'قيد التنفيذ';
-      case 'for_printing': return 'في انتظار الطباعة';
-      case 'for_cutting': return 'في انتظار التقطيع';
-      default: return status;
+  const getStatusText = (stage: string) => {
+    switch (stage) {
+      case 'done': return 'مكتمل';
+      case 'cutting': return 'مرحلة التقطيع';
+      case 'printing': return 'مرحلة الطباعة';
+      case 'film': return 'مرحلة الفيلم';
+      default: return stage;
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
+  const getStatusIcon = (stage: string) => {
+    switch (stage) {
+      case 'done':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'in_progress':
+      case 'cutting':
         return <Clock className="w-4 h-4 text-blue-600 animate-spin" />;
-      case 'for_printing':
-      case 'for_cutting':
+      case 'printing':
+      case 'film':
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
       default:
         return <Package className="w-4 h-4 text-gray-600" />;
@@ -223,29 +222,29 @@ export default function RollsTable({ stage }: RollsTableProps) {
                     {roll.production_order_number || "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {roll.weight ? parseFloat(roll.weight.toString()).toFixed(1) : "غير محدد"}
+                    {roll.weight_kg ? parseFloat(roll.weight_kg.toString()).toFixed(1) : "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {roll.machine_name_ar || roll.machine_name || "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge variant="secondary" className={getStatusColor(roll.status || "")}>
+                    <Badge variant="secondary" className={getStatusColor(roll.stage || "")}>
                       <div className="flex items-center gap-1">
-                        {getStatusIcon(roll.status || "")}
-                        {getStatusText(roll.status || "")}
+                        {getStatusIcon(roll.stage || "")}
+                        {getStatusText(roll.stage || "")}
                       </div>
                     </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      {(roll.current_stage || "") !== 'cutting' || (roll.status || "") !== 'completed' ? (
+                      {(roll.stage || "") !== 'done' ? (
                         <Button
                           size="sm"
-                          onClick={() => moveToNextStage(roll.id, roll.current_stage || "film")}
+                          onClick={() => moveToNextStage(roll.id, roll.stage || "film")}
                           disabled={updateRollMutation.isPending}
                           className="flex items-center gap-1"
                         >
-                          {nextStage[(roll.current_stage || "film") as keyof typeof nextStage] ? (
+                          {nextStage[(roll.stage || "film") as keyof typeof nextStage] ? (
                             <>
                               <ArrowRight className="w-3 h-3" />
                               نقل للمرحلة التالية

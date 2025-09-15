@@ -883,15 +883,21 @@ export const insertRollSchema = createInsertSchema(rolls).omit({
 export const insertCutSchema = createInsertSchema(cuts).omit({
   id: true,
   created_at: true,
+}).extend({
+  cut_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
 });
 
 export const insertWarehouseReceiptSchema = createInsertSchema(warehouse_receipts).omit({
   id: true,
   created_at: true,
+}).extend({
+  received_weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
 });
 
 export const insertProductionSettingsSchema = createInsertSchema(production_settings).omit({
   id: true,
+}).extend({
+  overrun_tolerance_percent: z.number().min(0).max(10, "النسبة يجب أن تكون بين 0 و 10")
 });
 
 export const insertMaintenanceRequestSchema = createInsertSchema(maintenance_requests).omit({
