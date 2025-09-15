@@ -4132,7 +4132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         allow_last_roll_overrun: true,
         qr_prefix: true
       }).extend({
-        overrun_tolerance_percent: z.number().min(0).max(10).transform(val => val.toString()),
+        overrun_tolerance_percent: z.number().min(0).max(10).transform(v => Number(v.toFixed(2))),
         qr_prefix: z.string().min(1, "بادئة الـ QR مطلوبة")
       });
 
@@ -4219,7 +4219,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/cuts", async (req, res) => {
     try {
       const validationSchema = insertCutSchema.extend({
-        cut_weight_kg: z.coerce.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString()),
+        cut_weight_kg: z.coerce.number().gt(0, "الوزن يجب أن يكون أكبر من صفر").max(50000, "الوزن يتجاوز 50 طن").transform(v => Number(v.toFixed(3))),
         pieces_count: z.coerce.number().positive().optional()
       });
 
@@ -4246,7 +4246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/warehouse/receipts", async (req, res) => {
     try {
       const validationSchema = insertWarehouseReceiptSchema.extend({
-        received_weight_kg: z.coerce.number().positive("الوزن يجب أن يكون أكبر من صفر").transform(val => val.toString())
+        received_weight_kg: z.coerce.number().gt(0, "الوزن يجب أن يكون أكبر من صفر").max(50000, "الوزن يتجاوز 50 طن").transform(v => Number(v.toFixed(3)))
       });
 
       const validated = validationSchema.parse(req.body);

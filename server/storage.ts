@@ -140,6 +140,7 @@ import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { generateRollNumber, generateUUID, generateCertificateNumber } from "@shared/id-generator";
+import { numberToDecimalString, normalizeDecimal } from "@shared/decimal-utils";
 
 // Database error handling utilities
 class DatabaseError extends Error {
@@ -3180,9 +3181,15 @@ export class DatabaseStorage implements IStorage {
 
   async updateProductionSettings(settingsData: Partial<InsertProductionSettings>): Promise<ProductionSettings> {
     try {
+      // Convert numeric decimal fields to strings at persistence boundary
+      const processedData: any = { ...settingsData };
+      if (processedData.overrun_tolerance_percent !== undefined) {
+        processedData.overrun_tolerance_percent = numberToDecimalString(processedData.overrun_tolerance_percent, 2);
+      }
+      
       const [settings] = await db
         .update(production_settings)
-        .set(settingsData)
+        .set(processedData)
         .where(eq(production_settings.id, 1))
         .returning();
       return settings;
@@ -3361,8 +3368,8 @@ export class DatabaseStorage implements IStorage {
         }
 
         // التحقق من أن الكمية الصافية لا تتجاوز وزن الرول الأصلي
-        const rollWeight = parseFloat(roll.weight_kg.toString());
-        const cutWeight = parseFloat(cutData.cut_weight_kg.toString());
+        const rollWeight = normalizeDecimal(roll.weight_kg);
+        const cutWeight = normalizeDecimal(cutData.cut_weight_kg);
 
         if (cutWeight > rollWeight) {
           throw new Error(`الكمية الصافية (${cutWeight.toFixed(2)} كيلو) لا يمكن أن تتجاوز وزن الرول (${rollWeight.toFixed(2)} كيلو)`);
@@ -3372,10 +3379,15 @@ export class DatabaseStorage implements IStorage {
           throw new Error('الكمية الصافية يجب أن تكون أكبر من صفر');
         }
 
-        // Create the cut
+        // Create the cut - convert numeric decimal fields to strings at persistence boundary
+        const processedCutData = {
+          ...cutData,
+          cut_weight_kg: numberToDecimalString(cutData.cut_weight_kg, 3)
+        };
+        
         const [cut] = await tx
           .insert(cuts)
-          .values(cutData)
+          .values(processedCutData)
           .returning();
 
         // حساب الهدر والكمية الصافية الإجمالية
@@ -3386,8 +3398,8 @@ export class DatabaseStorage implements IStorage {
         await tx
           .update(rolls)
           .set({
-            cut_weight_total_kg: totalCutWeight.toString(),
-            waste_kg: waste.toString(),
+            cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
+            waste_kg: numberToDecimalString(waste, 3),
             stage: 'cutting', // تحديث المرحلة إلى تم التقطيع
             cut_completed_at: new Date(),
             cut_by: cutData.performed_by
@@ -3404,9 +3416,15 @@ export class DatabaseStorage implements IStorage {
 
   async createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt> {
     try {
+      // Convert numeric decimal fields to strings at persistence boundary
+      const processedData = {
+        ...receiptData,
+        received_weight_kg: numberToDecimalString(receiptData.received_weight_kg, 3)
+      };
+      
       const [receipt] = await db
         .insert(warehouse_receipts)
-        .values(receiptData)
+        .values(processedData)
         .returning();
       return receipt;
     } catch (error) {
