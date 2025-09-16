@@ -951,7 +951,6 @@ export const insertLocationSchema = createInsertSchema(locations).omit({
 export const insertNewOrderSchema = createInsertSchema(orders).omit({
   id: true,
   created_at: true,
-  delivery_date: true,
 });
 
 export const insertProductionOrderSchema = createInsertSchema(production_orders).omit({
