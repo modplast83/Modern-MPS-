@@ -770,7 +770,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch {
             return 0; // Invalid order number format
           }
-        });
+        })
+        .filter(num => num > 0); // Remove invalid entries (zeros)
       
       const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
       const orderNumber = `ORD${nextNumber.toString().padStart(3, '0')}`;
