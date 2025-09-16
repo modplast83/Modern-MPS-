@@ -441,7 +441,7 @@ export default function Orders() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            order_id: newOrder.id,
+            order_id: newOrder.data.id,
             customer_product_id: parseInt(prodOrder.customer_product_id),
             quantity_kg: prodOrder.quantity_kg.toString(),
             status: prodOrder.status || 'pending'

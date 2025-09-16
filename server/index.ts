@@ -74,10 +74,14 @@ async function performPasswordSecurityCheck(): Promise<void> {
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Allow requests from localhost during development
-  if (!origin || origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('.replit.dev')) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
+  // Allow requests from safe origins only
+  if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('.replit.dev'))) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    // For same-origin requests (no origin header), allow the request
+    res.header('Access-Control-Allow-Origin', req.get('host') || 'localhost:5000');
   }
+  // Do not set wildcard '*' when credentials are enabled - this is a security vulnerability
   
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');

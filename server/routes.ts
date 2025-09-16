@@ -584,10 +584,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف المكينة مطلوب" });
       }
       
-      const machineId = parseInt(req.params.machineId);
-      if (isNaN(machineId) || machineId <= 0) {
+      const idStr = req.params.machineId as string;
+      if (!/^\d+$/.test(idStr)) {
         return res.status(400).json({ message: "معرف المكينة غير صحيح" });
       }
+      const machineId = Number(idStr);
       
       // استخدام آخر بيانات متاحة للمكينة
       const mockData = {
@@ -626,10 +627,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف المكينة مطلوب" });
       }
       
-      const machineId = parseInt(req.params.machineId);
-      if (isNaN(machineId) || machineId <= 0) {
+      const idStr = req.params.machineId as string;
+      if (!/^\d+$/.test(idStr)) {
         return res.status(400).json({ message: "معرف المكينة غير صحيح" });
       }
+      const machineId = Number(idStr);
       
       const optimization = await mlService.optimizeProductionParameters(machineId);
       res.json(optimization);
@@ -646,10 +648,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف المكينة مطلوب" });
       }
       
-      const machineId = parseInt(req.params.machineId);
-      if (isNaN(machineId) || machineId <= 0) {
+      const idStr = req.params.machineId as string;
+      if (!/^\d+$/.test(idStr)) {
         return res.status(400).json({ message: "معرف المكينة غير صحيح" });
       }
+      const machineId = Number(idStr);
       
       // محاكاة تدريب النموذج بإضافة بيانات عشوائية
       for (let i = 0; i < 50; i++) {
@@ -684,10 +687,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "معرف المكينة مطلوب" });
       }
       
-      const machineId = parseInt(req.params.machineId);
-      if (isNaN(machineId) || machineId <= 0) {
+      const idStr = req.params.machineId as string;
+      if (!/^\d+$/.test(idStr)) {
         return res.status(400).json({ message: "معرف المكينة غير صحيح" });
       }
+      const machineId = Number(idStr);
       
       const optimization = req.body || {};
       
