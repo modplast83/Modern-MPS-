@@ -59,6 +59,12 @@ export class AILearning {
 
       this.learningData.push(learningEntry);
 
+      // تنظيف البيانات القديمة للحفاظ على الذاكرة (الاحتفاظ بآخر 1000 إدخال)
+      const LEARNING_DATA_LIMIT = 1000;
+      if (this.learningData.length > LEARNING_DATA_LIMIT) {
+        this.learningData = this.learningData.slice(-LEARNING_DATA_LIMIT);
+      }
+
       // تحديث أنماط المستخدم
       await this.updateUserPatterns(userId);
 
