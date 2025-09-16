@@ -210,13 +210,14 @@ export const commonSchemas = {
       .min(1, 'رقم الطلب مطلوب')
       .max(50, 'رقم الطلب طويل جداً')
       .trim(),
-    delivery_days: z.number()
-      .min(0, 'أيام التسليم يجب أن تكون 0 أو أكثر')
-      .max(365, 'أيام التسليم يجب أن لا تتجاوز 365 يوم')
-      .optional(),
+    delivery_days: z.union([z.number(), z.string().regex(/^\d+$/)]).transform(val => 
+      typeof val === 'string' ? Number(val) : val
+    ).refine(val => val >= 0 && val <= 365, 'أيام التسليم يجب أن تكون بين 0 و 365 يوم').optional(),
     delivery_date: z.string().optional(),
     notes: z.string().max(1000, 'الملاحظات طويلة جداً').optional(),
-    created_by: z.number().min(1, 'معرف المنشئ مطلوب')
+    created_by: z.union([z.number(), z.string().regex(/^\d+$/, 'معرف المنشئ يجب أن يكون رقم صحيح')])
+      .transform(val => typeof val === 'string' ? Number(val) : val)
+      .refine(val => val >= 1, 'معرف المنشئ مطلوب')
   }),
 
   // Order status update
