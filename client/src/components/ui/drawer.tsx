@@ -37,22 +37,47 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay />
-    <DrawerPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-        className
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-))
+>(({ className, children, ...props }, ref) => {
+  // Check if children includes a DrawerDescription component
+  const hasDrawerDescription = React.Children.toArray(children).some(child => {
+    if (React.isValidElement(child)) {
+      // Check if it's a DrawerDescription by comparing displayName or type
+      return child.type === DrawerDescription || 
+             (child.type as any)?.displayName === DrawerDescription.displayName;
+    }
+    return false;
+  });
+  
+  // Only generate fallback ID if no explicit aria-describedby and no DrawerDescription
+  const needsFallback = !props["aria-describedby"] && !hasDrawerDescription;
+  const descriptionId = needsFallback ? React.useId() : undefined;
+  
+  return (
+    <DrawerPortal>
+      <DrawerOverlay />
+      <DrawerPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
+          className
+        )}
+        // Only set aria-describedby if fallback needed, let vaul handle DrawerDescription linkage
+        {...(descriptionId && { "aria-describedby": descriptionId })}
+        {...props}
+      >
+        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        {children}
+        
+        {/* Hidden description for accessibility only when needed */}
+        {needsFallback && (
+          <span id={descriptionId} className="sr-only">
+            Drawer content
+          </span>
+        )}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+})
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({
