@@ -8,6 +8,7 @@ import { normalizeDecimal, numberToDecimalString } from "./decimal-utils";
 
 /**
  * Determines the overrun percentage based on the product punching type
+ * Supports both Arabic and English terms for punching types
  * @param punching The punching type from customer_products table
  * @returns The overrun percentage as a number
  */
@@ -18,13 +19,13 @@ export function calculateOverrunPercentage(punching?: string | null): number {
 
   const punchingLower = punching.toLowerCase();
   
-  // Hook products get 20% overrun
-  if (punchingLower.includes('hook')) {
+  // Hook products get 20% overrun - Support both Arabic "علاقي" and English "hook"
+  if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
     return 20.0;
   }
   
-  // Banana products get 10% overrun
-  if (punchingLower.includes('banana')) {
+  // Banana products get 10% overrun - Support both Arabic "بنانة" and English "banana"
+  if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
     return 10.0;
   }
   
@@ -63,9 +64,9 @@ export function calculateProductionQuantities(
   let overrunReason = 'منتج عادي';
   if (punching) {
     const punchingLower = punching.toLowerCase();
-    if (punchingLower.includes('hook')) {
+    if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
       overrunReason = 'منتج علاقي (Hook)';
-    } else if (punchingLower.includes('banana')) {
+    } else if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
       overrunReason = 'منتج بنانة (Banana)';
     }
   }
@@ -88,6 +89,7 @@ export function formatOverrunPercentageArabic(overrunPercentage: number): string
 
 /**
  * Gets the description of why a certain overrun percentage was applied
+ * Supports both Arabic and English terms for punching types
  * @param punching The product punching type
  * @returns Arabic description of the overrun reason
  */
@@ -98,11 +100,11 @@ export function getOverrunReasonDescription(punching?: string | null): string {
   
   const punchingLower = punching.toLowerCase();
   
-  if (punchingLower.includes('hook')) {
+  if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
     return 'نسبة إضافة عالية للمنتجات العلاقية (Hook) - 20%';
   }
   
-  if (punchingLower.includes('banana')) {
+  if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
     return 'نسبة إضافة متوسطة لمنتجات البنانة (Banana) - 10%';
   }
   

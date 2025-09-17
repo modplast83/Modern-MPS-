@@ -4507,6 +4507,195 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Production Monitoring Analytics API Routes ============
+  
+  // Get user performance statistics
+  app.get("/api/production/user-performance", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const userId = req.query.user_id ? parseIntSafe(req.query.user_id as string, "User ID", { min: 1 }) : undefined;
+      const dateFrom = req.query.date_from as string || undefined;
+      const dateTo = req.query.date_to as string || undefined;
+      
+      // Validate date format if provided
+      if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+        return res.status(400).json({ message: "تنسيق تاريخ البداية غير صحيح (YYYY-MM-DD)" });
+      }
+      if (dateTo && !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+        return res.status(400).json({ message: "تنسيق تاريخ النهاية غير صحيح (YYYY-MM-DD)" });
+      }
+      
+      const performance = await storage.getUserPerformanceStats(userId, dateFrom, dateTo);
+      
+      res.json({
+        data: performance,
+        period: {
+          from: dateFrom || 'آخر 7 أيام',
+          to: dateTo || 'اليوم',
+          user_filter: userId ? `المستخدم ${userId}` : 'جميع المستخدمين'
+        },
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Error fetching user performance stats:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب إحصائيات أداء المستخدمين",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get role performance statistics
+  app.get("/api/production/role-performance", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const dateFrom = req.query.date_from as string || undefined;
+      const dateTo = req.query.date_to as string || undefined;
+      
+      // Validate date format if provided
+      if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+        return res.status(400).json({ message: "تنسيق تاريخ البداية غير صحيح (YYYY-MM-DD)" });
+      }
+      if (dateTo && !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+        return res.status(400).json({ message: "تنسيق تاريخ النهاية غير صحيح (YYYY-MM-DD)" });
+      }
+      
+      const performance = await storage.getRolePerformanceStats(dateFrom, dateTo);
+      
+      res.json({
+        data: performance,
+        period: {
+          from: dateFrom || 'آخر 7 أيام',
+          to: dateTo || 'اليوم'
+        },
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Error fetching role performance stats:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب إحصائيات أداء الأقسام",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get real-time production statistics
+  app.get("/api/production/real-time-stats", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const realTimeStats = await storage.getRealTimeProductionStats();
+      
+      res.json({
+        ...realTimeStats,
+        updateInterval: 30000 // 30 seconds
+      });
+    } catch (error: any) {
+      console.error("Error fetching real-time production stats:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب الإحصائيات الفورية",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get production efficiency metrics
+  app.get("/api/production/efficiency-metrics", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const dateFrom = req.query.date_from as string || undefined;
+      const dateTo = req.query.date_to as string || undefined;
+      
+      // Validate date format if provided
+      if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+        return res.status(400).json({ message: "تنسيق تاريخ البداية غير صحيح (YYYY-MM-DD)" });
+      }
+      if (dateTo && !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+        return res.status(400).json({ message: "تنسيق تاريخ النهاية غير صحيح (YYYY-MM-DD)" });
+      }
+      
+      const metrics = await storage.getProductionEfficiencyMetrics(dateFrom, dateTo);
+      
+      res.json({
+        ...metrics,
+        period: {
+          from: dateFrom || 'آخر 30 يوم',
+          to: dateTo || 'اليوم'
+        },
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Error fetching production efficiency metrics:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب مؤشرات الكفاءة",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get production alerts
+  app.get("/api/production/alerts", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const alerts = await storage.getProductionAlerts();
+      
+      res.json({
+        alerts,
+        alertCount: alerts.length,
+        criticalCount: alerts.filter((a: any) => a.priority === 'critical').length,
+        warningCount: alerts.filter((a: any) => a.priority === 'high' || a.priority === 'medium').length,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Error fetching production alerts:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب تنبيهات الإنتاج",
+        error: error.message 
+      });
+    }
+  });
+
+  // Get machine utilization statistics
+  app.get("/api/production/machine-utilization", 
+    requireAuth,
+    async (req, res) => {
+    try {
+      const dateFrom = req.query.date_from as string || undefined;
+      const dateTo = req.query.date_to as string || undefined;
+      
+      // Validate date format if provided
+      if (dateFrom && !/^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) {
+        return res.status(400).json({ message: "تنسيق تاريخ البداية غير صحيح (YYYY-MM-DD)" });
+      }
+      if (dateTo && !/^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+        return res.status(400).json({ message: "تنسيق تاريخ النهاية غير صحيح (YYYY-MM-DD)" });
+      }
+      
+      const utilizationStats = await storage.getMachineUtilizationStats(dateFrom, dateTo);
+      
+      res.json({
+        data: utilizationStats,
+        period: {
+          from: dateFrom || 'آخر 7 أيام',
+          to: dateTo || 'اليوم'
+        },
+        totalMachines: utilizationStats.length,
+        activeMachines: utilizationStats.filter((m: any) => m.status === 'active').length,
+        lastUpdated: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Error fetching machine utilization stats:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب إحصائيات استخدام المكائن",
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
