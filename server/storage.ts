@@ -141,6 +141,7 @@ import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { generateRollNumber, generateUUID, generateCertificateNumber } from "@shared/id-generator";
 import { numberToDecimalString, normalizeDecimal } from "@shared/decimal-utils";
+import { calculateProductionQuantities } from "@shared/quantity-utils";
 
 // Database error handling utilities
 class DatabaseError extends Error {
@@ -850,6 +851,130 @@ export class DatabaseStorage implements IStorage {
     return results;
   }
 
+  async getOrdersEnhanced(filters: {
+    search?: string,
+    customer_id?: string,
+    status?: string,
+    date_from?: string,
+    date_to?: string,
+    page?: number,
+    limit?: number
+  }): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      let query = db
+        .select({
+          // Order fields
+          id: orders.id,
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          delivery_days: orders.delivery_days,
+          status: orders.status,
+          notes: orders.notes,
+          created_by: orders.created_by,
+          created_at: orders.created_at,
+          delivery_date: orders.delivery_date,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          customer_code: customers.code,
+          customer_city: customers.city,
+          customer_phone: customers.phone,
+          
+          // Production orders count and total quantity
+          production_orders_count: count(production_orders.id),
+          total_quantity_kg: sum(production_orders.quantity_kg)
+        })
+        .from(orders)
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(production_orders, eq(production_orders.order_id, orders.id))
+        .groupBy(
+          orders.id,
+          orders.order_number,
+          orders.customer_id,
+          orders.delivery_days,
+          orders.status,
+          orders.notes,
+          orders.created_by,
+          orders.created_at,
+          orders.delivery_date,
+          customers.name,
+          customers.name_ar,
+          customers.code,
+          customers.city,
+          customers.phone
+        );
+
+      // Apply filters
+      const conditions = [];
+      
+      if (filters.search) {
+        const searchTerm = `%${filters.search}%`;
+        conditions.push(
+          or(
+            sql`${orders.order_number} ILIKE ${searchTerm}`,
+            sql`${customers.name} ILIKE ${searchTerm}`,
+            sql`${customers.name_ar} ILIKE ${searchTerm}`,
+            sql`${customers.code} ILIKE ${searchTerm}`,
+            sql`${orders.notes} ILIKE ${searchTerm}`
+          )
+        );
+      }
+      
+      if (filters.customer_id) {
+        conditions.push(eq(orders.customer_id, filters.customer_id));
+      }
+      
+      if (filters.status) {
+        conditions.push(eq(orders.status, filters.status));
+      }
+      
+      if (filters.date_from) {
+        conditions.push(sql`${orders.created_at} >= ${filters.date_from}`);
+      }
+      
+      if (filters.date_to) {
+        conditions.push(sql`${orders.created_at} <= ${filters.date_to}`);
+      }
+
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+
+      // Apply pagination
+      const page = filters.page || 1;
+      const limit = filters.limit || 50;
+      const offset = (page - 1) * limit;
+
+      query = query
+        .orderBy(desc(orders.created_at))
+        .limit(limit)
+        .offset(offset);
+
+      const results = await query;
+
+      // Get total count for pagination
+      const countQuery = db
+        .select({ count: count(orders.id) })
+        .from(orders)
+        .leftJoin(customers, eq(orders.customer_id, customers.id));
+
+      if (conditions.length > 0) {
+        countQuery.where(and(...conditions));
+      }
+
+      const [{ count: totalCount }] = await countQuery;
+
+      return {
+        orders: results,
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          totalPages: Math.ceil(totalCount / limit)
+        }
+      };
+    }, 'جلب الطلبات المحسنة');
+  }
+
   async getHierarchicalOrdersForProduction(): Promise<any[]> {
     // Optimized: Get all data in a single query with proper JOINs to avoid N+1 queries
     // Use JSON aggregation to build the hierarchy efficiently
@@ -868,7 +993,7 @@ export class DatabaseStorage implements IStorage {
         customer_name: customers.name,
         customer_name_ar: customers.name_ar,
         
-        // Production order fields
+        // Production order fields - using existing fields (migration pending for new quantity fields)
         production_order_id: production_orders.id,
         production_order_number: production_orders.production_order_number,
         customer_product_id: production_orders.customer_product_id,
@@ -979,9 +1104,48 @@ export class DatabaseStorage implements IStorage {
 
   // Production Orders Implementation
   async getAllProductionOrders(): Promise<ProductionOrder[]> {
-    return await db.select()
-      .from(production_orders)
-      .orderBy(desc(production_orders.created_at));
+    return await withDatabaseErrorHandling(async () => {
+      const results = await db
+        .select({
+          // Production order fields - using existing fields only
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          status: production_orders.status,
+          created_at: production_orders.created_at,
+          
+          // Related order information
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          
+          // Product details
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          master_batch_id: customer_products.master_batch_id,
+          is_printed: customer_products.is_printed,
+          punching: customer_products.punching,
+          
+          // Item information
+          item_name: items.name,
+          item_name_ar: items.name_ar
+        })
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
+        .orderBy(desc(production_orders.created_at));
+      
+      // Return results with proper type mapping - keep decimal fields as strings for consistency
+      return results;
+    }, 'تحميل أوامر الإنتاج');
   }
 
   async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
@@ -995,11 +1159,42 @@ export class DatabaseStorage implements IStorage {
     
     const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
     const productionOrderNumber = `PO${nextNumber.toString().padStart(3, '0')}`;
+
+    // Get customer product info for intelligent quantity calculation
+    const customerProduct = await db
+      .select()
+      .from(customer_products)
+      .where(eq(customer_products.id, parseInt(insertProductionOrder.customer_product_id.toString())))
+      .limit(1);
+    
+    // Use quantity_kg from the input - simplified until migration is complete
+    const baseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || '0');
+    
+    // Calculate intelligent quantities based on punching type (for logging purposes)
+    const punchingType = customerProduct[0]?.punching || null;
+    const quantityCalculation = calculateProductionQuantities(baseQuantityKg, punchingType);
+    
+    // Prepare the production order data - only with existing fields until migration
+    const productionOrderData = {
+      ...insertProductionOrder,
+      production_order_number: productionOrderNumber,
+      // Use calculated final quantity for now in the existing quantity_kg field
+      quantity_kg: numberToDecimalString(quantityCalculation.finalQuantityKg)
+    };
     
     const [productionOrder] = await db
       .insert(production_orders)
-      .values({ ...insertProductionOrder, production_order_number: productionOrderNumber })
+      .values(productionOrderData)
       .returning();
+      
+    console.log(`Created production order ${productionOrderNumber} with intelligent quantities:`, {
+      baseQuantity: baseQuantityKg,
+      punchingType,
+      overrunPercentage: quantityCalculation.overrunPercentage,
+      finalQuantity: quantityCalculation.finalQuantityKg,
+      reason: quantityCalculation.overrunReason
+    });
+    
     return productionOrder;
   }
 
@@ -1454,7 +1649,7 @@ export class DatabaseStorage implements IStorage {
         .from(orders)
         .where(or(eq(orders.status, 'in_production'), eq(orders.status, 'waiting'), eq(orders.status, 'pending'))),
       
-      // Production rate (percentage based on production orders)
+      // Production rate (percentage based on production orders) - using existing quantity field
       db.select({
         totalRequired: sum(production_orders.quantity_kg),
         totalProduced: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`
@@ -3533,22 +3728,7 @@ export class DatabaseStorage implements IStorage {
           customer_product_id: production_orders.customer_product_id,
           quantity_kg: production_orders.quantity_kg,
           status: production_orders.status,
-          created_at: production_orders.created_at,
-          // Use subquery for quantity_produced to avoid complex GROUP BY
-          quantity_produced: sql<string>`(
-            SELECT COALESCE(SUM(weight_kg), 0)
-            FROM rolls 
-            WHERE production_order_id = ${production_orders.id}
-          )`.as('quantity_produced'),
-          // Essential customer info only
-          customer_name: customers.name,
-          customer_name_ar: customers.name_ar,
-          // Essential product info only  
-          item_name: items.name,
-          item_name_ar: items.name_ar,
-          size_caption: customer_products.size_caption,
-          width: customer_products.width,
-          cutting_length_cm: customer_products.cutting_length_cm
+          created_at: production_orders.created_at
         })
         .from(production_orders)
         .leftJoin(orders, eq(production_orders.order_id, orders.id))
@@ -3650,7 +3830,7 @@ export class DatabaseStorage implements IStorage {
 
       const orderIds = ordersData.map(order => order.id);
 
-      // جلب أوامر الإنتاج مع تفاصيل المنتج
+      // جلب أوامر الإنتاج مع تفاصيل المنتج - using existing fields (migration pending)
       const productionOrdersData = await db
         .select({
           id: production_orders.id,
@@ -3734,9 +3914,17 @@ export class DatabaseStorage implements IStorage {
 
   async getOrderProgress(productionOrderId: number): Promise<any> {
     try {
-      // Get production order details
+      // Get production order details - using existing fields (migration pending)
       const [productionOrder] = await db
-        .select()
+        .select({
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          status: production_orders.status,
+          created_at: production_orders.created_at
+        })
         .from(production_orders)
         .where(eq(production_orders.id, productionOrderId));
 
