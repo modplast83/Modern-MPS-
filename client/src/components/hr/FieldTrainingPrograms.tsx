@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -457,6 +457,9 @@ export default function FieldTrainingPrograms() {
           <DialogContent className="max-w-2xl" dir="rtl">
             <DialogHeader>
               <DialogTitle>إضافة برنامج تدريبي جديد</DialogTitle>
+              <DialogDescription>
+                إنشاء برنامج تدريبي جديد للموظفين مع تحديد المدة والمتطلبات
+              </DialogDescription>
             </DialogHeader>
             <Form {...programForm}>
               <form onSubmit={programForm.handleSubmit(onCreateProgram)} className="space-y-4">
@@ -743,6 +746,9 @@ export default function FieldTrainingPrograms() {
               <DialogContent dir="rtl">
                 <DialogHeader>
                   <DialogTitle>تسجيل موظف في التدريب</DialogTitle>
+                  <DialogDescription>
+                    تسجيل موظف جديد في برنامج التدريب مع تحديد تاريخ التدريب
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...enrollmentForm}>
                   <form onSubmit={enrollmentForm.handleSubmit(onCreateEnrollment)} className="space-y-4">
@@ -975,6 +981,9 @@ export default function FieldTrainingPrograms() {
         <DialogContent className="max-w-3xl" dir="rtl">
           <DialogHeader>
             <DialogTitle>تقييم التدريب الميداني</DialogTitle>
+            <DialogDescription>
+              تقييم أداء الموظف في التدريب الميداني بناءً على المعايير المحددة
+            </DialogDescription>
           </DialogHeader>
           <Form {...evaluationForm}>
             <form onSubmit={evaluationForm.handleSubmit(onCreateEvaluation)} className="space-y-4">
