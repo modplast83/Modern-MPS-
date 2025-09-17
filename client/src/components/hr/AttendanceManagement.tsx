@@ -30,7 +30,7 @@ export default function AttendanceManagement() {
   const form = useForm<z.infer<typeof attendanceSchema>>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
-      user_id: 0,
+      user_id: undefined as any,
       status: "غائب",
       notes: ""
     }
@@ -185,7 +185,7 @@ export default function AttendanceManagement() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>الموظف</FormLabel>
-                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value !== undefined ? field.value.toString() : ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="اختر الموظف" />

@@ -283,7 +283,7 @@ export default function ERPIntegration() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>نوع النظام</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="اختر نوع النظام" />
@@ -450,7 +450,7 @@ export default function ERPIntegration() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>نوع قاعدة البيانات</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="اختر نوع قاعدة البيانات" />

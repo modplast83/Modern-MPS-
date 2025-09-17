@@ -247,10 +247,10 @@ export default function Orders() {
   const productionOrderForm = useForm({
     resolver: zodResolver(productionOrderFormSchema),
     defaultValues: {
-      order_id: "",
+      order_id: undefined,
       production_order_number: "",
-      customer_product_id: "",
-      quantity_kg: "",
+      customer_product_id: undefined, 
+      quantity_kg: undefined,
       status: "pending"
     }
   });
@@ -1406,7 +1406,7 @@ export default function Orders() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>الطلب</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue placeholder="اختر الطلب" />
@@ -1445,7 +1445,7 @@ export default function Orders() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>منتج العميل</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value}>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
                                     <FormControl>
                                       <SelectTrigger className="h-auto min-h-[40px]">
                                         <SelectValue placeholder="اختر المنتج" />
@@ -1526,7 +1526,7 @@ export default function Orders() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>الحالة</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value || ""}>
                                       <FormControl>
                                         <SelectTrigger className="w-full">
                                           <SelectValue placeholder="اختر الحالة" />
