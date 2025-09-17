@@ -762,6 +762,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate next order number
   app.get("/api/orders/next-number", async (req, res) => {
     try {
+      // Prevent caching to ensure fresh order numbers
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       const orders = await storage.getAllOrders();
       const orderNumbers = orders
         .map((order: any) => order.order_number)
@@ -769,11 +774,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .map((num: string) => {
           const match = num.match(/^ORD(\d+)$/);
           if (!match || !match[1]) return 0;
-          try {
-            return parseIntSafe(match[1], "Order number", { min: 1 });
-          } catch {
-            return 0; // Invalid order number format
-          }
+          // Use parseInt directly for order numbers to handle leading zeros
+          const parsed = parseInt(match[1], 10);
+          return isNaN(parsed) || parsed < 1 ? 0 : parsed;
         })
         .filter(num => num > 0); // Remove invalid entries (zeros)
       
