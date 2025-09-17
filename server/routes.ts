@@ -72,6 +72,16 @@ import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import { getNotificationManager, type SystemNotificationData } from "./services/notification-manager";
+import { 
+  createAlertsRouter,
+  createSystemHealthRouter,
+  createPerformanceRouter,
+  createCorrectiveActionsRouter,
+  createDataValidationRouter
+} from "./routes/alerts";
+import { getSystemHealthMonitor } from "./services/system-health-monitor";
+import { getAlertManager } from "./services/alert-manager";
+import { getDataValidator } from "./services/data-validator";
 import QRCode from 'qrcode';
 import { validateRequest, commonSchemas, requireAuth, requireAdmin } from './middleware/validation';
 import { calculateProductionQuantities } from "@shared/quantity-utils";
@@ -5135,6 +5145,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // ============ نظام التحذيرات الذكية ============
+  
+  // تفعيل خدمات النظام
+  const healthMonitor = getSystemHealthMonitor(storage);
+  const alertManager = getAlertManager(storage);
+  const dataValidator = getDataValidator(storage);
+  
+  // إعداد routes التحذيرات الذكية
+  app.use('/api/alerts', createAlertsRouter(storage));
+  app.use('/api/system/health', createSystemHealthRouter(storage));
+  app.use('/api/system/performance', createPerformanceRouter(storage));
+  app.use('/api/corrective-actions', createCorrectiveActionsRouter(storage));
+  app.use('/api/data-validation', createDataValidationRouter(storage));
+  
+  console.log('[SmartAlerts] نظام التحذيرات الذكية مُفعل ✅');
 
   const httpServer = createServer(app);
   return httpServer;

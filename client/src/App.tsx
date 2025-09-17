@@ -22,6 +22,8 @@ import ERPIntegration from "@/pages/erp-integration";
 import Orders from "@/pages/orders";
 import Notifications from "@/pages/notifications";
 import WhatsAppSetup from "@/pages/whatsapp-setup";
+import AlertsCenter from "@/pages/AlertsCenter";
+import SystemHealth from "@/pages/SystemHealth";
 
 import WhatsAppTest from "@/pages/whatsapp-test";
 import WhatsAppTroubleshoot from "@/pages/whatsapp-troubleshoot";
@@ -121,6 +123,16 @@ function Router() {
       <Route path="/notifications">
         <ProtectedRoute>
           <Notifications />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/alerts">
+        <ProtectedRoute>
+          <AlertsCenter />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/system-health">
+        <ProtectedRoute>
+          <SystemHealth />
         </ProtectedRoute>
       </Route>
       <Route path="/whatsapp-setup">

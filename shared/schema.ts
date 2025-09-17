@@ -1321,6 +1321,164 @@ export const leaveBalancesRelations = relations(leave_balances, ({ one }) => ({
   leaveType: one(leave_types, { fields: [leave_balances.leave_type_id], references: [leave_types.id] }),
 }));
 
+// 🚨 جداول نظام التحذيرات الذكية ومنع الأخطاء
+
+// جدول التحذيرات والتنبيهات الذكية
+export const system_alerts = pgTable('system_alerts', {
+  id: serial('id').primaryKey(),
+  title: varchar('title', { length: 200 }).notNull(),
+  title_ar: varchar('title_ar', { length: 200 }),
+  message: text('message').notNull(),
+  message_ar: text('message_ar'),
+  type: varchar('type', { length: 30 }).notNull(), // system, production, quality, inventory, maintenance, security
+  category: varchar('category', { length: 30 }).notNull(), // warning, error, critical, info, success
+  severity: varchar('severity', { length: 20 }).notNull(), // low, medium, high, critical
+  source: varchar('source', { length: 50 }).notNull(), // system_health, production_monitor, data_validator, etc.
+  source_id: varchar('source_id', { length: 50 }), // ID of the source entity
+  status: varchar('status', { length: 20 }).notNull().default('active'), // active, resolved, dismissed, expired
+  is_automated: boolean('is_automated').default(true),
+  requires_action: boolean('requires_action').default(false),
+  action_taken: varchar('action_taken', { length: 500 }),
+  action_taken_by: integer('action_taken_by').references(() => users.id),
+  action_taken_at: timestamp('action_taken_at'),
+  resolved_by: integer('resolved_by').references(() => users.id),
+  resolved_at: timestamp('resolved_at'),
+  resolution_notes: text('resolution_notes'),
+  affected_systems: json('affected_systems').$type<string[]>(),
+  suggested_actions: json('suggested_actions').$type<{action: string; priority: number; description?: string}[]>(),
+  context_data: json('context_data').$type<Record<string, any>>(),
+  notification_sent: boolean('notification_sent').default(false),
+  notification_methods: json('notification_methods').$type<string[]>(), // ['whatsapp', 'system', 'email']
+  target_users: json('target_users').$type<number[]>(),
+  target_roles: json('target_roles').$type<number[]>(),
+  expires_at: timestamp('expires_at'),
+  occurrences: integer('occurrences').default(1), // عدد مرات حدوث نفس التحذير
+  last_occurrence: timestamp('last_occurrence').defaultNow(),
+  first_occurrence: timestamp('first_occurrence').defaultNow(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// جدول قواعد التحذيرات والمراقبة
+export const alert_rules = pgTable('alert_rules', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 100 }).notNull(),
+  name_ar: varchar('name_ar', { length: 100 }),
+  description: text('description'),
+  description_ar: text('description_ar'),
+  monitor_type: varchar('monitor_type', { length: 50 }).notNull(), // database, performance, inventory, production, quality
+  rule_type: varchar('rule_type', { length: 30 }).notNull(), // threshold, pattern, anomaly, schedule
+  conditions: json('conditions').$type<Record<string, any>>().notNull(), // الشروط المطلوبة للتحذير
+  threshold_value: decimal('threshold_value', { precision: 15, scale: 4 }),
+  comparison_operator: varchar('comparison_operator', { length: 10 }), // >, <, >=, <=, =, !=
+  check_frequency: varchar('check_frequency', { length: 20 }).notNull().default('5min'), // 1min, 5min, 15min, 1hour, daily
+  severity: varchar('severity', { length: 20 }).notNull().default('medium'),
+  is_enabled: boolean('is_enabled').default(true),
+  notification_template: text('notification_template'),
+  notification_template_ar: text('notification_template_ar'),
+  escalation_rules: json('escalation_rules').$type<{delay_minutes: number; severity: string; target_roles: number[]}[]>(),
+  suppress_duration: integer('suppress_duration').default(60), // دقائق منع التكرار
+  created_by: integer('created_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// جدول فحوصات سلامة النظام
+export const system_health_checks = pgTable('system_health_checks', {
+  id: serial('id').primaryKey(),
+  check_name: varchar('check_name', { length: 100 }).notNull(),
+  check_name_ar: varchar('check_name_ar', { length: 100 }),
+  check_type: varchar('check_type', { length: 30 }).notNull(), // database, api, service, disk, memory, cpu
+  status: varchar('status', { length: 20 }).notNull().default('unknown'), // healthy, warning, critical, unknown
+  last_check_time: timestamp('last_check_time').defaultNow(),
+  check_duration_ms: integer('check_duration_ms'),
+  success_rate_24h: decimal('success_rate_24h', { precision: 5, scale: 2 }).default('100.00'),
+  average_response_time: integer('average_response_time'), // milliseconds
+  error_count_24h: integer('error_count_24h').default(0),
+  last_error: text('last_error'),
+  last_error_time: timestamp('last_error_time'),
+  check_details: json('check_details').$type<Record<string, any>>(),
+  thresholds: json('thresholds').$type<{warning: number; critical: number; unit: string}>(),
+  is_critical: boolean('is_critical').default(false), // يؤثر على عمل النظام
+  auto_recovery: boolean('auto_recovery').default(false),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// جدول مراقبة الأداء والموارد
+export const system_performance_metrics = pgTable('system_performance_metrics', {
+  id: serial('id').primaryKey(),
+  metric_name: varchar('metric_name', { length: 50 }).notNull(),
+  metric_category: varchar('metric_category', { length: 30 }).notNull(), // system, database, application, business
+  value: decimal('value', { precision: 15, scale: 4 }).notNull(),
+  unit: varchar('unit', { length: 20 }), // ms, mb, percent, count, rate
+  timestamp: timestamp('timestamp').defaultNow(),
+  source: varchar('source', { length: 50 }), // server, database, application
+  tags: json('tags').$type<Record<string, string>>(), // إضافة tags للتصنيف
+  created_at: timestamp('created_at').defaultNow(),
+});
+
+// جدول تسجيل الإجراءات التصحيحية
+export const corrective_actions = pgTable('corrective_actions', {
+  id: serial('id').primaryKey(),
+  alert_id: integer('alert_id').references(() => system_alerts.id),
+  action_type: varchar('action_type', { length: 30 }).notNull(), // manual, automated, escalated
+  action_title: varchar('action_title', { length: 200 }).notNull(),
+  action_description: text('action_description').notNull(),
+  action_description_ar: text('action_description_ar'),
+  status: varchar('status', { length: 20 }).notNull().default('pending'), // pending, in_progress, completed, failed
+  assigned_to: integer('assigned_to').references(() => users.id),
+  priority: varchar('priority', { length: 20 }).notNull().default('medium'),
+  estimated_duration: integer('estimated_duration'), // minutes
+  actual_duration: integer('actual_duration'),
+  success_rate: decimal('success_rate', { precision: 5, scale: 2 }),
+  notes: text('notes'),
+  created_by: integer('created_by').references(() => users.id),
+  completed_by: integer('completed_by').references(() => users.id),
+  completed_at: timestamp('completed_at'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+});
+
+// جدول إحصائيات النظام للتحليل
+export const system_analytics = pgTable('system_analytics', {
+  id: serial('id').primaryKey(),
+  date: date('date').notNull().default(sql`CURRENT_DATE`),
+  metric_type: varchar('metric_type', { length: 50 }).notNull(),
+  total_alerts: integer('total_alerts').default(0),
+  critical_alerts: integer('critical_alerts').default(0),
+  resolved_alerts: integer('resolved_alerts').default(0),
+  avg_resolution_time: integer('avg_resolution_time'), // minutes
+  system_uptime_percent: decimal('system_uptime_percent', { precision: 5, scale: 2 }),
+  total_health_checks: integer('total_health_checks').default(0),
+  failed_health_checks: integer('failed_health_checks').default(0),
+  performance_score: decimal('performance_score', { precision: 5, scale: 2 }),
+  data: json('data').$type<Record<string, any>>(), // إضافة بيانات إحصائية
+  created_at: timestamp('created_at').defaultNow(),
+});
+
+// أنواع البيانات للتحذيرات الذكية
+export type SystemAlert = typeof system_alerts.$inferSelect;
+export type InsertSystemAlert = typeof system_alerts.$inferInsert;
+export type AlertRule = typeof alert_rules.$inferSelect;
+export type InsertAlertRule = typeof alert_rules.$inferInsert;
+export type SystemHealthCheck = typeof system_health_checks.$inferSelect;
+export type InsertSystemHealthCheck = typeof system_health_checks.$inferInsert;
+export type SystemPerformanceMetric = typeof system_performance_metrics.$inferSelect;
+export type InsertSystemPerformanceMetric = typeof system_performance_metrics.$inferInsert;
+export type CorrectiveAction = typeof corrective_actions.$inferSelect;
+export type InsertCorrectiveAction = typeof corrective_actions.$inferInsert;
+export type SystemAnalytics = typeof system_analytics.$inferSelect;
+export type InsertSystemAnalytics = typeof system_analytics.$inferInsert;
+
+// مخططات التحقق من البيانات للتحذيرات
+export const insertSystemAlertSchema = createInsertSchema(system_alerts);
+export const insertAlertRuleSchema = createInsertSchema(alert_rules);
+export const insertSystemHealthCheckSchema = createInsertSchema(system_health_checks);
+export const insertSystemPerformanceMetricSchema = createInsertSchema(system_performance_metrics);
+export const insertCorrectiveActionSchema = createInsertSchema(corrective_actions);
+export const insertSystemAnalyticsSchema = createInsertSchema(system_analytics);
+
 // Sanitized user type that excludes sensitive fields like password
 export type SafeUser = Omit<User, 'password'>;
 
