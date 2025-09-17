@@ -1629,7 +1629,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>المعدة</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر المعدة" />
@@ -1656,7 +1656,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>نوع المشكلة</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر نوع المشكلة" />
@@ -1681,7 +1681,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>مستوى الإلحاح</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر مستوى الإلحاح" />
@@ -1705,7 +1705,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
             render={({ field }) => (
               <FormItem>
                 <FormLabel>المكلف بالإصلاح (اختياري)</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الفني" />

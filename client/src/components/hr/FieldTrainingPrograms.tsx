@@ -156,21 +156,30 @@ export default function FieldTrainingPrograms() {
   const enrollmentForm = useForm<z.infer<typeof enrollmentSchema>>({
     resolver: zodResolver(enrollmentSchema),
     defaultValues: {
-      training_date: new Date().toISOString().split('T')[0]
+      program_id: "",
+      employee_id: "",
+      training_date: new Date().toISOString().split('T')[0],
+      attendance_notes: ""
     }
   });
 
   const evaluationForm = useForm<z.infer<typeof evaluationSchema>>({
     resolver: zodResolver(evaluationSchema),
     defaultValues: {
+      enrollment_id: "",
+      program_id: "",
+      employee_id: "",
+      evaluator_id: "1",
       evaluation_date: new Date().toISOString().split('T')[0],
       theoretical_understanding: "3",
       practical_skills: "3",
       safety_compliance: "3",
       teamwork: "3",
       communication: "3",
-      recommendation: 'pass',
-      evaluator_id: "1"
+      strengths: "",
+      areas_for_improvement: "",
+      additional_notes: "",
+      recommendation: "pass"
     }
   });
 
@@ -744,7 +753,7 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>برنامج التدريب</FormLabel>
                           <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select value={field.value || ""} onValueChange={field.onChange}>
                               <SelectTrigger data-testid="select-training-program">
                                 <SelectValue placeholder="اختر برنامج التدريب" />
                               </SelectTrigger>
@@ -769,7 +778,7 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>الموظف</FormLabel>
                           <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select value={field.value || ""} onValueChange={field.onChange}>
                               <SelectTrigger data-testid="select-enrollment-employee">
                                 <SelectValue placeholder="اختر الموظف" />
                               </SelectTrigger>
