@@ -1830,6 +1830,265 @@ export class DatabaseStorage implements IStorage {
     }, 'getMachineUtilizationStats', 'إحصائيات استخدام المكائن');
   }
 
+  // ============ ADVANCED REPORTING METHODS ============
+
+  async getOrderReports(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${orders.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${orders.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+      const [orderStatusStats, deliveryPerformance, topCustomers, revenueStats] = await Promise.all([
+        // إحصائيات حالة الطلبات
+        db.select({
+          status: orders.status,
+          count: sql<number>`COUNT(*)`,
+          total_value: sql<number>`COALESCE(SUM(${production_orders.quantity_kg} * 5), 0)` // approximate value
+        })
+        .from(orders)
+        .leftJoin(production_orders, eq(orders.id, production_orders.order_id))
+        .where(dateFilter)
+        .groupBy(orders.status),
+
+        // أداء التسليم
+        db.select({
+          on_time_orders: sql<number>`COUNT(CASE WHEN ${orders.status} = 'completed' AND ${orders.delivery_date} >= CURRENT_DATE THEN 1 END)`,
+          late_orders: sql<number>`COUNT(CASE WHEN ${orders.status} = 'completed' AND ${orders.delivery_date} < CURRENT_DATE THEN 1 END)`,
+          avg_delivery_days: sql<number>`COALESCE(AVG(EXTRACT(DAYS FROM (CURRENT_DATE - ${orders.created_at}))), 0)`
+        })
+        .from(orders)
+        .where(dateFilter),
+
+        // أكثر العملاء طلباً
+        db.select({
+          customer_id: customers.id,
+          customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+          order_count: sql<number>`COUNT(${orders.id})`,
+          total_quantity: sql<number>`COALESCE(SUM(${production_orders.quantity_kg}), 0)`,
+          total_value: sql<number>`COALESCE(SUM(${production_orders.quantity_kg} * 5), 0)`
+        })
+        .from(customers)
+        .leftJoin(orders, eq(customers.id, orders.customer_id))
+        .leftJoin(production_orders, eq(orders.id, production_orders.order_id))
+        .where(dateFilter)
+        .groupBy(customers.id, customers.name, customers.name_ar)
+        .orderBy(sql`order_count DESC`)
+        .limit(10),
+
+        // إحصائيات الإيرادات
+        db.select({
+          total_orders: sql<number>`COUNT(DISTINCT ${orders.id})`,
+          total_production_quantity: sql<number>`COALESCE(SUM(${production_orders.quantity_kg}), 0)`,
+          estimated_revenue: sql<number>`COALESCE(SUM(${production_orders.quantity_kg} * 5), 0)`,
+          avg_order_value: sql<number>`COALESCE(AVG(${production_orders.quantity_kg} * 5), 0)`
+        })
+        .from(orders)
+        .leftJoin(production_orders, eq(orders.id, production_orders.order_id))
+        .where(dateFilter)
+      ]);
+
+      return {
+        orderStatusStats,
+        deliveryPerformance: deliveryPerformance[0] || {
+          on_time_orders: 0,
+          late_orders: 0,
+          avg_delivery_days: 0
+        },
+        topCustomers,
+        revenueStats: revenueStats[0] || {
+          total_orders: 0,
+          total_production_quantity: 0,
+          estimated_revenue: 0,
+          avg_order_value: 0
+        }
+      };
+    }, 'getOrderReports', 'تقارير الطلبات');
+  }
+
+  async getAdvancedMetrics(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+      const [oeeMetrics, cycleTimeStats, qualityMetrics] = await Promise.all([
+        // Overall Equipment Effectiveness (OEE)
+        db.select({
+          machine_id: machines.id,
+          machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+          availability: sql<number>`COALESCE((COUNT(DISTINCT DATE(${rolls.created_at}))::decimal / 30) * 100, 0)`,
+          performance: sql<number>`COALESCE(AVG(${rolls.weight_kg}) / NULLIF(MAX(${rolls.weight_kg}), 0) * 100, 80)`,
+          quality: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
+          oee: sql<number>`COALESCE(((COUNT(DISTINCT DATE(${rolls.created_at}))::decimal / 30) * (AVG(${rolls.weight_kg}) / NULLIF(MAX(${rolls.weight_kg}), 0)) * (95 - (AVG(${rolls.waste_kg})::decimal / NULLIF(AVG(${rolls.weight_kg}), 0) * 100)) / 100), 65)`
+        })
+        .from(machines)
+        .leftJoin(rolls, and(eq(machines.id, rolls.machine_id), dateFilter))
+        .groupBy(machines.id, machines.name, machines.name_ar),
+
+        // Cycle Time Statistics
+        db.select({
+          avg_film_to_printing: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.printed_at} - ${rolls.created_at}))/3600), 0)`,
+          avg_printing_to_cutting: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.cut_completed_at} - ${rolls.printed_at}))/3600), 0)`,
+          avg_total_cycle_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`,
+          fastest_cycle: sql<number>`COALESCE(MIN(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`,
+          slowest_cycle: sql<number>`COALESCE(MAX(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`
+        })
+        .from(rolls)
+        .where(and(dateFilter, sql`${rolls.completed_at} IS NOT NULL`)),
+
+        // Quality Metrics
+        db.select({
+          total_rolls: sql<number>`COUNT(*)`,
+          defective_rolls: sql<number>`COUNT(CASE WHEN (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 > 5 THEN 1 END)`,
+          quality_rate: sql<number>`100 - (COUNT(CASE WHEN (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 > 5 THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100)`,
+          avg_waste_percentage: sql<number>`COALESCE(AVG((${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100), 0)`,
+          rework_rate: sql<number>`COALESCE(COUNT(CASE WHEN ${rolls.stage} = 'rework' THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100, 0)`
+        })
+        .from(rolls)
+        .where(dateFilter)
+      ]);
+
+      return {
+        oeeMetrics,
+        cycleTimeStats: cycleTimeStats[0] || {
+          avg_film_to_printing: 0,
+          avg_printing_to_cutting: 0,
+          avg_total_cycle_time: 0,
+          fastest_cycle: 0,
+          slowest_cycle: 0
+        },
+        qualityMetrics: qualityMetrics[0] || {
+          total_rolls: 0,
+          defective_rolls: 0,
+          quality_rate: 95,
+          avg_waste_percentage: 0,
+          rework_rate: 0
+        }
+      };
+    }, 'getAdvancedMetrics', 'المؤشرات المتقدمة');
+  }
+
+  async getHRReports(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${attendance.date}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${attendance.date}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+      const [attendanceStats, performanceStats, trainingStats] = await Promise.all([
+        // إحصائيات الحضور والغياب
+        db.select({
+          user_id: users.id,
+          username: users.username,
+          display_name_ar: users.display_name_ar,
+          role_name: sql<string>`COALESCE(${roles.name_ar}, ${roles.name})`,
+          present_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)`,
+          absent_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'غائب' THEN 1 END)`,
+          late_days: sql<number>`COUNT(CASE WHEN ${attendance.check_in_time} > '08:30:00' THEN 1 END)`,
+          attendance_rate: sql<number>`COALESCE((COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100), 0)`
+        })
+        .from(users)
+        .leftJoin(roles, eq(users.role_id, roles.id))
+        .leftJoin(attendance, and(eq(users.id, attendance.user_id), dateFilter))
+        .groupBy(users.id, users.username, users.display_name_ar, roles.name, roles.name_ar),
+
+        // إحصائيات الأداء
+        db.select({
+          user_id: users.id,
+          username: users.username,
+          display_name_ar: users.display_name_ar,
+          production_efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
+          total_production: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          error_rate: sql<number>`COALESCE(COUNT(CASE WHEN (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 > 10 THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100, 0)`,
+          improvement_trend: sql<number>`COALESCE(CASE WHEN AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)) > 90 THEN 1 ELSE -1 END, 0)`
+        })
+        .from(users)
+        .leftJoin(rolls, and(eq(users.id, rolls.created_by), dateFilter))
+        .groupBy(users.id, users.username, users.display_name_ar),
+
+        // إحصائيات التدريب
+        db.select({
+          total_programs: sql<number>`COUNT(DISTINCT ${training_programs.id})`,
+          total_enrollments: sql<number>`COUNT(${training_enrollments.id})`,
+          completed_trainings: sql<number>`COUNT(CASE WHEN ${training_enrollments.status} = 'completed' THEN 1 END)`,
+          completion_rate: sql<number>`COALESCE(COUNT(CASE WHEN ${training_enrollments.status} = 'completed' THEN 1 END)::decimal / NULLIF(COUNT(${training_enrollments.id}), 0) * 100, 0)`
+        })
+        .from(training_programs)
+        .leftJoin(training_enrollments, eq(training_programs.id, training_enrollments.program_id))
+      ]);
+
+      return {
+        attendanceStats,
+        performanceStats,
+        trainingStats: trainingStats[0] || {
+          total_programs: 0,
+          total_enrollments: 0,
+          completed_trainings: 0,
+          completion_rate: 0
+        }
+      };
+    }, 'getHRReports', 'تقارير الموارد البشرية');
+  }
+
+  async getMaintenanceReports(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${maintenance_requests.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${maintenance_requests.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+      const [maintenanceStats, costAnalysis, downtimeAnalysis] = await Promise.all([
+        // إحصائيات طلبات الصيانة
+        db.select({
+          total_requests: sql<number>`COUNT(*)`,
+          completed_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.status} = 'completed' THEN 1 END)`,
+          pending_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.status} = 'pending' THEN 1 END)`,
+          critical_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.priority} = 'critical' THEN 1 END)`,
+          avg_resolution_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`
+        })
+        .from(maintenance_requests)
+        .where(dateFilter),
+
+        // تحليل التكاليف (مقدر)
+        db.select({
+          machine_id: machines.id,
+          machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+          maintenance_count: sql<number>`COUNT(${maintenance_requests.id})`,
+          estimated_cost: sql<number>`COUNT(${maintenance_requests.id}) * 500`, // تكلفة تقديرية
+          downtime_hours: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`
+        })
+        .from(machines)
+        .leftJoin(maintenance_requests, and(eq(machines.id, maintenance_requests.machine_id), dateFilter))
+        .groupBy(machines.id, machines.name, machines.name_ar),
+
+        // تحليل فترات التوقف
+        db.select({
+          total_downtime: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`,
+          planned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.type} = 'planned' THEN EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600 END), 0)`,
+          unplanned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.type} = 'emergency' THEN EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600 END), 0)`,
+          mtbf: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.created_at} - LAG(${maintenance_requests.completed_at}) OVER (PARTITION BY ${maintenance_requests.machine_id} ORDER BY ${maintenance_requests.created_at})))/3600), 168)` // Mean Time Between Failures
+        })
+        .from(maintenance_requests)
+        .where(and(dateFilter, sql`${maintenance_requests.completed_at} IS NOT NULL`))
+      ]);
+
+      return {
+        maintenanceStats: maintenanceStats[0] || {
+          total_requests: 0,
+          completed_requests: 0,
+          pending_requests: 0,
+          critical_requests: 0,
+          avg_resolution_time: 0
+        },
+        costAnalysis,
+        downtimeAnalysis: downtimeAnalysis[0] || {
+          total_downtime: 0,
+          planned_downtime: 0,
+          unplanned_downtime: 0,
+          mtbf: 168
+        }
+      };
+    }, 'getMaintenanceReports', 'تقارير الصيانة');
+  }
+
   async getItems(): Promise<any[]> {
     const result = await db
       .select({

@@ -1366,6 +1366,222 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // ================ ADVANCED REPORTING API ROUTES ================
+
+  // Order Reports
+  app.get("/api/reports/orders", requireAuth, async (req, res) => {
+    try {
+      const { date_from, date_to } = req.query;
+      const reports = await storage.getOrderReports(
+        date_from as string, 
+        date_to as string
+      );
+      res.json({
+        success: true,
+        data: reports
+      });
+    } catch (error) {
+      console.error("Order reports error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب تقارير الطلبات",
+        success: false 
+      });
+    }
+  });
+
+  // Advanced Metrics (OEE, Cycle Time, Quality)
+  app.get("/api/reports/advanced-metrics", requireAuth, async (req, res) => {
+    try {
+      const { date_from, date_to } = req.query;
+      const metrics = await storage.getAdvancedMetrics(
+        date_from as string, 
+        date_to as string
+      );
+      res.json({
+        success: true,
+        data: metrics
+      });
+    } catch (error) {
+      console.error("Advanced metrics error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب المؤشرات المتقدمة",
+        success: false 
+      });
+    }
+  });
+
+  // HR Reports
+  app.get("/api/reports/hr", requireAuth, async (req, res) => {
+    try {
+      const { date_from, date_to } = req.query;
+      const reports = await storage.getHRReports(
+        date_from as string, 
+        date_to as string
+      );
+      res.json({
+        success: true,
+        data: reports
+      });
+    } catch (error) {
+      console.error("HR reports error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب تقارير الموارد البشرية",
+        success: false 
+      });
+    }
+  });
+
+  // Maintenance Reports
+  app.get("/api/reports/maintenance", requireAuth, async (req, res) => {
+    try {
+      const { date_from, date_to } = req.query;
+      const reports = await storage.getMaintenanceReports(
+        date_from as string, 
+        date_to as string
+      );
+      res.json({
+        success: true,
+        data: reports
+      });
+    } catch (error) {
+      console.error("Maintenance reports error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب تقارير الصيانة",
+        success: false 
+      });
+    }
+  });
+
+  // Comprehensive Dashboard Report (All KPIs)
+  app.get("/api/reports/dashboard", requireAuth, async (req, res) => {
+    try {
+      const { date_from, date_to } = req.query;
+      
+      // Fetch all reports in parallel for better performance
+      const [
+        orderReports,
+        advancedMetrics,
+        hrReports,
+        maintenanceReports,
+        realTimeStats,
+        userPerformance,
+        rolePerformance,
+        machineUtilization,
+        productionEfficiency,
+        productionAlerts
+      ] = await Promise.all([
+        storage.getOrderReports(date_from as string, date_to as string),
+        storage.getAdvancedMetrics(date_from as string, date_to as string),
+        storage.getHRReports(date_from as string, date_to as string),
+        storage.getMaintenanceReports(date_from as string, date_to as string),
+        storage.getRealTimeProductionStats(),
+        storage.getUserPerformanceStats(date_from as string, date_to as string),
+        storage.getRolePerformanceStats(date_from as string, date_to as string),
+        storage.getMachineUtilizationStats(date_from as string, date_to as string),
+        storage.getProductionEfficiencyMetrics(date_from as string, date_to as string),
+        storage.getProductionAlerts()
+      ]);
+
+      res.json({
+        success: true,
+        data: {
+          orders: orderReports,
+          metrics: advancedMetrics,
+          hr: hrReports,
+          maintenance: maintenanceReports,
+          realTime: realTimeStats,
+          userPerformance,
+          rolePerformance,
+          machineUtilization,
+          productionEfficiency,
+          alerts: productionAlerts
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Comprehensive dashboard error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب التقرير الشامل",
+        success: false 
+      });
+    }
+  });
+
+  // Export Report (Placeholder for PDF/Excel export)
+  app.post("/api/reports/export", requireAuth, async (req, res) => {
+    try {
+      const { 
+        report_type, 
+        format, 
+        date_from, 
+        date_to, 
+        filters 
+      } = req.body;
+
+      // Basic validation
+      if (!report_type || !format) {
+        return res.status(400).json({
+          message: "نوع التقرير والصيغة مطلوبان",
+          success: false
+        });
+      }
+
+      // Get the requested report data
+      let reportData;
+      switch (report_type) {
+        case 'orders':
+          reportData = await storage.getOrderReports(date_from, date_to);
+          break;
+        case 'advanced-metrics':
+          reportData = await storage.getAdvancedMetrics(date_from, date_to);
+          break;
+        case 'hr':
+          reportData = await storage.getHRReports(date_from, date_to);
+          break;
+        case 'maintenance':
+          reportData = await storage.getMaintenanceReports(date_from, date_to);
+          break;
+        default:
+          return res.status(400).json({
+            message: "نوع التقرير غير صحيح",
+            success: false
+          });
+      }
+
+      // For now, return the data as JSON
+      // TODO: Implement actual PDF/Excel generation
+      const exportData = {
+        report_type,
+        format,
+        generated_at: new Date().toISOString(),
+        date_range: { from: date_from, to: date_to },
+        filters,
+        data: reportData
+      };
+
+      if (format === 'json') {
+        res.json({
+          success: true,
+          data: exportData
+        });
+      } else {
+        // For PDF/Excel, return download link or base64 data
+        res.json({
+          success: true,
+          message: `تم تجهيز التقرير بصيغة ${format}`,
+          download_url: `/api/reports/download/${report_type}-${Date.now()}.${format}`,
+          data: exportData
+        });
+      }
+    } catch (error) {
+      console.error("Export report error:", error);
+      res.status(500).json({ 
+        message: "خطأ في تصدير التقرير",
+        success: false 
+      });
+    }
+  });
+
   // Base API endpoint - return 404 instead of serving HTML
   app.get("/api", (req, res) => {
     res.status(404).json({ 
