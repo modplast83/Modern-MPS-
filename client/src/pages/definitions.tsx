@@ -20,10 +20,8 @@ export default function Definitions() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Clear cache on component mount to ensure fresh data
-  useEffect(() => {
-    queryClient.clear();
-  }, []);
+  // Remove aggressive cache clearing that causes unnecessary refetches
+  // React Query's default staleTime and gcTime will handle cache freshness automatically
 
   const [selectedTab, setSelectedTab] = useState("customers");
   const [editingItem, setEditingItem] = useState<any>(null);

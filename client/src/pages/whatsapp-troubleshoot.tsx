@@ -10,20 +10,14 @@ export default function WhatsAppTroubleshoot() {
   const queryClient = useQueryClient();
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
-  // استعلام الإشعارات للتحقق من أخطاء Twilio مع cleanup مناسب
+  // استعلام الإشعارات للتحقق من أخطاء Twilio مع معدل تحديث مُحسن
   const { data: notifications } = useQuery({
     queryKey: ['/api/notifications'],
-    refetchInterval: 10000,
-    gcTime: 60 * 1000, // 1 minute garbage collection for fast cleanup
+    // Reduce polling frequency to every 30 seconds instead of 10
+    refetchInterval: 30000,
+    // Use global gcTime instead of overriding
+    // Remove manual cleanup - React Query handles this automatically
   });
-
-  // تنظيف الاستعلامات عند إلغاء تحميل المكون
-  useEffect(() => {
-    return () => {
-      // Cancel all queries for this component when unmounting
-      queryClient.cancelQueries({ queryKey: ['/api/notifications'] });
-    };
-  }, [queryClient]);
 
   const notificationsList = Array.isArray(notifications) ? notifications : [];
   const failedMessages = notificationsList.filter((n: any) => n.status === 'failed' || n.external_status === 'undelivered');
