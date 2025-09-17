@@ -1219,10 +1219,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Preview quantity calculations for production orders
   app.post("/api/production-orders/preview-quantities", requireAuth, async (req, res) => {
     try {
-      const { customer_product_id, base_quantity_kg } = req.body;
+      const { customer_product_id, quantity_kg } = req.body;
 
       // Validate inputs
-      if (!customer_product_id || !base_quantity_kg || base_quantity_kg <= 0) {
+      if (!customer_product_id || !quantity_kg || quantity_kg <= 0) {
         return res.status(400).json({ 
           message: "معرف المنتج والكمية الأساسية مطلوبان",
           success: false 
@@ -1242,7 +1242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate quantities using intelligent system
       const quantityCalculation = calculateProductionQuantities(
-        parseFloat(base_quantity_kg), 
+        parseFloat(quantity_kg), 
         customerProduct.punching
       );
 
@@ -1250,7 +1250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         data: {
           customer_product_id: parseInt(customer_product_id),
-          base_quantity_kg: parseFloat(base_quantity_kg),
+          quantity_kg: parseFloat(quantity_kg),
           overrun_percentage: quantityCalculation.overrunPercentage,
           final_quantity_kg: quantityCalculation.finalQuantityKg,
           overrun_reason: quantityCalculation.overrunReason,

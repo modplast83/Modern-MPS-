@@ -64,8 +64,7 @@ const productionOrderFormSchema = z.object({
   order_id: z.coerce.number().int().positive().optional(),
   production_order_number: z.string().optional(),
   customer_product_id: z.coerce.number().int().positive().optional(),
-  quantity_kg: z.coerce.number().positive().optional(), // Keep for backward compatibility
-  base_quantity_kg: z.coerce.number().positive().optional(),
+  quantity_kg: z.coerce.number().positive().optional(),
   overrun_percentage: z.coerce.number().min(0).max(100).optional(),
   final_quantity_kg: z.coerce.number().positive().optional(),
   status: z.string().min(1, "الحالة مطلوبة"),
@@ -108,7 +107,7 @@ export default function Orders() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customer_product_id: customerProductId,
-          base_quantity_kg: baseQuantityKg
+          quantity_kg: baseQuantityKg
         })
       });
 
@@ -126,7 +125,7 @@ export default function Orders() {
   const updateQuantityPreview = async (index: number, customerProductId?: number, baseQuantityKg?: number) => {
     const prodOrder = productionOrdersInForm[index];
     const productId = customerProductId || prodOrder.customer_product_id;
-    const quantity = baseQuantityKg || prodOrder.base_quantity_kg || prodOrder.quantity_kg;
+    const quantity = baseQuantityKg || prodOrder.quantity_kg;
 
     if (productId && quantity > 0) {
       const preview = await previewQuantityCalculation(productId, quantity);
@@ -582,7 +581,6 @@ export default function Orders() {
       {
         customer_product_id: "",
         quantity_kg: 0,
-        base_quantity_kg: 0,
         overrun_percentage: 5.0,
         final_quantity_kg: 0,
         status: "pending"
@@ -602,8 +600,8 @@ export default function Orders() {
 
     // Update quantity preview when customer product or base quantity changes
     if (field === 'customer_product_id') {
-      await updateQuantityPreview(index, value, updated[index].base_quantity_kg || updated[index].quantity_kg);
-    } else if (field === 'base_quantity_kg' || field === 'quantity_kg') {
+      await updateQuantityPreview(index, value, updated[index].quantity_kg);
+    } else if (field === 'quantity_kg') {
       await updateQuantityPreview(index, updated[index].customer_product_id, value);
     }
   };
@@ -1234,8 +1232,8 @@ export default function Orders() {
                                             <Input
                                               type="number"
                                               placeholder="الكمية الأساسية"
-                                              value={prodOrder.base_quantity_kg || prodOrder.quantity_kg || ""}
-                                              onChange={(e) => updateProductionOrder(index, 'base_quantity_kg', parseFloat(e.target.value) || 0)}
+                                              value={prodOrder.quantity_kg || ""}
+                                              onChange={(e) => updateProductionOrder(index, 'quantity_kg', parseFloat(e.target.value) || 0)}
                                               className="w-full"
                                               data-testid={`input-base-quantity-${index}`}
                                             />
@@ -1244,7 +1242,7 @@ export default function Orders() {
                                                 <div className="text-sm text-blue-800 space-y-1">
                                                   <div className="flex justify-between">
                                                     <span>الكمية الأساسية:</span>
-                                                    <span className="font-medium">{quantityPreviews[index].base_quantity_kg} كغ</span>
+                                                    <span className="font-medium">{quantityPreviews[index].quantity_kg} كغ</span>
                                                   </div>
                                                   <div className="flex justify-between">
                                                     <span>نسبة الإضافة:</span>
