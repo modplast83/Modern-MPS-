@@ -152,7 +152,10 @@ export const production_orders = pgTable('production_orders', {
   production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(),
   order_id: integer('order_id').notNull().references(() => orders.id),
   customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id),
-  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(),
+  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(), // Keep for backward compatibility
+  base_quantity_kg: decimal('base_quantity_kg', { precision: 10, scale: 2 }).notNull(),
+  overrun_percentage: decimal('overrun_percentage', { precision: 5, scale: 2 }).notNull().default('5.00'),
+  final_quantity_kg: decimal('final_quantity_kg', { precision: 10, scale: 2 }).notNull(),
   status: varchar('status', { length: 30 }).default('pending'),
   created_at: timestamp('created_at').defaultNow()
 });
@@ -960,6 +963,21 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
 }).extend({
   // Transform decimal fields to handle both string and number inputs
   quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
+    if (val === null || val === undefined || val === '') return '0';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? '0' : num.toString();
+  }),
+  base_quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
+    if (val === null || val === undefined || val === '') return '0';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? '0' : num.toString();
+  }),
+  overrun_percentage: z.union([z.string(), z.number()]).transform((val) => {
+    if (val === null || val === undefined || val === '') return '5.00';
+    const num = typeof val === 'string' ? parseFloat(val) : val;
+    return isNaN(num) ? '5.00' : num.toString();
+  }),
+  final_quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
     if (val === null || val === undefined || val === '') return '0';
     const num = typeof val === 'string' ? parseFloat(val) : val;
     return isNaN(num) ? '0' : num.toString();

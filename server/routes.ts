@@ -36,7 +36,7 @@ import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
 import { z } from "zod";
-import { parseIntSafe, coercePositiveInt, coerceNonNegativeInt, extractNumericId, generateNextId } from "@shared/validation-utils";
+import { parseIntSafe, parseFloatSafe, coercePositiveInt, coerceNonNegativeInt, extractNumericId, generateNextId } from "@shared/validation-utils";
 
 // Helper functions for safe route parameter parsing
 const parseRouteParam = (param: string | undefined, paramName: string): number => {
@@ -73,6 +73,7 @@ import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import QRCode from 'qrcode';
 import { validateRequest, commonSchemas, requireAuth, requireAdmin } from './middleware/validation';
+import { calculateProductionQuantities } from "@shared/quantity-utils";
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -988,6 +989,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting production order:", error);
       res.status(500).json({ message: "خطأ في حذف أمر الإنتاج" });
+    }
+  });
+
+  // Preview quantity calculations for production orders
+  app.post("/api/production-orders/preview-quantities", requireAuth, async (req, res) => {
+    try {
+      const { customer_product_id, base_quantity_kg } = req.body;
+
+      // Validate inputs
+      if (!customer_product_id || !base_quantity_kg || base_quantity_kg <= 0) {
+        return res.status(400).json({ 
+          message: "معرف المنتج والكمية الأساسية مطلوبان",
+          success: false 
+        });
+      }
+
+      // Get customer product info for intelligent calculation
+      const customerProducts = await storage.getCustomerProducts();
+      const customerProduct = customerProducts.find(cp => cp.id === parseInt(customer_product_id));
+      
+      if (!customerProduct) {
+        return res.status(404).json({ 
+          message: "المنتج غير موجود",
+          success: false 
+        });
+      }
+
+      // Calculate quantities using intelligent system
+      const quantityCalculation = calculateProductionQuantities(
+        parseFloat(base_quantity_kg), 
+        customerProduct.punching
+      );
+
+      res.json({
+        success: true,
+        data: {
+          customer_product_id: parseInt(customer_product_id),
+          base_quantity_kg: parseFloat(base_quantity_kg),
+          overrun_percentage: quantityCalculation.overrunPercentage,
+          final_quantity_kg: quantityCalculation.finalQuantityKg,
+          overrun_reason: quantityCalculation.overrunReason,
+          product_info: {
+            punching: customerProduct.punching,
+            size_caption: customerProduct.size_caption,
+            raw_material: customerProduct.raw_material,
+            master_batch_id: customerProduct.master_batch_id
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Quantity preview error:", error);
+      res.status(500).json({ 
+        message: "خطأ في حساب الكمية",
+        success: false 
+      });
+    }
+  });
+
+  // Get all orders with enhanced search and filtering
+  app.get("/api/orders/enhanced", requireAuth, async (req, res) => {
+    try {
+      const { 
+        search, 
+        customer_id, 
+        status, 
+        date_from, 
+        date_to, 
+        page = 1, 
+        limit = 50 
+      } = req.query;
+
+      // Build dynamic query with filters
+      const orders = await storage.getOrdersEnhanced({
+        search: search as string,
+        customer_id: customer_id as string,
+        status: status as string,
+        date_from: date_from as string,
+        date_to: date_to as string,
+        page: parseInt(page as string),
+        limit: parseInt(limit as string)
+      });
+
+      res.json({
+        success: true,
+        data: orders
+      });
+    } catch (error) {
+      console.error("Enhanced orders fetch error:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب الطلبات",
+        success: false 
+      });
     }
   });
 

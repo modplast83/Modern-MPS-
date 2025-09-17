@@ -64,7 +64,10 @@ const productionOrderFormSchema = z.object({
   order_id: z.coerce.number().int().positive().optional(),
   production_order_number: z.string().optional(),
   customer_product_id: z.coerce.number().int().positive().optional(),
-  quantity_kg: z.coerce.number().positive().optional(),
+  quantity_kg: z.coerce.number().positive().optional(), // Keep for backward compatibility
+  base_quantity_kg: z.coerce.number().positive().optional(),
+  overrun_percentage: z.coerce.number().min(0).max(100).optional(),
+  final_quantity_kg: z.coerce.number().positive().optional(),
   status: z.string().min(1, "الحالة مطلوبة"),
 });
 
@@ -81,20 +84,92 @@ export default function Orders() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [productionOrdersInForm, setProductionOrdersInForm] = useState<any[]>([]);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [quantityPreviews, setQuantityPreviews] = useState<{ [key: number]: any }>({});
+  
+  // Enhanced filtering states
+  const [customerFilter, setCustomerFilter] = useState<string>("");
+  const [dateFromFilter, setDateFromFilter] = useState<string>("");
+  const [dateToFilter, setDateToFilter] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch orders data
-  const { data: orders = [], isLoading: ordersLoading } = useQuery({
-    queryKey: ['/api/orders'],
-    queryFn: async () => {
-      const response = await fetch('/api/orders');
+  // Function to preview quantity calculations
+  const previewQuantityCalculation = async (customerProductId: number, baseQuantityKg: number) => {
+    if (!customerProductId || !baseQuantityKg || baseQuantityKg <= 0) {
+      return null;
+    }
+
+    try {
+      const response = await fetch('/api/production-orders/preview-quantities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          customer_product_id: customerProductId,
+          base_quantity_kg: baseQuantityKg
+        })
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+      return null;
+    } catch (error) {
+      console.error('Error previewing quantity calculation:', error);
+      return null;
+    }
+  };
+
+  // Function to update quantity preview for a production order
+  const updateQuantityPreview = async (index: number, customerProductId?: number, baseQuantityKg?: number) => {
+    const prodOrder = productionOrdersInForm[index];
+    const productId = customerProductId || prodOrder.customer_product_id;
+    const quantity = baseQuantityKg || prodOrder.base_quantity_kg || prodOrder.quantity_kg;
+
+    if (productId && quantity > 0) {
+      const preview = await previewQuantityCalculation(productId, quantity);
+      if (preview) {
+        setQuantityPreviews(prev => ({
+          ...prev,
+          [index]: preview
+        }));
+      }
+    }
+  };
+
+  // Enhanced orders data fetching with filters
+  const { data: enhancedOrdersData, isLoading: ordersLoading, refetch: refetchOrders } = useQuery({
+    queryKey: ['/api/orders/enhanced', {
+      search: searchTerm,
+      customer_id: customerFilter,
+      status: statusFilter === 'all' ? '' : statusFilter,
+      date_from: dateFromFilter,
+      date_to: dateToFilter,
+      page: currentPage,
+      limit: itemsPerPage
+    }],
+    queryFn: async ({ queryKey }) => {
+      const [, params] = queryKey;
+      const queryParams = new URLSearchParams();
+      
+      Object.entries(params as Record<string, any>).forEach(([key, value]) => {
+        if (value && value !== '') {
+          queryParams.append(key, String(value));
+        }
+      });
+      
+      const response = await fetch(`/api/orders/enhanced?${queryParams}`);
       if (!response.ok) throw new Error('فشل في جلب الطلبات');
       const result = await response.json();
-      const data = result.data || result;
-      return Array.isArray(data) ? data : [];
-    }
+      return result.success ? result.data : { orders: [], pagination: { page: 1, limit: 25, total: 0, totalPages: 0 } };
+    },
+    staleTime: 10000
   });
+
+  const orders = enhancedOrdersData?.orders || [];
+  const pagination = enhancedOrdersData?.pagination;
 
   // Fetch production orders
   const { data: productionOrders = [] } = useQuery({
@@ -507,6 +582,9 @@ export default function Orders() {
       {
         customer_product_id: "",
         quantity_kg: 0,
+        base_quantity_kg: 0,
+        overrun_percentage: 5.0,
+        final_quantity_kg: 0,
         status: "pending"
       }
     ]);
@@ -517,10 +595,17 @@ export default function Orders() {
     setProductionOrdersInForm(updated);
   };
 
-  const updateProductionOrder = (index: number, field: string, value: any) => {
+  const updateProductionOrder = async (index: number, field: string, value: any) => {
     const updated = [...productionOrdersInForm];
     updated[index] = { ...updated[index], [field]: value };
     setProductionOrdersInForm(updated);
+
+    // Update quantity preview when customer product or base quantity changes
+    if (field === 'customer_product_id') {
+      await updateQuantityPreview(index, value, updated[index].base_quantity_kg || updated[index].quantity_kg);
+    } else if (field === 'base_quantity_kg' || field === 'quantity_kg') {
+      await updateQuantityPreview(index, updated[index].customer_product_id, value);
+    }
   };
 
   const onProductionOrderSubmit = (data: any) => {
@@ -1143,16 +1228,38 @@ export default function Orders() {
                                           </Select>
                                         </div>
                                         
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 gap-4">
                                           <div>
-                                            <label className="text-sm font-medium text-gray-700">الكمية (كيلو)</label>
+                                            <label className="text-sm font-medium text-gray-700">الكمية الأساسية (كيلو)</label>
                                             <Input
                                               type="number"
-                                              placeholder="الكمية"
-                                              value={prodOrder.quantity_kg || ""}
-                                              onChange={(e) => updateProductionOrder(index, 'quantity_kg', parseFloat(e.target.value) || 0)}
+                                              placeholder="الكمية الأساسية"
+                                              value={prodOrder.base_quantity_kg || prodOrder.quantity_kg || ""}
+                                              onChange={(e) => updateProductionOrder(index, 'base_quantity_kg', parseFloat(e.target.value) || 0)}
                                               className="w-full"
+                                              data-testid={`input-base-quantity-${index}`}
                                             />
+                                            {quantityPreviews[index] && (
+                                              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <div className="text-sm text-blue-800 space-y-1">
+                                                  <div className="flex justify-between">
+                                                    <span>الكمية الأساسية:</span>
+                                                    <span className="font-medium">{quantityPreviews[index].base_quantity_kg} كغ</span>
+                                                  </div>
+                                                  <div className="flex justify-between">
+                                                    <span>نسبة الإضافة:</span>
+                                                    <span className="font-medium text-orange-600">{quantityPreviews[index].overrun_percentage}%</span>
+                                                  </div>
+                                                  <div className="flex justify-between border-t pt-1">
+                                                    <span className="font-semibold">الكمية النهائية:</span>
+                                                    <span className="font-bold text-green-600">{quantityPreviews[index].final_quantity_kg} كغ</span>
+                                                  </div>
+                                                  <div className="text-xs text-blue-600 italic">
+                                                    {quantityPreviews[index].overrun_reason}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
                                           
                                           <div>
