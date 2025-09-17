@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, MessageSquare, Send, TestTube, Phone, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Bell, 
+  MessageSquare, 
+  Send, 
+  TestTube, 
+  Phone, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  Trash2, 
+  Eye, 
+  EyeOff,
+  Wifi,
+  WifiOff,
+  Settings,
+  Users,
+  AlertCircle,
+  Zap,
+  Loader2
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest, queryClient } from '@/lib/queryClient';
+import { useSSE, type SSENotification } from '@/hooks/use-sse';
 
 interface Notification {
   id: number;
@@ -22,9 +45,12 @@ interface Notification {
   phone_number?: string;
   sent_at?: string;
   delivered_at?: string;
+  read_at?: string;
   created_at: string;
   twilio_sid?: string;
   error_message?: string;
+  context_type?: string;
+  context_id?: string;
 }
 
 export default function NotificationCenter() {
@@ -33,10 +59,177 @@ export default function NotificationCenter() {
   const [message, setMessage] = useState('');
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState('normal');
+  
+  // System notification form states
+  const [systemTitle, setSystemTitle] = useState('');
+  const [systemMessage, setSystemMessage] = useState('');
+  const [systemType, setSystemType] = useState<'system' | 'order' | 'production' | 'maintenance' | 'quality' | 'hr'>('system');
+  const [systemPriority, setSystemPriority] = useState<'low' | 'normal' | 'high' | 'urgent'>('normal');
+  const [recipientType, setRecipientType] = useState<'user' | 'role' | 'all'>('all');
+  const [recipientId, setRecipientId] = useState('');
+  const [notificationSound, setNotificationSound] = useState(false);
+  
+  // Real-time notifications state
+  const [realtimeNotifications, setRealtimeNotifications] = useState<SSENotification[]>([]);
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-  // Fetch notifications
-  const { data: notifications, isLoading } = useQuery<Notification[]>({
+  // Fetch initial notifications (for WhatsApp history)
+  const { data: whatsappNotifications, isLoading: whatsappLoading } = useQuery<Notification[]>({
     queryKey: ['/api/notifications'],
+  });
+
+  // Fetch user notifications with real-time support
+  const { data: userNotificationsData, isLoading: userNotificationsLoading, refetch: refetchUserNotifications } = useQuery({
+    queryKey: ['/api/notifications/user', { unread_only: showUnreadOnly }],
+    queryFn: async () => {
+      const response = await fetch(`/api/notifications/user?unread_only=${showUnreadOnly}&limit=100`, {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch user notifications');
+      }
+      return response.json() as Promise<{ notifications: Notification[]; unread_count: number }>;
+    }
+  });
+
+  // SSE event handlers
+  const handleNewNotification = useCallback((notification: SSENotification) => {
+    // Add to realtime notifications
+    setRealtimeNotifications(prev => [notification, ...prev]);
+    
+    // Show toast for new notification
+    toast({
+      title: notification.icon + " " + (notification.title_ar || notification.title),
+      description: notification.message_ar || notification.message,
+      duration: notification.priority === 'urgent' ? 10000 : notification.priority === 'high' ? 7000 : 5000,
+    });
+
+    // Refresh user notifications to update counts
+    refetchUserNotifications();
+  }, [toast, refetchUserNotifications]);
+
+  const handleRecentNotifications = useCallback((data: { notifications: SSENotification[]; count: number }) => {
+    setRealtimeNotifications(data.notifications);
+    console.log(`[NotificationCenter] Received ${data.count} recent notifications`);
+  }, []);
+
+  const handleSSEConnected = useCallback(() => {
+    console.log('[NotificationCenter] SSE connected successfully');
+  }, []);
+
+  const handleSSEError = useCallback((error: Event) => {
+    console.error('[NotificationCenter] SSE connection error:', error);
+  }, []);
+
+  // Initialize SSE connection
+  const { connectionState, reconnect } = useSSE({
+    onNotification: handleNewNotification,
+    onRecentNotifications: handleRecentNotifications,
+    onConnected: handleSSEConnected,
+    onError: handleSSEError,
+  });
+
+  // Create system notification mutation
+  const createSystemNotificationMutation = useMutation({
+    mutationFn: async (data: {
+      title: string;
+      message: string;
+      type: string;
+      priority: string;
+      recipient_type: string;
+      recipient_id?: string;
+      sound?: boolean;
+    }) => {
+      return await apiRequest('/api/notifications/system', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "✅ تم إرسال الإشعار",
+        description: "تم إرسال الإشعار للنظام بنجاح",
+      });
+      setSystemTitle('');
+      setSystemMessage('');
+      setRecipientId('');
+      refetchUserNotifications();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ خطأ في الإرسال",
+        description: error.message || "فشل في إرسال إشعار النظام",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mark notification as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: number) => {
+      return await apiRequest(`/api/notifications/mark-read/${notificationId}`, {
+        method: 'PATCH',
+      });
+    },
+    onSuccess: () => {
+      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ خطأ",
+        description: error.message || "فشل في تعليم الإشعار كمقروء",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/notifications/mark-all-read', {
+        method: 'PATCH',
+      });
+    },
+    onSuccess: () => {
+      refetchUserNotifications();
+      setRealtimeNotifications([]);
+      toast({
+        title: "✅ تم التحديث",
+        description: "تم تعليم جميع الإشعارات كمقروءة",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ خطأ",
+        description: error.message || "فشل في تعليم الإشعارات كمقروءة",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete notification mutation
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: number) => {
+      return await apiRequest(`/api/notifications/delete/${notificationId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
+      toast({
+        title: "✅ تم الحذف",
+        description: "تم حذف الإشعار بنجاح",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ خطأ في الحذف",
+        description: error.message || "فشل في حذف الإشعار",
+        variant: "destructive"
+      });
+    }
   });
 
   // Send WhatsApp message mutation
@@ -95,6 +288,7 @@ export default function NotificationCenter() {
     }
   });
 
+  // Handler functions
   const handleSendMessage = () => {
     if (!phoneNumber || !message) {
       toast({
@@ -112,6 +306,57 @@ export default function NotificationCenter() {
       priority
     });
   };
+
+  const handleSendSystemNotification = () => {
+    if (!systemTitle || !systemMessage) {
+      toast({
+        title: "⚠️ بيانات ناقصة",
+        description: "يرجى إدخال العنوان والرسالة",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (recipientType !== 'all' && !recipientId) {
+      toast({
+        title: "⚠️ معرف المستلم مطلوب",
+        description: "يرجى إدخال معرف المستخدم أو الدور",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    createSystemNotificationMutation.mutate({
+      title: systemTitle,
+      message: systemMessage,
+      type: systemType,
+      priority: systemPriority,
+      recipient_type: recipientType,
+      recipient_id: recipientType === 'all' ? undefined : recipientId,
+      sound: notificationSound
+    });
+  };
+
+  const handleMarkAsRead = (notificationId: number) => {
+    markAsReadMutation.mutate(notificationId);
+  };
+
+  const handleDeleteNotification = (notificationId: number) => {
+    deleteNotificationMutation.mutate(notificationId);
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutation.mutate();
+  };
+
+  const handleReconnectSSE = () => {
+    reconnect();
+  };
+
+  // Effect to update filter when showUnreadOnly changes
+  useEffect(() => {
+    refetchUserNotifications();
+  }, [showUnreadOnly, refetchUserNotifications]);
 
   const handleSendTest = () => {
     if (!phoneNumber) {
@@ -172,17 +417,302 @@ export default function NotificationCenter() {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">مركز الإشعارات</h1>
       </div>
 
-      <Tabs defaultValue="send" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="send" className="flex items-center gap-2">
+      {/* SSE Connection Status */}
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {connectionState.isConnected ? (
+                <Wifi className="h-5 w-5 text-green-500" />
+              ) : connectionState.isConnecting ? (
+                <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
+              ) : (
+                <WifiOff className="h-5 w-5 text-red-500" />
+              )}
+              <span className="text-sm font-medium">
+                {connectionState.isConnected 
+                  ? "متصل - الإشعارات الفورية نشطة" 
+                  : connectionState.isConnecting 
+                    ? "جاري الاتصال..." 
+                    : "غير متصل - الإشعارات الفورية معطلة"}
+              </span>
+            </div>
+            {connectionState.error && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-red-600">{connectionState.error}</span>
+                <Button size="sm" variant="outline" onClick={handleReconnectSSE}>
+                  إعادة الاتصال
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Tabs defaultValue="realtime" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="realtime" className="flex items-center gap-2" data-testid="tab-realtime">
+            <Bell className="h-4 w-4" />
+            الإشعارات الفورية
+          </TabsTrigger>
+          <TabsTrigger value="send" className="flex items-center gap-2" data-testid="tab-send">
             <MessageSquare className="h-4 w-4" />
             إرسال رسائل
           </TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-2">
+          <TabsTrigger value="system" className="flex items-center gap-2" data-testid="tab-system">
+            <Settings className="h-4 w-4" />
+            إشعارات النظام
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2" data-testid="tab-history">
             <Clock className="h-4 w-4" />
             سجل الإشعارات
           </TabsTrigger>
         </TabsList>
+
+        {/* Real-time Notifications Tab */}
+        <TabsContent value="realtime" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  الإشعارات الفورية
+                  {userNotificationsData?.unread_count && userNotificationsData.unread_count > 0 && (
+                    <Badge variant="destructive" className="ml-2">
+                      {userNotificationsData.unread_count}
+                    </Badge>
+                  )}
+                </CardTitle>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={showUnreadOnly}
+                      onCheckedChange={setShowUnreadOnly}
+                      data-testid="switch-unread-only"
+                    />
+                    <span className="text-sm text-gray-600">غير المقروء فقط</span>
+                  </div>
+                  {(userNotificationsData?.unread_count || 0) > 0 && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={handleMarkAllAsRead}
+                      disabled={markAllAsReadMutation.isPending}
+                      data-testid="button-mark-all-read"
+                    >
+                      {markAllAsReadMutation.isPending && <Loader2 className="h-4 w-4 animate-spin ml-1" />}
+                      تعليم الجميع كمقروء
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {userNotificationsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  <span className="ml-2">جاري تحميل الإشعارات...</span>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {userNotificationsData?.notifications && userNotificationsData.notifications.length > 0 ? (
+                    userNotificationsData.notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className={`p-4 border rounded-lg transition-all ${
+                          !notification.read_at 
+                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' 
+                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                        }`}
+                        data-testid={`notification-${notification.id}`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-gray-900 dark:text-white">
+                                {notification.title_ar || notification.title}
+                              </span>
+                              <Badge className={getPriorityColor(notification.priority)}>
+                                {notification.priority}
+                              </Badge>
+                              <Badge className={getStatusColor(notification.status)}>
+                                {getStatusIcon(notification.status)}
+                                {notification.status}
+                              </Badge>
+                              {!notification.read_at && (
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                                  جديد
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">
+                              {notification.message_ar || notification.message}
+                            </p>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>نوع: {notification.type}</span>
+                              <span>تاريخ: {new Date(notification.created_at).toLocaleString('ar-SA')}</span>
+                              {notification.context_type && (
+                                <span>السياق: {notification.context_type}</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {!notification.read_at && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleMarkAsRead(notification.id)}
+                                disabled={markAsReadMutation.isPending}
+                                data-testid={`button-mark-read-${notification.id}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteNotification(notification.id)}
+                              disabled={deleteNotificationMutation.isPending}
+                              data-testid={`button-delete-${notification.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>لا توجد إشعارات حالياً</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System Notifications Tab */}
+        <TabsContent value="system" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-purple-600" />
+                إنشاء إشعار نظام
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">عنوان الإشعار *</label>
+                  <Input
+                    placeholder="عنوان الإشعار"
+                    value={systemTitle}
+                    onChange={(e) => setSystemTitle(e.target.value)}
+                    data-testid="input-system-title"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">نوع الإشعار</label>
+                  <Select value={systemType} onValueChange={(value: any) => setSystemType(value)}>
+                    <SelectTrigger data-testid="select-system-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="system">نظام</SelectItem>
+                      <SelectItem value="order">طلب</SelectItem>
+                      <SelectItem value="production">إنتاج</SelectItem>
+                      <SelectItem value="maintenance">صيانة</SelectItem>
+                      <SelectItem value="quality">جودة</SelectItem>
+                      <SelectItem value="hr">موارد بشرية</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">محتوى الإشعار *</label>
+                <Textarea
+                  placeholder="اكتب محتوى الإشعار هنا..."
+                  value={systemMessage}
+                  onChange={(e) => setSystemMessage(e.target.value)}
+                  rows={3}
+                  data-testid="textarea-system-message"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">الأولوية</label>
+                  <Select value={systemPriority} onValueChange={(value: any) => setSystemPriority(value)}>
+                    <SelectTrigger data-testid="select-system-priority">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">منخفضة</SelectItem>
+                      <SelectItem value="normal">عادية</SelectItem>
+                      <SelectItem value="high">عالية</SelectItem>
+                      <SelectItem value="urgent">عاجلة</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">المستلم</label>
+                  <Select value={recipientType} onValueChange={(value: any) => setRecipientType(value)}>
+                    <SelectTrigger data-testid="select-recipient-type">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">جميع المستخدمين</SelectItem>
+                      <SelectItem value="user">مستخدم محدد</SelectItem>
+                      <SelectItem value="role">دور محدد</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {recipientType !== 'all' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">معرف المستلم</label>
+                    <Input
+                      placeholder={recipientType === 'user' ? "معرف المستخدم" : "معرف الدور"}
+                      value={recipientId}
+                      onChange={(e) => setRecipientId(e.target.value)}
+                      type="number"
+                      data-testid="input-recipient-id"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={notificationSound}
+                  onCheckedChange={setNotificationSound}
+                  data-testid="switch-notification-sound"
+                />
+                <label className="text-sm">تشغيل صوت الإشعار</label>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  onClick={handleSendSystemNotification}
+                  disabled={createSystemNotificationMutation.isPending}
+                  className="flex-1"
+                  data-testid="button-send-system-notification"
+                >
+                  {createSystemNotificationMutation.isPending && (
+                    <Loader2 className="h-4 w-4 animate-spin ml-1" />
+                  )}
+                  <Send className="h-4 w-4 ml-1" />
+                  إرسال الإشعار
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="send" className="space-y-6">
           <Card>
@@ -283,14 +813,14 @@ export default function NotificationCenter() {
               <CardTitle>سجل الإشعارات</CardTitle>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {whatsappLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="text-gray-600 mt-2">جاري تحميل الإشعارات...</p>
                 </div>
-              ) : notifications && notifications.length > 0 ? (
+              ) : whatsappNotifications && whatsappNotifications.length > 0 ? (
                 <div className="space-y-3">
-                  {notifications.map((notification) => (
+                  {whatsappNotifications.map((notification) => (
                     <div
                       key={notification.id}
                       className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3"

@@ -461,6 +461,10 @@ export interface IStorage {
   // Notifications
   createNotification(notification: InsertNotification): Promise<Notification>;
   getNotifications(userId?: number, limit?: number, offset?: number): Promise<Notification[]>;
+  getUserNotifications(userId: number, options?: { unreadOnly?: boolean; limit?: number; offset?: number }): Promise<Notification[]>;
+  markNotificationAsRead(notificationId: number): Promise<Notification>;
+  markAllNotificationsAsRead(userId: number): Promise<void>;
+  deleteNotification(notificationId: number): Promise<void>;
   updateNotificationStatus(twilioSid: string, updates: Partial<Notification>): Promise<Notification>;
   getUserById(id: number): Promise<User | undefined>;
   getUsersByRole(roleId: number): Promise<User[]>;
@@ -4583,6 +4587,139 @@ export class DatabaseStorage implements IStorage {
       console.error('Error updating notification status:', error);
       throw new Error('فشل في تحديث حالة الإشعار');
     }
+  }
+
+  async getUserNotifications(userId: number, options?: { unreadOnly?: boolean; limit?: number; offset?: number }): Promise<Notification[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!userId || typeof userId !== 'number' || userId <= 0) {
+          throw new Error('معرف المستخدم مطلوب');
+        }
+
+        const limit = options?.limit || 50;
+        const offset = options?.offset || 0;
+
+        let query = db
+          .select()
+          .from(notifications)
+          .where(
+            or(
+              eq(notifications.recipient_id, userId.toString()),
+              and(
+                eq(notifications.recipient_type, 'all'),
+                eq(notifications.type, 'system')
+              )
+            )
+          )
+          .orderBy(desc(notifications.created_at))
+          .limit(limit)
+          .offset(offset);
+
+        // Add unread filter if specified
+        if (options?.unreadOnly) {
+          query = db
+            .select()
+            .from(notifications)
+            .where(
+              and(
+                or(
+                  eq(notifications.recipient_id, userId.toString()),
+                  and(
+                    eq(notifications.recipient_type, 'all'),
+                    eq(notifications.type, 'system')
+                  )
+                ),
+                sql`${notifications.read_at} IS NULL`
+              )
+            )
+            .orderBy(desc(notifications.created_at))
+            .limit(limit)
+            .offset(offset);
+        }
+
+        return await query;
+      },
+      'جلب إشعارات المستخدم',
+      `المستخدم رقم ${userId}`
+    );
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<Notification> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!notificationId || typeof notificationId !== 'number' || notificationId <= 0) {
+          throw new Error('معرف الإشعار غير صحيح');
+        }
+
+        const [notification] = await db
+          .update(notifications)
+          .set({
+            read_at: new Date(),
+            status: 'read',
+            updated_at: new Date()
+          })
+          .where(eq(notifications.id, notificationId))
+          .returning();
+
+        if (!notification) {
+          throw new Error('الإشعار غير موجود');
+        }
+
+        return notification;
+      },
+      'تعليم الإشعار كمقروء',
+      `الإشعار رقم ${notificationId}`
+    );
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!userId || typeof userId !== 'number' || userId <= 0) {
+          throw new Error('معرف المستخدم مطلوب');
+        }
+
+        await db
+          .update(notifications)
+          .set({
+            read_at: new Date(),
+            status: 'read',
+            updated_at: new Date()
+          })
+          .where(
+            and(
+              or(
+                eq(notifications.recipient_id, userId.toString()),
+                eq(notifications.recipient_type, 'all')
+              ),
+              sql`${notifications.read_at} IS NULL`
+            )
+          );
+      },
+      'تعليم جميع الإشعارات كمقروءة',
+      `المستخدم رقم ${userId}`
+    );
+  }
+
+  async deleteNotification(notificationId: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!notificationId || typeof notificationId !== 'number' || notificationId <= 0) {
+          throw new Error('معرف الإشعار غير صحيح');
+        }
+
+        const result = await db
+          .delete(notifications)
+          .where(eq(notifications.id, notificationId))
+          .returning();
+
+        if (result.length === 0) {
+          throw new Error('الإشعار غير موجود');
+        }
+      },
+      'حذف الإشعار',
+      `الإشعار رقم ${notificationId}`
+    );
   }
 
   // ============ Notification Templates Management ============

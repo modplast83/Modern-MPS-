@@ -71,12 +71,16 @@ const insertLocationSchema = createInsertSchema(locations).omit({ id: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
+import { getNotificationManager, type SystemNotificationData } from "./services/notification-manager";
 import QRCode from 'qrcode';
 import { validateRequest, commonSchemas, requireAuth, requireAdmin } from './middleware/validation';
 import { calculateProductionQuantities } from "@shared/quantity-utils";
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
+
+// Initialize notification manager (singleton)
+let notificationManager: ReturnType<typeof getNotificationManager> | null = null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication routes
@@ -475,6 +479,226 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error handling Twilio webhook:", error);
       res.status(500).send("Error");
+    }
+  });
+
+  // ============ SSE Real-time Notification System ============
+  
+  // SSE endpoint for real-time notifications
+  app.get("/api/notifications/stream", requireAuth, async (req, res) => {
+    try {
+      // Initialize notification manager if not already done
+      if (!notificationManager) {
+        notificationManager = getNotificationManager(storage);
+      }
+
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح به" });
+      }
+
+      // Generate unique connection ID
+      const connectionId = `${userId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Add SSE connection
+      notificationManager.addConnection(connectionId, userId, res);
+
+      console.log(`[SSE] New connection established for user ${userId}, connectionId: ${connectionId}`);
+
+    } catch (error) {
+      console.error("Error establishing SSE connection:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الاتصال" });
+    }
+  });
+
+  // Create system notification
+  app.post("/api/notifications/system", requireAuth, 
+    validateRequest({ 
+      body: z.object({
+        title: z.string().min(1, "العنوان مطلوب"),
+        title_ar: z.string().optional(),
+        message: z.string().min(1, "الرسالة مطلوبة"),
+        message_ar: z.string().optional(),
+        type: z.enum(['system', 'order', 'production', 'maintenance', 'quality', 'hr']).default('system'),
+        priority: z.enum(['low', 'normal', 'high', 'urgent']).default('normal'),
+        recipient_type: z.enum(['user', 'role', 'all']),
+        recipient_id: z.string().optional(),
+        context_type: z.string().optional(),
+        context_id: z.string().optional(),
+        sound: z.boolean().optional().default(false),
+        icon: z.string().optional()
+      })
+    }),
+    async (req, res) => {
+    try {
+      // Initialize notification manager if not already done
+      if (!notificationManager) {
+        notificationManager = getNotificationManager(storage);
+      }
+
+      const notificationData: SystemNotificationData = req.body;
+
+      // Send notification based on recipient type
+      if (notificationData.recipient_type === 'user' && notificationData.recipient_id) {
+        const userId = parseInt(notificationData.recipient_id);
+        if (isNaN(userId)) {
+          return res.status(400).json({ message: "معرف المستخدم غير صحيح" });
+        }
+        await notificationManager.sendToUser(userId, notificationData);
+      } else if (notificationData.recipient_type === 'role' && notificationData.recipient_id) {
+        const roleId = parseInt(notificationData.recipient_id);
+        if (isNaN(roleId)) {
+          return res.status(400).json({ message: "معرف الدور غير صحيح" });
+        }
+        await notificationManager.sendToRole(roleId, notificationData);
+      } else if (notificationData.recipient_type === 'all') {
+        await notificationManager.sendToAll(notificationData);
+      } else {
+        return res.status(400).json({ message: "نوع المستلم أو معرف المستلم مطلوب" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "تم إرسال الإشعار بنجاح",
+        recipient_type: notificationData.recipient_type,
+        recipient_id: notificationData.recipient_id 
+      });
+
+    } catch (error: any) {
+      console.error("Error creating system notification:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "فشل في إرسال الإشعار" 
+      });
+    }
+  });
+
+  // Mark notification as read
+  app.patch("/api/notifications/mark-read/:id", requireAuth, async (req, res) => {
+    try {
+      const notificationId = parseRouteParam(req.params.id, "معرف الإشعار");
+      
+      const notification = await storage.markNotificationAsRead(notificationId);
+      
+      res.json({ 
+        success: true, 
+        message: "تم تعليم الإشعار كمقروء",
+        notification 
+      });
+
+    } catch (error: any) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "فشل في تعليم الإشعار كمقروء" 
+      });
+    }
+  });
+
+  // Mark all notifications as read for current user
+  app.patch("/api/notifications/mark-all-read", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح به" });
+      }
+      
+      await storage.markAllNotificationsAsRead(userId);
+      
+      res.json({ 
+        success: true, 
+        message: "تم تعليم جميع الإشعارات كمقروءة" 
+      });
+
+    } catch (error: any) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "فشل في تعليم الإشعارات كمقروءة" 
+      });
+    }
+  });
+
+  // Delete notification
+  app.delete("/api/notifications/delete/:id", requireAuth, async (req, res) => {
+    try {
+      const notificationId = parseRouteParam(req.params.id, "معرف الإشعار");
+      
+      await storage.deleteNotification(notificationId);
+      
+      res.json({ 
+        success: true, 
+        message: "تم حذف الإشعار" 
+      });
+
+    } catch (error: any) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "فشل في حذف الإشعار" 
+      });
+    }
+  });
+
+  // Get user notifications with real-time support
+  app.get("/api/notifications/user", requireAuth, async (req, res) => {
+    try {
+      const userId = req.session?.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح به" });
+      }
+
+      const unreadOnly = req.query.unread_only === 'true';
+      const limit = parseOptionalQueryParam(req.query.limit, "الحد الأقصى", 50);
+      const offset = parseOptionalQueryParam(req.query.offset, "الإزاحة", 0);
+
+      const notifications = await storage.getUserNotifications(userId, {
+        unreadOnly,
+        limit,
+        offset
+      });
+
+      // Count unread notifications
+      const unreadNotifications = await storage.getUserNotifications(userId, {
+        unreadOnly: true,
+        limit: 1000 // Get all unread to count
+      });
+
+      res.json({
+        success: true,
+        notifications,
+        unread_count: unreadNotifications.length,
+        total_returned: notifications.length
+      });
+
+    } catch (error: any) {
+      console.error("Error fetching user notifications:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.message || "فشل في جلب الإشعارات" 
+      });
+    }
+  });
+
+  // Get SSE connection statistics (admin only)
+  app.get("/api/notifications/stats", requireAuth, requireAdmin, async (req, res) => {
+    try {
+      if (!notificationManager) {
+        return res.json({
+          success: true,
+          stats: { activeConnections: 0, connectionsByUser: {} }
+        });
+      }
+
+      const stats = notificationManager.getStats();
+      res.json({ success: true, stats });
+
+    } catch (error: any) {
+      console.error("Error getting notification stats:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "فشل في جلب إحصائيات الإشعارات" 
+      });
     }
   });
 
