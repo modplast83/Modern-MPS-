@@ -61,9 +61,10 @@ const orderFormSchema = z.object({
 });
 
 const productionOrderFormSchema = z.object({
-  order_id: z.coerce.number().int().positive(),
-  customer_product_id: z.coerce.number().int().positive(),
-  quantity_kg: z.coerce.number().positive(),
+  order_id: z.coerce.number().int().positive().optional(),
+  production_order_number: z.string().optional(),
+  customer_product_id: z.coerce.number().int().positive().optional(),
+  quantity_kg: z.coerce.number().positive().optional(),
   status: z.string().min(1, "الحالة مطلوبة"),
 });
 
@@ -244,7 +245,13 @@ export default function Orders() {
     customer.name?.toLowerCase().includes(customerSearchTerm.toLowerCase())
   );
 
-  const productionOrderForm = useForm({
+  const productionOrderForm = useForm<{
+    order_id?: number;
+    production_order_number?: string;
+    customer_product_id?: number;
+    quantity_kg?: number;
+    status: string;
+  }>({
     resolver: zodResolver(productionOrderFormSchema),
     defaultValues: {
       order_id: undefined,
@@ -340,10 +347,10 @@ export default function Orders() {
   const handleAddProductionOrder = (orderId?: number) => {
     setEditingProductionOrder(null);
     productionOrderForm.reset({
-      order_id: orderId ? orderId.toString() : "",
+      order_id: orderId || undefined,
       production_order_number: "",
-      customer_product_id: "",
-      quantity_kg: "",
+      customer_product_id: undefined,
+      quantity_kg: undefined,
       status: "pending"
     });
     setIsProductionOrderDialogOpen(true);
@@ -1406,7 +1413,7 @@ export default function Orders() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>الطلب</FormLabel>
-                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? String(field.value) : ""}>
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue placeholder="اختر الطلب" />
@@ -1445,7 +1452,7 @@ export default function Orders() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>منتج العميل</FormLabel>
-                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? field.value.toString() : ""}>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value ? String(field.value) : ""}>
                                     <FormControl>
                                       <SelectTrigger className="h-auto min-h-[40px]">
                                         <SelectValue placeholder="اختر المنتج" />
