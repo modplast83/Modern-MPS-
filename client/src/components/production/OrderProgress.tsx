@@ -10,6 +10,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Package, Scissors, Archive, Plus, QrCode, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+interface ProductionOrder {
+  id: number;
+  production_order: any; // Add proper type based on your schema
+}
+
+interface ProgressData {
+  production_order: any;
+  progress: {
+    printing?: { completed: number; total: number };
+    lamination?: { completed: number; total: number };
+    cutting?: { completed: number; total: number };
+    packaging?: { completed: number; total: number };
+    film_weight?: number;
+    film_percentage?: number;
+    printed_weight?: number;
+    printed_percentage?: number;
+    cut_weight?: number;
+    cut_percentage?: number;
+    warehouse_weight?: number;
+    warehouse_percentage?: number;
+  };
+  rolls: any[];
+  warehouse_receipts: any[];
+}
+
+interface AvailableCut {
+  id: string;
+  name: string;
+}
+
 export default function OrderProgress() {
   const [selectedProductionOrderId, setSelectedProductionOrderId] = useState<number | null>(null);
   const [warehouseDialogOpen, setWarehouseDialogOpen] = useState(false);
@@ -23,20 +53,20 @@ export default function OrderProgress() {
   const queryClient = useQueryClient();
 
   // Fetch all production orders
-  const { data: productionOrders = [] } = useQuery({
+  const { data: productionOrders = [] } = useQuery<ProductionOrder[]>({
     queryKey: ['/api/production-orders'],
     refetchInterval: 30000
   });
 
   // Fetch progress for selected production order
-  const { data: progress, isLoading: progressLoading } = useQuery({
+  const { data: progress, isLoading: progressLoading } = useQuery<ProgressData>({
     queryKey: ['/api/production/order-progress', selectedProductionOrderId],
     enabled: !!selectedProductionOrderId,
     refetchInterval: 15000
   });
 
   // Fetch available cuts for warehouse receipt
-  const { data: availableCuts = [] } = useQuery({
+  const { data: availableCuts = [] } = useQuery<AvailableCut[]>({
     queryKey: ['/api/cuts/available'],
     enabled: warehouseDialogOpen
   });

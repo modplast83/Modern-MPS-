@@ -1,4 +1,4 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient, QueryFunction, QueryCache, MutationCache } from "@tanstack/react-query";
 
 // Create a single instance to prevent multiple React contexts
 let globalQueryClient: QueryClient | undefined;
@@ -158,11 +158,15 @@ export function getQueryClient(): QueryClient {
           queryFn: getQueryFn({ on401: "throw" }),
           refetchInterval: false,
           refetchOnWindowFocus: false,
-          staleTime: 30000, // 30 seconds
-          gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+          refetchOnMount: true,
+          refetchOnReconnect: 'always',
+          // Increase staleTime to reduce unnecessary refetches
+          staleTime: 2 * 60 * 1000, // 2 minutes - data considered fresh longer
+          gcTime: 10 * 60 * 1000, // 10 minutes garbage collection - keep data longer
+          // Prevent excessive retries that can cause cancellation issues
           retry: (failureCount, error: any) => {
-            // Don't retry after 3 attempts
-            if (failureCount > 2) return false;
+            // Don't retry after 2 attempts (reduced from 3)
+            if (failureCount > 1) return false;
             
             // Never retry AbortError (query cancellation)
             if (error?.name === 'AbortError') return false;
@@ -170,34 +174,49 @@ export function getQueryClient(): QueryClient {
             // Don't retry client errors (4xx) - these need user action
             if (error?.status >= 400 && error?.status < 500) return false;
             
-            // Don't retry timeout errors more than once
-            if (error?.type === 'timeout') return failureCount < 1;
+            // Don't retry timeout errors
+            if (error?.type === 'timeout') return false;
             
-            // Retry network errors and server errors (5xx) up to 3 times
-            if (error?.type === 'network' || (error?.status >= 500)) return true;
+            // Only retry network errors and server errors (5xx) once
+            if (error?.type === 'network' || (error?.status >= 500)) return failureCount < 1;
             
-            // For all other errors, retry once
-            return failureCount < 1;
+            // Don't retry other errors to prevent cascading cancellations
+            return false;
           },
-          retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-          // Remove dangerous throwOnError - let React Query handle errors naturally
+          retryDelay: attemptIndex => Math.min(2000 * 2 ** attemptIndex, 10000), // Faster exponential backoff, max 10s
+          // Disable automatic background refetching that can cause cancellations
+          refetchIntervalInBackground: false,
         },
         mutations: {
           retry: (failureCount, error: any) => {
-            // Only retry mutations once to avoid duplicate operations
-            if (failureCount > 0) return false;
-            
-            // Don't retry client errors for mutations
-            if (error?.status >= 400 && error?.status < 500) return false;
-            
-            // Only retry network errors and server errors (5xx) for mutations
-            if (error?.type === 'network' || (error?.status >= 500)) return true;
-            
+            // Don't retry mutations at all to avoid duplicate operations
             return false;
           },
-          retryDelay: 1000, // Short delay for mutations
+          // Remove retryDelay for mutations since we're not retrying
         },
       },
+      // Add global query cancellation optimization
+      queryCache: new QueryCache({
+        onError: (error, query) => {
+          // Silently handle AbortErrors during development to reduce console noise
+          if (import.meta.env.DEV && error?.name === 'AbortError') {
+            console.debug('Query cancelled during cleanup:', query.queryKey);
+            return;
+          }
+          // Let other errors propagate normally
+        },
+      }),
+      // Add mutation cache error handling
+      mutationCache: new MutationCache({
+        onError: (error, _variables, _context, mutation) => {
+          // Silently handle AbortErrors during development
+          if (import.meta.env.DEV && error?.name === 'AbortError') {
+            console.debug('Mutation cancelled:', mutation.options.mutationKey);
+            return;
+          }
+          // Let other errors propagate normally
+        },
+      }),
     });
   }
   return globalQueryClient;

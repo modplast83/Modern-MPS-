@@ -54,70 +54,64 @@ export default function MLAnalytics() {
   const [selectedMachine, setSelectedMachine] = useState<number>(1);
   const queryClient = useQueryClient();
 
-  // جلب التنبؤات
-  const { data: predictions, isLoading: predictionLoading, refetch: refetchPredictions } = useQuery({
+  // جلب التنبؤات - استخدام default queryFn
+  const { data: predictions, isLoading: predictionLoading, refetch: refetchPredictions } = useQuery<MLPrediction>({
     queryKey: ['/api/ml/predictions', selectedMachine],
-    queryFn: async (): Promise<MLPrediction> => {
-      const response = await fetch(`/api/ml/predictions/${selectedMachine}`);
-      if (!response.ok) throw new Error('فشل في جلب التنبؤات');
-      return response.json();
-    }
+    // Use default queryFn from queryClient config instead of custom one
+    enabled: !!selectedMachine, // Only fetch when machine is selected
   });
 
-  // جلب اكتشاف الشذوذ
-  const { data: anomalies, isLoading: anomalyLoading } = useQuery({
+  // جلب اكتشاف الشذوذ - استخدام default queryFn
+  const { data: anomalies, isLoading: anomalyLoading } = useQuery<AnomalyDetection>({
     queryKey: ['/api/ml/anomalies', selectedMachine],
-    queryFn: async (): Promise<AnomalyDetection> => {
-      const response = await fetch(`/api/ml/anomalies/${selectedMachine}`);
-      if (!response.ok) throw new Error('فشل في جلب تحليل الشذوذ');
-      return response.json();
-    }
+    // Use default queryFn from queryClient config
+    enabled: !!selectedMachine,
   });
 
-  // جلب تحليل الأنماط
-  const { data: patterns, isLoading: patternsLoading } = useQuery({
+  // جلب تحليل الأنماط - استخدام default queryFn
+  const { data: patterns, isLoading: patternsLoading } = useQuery<ProductionPatterns>({
     queryKey: ['/api/ml/patterns'],
-    queryFn: async (): Promise<ProductionPatterns> => {
-      const response = await fetch('/api/ml/patterns');
-      if (!response.ok) throw new Error('فشل في جلب تحليل الأنماط');
-      return response.json();
-    }
+    // Use default queryFn - no machine dependency needed for patterns
   });
 
-  // جلب التحسينات المقترحة
-  const { data: optimization, isLoading: optimizationLoading } = useQuery({
+  // جلب التحسينات المقترحة - استخدام default queryFn
+  const { data: optimization, isLoading: optimizationLoading } = useQuery<OptimizationResult>({
     queryKey: ['/api/ml/optimization', selectedMachine],
-    queryFn: async (): Promise<OptimizationResult> => {
-      const response = await fetch(`/api/ml/optimization/${selectedMachine}`);
-      if (!response.ok) throw new Error('فشل في جلب التحسينات');
-      return response.json();
-    }
+    // Use default queryFn from queryClient config
+    enabled: !!selectedMachine,
   });
 
-  // تدريب النموذج
+  // تدريب النموذج - استخدام apiRequest
   const trainModelMutation = useMutation({
     mutationFn: async (machineId: number) => {
-      const response = await fetch(`/api/ml/train/${machineId}`, {
+      const { apiRequest } = await import('@/lib/queryClient');
+      const response = await apiRequest(`/api/ml/train/${machineId}`, {
         method: 'POST'
       });
-      if (!response.ok) throw new Error('فشل في تدريب النموذج');
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/ml/'] });
+      // Use more specific invalidation to reduce unnecessary cancellations
+      queryClient.invalidateQueries({ queryKey: ['/api/ml/predictions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ml/anomalies'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ml/patterns'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/ml/optimization'] });
     }
   });
 
-  // تطبيق التحسينات
+  // تطبيق التحسينات - استخدام apiRequest
   const applyOptimizationMutation = useMutation({
     mutationFn: async (optimization: OptimizationResult) => {
-      const response = await fetch(`/api/ml/apply-optimization/${selectedMachine}`, {
+      const { apiRequest } = await import('@/lib/queryClient');
+      const response = await apiRequest(`/api/ml/apply-optimization/${selectedMachine}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(optimization)
       });
-      if (!response.ok) throw new Error('فشل في تطبيق التحسينات');
       return response.json();
+    },
+    onSuccess: () => {
+      // Specific invalidation to avoid broad cancellations
+      queryClient.invalidateQueries({ queryKey: ['/api/ml/optimization', selectedMachine] });
     }
   });
 
@@ -264,7 +258,7 @@ export default function MLAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {predictions?.recommendations.map((rec, index) => (
+                {predictions?.recommendations?.map((rec: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-2 bg-blue-50 rounded-md">
                     <Zap className="h-4 w-4 text-blue-600" />
                     <span className="text-sm">{rec}</span>
@@ -328,12 +322,12 @@ export default function MLAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
-                  {anomalies?.affectedMetrics.map((metric, index) => (
+                  {anomalies?.affectedMetrics?.map((metric: string, index: number) => (
                     <Badge key={index} variant="outline" className="block text-center">
                       {metric}
                     </Badge>
                   ))}
-                  {(!anomalies?.affectedMetrics || anomalies.affectedMetrics.length === 0) && (
+                  {(!anomalies?.affectedMetrics || anomalies?.affectedMetrics?.length === 0) && (
                     <p className="text-center text-muted-foreground">لا يوجد</p>
                   )}
                 </div>
@@ -348,7 +342,7 @@ export default function MLAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {anomalies.recommendations.map((rec, index) => (
+                  {anomalies?.recommendations?.map((rec: string, index: number) => (
                     <div key={index} className="flex items-center gap-2 p-2 bg-red-50 rounded-md">
                       <AlertTriangle className="h-4 w-4 text-red-600" />
                       <span className="text-sm">{rec}</span>
@@ -368,7 +362,7 @@ export default function MLAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-6 gap-2">
-                  {patterns?.peakHours.map((hour) => (
+                  {patterns?.peakHours?.map((hour: number) => (
                     <Badge key={hour} variant="default" className="text-center">
                       {hour}:00
                     </Badge>
@@ -383,7 +377,7 @@ export default function MLAnalytics() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {patterns?.optimalShifts.map((shift, index) => (
+                  {patterns?.optimalShifts?.map((shift: string, index: number) => (
                     <Badge key={index} variant="secondary" className="block text-center">
                       النوبة {shift}
                     </Badge>
@@ -399,7 +393,7 @@ export default function MLAnalytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {patterns?.efficiencyInsights.map((insight, index) => (
+                {patterns?.efficiencyInsights?.map((insight: string, index: number) => (
                   <div key={index} className="flex items-center gap-2 p-3 bg-green-50 rounded-md">
                     <BarChart3 className="h-4 w-4 text-green-600" />
                     <span className="text-sm">{insight}</span>
