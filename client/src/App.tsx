@@ -9,6 +9,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Dashboard from "@/pages/dashboard";
 import UserDashboard from "@/pages/user-dashboard";
 import Production from "@/pages/production";
+import ProductionMonitoring from "@/pages/production-monitoring";
 import Quality from "@/pages/quality";
 import Maintenance from "@/pages/maintenance";
 import HR from "@/pages/hr";
@@ -60,6 +61,11 @@ function Router() {
       <Route path="/production">
         <ProtectedRoute>
           <Production />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/production-monitoring">
+        <ProtectedRoute>
+          <ProductionMonitoring />
         </ProtectedRoute>
       </Route>
       <Route path="/quality">

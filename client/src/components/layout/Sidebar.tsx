@@ -11,7 +11,9 @@ import {
   Link2,
   FileText,
   LayoutDashboard,
-  Bell
+  Bell,
+  Monitor,
+  Activity
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -42,6 +44,13 @@ const modules = [
     name_ar: "الإنتاج",
     icon: Cog,
     path: "/production",
+    active: false
+  },
+  {
+    name: "مراقبة الإنتاج",
+    name_ar: "مراقبة الإنتاج",
+    icon: Monitor,
+    path: "/production-monitoring",
     active: false
   },
   {

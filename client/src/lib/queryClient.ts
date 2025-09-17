@@ -3,8 +3,30 @@ import { QueryClient, QueryFunction, QueryCache, MutationCache } from "@tanstack
 // Create a single instance to prevent multiple React contexts
 let globalQueryClient: QueryClient | undefined;
 
+// Global 401 handler - automatically logout user and redirect to login
+function handle401Error() {
+  // Clear user data from localStorage
+  localStorage.removeItem('mpbf_user');
+  
+  // Force reload to redirect to login through AuthProvider
+  if (typeof window !== 'undefined') {
+    window.location.reload();
+  }
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle 401 errors globally - automatically logout user
+    if (res.status === 401) {
+      console.warn('Session expired - logging out user');
+      handle401Error();
+      // Still throw the error for proper error handling
+      const error = new Error('انتهت صلاحية جلستك. جاري إعادة التوجيه...');
+      (error as any).status = 401;
+      (error as any).statusText = res.statusText;
+      throw error;
+    }
+    
     let errorMessage = res.statusText || 'Unknown error';
     
     try {
@@ -195,9 +217,16 @@ export function getQueryClient(): QueryClient {
           // Remove retryDelay for mutations since we're not retrying
         },
       },
-      // Add global query cancellation optimization
+      // Add global query error handling with 401 support
       queryCache: new QueryCache({
         onError: (error, query) => {
+          // Handle 401 errors globally
+          if (error && (error as any).status === 401) {
+            console.warn('401 error in query - handling logout:', query.queryKey);
+            handle401Error();
+            return;
+          }
+          
           // Silently handle AbortErrors during development to reduce console noise
           if (import.meta.env.DEV && error?.name === 'AbortError') {
             console.debug('Query cancelled during cleanup:', query.queryKey);
@@ -206,9 +235,16 @@ export function getQueryClient(): QueryClient {
           // Let other errors propagate normally
         },
       }),
-      // Add mutation cache error handling
+      // Add mutation cache error handling with 401 support
       mutationCache: new MutationCache({
         onError: (error, _variables, _context, mutation) => {
+          // Handle 401 errors globally in mutations
+          if (error && (error as any).status === 401) {
+            console.warn('401 error in mutation - handling logout:', mutation.options.mutationKey);
+            handle401Error();
+            return;
+          }
+          
           // Silently handle AbortErrors during development
           if (import.meta.env.DEV && error?.name === 'AbortError') {
             console.debug('Mutation cancelled:', mutation.options.mutationKey);

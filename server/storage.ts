@@ -319,7 +319,13 @@ export interface IStorage {
   // Sections
   getSections(): Promise<Section[]>;
   
-
+  // Production Monitoring Analytics
+  getUserPerformanceStats(userId?: number, dateFrom?: string, dateTo?: string): Promise<any>;
+  getRolePerformanceStats(dateFrom?: string, dateTo?: string): Promise<any>;
+  getRealTimeProductionStats(): Promise<any>;
+  getProductionEfficiencyMetrics(dateFrom?: string, dateTo?: string): Promise<any>;
+  getProductionAlerts(): Promise<any>;
+  getMachineUtilizationStats(dateFrom?: string, dateTo?: string): Promise<any>;
   
   // Items
   getItems(): Promise<Item[]>;
@@ -1533,7 +1539,292 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(sections);
   }
 
-
+  // ============ Production Monitoring Analytics ============
+  
+  async getUserPerformanceStats(userId?: number, dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+      
+      let query = db.select({
+        user_id: users.id,
+        username: users.username,
+        display_name_ar: users.display_name_ar,
+        role_name: sql<string>`COALESCE(roles.name_ar, roles.name)`,
+        section_name: sql<string>`COALESCE(sections.name_ar, sections.name)`,
+        rolls_created: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.created_by} = ${users.id} THEN ${rolls.id} END)`,
+        rolls_printed: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.printed_by} = ${users.id} THEN ${rolls.id} END)`,
+        rolls_cut: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.cut_by} = ${users.id} THEN ${rolls.id} END)`,
+        total_weight_kg: sql<number>`COALESCE(SUM(CASE WHEN ${rolls.created_by} = ${users.id} OR ${rolls.printed_by} = ${users.id} OR ${rolls.cut_by} = ${users.id} THEN ${rolls.weight_kg} END), 0)`,
+        avg_roll_weight: sql<number>`COALESCE(AVG(CASE WHEN ${rolls.created_by} = ${users.id} OR ${rolls.printed_by} = ${users.id} OR ${rolls.cut_by} = ${users.id} THEN ${rolls.weight_kg} END), 0)`,
+        hours_worked: sql<number>`COUNT(DISTINCT DATE(${rolls.created_at})) * 8`,
+        efficiency_score: sql<number>`COALESCE(AVG(CASE WHEN ${rolls.created_by} = ${users.id} OR ${rolls.printed_by} = ${users.id} OR ${rolls.cut_by} = ${users.id} THEN 95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100) END), 90)`
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.role_id, roles.id))
+      .leftJoin(sections, eq(users.section_id, sections.id))
+      .leftJoin(rolls, sql`(${rolls.created_by} = ${users.id} OR ${rolls.printed_by} = ${users.id} OR ${rolls.cut_by} = ${users.id}) AND ${dateFilter}`)
+      .groupBy(users.id, users.username, users.display_name_ar, roles.name, roles.name_ar, sections.name, sections.name_ar)
+      .orderBy(sql`rolls_created + rolls_printed + rolls_cut DESC`);
+      
+      if (userId) {
+        query = query.where(eq(users.id, userId));
+      }
+      
+      return await query;
+    }, 'getUserPerformanceStats', userId ? `للمستخدم ${userId}` : 'لجميع المستخدمين');
+  }
+  
+  async getRolePerformanceStats(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${production_orders.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${production_orders.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+      
+      const roleStats = await db.select({
+        role_id: roles.id,
+        role_name: sql<string>`COALESCE(roles.name_ar, roles.name)`,
+        user_count: sql<number>`COUNT(DISTINCT ${users.id})`,
+        total_production_orders: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
+        total_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+        total_weight_kg: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avg_order_completion_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${production_orders.created_at}))/3600), 0)`,
+        quality_score: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
+        on_time_delivery_rate: sql<number>`COALESCE(AVG(CASE WHEN ${rolls.completed_at} IS NOT NULL THEN 100 ELSE 0 END), 80)`
+      })
+      .from(roles)
+      .leftJoin(users, eq(roles.id, users.role_id))
+      .leftJoin(production_orders, sql`${dateFilter}`)
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      .groupBy(roles.id, roles.name, roles.name_ar)
+      .orderBy(sql`total_weight_kg DESC`);
+      
+      return roleStats;
+    }, 'getRolePerformanceStats', 'أداء الأدوار');
+  }
+  
+  async getRealTimeProductionStats(): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
+      const [currentStats, machineStatus, queueStats] = await Promise.all([
+        // إحصائيات اليوم الحالي
+        db.select({
+          daily_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+          daily_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          active_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.status} IN ('in_production', 'waiting') THEN ${orders.id} END)`,
+          completed_today: sql<number>`COUNT(DISTINCT CASE WHEN DATE(${rolls.completed_at}) = CURRENT_DATE THEN ${rolls.id} END)`,
+          current_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+          avg_efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`
+        })
+        .from(rolls)
+        .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .where(sql`DATE(${rolls.created_at}) = CURRENT_DATE`),
+        
+        // حالة المكائن
+        db.select({
+          machine_id: machines.id,
+          machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+          status: machines.status,
+          current_rolls: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.stage} != 'done' THEN ${rolls.id} END)`
+        })
+        .from(machines)
+        .leftJoin(rolls, eq(machines.id, rolls.machine_id))
+        .groupBy(machines.id, machines.name, machines.name_ar, machines.status),
+        
+        // إحصائيات الطوابير
+        db.select({
+          film_queue: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.stage} = 'film' THEN ${rolls.id} END)`,
+          printing_queue: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.stage} = 'printing' THEN ${rolls.id} END)`,
+          cutting_queue: sql<number>`COUNT(DISTINCT CASE WHEN ${rolls.stage} = 'cutting' THEN ${rolls.id} END)`,
+          pending_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'pending' THEN ${production_orders.id} END)`
+        })
+        .from(production_orders)
+        .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      ]);
+      
+      return {
+        currentStats: currentStats[0] || {
+          daily_rolls: 0,
+          daily_weight: 0,
+          active_orders: 0,
+          completed_today: 0,
+          current_waste: 0,
+          avg_efficiency: 90
+        },
+        machineStatus: machineStatus || [],
+        queueStats: queueStats[0] || {
+          film_queue: 0,
+          printing_queue: 0,
+          cutting_queue: 0,
+          pending_orders: 0
+        },
+        lastUpdated: now.toISOString()
+      };
+    }, 'getRealTimeProductionStats', 'الإحصائيات الفورية');
+  }
+  
+  async getProductionEfficiencyMetrics(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
+      
+      const [efficiencyMetrics, trendData] = await Promise.all([
+        // مؤشرات الكفاءة العامة
+        db.select({
+          total_production: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          total_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+          waste_percentage: sql<number>`COALESCE((SUM(${rolls.waste_kg})::decimal / NULLIF(SUM(${rolls.weight_kg}), 0)) * 100, 0)`,
+          avg_roll_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`,
+          machine_utilization: sql<number>`COALESCE(COUNT(DISTINCT ${rolls.machine_id})::decimal / NULLIF((SELECT COUNT(*) FROM ${machines}), 0) * 100, 0)`,
+          quality_score: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
+          on_time_completion: sql<number>`COALESCE(AVG(CASE WHEN ${rolls.completed_at} IS NOT NULL THEN 100 ELSE 0 END), 80)`
+        })
+        .from(rolls)
+        .where(dateFilter),
+        
+        // بيانات الاتجاه اليومي
+        db.select({
+          date: sql<string>`DATE(${rolls.created_at})`,
+          daily_production: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          daily_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+          daily_rolls: sql<number>`COUNT(${rolls.id})`,
+          daily_efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`
+        })
+        .from(rolls)
+        .where(dateFilter)
+        .groupBy(sql`DATE(${rolls.created_at})`)
+        .orderBy(sql`DATE(${rolls.created_at}) DESC`)
+        .limit(30)
+      ]);
+      
+      return {
+        efficiency: efficiencyMetrics[0] || {
+          total_production: 0,
+          total_waste: 0,
+          waste_percentage: 0,
+          avg_roll_time: 0,
+          machine_utilization: 0,
+          quality_score: 90,
+          on_time_completion: 80
+        },
+        trends: trendData || []
+      };
+    }, 'getProductionEfficiencyMetrics', 'مؤشرات الكفاءة');
+  }
+  
+  async getProductionAlerts(): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const alerts = [];
+      
+      // تحقق من الطلبات المتأخرة
+      const overdueOrders = await db.select({
+        order_id: orders.id,
+        order_number: orders.order_number,
+        customer_name: customers.name_ar,
+        delivery_date: orders.delivery_date,
+        days_overdue: sql<number>`EXTRACT(DAYS FROM (CURRENT_DATE - ${orders.delivery_date}))`
+      })
+      .from(orders)
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .where(and(
+        sql`${orders.delivery_date} < CURRENT_DATE`,
+        sql`${orders.status} NOT IN ('completed', 'cancelled')`
+      ))
+      .limit(10);
+      
+      // تحقق من المكائن المعطلة
+      const downMachines = await db.select({
+        machine_id: machines.id,
+        machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+        status: machines.status
+      })
+      .from(machines)
+      .where(eq(machines.status, 'down'));
+      
+      // تحقق من الهدر العالي
+      const highWasteRolls = await db.select({
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        waste_percentage: sql<number>`(${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100`,
+        machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`
+      })
+      .from(rolls)
+      .leftJoin(machines, eq(rolls.machine_id, machines.id))
+      .where(sql`(${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 > 10`)
+      .orderBy(sql`waste_percentage DESC`)
+      .limit(5);
+      
+      // إضافة التنبيهات
+      if (overdueOrders.length > 0) {
+        alerts.push({
+          type: 'warning',
+          category: 'overdue_orders',
+          title: 'طلبات متأخرة',
+          message: `يوجد ${overdueOrders.length} طلب متأخر عن موعد التسليم`,
+          data: overdueOrders,
+          priority: 'high'
+        });
+      }
+      
+      if (downMachines.length > 0) {
+        alerts.push({
+          type: 'error',
+          category: 'machine_down',
+          title: 'مكائن معطلة',
+          message: `يوجد ${downMachines.length} ماكينة معطلة تحتاج صيانة`,
+          data: downMachines,
+          priority: 'critical'
+        });
+      }
+      
+      if (highWasteRolls.length > 0) {
+        alerts.push({
+          type: 'warning',
+          category: 'high_waste',
+          title: 'هدر عالي',
+          message: `يوجد ${highWasteRolls.length} رول بنسبة هدر أعلى من 10%`,
+          data: highWasteRolls,
+          priority: 'medium'
+        });
+      }
+      
+      return alerts;
+    }, 'getProductionAlerts', 'تنبيهات الإنتاج');
+  }
+  
+  async getMachineUtilizationStats(dateFrom?: string, dateTo?: string): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      const dateFilter = dateFrom && dateTo ? 
+        sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+      
+      const machineStats = await db.select({
+        machine_id: machines.id,
+        machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+        machine_type: machines.type,
+        section_name: sql<string>`COALESCE(${sections.name_ar}, ${sections.name})`,
+        status: machines.status,
+        total_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+        total_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        total_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+        efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
+        avg_processing_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`,
+        utilization_rate: sql<number>`COALESCE(COUNT(DISTINCT DATE(${rolls.created_at}))::decimal / 7 * 100, 0)`
+      })
+      .from(machines)
+      .leftJoin(sections, eq(machines.section_id, sections.id))
+      .leftJoin(rolls, and(eq(machines.id, rolls.machine_id), dateFilter))
+      .groupBy(machines.id, machines.name, machines.name_ar, machines.type, machines.status, sections.name, sections.name_ar)
+      .orderBy(sql`total_weight DESC`);
+      
+      return machineStats;
+    }, 'getMachineUtilizationStats', 'إحصائيات استخدام المكائن');
+  }
 
   async getItems(): Promise<any[]> {
     const result = await db
