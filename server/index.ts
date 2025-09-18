@@ -154,7 +154,7 @@ app.use(session({
   rolling: true, // Reset expiry on activity - crucial for keeping session alive
   cookie: {
     secure: isProduction, // HTTPS-only in production for security
-    httpOnly: isProduction, // Prevent XSS in production
+    httpOnly: true, // ALWAYS prevent XSS - critical security fix
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     sameSite: isProduction ? 'strict' : 'lax' // Stricter CSRF protection in production
   },

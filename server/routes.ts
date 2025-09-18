@@ -125,15 +125,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (user.status !== 'active') {
-        return res.status(401).json({ message: "الحساب غير نشط" });
+        return res.status(401).json({ message: "بيانات تسجيل الدخول غير صحيحة" });
       }
 
       // Save user session with explicit save callback
       req.session.userId = user.id;
       
-      // Debug session creation (remove in production)
-      // console.log("Login successful - Session ID:", req.sessionID);
-      // console.log("Login successful - User ID saved to session:", req.session.userId);
 
       // Ensure session is saved before responding
       req.session.save((err: any) => {
@@ -268,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dashboard stats
-  app.get("/api/dashboard/stats", async (req, res) => {
+  app.get("/api/dashboard/stats", requireAuth, async (req, res) => {
     try {
       const stats = await storage.getDashboardStats();
       res.json(stats);
@@ -997,7 +994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Generate next order number
-  app.get("/api/orders/next-number", async (req, res) => {
+  app.get("/api/orders/next-number", requireAuth, async (req, res) => {
     try {
       // Prevent caching to ensure fresh order numbers
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
@@ -1158,7 +1155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get orders for production page
-  app.get("/api/production/orders-for-production", async (req, res) => {
+  app.get("/api/production/orders-for-production", requireAuth, async (req, res) => {
     try {
       const orders = await storage.getOrdersForProduction();
       res.json(orders);
@@ -1169,7 +1166,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get hierarchical orders for production page
-  app.get("/api/production/hierarchical-orders", async (req, res) => {
+  app.get("/api/production/hierarchical-orders", requireAuth, async (req, res) => {
     try {
       const orders = await storage.getHierarchicalOrdersForProduction();
       res.json(orders);
@@ -1180,7 +1177,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Production Orders routes
-  app.get("/api/production-orders", async (req, res) => {
+  app.get("/api/production-orders", requireAuth, async (req, res) => {
     try {
       const productionOrders = await storage.getAllProductionOrders();
       res.json(productionOrders);
@@ -1190,7 +1187,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/production-orders", async (req, res) => {
+  app.post("/api/production-orders", requireAuth, async (req, res) => {
     try {
       const validatedData = insertProductionOrderSchema.parse(req.body);
       const productionOrder = await storage.createProductionOrder(validatedData);
@@ -1205,7 +1202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/production-orders/:id", async (req, res) => {
+  app.put("/api/production-orders/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertProductionOrderSchema.partial().parse(req.body);
@@ -1322,7 +1319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Rolls routes
-  app.get("/api/rolls", async (req, res) => {
+  app.get("/api/rolls", requireAuth, async (req, res) => {
     try {
       const { stage } = req.query;
       if (stage) {
@@ -1338,7 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  app.patch("/api/rolls/:id", async (req, res) => {
+  app.patch("/api/rolls/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;
@@ -1350,7 +1347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Machines routes
-  app.get("/api/machines", async (req, res) => {
+  app.get("/api/machines", requireAuth, async (req, res) => {
     try {
       const machines = await storage.getMachines();
       res.json(machines);
@@ -1360,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Customers routes
-  app.get("/api/customers", async (req, res) => {
+  app.get("/api/customers", requireAuth, async (req, res) => {
     try {
       const customers = await storage.getCustomers();
       res.json(customers);
