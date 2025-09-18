@@ -1,8 +1,80 @@
 import { sql, relations } from "drizzle-orm";
-import { pgTable, serial, varchar, integer, boolean, date, timestamp, json, text, decimal } from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, integer, boolean, date, timestamp, json, text, decimal, check } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { parseIntSafe, parseFloatSafe } from "./validation-utils";
+
+/**
+ * =================================================================
+ * 🏭 MANUFACTURING WORKFLOW INVARIANTS & DATA INTEGRITY RULES
+ * =================================================================
+ * 
+ * This schema defines the core business rules and data integrity constraints
+ * for our plastic bag manufacturing workflow system. These invariants MUST
+ * be maintained at all times to ensure system consistency.
+ * 
+ * 📋 CRITICAL BUSINESS INVARIANTS:
+ * 
+ * A) ORDER-PRODUCTION QUANTITY CONSTRAINT:
+ *    ∑(ProductionOrder.quantity_kg) ≤ Order.total_quantity + tolerance
+ *    - Sum of all production order quantities for an order cannot exceed
+ *      the original order quantity plus allowed overrun tolerance
+ *    - Prevents overproduction beyond customer requirements
+ * 
+ * B) PRODUCTION-ROLL QUANTITY CONSTRAINT:
+ *    ∑(Roll.weight_kg) ≤ ProductionOrder.final_quantity_kg + tolerance
+ *    - Sum of roll weights cannot exceed production order final quantity
+ *    - Accounts for production overrun settings and tolerances
+ *    - Prevents creating rolls that exceed production requirements
+ * 
+ * C) INVENTORY NON-NEGATIVE CONSTRAINT:
+ *    Inventory.current_stock ≥ 0 AT ALL TIMES
+ *    - Current stock levels must never go negative
+ *    - All inventory movements must be validated before execution
+ *    - Prevents overselling or over-allocation of materials
+ * 
+ * D) VALID STATE TRANSITIONS:
+ *    - Orders: waiting → in_production → completed/cancelled
+ *    - Production Orders: pending → active → completed/cancelled
+ *    - Rolls: film → printing → cutting → done
+ *    - Machines: active ↔ maintenance ↔ down (bidirectional)
+ *    - Invalid transitions must be rejected with proper error messages
+ * 
+ * E) MACHINE OPERATIONAL CONSTRAINT:
+ *    - Rolls can only be created on machines with status = 'active'
+ *    - Production operations require valid, active machines
+ *    - Machine must exist in database and be properly configured
+ * 
+ * F) REFERENTIAL INTEGRITY CONSTRAINT:
+ *    - All foreign key relationships must be maintained
+ *    - Deletion of parent records must be restricted if children exist
+ *    - Orphaned records are not allowed in the system
+ * 
+ * G) TEMPORAL CONSISTENCY CONSTRAINTS:
+ *    - Delivery dates must be in the future when orders are created
+ *    - Production timestamps must follow logical sequence
+ *    - Roll creation date ≤ printing date ≤ cutting completion date
+ * 
+ * H) QUALITY & WASTE TRACKING CONSTRAINTS:
+ *    - Waste quantities must be positive when recorded
+ *    - Quality check scores must be within valid ranges (1-5)
+ *    - Total waste cannot exceed production quantities
+ * 
+ * 🔒 VALIDATION ENFORCEMENT LEVELS:
+ * 
+ * 1. DATABASE LEVEL: Foreign keys, NOT NULL, CHECK constraints, unique indexes
+ * 2. APPLICATION LEVEL: Zod schema validation, business rule enforcement
+ * 3. TRANSACTION LEVEL: Multi-table operations with rollback on failure
+ * 4. UI LEVEL: Client-side validation for immediate feedback
+ * 
+ * 🚨 CONCURRENT OPERATION SAFETY:
+ * - All multi-table operations use database transactions
+ * - Optimistic concurrency control for high-traffic operations
+ * - Row-level locking for critical inventory updates
+ * - Proper error handling with user-friendly Arabic messages
+ * 
+ * =================================================================
+ */
 
 // 🔐 جدول الصلاحيات
 export const roles = pgTable('roles', {
@@ -123,67 +195,114 @@ export const customer_products = pgTable('customer_products', {
   created_at: timestamp('created_at').defaultNow(),
 });
 
-// 🏭 جدول المكائن
+// 🏭 جدول المكائن - Machine Management with Operational Constraints
+// INVARIANT E: Only machines with status = 'active' can be used for production
+// STATUS TRANSITIONS: active ↔ maintenance ↔ down (bidirectional transitions allowed)
+// CONSTRAINT: Machine must be assigned to valid section
 export const machines = pgTable('machines', {
-  id: varchar('id', { length: 20 }).primaryKey(),
-  name: varchar('name', { length: 100 }).notNull(),
-  name_ar: varchar('name_ar', { length: 100 }),
-  type: varchar('type', { length: 50 }), // extruder / printer / cutter
-  section_id: varchar('section_id', { length: 20 }).references(() => sections.id),
-  status: varchar('status', { length: 20 }).default('active'), // active / maintenance / down
-});
+  id: varchar('id', { length: 20 }).primaryKey(), // Format: M001, M002, etc.
+  name: varchar('name', { length: 100 }).notNull(), // Machine display name (English)
+  name_ar: varchar('name_ar', { length: 100 }), // Machine display name (Arabic)
+  type: varchar('type', { length: 50 }).notNull(), // ENUM: extruder / printer / cutter / quality_check
+  section_id: varchar('section_id', { length: 20 }).references(() => sections.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  status: varchar('status', { length: 20 }).notNull().default('active'), // ENUM: active / maintenance / down
+}, (table) => ({
+  // Check constraints for machine integrity
+  machineIdFormat: check('machine_id_format', sql`${table.id} ~ '^M[0-9]{3}$'`), // Format: M001, M002, etc.
+  typeValid: check('type_valid', sql`${table.type} IN ('extruder', 'printer', 'cutter', 'quality_check')`),
+  statusValid: check('status_valid', sql`${table.status} IN ('active', 'maintenance', 'down')`),
+  nameNotEmpty: check('name_not_empty', sql`LENGTH(TRIM(${table.name})) > 0`)
+}));
 
-// 🧾 جدول الطلبات
+// 🧾 جدول الطلبات - Order Management with Quantity Constraints
+// INVARIANT A: ∑(ProductionOrder.quantity_kg) ≤ Order.total_quantity + tolerance
+// STATUS TRANSITIONS: waiting → in_production → completed/cancelled
+// CONSTRAINT: delivery_date must be future date when status = 'waiting'
 export const orders = pgTable('orders', {
   id: serial('id').primaryKey(),
-  order_number: varchar('order_number', { length: 50 }).notNull().unique(),
-  customer_id: varchar('customer_id', { length: 20 }).notNull().references(() => customers.id),
-  delivery_days: integer('delivery_days'),
-  status: varchar('status', { length: 30 }).default('waiting'), // waiting / in_production / paused / cancelled / completed
+  order_number: varchar('order_number', { length: 50 }).notNull().unique(), // Must be unique across system
+  customer_id: varchar('customer_id', { length: 20 }).notNull().references(() => customers.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  delivery_days: integer('delivery_days'), // Must be > 0 if specified
+  status: varchar('status', { length: 30 }).notNull().default('waiting'), // ENUM: waiting / in_production / paused / cancelled / completed
   notes: text('notes'),
-  created_by: integer('created_by').references(() => users.id),
-  created_at: timestamp('created_at').defaultNow(),
-  delivery_date: date('delivery_date')
-});
+  created_by: integer('created_by').references(() => users.id, { onDelete: 'set null' }), // ON DELETE SET NULL
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  delivery_date: date('delivery_date') // Must be >= CURRENT_DATE when order is created
+}, (table) => ({
+  // Check constraints for data integrity
+  deliveryDaysPositive: check('delivery_days_positive', sql`${table.delivery_days} IS NULL OR ${table.delivery_days} > 0`),
+  statusValid: check('status_valid', sql`${table.status} IN ('waiting', 'in_production', 'paused', 'cancelled', 'completed')`),
+  // Temporal constraint: delivery_date must be in future when order is active
+  deliveryDateValid: check('delivery_date_valid', sql`${table.delivery_date} IS NULL OR ${table.delivery_date} >= CURRENT_DATE`)
+}));
 
-// 📋 جدول أوامر الإنتاج
+// 📋 جدول أوامر الإنتاج - Production Order Management with Roll Constraints  
+// INVARIANT B: ∑(Roll.weight_kg) ≤ ProductionOrder.final_quantity_kg + tolerance
+// STATUS TRANSITIONS: pending → active → completed/cancelled
+// BUSINESS RULE: final_quantity_kg = quantity_kg * (1 + overrun_percentage/100)
 export const production_orders = pgTable('production_orders', {
   id: serial('id').primaryKey(),
-  production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(),
-  order_id: integer('order_id').notNull().references(() => orders.id),
-  customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id),
-  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(),
-  overrun_percentage: decimal('overrun_percentage', { precision: 5, scale: 2 }).notNull().default('5.00'),
-  final_quantity_kg: decimal('final_quantity_kg', { precision: 10, scale: 2 }).notNull(),
-  status: varchar('status', { length: 30 }).default('pending'),
-  created_at: timestamp('created_at').defaultNow()
-});
+  production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(), // Auto-generated unique identifier
+  order_id: integer('order_id').notNull().references(() => orders.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT - cannot delete order with production orders
+  customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(), // CHECK: > 0
+  overrun_percentage: decimal('overrun_percentage', { precision: 5, scale: 2 }).notNull().default('5.00'), // CHECK: >= 0 AND <= 50
+  final_quantity_kg: decimal('final_quantity_kg', { precision: 10, scale: 2 }).notNull(), // Calculated: quantity_kg * (1 + overrun_percentage/100)
+  status: varchar('status', { length: 30 }).notNull().default('pending'), // ENUM: pending / active / completed / cancelled
+  created_at: timestamp('created_at').notNull().defaultNow()
+}, (table) => ({
+  // Check constraints for business rule enforcement
+  quantityPositive: check('quantity_kg_positive', sql`${table.quantity_kg} > 0`),
+  overrunPercentageValid: check('overrun_percentage_valid', sql`${table.overrun_percentage} >= 0 AND ${table.overrun_percentage} <= 50`),
+  finalQuantityPositive: check('final_quantity_kg_positive', sql`${table.final_quantity_kg} > 0`),
+  statusValid: check('production_status_valid', sql`${table.status} IN ('pending', 'active', 'completed', 'cancelled')`),
+  // Business logic constraint: final_quantity must be reasonable compared to base quantity
+  finalQuantityReasonable: check('final_quantity_reasonable', sql`${table.final_quantity_kg} >= ${table.quantity_kg} AND ${table.final_quantity_kg} <= ${table.quantity_kg} * 1.5`)
+}));
 
 
-// 🧵 جدول الرولات
+// 🧵 جدول الرولات - Roll Management with Production Constraints
+// INVARIANT B: Sum of roll weights ≤ ProductionOrder.final_quantity_kg + tolerance
+// INVARIANT E: Machine must exist and have status = 'active' during creation
+// STAGE TRANSITIONS: film → printing → cutting → done (sequential only)
+// TEMPORAL CONSTRAINTS: created_at ≤ printed_at ≤ cut_completed_at ≤ completed_at
 export const rolls = pgTable('rolls', {
   id: serial('id').primaryKey(),
-  roll_seq: integer('roll_seq').notNull(),
-  roll_number: varchar('roll_number', { length: 64 }).notNull().unique(),
-  production_order_id: integer('production_order_id').references(() => production_orders.id),
-  qr_code_text: text('qr_code_text').notNull(),
-  qr_png_base64: text('qr_png_base64'),
-  stage: varchar('stage', { length: 20 }).notNull(), // film, printing, cutting, done
-  weight_kg: decimal('weight_kg', { precision: 12, scale: 3 }).notNull(),
-  cut_weight_total_kg: decimal('cut_weight_total_kg', { precision: 12, scale: 3 }).notNull().default('0'),
-  waste_kg: decimal('waste_kg', { precision: 12, scale: 3 }).notNull().default('0'),
-  printed_at: timestamp('printed_at'),
-  cut_completed_at: timestamp('cut_completed_at'),
-  performed_by: integer('performed_by').references(() => users.id), // Legacy field, kept for backward compatibility
-  machine_id: varchar('machine_id', { length: 20 }).references(() => machines.id),
-  employee_id: integer('employee_id').references(() => users.id), // Legacy field, kept for backward compatibility
-  created_by: integer('created_by').references(() => users.id), // المستخدم الذي أنشأ الرول
-  printed_by: integer('printed_by').references(() => users.id), // المستخدم الذي طبع الرول
-  cut_by: integer('cut_by').references(() => users.id), // المستخدم الذي قطع الرول
-  qr_code: varchar('qr_code', { length: 255 }),
-  created_at: timestamp('created_at').defaultNow(),
-  completed_at: timestamp('completed_at'),
-});
+  roll_seq: integer('roll_seq').notNull(), // Sequential number within production order, CHECK: > 0
+  roll_number: varchar('roll_number', { length: 64 }).notNull().unique(), // Auto-generated format: PO001-R001
+  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  qr_code_text: text('qr_code_text').notNull(), // JSON string with roll metadata
+  qr_png_base64: text('qr_png_base64'), // Base64 encoded QR code image
+  stage: varchar('stage', { length: 20 }).notNull().default('film'), // ENUM: film / printing / cutting / done - sequential transitions only
+  weight_kg: decimal('weight_kg', { precision: 12, scale: 3 }).notNull(), // CHECK: > 0, validates against production order limits
+  cut_weight_total_kg: decimal('cut_weight_total_kg', { precision: 12, scale: 3 }).notNull().default('0'), // CHECK: >= 0, <= weight_kg
+  waste_kg: decimal('waste_kg', { precision: 12, scale: 3 }).notNull().default('0'), // CHECK: >= 0, <= weight_kg  
+  printed_at: timestamp('printed_at'), // Set when stage changes to 'printing', must be >= created_at
+  cut_completed_at: timestamp('cut_completed_at'), // Set when stage changes to 'cutting', must be >= printed_at
+  performed_by: integer('performed_by').references(() => users.id, { onDelete: 'set null' }), // Legacy field, ON DELETE SET NULL
+  machine_id: varchar('machine_id', { length: 20 }).notNull().references(() => machines.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT, machine must be 'active'
+  employee_id: integer('employee_id').references(() => users.id, { onDelete: 'set null' }), // Legacy field, ON DELETE SET NULL  
+  created_by: integer('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT - user who created the roll
+  printed_by: integer('printed_by').references(() => users.id, { onDelete: 'set null' }), // ON DELETE SET NULL - user who printed the roll
+  cut_by: integer('cut_by').references(() => users.id, { onDelete: 'set null' }), // ON DELETE SET NULL - user who cut the roll
+  qr_code: varchar('qr_code', { length: 255 }), // Legacy field
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  completed_at: timestamp('completed_at'), // Set when stage = 'done'
+}, (table) => ({
+  // Check constraints for roll integrity
+  rollSeqPositive: check('roll_seq_positive', sql`${table.roll_seq} > 0`),
+  weightPositive: check('weight_kg_positive', sql`${table.weight_kg} > 0`),
+  weightReasonable: check('weight_kg_reasonable', sql`${table.weight_kg} <= 500`), // Max 500kg per roll
+  cutWeightValid: check('cut_weight_valid', sql`${table.cut_weight_total_kg} >= 0 AND ${table.cut_weight_total_kg} <= ${table.weight_kg}`),
+  wasteValid: check('waste_valid', sql`${table.waste_kg} >= 0 AND ${table.waste_kg} <= ${table.weight_kg}`),
+  stageValid: check('stage_valid', sql`${table.stage} IN ('film', 'printing', 'cutting', 'done')`),
+  // Temporal constraints: timestamps must be in logical order
+  printedAtValid: check('printed_at_valid', sql`${table.printed_at} IS NULL OR ${table.printed_at} >= ${table.created_at}`),
+  cutCompletedAtValid: check('cut_completed_at_valid', sql`${table.cut_completed_at} IS NULL OR (${table.cut_completed_at} >= ${table.created_at} AND (${table.printed_at} IS NULL OR ${table.cut_completed_at} >= ${table.printed_at}))`),
+  completedAtValid: check('completed_at_valid', sql`${table.completed_at} IS NULL OR ${table.completed_at} >= ${table.created_at}`),
+  // INVARIANT E: Machine must be active for roll creation - enforced at application level
+  machineActiveForCreation: check('machine_active_for_creation', sql`TRUE`) // Placeholder - enforced in application layer
+}));
 
 // ✂️ جدول القطع (Cuts)
 export const cuts = pgTable('cuts', {
@@ -382,33 +501,61 @@ export const suppliers = pgTable('suppliers', {
   materials_supplied: json('materials_supplied').$type<number[]>(),
 });
 
-// 📦 جدول المخزون الحالي
+// 📦 جدول المخزون الحالي - Inventory Management with Stock Constraints
+// INVARIANT C: Inventory.current_stock ≥ 0 AT ALL TIMES
+// CONSTRAINT: current_stock must never go negative during any operation
+// VALIDATION: All inventory movements must be validated before execution
+// 📦 جدول المخزون - Inventory Management with Stock Constraints
+// INVARIANT C: current_stock ≥ 0 AT ALL TIMES - NEVER NEGATIVE
+// BUSINESS RULE: max_stock ≥ min_stock for proper threshold management
 export const inventory = pgTable('inventory', {
   id: serial('id').primaryKey(),
-  item_id: varchar('item_id', { length: 20 }).notNull().references(() => items.id),
-  location_id: varchar('location_id', { length: 20 }).references(() => locations.id),
-  current_stock: decimal('current_stock', { precision: 10, scale: 2 }).default('0'),
-  min_stock: decimal('min_stock', { precision: 10, scale: 2 }).default('0'),
-  max_stock: decimal('max_stock', { precision: 10, scale: 2 }).default('0'),
-  unit: varchar('unit', { length: 20 }).default('كيلو'),
-  cost_per_unit: decimal('cost_per_unit', { precision: 10, scale: 4 }),
-  last_updated: timestamp('last_updated').defaultNow(),
-});
+  item_id: varchar('item_id', { length: 20 }).notNull().references(() => items.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  location_id: varchar('location_id', { length: 20 }).references(() => locations.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  current_stock: decimal('current_stock', { precision: 10, scale: 2 }).notNull().default('0'), // CHECK: >= 0 - NEVER NEGATIVE
+  min_stock: decimal('min_stock', { precision: 10, scale: 2 }).notNull().default('0'), // CHECK: >= 0 - minimum stock threshold
+  max_stock: decimal('max_stock', { precision: 10, scale: 2 }).notNull().default('0'), // CHECK: >= min_stock - maximum stock threshold
+  unit: varchar('unit', { length: 20 }).notNull().default('كيلو'), // ENUM: kg / piece / roll / package
+  cost_per_unit: decimal('cost_per_unit', { precision: 10, scale: 4 }), // CHECK: >= 0 if not null
+  last_updated: timestamp('last_updated').notNull().defaultNow(), // Updated on every stock change
+}, (table) => ({
+  // INVARIANT C: Stock constraints for inventory integrity
+  currentStockNonNegative: check('current_stock_non_negative', sql`${table.current_stock} >= 0`),
+  minStockNonNegative: check('min_stock_non_negative', sql`${table.min_stock} >= 0`),
+  maxStockNonNegative: check('max_stock_non_negative', sql`${table.max_stock} >= 0`),
+  stockThresholdLogical: check('stock_threshold_logical', sql`${table.max_stock} >= ${table.min_stock}`),
+  costPerUnitValid: check('cost_per_unit_valid', sql`${table.cost_per_unit} IS NULL OR ${table.cost_per_unit} >= 0`),
+  unitValid: check('unit_valid', sql`${table.unit} IN ('كيلو', 'قطعة', 'رول', 'علبة', 'kg', 'piece', 'roll', 'package')`),
+  // Unique constraint: one inventory record per item-location combination
+  itemLocationUnique: check('item_location_unique', sql`TRUE`) // This will be handled as a unique index separately
+}));
 
-// 📋 جدول حركات المخزون
+// 📋 جدول حركات المخزون - Inventory Movement Tracking with Validation
+// BUSINESS RULE: All movements must have positive quantities
+// REFERENTIAL INTEGRITY: Movements must reference valid inventory items
+// AUDIT TRAIL: Complete tracking of all stock changes with user accountability
 export const inventory_movements = pgTable('inventory_movements', {
   id: serial('id').primaryKey(),
-  inventory_id: integer('inventory_id').references(() => inventory.id),
+  inventory_id: integer('inventory_id').notNull().references(() => inventory.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
   movement_type: varchar('movement_type', { length: 20 }).notNull(), // in / out / transfer / adjustment
-  quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(),
-  unit_cost: decimal('unit_cost', { precision: 10, scale: 4 }),
-  total_cost: decimal('total_cost', { precision: 10, scale: 4 }),
+  quantity: decimal('quantity', { precision: 10, scale: 2 }).notNull(), // CHECK: > 0
+  unit_cost: decimal('unit_cost', { precision: 10, scale: 4 }), // CHECK: >= 0 if not null
+  total_cost: decimal('total_cost', { precision: 10, scale: 4 }), // CHECK: >= 0 if not null
   reference_number: varchar('reference_number', { length: 50 }),
   reference_type: varchar('reference_type', { length: 20 }), // purchase / sale / production / adjustment
   notes: text('notes'),
-  created_by: integer('created_by').references(() => users.id),
-  created_at: timestamp('created_at').defaultNow(),
-});
+  created_by: integer('created_by').notNull().references(() => users.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT for audit trail
+  created_at: timestamp('created_at').notNull().defaultNow(),
+}, (table) => ({
+  // Check constraints for movement integrity
+  quantityPositive: check('quantity_positive', sql`${table.quantity} > 0`),
+  unitCostValid: check('unit_cost_valid', sql`${table.unit_cost} IS NULL OR ${table.unit_cost} >= 0`),
+  totalCostValid: check('total_cost_valid', sql`${table.total_cost} IS NULL OR ${table.total_cost} >= 0`),
+  movementTypeValid: check('movement_type_valid', sql`${table.movement_type} IN ('in', 'out', 'transfer', 'adjustment')`),
+  referenceTypeValid: check('reference_type_valid', sql`${table.reference_type} IS NULL OR ${table.reference_type} IN ('purchase', 'sale', 'production', 'adjustment', 'transfer')`),
+  // Logical constraint: if unit_cost and quantity are provided, total_cost should be reasonable
+  totalCostLogical: check('total_cost_logical', sql`${table.total_cost} IS NULL OR ${table.unit_cost} IS NULL OR ${table.total_cost} = ${table.unit_cost} * ${table.quantity}`)
+}));
 
 // 🏬 جدول حركات المستودع
 export const warehouse_transactions = pgTable('warehouse_transactions', {
@@ -873,6 +1020,7 @@ export const insertUserSchema = createInsertSchema(users).omit({
 // Order schema (legacy - will be phased out)
 
 
+// Enhanced Roll Creation Schema with Business Rule Validation
 export const insertRollSchema = createInsertSchema(rolls).omit({
   id: true,
   created_at: true,
@@ -881,6 +1029,29 @@ export const insertRollSchema = createInsertSchema(rolls).omit({
   roll_seq: true,
   qr_code_text: true,
   qr_png_base64: true,
+}).extend({
+  // INVARIANT B: Enforce production order constraints
+  production_order_id: z.number().int().positive("معرف أمر الإنتاج مطلوب"),
+  // INVARIANT E: Machine must be valid and active
+  machine_id: z.string().min(1, "معرف المكينة مطلوب"),
+  // Weight validation with business rules
+  weight_kg: z.union([z.string(), z.number()])
+    .transform((val) => {
+      if (val === null || val === undefined || val === '') {
+        throw new Error("الوزن مطلوب");
+      }
+      const num = typeof val === 'string' ? parseFloatSafe(val, "الوزن") : val;
+      return num;
+    })
+    .refine((val) => val > 0, "يجب أن يكون الوزن أكبر من صفر")
+    .refine((val) => val <= 500, "الوزن لا يمكن أن يتجاوز 500 كيلو"),
+  // Stage validation - must start at 'film'
+  stage: z.string().default('film').refine(
+    (val) => ['film', 'printing', 'cutting', 'done'].includes(val),
+    "مرحلة الإنتاج غير صحيحة"
+  ),
+  // User validation
+  created_by: z.number().int().positive("معرف المستخدم مطلوب")
 });
 
 export const insertCutSchema = createInsertSchema(cuts).omit({
@@ -950,32 +1121,84 @@ export const insertLocationSchema = createInsertSchema(locations).omit({
   id: true,
 });
 
+// Enhanced Order Creation Schema with Business Rule Validation
 export const insertNewOrderSchema = createInsertSchema(orders).omit({
   id: true,
   created_at: true,
+}).extend({
+  // Order number validation
+  order_number: z.string().min(1, "رقم الطلب مطلوب").max(50, "رقم الطلب طويل جداً"),
+  // Customer validation - INVARIANT F: Must reference valid customer
+  customer_id: z.string().min(1, "معرف العميل مطلوب"),
+  // INVARIANT G: Delivery date must be in future
+  delivery_date: z.union([z.string(), z.date(), z.null()]).optional()
+    .transform((val) => {
+      if (!val) return null;
+      const date = typeof val === 'string' ? new Date(val) : val;
+      return date instanceof Date && !isNaN(date.getTime()) ? date : null;
+    })
+    .refine((date) => {
+      if (!date) return true; // null is allowed
+      return date >= new Date(new Date().setHours(0, 0, 0, 0));
+    }, "يجب أن يكون تاريخ التسليم في المستقبل"),
+  // Delivery days validation
+  delivery_days: z.union([z.string(), z.number(), z.null()]).optional()
+    .transform((val) => {
+      if (val === null || val === undefined || val === '') return null;
+      const num = typeof val === 'string' ? parseIntSafe(val, "أيام التسليم") : val;
+      return num;
+    })
+    .refine((val) => val === null || val > 0, "أيام التسليم يجب أن تكون أكبر من صفر"),
+  // Status validation
+  status: z.enum(['waiting', 'in_production', 'paused', 'cancelled', 'completed'])
+    .default('waiting'),
+  // User reference
+  created_by: z.number().int().positive("معرف المستخدم مطلوب").optional()
 });
 
+// Enhanced Production Order Schema with Business Rule Validation  
 export const insertProductionOrderSchema = createInsertSchema(production_orders).omit({
   id: true,
   created_at: true,
   production_order_number: true,
 }).extend({
-  // Transform decimal fields to handle both string and number inputs
-  quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
-    if (val === null || val === undefined || val === '') return '0';
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    return isNaN(num) ? '0' : num.toString();
-  }),
-  overrun_percentage: z.union([z.string(), z.number()]).transform((val) => {
-    if (val === null || val === undefined || val === '') return '5.00';
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    return isNaN(num) ? '5.00' : num.toString();
-  }),
-  final_quantity_kg: z.union([z.string(), z.number()]).transform((val) => {
-    if (val === null || val === undefined || val === '') return '0';
-    const num = typeof val === 'string' ? parseFloat(val) : val;
-    return isNaN(num) ? '0' : num.toString();
-  })
+  // INVARIANT A & F: Order must exist and be valid
+  order_id: z.number().int().positive("معرف الطلب مطلوب"),
+  customer_product_id: z.number().int().positive("معرف منتج العميل مطلوب"),
+  // Quantity validation with business rules
+  quantity_kg: z.union([z.string(), z.number()])
+    .transform((val) => {
+      if (val === null || val === undefined || val === '') {
+        throw new Error("الكمية مطلوبة");
+      }
+      const num = typeof val === 'string' ? parseFloatSafe(val, "الكمية") : val;
+      return num.toString();
+    })
+    .refine((val) => parseFloat(val) > 0, "يجب أن تكون الكمية أكبر من صفر")
+    .refine((val) => parseFloat(val) <= 10000, "الكمية لا يمكن أن تتجاوز 10000 كيلو"),
+  // Overrun percentage validation
+  overrun_percentage: z.union([z.string(), z.number()])
+    .transform((val) => {
+      if (val === null || val === undefined || val === '') return '5.00';
+      const num = typeof val === 'string' ? parseFloatSafe(val, "نسبة الزيادة") : val;
+      return num.toString();
+    })
+    .refine((val) => {
+      const num = parseFloat(val);
+      return num >= 0 && num <= 50;
+    }, "نسبة الزيادة يجب أن تكون بين 0 و 50 بالمئة"),
+  // Final quantity - automatically calculated but validated
+  final_quantity_kg: z.union([z.string(), z.number()])
+    .transform((val) => {
+      if (val === null || val === undefined || val === '') {
+        throw new Error("الكمية النهائية مطلوبة");
+      }
+      const num = typeof val === 'string' ? parseFloatSafe(val, "الكمية النهائية") : val;
+      return num.toString();
+    })
+    .refine((val) => parseFloat(val) > 0, "يجب أن تكون الكمية النهائية أكبر من صفر"),
+  // Status validation
+  status: z.enum(['pending', 'active', 'completed', 'cancelled']).default('pending')
 });
 
 

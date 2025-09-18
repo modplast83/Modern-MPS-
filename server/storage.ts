@@ -164,6 +164,7 @@ import bcrypt from "bcrypt";
 import { generateRollNumber, generateUUID, generateCertificateNumber } from "@shared/id-generator";
 import { numberToDecimalString, normalizeDecimal } from "@shared/decimal-utils";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
+import { getDataValidator } from "./services/data-validator";
 
 // Database error handling utilities
 class DatabaseError extends Error {
@@ -259,6 +260,7 @@ export interface IStorage {
   
   // Production Orders
   getAllProductionOrders(): Promise<ProductionOrder[]>;
+  getProductionOrderById(id: number): Promise<ProductionOrder | undefined>;
   createProductionOrder(productionOrder: InsertProductionOrder): Promise<ProductionOrder>;
   updateProductionOrder(id: number, productionOrder: Partial<ProductionOrder>): Promise<ProductionOrder>;
   deleteProductionOrder(id: number): Promise<void>;
@@ -811,6 +813,20 @@ export class DatabaseStorage implements IStorage {
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
     return withDatabaseErrorHandling(
       async () => {
+        // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+        const dataValidator = getDataValidator(this);
+        const validationResult = await dataValidator.validateEntity('orders', insertOrder, false);
+        
+        if (!validationResult.isValid) {
+          console.error('[Storage] ❌ ORDER VALIDATION FAILED:', validationResult.errors);
+          throw new DatabaseError(
+            `فشل التحقق من صحة الطلب: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+            { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+          );
+        }
+        
+        console.log('[Storage] ✅ Order validation passed, proceeding with database write');
+        
         // Validate required fields
         if (!insertOrder.customer_id) {
           throw new Error('معرف العميل مطلوب');
@@ -875,6 +891,31 @@ export class DatabaseStorage implements IStorage {
         if (!status || typeof status !== 'string' || status.trim() === '') {
           throw new Error('حالة الطلب مطلوبة');
         }
+
+        // STEP 0: Get current order to validate status transition
+        const currentOrder = await this.getOrderById(id);
+        if (!currentOrder) {
+          throw new DatabaseError('الطلب غير موجود', { code: '23503' });
+        }
+
+        // STEP 1: MANDATORY STATUS TRANSITION VALIDATION
+        const dataValidator = getDataValidator(this);
+        const transitionResult = await dataValidator.validateStatusTransition(
+          'orders', 
+          currentOrder.status || 'waiting', 
+          status.trim(), 
+          id
+        );
+        
+        if (!transitionResult.isValid) {
+          console.error('[Storage] ❌ INVALID ORDER STATUS TRANSITION:', transitionResult.errors);
+          throw new DatabaseError(
+            `انتقال حالة غير صحيح: ${transitionResult.errors.map(e => e.message_ar).join(', ')}`,
+            { code: 'INVALID_STATUS_TRANSITION', transitionErrors: transitionResult.errors }
+          );
+        }
+        
+        console.log(`[Storage] ✅ Valid status transition: ${currentOrder.status} → ${status}`);
         
         const validStatuses = ['pending', 'waiting', 'in_production', 'for_production', 'paused', 'on_hold', 'completed', 'cancelled'];
         if (!validStatuses.includes(status)) {
@@ -1284,54 +1325,178 @@ export class DatabaseStorage implements IStorage {
     }, 'تحميل أوامر الإنتاج');
   }
 
-  async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
-    // Generate production order number
-    const existingOrders = await db.select({ production_order_number: production_orders.production_order_number }).from(production_orders);
-    const orderNumbers = existingOrders
-      .map(order => order.production_order_number)
-      .filter(orderNumber => orderNumber.startsWith('PO'))
-      .map(orderNumber => parseInt(orderNumber.replace('PO', '')))
-      .filter(num => !isNaN(num));
-    
-    const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
-    const productionOrderNumber = `PO${nextNumber.toString().padStart(3, '0')}`;
-
-    // Get customer product info for intelligent quantity calculation
-    const customerProduct = await db
-      .select()
-      .from(customer_products)
-      .where(eq(customer_products.id, parseInt(insertProductionOrder.customer_product_id.toString())))
-      .limit(1);
-    
-    // Use quantity_kg from the input - simplified until migration is complete
-    const baseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || '0');
-    
-    // Calculate intelligent quantities based on punching type (for logging purposes)
-    const punchingType = customerProduct[0]?.punching || null;
-    const quantityCalculation = calculateProductionQuantities(baseQuantityKg, punchingType);
-    
-    // Prepare the production order data - only with existing fields until migration
-    const productionOrderData = {
-      ...insertProductionOrder,
-      production_order_number: productionOrderNumber,
-      // Use calculated final quantity for now in the existing quantity_kg field
-      quantity_kg: numberToDecimalString(quantityCalculation.finalQuantityKg)
-    };
-    
-    const [productionOrder] = await db
-      .insert(production_orders)
-      .values(productionOrderData)
-      .returning();
+  async getProductionOrderById(id: number): Promise<ProductionOrder | undefined> {
+    return await withDatabaseErrorHandling(async () => {
+      const results = await db
+        .select({
+          // Production order fields
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          overrun_percentage: production_orders.overrun_percentage,
+          final_quantity_kg: production_orders.final_quantity_kg,
+          status: production_orders.status,
+          created_at: production_orders.created_at,
+          
+          // Related order information
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          
+          // Product details
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          master_batch_id: customer_products.master_batch_id,
+          is_printed: customer_products.is_printed,
+          punching: customer_products.punching,
+          
+          // Item information
+          item_name: items.name,
+          item_name_ar: items.name_ar
+        })
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
+        .where(eq(production_orders.id, id))
+        .limit(1);
       
-    console.log(`Created production order ${productionOrderNumber} with intelligent quantities:`, {
-      baseQuantity: baseQuantityKg,
-      punchingType,
-      overrunPercentage: quantityCalculation.overrunPercentage,
-      finalQuantity: quantityCalculation.finalQuantityKg,
-      reason: quantityCalculation.overrunReason
-    });
-    
-    return productionOrder;
+      return results.length > 0 ? results[0] : undefined;
+    }, 'تحميل أمر الإنتاج');
+  }
+
+  async createProductionOrder(insertProductionOrder: InsertProductionOrder): Promise<ProductionOrder> {
+    return await withDatabaseErrorHandling(async () => {
+      // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+      const dataValidator = getDataValidator(this);
+      const validationResult = await dataValidator.validateEntity('production_orders', insertProductionOrder, false);
+      
+      if (!validationResult.isValid) {
+        console.error('[Storage] ❌ PRODUCTION ORDER VALIDATION FAILED:', validationResult.errors);
+        throw new DatabaseError(
+          `فشل التحقق من صحة طلب الإنتاج: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+          { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+        );
+      }
+      
+      console.log('[Storage] ✅ Production order validation passed, proceeding with database write');
+      
+      return await db.transaction(async (tx) => {
+        // STEP 1: Lock the parent order to prevent race conditions
+        const [parentOrder] = await tx
+          .select()
+          .from(orders)
+          .where(eq(orders.id, insertProductionOrder.order_id))
+          .for('update');
+
+        if (!parentOrder) {
+          throw new Error('الطلب الأصلي غير موجود');
+        }
+
+        // STEP 2: Check existing production orders for this order (INVARIANT A)
+        const existingProductionOrders = await tx
+          .select({ 
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg
+          })
+          .from(production_orders)
+          .where(eq(production_orders.order_id, insertProductionOrder.order_id));
+
+        const existingTotalQuantity = existingProductionOrders.reduce(
+          (sum, po) => sum + parseFloat(po.final_quantity_kg || po.quantity_kg || '0'), 0);
+
+        const proposedFinalQuantity = parseFloat(insertProductionOrder.final_quantity_kg || '0');
+        const orderQuantity = parseFloat(parentOrder.quantity || '0');
+
+        // INVARIANT A: Ensure total production orders don't exceed order quantity + 10% tolerance
+        const orderTolerance = orderQuantity * 0.10; // 10% tolerance for overrun
+        const maxAllowedTotal = orderQuantity + orderTolerance;
+        
+        if (existingTotalQuantity + proposedFinalQuantity > maxAllowedTotal) {
+          throw new DatabaseError(
+            `تجاوز الكمية الإجمالية للإنتاج الحد المسموح: ${(existingTotalQuantity + proposedFinalQuantity).toFixed(2)}كغ > ${maxAllowedTotal.toFixed(2)}كغ (${orderQuantity.toFixed(2)}كغ + 10% تسامح)`,
+            { code: 'INVARIANT_A_VIOLATION' }
+          );
+        }
+
+        // STEP 2.5: INVARIANT D - State transition validation
+        if (parentOrder.status === 'cancelled') {
+          throw new DatabaseError(
+            'لا يمكن إنشاء طلب إنتاج لطلب ملغي',
+            { code: 'INVARIANT_D_VIOLATION' }
+          );
+        }
+        
+        if (parentOrder.status === 'completed') {
+          throw new DatabaseError(
+            'لا يمكن إنشاء طلب إنتاج لطلب مكتمل',
+            { code: 'INVARIANT_D_VIOLATION' }
+          );
+        }
+
+        // STEP 3: Generate unique production order number with optimistic locking
+        const existingOrders = await tx
+          .select({ production_order_number: production_orders.production_order_number })
+          .from(production_orders)
+          .for('update');
+
+        const orderNumbers = existingOrders
+          .map(order => order.production_order_number)
+          .filter(orderNumber => orderNumber.startsWith('PO'))
+          .map(orderNumber => parseInt(orderNumber.replace('PO', '')))
+          .filter(num => !isNaN(num));
+        
+        const nextNumber = orderNumbers.length > 0 ? Math.max(...orderNumbers) + 1 : 1;
+        const productionOrderNumber = `PO${nextNumber.toString().padStart(3, '0')}`;
+
+        // STEP 4: Get customer product info for validation
+        const [customerProduct] = await tx
+          .select()
+          .from(customer_products)
+          .where(eq(customer_products.id, parseInt(insertProductionOrder.customer_product_id.toString())));
+        
+        if (!customerProduct) {
+          throw new Error('منتج العميل غير موجود');
+        }
+        
+        // Use quantity_kg from the input
+        const baseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || '0');
+        
+        // Calculate quantities based on punching type
+        const punchingType = customerProduct.punching || null;
+        const quantityCalculation = calculateProductionQuantities(baseQuantityKg, punchingType);
+        
+        // STEP 5: Prepare production order data with validation
+        const productionOrderData = {
+          ...insertProductionOrder,
+          production_order_number: productionOrderNumber,
+          quantity_kg: numberToDecimalString(quantityCalculation.finalQuantityKg)
+        };
+        
+        // STEP 6: Create production order within transaction
+        const [productionOrder] = await tx
+          .insert(production_orders)
+          .values(productionOrderData)
+          .returning();
+          
+        console.log(`Created production order ${productionOrderNumber} with intelligent quantities:`, {
+          baseQuantity: baseQuantityKg,
+          punchingType,
+          overrunPercentage: quantityCalculation.overrunPercentage,
+          finalQuantity: quantityCalculation.finalQuantityKg,
+          reason: quantityCalculation.overrunReason
+        });
+        
+        return productionOrder;
+      });
+    }, 'إنشاء أمر الإنتاج');
   }
 
   async updateProductionOrder(id: number, productionOrderUpdate: Partial<ProductionOrder>): Promise<ProductionOrder> {
@@ -1400,26 +1565,109 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
-    const rollNumber = generateRollNumber();
-    const qrCodeText = `QR-${rollNumber}`;
-    
-    // Generate roll sequence number
-    const lastRoll = await db.select({ roll_seq: rolls.roll_seq })
-      .from(rolls)
-      .orderBy(desc(rolls.roll_seq))
-      .limit(1);
-    const nextRollSeq = (lastRoll[0]?.roll_seq || 0) + 1;
-    
-    const [roll] = await db
-      .insert(rolls)
-      .values({ 
-        ...insertRoll, 
-        roll_number: rollNumber, 
-        qr_code_text: qrCodeText,
-        roll_seq: nextRollSeq
-      } as any) // Type assertion to allow additional fields
-      .returning();
-    return roll;
+    return await withDatabaseErrorHandling(async () => {
+      // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+      const dataValidator = getDataValidator(this);
+      const validationResult = await dataValidator.validateEntity('rolls', insertRoll, false);
+      
+      if (!validationResult.isValid) {
+        console.error('[Storage] ❌ ROLL VALIDATION FAILED:', validationResult.errors);
+        throw new DatabaseError(
+          `فشل التحقق من صحة الرول: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+          { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+        );
+      }
+      
+      console.log('[Storage] ✅ Roll validation passed, proceeding with database write');
+      
+      return await db.transaction(async (tx) => {
+        // STEP 1: Lock production order for atomic operations (CRITICAL FOR CONCURRENCY)
+        const [productionOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, insertRoll.production_order_id))
+          .for('update'); // SELECT FOR UPDATE - prevents race conditions
+
+        if (!productionOrder) {
+          throw new DatabaseError('طلب الإنتاج غير موجود', { code: '23503' });
+        }
+
+        // STEP 2: INVARIANT E - Verify machine exists and is active
+        const [machine] = await tx
+          .select()
+          .from(machines)
+          .where(eq(machines.id, insertRoll.machine_id));
+          
+        if (!machine) {
+          throw new DatabaseError('الماكينة غير موجودة', { code: '23503' });
+        }
+        
+        if (machine.status !== 'active') {
+          throw new DatabaseError(
+            `لا يمكن إنشاء رول على ماكينة غير نشطة - حالة الماكينة: ${machine.status}`,
+            { code: 'INVARIANT_E_VIOLATION' }
+          );
+        }
+
+        // STEP 3: INVARIANT B - Check roll weight constraints
+        const rollWeightKg = parseFloat(insertRoll.weight_kg?.toString() || '0');
+        if (rollWeightKg <= 0) {
+          throw new DatabaseError('وزن الرول يجب أن يكون موجب', { code: '23514' });
+        }
+
+        // Get current total weight of all rolls for this production order
+        const totalWeightResult = await tx
+          .select({ total: sql<number>`COALESCE(SUM(${rolls.weight_kg}::decimal), 0)` })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, insertRoll.production_order_id));
+
+        const currentTotalWeight = Number(totalWeightResult[0]?.total || 0);
+        const newTotalWeight = currentTotalWeight + rollWeightKg;
+        const finalQuantityKg = parseFloat(productionOrder.final_quantity_kg?.toString() || '0');
+        
+        // INVARIANT B: Sum of roll weights ≤ ProductionOrder.final_quantity_kg + 3% tolerance
+        const tolerance = finalQuantityKg * 0.03; // 3% tolerance
+        const maxAllowedWeight = finalQuantityKg + tolerance;
+        
+        if (newTotalWeight > maxAllowedWeight) {
+          throw new DatabaseError(
+            `تجاوز الوزن الإجمالي للرولات الحد المسموح: ${newTotalWeight.toFixed(2)}كغ > ${maxAllowedWeight.toFixed(2)}كغ (${finalQuantityKg.toFixed(2)}كغ + 3% تسامح)`,
+            { code: 'INVARIANT_B_VIOLATION' }
+          );
+        }
+
+        // STEP 4: Generate roll sequence number
+        const rollCount = await tx
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, insertRoll.production_order_id));
+        const nextRollSeq = (rollCount[0]?.count || 0) + 1;
+
+        // STEP 5: Generate roll identifiers
+        const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}`;
+        const qrCodeText = `QR-${rollNumber}`;
+
+        // STEP 6: Create the roll with all constraints validated
+        const [roll] = await tx
+          .insert(rolls)
+          .values({ 
+            ...insertRoll,
+            roll_number: rollNumber,
+            qr_code_text: qrCodeText,
+            roll_seq: nextRollSeq
+          } as any) // Type assertion for additional fields
+          .returning();
+          
+        console.log(`[Storage] Created roll ${rollNumber} with invariant validation:`, {
+          rollWeight: rollWeightKg,
+          newTotalWeight: newTotalWeight.toFixed(2),
+          maxAllowed: maxAllowedWeight.toFixed(2),
+          machineStatus: machine.status
+        });
+        
+        return roll;
+      });
+    }, 'createRoll', `للطلب الإنتاجي ${insertRoll.production_order_id}`);
   }
 
   async updateRoll(id: number, updates: Partial<Roll>): Promise<Roll> {
@@ -1531,25 +1779,41 @@ export class DatabaseStorage implements IStorage {
   // Replaced by createCustomerProduct
 
   async createCustomer(customer: any): Promise<Customer> {
-    // Generate a new customer ID in format CID001, CID002, etc.
-    const existingCustomers = await db.select({ id: customers.id }).from(customers);
-    const customerIds = existingCustomers.map(c => c.id);
-    const maxNumber = customerIds
-      .filter(id => id.startsWith('CID'))
-      .map(id => parseInt(id.substring(3)))
-      .filter(num => !isNaN(num))
-      .reduce((max, num) => Math.max(max, num), 0);
-    
-    const newId = `CID${String(maxNumber + 1).padStart(3, '0')}`;
-    
-    const [newCustomer] = await db
-      .insert(customers)
-      .values({
-        ...customer,
-        id: newId
-      })
-      .returning();
-    return newCustomer;
+    return await withDatabaseErrorHandling(async () => {
+      // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+      const dataValidator = getDataValidator(this);
+      const validationResult = await dataValidator.validateEntity('customers', customer, false);
+      
+      if (!validationResult.isValid) {
+        console.error('[Storage] ❌ CUSTOMER VALIDATION FAILED:', validationResult.errors);
+        throw new DatabaseError(
+          `فشل التحقق من صحة بيانات العميل: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+          { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+        );
+      }
+      
+      console.log('[Storage] ✅ Customer validation passed, proceeding with database write');
+      
+      // Generate a new customer ID in format CID001, CID002, etc.
+      const existingCustomers = await db.select({ id: customers.id }).from(customers);
+      const customerIds = existingCustomers.map(c => c.id);
+      const maxNumber = customerIds
+        .filter(id => id.startsWith('CID'))
+        .map(id => parseInt(id.substring(3)))
+        .filter(num => !isNaN(num))
+        .reduce((max, num) => Math.max(max, num), 0);
+      
+      const newId = `CID${String(maxNumber + 1).padStart(3, '0')}`;
+      
+      const [newCustomer] = await db
+        .insert(customers)
+        .values({
+          ...customer,
+          id: newId
+        })
+        .returning();
+      return newCustomer;
+    }, 'إنشاء عميل جديد', `العميل: ${customer.name}`);
   }
 
   async updateCustomer(id: string, updates: any): Promise<Customer> {
@@ -1562,11 +1826,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMachine(machine: any): Promise<Machine> {
-    const [newMachine] = await db
-      .insert(machines)
-      .values(machine)
-      .returning();
-    return newMachine;
+    return await withDatabaseErrorHandling(async () => {
+      // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+      const dataValidator = getDataValidator(this);
+      const validationResult = await dataValidator.validateEntity('machines', machine, false);
+      
+      if (!validationResult.isValid) {
+        console.error('[Storage] ❌ MACHINE VALIDATION FAILED:', validationResult.errors);
+        throw new DatabaseError(
+          `فشل التحقق من صحة بيانات الماكينة: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+          { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+        );
+      }
+      
+      console.log('[Storage] ✅ Machine validation passed, proceeding with database write');
+      
+      const [newMachine] = await db
+        .insert(machines)
+        .values(machine)
+        .returning();
+      return newMachine;
+    }, 'إنشاء ماكينة جديدة', `الماكينة: ${machine.name}`);
   }
 
   async updateMachine(id: string, updates: any): Promise<Machine> {
@@ -3033,33 +3313,76 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInventoryMovement(data: InsertInventoryMovement): Promise<InventoryMovement> {
-    const [movement] = await db.insert(inventory_movements).values(data).returning();
-    
-    // Update inventory stock based on movement type
-    if (movement.inventory_id) {
-      const [currentInventory] = await db
-        .select()
-        .from(inventory)
-        .where(eq(inventory.id, movement.inventory_id));
+    return await withDatabaseErrorHandling(async () => {
+      // STEP 0: MANDATORY DATAVALIDATOR INTEGRATION - Validate BEFORE database write
+      const dataValidator = getDataValidator(this);
+      const validationResult = await dataValidator.validateEntity('inventory_movements', data, false);
+      
+      if (!validationResult.isValid) {
+        console.error('[Storage] ❌ INVENTORY MOVEMENT VALIDATION FAILED:', validationResult.errors);
+        throw new DatabaseError(
+          `فشل التحقق من صحة حركة المخزون: ${validationResult.errors.map(e => e.message_ar).join(', ')}`,
+          { code: 'VALIDATION_FAILED', validationErrors: validationResult.errors }
+        );
+      }
+      
+      console.log('[Storage] ✅ Inventory movement validation passed, proceeding with database write');
+      
+      return await db.transaction(async (tx) => {
+        // STEP 1: Lock inventory item to prevent race conditions
+        let currentInventory: any = null;
+        if (data.inventory_id) {
+          [currentInventory] = await tx
+            .select()
+            .from(inventory)
+            .where(eq(inventory.id, data.inventory_id))
+            .for('update');
+            
+          if (!currentInventory) {
+            throw new Error('عنصر المخزون غير موجود');
+          }
+        }
+
+        // STEP 2: Validate inventory constraints before movement
+        const currentStock = parseFloat(currentInventory?.current_stock || '0');
+        const movementQty = parseFloat(data.quantity?.toString() || '0');
         
-      if (currentInventory) {
-        const currentStock = parseFloat(currentInventory.current_stock || '0');
-        const movementQty = parseFloat(movement.quantity?.toString() || '0');
-        
-        let newStock = currentStock;
-        if (movement.movement_type === 'in') {
-          newStock = currentStock + movementQty;
-        } else if (movement.movement_type === 'out') {
-          newStock = Math.max(0, currentStock - movementQty);
+        if (movementQty <= 0) {
+          throw new Error('كمية الحركة يجب أن تكون أكبر من صفر');
         }
         
-        await db.update(inventory)
-          .set({ current_stock: newStock.toString(), last_updated: new Date() })
-          .where(eq(inventory.id, movement.inventory_id));
-      }
-    }
-    
-    return movement;
+        let newStock = currentStock;
+        if (data.movement_type === 'in') {
+          newStock = currentStock + movementQty;
+        } else if (data.movement_type === 'out') {
+          // INVARIANT C: Prevent negative inventory
+          if (currentStock < movementQty) {
+            throw new Error(`المخزون غير كافي. المتاح: ${currentStock.toFixed(2)}, المطلوب: ${movementQty.toFixed(2)}`);
+          }
+          newStock = currentStock - movementQty;
+        } else if (data.movement_type === 'adjustment') {
+          // For adjustments, the quantity represents the final stock level
+          newStock = movementQty;
+        }
+
+        // INVARIANT C: Final check - ensure stock doesn't go negative
+        if (newStock < 0) {
+          throw new Error('لا يمكن أن يكون المخزون سالب');
+        }
+
+        // STEP 3: Create the movement record
+        const [movement] = await tx.insert(inventory_movements).values(data).returning();
+        
+        // STEP 4: Update inventory stock atomically
+        if (movement.inventory_id) {
+          await tx.update(inventory)
+            .set({ current_stock: newStock.toString(), last_updated: new Date() })
+            .where(eq(inventory.id, movement.inventory_id));
+        }
+        
+        return movement;
+      });
+    }, 'إنشاء حركة مخزون');
   }
 
   async deleteInventoryMovement(id: number): Promise<boolean> {

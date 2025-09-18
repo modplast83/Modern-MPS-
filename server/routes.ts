@@ -24,6 +24,8 @@ import {
   insertMaintenanceReportSchema,
   insertOperatorNegligenceReportSchema,
   insertInventoryMovementSchema,
+  insertInventorySchema,
+  insertCustomerProductSchema,
   insertCutSchema,
   insertWarehouseReceiptSchema,
   insertProductionSettingsSchema,
@@ -1686,13 +1688,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/customer-products", async (req, res) => {
+  app.post("/api/customer-products", requireAuth, async (req, res) => {
     try {
-      const customerProduct = await storage.createCustomerProduct(req.body);
-      res.json(customerProduct);
-    } catch (error) {
+      // STEP 1: Zod schema validation
+      const validatedData = insertCustomerProductSchema.parse(req.body);
+      
+      // STEP 2: DataValidator integration for business rules
+      const validationResult = await getDataValidator().validateData('customer_products', validatedData);
+      if (!validationResult.isValid) {
+        const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
+        if (criticalErrors.length > 0) {
+          return res.status(400).json({ 
+            message: criticalErrors[0].message_ar || criticalErrors[0].message,
+            errors: validationResult.errors,
+            success: false
+          });
+        }
+      }
+      
+      // STEP 3: Create customer product with validated data
+      const customerProduct = await storage.createCustomerProduct(validatedData);
+      
+      res.status(201).json({
+        data: customerProduct,
+        message: "تم إنشاء منتج العميل بنجاح",
+        success: true
+      });
+    } catch (error: any) {
       console.error('Customer product creation error:', error);
-      res.status(500).json({ message: "خطأ في إنشاء منتج العميل" });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في إنشاء منتج العميل",
+        success: false 
+      });
     }
   });
 
@@ -2885,7 +2920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/machines", async (req, res) => {
+  app.post("/api/machines", requireAuth, async (req, res) => {
     try {
       console.log('Received machine data:', req.body);
       
@@ -2914,13 +2949,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: machineId
       };
       
+      // STEP 1: DataValidator integration for business rules
+      const validationResult = await getDataValidator().validateData('machines', processedData);
+      if (!validationResult.isValid) {
+        const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
+        if (criticalErrors.length > 0) {
+          return res.status(400).json({ 
+            message: criticalErrors[0].message_ar || criticalErrors[0].message,
+            errors: validationResult.errors,
+            success: false
+          });
+        }
+      }
+      
       console.log('Processed machine data:', processedData);
       const machine = await storage.createMachine(processedData);
       console.log('Created machine:', machine);
-      res.json(machine);
-    } catch (error) {
+      
+      res.status(201).json({
+        data: machine,
+        message: "تم إنشاء الماكينة بنجاح",
+        success: true
+      });
+    } catch (error: any) {
       console.error('Machine creation error:', error);
-      res.status(500).json({ message: "خطأ في إنشاء الماكينة", error: error instanceof Error ? error.message : 'Unknown error' });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في إنشاء الماكينة",
+        success: false 
+      });
     }
   });
 
@@ -3896,22 +3960,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/inventory", async (req, res) => {
+  app.post("/api/inventory", requireAuth, async (req, res) => {
     try {
-      const item = await storage.createInventoryItem(req.body);
-      res.json(item);
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في إضافة صنف للمخزون" });
+      // STEP 1: Zod schema validation
+      const validatedData = insertInventorySchema.parse(req.body);
+      
+      // STEP 2: DataValidator integration for business rules
+      const validationResult = await getDataValidator().validateData('inventory', validatedData);
+      if (!validationResult.isValid) {
+        const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
+        if (criticalErrors.length > 0) {
+          return res.status(400).json({ 
+            message: criticalErrors[0].message_ar || criticalErrors[0].message,
+            errors: validationResult.errors,
+            success: false
+          });
+        }
+      }
+      
+      // STEP 3: Create inventory item with validated data
+      const item = await storage.createInventoryItem(validatedData);
+      
+      res.status(201).json({
+        data: item,
+        message: "تم إضافة صنف المخزون بنجاح",
+        success: true
+      });
+    } catch (error: any) {
+      console.error('Inventory creation error:', error);
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في إضافة صنف للمخزون",
+        success: false 
+      });
     }
   });
 
-  app.put("/api/inventory/:id", async (req, res) => {
+  app.put("/api/inventory/:id", requireAuth, async (req, res) => {
     try {
+      // STEP 1: Parameter validation
       const id = parseInt(req.params.id);
-      const item = await storage.updateInventoryItem(id, req.body);
-      res.json(item);
-    } catch (error) {
-      res.status(500).json({ message: "خطأ في تحديث صنف المخزون" });
+      if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ 
+          message: "معرف المخزون غير صحيح",
+          success: false 
+        });
+      }
+      
+      // STEP 2: Zod schema validation (partial for updates)
+      const validatedData = insertInventorySchema.partial().parse(req.body);
+      
+      // STEP 3: DataValidator integration for business rules
+      const validationResult = await getDataValidator().validateData('inventory', validatedData, true);
+      if (!validationResult.isValid) {
+        const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
+        if (criticalErrors.length > 0) {
+          return res.status(400).json({ 
+            message: criticalErrors[0].message_ar || criticalErrors[0].message,
+            errors: validationResult.errors,
+            success: false
+          });
+        }
+      }
+      
+      // STEP 4: Update inventory item with validated data
+      const item = await storage.updateInventoryItem(id, validatedData);
+      
+      res.json({
+        data: item,
+        message: "تم تحديث صنف المخزون بنجاح",
+        success: true
+      });
+    } catch (error: any) {
+      console.error('Inventory update error:', error);
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في تحديث صنف المخزون",
+        success: false 
+      });
     }
   });
 
@@ -4045,26 +4185,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/orders/:id/status", async (req, res) => {
+  app.patch("/api/orders/:id/status", requireAuth, async (req, res) => {
     try {
       const orderId = parseInt(req.params.id);
       const { status } = req.body;
       
       if (!status) {
-        return res.status(400).json({ message: "الحالة مطلوبة" });
+        return res.status(400).json({ message: "الحالة مطلوبة", success: false });
       }
 
-      // Validate status values (new and legacy statuses)
+      // Enhanced status validation with state transition rules (INVARIANT D)
       const validStatuses = ['waiting', 'in_production', 'paused', 'completed', 'cancelled', 'pending', 'for_production', 'on_hold', 'in_progress', 'delivered'];
       if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: "حالة غير صحيحة" });
+        return res.status(400).json({ message: "حالة غير صحيحة", success: false });
       }
       
-      const order = await storage.updateOrderStatus(orderId, status);
-      res.json(order);
-    } catch (error) {
+      // STEP 1: Get current order status for state transition validation
+      const currentOrder = await storage.getOrderById(orderId);
+      if (!currentOrder) {
+        return res.status(404).json({ message: "الطلب غير موجود", success: false });
+      }
+      
+      // STEP 2: INVARIANT D - State transition validation with business rules
+      const currentStatus = currentOrder.status;
+      const newStatus = status;
+      
+      // Define valid state transitions based on business logic
+      const validTransitions: Record<string, string[]> = {
+        'pending': ['waiting', 'for_production', 'cancelled'],
+        'waiting': ['in_production', 'for_production', 'on_hold', 'cancelled'],
+        'for_production': ['in_production', 'waiting', 'on_hold', 'cancelled'],
+        'in_production': ['paused', 'completed', 'on_hold', 'in_progress'],
+        'in_progress': ['paused', 'completed', 'on_hold'],
+        'paused': ['in_production', 'in_progress', 'cancelled'],
+        'on_hold': ['waiting', 'for_production', 'cancelled'],
+        'completed': ['delivered'], // Only allow delivery from completed
+        'delivered': [], // Terminal state - no further transitions
+        'cancelled': [] // Terminal state - no further transitions
+      };
+      
+      // Check if transition is allowed
+      const allowedNextStates = validTransitions[currentStatus] || [];
+      if (currentStatus !== newStatus && !allowedNextStates.includes(newStatus)) {
+        return res.status(400).json({ 
+          message: `لا يمكن تغيير حالة الطلب من "${currentStatus}" إلى "${newStatus}". التحولات المسموحة: ${allowedNextStates.join(', ')}`,
+          success: false,
+          currentStatus,
+          requestedStatus: newStatus,
+          allowedTransitions: allowedNextStates
+        });
+      }
+      
+      // STEP 3: Additional business rule validations
+      if (newStatus === 'completed') {
+        // Check if all production orders are completed before marking order as completed
+        const productionOrders = await storage.getProductionOrdersByOrderId(orderId);
+        const incompleteProdOrders = productionOrders.filter(po => po.status !== 'completed');
+        
+        if (incompleteProdOrders.length > 0) {
+          return res.status(400).json({ 
+            message: `لا يمكن إتمام الطلب - يوجد ${incompleteProdOrders.length} أوامر إنتاج غير مكتملة`,
+            success: false,
+            incompleteProdOrders: incompleteProdOrders.length
+          });
+        }
+      }
+      
+      if (newStatus === 'cancelled') {
+        // Check if there are production orders in progress
+        const productionOrders = await storage.getProductionOrdersByOrderId(orderId);
+        const activeProdOrders = productionOrders.filter(po => ['in_progress', 'in_production'].includes(po.status));
+        
+        if (activeProdOrders.length > 0) {
+          return res.status(400).json({ 
+            message: `لا يمكن إلغاء الطلب - يوجد ${activeProdOrders.length} أوامر إنتاج نشطة`,
+            success: false,
+            activeProdOrders: activeProdOrders.length
+          });
+        }
+      }
+      
+      // STEP 4: Perform atomic status update with validation
+      const order = await storage.updateOrderStatus(orderId, newStatus);
+      
+      res.json({
+        data: order,
+        message: `تم تغيير حالة الطلب إلى "${newStatus}" بنجاح`,
+        success: true,
+        previousStatus: currentStatus,
+        currentStatus: newStatus
+      });
+    } catch (error: any) {
       console.error('Error updating order status:', error);
-      res.status(500).json({ message: "خطأ في تحديث حالة الطلب" });
+      
+      if (error.name === 'DatabaseError') {
+        return res.status(400).json({
+          message: error.message,
+          success: false
+        });
+      }
+      
+      res.status(500).json({ 
+        message: "خطأ في تحديث حالة الطلب",
+        success: false 
+      });
     }
   });
 
@@ -4765,30 +4989,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create Roll with QR
-  app.post("/api/rolls", async (req, res) => {
+  app.post("/api/rolls", 
+    requireAuth,
+    validateRequest({ body: insertRollSchema }),
+    async (req, res) => {
     try {
       console.log('Roll creation request body:', req.body);
       
-      const validationSchema = z.object({
-        production_order_id: z.number(),
-        machine_id: z.string(),
-        weight_kg: z.number().positive("الوزن يجب أن يكون أكبر من صفر")
-      });
-
-      const validated = validationSchema.parse(req.body);
+      // Get DataValidator for business rule enforcement
+      const dataValidator = getDataValidator();
       
-      if (!req.session.userId) {
-        return res.status(401).json({ message: "غير مسجل الدخول" });
-      }
-
+      // Add created_by from session
       const rollData = {
-        production_order_id: validated.production_order_id,
-        machine_id: validated.machine_id,
-        weight_kg: validated.weight_kg,
+        ...req.body,
         created_by: req.session.userId
       };
       
-      // Generate QR code and roll number
+      // INVARIANT B: Validate roll weight against production order limits
+      const productionOrder = await storage.getProductionOrderById(rollData.production_order_id);
+      if (!productionOrder) {
+        return res.status(400).json({ 
+          message: "أمر الإنتاج غير موجود",
+          field: "production_order_id"
+        });
+      }
+      
+      // INVARIANT E: Validate machine is active
+      const machine = await storage.getMachineById(rollData.machine_id);
+      if (!machine) {
+        return res.status(400).json({ 
+          message: "المكينة غير موجودة", 
+          field: "machine_id"
+        });
+      }
+      if (machine.status !== 'active') {
+        return res.status(400).json({ 
+          message: "المكينة غير نشطة - لا يمكن إنشاء رولات عليها", 
+          field: "machine_id"
+        });
+      }
+      
+      // Run synchronous business rule validation
+      const validationResult = await dataValidator.validateRollCreation(rollData);
+      if (!validationResult.isValid) {
+        return res.status(400).json({
+          message: "فشل في التحقق من قواعد العمل",
+          errors: validationResult.errors,
+          warnings: validationResult.warnings
+        });
+      }
+      
+      // Generate QR code and roll number with validation passed
       const roll = await storage.createRollWithQR(rollData);
       res.status(201).json(roll);
     } catch (error) {
