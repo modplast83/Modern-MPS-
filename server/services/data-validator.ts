@@ -623,6 +623,80 @@ export class DataValidator {
   }
 
   /**
+   * Validate roll creation against business invariants
+   * INVARIANT B: Sum of roll weights ≤ ProductionOrder.final_quantity_kg + tolerance
+   */
+  async validateRollCreation(rollData: any): Promise<ValidationResult> {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+    
+    try {
+      // Get production order
+      const productionOrder = await this.storage.getProductionOrderById(rollData.production_order_id);
+      if (!productionOrder) {
+        errors.push({
+          field: 'production_order_id',
+          message: 'Production order not found',
+          message_ar: 'أمر الإنتاج غير موجود',
+          severity: 'high',
+          rule_id: 'production_order_exists'
+        });
+        return { isValid: false, errors, warnings };
+      }
+      
+      // Get existing rolls for this production order
+      const existingRolls = await this.storage.getRollsByProductionOrder(rollData.production_order_id);
+      const existingTotalWeight = existingRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg || '0'), 0);
+      
+      // Calculate remaining capacity
+      const finalQuantity = parseFloat(productionOrder.final_quantity_kg || '0');
+      const proposedWeight = parseFloat(rollData.weight_kg || '0');
+      const newTotalWeight = existingTotalWeight + proposedWeight;
+      
+      // Get production settings for tolerance
+      const settings = await this.storage.getProductionSettings();
+      const tolerance = parseFloat(settings.overrun_tolerance_percent || '3') / 100;
+      const maxAllowedWeight = finalQuantity * (1 + tolerance);
+      
+      // INVARIANT B: Check weight constraint
+      if (newTotalWeight > maxAllowedWeight) {
+        errors.push({
+          field: 'weight_kg',
+          message: `Roll weight exceeds production order limits. Current: ${existingTotalWeight}kg, Proposed: ${proposedWeight}kg, Max allowed: ${maxAllowedWeight}kg`,
+          message_ar: `وزن الرول يتجاوز حدود أمر الإنتاج. الحالي: ${existingTotalWeight} كيلو، المقترح: ${proposedWeight} كيلو، الحد الأقصى: ${maxAllowedWeight} كيلو`,
+          severity: 'high',
+          rule_id: 'roll_weight_constraint'
+        });
+      }
+      
+      // Warning if approaching limit (90% of max)
+      if (newTotalWeight > maxAllowedWeight * 0.9 && errors.length === 0) {
+        warnings.push({
+          field: 'weight_kg',
+          message: 'Roll weight approaching production order limits',
+          message_ar: 'وزن الرول يقترب من حدود أمر الإنتاج',
+          suggestion: 'Consider reducing weight or creating additional production orders',
+          suggestion_ar: 'انظر في تقليل الوزن أو إنشاء أوامر إنتاج إضافية'
+        });
+      }
+      
+      return { isValid: errors.length === 0, errors, warnings };
+      
+    } catch (error) {
+      console.error('[DataValidator] Error validating roll creation:', error);
+      errors.push({
+        field: 'system',
+        message: 'System validation error',
+        message_ar: 'خطأ في نظام التحقق',
+        severity: 'critical',
+        rule_id: 'system_error'
+      });
+      return { isValid: false, errors, warnings };
+    }
+  }
+
+  /**
    * فحص سلامة قاعدة البيانات
    */
   async validateDatabaseIntegrity(): Promise<{
@@ -676,6 +750,136 @@ export class DataValidator {
   addCustomValidator(name: string, validator: Function): void {
     this.customValidators.set(name, validator);
     console.log(`[DataValidator] تم إضافة مدقق مخصص: ${name}`);
+  }
+
+  /**
+   * CRITICAL: validateEntity - Main validation entry point for all database writes
+   * This method MUST be called before every database insert/update operation
+   * Enforces business rules, invariants, and data integrity constraints
+   */
+  async validateEntity(tableName: string, data: Record<string, any>, isUpdate: boolean = false): Promise<ValidationResult> {
+    console.log(`[DataValidator] 🔒 Validating ${tableName} entity:`, { tableName, isUpdate, dataKeys: Object.keys(data) });
+    
+    try {
+      // Call the main validation method with enhanced logging
+      const result = await this.validateData(tableName, data, isUpdate);
+      
+      // Enhanced error logging for critical failures
+      if (!result.isValid) {
+        console.error(`[DataValidator] ❌ VALIDATION FAILED for ${tableName}:`, {
+          errors: result.errors,
+          warnings: result.warnings,
+          data: data
+        });
+      } else {
+        console.log(`[DataValidator] ✅ Validation passed for ${tableName}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error(`[DataValidator] CRITICAL ERROR during ${tableName} validation:`, error);
+      return {
+        isValid: false,
+        errors: [{
+          field: '_system',
+          message: 'Validation system error',
+          message_ar: 'خطأ في نظام التحقق',
+          severity: 'critical',
+          rule_id: 'system_error',
+          value: error
+        }],
+        warnings: []
+      };
+    }
+  }
+
+  /**
+   * CRITICAL: validateStatusTransition - Enforces valid state transitions
+   * Prevents invalid status changes that could corrupt business workflow
+   */
+  async validateStatusTransition(tableName: string, currentStatus: string, newStatus: string, entityId: number): Promise<ValidationResult> {
+    console.log(`[DataValidator] 🔄 Validating status transition for ${tableName}:`, { 
+      entityId, currentStatus, newStatus 
+    });
+    
+    const errors: ValidationError[] = [];
+    const warnings: ValidationWarning[] = [];
+    
+    try {
+      // Define valid status transitions by table
+      const validTransitions: Record<string, Record<string, string[]>> = {
+        orders: {
+          'waiting': ['in_production', 'cancelled'],
+          'in_production': ['completed', 'paused', 'cancelled'],
+          'paused': ['in_production', 'cancelled'],
+          'completed': [], // No transitions allowed from completed
+          'cancelled': [] // No transitions allowed from cancelled
+        },
+        production_orders: {
+          'pending': ['active', 'cancelled'],
+          'active': ['completed', 'cancelled'],
+          'completed': [], // No transitions allowed from completed
+          'cancelled': [] // No transitions allowed from cancelled
+        },
+        rolls: {
+          'film': ['printing', 'cutting'], // Can skip printing if not needed
+          'printing': ['cutting'],
+          'cutting': ['done'],
+          'done': [] // No transitions allowed from done
+        }
+      };
+      
+      // Check if table has defined transitions
+      const tableTransitions = validTransitions[tableName];
+      if (!tableTransitions) {
+        warnings.push({
+          field: 'status',
+          message: `No status transition rules defined for ${tableName}`,
+          message_ar: `لا توجد قواعد انتقال حالة محددة لـ ${tableName}`
+        });
+        return { isValid: true, errors, warnings };
+      }
+      
+      // Check if current status exists
+      const allowedFromCurrent = tableTransitions[currentStatus];
+      if (!allowedFromCurrent) {
+        errors.push({
+          field: 'status',
+          message: `Invalid current status: ${currentStatus}`,
+          message_ar: `حالة حالية غير صحيحة: ${currentStatus}`,
+          severity: 'high',
+          rule_id: 'invalid_current_status'
+        });
+        return { isValid: false, errors, warnings };
+      }
+      
+      // Check if transition is allowed
+      if (!allowedFromCurrent.includes(newStatus)) {
+        errors.push({
+          field: 'status',
+          message: `Invalid status transition: ${currentStatus} → ${newStatus}`,
+          message_ar: `انتقال حالة غير صحيح: ${currentStatus} ← ${newStatus}`,
+          severity: 'high',
+          rule_id: 'invalid_status_transition',
+          value: { from: currentStatus, to: newStatus, allowed: allowedFromCurrent }
+        });
+        return { isValid: false, errors, warnings };
+      }
+      
+      console.log(`[DataValidator] ✅ Valid status transition: ${currentStatus} → ${newStatus}`);
+      return { isValid: true, errors, warnings };
+      
+    } catch (error) {
+      console.error('[DataValidator] Error validating status transition:', error);
+      errors.push({
+        field: 'status',
+        message: 'Error validating status transition',
+        message_ar: 'خطأ في التحقق من انتقال الحالة',
+        severity: 'critical',
+        rule_id: 'transition_validation_error'
+      });
+      return { isValid: false, errors, warnings };
+    }
   }
 }
 
