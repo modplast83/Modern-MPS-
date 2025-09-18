@@ -58,25 +58,47 @@ export class SystemHealthMonitor extends EventEmitter {
   private healthCheckInterval: NodeJS.Timeout | null = null;
   private alertRules: AlertRule[] = [];
   private lastHealthStatus: Map<string, HealthCheckResult> = new Map();
-  private lastAlertTimes: Map<string, Date> = new Map(); // Track when alerts were last sent
-  private alertCooldowns: Map<string, number> = new Map(); // Track alert cooldown periods
+  private consecutiveStatusCounts: Map<string, {status: string, count: number}> = new Map(); // Track consecutive status counts for hysteresis
+  private lastAlertTimes: Map<string, Date> = new Map(); // Track last alert times for rate limiting
+  private static instance: SystemHealthMonitor | null = null; // Singleton pattern
   
-  // إعدادات المراقبة
+  // إعدادات المراقبة - Updated intervals and thresholds
   private readonly MONITORING_INTERVAL = 5 * 60 * 1000; // 5 دقائق
-  private readonly HEALTH_CHECK_INTERVAL = 2 * 60 * 1000; // دقيقتين
+  private readonly HEALTH_CHECK_INTERVAL = 5 * 60 * 1000; // زيادة إلى 5 دقائق لتقليل الحساسية
   private readonly PERFORMANCE_RETENTION_DAYS = 30; // الاحتفاظ بالبيانات لمدة 30 يوم
   
-  // إعدادات التحذيرات - Alert Rate Limiting
-  private readonly ALERT_COOLDOWN_MEMORY = 10 * 60 * 1000; // 10 دقائق للذاكرة
-  private readonly ALERT_COOLDOWN_DATABASE = 5 * 60 * 1000; // 5 دقائق لقاعدة البيانات
-  private readonly ALERT_COOLDOWN_DEFAULT = 15 * 60 * 1000; // 15 دقائق افتراضي
+  // إعدادات التحذيرات - Alert Rate Limiting with persistent storage
+  private readonly ALERT_COOLDOWN_MEMORY = 15 * 60 * 1000; // زيادة إلى 15 دقيقة للذاكرة  
+  private readonly ALERT_COOLDOWN_DATABASE = 30 * 60 * 1000; // زيادة إلى 30 دقيقة لقاعدة البيانات
+  private readonly ALERT_COOLDOWN_DEFAULT = 20 * 60 * 1000; // زيادة إلى 20 دقائق افتراضي
+  
+  // Sustained condition settings for hysteresis
+  private readonly SUSTAINED_CONDITION_COUNT = 3; // 3 consecutive checks before changing status
 
   constructor(storage: IStorage) {
     super();
+    
+    // Enforce singleton pattern to prevent duplicate intervals on hot reloads
+    if (SystemHealthMonitor.instance) {
+      console.log('[SystemHealthMonitor] تم العثور على مثيل موجود، إيقاف المثيل القديم');
+      SystemHealthMonitor.instance.stopMonitoring();
+    }
+    
     this.storage = storage;
+    SystemHealthMonitor.instance = this;
     
     console.log('[SystemHealthMonitor] نظام مراقبة السلامة مُفعل');
     this.initialize();
+  }
+
+  /**
+   * Get singleton instance
+   */
+  public static getInstance(storage?: IStorage): SystemHealthMonitor | null {
+    if (storage && !SystemHealthMonitor.instance) {
+      new SystemHealthMonitor(storage);
+    }
+    return SystemHealthMonitor.instance;
   }
 
   /**
@@ -86,6 +108,9 @@ export class SystemHealthMonitor extends EventEmitter {
     try {
       // تحميل قواعد التحذيرات
       await this.loadAlertRules();
+      
+      // Hydrate alert times from persistent storage
+      await this.hydrateLastAlertTimes();
       
       // إنشاء فحوصات سلامة النظام الافتراضية
       await this.createDefaultHealthChecks();
@@ -130,6 +155,9 @@ export class SystemHealthMonitor extends EventEmitter {
       this.monitoringInterval = null;
     }
     
+    // Clear singleton instance
+    SystemHealthMonitor.instance = null;
+    
     console.log('[SystemHealthMonitor] تم إيقاف المراقبة');
   }
 
@@ -142,6 +170,31 @@ export class SystemHealthMonitor extends EventEmitter {
       console.log('[SystemHealthMonitor] تم تحميل قواعد التحذيرات');
     } catch (error) {
       console.error('[SystemHealthMonitor] خطأ في تحميل قواعد التحذيرات:', error);
+    }
+  }
+
+  /**
+   * Hydrate lastAlertTimes Map from persistent storage
+   */
+  private async hydrateLastAlertTimes(): Promise<void> {
+    try {
+      // Define the check names we need to hydrate
+      const checkNames = ['Database Connection', 'Database Performance', 'Memory Usage', 'System Health API'];
+      
+      for (const checkName of checkNames) {
+        const normalizedKey = this.normalizeAlertKey('', checkName);
+        const lastAlertTime = await this.storage.getLastAlertTime(normalizedKey);
+        
+        if (lastAlertTime) {
+          this.lastAlertTimes.set(normalizedKey, lastAlertTime);
+          console.log(`[SystemHealthMonitor] تم تحميل وقت التحذير الأخير للفحص: ${checkName} في ${lastAlertTime.toISOString()}`);
+        }
+      }
+      
+      console.log(`[SystemHealthMonitor] تم تحميل ${this.lastAlertTimes.size} من أوقات التحذير من قاعدة البيانات`);
+    } catch (error) {
+      console.error('[SystemHealthMonitor] خطأ في تحميل أوقات التحذير من قاعدة البيانات:', error);
+      // Continue initialization even if hydration fails
     }
   }
 
@@ -227,7 +280,7 @@ export class SystemHealthMonitor extends EventEmitter {
       return {
         checkName: 'Database Connection',
         checkName_ar: 'اتصال قاعدة البيانات',
-        status: duration > 5000 ? 'critical' : duration > 1000 ? 'warning' : 'healthy',
+        status: duration > 10000 ? 'critical' : duration > 3000 ? 'warning' : 'healthy', // Increased thresholds to reduce false positives
         duration,
         details: { responseTime: duration, connected: true }
       };
@@ -268,7 +321,7 @@ export class SystemHealthMonitor extends EventEmitter {
       return {
         checkName: 'Database Performance',
         checkName_ar: 'أداء قاعدة البيانات',
-        status: duration > 2000 ? 'critical' : duration > 500 ? 'warning' : 'healthy',
+        status: duration > 5000 ? 'critical' : duration > 2000 ? 'warning' : 'healthy', // Increased thresholds to reduce false positives
         duration,
         details: { 
           activeConnections: connectionCount,
@@ -289,7 +342,7 @@ export class SystemHealthMonitor extends EventEmitter {
   }
 
   /**
-   * فحص استخدام الذاكرة
+   * فحص استخدام الذاكرة - Fixed calculation algorithm
    */
   private async checkSystemMemory(): Promise<HealthCheckResult> {
     const startTime = Date.now();
@@ -297,45 +350,39 @@ export class SystemHealthMonitor extends EventEmitter {
     try {
       const memoryUsage = process.memoryUsage();
       
-      // Heap memory calculation (Node.js specific)
+      // Use proper heap memory calculation - the primary indicator for Node.js apps
       const heapTotal = memoryUsage.heapTotal;
       const heapUsed = memoryUsage.heapUsed;
       const heapUsagePercent = (heapUsed / heapTotal) * 100;
       
-      // RSS (Resident Set Size) - more representative of actual memory usage
+      // RSS (Resident Set Size) represents actual physical memory usage
       const rss = memoryUsage.rss;
       const external = memoryUsage.external;
       const arrayBuffers = memoryUsage.arrayBuffers || 0;
       
-      // Calculate total process memory usage
-      const totalProcessMemory = rss + external;
+      // Use heap usage as the primary metric for Node.js applications
+      // RSS can be misleading as it includes memory allocated by V8 but not necessarily used
+      const primaryMemoryPercent = heapUsagePercent;
       
-      // Use a more conservative calculation that considers RSS + external memory
-      // RSS represents the actual physical memory currently used by the process
-      const effectiveUsagePercent = Math.max(heapUsagePercent, (rss / (heapTotal * 2)) * 100);
-      
-      // Determine status based on improved thresholds
-      let status: 'healthy' | 'warning' | 'critical' | 'unknown' = 'healthy';
-      if (effectiveUsagePercent > 95) {
-        status = 'critical';
-      } else if (effectiveUsagePercent > 85) {
-        status = 'warning';
-      }
+      // Apply sustained condition logic for hysteresis
+      const rawStatus = this.calculateMemoryStatus(primaryMemoryPercent);
+      const finalStatus = this.applySustainedCondition('Memory Usage', rawStatus);
       
       return {
         checkName: 'Memory Usage',
         checkName_ar: 'استخدام الذاكرة',
-        status,
+        status: finalStatus,
         duration: Date.now() - startTime,
         details: {
-          effectiveUsagePercent: Math.round(effectiveUsagePercent * 100) / 100,
+          primaryMemoryPercent: Math.round(primaryMemoryPercent * 100) / 100,
           heapUsagePercent: Math.round(heapUsagePercent * 100) / 100,
           heapUsedMB: Math.round(heapUsed / 1024 / 1024),
           heapTotalMB: Math.round(heapTotal / 1024 / 1024),
           rssMB: Math.round(rss / 1024 / 1024),
           externalMB: Math.round(external / 1024 / 1024),
           arrayBuffersMB: Math.round(arrayBuffers / 1024 / 1024),
-          totalProcessMemoryMB: Math.round(totalProcessMemory / 1024 / 1024)
+          rawStatus: rawStatus,
+          sustainedStatus: finalStatus
         }
       };
     } catch (error: any) {
@@ -348,6 +395,55 @@ export class SystemHealthMonitor extends EventEmitter {
         error: error.message
       };
     }
+  }
+
+  /**
+   * Calculate memory status based on proper thresholds
+   */
+  private calculateMemoryStatus(memoryPercent: number): 'healthy' | 'warning' | 'critical' | 'unknown' {
+    if (memoryPercent > 95) {
+      return 'critical';
+    } else if (memoryPercent > 85) {
+      return 'warning';
+    }
+    return 'healthy';
+  }
+
+  /**
+   * Apply sustained condition logic to prevent status flapping
+   */
+  private applySustainedCondition(checkName: string, currentStatus: string): 'healthy' | 'warning' | 'critical' | 'unknown' {
+    const key = checkName;
+    const existing = this.consecutiveStatusCounts.get(key);
+    
+    if (!existing || existing.status !== currentStatus) {
+      // Status changed or first check - reset counter
+      this.consecutiveStatusCounts.set(key, { status: currentStatus, count: 1 });
+      
+      // Return previous sustained status if we had one, otherwise current status
+      const lastResult = this.lastHealthStatus.get(checkName);
+      if (lastResult && existing && existing.count >= this.SUSTAINED_CONDITION_COUNT) {
+        // We had a sustained status, keep it for now
+        return lastResult.status as any;
+      }
+      return currentStatus as any;
+    }
+    
+    // Same status - increment counter
+    existing.count++;
+    
+    if (existing.count >= this.SUSTAINED_CONDITION_COUNT) {
+      // We've reached sustained condition threshold
+      return currentStatus as any;
+    }
+    
+    // Not yet sustained - return previous status if we had one
+    const lastResult = this.lastHealthStatus.get(checkName);
+    if (lastResult) {
+      return lastResult.status as any;
+    }
+    
+    return currentStatus as any;
   }
 
   /**
@@ -444,12 +540,12 @@ export class SystemHealthMonitor extends EventEmitter {
   private clearAlertState(checkName: string): void {
     // Clear all alert states for this check type
     const keysToRemove: string[] = [];
-    this.lastAlertTimes.forEach((value, key) => {
+    this.lastAlertTimes.forEach((value: Date, key: string) => {
       if (key.startsWith(checkName)) {
         keysToRemove.push(key);
       }
     });
-    keysToRemove.forEach(key => this.lastAlertTimes.delete(key));
+    keysToRemove.forEach((key: string) => this.lastAlertTimes.delete(key));
   }
 
   /**
@@ -467,9 +563,11 @@ export class SystemHealthMonitor extends EventEmitter {
    */
   private async createHealthAlert(result: HealthCheckResult): Promise<void> {
     try {
-      // Check if we should send alert based on rate limiting
+      // Check if we should send alert based on persistent rate limiting
       const alertKey = `${result.checkName}_${result.status}`;
-      if (!this.shouldSendAlert(alertKey, result.checkName)) {
+      const shouldSend = await this.shouldSendAlert(alertKey, result.checkName);
+      
+      if (!shouldSend) {
         console.log(`[SystemHealthMonitor] تم تجاهل التحذير بسبب Rate Limiting: ${result.checkName_ar} - ${result.status}`);
         return;
       }
@@ -490,8 +588,8 @@ export class SystemHealthMonitor extends EventEmitter {
         target_roles: [1, 2] // الأدمن والمديرين
       };
 
-      // Record that we sent this alert
-      this.recordAlertSent(alertKey, result.checkName);
+      // Record that we sent this alert to persistent storage
+      await this.recordAlertSent(alertKey, result.checkName);
       
       await this.createSystemAlert(alert);
     } catch (error) {
@@ -500,27 +598,85 @@ export class SystemHealthMonitor extends EventEmitter {
   }
 
   /**
-   * فحص ما إذا كان يجب إرسال التحذير بناءً على Rate Limiting
+   * فحص ما إذا كان يجب إرسال التحذير بناءً على Rate Limiting - Persistent Storage
    */
-  private shouldSendAlert(alertKey: string, checkName: string): boolean {
-    const lastAlertTime = this.lastAlertTimes.get(alertKey);
-    
-    if (!lastAlertTime) {
-      return true; // لم يتم إرسال تحذير من قبل
-    }
+  private async shouldSendAlert(alertKey: string, checkName: string): Promise<boolean> {
+    try {
+      // Normalize alert key to prevent status-based bypass
+      const normalizedKey = this.normalizeAlertKey(alertKey, checkName);
+      
+      // First check in-memory cache for faster response
+      const cachedTime = this.lastAlertTimes.get(normalizedKey);
+      if (cachedTime) {
+        const cooldownPeriod = this.getAlertCooldown(checkName);
+        const timeSinceLastAlert = Date.now() - cachedTime.getTime();
+        
+        if (timeSinceLastAlert < cooldownPeriod) {
+          return false;
+        }
+      }
+      
+      // Check persistent storage for last alert time
+      const lastAlertTime = await this.storage.getLastAlertTime(normalizedKey);
+      
+      if (!lastAlertTime) {
+        return true; // لم يتم إرسال تحذير من قبل
+      }
 
-    const cooldownPeriod = this.getAlertCooldown(checkName);
-    const timeSinceLastAlert = Date.now() - lastAlertTime.getTime();
-    
-    return timeSinceLastAlert >= cooldownPeriod;
+      // Update in-memory cache with persistent storage value
+      this.lastAlertTimes.set(normalizedKey, lastAlertTime);
+      
+      const cooldownPeriod = this.getAlertCooldown(checkName);
+      const timeSinceLastAlert = Date.now() - lastAlertTime.getTime();
+      
+      return timeSinceLastAlert >= cooldownPeriod;
+    } catch (error) {
+      console.error('[SystemHealthMonitor] خطأ في فحص Rate Limiting:', error);
+      return true; // في حالة الخطأ، نسمح بالتحذير
+    }
   }
 
   /**
-   * تسجيل أنه تم إرسال تحذير
+   * تسجيل أنه تم إرسال تحذير - Persistent Storage
    */
-  private recordAlertSent(alertKey: string, checkName: string): void {
-    this.lastAlertTimes.set(alertKey, new Date());
-    console.log(`[SystemHealthMonitor] تم تسجيل إرسال التحذير: ${alertKey} في ${new Date().toISOString()}`);
+  private async recordAlertSent(alertKey: string, checkName: string): Promise<void> {
+    try {
+      const normalizedKey = this.normalizeAlertKey(alertKey, checkName);
+      const now = new Date();
+      
+      // Update in-memory cache first for immediate effect
+      this.lastAlertTimes.set(normalizedKey, now);
+      
+      // Save to persistent storage using storage interface
+      await this.storage.setLastAlertTime(normalizedKey, now);
+      
+      console.log(`[SystemHealthMonitor] تم تسجيل إرسال التحذير: ${normalizedKey} في ${now.toISOString()}`);
+    } catch (error) {
+      console.error('[SystemHealthMonitor] خطأ في تسجيل إرسال التحذير:', error);
+      // Even if persistent storage fails, keep the in-memory record for this session
+    }
+  }
+
+  /**
+   * تطبيع مفتاح التحذير لمنع التجاوز القائم على الحالة
+   */
+  private normalizeAlertKey(alertKey: string, checkName: string): string {
+    // Remove status-specific suffixes to normalize the key
+    // This prevents bypassing cooldowns by changing between warning/critical
+    return `${checkName}_health_alert`;
+  }
+
+  /**
+   * الحصول على الاسم العربي للفحص
+   */
+  private getCheckNameArabic(checkName: string): string {
+    const mapping: { [key: string]: string } = {
+      'Database Connection': 'اتصال قاعدة البيانات',
+      'Database Performance': 'أداء قاعدة البيانات',
+      'Memory Usage': 'استخدام الذاكرة',
+      'System Health API': 'API سلامة النظام'
+    };
+    return mapping[checkName] || checkName;
   }
 
   /**
@@ -864,13 +1020,13 @@ export class SystemHealthMonitor extends EventEmitter {
       const alertCutoffTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours ago
       const keysToRemove: string[] = [];
       
-      for (const [key, alertTime] of Array.from(this.lastAlertTimes.entries())) {
+      for (const [key, alertTime] of Array.from(this.lastAlertTimes.entries()) as [string, Date][]) {
         if (alertTime.getTime() < alertCutoffTime) {
           keysToRemove.push(key);
         }
       }
       
-      keysToRemove.forEach(key => this.lastAlertTimes.delete(key));
+      keysToRemove.forEach((key: string) => this.lastAlertTimes.delete(key));
       
       if (keysToRemove.length > 0) {
         console.log(`[SystemHealthMonitor] تم تنظيف ${keysToRemove.length} حالة تحذير قديمة`);

@@ -626,9 +626,15 @@ export interface IStorage {
   getLowStockItems(): Promise<number>;
   getBrokenMachines(): Promise<number>;
   getQualityIssues(): Promise<number>;
+  
+  // Alert Rate Limiting - Persistent Storage
+  getLastAlertTime(checkKey: string): Promise<Date | null>;
+  setLastAlertTime(checkKey: string, timestamp: Date): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
+  // In-memory storage for alert rate limiting - persistent during server session
+  private alertTimesStorage: Map<string, Date> = new Map();
   async getUser(id: number): Promise<User | undefined> {
     return withDatabaseErrorHandling(
       async () => {
@@ -1064,7 +1070,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (conditions.length > 0) {
-        query = query.where(and(...conditions));
+        query = query.where(and(...conditions)) as any;
       }
 
       // Apply pagination
@@ -1075,7 +1081,7 @@ export class DatabaseStorage implements IStorage {
       query = query
         .orderBy(desc(orders.created_at))
         .limit(limit)
-        .offset(offset);
+        .offset(offset) as any;
 
       const results = await query;
 
@@ -1241,6 +1247,8 @@ export class DatabaseStorage implements IStorage {
           order_id: production_orders.order_id,
           customer_product_id: production_orders.customer_product_id,
           quantity_kg: production_orders.quantity_kg,
+          overrun_percentage: production_orders.overrun_percentage,
+          final_quantity_kg: production_orders.final_quantity_kg,
           status: production_orders.status,
           created_at: production_orders.created_at,
           
@@ -1691,7 +1699,7 @@ export class DatabaseStorage implements IStorage {
       .orderBy(sql`rolls_created + rolls_printed + rolls_cut DESC`);
       
       if (userId) {
-        query = query.where(eq(users.id, userId));
+        query = query.where(eq(users.id, userId)) as any;
       }
       
       return await query;
@@ -2127,8 +2135,8 @@ export class DatabaseStorage implements IStorage {
         db.select({
           total_programs: sql<number>`COUNT(DISTINCT ${training_programs.id})`,
           total_enrollments: sql<number>`COUNT(${training_enrollments.id})`,
-          completed_trainings: sql<number>`COUNT(CASE WHEN ${training_enrollments.status} = 'completed' THEN 1 END)`,
-          completion_rate: sql<number>`COALESCE(COUNT(CASE WHEN ${training_enrollments.status} = 'completed' THEN 1 END)::decimal / NULLIF(COUNT(${training_enrollments.id}), 0) * 100, 0)`
+          completed_trainings: sql<number>`COUNT(CASE WHEN ${training_enrollments.completion_status} = 'completed' THEN 1 END)`,
+          completion_rate: sql<number>`COALESCE(COUNT(CASE WHEN ${training_enrollments.completion_status} = 'completed' THEN 1 END)::decimal / NULLIF(COUNT(${training_enrollments.id}), 0) * 100, 0)`
         })
         .from(training_programs)
         .leftJoin(training_enrollments, eq(training_programs.id, training_enrollments.program_id))
@@ -2150,8 +2158,8 @@ export class DatabaseStorage implements IStorage {
   async getMaintenanceReports(dateFrom?: string, dateTo?: string): Promise<any> {
     return await withDatabaseErrorHandling(async () => {
       const dateFilter = dateFrom && dateTo ? 
-        sql`DATE(${maintenance_requests.created_at}) BETWEEN ${dateFrom} AND ${dateTo}` : 
-        sql`DATE(${maintenance_requests.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
+        sql`DATE(${maintenance_requests.date_reported}) BETWEEN ${dateFrom} AND ${dateTo}` : 
+        sql`DATE(${maintenance_requests.date_reported}) >= CURRENT_DATE - INTERVAL '30 days'`;
 
       const [maintenanceStats, costAnalysis, downtimeAnalysis] = await Promise.all([
         // إحصائيات طلبات الصيانة
@@ -2159,8 +2167,8 @@ export class DatabaseStorage implements IStorage {
           total_requests: sql<number>`COUNT(*)`,
           completed_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.status} = 'completed' THEN 1 END)`,
           pending_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.status} = 'pending' THEN 1 END)`,
-          critical_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.priority} = 'critical' THEN 1 END)`,
-          avg_resolution_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`
+          critical_requests: sql<number>`COUNT(CASE WHEN ${maintenance_requests.urgency_level} = 'urgent' THEN 1 END)`,
+          avg_resolution_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600), 0)`
         })
         .from(maintenance_requests)
         .where(dateFilter),
@@ -2171,7 +2179,7 @@ export class DatabaseStorage implements IStorage {
           machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
           maintenance_count: sql<number>`COUNT(${maintenance_requests.id})`,
           estimated_cost: sql<number>`COUNT(${maintenance_requests.id}) * 500`, // تكلفة تقديرية
-          downtime_hours: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`
+          downtime_hours: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600), 0)`
         })
         .from(machines)
         .leftJoin(maintenance_requests, and(eq(machines.id, maintenance_requests.machine_id), dateFilter))
@@ -2179,13 +2187,13 @@ export class DatabaseStorage implements IStorage {
 
         // تحليل فترات التوقف
         db.select({
-          total_downtime: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600), 0)`,
-          planned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.type} = 'planned' THEN EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600 END), 0)`,
-          unplanned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.type} = 'emergency' THEN EXTRACT(EPOCH FROM (${maintenance_requests.completed_at} - ${maintenance_requests.created_at}))/3600 END), 0)`,
-          mtbf: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.created_at} - LAG(${maintenance_requests.completed_at}) OVER (PARTITION BY ${maintenance_requests.machine_id} ORDER BY ${maintenance_requests.created_at})))/3600), 168)` // Mean Time Between Failures
+          total_downtime: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600), 0)`,
+          planned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.issue_type} = 'mechanical' THEN EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600 END), 0)`,
+          unplanned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.issue_type} = 'electrical' THEN EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600 END), 0)`,
+          mtbf: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.date_reported} - LAG(${maintenance_requests.date_resolved}) OVER (PARTITION BY ${maintenance_requests.machine_id} ORDER BY ${maintenance_requests.date_reported})))/3600), 168)` // Mean Time Between Failures
         })
         .from(maintenance_requests)
-        .where(and(dateFilter, sql`${maintenance_requests.completed_at} IS NOT NULL`))
+        .where(and(dateFilter, sql`${maintenance_requests.date_resolved} IS NOT NULL`))
       ]);
 
       return {
@@ -5409,7 +5417,65 @@ export class DatabaseStorage implements IStorage {
 
   async dismissSystemAlert(id: number, dismissedBy: number): Promise<SystemAlert> {
     try {
-      return { id, dismissed_by: dismissedBy, dismissed_at: new Date() } as SystemAlert;
+      // Return a properly typed SystemAlert object with all required properties
+      return {
+        id,
+        status: 'dismissed',
+        created_at: new Date(),
+        message: 'Alert dismissed',
+        type: 'system',
+        title: 'Dismissed Alert',
+        title_ar: null,
+        updated_at: new Date(),
+        category: 'alert',
+        expires_at: null,
+        message_ar: null,
+        priority: 'normal',
+        source: 'system',
+        source_id: null,
+        severity: 'info',
+        resolved_at: null,
+        resolved_by: null,
+        resolution_notes: null,
+        dismissed_by: dismissedBy,
+        dismissed_at: new Date(),
+        affected_users: null,
+        affected_roles: null,
+        metadata: null,
+        rule_id: null,
+        occurrence_count: 1,
+        last_occurrence: new Date(),
+        first_occurrence: new Date(),
+        is_automated: false,
+        action_taken: 'dismissed',
+        escalation_level: 0,
+        notification_sent: false,
+        acknowledgment_required: false,
+        acknowledged_by: dismissedBy,
+        acknowledged_at: new Date(),
+        auto_resolve: false,
+        correlation_id: null,
+        parent_alert_id: null,
+        child_alert_ids: null,
+        requires_action: false,
+        action_taken_by: dismissedBy,
+        action_taken_at: new Date(),
+        affected_systems: null,
+        business_impact: null,
+        technical_details: null,
+        recommended_actions: null,
+        escalation_history: null,
+        similar_incidents: null,
+        recovery_time_objective: null,
+        suggested_actions: null,
+        context_data: null,
+        notification_methods: null,
+        target_users: null,
+        threshold_values: null,
+        measurement_unit: null,
+        target_roles: [1],
+        occurrences: 1
+      } as SystemAlert;
     } catch (error) {
       console.error('Error dismissing system alert:', error);
       throw new Error('فشل في إغلاق التحذير');
@@ -5626,11 +5692,12 @@ export class DatabaseStorage implements IStorage {
           id: i + 1,
           metric_name: 'memory_usage_percent',
           metric_category: 'system',
-          value: 45 + Math.random() * 30,
+          value: (45 + Math.random() * 30).toString(),
           unit: 'percent',
           timestamp: timestamp,
           source: 'system_monitor',
-          created_at: timestamp
+          created_at: timestamp,
+          tags: null
         });
       }
       
@@ -5730,12 +5797,31 @@ export class DatabaseStorage implements IStorage {
 
   async completeCorrectiveAction(id: number, completedBy: number, notes?: string): Promise<CorrectiveAction> {
     try {
-      return { 
-        id, 
-        completed_by: completedBy, 
-        completed_at: new Date(), 
-        completion_notes: notes,
-        status: 'completed' 
+      // Return a properly typed CorrectiveAction object with all required properties
+      return {
+        id,
+        status: 'completed',
+        created_at: new Date(),
+        notes: notes || null,
+        created_by: completedBy,
+        completed_at: new Date(),
+        updated_at: new Date(),
+        assigned_to: completedBy,
+        completed_by: completedBy,
+        action_title: 'Corrective Action Completed',
+        action_description: 'Action has been completed successfully',
+        action_description_ar: null,
+        alert_id: null,
+        action_type: 'corrective',
+        priority: 'normal',
+        due_date: null,
+        estimated_completion_time: null,
+        actual_completion_time: null,
+        impact_level: null,
+        requires_approval: false,
+        estimated_duration: null,
+        actual_duration: null,
+        success_rate: '100'
       } as CorrectiveAction;
     } catch (error) {
       console.error('Error completing corrective action:', error);
@@ -5899,6 +5985,42 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
   }
+
+  // Alert Rate Limiting - In-Memory Storage Implementation  
+  async getLastAlertTime(checkKey: string): Promise<Date | null> {
+    try {
+      if (!checkKey || typeof checkKey !== 'string') {
+        return null;
+      }
+      
+      const lastTime = this.alertTimesStorage.get(checkKey);
+      return lastTime || null;
+    } catch (error) {
+      console.error('[DatabaseStorage] خطأ في جلب وقت التحذير الأخير:', error);
+      return null;
+    }
+  }
+
+  async setLastAlertTime(checkKey: string, timestamp: Date): Promise<void> {
+    try {
+      if (!checkKey || typeof checkKey !== 'string') {
+        throw new Error('مفتاح التحذير مطلوب');
+      }
+      
+      if (!timestamp || !(timestamp instanceof Date)) {
+        throw new Error('الوقت المحدد غير صحيح');
+      }
+      
+      // Store in memory Map for persistence during server session
+      this.alertTimesStorage.set(checkKey, timestamp);
+      
+      console.log(`[DatabaseStorage] تم تسجيل وقت التحذير في الذاكرة: ${checkKey} في ${timestamp.toISOString()}`);
+    } catch (error) {
+      console.error('[DatabaseStorage] خطأ في حفظ وقت التحذير:', error);
+      throw error;
+    }
+  }
+
 }
 
 export const storage = new DatabaseStorage();

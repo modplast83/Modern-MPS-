@@ -31,7 +31,8 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
 
   const { data: ordersData = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/production/hierarchical-orders'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 90000, // Reduced from 30s to 90s (1.5 minutes)
+    staleTime: 60000, // Cache for 1 minute to reduce server load
     gcTime: 2 * 60 * 1000, // 2 minutes garbage collection
   });
 

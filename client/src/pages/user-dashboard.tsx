@@ -124,7 +124,7 @@ export default function UserDashboard() {
     select: (data) => data.filter(request => request.user_id === user?.id)
   });
 
-  // Fetch daily attendance status
+  // Fetch daily attendance status - Optimized polling
   const { data: dailyAttendanceStatus } = useQuery<{
     hasCheckedIn: boolean;
     hasStartedLunch: boolean;
@@ -134,7 +134,8 @@ export default function UserDashboard() {
   }>({
     queryKey: ['/api/attendance/daily-status', user?.id],
     enabled: !!user?.id,
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 120000, // Reduced from 30s to 2 minutes
+    staleTime: 90000 // Cache for 1.5 minutes
   });
 
   // Current attendance status - get the latest record for today

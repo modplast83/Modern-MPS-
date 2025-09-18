@@ -65,22 +65,25 @@ interface SystemOverview {
 export default function SystemHealth() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
 
-  // جلب نظرة عامة على النظام
+  // جلب نظرة عامة على النظام - Optimized polling
   const { data: overview } = useQuery<SystemOverview>({
     queryKey: ['/api/system/health/overview'],
-    refetchInterval: 30000
+    refetchInterval: 120000, // Reduced from 30s to 2 minutes
+    staleTime: 90000 // Cache for 1.5 minutes
   });
 
   // جلب فحوصات السلامة
   const { data: healthChecks = [] } = useQuery<HealthCheck[]>({
     queryKey: ['/api/system/health/checks'],
-    refetchInterval: 30000
+    refetchInterval: 120000, // Reduced from 30s to 2 minutes
+    staleTime: 90000
   });
 
   // جلب مؤشرات الأداء
   const { data: performanceMetrics = [] } = useQuery<PerformanceMetric[]>({
     queryKey: ['/api/system/performance', { timeRange: selectedTimeRange }],
-    refetchInterval: 30000
+    refetchInterval: 120000, // Reduced from 30s to 2 minutes
+    staleTime: 90000
   });
 
   // الحصول على لون الحالة
