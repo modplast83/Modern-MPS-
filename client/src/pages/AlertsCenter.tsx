@@ -90,7 +90,7 @@ export default function AlertsCenter() {
   const queryClient = useQueryClient();
 
   // جلب التحذيرات
-  const { data: alerts = [], isLoading: alertsLoading } = useQuery({
+  const { data: alerts = [], isLoading: alertsLoading } = useQuery<SystemAlert[]>({
     queryKey: ['/api/alerts', { 
       status: filterStatus, 
       type: filterType === 'all' ? undefined : filterType,
