@@ -1,9 +1,6 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
-import type { 
-  Customer, Item, NewOrder, JobOrder, Roll, Machine, User,
-  InsertItem, InsertNewOrder, InsertJobOrder, InsertRoll
-} from "../../shared/schema";
+// Note: Imports removed as they are not used in this service
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -27,24 +24,7 @@ interface DatabaseOperation {
   result?: any;
 }
 
-interface IntelligentReport {
-  title: string;
-  summary: string;
-  insights: string[];
-  recommendations: string[];
-  data: Record<string, any>;
-  charts?: any[];
-}
-
-interface LearningData {
-  user_id: number;
-  action_type: string;
-  context: string;
-  success: boolean;
-  execution_time: number;
-  user_feedback?: 'positive' | 'negative' | 'neutral';
-  timestamp: Date;
-}
+// Note: Unused interfaces removed
 
 class AdvancedOpenAIService {
   
@@ -427,7 +407,7 @@ Respond in JSON format containing:
           result = await this.createOrder(intent.parameters);
           break;
         case 'add_production_order':
-          result = await this.createProductionOrder(intent.parameters);
+          result = await this.createJobOrder(intent.parameters);
           break;
         case 'add_machine':
           result = await this.createMachine(intent.parameters);
@@ -543,14 +523,14 @@ Respond in JSON format containing:
   private async createJobOrder(params: any): Promise<DatabaseOperation> {
     try {
       const jobOrderData = await this.extractJobOrderData(params.text || params.data);
-      const jobOrder = await storage.createJobOrder(jobOrderData);
+      const jobOrder = await storage.createProductionOrder(jobOrderData);
       
       return {
         operation: 'create',
         table: 'production_orders',
         data: jobOrderData,
         success: true,
-        message: `تم إنشاء أمر التشغيل بنجاح! رقم أمر التشغيل: ${jobOrder.job_number}`,
+        message: `تم إنشاء أمر التشغيل بنجاح! رقم أمر التشغيل: ${jobOrder.production_order_number}`,
         result: jobOrder
       };
     } catch (error: any) {
