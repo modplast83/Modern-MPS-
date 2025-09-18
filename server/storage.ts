@@ -840,9 +840,17 @@ export class DatabaseStorage implements IStorage {
           throw new Error('معرف منشئ الطلب مطلوب');
         }
         
+        // Convert Date objects to strings for database compatibility
+        const orderData = {
+          ...insertOrder,
+          delivery_date: insertOrder.delivery_date instanceof Date 
+            ? insertOrder.delivery_date.toISOString().split('T')[0] 
+            : insertOrder.delivery_date
+        };
+
         const [order] = await db
           .insert(orders)
-          .values(insertOrder)
+          .values(orderData)
           .returning();
         return order;
       },
