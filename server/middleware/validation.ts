@@ -257,17 +257,67 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 // Admin role validation middleware
-export function requireAdmin(req: Request, res: Response, next: NextFunction) {
-  // This would need to be implemented with proper role checking
-  // For now, just ensure user is authenticated
+export async function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  // First check if user is authenticated
   if (!req.session?.userId) {
     return res.status(401).json({
-      message: 'غير مسجل الدخول',
+      message: 'غير مسجل الدخول - يرجى تسجيل الدخول أولاً',
       success: false
     });
   }
-  // TODO: Add actual admin role check here
-  next();
+
+  try {
+    // Import db and related schemas here to avoid circular dependencies
+    const { db } = await import('../db');
+    const { users, roles } = await import('@shared/schema');
+    const { eq } = await import('drizzle-orm');
+
+    // Get user with role information
+    const userWithRole = await db
+      .select({
+        user_id: users.id,
+        user_role_id: users.role_id,
+        role_name: roles.name,
+        role_permissions: roles.permissions
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.role_id, roles.id))
+      .where(eq(users.id, req.session.userId))
+      .limit(1);
+
+    if (userWithRole.length === 0) {
+      return res.status(403).json({
+        message: 'المستخدم غير موجود',
+        success: false
+      });
+    }
+
+    const user = userWithRole[0];
+    
+    // Check if user has admin role or admin permissions
+    const isAdmin = user.role_name === 'admin' || 
+                   user.role_name === 'مدير النظام' ||
+                   user.role_name === 'administrator' ||
+                   user.user_role_id === 1 || // Assume role ID 1 is admin
+                   (user.role_permissions && Array.isArray(user.role_permissions) && 
+                    user.role_permissions.includes('admin'));
+
+    if (!isAdmin) {
+      return res.status(403).json({
+        message: 'غير مخول للوصول - صلاحيات المدير مطلوبة',
+        success: false
+      });
+    }
+
+    // User is authenticated and has admin privileges
+    next();
+  } catch (error) {
+    console.error('Admin role validation error:', error);
+    return res.status(500).json({
+      message: 'خطأ في التحقق من الصلاحيات',
+      success: false
+    });
+  }
 }
 
 export { z } from 'zod';

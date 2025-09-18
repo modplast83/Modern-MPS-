@@ -22,49 +22,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for current user session via API
+    // Check for current user session via API - secure server-side validation only
     const checkAuth = async () => {
       try {
-        // First check localStorage for cached user data
-        const cachedUser = localStorage.getItem('mpbf_user');
-        if (cachedUser) {
-          try {
-            const parsedUser = JSON.parse(cachedUser);
-            setUser(parsedUser);
-            setIsLoading(false);
-          } catch (e) {
-            localStorage.removeItem('mpbf_user');
-          }
-        }
-
-        // Then verify with server
+        // Security improvement: Only validate against server, no localStorage usage
         const response = await fetch('/api/me', {
           credentials: 'include' // Include cookies for session validation
         });
         
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
-          localStorage.setItem('mpbf_user', JSON.stringify(data.user));
+          if (data.success && data.user) {
+            setUser(data.user);
+          } else {
+            // Invalid response format
+            setUser(null);
+          }
         } else {
-          // No active session on server
+          // No active session on server or authentication failed
           setUser(null);
-          localStorage.removeItem('mpbf_user');
         }
       } catch (error) {
         console.warn('Error checking auth session:', error);
-        // Keep cached user if server is unreachable - don't logout user on network errors
-        const cachedUser = localStorage.getItem('mpbf_user');
-        if (cachedUser && !user) {
-          try {
-            const parsedUser = JSON.parse(cachedUser);
-            setUser(parsedUser);
-          } catch (e) {
-            localStorage.removeItem('mpbf_user');
-            setUser(null);
-          }
-        }
-        // Don't logout on network errors - preserve existing auth state
+        // Security improvement: Don't preserve auth state on network errors
+        // This ensures users must re-authenticate if server is unreachable
+        setUser(null);
       }
       setIsLoading(false);
     };
@@ -90,8 +72,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
+      // Security improvement: Only store user data in memory, not localStorage
       setUser(data.user);
-      localStorage.setItem('mpbf_user', JSON.stringify(data.user));
     } catch (error) {
       throw error;
     } finally {
@@ -108,8 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.warn('Error during logout:', error);
     }
+    // Security improvement: Only clear in-memory user state
     setUser(null);
-    localStorage.removeItem('mpbf_user');
     // Clear any cached queries related to user data
     if (typeof window !== 'undefined') {
       window.location.reload();
