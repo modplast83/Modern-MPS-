@@ -17,11 +17,11 @@ interface IntelligentReport {
 
 export class AIReports {
   // توليد تقرير الإنتاج الذكي
-  static async generateProductionReport(params?: any): Promise<IntelligentReport> {
+  static async generateProductionReport(_params?: any): Promise<IntelligentReport> {
     try {
       // جمع البيانات
       const stats = await storage.getDashboardStats();
-      const jobOrders = await storage.getJobOrders();
+      const productionOrders = await storage.getAllProductionOrders();
       const machines = await storage.getMachines();
       const rolls = await storage.getRolls();
       
@@ -51,7 +51,7 @@ export class AIReports {
 معدل الإنتاج: ${stats.productionRate}%
 نسبة الجودة: ${stats.qualityScore}%
 نسبة الهدر: ${stats.wastePercentage}%
-عدد أوامر التشغيل: ${jobOrders.length}
+عدد أوامر الإنتاج: ${productionOrders.length}
 عدد المكائن: ${machines.length}
 عدد الرولات: ${rolls.length}
 
@@ -71,7 +71,7 @@ export class AIReports {
         recommendations: result.recommendations || [],
         data: {
           stats,
-          jobOrders: jobOrders.length,
+          productionOrders: productionOrders.length,
           machines: machines.length,
           rolls: rolls.length,
           key_metrics: result.key_metrics || {}
@@ -84,7 +84,7 @@ export class AIReports {
   }
 
   // توليد تقرير الجودة الذكي
-  static async generateQualityReport(params?: any): Promise<IntelligentReport> {
+  static async generateQualityReport(_params?: any): Promise<IntelligentReport> {
     try {
       const qualityChecks = await storage.getQualityChecks();
       const stats = await storage.getDashboardStats();
@@ -135,7 +135,7 @@ export class AIReports {
   }
 
   // توليد تقرير الصيانة الذكي
-  static async generateMaintenanceReport(params?: any): Promise<IntelligentReport> {
+  static async generateMaintenanceReport(_params?: any): Promise<IntelligentReport> {
     try {
       const machines = await storage.getMachines();
       // الحصول على سجلات الصيانة (محاكاة حتى يتم إضافة الوظيفة)
@@ -156,9 +156,9 @@ export class AIReports {
             role: "user",
             content: `بيانات الصيانة:
 عدد المكائن: ${machines.length}
-المكائن النشطة: ${machines.filter(m => m.status === 'active').length}
-المكائن في الصيانة: ${machines.filter(m => m.status === 'maintenance').length}
-المكائن المتوقفة: ${machines.filter(m => m.status === 'down').length}
+المكائن النشطة: ${machines.filter((m: any) => m.status === 'active').length}
+المكائن في الصيانة: ${machines.filter((m: any) => m.status === 'maintenance').length}
+المكائن المتوقفة: ${machines.filter((m: any) => m.status === 'down').length}
 سجلات الصيانة: ${maintenanceRecords.length}
 
 قدم تحليلاً متخصصاً في الصيانة.`
@@ -177,9 +177,9 @@ export class AIReports {
         recommendations: result.recommendations || [],
         data: {
           totalMachines: machines.length,
-          activeMachines: machines.filter(m => m.status === 'active').length,
-          maintenanceMachines: machines.filter(m => m.status === 'maintenance').length,
-          downMachines: machines.filter(m => m.status === 'down').length,
+          activeMachines: machines.filter((m: any) => m.status === 'active').length,
+          maintenanceMachines: machines.filter((m: any) => m.status === 'maintenance').length,
+          downMachines: machines.filter((m: any) => m.status === 'down').length,
           maintenanceRecords: maintenanceRecords.length
         }
       };
@@ -190,10 +190,10 @@ export class AIReports {
   }
 
   // توليد تقرير المبيعات والعملاء الذكي
-  static async generateSalesReport(params?: any): Promise<IntelligentReport> {
+  static async generateSalesReport(_params?: any): Promise<IntelligentReport> {
     try {
       const customers = await storage.getCustomers();
-      const orders = await storage.getOrders();
+      const orders = await storage.getAllOrders();
       const stats = await storage.getDashboardStats();
       
       const analysis = await openai.chat.completions.create({
@@ -213,8 +213,8 @@ export class AIReports {
 عدد العملاء: ${customers.length}
 عدد الطلبات: ${orders.length}
 الطلبات النشطة: ${stats.activeOrders}
-الطلبات المكتملة: ${orders.filter(o => o.status === 'completed').length}
-الطلبات المُسلمة: ${orders.filter(o => o.status === 'delivered').length}
+الطلبات المكتملة: ${orders.filter((o: any) => o.status === 'completed').length}
+الطلبات المُسلمة: ${orders.filter((o: any) => o.status === 'delivered').length}
 
 قدم تحليلاً تجارياً شاملاً.`
           }
@@ -234,8 +234,8 @@ export class AIReports {
           totalCustomers: customers.length,
           totalOrders: orders.length,
           activeOrders: stats.activeOrders,
-          completedOrders: orders.filter(o => o.status === 'completed').length,
-          deliveredOrders: orders.filter(o => o.status === 'delivered').length
+          completedOrders: orders.filter((o: any) => o.status === 'completed').length,
+          deliveredOrders: orders.filter((o: any) => o.status === 'delivered').length
         }
       };
     } catch (error) {
@@ -245,7 +245,7 @@ export class AIReports {
   }
 
   // توليد تقرير مخصص
-  static async generateCustomReport(reportType: string, params?: any): Promise<IntelligentReport> {
+  static async generateCustomReport(reportType: string, _params?: any): Promise<IntelligentReport> {
     try {
       // جمع البيانات حسب نوع التقرير
       let data = {};
@@ -351,13 +351,13 @@ export class AIReports {
   // جمع البيانات المالية
   private static async gatherFinancialData(): Promise<any> {
     try {
-      const orders = await storage.getOrders();
+      const orders = await storage.getAllOrders();
       const stats = await storage.getDashboardStats();
       
       return {
         totalOrders: orders.length,
-        completedOrders: orders.filter(o => o.status === 'completed').length,
-        deliveredOrders: orders.filter(o => o.status === 'delivered').length,
+        completedOrders: orders.filter((o: any) => o.status === 'completed').length,
+        deliveredOrders: orders.filter((o: any) => o.status === 'delivered').length,
         productionRate: stats.productionRate,
         wastePercentage: stats.wastePercentage
       };
