@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
@@ -70,18 +71,34 @@ async function performPasswordSecurityCheck(): Promise<void> {
   }
 }
 
-// Configure CORS for cookies - must be before session middleware
+// Configure CORS with strict allowlist - must be before session middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   
-  // Allow requests from safe origins only
-  if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('.replit.dev'))) {
+  // Strict allowlist of trusted origins
+  const allowedOrigins = [
+    'http://localhost:5000',
+    'https://localhost:5000',
+    'http://127.0.0.1:5000',
+    'https://127.0.0.1:5000',
+    // Add specific Replit deployment URLs here - replace with actual URLs
+    // Example: 'https://your-app-name.replit.app'
+  ];
+  
+  // Add current host for same-origin requests
+  const currentHost = req.get('host');
+  if (currentHost) {
+    allowedOrigins.push(`http://${currentHost}`);
+    allowedOrigins.push(`https://${currentHost}`);
+  }
+  
+  if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   } else if (!origin) {
     // For same-origin requests (no origin header), allow the request
-    res.header('Access-Control-Allow-Origin', req.get('host') || 'localhost:5000');
+    res.header('Access-Control-Allow-Origin', currentHost ? `https://${currentHost}` : 'https://localhost:5000');
   }
-  // Do not set wildcard '*' when credentials are enabled - this is a security vulnerability
+  // Explicitly reject unauthorized origins - no wildcard '*' when credentials are enabled
   
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
@@ -95,16 +112,43 @@ app.use((req, res, next) => {
   }
 });
 
-// Configure session store  
-const MemoryStoreSession = MemoryStore(session);
-
-// Configure sessions with proper store
+// Configure session store with security validation
 const isProduction = process.env.NODE_ENV === 'production';
-app.use(session({
-  store: new MemoryStoreSession({
+
+// Security validation: Require SESSION_SECRET in production
+if (isProduction && !process.env.SESSION_SECRET) {
+  console.error('🚨 SECURITY ERROR: SESSION_SECRET environment variable is required in production');
+  console.error('🚨 Please set SESSION_SECRET to a secure random value');
+  process.exit(1);
+}
+
+// Configure production-ready session store
+let sessionStore: any;
+if (isProduction) {
+  // Use PostgreSQL session store in production for scalability and persistence
+  const PgSession = connectPgSimple(session);
+  sessionStore = new PgSession({
+    conString: process.env.DATABASE_URL,
+    tableName: 'user_sessions',
+    createTableIfMissing: true,
+    pruneSessionInterval: 60 * 15 // Clean expired sessions every 15 minutes
+  });
+  console.log('✅ Using PostgreSQL session store for production');
+} else {
+  // Use MemoryStore only in development
+  const MemoryStoreSession = MemoryStore(session);
+  sessionStore = new MemoryStoreSession({
     checkPeriod: 86400000 // prune expired entries every 24h
-  }),
-  secret: process.env.SESSION_SECRET || 'plastic-bag-manufacturing-system-secret-key-2025',
+  });
+  console.log('⚠️ Using MemoryStore session store for development only');
+}
+
+app.use(session({
+  store: sessionStore,
+  secret: process.env.SESSION_SECRET || (isProduction ? (() => {
+    console.error('🚨 CRITICAL: SESSION_SECRET missing in production');
+    process.exit(1);
+  })() : 'dev-secret-key-not-for-production'),
   resave: true, // Always save session to extend lifetime
   saveUninitialized: false, // Don't create session until something stored
   rolling: true, // Reset expiry on activity - crucial for keeping session alive
@@ -149,8 +193,15 @@ app.use((req, res, next) => {
     
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+      
+      // Security: Only log response metadata in production, never response bodies
+      // Response bodies may contain sensitive data like passwords, tokens, PII
+      if (!isProduction && capturedJsonResponse) {
+        // In development, sanitize sensitive fields before logging
+        const sanitizedResponse = sanitizeResponseForLogging(capturedJsonResponse);
+        if (Object.keys(sanitizedResponse).length > 0) {
+          logLine += ` :: ${JSON.stringify(sanitizedResponse)}`;
+        }
       }
 
       if (logLine.length > 80) {
@@ -163,6 +214,40 @@ app.use((req, res, next) => {
 
   next();
 });
+
+// Security function to sanitize response data for logging
+function sanitizeResponseForLogging(response: any): any {
+  if (!response || typeof response !== 'object') {
+    return {};
+  }
+  
+  // List of sensitive field patterns to exclude from logs
+  const sensitiveFields = [
+    'password', 'passwd', 'pwd', 'secret', 'token', 'key', 'auth',
+    'session', 'cookie', 'authorization', 'credential', 'private',
+    'ssn', 'social', 'email', 'phone', 'address', 'ip', 'personal',
+    'card', 'payment', 'billing', 'account', 'user_id', 'userId'
+  ];
+  
+  const sanitized: any = {};
+  
+  for (const [key, value] of Object.entries(response)) {
+    const keyLower = key.toLowerCase();
+    const isSensitive = sensitiveFields.some(field => keyLower.includes(field));
+    
+    if (isSensitive) {
+      sanitized[key] = '[REDACTED]';
+    } else if (Array.isArray(value)) {
+      sanitized[key] = `[Array:${value.length}]`;
+    } else if (typeof value === 'object' && value !== null) {
+      sanitized[key] = '[Object]';
+    } else {
+      sanitized[key] = value;
+    }
+  }
+  
+  return sanitized;
+}
 
 (async () => {
   // Enhanced database initialization for production deployment
