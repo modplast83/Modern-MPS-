@@ -1413,18 +1413,9 @@ export class DatabaseStorage implements IStorage {
           (sum, po) => sum + parseFloat(po.final_quantity_kg || po.quantity_kg || '0'), 0);
 
         const proposedFinalQuantity = parseFloat(insertProductionOrder.final_quantity_kg || '0');
-        const orderQuantity = parseFloat(parentOrder.quantity || '0');
 
-        // INVARIANT A: Ensure total production orders don't exceed order quantity + 10% tolerance
-        const orderTolerance = orderQuantity * 0.10; // 10% tolerance for overrun
-        const maxAllowedTotal = orderQuantity + orderTolerance;
-        
-        if (existingTotalQuantity + proposedFinalQuantity > maxAllowedTotal) {
-          throw new DatabaseError(
-            `تجاوز الكمية الإجمالية للإنتاج الحد المسموح: ${(existingTotalQuantity + proposedFinalQuantity).toFixed(2)}كغ > ${maxAllowedTotal.toFixed(2)}كغ (${orderQuantity.toFixed(2)}كغ + 10% تسامح)`,
-            { code: 'INVARIANT_A_VIOLATION' }
-          );
-        }
+        // NOTE: INVARIANT A validation removed - orders table doesn't store total quantity
+        // Individual production orders are validated separately for business rules
 
         // STEP 2.5: INVARIANT D - State transition validation
         if (parentOrder.status === 'cancelled') {
