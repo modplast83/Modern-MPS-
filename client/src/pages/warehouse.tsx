@@ -1157,10 +1157,11 @@ function ProductionHallContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch production orders ready for receipt
+  // Fetch production orders ready for receipt - Optimized polling
   const { data: productionOrders = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/warehouse/production-hall'],
-    staleTime: 30000 // Refresh every 30 seconds
+    refetchInterval: 120000, // Reduced to 2 minutes instead of aggressive 30s polling
+    staleTime: 90000 // Cache for 1.5 minutes to reduce server load
   });
 
   // Group production orders by main order number
