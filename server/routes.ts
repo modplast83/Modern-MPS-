@@ -25,7 +25,6 @@ import {
   insertOperatorNegligenceReportSchema,
   insertInventoryMovementSchema,
   insertInventorySchema,
-  insertCustomerProductSchema,
   insertCutSchema,
   insertWarehouseReceiptSchema,
   insertProductionSettingsSchema,
@@ -1484,7 +1483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getHRReports(date_from as string, date_to as string),
         storage.getMaintenanceReports(date_from as string, date_to as string),
         storage.getRealTimeProductionStats(),
-        storage.getUserPerformanceStats(date_from as string, date_to as string),
+        storage.getUserPerformanceStats(undefined, date_from as string, date_to as string),
         storage.getRolePerformanceStats(date_from as string, date_to as string),
         storage.getMachineUtilizationStats(date_from as string, date_to as string),
         storage.getProductionEfficiencyMetrics(date_from as string, date_to as string),
@@ -1691,7 +1690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertCustomerProductSchema.parse(req.body);
       
       // STEP 2: DataValidator integration for business rules
-      const validationResult = await getDataValidator().validateData('customer_products', validatedData);
+      const validationResult = await getDataValidator(storage).validateData('customer_products', validatedData);
       if (!validationResult.isValid) {
         const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
         if (criticalErrors.length > 0) {
@@ -2947,7 +2946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       // STEP 1: DataValidator integration for business rules
-      const validationResult = await getDataValidator().validateData('machines', processedData);
+      const validationResult = await getDataValidator(storage).validateData('machines', processedData);
       if (!validationResult.isValid) {
         const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
         if (criticalErrors.length > 0) {
@@ -3963,7 +3962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertInventorySchema.parse(req.body);
       
       // STEP 2: DataValidator integration for business rules
-      const validationResult = await getDataValidator().validateData('inventory', validatedData);
+      const validationResult = await getDataValidator(storage).validateData('inventory', validatedData);
       if (!validationResult.isValid) {
         const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
         if (criticalErrors.length > 0) {
@@ -4015,7 +4014,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertInventorySchema.partial().parse(req.body);
       
       // STEP 3: DataValidator integration for business rules
-      const validationResult = await getDataValidator().validateData('inventory', validatedData, true);
+      const validationResult = await getDataValidator(storage).validateData('inventory', validatedData, true);
       if (!validationResult.isValid) {
         const criticalErrors = validationResult.errors.filter(e => e.severity === 'critical' || e.severity === 'high');
         if (criticalErrors.length > 0) {
@@ -4174,7 +4173,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات غير صحيحة", errors: result.error.errors });
       }
       
-      const order = await storage.updateOrder(orderId, result.data);
+      // Convert Date objects to strings for database compatibility
+      const updateData = { 
+        ...result.data,
+        delivery_date: result.data.delivery_date ? result.data.delivery_date.toISOString().split('T')[0] : result.data.delivery_date
+      };
+      const order = await storage.updateOrder(orderId, updateData);
       res.json(order);
     } catch (error) {
       console.error('Error updating order:', error);
@@ -4236,8 +4240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // STEP 3: Additional business rule validations
       if (newStatus === 'completed') {
         // Check if all production orders are completed before marking order as completed
-        const productionOrders = await storage.getProductionOrdersByOrderId(orderId);
-        const incompleteProdOrders = productionOrders.filter(po => po.status !== 'completed');
+        const allProductionOrders = await storage.getAllProductionOrders();
+        const productionOrders = allProductionOrders.filter((po: any) => po.order_id === orderId);
+        const incompleteProdOrders = productionOrders.filter((po: any) => po.status !== 'completed');
         
         if (incompleteProdOrders.length > 0) {
           return res.status(400).json({ 
@@ -4250,8 +4255,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (newStatus === 'cancelled') {
         // Check if there are production orders in progress
-        const productionOrders = await storage.getProductionOrdersByOrderId(orderId);
-        const activeProdOrders = productionOrders.filter(po => ['in_progress', 'in_production'].includes(po.status));
+        const allProductionOrders = await storage.getAllProductionOrders();
+        const productionOrders = allProductionOrders.filter((po: any) => po.order_id === orderId);
+        const activeProdOrders = productionOrders.filter((po: any) => ['in_progress', 'in_production'].includes(po.status));
         
         if (activeProdOrders.length > 0) {
           return res.status(400).json({ 
@@ -4994,7 +5000,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Roll creation request body:', req.body);
       
       // Get DataValidator for business rule enforcement
-      const dataValidator = getDataValidator();
+      const dataValidator = getDataValidator(storage);
       
       // Add created_by from session
       const rollData = {
