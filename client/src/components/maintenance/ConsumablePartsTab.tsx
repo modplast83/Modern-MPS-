@@ -15,7 +15,7 @@ import { Plus, Edit, Trash2, Package, Search, QrCode, ArrowDown, ArrowUp, AlertT
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import { useAuth } from "../../hooks/use-auth";
-import { insertConsumablePartSchema, insertConsumablePartTransactionSchema } from "../../shared/schema";
+import { insertConsumablePartSchema, insertConsumablePartTransactionSchema } from "../../../../shared/schema";
 
 // Extend shared schemas with UI-specific validation rules
 const consumablePartSchema = insertConsumablePartSchema.extend({

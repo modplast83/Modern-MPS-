@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
-import type { Roll } from "../../shared/schema";
+import type { Roll } from "../../../../shared/schema";
 
 interface RollsTableProps {
   stage: string;
