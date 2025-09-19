@@ -10,6 +10,8 @@ import {
   maintenance_reports,
   operator_negligence_reports,
   spare_parts,
+  consumable_parts,
+  consumable_parts_transactions,
   quality_checks,
   attendance,
   waste,
@@ -121,6 +123,10 @@ import {
   type InsertNotificationTemplate,
   type SparePart,
   type InsertSparePart,
+  type ConsumablePart,
+  type InsertConsumablePart,
+  type ConsumablePartTransaction,
+  type InsertConsumablePartTransaction,
   type MaintenanceAction,
   type InsertMaintenanceAction,
   type MaintenanceReport,
@@ -5617,6 +5623,160 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting spare part:', error);
       throw new Error('فشل في حذف قطعة الغيار');
+    }
+  }
+
+  // ============ Consumable Parts Management ============
+  async getAllConsumableParts(): Promise<ConsumablePart[]> {
+    try {
+      return await db.select().from(consumable_parts).orderBy(consumable_parts.part_id);
+    } catch (error) {
+      console.error('Error fetching consumable parts:', error);
+      throw new Error('فشل في جلب قطع الغيار الاستهلاكية');
+    }
+  }
+
+  async createConsumablePart(part: InsertConsumablePart): Promise<ConsumablePart> {
+    try {
+      // Generate part_id automatically
+      const existingParts = await db.select().from(consumable_parts);
+      const nextNumber = existingParts.length + 1;
+      const partId = `CP${nextNumber.toString().padStart(3, '0')}`;
+
+      const [result] = await db.insert(consumable_parts).values({
+        ...part,
+        part_id: partId
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating consumable part:', error);
+      throw new Error('فشل في إنشاء قطعة غيار استهلاكية');
+    }
+  }
+
+  async updateConsumablePart(id: number, part: Partial<ConsumablePart>): Promise<ConsumablePart> {
+    try {
+      const [result] = await db.update(consumable_parts)
+        .set(part)
+        .where(eq(consumable_parts.id, id))
+        .returning();
+      return result;
+    } catch (error) {
+      console.error('Error updating consumable part:', error);
+      throw new Error('فشل في تحديث قطعة الغيار الاستهلاكية');
+    }
+  }
+
+  async deleteConsumablePart(id: number): Promise<void> {
+    try {
+      await db.delete(consumable_parts).where(eq(consumable_parts.id, id));
+    } catch (error) {
+      console.error('Error deleting consumable part:', error);
+      throw new Error('فشل في حذف قطعة الغيار الاستهلاكية');
+    }
+  }
+
+  async getConsumablePartByBarcode(barcode: string): Promise<ConsumablePart | null> {
+    try {
+      const [result] = await db.select()
+        .from(consumable_parts)
+        .where(eq(consumable_parts.barcode, barcode))
+        .limit(1);
+      return result || null;
+    } catch (error) {
+      console.error('Error finding consumable part by barcode:', error);
+      throw new Error('فشل في البحث عن قطعة الغيار بالباركود');
+    }
+  }
+
+  // ============ Consumable Parts Transactions Management ============
+  async getConsumablePartTransactions(): Promise<ConsumablePartTransaction[]> {
+    try {
+      return await db.select().from(consumable_parts_transactions)
+        .orderBy(desc(consumable_parts_transactions.created_at));
+    } catch (error) {
+      console.error('Error fetching consumable parts transactions:', error);
+      throw new Error('فشل في جلب حركات قطع الغيار الاستهلاكية');
+    }
+  }
+
+  async getConsumablePartTransactionsByPartId(partId: number): Promise<ConsumablePartTransaction[]> {
+    try {
+      return await db.select().from(consumable_parts_transactions)
+        .where(eq(consumable_parts_transactions.consumable_part_id, partId))
+        .orderBy(desc(consumable_parts_transactions.created_at));
+    } catch (error) {
+      console.error('Error fetching consumable parts transactions by part:', error);
+      throw new Error('فشل في جلب حركات قطعة الغيار الاستهلاكية');
+    }
+  }
+
+  async createConsumablePartTransaction(transaction: InsertConsumablePartTransaction): Promise<ConsumablePartTransaction> {
+    try {
+      // Generate transaction_id automatically
+      const existingTransactions = await db.select().from(consumable_parts_transactions);
+      const nextNumber = existingTransactions.length + 1;
+      const transactionId = `CT${nextNumber.toString().padStart(3, '0')}`;
+
+      const [result] = await db.insert(consumable_parts_transactions).values({
+        ...transaction,
+        transaction_id: transactionId
+      }).returning();
+      return result;
+    } catch (error) {
+      console.error('Error creating consumable parts transaction:', error);
+      throw new Error('فشل في إنشاء حركة قطعة غيار استهلاكية');
+    }
+  }
+
+  async processConsumablePartBarcodeTransaction(transactionData: InsertConsumablePartTransaction): Promise<{ transaction: ConsumablePartTransaction, updatedPart: ConsumablePart }> {
+    try {
+      return await db.transaction(async (trx) => {
+        // Generate transaction_id
+        const existingTransactions = await trx.select().from(consumable_parts_transactions);
+        const nextNumber = existingTransactions.length + 1;
+        const transactionId = `CT${nextNumber.toString().padStart(3, '0')}`;
+
+        // Create the transaction record
+        const [transaction] = await trx.insert(consumable_parts_transactions).values({
+          ...transactionData,
+          transaction_id: transactionId
+        }).returning();
+
+        // Update the consumable part quantity
+        const [currentPart] = await trx.select()
+          .from(consumable_parts)
+          .where(eq(consumable_parts.id, transactionData.consumable_part_id))
+          .limit(1);
+
+        if (!currentPart) {
+          throw new Error('قطعة الغيار الاستهلاكية غير موجودة');
+        }
+
+        let newQuantity = currentPart.current_quantity;
+        if (transactionData.transaction_type === 'in') {
+          newQuantity += transactionData.quantity;
+        } else {
+          newQuantity -= transactionData.quantity;
+          if (newQuantity < 0) {
+            throw new Error('الكمية المطلوبة غير متوفرة في المخزون');
+          }
+        }
+
+        // Update the part quantity
+        const [updatedPart] = await trx.update(consumable_parts)
+          .set({ 
+            current_quantity: newQuantity,
+            updated_at: new Date()
+          })
+          .where(eq(consumable_parts.id, transactionData.consumable_part_id))
+          .returning();
+
+        return { transaction, updatedPart };
+      });
+    } catch (error) {
+      console.error('Error processing consumable part barcode transaction:', error);
+      throw new Error('فشل في معالجة حركة الباركود');
     }
   }
 
