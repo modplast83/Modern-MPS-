@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { generateActionNumber, generateMaintenanceReportNumber, generateOperatorReportNumber } from "@shared/id-generator";
+import ConsumablePartsTab from "@/components/maintenance/ConsumablePartsTab";
 
 // Schema definitions for forms
 const maintenanceActionSchema = z.object({
@@ -507,17 +508,7 @@ export default function Maintenance() {
 
             {/* Consumable Parts Tab */}
             <TabsContent value="consumable-parts">
-              <Card>
-                <CardHeader>
-                  <CardTitle>قطع الغيار الاستهلاكية</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8">
-                    <Wrench className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                    <p className="text-gray-500">سيتم إضافة المحتوى قريباً...</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ConsumablePartsTab />
             </TabsContent>
 
           </Tabs>
