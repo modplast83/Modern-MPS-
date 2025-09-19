@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatNumber, formatPercentage } from '@/lib/formatNumber';
-import ErrorBoundary from "@/components/ErrorBoundary";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { formatNumber, formatPercentage } from '../../lib/formatNumber';
+import ErrorBoundary from "../ErrorBoundary";
 import { 
   ShoppingCart, 
   Package, 

@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+import { Input } from "../ui/input";
 import { 
   ChevronDown, 
   ChevronRight, 
@@ -12,7 +12,7 @@ import {
   Plus, 
   Search 
 } from "lucide-react";
-import { formatNumber, formatWeight } from '@/lib/formatNumber';
+import { formatNumber, formatWeight } from '../../lib/formatNumber';
 
 interface HierarchicalOrdersViewProps {
   stage: string;

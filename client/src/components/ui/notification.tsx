@@ -1,6 +1,6 @@
 import { CheckCircle, AlertCircle, Info, XCircle, X } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "./alert";
+import { Button } from "./button";
 
 interface NotificationProps {
   type: 'success' | 'error' | 'warning' | 'info';

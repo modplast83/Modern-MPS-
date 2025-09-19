@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import { useSpeechSynthesis } from '@/hooks/use-speech-synthesis';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useSpeechRecognition } from '../../hooks/use-speech-recognition';
+import { useSpeechSynthesis } from '../../hooks/use-speech-synthesis';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Mic, 

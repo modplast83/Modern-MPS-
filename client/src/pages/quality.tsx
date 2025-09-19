@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import MobileNav from "@/components/layout/MobileNav";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
+import { Badge } from "../components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { CheckCircle2, XCircle, AlertTriangle, Clock } from "lucide-react";
-import { formatNumber, formatPercentage } from '@/lib/formatNumber';
+import { formatNumber, formatPercentage } from '../lib/formatNumber';
 
 export default function Quality() {
   const { data: qualityChecks, isLoading } = useQuery({

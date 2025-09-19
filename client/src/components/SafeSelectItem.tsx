@@ -1,5 +1,5 @@
 import React from 'react';
-import { SelectItem } from '@/components/ui/select';
+import { SelectItem } from './ui/select';
 
 interface SafeSelectItemProps {
   value: any;

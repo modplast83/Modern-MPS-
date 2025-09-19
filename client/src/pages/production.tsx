@@ -1,9 +1,9 @@
 import { useState } from "react";
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import MobileNav from "@/components/layout/MobileNav";
-import ProductionTabs from "@/components/production/ProductionTabs";
-import RollCreationModal from "@/components/modals/RollCreationModal";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
+import ProductionTabs from "../components/production/ProductionTabs";
+import RollCreationModal from "../components/modals/RollCreationModal";
 
 export default function Production() {
   const [isRollModalOpen, setIsRollModalOpen] = useState(false);

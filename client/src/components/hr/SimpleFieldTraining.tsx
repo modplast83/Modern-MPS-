@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
 import { Shield, Users, Star } from "lucide-react";
 
 export default function SimpleFieldTraining() {
