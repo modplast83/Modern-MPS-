@@ -411,6 +411,49 @@ export const spare_parts = pgTable('spare_parts', {
   updated_at: timestamp('updated_at').defaultNow(),
 });
 
+// 🔧 جدول قطع الغيار الاستهلاكية - Consumable Spare Parts
+export const consumable_parts = pgTable('consumable_parts', {
+  id: serial('id').primaryKey(),
+  part_id: varchar('part_id', { length: 50 }).notNull().unique(), // CP001, CP002, etc.
+  type: varchar('type', { length: 100 }).notNull(), // نوع القطعة (سيور، بيرنقات، مسامير، الخ)
+  code: varchar('code', { length: 50 }).notNull(), // كود القطعة
+  current_quantity: integer('current_quantity').notNull().default(0), // الكمية الحالية
+  min_quantity: integer('min_quantity').default(0), // الحد الأدنى للكمية
+  max_quantity: integer('max_quantity').default(0), // الحد الأقصى للكمية  
+  unit: varchar('unit', { length: 20 }).default('قطعة'), // الوحدة (قطعة، كيلو، متر، الخ)
+  barcode: varchar('barcode', { length: 100 }), // الباركود
+  location: varchar('location', { length: 100 }), // موقع التخزين
+  notes: text('notes'), // ملاحظات
+  status: varchar('status', { length: 20 }).default('active'), // active / inactive
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  // Check constraints for consumable parts integrity
+  currentQuantityNonNegative: check('current_quantity_non_negative', sql`${table.current_quantity} >= 0`),
+  minQuantityNonNegative: check('min_quantity_non_negative', sql`${table.min_quantity} >= 0`),
+  maxQuantityNonNegative: check('max_quantity_non_negative', sql`${table.max_quantity} >= 0`),
+  statusValid: check('consumable_status_valid', sql`${table.status} IN ('active', 'inactive')`),
+}));
+
+// 📊 جدول حركات قطع الغيار الاستهلاكية - Consumable Parts Transactions  
+export const consumable_parts_transactions = pgTable('consumable_parts_transactions', {
+  id: serial('id').primaryKey(),
+  transaction_id: varchar('transaction_id', { length: 50 }).notNull().unique(), // CT001, CT002, etc.
+  consumable_part_id: integer('consumable_part_id').notNull().references(() => consumable_parts.id, { onDelete: 'restrict' }),
+  transaction_type: varchar('transaction_type', { length: 10 }).notNull(), // in / out
+  quantity: integer('quantity').notNull(), // الكمية (سالبة للخروج، موجبة للدخول)
+  barcode_scanned: varchar('barcode_scanned', { length: 100 }), // الباركود الممسوح
+  manual_entry: boolean('manual_entry').default(false), // إدخال يدوي أم بالماسح
+  transaction_reason: varchar('transaction_reason', { length: 100 }), // سبب الحركة
+  notes: text('notes'), // ملاحظات
+  performed_by: integer('performed_by').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  created_at: timestamp('created_at').defaultNow(),
+}, (table) => ({
+  // Check constraints for transaction integrity
+  quantityPositive: check('quantity_positive', sql`${table.quantity} > 0`),
+  transactionTypeValid: check('transaction_type_valid', sql`${table.transaction_type} IN ('in', 'out')`),
+}));
+
 // 📋 جدول بلاغات الصيانة (للإدارة)
 export const maintenance_reports = pgTable('maintenance_reports', {
   id: serial('id').primaryKey(),
@@ -1437,6 +1480,20 @@ export const insertOperatorNegligenceReportSchema = createInsertSchema(operator_
   updated_at: true,
 });
 
+// Consumable Parts Schemas
+export const insertConsumablePartSchema = createInsertSchema(consumable_parts).omit({
+  id: true,
+  part_id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertConsumablePartTransactionSchema = createInsertSchema(consumable_parts_transactions).omit({
+  id: true,
+  transaction_id: true,
+  created_at: true,
+});
+
 // HR System Types
 export type Attendance = typeof attendance.$inferSelect;
 export type InsertAttendance = z.infer<typeof insertAttendanceSchema>;
@@ -1470,6 +1527,12 @@ export type MaintenanceReport = typeof maintenance_reports.$inferSelect;
 export type InsertMaintenanceReport = z.infer<typeof insertMaintenanceReportSchema>;
 export type OperatorNegligenceReport = typeof operator_negligence_reports.$inferSelect;
 export type InsertOperatorNegligenceReport = z.infer<typeof insertOperatorNegligenceReportSchema>;
+
+// Consumable Parts Types
+export type ConsumablePart = typeof consumable_parts.$inferSelect;
+export type InsertConsumablePart = z.infer<typeof insertConsumablePartSchema>;
+export type ConsumablePartTransaction = typeof consumable_parts_transactions.$inferSelect;
+export type InsertConsumablePartTransaction = z.infer<typeof insertConsumablePartTransactionSchema>;
 
 // Production Flow Types
 export type Cut = typeof cuts.$inferSelect;
