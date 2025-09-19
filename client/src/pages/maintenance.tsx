@@ -305,7 +305,7 @@ export default function Maintenance() {
 
           {/* Main Tabs */}
           <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="requests" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
                 طلبات الصيانة
@@ -325,6 +325,10 @@ export default function Maintenance() {
               <TabsTrigger value="spare-parts" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 قطع الغيار
+              </TabsTrigger>
+              <TabsTrigger value="consumable-parts" className="flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                قطع غيار استهلاكية
               </TabsTrigger>
             </TabsList>
 
@@ -499,6 +503,21 @@ export default function Maintenance() {
                 spareParts={Array.isArray(spareParts) ? spareParts : []}
                 isLoading={false}
               />
+            </TabsContent>
+
+            {/* Consumable Parts Tab */}
+            <TabsContent value="consumable-parts">
+              <Card>
+                <CardHeader>
+                  <CardTitle>قطع الغيار الاستهلاكية</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Wrench className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p className="text-gray-500">سيتم إضافة المحتوى قريباً...</p>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
           </Tabs>
