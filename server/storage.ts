@@ -5421,14 +5421,11 @@ export class DatabaseStorage implements IStorage {
           throw new Error('معرف الإشعار غير صحيح');
         }
 
-        const result = await db
+        // Delete the notification - idempotent operation
+        // If notification doesn't exist, that's the desired state, so no error
+        await db
           .delete(notifications)
-          .where(eq(notifications.id, notificationId))
-          .returning();
-
-        if (result.length === 0) {
-          throw new Error('الإشعار غير موجود');
-        }
+          .where(eq(notifications.id, notificationId));
       },
       'حذف الإشعار',
       `الإشعار رقم ${notificationId}`
