@@ -9,7 +9,7 @@ import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import ErrorBoundary from "../ErrorBoundary";
 import { Bot, User, Send, Mic, MicOff, Volume2, FileText, Bell, TrendingUp, Settings } from "lucide-react";
-import { generateMessageId } from "../../../shared/id-generator";
+import { generateMessageId } from "../../../../shared/id-generator";
 
 interface Message {
   id: string;
