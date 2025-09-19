@@ -23,6 +23,8 @@ import {
   insertMaintenanceActionSchema,
   insertMaintenanceReportSchema,
   insertOperatorNegligenceReportSchema,
+  insertConsumablePartSchema,
+  insertConsumablePartTransactionSchema,
   insertInventoryMovementSchema,
   insertInventorySchema,
   insertCutSchema,
@@ -2657,6 +2659,136 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error deleting spare part:', error);
       res.status(500).json({ message: "خطأ في حذف قطعة الغيار" });
+    }
+  });
+
+  // Consumable Parts routes
+  app.get("/api/consumable-parts", async (req, res) => {
+    try {
+      const consumableParts = await storage.getAllConsumableParts();
+      res.json(consumableParts);
+    } catch (error) {
+      console.error('Error fetching consumable parts:', error);
+      res.status(500).json({ message: "خطأ في جلب قطع الغيار الاستهلاكية" });
+    }
+  });
+
+  app.post("/api/consumable-parts", async (req, res) => {
+    try {
+      const consumablePart = await storage.createConsumablePart(req.body);
+      res.json(consumablePart);
+    } catch (error) {
+      console.error('Error creating consumable part:', error);
+      res.status(500).json({ message: "خطأ في إنشاء قطعة الغيار الاستهلاكية" });
+    }
+  });
+
+  app.put("/api/consumable-parts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const consumablePart = await storage.updateConsumablePart(id, req.body);
+      res.json(consumablePart);
+    } catch (error) {
+      console.error('Error updating consumable part:', error);
+      res.status(500).json({ message: "خطأ في تحديث قطعة الغيار الاستهلاكية" });
+    }
+  });
+
+  app.delete("/api/consumable-parts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteConsumablePart(id);
+      res.json({ message: "تم حذف قطعة الغيار الاستهلاكية بنجاح" });
+    } catch (error) {
+      console.error('Error deleting consumable part:', error);
+      res.status(500).json({ message: "خطأ في حذف قطعة الغيار الاستهلاكية" });
+    }
+  });
+
+  // Consumable Parts Transactions routes
+  app.get("/api/consumable-parts-transactions", async (req, res) => {
+    try {
+      const transactions = await storage.getConsumablePartTransactions();
+      res.json(transactions);
+    } catch (error) {
+      console.error('Error fetching consumable parts transactions:', error);
+      res.status(500).json({ message: "خطأ في جلب حركات قطع الغيار الاستهلاكية" });
+    }
+  });
+
+  app.get("/api/consumable-parts-transactions/part/:partId", async (req, res) => {
+    try {
+      const partId = parseInt(req.params.partId);
+      const transactions = await storage.getConsumablePartTransactionsByPartId(partId);
+      res.json(transactions);
+    } catch (error) {
+      console.error('Error fetching consumable parts transactions by part:', error);
+      res.status(500).json({ message: "خطأ في جلب حركات قطعة الغيار الاستهلاكية" });
+    }
+  });
+
+  app.post("/api/consumable-parts-transactions", async (req, res) => {
+    try {
+      const transaction = await storage.createConsumablePartTransaction(req.body);
+      res.json(transaction);
+    } catch (error) {
+      console.error('Error creating consumable parts transaction:', error);
+      res.status(500).json({ message: "خطأ في إنشاء حركة قطعة الغيار الاستهلاكية" });
+    }
+  });
+
+  // Barcode scanning endpoint for consumable parts
+  app.post("/api/consumable-parts/scan-barcode", async (req, res) => {
+    try {
+      const { barcode } = req.body;
+      if (!barcode) {
+        return res.status(400).json({ message: "الباركود مطلوب" });
+      }
+      
+      const consumablePart = await storage.getConsumablePartByBarcode(barcode);
+      if (!consumablePart) {
+        return res.status(404).json({ message: "لم يتم العثور على قطعة غيار بهذا الباركود" });
+      }
+      
+      res.json(consumablePart);
+    } catch (error) {
+      console.error('Error scanning barcode:', error);
+      res.status(500).json({ message: "خطأ في قراءة الباركود" });
+    }
+  });
+
+  // Process barcode transaction (in/out)
+  app.post("/api/consumable-parts/barcode-transaction", async (req, res) => {
+    try {
+      const { barcode, transaction_type, quantity, transaction_reason, notes, manual_entry } = req.body;
+      
+      if (!barcode || !transaction_type || !quantity) {
+        return res.status(400).json({ message: "الباركود ونوع الحركة والكمية مطلوبة" });
+      }
+
+      // Find consumable part by barcode
+      const consumablePart = await storage.getConsumablePartByBarcode(barcode);
+      if (!consumablePart) {
+        return res.status(404).json({ message: "لم يتم العثور على قطعة غيار بهذا الباركود" });
+      }
+
+      // Create transaction
+      const transactionData = {
+        consumable_part_id: consumablePart.id,
+        transaction_type,
+        quantity: parseInt(quantity),
+        barcode_scanned: barcode,
+        manual_entry: manual_entry || false,
+        transaction_reason: transaction_reason || '',
+        notes: notes || '',
+        performed_by: req.session.userId || 1
+      };
+
+      const transaction = await storage.processConsumablePartBarcodeTransaction(transactionData);
+      res.json(transaction);
+    } catch (error) {
+      console.error('Error processing barcode transaction:', error);
+      res.status(500).json({ message: "خطأ في معالجة حركة الباركود" });
     }
   });
 
