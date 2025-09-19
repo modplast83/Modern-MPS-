@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -104,9 +104,9 @@ export default function NotificationCenter() {
       duration: notification.priority === 'urgent' ? 10000 : notification.priority === 'high' ? 7000 : 5000,
     });
 
-    // Refresh user notifications to update counts
-    refetchUserNotifications();
-  }, [toast, refetchUserNotifications]);
+    // Invalidate query to automatically refetch - more efficient than manual refetch
+    queryClient.invalidateQueries({ queryKey: ['/api/notifications/user'] });
+  }, [toast, queryClient]);
 
   const handleRecentNotifications = useCallback((data: { notifications: SSENotification[]; count: number }) => {
     setRealtimeNotifications(data.notifications);
@@ -121,13 +121,16 @@ export default function NotificationCenter() {
     console.error('[NotificationCenter] SSE connection error:', error);
   }, []);
 
-  // Initialize SSE connection
-  const { connectionState, reconnect } = useSSE({
+  // Memoize event handlers object to prevent infinite re-renders
+  const sseEventHandlers = useMemo(() => ({
     onNotification: handleNewNotification,
     onRecentNotifications: handleRecentNotifications,
     onConnected: handleSSEConnected,
     onError: handleSSEError,
-  });
+  }), [handleNewNotification, handleRecentNotifications, handleSSEConnected, handleSSEError]);
+
+  // Initialize SSE connection
+  const { connectionState, reconnect } = useSSE(sseEventHandlers);
 
   // Create system notification mutation
   const createSystemNotificationMutation = useMutation({
@@ -153,7 +156,7 @@ export default function NotificationCenter() {
       setSystemTitle('');
       setSystemMessage('');
       setRecipientId('');
-      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/user'] });
     },
     onError: (error: any) => {
       toast({
@@ -172,7 +175,7 @@ export default function NotificationCenter() {
       });
     },
     onSuccess: () => {
-      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
     },
     onError: (error: any) => {
@@ -192,7 +195,7 @@ export default function NotificationCenter() {
       });
     },
     onSuccess: () => {
-      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/user'] });
       setRealtimeNotifications([]);
       toast({
         title: "✅ تم التحديث",
@@ -216,7 +219,7 @@ export default function NotificationCenter() {
       });
     },
     onSuccess: () => {
-      refetchUserNotifications();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/user'] });
       queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
       toast({
         title: "✅ تم الحذف",
