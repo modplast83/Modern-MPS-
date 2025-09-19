@@ -8,7 +8,7 @@ import {
   ResponsiveContainer,
   Legend
 } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface InteractiveBarChartProps {
   data: any[];

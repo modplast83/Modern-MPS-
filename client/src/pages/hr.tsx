@@ -1,7 +1,7 @@
-import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
-import MobileNav from "@/components/layout/MobileNav";
-import HRTabs from "@/components/hr/HRTabs";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
+import HRTabs from "../components/hr/HRTabs";
 
 export default function HR() {
   return (

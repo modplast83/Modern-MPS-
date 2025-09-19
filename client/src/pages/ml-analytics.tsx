@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Brain, 
@@ -84,7 +84,7 @@ export default function MLAnalytics() {
   // تدريب النموذج - استخدام apiRequest
   const trainModelMutation = useMutation({
     mutationFn: async (machineId: number) => {
-      const { apiRequest } = await import('@/lib/queryClient');
+      const { apiRequest } = await import('/client/src/lib/queryClient');
       const response = await apiRequest(`/api/ml/train/${machineId}`, {
         method: 'POST'
       });
@@ -102,7 +102,7 @@ export default function MLAnalytics() {
   // تطبيق التحسينات - استخدام apiRequest
   const applyOptimizationMutation = useMutation({
     mutationFn: async (optimization: OptimizationResult) => {
-      const { apiRequest } = await import('@/lib/queryClient');
+      const { apiRequest } = await import('/client/src/lib/queryClient');
       const response = await apiRequest(`/api/ml/apply-optimization/${selectedMachine}`, {
         method: 'POST',
         body: JSON.stringify(optimization)

@@ -1,7 +1,7 @@
 import React from 'react';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+import { Button } from './ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface QueryErrorBoundaryProps {

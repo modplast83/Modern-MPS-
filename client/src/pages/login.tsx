@@ -1,16 +1,17 @@
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "../hooks/use-auth";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form";
+import { useToast } from "../hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Factory } from "lucide-react";
 
-import FactoryLogoHPNGWg from "@assets/FactoryLogoHPNGWg.png";
+// Note: Using require for asset import as fallback
+const FactoryLogoHPNGWg = "/attached_assets/FactoryLogoHPNGWg.png";
 
 const loginSchema = z.object({
   username: z.string().min(1, "اسم المستخدم مطلوب").min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
@@ -123,7 +124,7 @@ export default function Login() {
             </form>
           </Form>
           
-          <div className="mt-6 pt-6 border-t border-border">
+          <div className="mt-6 pt-6 border-t">
             <p className="text-xs text-muted-foreground text-center">جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ</p>
           </div>
         </CardContent>

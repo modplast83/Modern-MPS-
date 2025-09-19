@@ -75,13 +75,16 @@
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: var(--border);
   }
 
   body {
-    @apply font-cairo antialiased bg-background text-foreground;
     font-family: 'Cairo', 'Inter', system-ui, -apple-system, sans-serif;
     direction: rtl;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   [dir="ltr"] body {
@@ -149,7 +152,7 @@
 
   /* Card components */
   .card-stats {
-    @apply bg-card rounded-lg shadow-sm border border-border p-6 hover:shadow-md transition-shadow;
+    @apply bg-card rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow;
   }
   
   /* Status indicators */

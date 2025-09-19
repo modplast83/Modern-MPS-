@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "../ui/button";
+import { Progress } from "../ui/progress";
 import { Eye, Plus } from "lucide-react";
 import type { ProductionOrderWithDetails } from "@/types";
-import { formatNumber, formatWeight } from '@/lib/formatNumber';
+import { formatNumber, formatWeight } from '../../lib/formatNumber';
 
 const formatPercentage = (value: number): string => {
   return `${value}%`;

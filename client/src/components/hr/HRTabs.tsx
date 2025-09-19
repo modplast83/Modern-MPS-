@@ -1,4 +1,4 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { GraduationCap, Target, Calendar, Users, Clock } from "lucide-react";
 import SimpleFieldTraining from "./SimpleFieldTraining.tsx";
 import PerformanceReviews from "./PerformanceReviews.tsx";
