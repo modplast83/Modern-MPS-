@@ -341,7 +341,7 @@ export default function ProductionMonitoring() {
                   <span className="text-sm font-medium">فترة التقرير:</span>
                 </div>
                 
-                <Select value={dateFilter} onValueChange={setDateFilter}>
+                <Select value={dateFilter || ""} onValueChange={setDateFilter}>
                   <SelectTrigger className="w-32" data-testid="select-date-filter">
                     <SelectValue />
                   </SelectTrigger>

@@ -5126,25 +5126,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create Roll with QR
   app.post("/api/rolls", 
     requireAuth,
-    validateRequest({ body: insertRollSchema }),
+    validateRequest({ body: insertRollSchema.omit({ created_by: true }) }),
     async (req, res) => {
     try {
       console.log('Roll creation request body:', JSON.stringify(req.body, null, 2));
       console.log('Session userId:', req.session.userId);
       
+      // Ensure session userId is valid
+      if (!req.session.userId || typeof req.session.userId !== 'number') {
+        return res.status(401).json({ message: "معرف المستخدم غير صحيح" });
+      }
+      
       // Get DataValidator for business rule enforcement
       const dataValidator = getDataValidator(storage);
       
-      // Add created_by from session
+      // Add created_by from session and validate the complete data
       const rollData = {
         ...req.body,
-        created_by: req.session.userId
+        created_by: Number(req.session.userId)
       };
       
-      console.log('Final rollData before validation:', JSON.stringify(rollData, null, 2));
+      // Validate with insertRollSchema AFTER adding created_by
+      let validatedRollData;
+      try {
+        validatedRollData = insertRollSchema.parse(rollData);
+        console.log('Validation successful for roll data');
+      } catch (validationError) {
+        console.error('Roll schema validation failed:', validationError);
+        if (validationError instanceof z.ZodError) {
+          return res.status(400).json({ 
+            message: "بيانات غير صحيحة", 
+            errors: validationError.errors 
+          });
+        }
+        throw validationError;
+      }
+      
+      console.log('Final validated roll data:', JSON.stringify(validatedRollData, null, 2));
       
       // INVARIANT B: Validate roll weight against production order limits
-      const productionOrder = await storage.getProductionOrderById(rollData.production_order_id);
+      const productionOrder = await storage.getProductionOrderById(validatedRollData.production_order_id);
       if (!productionOrder) {
         return res.status(400).json({ 
           message: "أمر الإنتاج غير موجود",
@@ -5153,7 +5174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // INVARIANT E: Validate machine is active
-      const machine = await storage.getMachineById(rollData.machine_id);
+      const machine = await storage.getMachineById(validatedRollData.machine_id);
       if (!machine) {
         return res.status(400).json({ 
           message: "المكينة غير موجودة", 
@@ -5168,7 +5189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Run synchronous business rule validation
-      const validationResult = await dataValidator.validateRollCreation(rollData);
+      const validationResult = await dataValidator.validateRollCreation(validatedRollData);
       if (!validationResult.isValid) {
         return res.status(400).json({
           message: "فشل في التحقق من قواعد العمل",
@@ -5178,7 +5199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate QR code and roll number with validation passed
-      const roll = await storage.createRollWithQR(rollData);
+      const roll = await storage.createRollWithQR(validatedRollData);
       res.status(201).json(roll);
     } catch (error) {
       console.error('Error creating roll:', error);
