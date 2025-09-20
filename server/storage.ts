@@ -2142,7 +2142,7 @@ export class DatabaseStorage implements IStorage {
         order_number: orders.order_number,
         customer_name: customers.name_ar,
         delivery_date: orders.delivery_date,
-        days_overdue: sql<number>`EXTRACT(DAYS FROM (CURRENT_DATE - ${orders.delivery_date}))`
+        days_overdue: sql<number>`(CURRENT_DATE - ${orders.delivery_date})::int`
       })
       .from(orders)
       .leftJoin(customers, eq(orders.customer_id, customers.id))
