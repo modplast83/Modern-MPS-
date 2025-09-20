@@ -230,6 +230,7 @@ export function getQueryClient(): QueryClient {
           // Silently handle AbortErrors during development to reduce console noise
           if (import.meta.env.DEV && error?.name === 'AbortError') {
             console.debug('Query cancelled during cleanup:', query.queryKey);
+            console.debug('Suppressed React Query AbortError during development cleanup');
             return;
           }
           // Let other errors propagate normally
@@ -259,3 +260,27 @@ export function getQueryClient(): QueryClient {
 }
 
 export const queryClient = getQueryClient();
+
+// Add global unhandled rejection handler to suppress AbortError noise
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  window.addEventListener('unhandledrejection', (event) => {
+    // Check if this is an AbortError from React Query
+    if (event.reason?.name === 'AbortError' && 
+        (event.reason?.message?.includes('signal is aborted') ||
+         event.reason?.message?.includes('The operation was aborted'))) {
+      // Silently prevent the error from showing in console
+      console.debug('Suppressed unhandled AbortError during development');
+      event.preventDefault();
+      return;
+    }
+    
+    // Also suppress if it's just an empty AbortError object
+    if (event.reason && typeof event.reason === 'object' && 
+        event.reason.constructor?.name === 'AbortError' && 
+        (!event.reason.message || event.reason.message === '')) {
+      console.debug('Suppressed empty AbortError during development');
+      event.preventDefault();
+      return;
+    }
+  });
+}
