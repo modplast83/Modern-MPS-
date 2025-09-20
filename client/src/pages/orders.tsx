@@ -936,7 +936,7 @@ export default function Orders() {
                           className="pl-10 w-64"
                         />
                       </div>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <Select value={statusFilter || ""} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-48">
                           <SelectValue placeholder="فلترة حسب الحالة" />
                         </SelectTrigger>
@@ -1008,7 +1008,7 @@ export default function Orders() {
                                           // Reset production orders when customer changes
                                           setProductionOrdersInForm([]);
                                         }} 
-                                        value={field.value}
+                                        value={field.value || ""}
                                       >
                                         <FormControl>
                                           <SelectTrigger>

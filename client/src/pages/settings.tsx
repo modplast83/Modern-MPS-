@@ -801,7 +801,7 @@ export default function Settings() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="language">اللغة المفضلة</Label>
-                        <Select value={userSettings.language} onValueChange={(value) => setUserSettings(prev => ({ ...prev, language: value }))}>
+                        <Select value={userSettings.language || "ar"} onValueChange={(value) => setUserSettings(prev => ({ ...prev, language: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -961,7 +961,7 @@ export default function Settings() {
                         <div className="space-y-2">
                           <Label htmlFor="refreshInterval">فترة التحديث (بالثواني)</Label>
                           <Select 
-                            value={userSettings.dashboard.refreshInterval.toString()} 
+                            value={userSettings.dashboard.refreshInterval?.toString() || "30"} 
                             onValueChange={(value) => setUserSettings(prev => ({
                               ...prev,
                               dashboard: { ...prev.dashboard, refreshInterval: parseInt(value) }
