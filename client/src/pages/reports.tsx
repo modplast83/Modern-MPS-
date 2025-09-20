@@ -159,14 +159,21 @@ export default function Reports() {
   };
 
   // Format chart data helpers
-  const formatChartValue = (value: number, type: 'number' | 'percentage' | 'currency' = 'number') => {
+  const formatChartValue = (value: any, type: 'number' | 'percentage' | 'currency' = 'number') => {
+    // Ensure value is a valid number
+    const numValue = typeof value === 'number' && !isNaN(value) ? value : 
+                     typeof value === 'string' ? parseFloat(value) : 
+                     0;
+    
+    const safeValue = isNaN(numValue) ? 0 : numValue;
+    
     switch (type) {
       case 'percentage':
-        return `${value.toFixed(1)}%`;
+        return `${safeValue.toFixed(1)}%`;
       case 'currency':
-        return `${formatNumberWithCommas(value)} ريال`;
+        return `${formatNumberWithCommas(safeValue)} ريال`;
       default:
-        return formatNumberWithCommas(value);
+        return formatNumberWithCommas(safeValue);
     }
   };
 
