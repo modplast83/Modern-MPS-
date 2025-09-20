@@ -57,7 +57,7 @@ export default function RollCreationModal({
   const form = useForm<RollFormData>({
     resolver: zodResolver(rollFormSchema),
     defaultValues: {
-      production_order_id: selectedProductionOrderId || 0,
+      production_order_id: selectedProductionOrderId || 1, // Default to 1 instead of 0
       weight_kg: "",
       machine_id: "",
     }
@@ -93,7 +93,13 @@ export default function RollCreationModal({
   // مزامنة قيمة أمر الإنتاج المختار من الـprop عند تغييره/فتح المودال
   useEffect(() => {
     if (isOpen) {
-      form.setValue("production_order_id", selectedProductionOrderId || 0);
+      // Only set production_order_id if a valid one is provided
+      if (selectedProductionOrderId && selectedProductionOrderId > 0) {
+        form.setValue("production_order_id", selectedProductionOrderId);
+      } else if (productionOrders.length > 0) {
+        // If no valid ID provided, default to the first available production order
+        form.setValue("production_order_id", productionOrders[0].id);
+      }
       
       // Set default weight to remaining quantity if a production order is selected
       if (selectedProductionOrderId && selectedOrder) {
@@ -101,7 +107,7 @@ export default function RollCreationModal({
         form.setValue("weight_kg", remainingQuantity > 0 ? remainingQuantity.toString() : "");
       }
     }
-  }, [isOpen, selectedProductionOrderId, selectedOrder, rolls, form]);
+  }, [isOpen, selectedProductionOrderId, selectedOrder, rolls, form, productionOrders]);
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
