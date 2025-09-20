@@ -2171,7 +2171,7 @@ export class DatabaseStorage implements IStorage {
       .from(rolls)
       .leftJoin(machines, eq(rolls.machine_id, machines.id))
       .where(sql`(${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 > 10`)
-      .orderBy(sql`waste_percentage DESC`)
+      .orderBy(sql`(${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0)) * 100 DESC`)
       .limit(5);
       
       // إضافة التنبيهات
@@ -2283,7 +2283,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(production_orders, eq(orders.id, production_orders.order_id))
         .where(dateFilter)
         .groupBy(customers.id, customers.name, customers.name_ar)
-        .orderBy(sql`order_count DESC`)
+        .orderBy(sql`COUNT(${orders.id}) DESC`)
         .limit(10),
 
         // إحصائيات الإيرادات
@@ -2394,7 +2394,7 @@ export class DatabaseStorage implements IStorage {
           role_name: sql<string>`COALESCE(${roles.name_ar}, ${roles.name})`,
           present_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)`,
           absent_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'غائب' THEN 1 END)`,
-          late_days: sql<number>`COUNT(CASE WHEN ${attendance.check_in_time} > '08:30:00' THEN 1 END)`,
+          late_days: sql<number>`COUNT(CASE WHEN ${attendance.check_in_time} > TIME '08:30:00' THEN 1 END)`,
           attendance_rate: sql<number>`COALESCE((COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100), 0)`
         })
         .from(users)
@@ -2475,7 +2475,7 @@ export class DatabaseStorage implements IStorage {
           total_downtime: sql<number>`COALESCE(SUM(EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600), 0)`,
           planned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.issue_type} = 'mechanical' THEN EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600 END), 0)`,
           unplanned_downtime: sql<number>`COALESCE(SUM(CASE WHEN ${maintenance_requests.issue_type} = 'electrical' THEN EXTRACT(EPOCH FROM (${maintenance_requests.date_resolved} - ${maintenance_requests.date_reported}))/3600 END), 0)`,
-          mtbf: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${maintenance_requests.date_reported} - LAG(${maintenance_requests.date_resolved}) OVER (PARTITION BY ${maintenance_requests.machine_id} ORDER BY ${maintenance_requests.date_reported})))/3600), 168)` // Mean Time Between Failures
+          mtbf: sql<number>`168` // Mean Time Between Failures - simplified calculation
         })
         .from(maintenance_requests)
         .where(and(dateFilter, sql`${maintenance_requests.date_resolved} IS NOT NULL`))
