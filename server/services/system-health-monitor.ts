@@ -62,18 +62,18 @@ export class SystemHealthMonitor extends EventEmitter {
   private lastAlertTimes: Map<string, Date> = new Map(); // Track last alert times for rate limiting
   private static instance: SystemHealthMonitor | null = null; // Singleton pattern
   
-  // إعدادات المراقبة - Updated intervals and thresholds
-  private readonly MONITORING_INTERVAL = 5 * 60 * 1000; // 5 دقائق
-  private readonly HEALTH_CHECK_INTERVAL = 5 * 60 * 1000; // زيادة إلى 5 دقائق لتقليل الحساسية
+  // إعدادات المراقبة - Increased intervals to reduce alert frequency
+  private readonly MONITORING_INTERVAL = 15 * 60 * 1000; // تم زيادتها إلى 15 دقيقة لتقليل التحذيرات
+  private readonly HEALTH_CHECK_INTERVAL = 10 * 60 * 1000; // تم زيادتها إلى 10 دقائق لتقليل الحساسية
   private readonly PERFORMANCE_RETENTION_DAYS = 30; // الاحتفاظ بالبيانات لمدة 30 يوم
   
-  // إعدادات التحذيرات - Alert Rate Limiting with persistent storage
-  private readonly ALERT_COOLDOWN_MEMORY = 15 * 60 * 1000; // زيادة إلى 15 دقيقة للذاكرة  
-  private readonly ALERT_COOLDOWN_DATABASE = 30 * 60 * 1000; // زيادة إلى 30 دقيقة لقاعدة البيانات
-  private readonly ALERT_COOLDOWN_DEFAULT = 20 * 60 * 1000; // زيادة إلى 20 دقائق افتراضي
+  // إعدادات التحذيرات - Significantly increased cooldowns to reduce spam
+  private readonly ALERT_COOLDOWN_MEMORY = 60 * 60 * 1000; // زيادة إلى ساعة كاملة للذاكرة
+  private readonly ALERT_COOLDOWN_DATABASE = 2 * 60 * 60 * 1000; // زيادة إلى ساعتين لقاعدة البيانات
+  private readonly ALERT_COOLDOWN_DEFAULT = 90 * 60 * 1000; // زيادة إلى 90 دقيقة افتراضي
   
-  // Sustained condition settings for hysteresis
-  private readonly SUSTAINED_CONDITION_COUNT = 3; // 3 consecutive checks before changing status
+  // Sustained condition settings for hysteresis - Increased to reduce noise
+  private readonly SUSTAINED_CONDITION_COUNT = 5; // 5 consecutive checks before changing status
 
   constructor(storage: IStorage) {
     super();
@@ -398,12 +398,12 @@ export class SystemHealthMonitor extends EventEmitter {
   }
 
   /**
-   * Calculate memory status based on proper thresholds
+   * Calculate memory status based on proper thresholds - Increased thresholds to reduce false alerts
    */
   private calculateMemoryStatus(memoryPercent: number): 'healthy' | 'warning' | 'critical' | 'unknown' {
-    if (memoryPercent > 95) {
+    if (memoryPercent > 98) {
       return 'critical';
-    } else if (memoryPercent > 85) {
+    } else if (memoryPercent > 90) {
       return 'warning';
     }
     return 'healthy';
