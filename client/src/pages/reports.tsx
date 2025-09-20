@@ -159,6 +159,14 @@ export default function Reports() {
   };
 
   // Format chart data helpers
+  const safeToFixed = (value: any, decimals: number = 1): string => {
+    const numValue = typeof value === 'number' && !isNaN(value) ? value : 
+                     typeof value === 'string' ? parseFloat(value) : 
+                     0;
+    const safeValue = isNaN(numValue) ? 0 : numValue;
+    return safeValue.toFixed(decimals);
+  };
+
   const formatChartValue = (value: any, type: 'number' | 'percentage' | 'currency' = 'number') => {
     // Ensure value is a valid number
     const numValue = typeof value === 'number' && !isNaN(value) ? value : 
@@ -310,7 +318,7 @@ export default function Reports() {
                         },
                         {
                           title: "كفاءة الإنتاج",
-                          value: `${(dashboardData.data.realTime?.currentStats?.avg_efficiency || 90).toFixed(1)}%`,
+                          value: `${safeToFixed(dashboardData.data.realTime?.currentStats?.avg_efficiency || 90)}%`,
                           description: "متوسط الكفاءة",
                           icon: <Target className="w-5 h-5" />,
                           trend: {
@@ -332,7 +340,7 @@ export default function Reports() {
                         },
                         {
                           title: "معدل الهدر",
-                          value: `${((dashboardData.data.realTime?.currentStats?.current_waste || 0) / Math.max(dashboardData.data.realTime?.currentStats?.daily_weight || 1, 1) * 100).toFixed(1)}%`,
+                          value: `${safeToFixed(((dashboardData.data.realTime?.currentStats?.current_waste || 0) / Math.max(dashboardData.data.realTime?.currentStats?.daily_weight || 1, 1) * 100))}%`,
                           description: "نسبة الهدر",
                           icon: <AlertTriangle className="w-5 h-5" />,
                           trend: {
@@ -497,7 +505,7 @@ export default function Reports() {
                       metrics={[
                         {
                           title: "معدل الجودة",
-                          value: `${(advancedMetrics.data.qualityMetrics?.quality_rate || 95).toFixed(1)}%`,
+                          value: `${safeToFixed(advancedMetrics.data.qualityMetrics?.quality_rate || 95)}%`,
                           description: "نسبة الإنتاج السليم",
                           icon: <CheckCircle2 className="w-5 h-5" />,
                           trend: {
@@ -530,7 +538,7 @@ export default function Reports() {
                         },
                         {
                           title: "متوسط الهدر",
-                          value: `${(advancedMetrics.data.qualityMetrics?.avg_waste_percentage || 0).toFixed(1)}%`,
+                          value: `${safeToFixed(advancedMetrics.data.qualityMetrics?.avg_waste_percentage || 0)}%`,
                           description: "نسبة الهدر",
                           icon: <Activity className="w-5 h-5" />,
                           trend: {
@@ -583,7 +591,7 @@ export default function Reports() {
                         yAxisKey="time"
                         barColor="#6366f1"
                         height={350}
-                        formatValue={(value) => `${value.toFixed(1)} ساعة`}
+                        formatValue={(value) => `${safeToFixed(value)} ساعة`}
                       />
                     )}
                   </div>
@@ -650,7 +658,7 @@ export default function Reports() {
                         },
                         {
                           title: "متوسط وقت الإصلاح",
-                          value: `${(maintenanceReports.data.maintenanceStats?.avg_resolution_time || 0).toFixed(1)}`,
+                          value: `${safeToFixed(maintenanceReports.data.maintenanceStats?.avg_resolution_time || 0)}`,
                           description: "ساعة",
                           icon: <Clock className="w-5 h-5" />,
                           trend: {
@@ -717,7 +725,7 @@ export default function Reports() {
                           }
                         ]}
                         height={350}
-                        formatValue={(value) => `${value.toFixed(1)} ساعة`}
+                        formatValue={(value) => `${safeToFixed(value)} ساعة`}
                       />
                     )}
                   </div>
@@ -732,7 +740,7 @@ export default function Reports() {
                         <div className="flex items-center justify-center p-8">
                           <div className="text-center">
                             <div className="text-4xl font-bold text-blue-600 mb-2">
-                              {(maintenanceReports.data.downtimeAnalysis?.mtbf || 168).toFixed(0)}
+                              {safeToFixed(maintenanceReports.data.downtimeAnalysis?.mtbf || 168, 0)}
                             </div>
                             <div className="text-lg text-gray-600">ساعة</div>
                             <div className="text-sm text-gray-500 mt-2">
@@ -786,7 +794,7 @@ export default function Reports() {
                         },
                         {
                           title: "معدل الإكمال",
-                          value: `${(hrReports.data.trainingStats?.completion_rate || 0).toFixed(1)}%`,
+                          value: `${safeToFixed(hrReports.data.trainingStats?.completion_rate || 0)}%`,
                           description: "إكمال التدريب",
                           icon: <Target className="w-5 h-5" />,
                           trend: {
@@ -929,7 +937,7 @@ export default function Reports() {
                         },
                         {
                           title: "الطلبات في الوقت",
-                          value: `${((orderReports.data.deliveryPerformance?.on_time_orders || 0) / Math.max(orderReports.data.revenueStats?.total_orders || 1, 1) * 100).toFixed(1)}%`,
+                          value: `${safeToFixed(((orderReports.data.deliveryPerformance?.on_time_orders || 0) / Math.max(orderReports.data.revenueStats?.total_orders || 1, 1) * 100))}%`,
                           description: "أداء التسليم",
                           icon: <CheckCircle2 className="w-5 h-5" />,
                           trend: {
@@ -1018,7 +1026,7 @@ export default function Reports() {
                           </div>
                           <div className="text-center p-4 bg-blue-50 rounded-lg">
                             <div className="text-2xl font-bold text-blue-600">
-                              {(orderReports.data.deliveryPerformance.avg_delivery_days || 0).toFixed(1)}
+                              {safeToFixed(orderReports.data.deliveryPerformance.avg_delivery_days || 0)}
                             </div>
                             <div className="text-sm text-gray-600">متوسط أيام التسليم</div>
                           </div>
