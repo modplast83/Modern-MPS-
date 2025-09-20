@@ -516,17 +516,33 @@ export default function Orders() {
       console.log('إنشاء أوامر الإنتاج...', validProductionOrders.length);
       for (let i = 0; i < validProductionOrders.length; i++) {
         const prodOrder = validProductionOrders[i];
-        console.log(`إنشاء أمر إنتاج ${i + 1}:`, prodOrder);
+        
+        // Find the index of this production order in the original array
+        const originalIndex = productionOrdersInForm.findIndex(order => 
+          order.customer_product_id === prodOrder.customer_product_id &&
+          order.quantity_kg === prodOrder.quantity_kg
+        );
+        
+        // Get the calculated values from quantityPreviews
+        const quantityData = quantityPreviews[originalIndex];
+        const overrunPercentage = quantityData?.overrun_percentage || 5.0;
+        const finalQuantityKg = quantityData?.final_quantity_kg || (prodOrder.quantity_kg * 1.05);
+        
+        const productionOrderData = {
+          order_id: newOrder.data.id,
+          customer_product_id: parseInt(prodOrder.customer_product_id),
+          quantity_kg: prodOrder.quantity_kg.toString(),
+          overrun_percentage: overrunPercentage.toString(),
+          final_quantity_kg: finalQuantityKg.toString(),
+          status: prodOrder.status || 'pending'
+        };
+        
+        console.log(`إنشاء أمر إنتاج ${i + 1}:`, productionOrderData);
         
         const prodOrderResponse = await fetch('/api/production-orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            order_id: newOrder.data.id,
-            customer_product_id: parseInt(prodOrder.customer_product_id),
-            quantity_kg: prodOrder.quantity_kg.toString(),
-            status: prodOrder.status || 'pending'
-          })
+          body: JSON.stringify(productionOrderData)
         });
         
         if (!prodOrderResponse.ok) {
