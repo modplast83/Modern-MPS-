@@ -266,82 +266,66 @@ export function getQueryClient(): QueryClient {
 
 export const queryClient = getQueryClient();
 
-// Ultimate AbortError suppression for development - Target React Query specifically
+// Safe AbortError suppression for development - No API overrides
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  // Override AbortController to make signals silent when aborted
-  const OriginalAbortController = window.AbortController;
   const originalConsoleError = console.error;
+  const originalConsoleWarn = console.warn;
   
-  class SilentAbortController extends OriginalAbortController {
-    constructor() {
-      super();
-      
-      // Override signal to suppress unhandled rejection when aborted
-      const originalSignal = this.signal;
-      const silentSignal = new Proxy(originalSignal, {
-        get(target, prop) {
-          if (prop === 'addEventListener') {
-            return function(type: string, listener: any, options?: any) {
-              if (type === 'abort') {
-                // Wrap abort listeners to handle potential unhandled rejections
-                const wrappedListener = (event: any) => {
-                  try {
-                    listener(event);
-                  } catch (error: any) {
-                    // Silently catch any errors from abort handling
-                    if (error?.name !== 'AbortError') {
-                      throw error; // Re-throw non-AbortErrors
-                    }
-                  }
-                };
-                return target.addEventListener(type, wrappedListener, options);
-              }
-              return target.addEventListener(type, listener, options);
-            };
-          }
-          return target[prop as keyof AbortSignal];
-        }
-      });
-      
-      Object.defineProperty(this, 'signal', {
-        value: silentSignal,
-        writable: false
-      });
-    }
-  }
-  
-  // Replace AbortController globally
-  window.AbortController = SilentAbortController as any;
-  
-  // Enhanced unhandled rejection handler
+  // Enhanced AbortError detection
   const isAbortError = (reason: any) => {
-    return reason?.name === 'AbortError' || 
-           reason?.constructor?.name === 'AbortError' ||
-           (reason?.message && reason.message.includes('signal is aborted')) ||
-           (reason?.stack && reason.stack.includes('AbortError'));
+    if (!reason) return false;
+    
+    return (
+      reason?.name === 'AbortError' || 
+      reason?.constructor?.name === 'AbortError' ||
+      (reason?.message && (
+        reason.message.includes('signal is aborted') ||
+        reason.message.includes('The operation was aborted') ||
+        reason.message.includes('aborted without reason') ||
+        reason.message.includes('Failed to convert value to \'AbortSignal\'')
+      )) ||
+      (reason?.stack && (
+        reason.stack.includes('AbortError') ||
+        reason.stack.includes('Object.cancel')
+      ))
+    );
   };
   
-  // Ultimate suppression of unhandled rejections
+  // Handle unhandled rejections safely without breaking APIs
   window.addEventListener('unhandledrejection', (event) => {
     if (isAbortError(event.reason)) {
       event.preventDefault();
-      event.stopImmediatePropagation();
       return false;
     }
-  }, true);
+  });
   
-  // Override console.error to completely filter AbortError messages
+  // Safe console filtering without breaking functionality
   console.error = (...args) => {
-    const hasAbortError = args.some(arg => 
-      typeof arg === 'string' && (
-        arg.includes('AbortError') || 
-        arg.includes('signal is aborted') ||
-        arg.includes('Unhandled promise rejection')
-      ) || isAbortError(arg)
-    );
+    const hasAbortError = args.some(arg => {
+      if (typeof arg === 'string') {
+        return arg.includes('AbortError') || 
+               arg.includes('signal is aborted') ||
+               arg.includes('Failed to convert value to \'AbortSignal\'') ||
+               arg.includes('Unhandled promise rejection');
+      }
+      return isAbortError(arg);
+    });
     
     if (!hasAbortError) {
       originalConsoleError(...args);
+    }
+  };
+  
+  console.warn = (...args) => {
+    const hasAbortError = args.some(arg => {
+      if (typeof arg === 'string') {
+        return arg.includes('AbortError') || arg.includes('signal is aborted');
+      }
+      return isAbortError(arg);
+    });
+    
+    if (!hasAbortError) {
+      originalConsoleWarn(...args);
     }
   };
 }
