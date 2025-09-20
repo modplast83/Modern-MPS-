@@ -268,118 +268,46 @@ export const queryClient = getQueryClient();
 
 // Complete AbortError suppression for development - Multiple layers
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
-  const originalConsoleError = console.error;
-  const originalConsoleWarn = console.warn;
-  const originalConsoleDebug = console.debug;
-  const originalConsoleLog = console.log;
-  
-  // Enhanced AbortError detection - covers all patterns
-  const isAbortError = (reason: any) => {
-    if (!reason) return false;
-    
-    // Direct AbortError check
-    if (reason?.name === 'AbortError' || 
-        reason?.constructor?.name === 'AbortError') {
-      return true;
+  (() => {
+    // Idempotency guard to prevent duplicate handlers during HMR
+    if ((window as any).__rqAbortFilterInstalled) {
+      return; // Exit early if already installed
     }
+    (window as any).__rqAbortFilterInstalled = true;
     
-    // Message-based detection
-    if (reason?.message && typeof reason.message === 'string') {
-      const message = reason.message.toLowerCase();
-      if (message.includes('signal is aborted') ||
-          message.includes('operation was aborted') ||
-          message.includes('aborted without reason') ||
-          message.includes('convert value to \'abortsignal\'')) {
-        return true;
+    const originalConsoleError = console.error;
+    
+    // Strict AbortError detection - only catch real AbortErrors
+    const isAbortError = (reason: any) => {
+      if (!reason) return false;
+      
+      // Direct AbortError name check
+      if (reason?.name === 'AbortError') return true;
+      
+      // DOMException AbortError check
+      if (reason instanceof DOMException && reason.name === 'AbortError') return true;
+      
+      // Strict message-based detection for known AbortError patterns
+      if (reason?.message && typeof reason.message === 'string') {
+        const message = reason.message;
+        return /^(signal is aborted|The user aborted a request|AbortError)/i.test(message);
       }
-    }
+      
+      return false;
+    };
     
-    // Stack-based detection
-    if (reason?.stack && typeof reason.stack === 'string') {
-      if (reason.stack.includes('AbortError') ||
-          reason.stack.includes('Object.cancel') ||
-          reason.stack.includes('react-query')) {
-        return true;
+    // Single unhandled rejection handler
+    window.addEventListener('unhandledrejection', (event) => {
+      if (isAbortError(event.reason)) {
+        event.preventDefault(); // Sufficient to prevent console logging
       }
-    }
+    }, { capture: true });
     
-    // String-based detection for text arguments
-    if (typeof reason === 'string') {
-      const str = reason.toLowerCase();
-      return str.includes('aborterror') || 
-             str.includes('signal is aborted') ||
-             str.includes('aborted without reason');
-    }
-    
-    return false;
-  };
-  
-  // Multiple unhandled rejection handlers for maximum coverage
-  window.addEventListener('unhandledrejection', (event) => {
-    if (isAbortError(event.reason)) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      return false;
-    }
-  }, { capture: true });
-  
-  window.addEventListener('unhandledrejection', (event) => {
-    if (isAbortError(event.reason)) {
-      event.preventDefault();
-      return false;
-    }
-  }, { capture: false });
-  
-  // Comprehensive console filtering
-  console.error = (...args) => {
-    const hasAbortError = args.some(arg => isAbortError(arg) || 
-      (typeof arg === 'string' && (
-        arg.includes('AbortError') || 
-        arg.includes('signal is aborted') ||
-        arg.includes('Failed to convert value to \'AbortSignal\'') ||
-        arg.includes('Unhandled promise rejection')
-      ))
-    );
-    
-    if (!hasAbortError) {
-      originalConsoleError(...args);
-    }
-  };
-  
-  console.warn = (...args) => {
-    const hasAbortError = args.some(arg => isAbortError(arg) ||
-      (typeof arg === 'string' && (
-        arg.includes('AbortError') || 
-        arg.includes('signal is aborted')
-      ))
-    );
-    
-    if (!hasAbortError) {
-      originalConsoleWarn(...args);
-    }
-  };
-  
-  // Also filter debug and log messages
-  console.debug = (...args) => {
-    const hasAbortError = args.some(arg => isAbortError(arg) ||
-      (typeof arg === 'string' && (
-        arg.includes('Query cancelled during cleanup') ||
-        arg.includes('Suppressed React Query AbortError')
-      ))
-    );
-    
-    if (!hasAbortError) {
-      originalConsoleDebug(...args);
-    }
-  };
-  
-  console.log = (...args) => {
-    const hasAbortError = args.some(arg => isAbortError(arg) ||
-      (typeof arg === 'string' && arg.includes('AbortError'))
-    );
-    
-    if (!hasAbortError) {
-      originalConsoleLog(...args);
-    }
-  };
+    // Minimal console filtering - only suppress strict AbortErrors  
+    console.error = (...args) => {
+      if (!args.some(arg => isAbortError(arg))) {
+        originalConsoleError(...args);
+      }
+    };
+  })();
 }
