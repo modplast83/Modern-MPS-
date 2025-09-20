@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "../ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { QrCode, Scissors, ChevronDown, ChevronUp, Clock, Package } from "lucide-react";
@@ -281,6 +281,9 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>تقطيع الرول</DialogTitle>
+            <DialogDescription>
+              إدخال بيانات تقطيع الرول وتحديد الكميات المطلوبة
+            </DialogDescription>
           </DialogHeader>
           
           {selectedRoll && (

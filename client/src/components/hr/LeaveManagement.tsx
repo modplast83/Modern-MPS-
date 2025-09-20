@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "../ui/dialog";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import { useToast } from "../../hooks/use-toast";
@@ -462,6 +462,9 @@ export default function LeaveManagement() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل الطلب</DialogTitle>
+            <DialogDescription>
+              عرض تفاصيل طلب الإجازة وحالة المراجعة
+            </DialogDescription>
           </DialogHeader>
           {selectedRequest && (
             <div className="space-y-4">
@@ -547,6 +550,12 @@ export default function LeaveManagement() {
             <DialogTitle>
               {approvalAction === 'approve' ? 'موافقة على الطلب' : 'رفض الطلب'}
             </DialogTitle>
+            <DialogDescription>
+              {approvalAction === 'approve' 
+                ? 'تأكيد الموافقة على الطلب مع إمكانية إضافة تعليقات'
+                : 'رفض الطلب وإضافة تعليقات حول أسباب الرفض'
+              }
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
