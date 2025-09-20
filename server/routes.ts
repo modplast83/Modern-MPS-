@@ -5129,7 +5129,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     validateRequest({ body: insertRollSchema }),
     async (req, res) => {
     try {
-      console.log('Roll creation request body:', req.body);
+      console.log('Roll creation request body:', JSON.stringify(req.body, null, 2));
+      console.log('Session userId:', req.session.userId);
       
       // Get DataValidator for business rule enforcement
       const dataValidator = getDataValidator(storage);
@@ -5139,6 +5140,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         created_by: req.session.userId
       };
+      
+      console.log('Final rollData before validation:', JSON.stringify(rollData, null, 2));
       
       // INVARIANT B: Validate roll weight against production order limits
       const productionOrder = await storage.getProductionOrderById(rollData.production_order_id);
