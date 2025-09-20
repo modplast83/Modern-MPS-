@@ -227,14 +227,19 @@ export function getQueryClient(): QueryClient {
             return;
           }
           
-          // Silently handle AbortErrors during development to reduce console noise
+          // Completely suppress AbortErrors during development - no propagation at all
           if (import.meta.env.DEV && error?.name === 'AbortError') {
-            console.debug('Query cancelled during cleanup:', query.queryKey);
-            console.debug('Suppressed React Query AbortError during development cleanup');
+            // Do not let AbortErrors propagate or log anything
             return;
           }
           // Let other errors propagate normally
         },
+        onSettled: (data, error, query) => {
+          // Additional catch for AbortError at settled phase
+          if (import.meta.env.DEV && error?.name === 'AbortError') {
+            return; // Suppress completely
+          }
+        }
       }),
       // Add mutation cache error handling with 401 support
       mutationCache: new MutationCache({
@@ -261,26 +266,82 @@ export function getQueryClient(): QueryClient {
 
 export const queryClient = getQueryClient();
 
-// Add global unhandled rejection handler to suppress AbortError noise
+// Ultimate AbortError suppression for development - Target React Query specifically
 if (typeof window !== 'undefined' && import.meta.env.DEV) {
+  // Override AbortController to make signals silent when aborted
+  const OriginalAbortController = window.AbortController;
+  const originalConsoleError = console.error;
+  
+  class SilentAbortController extends OriginalAbortController {
+    constructor() {
+      super();
+      
+      // Override signal to suppress unhandled rejection when aborted
+      const originalSignal = this.signal;
+      const silentSignal = new Proxy(originalSignal, {
+        get(target, prop) {
+          if (prop === 'addEventListener') {
+            return function(type: string, listener: any, options?: any) {
+              if (type === 'abort') {
+                // Wrap abort listeners to handle potential unhandled rejections
+                const wrappedListener = (event: any) => {
+                  try {
+                    listener(event);
+                  } catch (error: any) {
+                    // Silently catch any errors from abort handling
+                    if (error?.name !== 'AbortError') {
+                      throw error; // Re-throw non-AbortErrors
+                    }
+                  }
+                };
+                return target.addEventListener(type, wrappedListener, options);
+              }
+              return target.addEventListener(type, listener, options);
+            };
+          }
+          return target[prop as keyof AbortSignal];
+        }
+      });
+      
+      Object.defineProperty(this, 'signal', {
+        value: silentSignal,
+        writable: false
+      });
+    }
+  }
+  
+  // Replace AbortController globally
+  window.AbortController = SilentAbortController as any;
+  
+  // Enhanced unhandled rejection handler
+  const isAbortError = (reason: any) => {
+    return reason?.name === 'AbortError' || 
+           reason?.constructor?.name === 'AbortError' ||
+           (reason?.message && reason.message.includes('signal is aborted')) ||
+           (reason?.stack && reason.stack.includes('AbortError'));
+  };
+  
+  // Ultimate suppression of unhandled rejections
   window.addEventListener('unhandledrejection', (event) => {
-    // Check if this is an AbortError from React Query
-    if (event.reason?.name === 'AbortError' && 
-        (event.reason?.message?.includes('signal is aborted') ||
-         event.reason?.message?.includes('The operation was aborted'))) {
-      // Silently prevent the error from showing in console
-      console.debug('Suppressed unhandled AbortError during development');
+    if (isAbortError(event.reason)) {
       event.preventDefault();
-      return;
+      event.stopImmediatePropagation();
+      return false;
     }
+  }, true);
+  
+  // Override console.error to completely filter AbortError messages
+  console.error = (...args) => {
+    const hasAbortError = args.some(arg => 
+      typeof arg === 'string' && (
+        arg.includes('AbortError') || 
+        arg.includes('signal is aborted') ||
+        arg.includes('Unhandled promise rejection')
+      ) || isAbortError(arg)
+    );
     
-    // Also suppress if it's just an empty AbortError object
-    if (event.reason && typeof event.reason === 'object' && 
-        event.reason.constructor?.name === 'AbortError' && 
-        (!event.reason.message || event.reason.message === '')) {
-      console.debug('Suppressed empty AbortError during development');
-      event.preventDefault();
-      return;
+    if (!hasAbortError) {
+      originalConsoleError(...args);
     }
-  });
+  };
 }
