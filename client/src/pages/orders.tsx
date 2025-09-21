@@ -72,7 +72,7 @@ const productionOrderFormSchema = z.object({
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("pending"); // Default to pending orders
+  const [statusFilter, setStatusFilter] = useState("waiting"); // Default to waiting orders
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isProductionOrderDialogOpen, setIsProductionOrderDialogOpen] = useState(false);
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
@@ -826,17 +826,13 @@ export default function Orders() {
 
   const getStatusBadge = (status: string) => {
     const statusMap = {
-      waiting: { label: "بالإنتظار", variant: "secondary" as const },
-      in_production: { label: "قيد الانتاج", variant: "default" as const },
-      paused: { label: "ايقاف الانتاج مؤقتا", variant: "destructive" as const },
-      cancelled: { label: "ملغي", variant: "destructive" as const },
+      waiting: { label: "انتظار", variant: "secondary" as const },
+      in_production: { label: "انتاج", variant: "default" as const },
+      paused: { label: "معلق", variant: "destructive" as const },
       completed: { label: "مكتمل", variant: "default" as const },
-      // Legacy statuses for backward compatibility
-      pending: { label: "بالإنتظار", variant: "secondary" as const },
-      for_production: { label: "قيد الانتاج", variant: "default" as const },
-      on_hold: { label: "ايقاف الانتاج مؤقتا", variant: "destructive" as const },
-      in_progress: { label: "قيد الانتاج", variant: "default" as const },
-      delivered: { label: "مكتمل", variant: "default" as const }
+      received: { label: "مستلم", variant: "default" as const },
+      delivered: { label: "تم التوصيل", variant: "default" as const },
+      cancelled: { label: "ملغي", variant: "destructive" as const }
     };
     const statusInfo = statusMap[status as keyof typeof statusMap] || statusMap.waiting;
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
@@ -859,11 +855,12 @@ export default function Orders() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {statusFilter === "all" ? "إجمالي الطلبات" : 
-                   statusFilter === "pending" || statusFilter === "waiting" ? "الطلبات بالانتظار" :
-                   statusFilter === "in_production" || statusFilter === "for_production" || statusFilter === "in_progress" ? "قيد الانتاج" :
-                   statusFilter === "completed" || statusFilter === "delivered" ? "الطلبات المكتملة" :
-                   statusFilter === "cancelled" ? "الطلبات الملغية" :
-                   statusFilter === "paused" || statusFilter === "on_hold" ? "الطلبات المتوقفة" :
+                   statusFilter === "waiting" ? "طلبات في الانتظار" :
+                   statusFilter === "in_production" ? "طلبات في الانتاج" :
+                   statusFilter === "paused" ? "طلبات معلقة" :
+                   statusFilter === "completed" ? "طلبات مكتملة" :
+                   statusFilter === "received" ? "طلبات مستلمة" :
+                   statusFilter === "delivered" ? "طلبات تم توصيلها" :
                    "الطلبات المفلترة"}
                 </CardTitle>
                 <FileText className="h-4 w-4 text-muted-foreground" />
@@ -942,16 +939,12 @@ export default function Orders() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">جميع الطلبات</SelectItem>
-                          <SelectItem value="pending">بالانتظار</SelectItem>
-                          <SelectItem value="waiting">بالانتظار</SelectItem>
-                          <SelectItem value="in_production">قيد الانتاج</SelectItem>
-                          <SelectItem value="for_production">للإنتاج</SelectItem>
-                          <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                          <SelectItem value="paused">متوقف مؤقتاً</SelectItem>
-                          <SelectItem value="on_hold">معلق</SelectItem>
+                          <SelectItem value="waiting">انتظار</SelectItem>
+                          <SelectItem value="in_production">انتاج</SelectItem>
+                          <SelectItem value="paused">معلق</SelectItem>
                           <SelectItem value="completed">مكتمل</SelectItem>
-                          <SelectItem value="delivered">مسلم</SelectItem>
-                          <SelectItem value="cancelled">ملغي</SelectItem>
+                          <SelectItem value="received">مستلم</SelectItem>
+                          <SelectItem value="delivered">تم التوصيل</SelectItem>
                         </SelectContent>
                       </Select>
                       <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
