@@ -292,7 +292,7 @@ export const rolls = pgTable('rolls', {
   // Check constraints for roll integrity
   rollSeqPositive: check('roll_seq_positive', sql`${table.roll_seq} > 0`),
   weightPositive: check('weight_kg_positive', sql`${table.weight_kg} > 0`),
-  weightReasonable: check('weight_kg_reasonable', sql`${table.weight_kg} <= 500`), // Max 500kg per roll
+  weightReasonable: check('weight_kg_reasonable', sql`${table.weight_kg} <= 2000`), // Max 2000kg per roll
   cutWeightValid: check('cut_weight_valid', sql`${table.cut_weight_total_kg} >= 0 AND ${table.cut_weight_total_kg} <= ${table.weight_kg}`),
   wasteValid: check('waste_valid', sql`${table.waste_kg} >= 0 AND ${table.waste_kg} <= ${table.weight_kg}`),
   stageValid: check('stage_valid', sql`${table.stage} IN ('film', 'printing', 'cutting', 'done')`),
@@ -1087,7 +1087,7 @@ export const insertRollSchema = createInsertSchema(rolls).omit({
       return num;
     })
     .refine((val) => val > 0, "يجب أن يكون الوزن أكبر من صفر")
-    .refine((val) => val <= 500, "الوزن لا يمكن أن يتجاوز 500 كيلو"),
+    .refine((val) => val <= 2000, "الوزن لا يمكن أن يتجاوز 2000 كيلو"),
   // Stage validation - must start at 'film'
   stage: z.string().default('film').refine(
     (val) => ['film', 'printing', 'cutting', 'done'].includes(val),
