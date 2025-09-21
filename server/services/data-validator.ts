@@ -656,7 +656,7 @@ export class DataValidator {
       
       // Get production settings for tolerance
       const settings = await this.storage.getProductionSettings();
-      const tolerance = parseFloat(settings.overrun_tolerance_percent || '3') / 100;
+      const tolerance = parseFloat(settings?.overrun_tolerance_percent || '3') / 100;
       const maxAllowedWeight = finalQuantity * (1 + tolerance);
       
       // INVARIANT B: Check weight constraint
