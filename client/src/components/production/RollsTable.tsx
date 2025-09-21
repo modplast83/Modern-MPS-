@@ -7,7 +7,9 @@ import {
   Package, 
   Clock, 
   CheckCircle, 
-  AlertCircle 
+  AlertCircle,
+  Tag,
+  QrCode
 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
@@ -90,6 +92,182 @@ export default function RollsTable({ stage }: RollsTableProps) {
         updates: { 
           stage: next
         }
+      });
+    }
+  };
+
+  const printLabel = async (rollId: number) => {
+    try {
+      const response = await fetch(`/api/rolls/${rollId}/label`);
+      const labelData = await response.json();
+      
+      // إنشاء نافذة طباعة جديدة
+      const printWindow = window.open('', '_blank', 'width=400,height=500');
+      if (!printWindow) {
+        toast({
+          title: "خطأ في فتح نافذة الطباعة",
+          description: "تأكد من السماح للنوافذ المنبثقة",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // HTML للليبل بمقاس 4" × 5"
+      const labelHTML = `
+        <!DOCTYPE html>
+        <html dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>ليبل الرول - ${labelData.roll_number}</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              font-family: 'Arial', sans-serif;
+              width: 4in;
+              height: 5in;
+              padding: 10px;
+              background: white;
+              color: black;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #000;
+              padding-bottom: 5px;
+              margin-bottom: 10px;
+            }
+            .title {
+              font-size: 18px;
+              font-weight: bold;
+              margin-bottom: 3px;
+            }
+            .subtitle {
+              font-size: 12px;
+              color: #666;
+            }
+            .content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+            }
+            .info-section {
+              margin-bottom: 10px;
+            }
+            .info-row {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 5px;
+              font-size: 11px;
+            }
+            .label {
+              font-weight: bold;
+              color: #333;
+            }
+            .value {
+              text-align: left;
+              direction: ltr;
+            }
+            .qr-section {
+              text-align: center;
+              border: 1px solid #ddd;
+              padding: 8px;
+              border-radius: 4px;
+            }
+            .qr-code {
+              max-width: 80px;
+              max-height: 80px;
+              margin: 0 auto;
+            }
+            .footer {
+              text-align: center;
+              font-size: 8px;
+              color: #999;
+              border-top: 1px solid #eee;
+              padding-top: 5px;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="title">ليبل الرول</div>
+            <div class="subtitle">${labelData.label_dimensions.width} × ${labelData.label_dimensions.height}</div>
+          </div>
+          
+          <div class="content">
+            <div class="info-section">
+              <div class="info-row">
+                <span class="label">رقم الرول:</span>
+                <span class="value">${labelData.roll_number}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">أمر الإنتاج:</span>
+                <span class="value">${labelData.production_order_number}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">العميل:</span>
+                <span class="value">${labelData.customer_name}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">الوزن:</span>
+                <span class="value">${labelData.weight_kg}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">المرحلة:</span>
+                <span class="value">${labelData.stage}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">الماكينة:</span>
+                <span class="value">${labelData.machine_name}</span>
+              </div>
+              <div class="info-row">
+                <span class="label">تاريخ الإنتاج:</span>
+                <span class="value">${labelData.created_at}</span>
+              </div>
+            </div>
+            
+            ${labelData.qr_png_base64 ? `
+            <div class="qr-section">
+              <img src="data:image/png;base64,${labelData.qr_png_base64}" 
+                   alt="QR Code" class="qr-code" />
+              <div style="font-size: 8px; margin-top: 3px;">امسح للمعلومات</div>
+            </div>
+            ` : ''}
+          </div>
+          
+          <div class="footer">
+            تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} | نظام إدارة الإنتاج
+          </div>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(labelHTML);
+      printWindow.document.close();
+      
+      // انتظار تحميل الصور ثم طباعة
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+
+      toast({
+        title: "تم إرسال الليبل للطباعة",
+        description: `ليبل الرول ${labelData.roll_number}`,
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('Error printing label:', error);
+      toast({
+        title: "خطأ في طباعة الليبل",
+        description: "حدث خطأ أثناء توليد الليبل للطباعة",
+        variant: "destructive",
       });
     }
   };
@@ -205,6 +383,9 @@ export default function RollsTable({ stage }: RollsTableProps) {
                   المكينة
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  المسؤول/التوقيت
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   الحالة
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -227,6 +408,44 @@ export default function RollsTable({ stage }: RollsTableProps) {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {roll.machine_name_ar || roll.machine_name || "غير محدد"}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div className="space-y-1">
+                      {/* إنتاج */}
+                      <div className="flex items-center gap-1 text-xs">
+                        <span className="font-medium text-blue-600">إنتاج:</span>
+                        <span>{`مستخدم ${roll.created_by || "غير محدد"}`}</span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {roll.created_at ? new Date(roll.created_at).toLocaleDateString('ar') : ""}
+                      </div>
+                      
+                      {/* طباعة */}
+                      {roll.printed_by && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="font-medium text-green-600">طباعة:</span>
+                          <span>{`مستخدم ${roll.printed_by}`}</span>
+                        </div>
+                      )}
+                      {roll.printed_at && (
+                        <div className="text-xs text-gray-400">
+                          {new Date(roll.printed_at).toLocaleDateString('ar')}
+                        </div>
+                      )}
+                      
+                      {/* قص */}
+                      {roll.cut_by && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="font-medium text-purple-600">قص:</span>
+                          <span>{`مستخدم ${roll.cut_by}`}</span>
+                        </div>
+                      )}
+                      {roll.cut_completed_at && (
+                        <div className="text-xs text-gray-400">
+                          {new Date(roll.cut_completed_at).toLocaleDateString('ar')}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant="secondary" className={getStatusColor(roll.stage || "")}>
                       <div className="flex items-center gap-1">
@@ -237,12 +456,38 @@ export default function RollsTable({ stage }: RollsTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2 space-x-reverse">
+                      {/* زر طباعة الليبل */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => printLabel(roll.id)}
+                        className="flex items-center gap-1"
+                        data-testid={`button-print-label-${roll.id}`}
+                      >
+                        <Tag className="w-3 h-3" />
+                        ليبل
+                      </Button>
+                      
+                      {/* زر QR */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/api/rolls/${roll.id}/qr`, '_blank')}
+                        className="flex items-center gap-1"
+                        data-testid={`button-qr-${roll.id}`}
+                      >
+                        <QrCode className="w-3 h-3" />
+                        QR
+                      </Button>
+                      
+                      {/* زر نقل المرحلة */}
                       {(roll.stage || "") !== 'done' ? (
                         <Button
                           size="sm"
                           onClick={() => moveToNextStage(roll.id, roll.stage || "film")}
                           disabled={updateRollMutation.isPending}
                           className="flex items-center gap-1"
+                          data-testid={`button-next-stage-${roll.id}`}
                         >
                           {nextStage[(roll.stage || "film") as keyof typeof nextStage] ? (
                             <>

@@ -171,6 +171,7 @@ import { generateRollNumber, generateUUID, generateCertificateNumber } from "@sh
 import { numberToDecimalString, normalizeDecimal } from "@shared/decimal-utils";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
 import { getDataValidator } from "./services/data-validator";
+import QRCode from 'qrcode';
 
 // Database error handling utilities
 class DatabaseError extends Error {
@@ -538,6 +539,17 @@ export interface IStorage {
   getGroupedCuttingQueue(): Promise<any[]>;
   getOrderProgress(productionOrderId: number): Promise<any>;
   getRollQR(rollId: number): Promise<{ qr_code_text: string; qr_png_base64: string }>;
+  getRollLabelData(rollId: number): Promise<{
+    roll_number: string;
+    production_order_number: string;
+    customer_name: string;
+    weight_kg: string;
+    stage: string;
+    created_at: string;
+    machine_name: string;
+    qr_png_base64: string;
+    label_dimensions: { width: string; height: string };
+  }>;
 
   // ============ نظام التحذيرات الذكية ============
   
@@ -1648,9 +1660,38 @@ export class DatabaseStorage implements IStorage {
           .where(eq(rolls.production_order_id, insertRoll.production_order_id));
         const nextRollSeq = (rollCount[0]?.count || 0) + 1;
 
-        // STEP 5: Generate roll identifiers
+        // STEP 5: Generate roll identifiers and QR code
         const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}`;
-        const qrCodeText = `QR-${rollNumber}`;
+        
+        // إنشاء بيانات QR Code غنية
+        const qrData = {
+          roll_number: rollNumber,
+          production_order: productionOrder.production_order_number,
+          weight_kg: insertRoll.weight_kg,
+          machine_id: insertRoll.machine_id,
+          created_at: new Date().toISOString(),
+          stage: 'film'
+        };
+        
+        const qrCodeText = JSON.stringify(qrData);
+        
+        // توليد صورة QR Code
+        let qrPngBase64 = '';
+        try {
+          const qrPngBuffer = await QRCode.toBuffer(qrCodeText, {
+            type: 'png',
+            width: 200,
+            margin: 1,
+            color: {
+              dark: '#000000',
+              light: '#FFFFFF'
+            }
+          });
+          qrPngBase64 = qrPngBuffer.toString('base64');
+        } catch (qrError) {
+          console.error('Error generating QR code image:', qrError);
+          // استكمال العملية حتى لو فشل توليد QR code
+        }
 
         // STEP 6: Create the roll with all constraints validated
         const [roll] = await tx
@@ -1659,6 +1700,7 @@ export class DatabaseStorage implements IStorage {
             ...insertRoll,
             roll_number: rollNumber,
             qr_code_text: qrCodeText,
+            qr_png_base64: qrPngBase64,
             roll_seq: nextRollSeq
           } as any) // Type assertion for additional fields
           .returning();
@@ -5009,6 +5051,74 @@ export class DatabaseStorage implements IStorage {
       console.error('Error fetching roll QR:', error);
       throw new Error('فشل في جلب رمز QR للرول');
     }
+  }
+
+  async getRollLabelData(rollId: number): Promise<{
+    roll_number: string;
+    production_order_number: string;
+    customer_name: string;
+    weight_kg: string;
+    stage: string;
+    created_at: string;
+    machine_name: string;
+    qr_png_base64: string;
+    label_dimensions: { width: string; height: string };
+  }> {
+    try {
+      const [rollData] = await db
+        .select({
+          id: rolls.id,
+          roll_number: rolls.roll_number,
+          production_order_id: rolls.production_order_id,
+          weight_kg: rolls.weight_kg,
+          stage: rolls.stage,
+          created_at: rolls.created_at,
+          machine_id: rolls.machine_id,
+          qr_png_base64: rolls.qr_png_base64,
+          production_order_number: production_orders.production_order_number,
+          machine_name: machines.name,
+          machine_name_ar: machines.name_ar,
+          customer_name: customers.name
+        })
+        .from(rolls)
+        .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(machines, eq(rolls.machine_id, machines.id))
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .where(eq(rolls.id, rollId));
+
+      if (!rollData) {
+        throw new Error('الرول غير موجود');
+      }
+
+      return {
+        roll_number: rollData.roll_number || '',
+        production_order_number: rollData.production_order_number || '',
+        customer_name: rollData.customer_name || 'غير محدد',
+        weight_kg: `${rollData.weight_kg} كغ`,
+        stage: this.getStageArabicName(rollData.stage || ''),
+        created_at: rollData.created_at ? new Date(rollData.created_at).toLocaleDateString('ar-SA') : '',
+        machine_name: rollData.machine_name_ar || rollData.machine_name || 'غير محدد',
+        qr_png_base64: rollData.qr_png_base64 || '',
+        label_dimensions: {
+          width: '4 بوصة',
+          height: '5 بوصة'
+        }
+      };
+    } catch (error) {
+      console.error('Error fetching roll label data:', error);
+      throw new Error('فشل في جلب بيانات ليبل الرول');
+    }
+  }
+
+  private getStageArabicName(stage: string): string {
+    const stageNames: { [key: string]: string } = {
+      'film': 'إنتاج فيلم',
+      'printing': 'طباعة',
+      'cutting': 'قص',
+      'done': 'مكتمل'
+    };
+    return stageNames[stage] || stage;
   }
 
   // ============ User Attendance Management ============

@@ -5367,6 +5367,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Label printing endpoint - generates 4" x 5" label
+  app.get("/api/rolls/:id/label", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const labelData = await storage.getRollLabelData(id);
+      res.json(labelData);
+    } catch (error) {
+      console.error('Error generating roll label:', error);
+      res.status(500).json({ message: "خطأ في توليد ليبل الرول" });
+    }
+  });
+
   // ============ Production Monitoring Analytics API Routes ============
   
   // Get user performance statistics
