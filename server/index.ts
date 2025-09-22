@@ -112,6 +112,9 @@ app.use((req, res, next) => {
   }
 });
 
+// Configure Express to trust proxy for correct session handling in production
+app.set('trust proxy', 1);
+
 // Configure session store with security validation
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -149,14 +152,14 @@ app.use(session({
     console.error('🚨 CRITICAL: SESSION_SECRET missing in production');
     process.exit(1);
   })() : 'dev-secret-key-not-for-production'),
-  resave: true, // Always save session to extend lifetime
+  resave: false, // Optimized session handling
   saveUninitialized: false, // Don't create session until something stored
   rolling: true, // Reset expiry on activity - crucial for keeping session alive
   cookie: {
-    secure: isProduction, // HTTPS-only in production for security
+    secure: 'auto', // Let Express determine security based on connection
     httpOnly: true, // ALWAYS prevent XSS - critical security fix
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-    sameSite: isProduction ? 'strict' : 'lax' // Stricter CSRF protection in production
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - more reasonable session lifetime
+    sameSite: 'lax' // Better balance for same-origin requests
   },
   name: 'plastic-bag-session', // Custom session name
   unset: 'keep' // Keep the session even if we unset properties

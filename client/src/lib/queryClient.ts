@@ -5,6 +5,11 @@ let globalQueryClient: QueryClient | undefined;
 
 // Global 401 handler - automatically logout user and redirect to login
 function handle401Error() {
+  // Check if we're already on login page to prevent reload loops
+  if (typeof window !== 'undefined' && window.location.pathname === '/login') {
+    return; // Don't reload if already on login page
+  }
+  
   // Clear user data from localStorage
   localStorage.removeItem('mpbf_user');
   
