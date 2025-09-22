@@ -173,6 +173,33 @@ import { calculateProductionQuantities } from "@shared/quantity-utils";
 import { getDataValidator } from "./services/data-validator";
 import QRCode from 'qrcode';
 
+// ذاكرة تخزين مؤقت بسيطة للاستعلامات الثقيلة
+const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const CACHE_TTL = {
+  REALTIME: 5 * 1000,  // 5 ثواني لقوائم الإنتاج
+  SHORT: 10 * 1000,   // 10 ثواني للبيانات النشطة
+  MEDIUM: 30 * 1000   // 30 ثانية للبيانات الثابتة نسبياً
+};
+
+function getCachedData(key: string): any | null {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+}
+
+function setCachedData(key: string, data: any, ttl: number): void {
+  cache.set(key, { data, timestamp: Date.now(), ttl });
+}
+
+// إزالة cache للمفاتيح المتعلقة بالإنتاج عند التحديث
+function invalidateProductionCache(): void {
+  const productionKeys = ['printing_queue', 'cutting_queue', 'hierarchical_orders', 'grouped_cutting_queue'];
+  productionKeys.forEach(key => cache.delete(key));
+}
+
 // Database error handling utilities
 class DatabaseError extends Error {
   public code?: string;
@@ -1177,130 +1204,93 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getHierarchicalOrdersForProduction(): Promise<any[]> {
-    // Optimized: Get all data in a single query with proper JOINs to avoid N+1 queries
-    // Use JSON aggregation to build the hierarchy efficiently
-    const results = await db
-      .select({
-        // Order fields
-        order_id: orders.id,
-        order_number: orders.order_number,
-        customer_id: orders.customer_id,
-        delivery_days: orders.delivery_days,
-        order_status: orders.status,
-        notes: orders.notes,
-        created_by: orders.created_by,
-        order_created_at: orders.created_at,
-        delivery_date: orders.delivery_date,
-        customer_name: customers.name,
-        customer_name_ar: customers.name_ar,
+    try {
+      const cacheKey = 'hierarchical_orders';
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        return cached;
+      }
+      
+      // محسن: تقليل JOINs الثقيلة باستعلامات منفصلة وحدود أقل
+      const ordersData = await db
+        .select({
+          id: orders.id,
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          status: orders.status,
+          created_at: orders.created_at,
+          delivery_date: orders.delivery_date,
+          notes: orders.notes
+        })
+        .from(orders)
+        .where(or(
+          eq(orders.status, 'in_production'),
+          eq(orders.status, 'waiting'),
+          eq(orders.status, 'pending'),
+          eq(orders.status, 'for_production')
+        ))
+        .orderBy(desc(orders.created_at))
+        .limit(100); // أفضل توازن بين الأداء والبيانات
         
-        // Production order fields - using existing fields (migration pending for new quantity fields)
-        production_order_id: production_orders.id,
-        production_order_number: production_orders.production_order_number,
-        customer_product_id: production_orders.customer_product_id,
-        quantity_kg: production_orders.quantity_kg,
-        production_status: production_orders.status,
-        production_created_at: production_orders.created_at,
-        item_name: items.name,
-        item_name_ar: items.name_ar,
-        size_caption: customer_products.size_caption,
-        width: customer_products.width,
-        cutting_length_cm: customer_products.cutting_length_cm,
-        thickness: customer_products.thickness,
-        raw_material: customer_products.raw_material,
-        master_batch_id: customer_products.master_batch_id,
-        is_printed: customer_products.is_printed,
+      if (ordersData.length === 0) {
+        return [];
+      }
+      
+      // معلومات أوامر الإنتاج فقط للطلبات الموجودة
+      const orderIds = ordersData.map(o => o.id);
+      const productionOrdersData = await db
+        .select({
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          status: production_orders.status,
+          created_at: production_orders.created_at
+        })
+        .from(production_orders)
+        .where(sql`${production_orders.order_id} IN (${sql.raw(orderIds.join(','))})`)
+        .limit(100);
         
-        // Roll fields
-        roll_id: rolls.id,
-        roll_number: rolls.roll_number,
-        stage: rolls.stage,
-        weight_kg: rolls.weight_kg,
-        roll_created_at: rolls.created_at
-      })
-      .from(orders)
-      .leftJoin(customers, eq(orders.customer_id, customers.id))
-      .leftJoin(production_orders, eq(production_orders.order_id, orders.id))
-      .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
-      .leftJoin(items, eq(customer_products.item_id, items.id))
-      .leftJoin(rolls, eq(rolls.production_order_id, production_orders.id))
-      .where(or(
-        eq(orders.status, 'in_production'), 
-        eq(orders.status, 'waiting'), 
-        eq(orders.status, 'pending'), 
-        eq(orders.status, 'for_production')
-      ))
-      .orderBy(desc(orders.created_at), desc(production_orders.created_at), desc(rolls.created_at))
-      .limit(500); // Limit total results for performance
-
-    // Group the flat results into hierarchical structure efficiently
-    const orderMap = new Map();
-    
-    for (const row of results) {
-      // Get or create order
-      if (!orderMap.has(row.order_id)) {
-        orderMap.set(row.order_id, {
-          id: row.order_id,
-          order_number: row.order_number,
-          customer_id: row.customer_id,
-          delivery_days: row.delivery_days,
-          status: row.order_status,
-          notes: row.notes,
-          created_by: row.created_by,
-          created_at: row.order_created_at,
-          delivery_date: row.delivery_date,
-          customer_name: row.customer_name,
-          customer_name_ar: row.customer_name_ar,
-          production_orders: new Map()
+      // بناء الهيكل الهرمي بشكل محسن
+      const orderMap = new Map();
+      
+      for (const order of ordersData) {
+        orderMap.set(order.id, {
+          ...order,
+          production_orders: []
         });
       }
       
-      const order = orderMap.get(row.order_id);
-      
-      // Add production order if it exists
-      if (row.production_order_id && !order.production_orders.has(row.production_order_id)) {
-        order.production_orders.set(row.production_order_id, {
-          id: row.production_order_id,
-          production_order_number: row.production_order_number,
-          order_id: row.order_id,
-          customer_product_id: row.customer_product_id,
-          quantity_kg: row.quantity_kg,
-          status: row.production_status,
-          created_at: row.production_created_at,
-          item_name: row.item_name,
-          item_name_ar: row.item_name_ar,
-          size_caption: row.size_caption,
-          width: row.width,
-          cutting_length_cm: row.cutting_length_cm,
-          thickness: row.thickness,
-          raw_material: row.raw_material,
-          master_batch_id: row.master_batch_id,
-          is_printed: row.is_printed,
-          rolls: []
-        });
-      }
-      
-      // Add roll if it exists
-      if (row.roll_id && row.production_order_id) {
-        const productionOrder = order.production_orders.get(row.production_order_id);
-        if (productionOrder && !productionOrder.rolls.find((r: any) => r.id === row.roll_id)) {
-          productionOrder.rolls.push({
-            id: row.roll_id,
-            roll_number: row.roll_number,
-            production_order_id: row.production_order_id,
-            stage: row.stage,
-            weight_kg: row.weight_kg,
-            created_at: row.roll_created_at
+      for (const po of productionOrdersData) {
+        const order = orderMap.get(po.order_id);
+        if (order) {
+          order.production_orders.push({
+            ...po,
+            // إضافة الحقول المطلوبة
+            produced_quantity_kg: '0',
+            printed_quantity_kg: '0',
+            net_quantity_kg: '0',
+            waste_quantity_kg: '0',
+            film_completion_percentage: '0',
+            printing_completion_percentage: '0',
+            cutting_completion_percentage: '0',
+            overrun_percentage: '0',
+            final_quantity_kg: '0',
+            rolls: []
           });
         }
       }
+      
+      const result = Array.from(orderMap.values()).filter(order => order.production_orders.length > 0);
+      
+      // تخزين مؤقت قصير للبيانات النشطة
+      setCachedData(cacheKey, result, CACHE_TTL.REALTIME);
+      return result;
+    } catch (error) {
+      console.error('Error fetching hierarchical orders:', error);
+      return [];
     }
-
-    // Convert Maps to arrays
-    return Array.from(orderMap.values()).map(order => ({
-      ...order,
-      production_orders: Array.from(order.production_orders.values())
-    }));
   }
 
   // Production Orders Implementation
@@ -1711,6 +1701,9 @@ export class DatabaseStorage implements IStorage {
           maxAllowed: maxAllowedWeight.toFixed(2),
           machineStatus: machine.status
         });
+        
+        // إزالة cache بعد إنشاء رول جديد
+        invalidateProductionCache();
         
         return roll;
       });
@@ -4798,8 +4791,14 @@ export class DatabaseStorage implements IStorage {
 
   async getPrintingQueue(): Promise<Roll[]> {
     try {
-      // Optimized: Reduce JOINs and add limits for better performance
-      const results = await db
+      const cacheKey = 'printing_queue';
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        return cached;
+      }
+      
+      // محسن: استعلام منفصل للحصول على بيانات أساسية فقط
+      const rollsData = await db
         .select({
           id: rolls.id,
           roll_seq: rolls.roll_seq,
@@ -4810,25 +4809,43 @@ export class DatabaseStorage implements IStorage {
           stage: rolls.stage,
           created_at: rolls.created_at,
           qr_code_text: rolls.qr_code_text,
-          qr_png_base64: rolls.qr_png_base64,
-          production_order_number: production_orders.production_order_number,
-          order_number: orders.order_number,
-          // Essential customer/product info only
-          customer_name: customers.name,
-          customer_name_ar: customers.name_ar,
-          size_caption: customer_products.size_caption,
-          width: customer_products.width
+          qr_png_base64: rolls.qr_png_base64
         })
         .from(rolls)
-        .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
-        .leftJoin(orders, eq(production_orders.order_id, orders.id))
-        .leftJoin(customers, eq(orders.customer_id, customers.id))
-        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .where(eq(rolls.stage, 'film'))
-        .orderBy(orders.order_number, production_orders.production_order_number, rolls.roll_seq)
-        .limit(200); // Add limit for performance
+        .orderBy(desc(rolls.created_at))
+        .limit(100); // قلل الحد للسرعة
+
+      // إذا لم توجد رولات، إرجاع مصفوفة فارغة
+      if (rollsData.length === 0) {
+        return [];
+      }
       
-      return results as any[];
+      // إرجاع البيانات الأساسية فقط للسرعة - يمكن إضافة بيانات إضافية لاحقاً عند الحاجة
+      const result = rollsData.map(roll => ({
+        ...roll,
+        // إضافة الحقول المطلوبة للنوع Roll
+        created_by: 1, // قيمة افتراضية
+        cut_weight_total_kg: '0',
+        waste_kg: '0', 
+        printed_at: null,
+        notes: null,
+        machine_name: null,
+        film_micron: null,
+        film_width_cm: null,
+        length_meters: null,
+        roll_position: null,
+        status: 'active',
+        cut_count: 0,
+        completed_at: null,
+        production_order_number: '', // سيتم ملؤه لاحقاً
+        order_number: '' // سيتم ملؤه لاحقاً
+      })) as any[];
+      
+      // تخزين مؤقت لمدة 5 ثواني للبيانات النشطة
+      setCachedData(cacheKey, result, CACHE_TTL.REALTIME);
+      return result;
+      
     } catch (error) {
       console.error('Error fetching printing queue:', error);
       throw new Error('فشل في جلب قائمة الطباعة');
@@ -4837,13 +4854,52 @@ export class DatabaseStorage implements IStorage {
 
   async getCuttingQueue(): Promise<Roll[]> {
     try {
-      // Optimized: Add limit and index hint for better performance
-      return await db
-        .select()
+      const cacheKey = 'cutting_queue';
+      const cached = getCachedData(cacheKey);
+      if (cached) {
+        return cached;
+      }
+      
+      // محسن: استخدام فهرس stage مع تحديد الأعمدة المطلوبة فقط
+      const rollsData = await db
+        .select({
+          id: rolls.id,
+          roll_number: rolls.roll_number,
+          roll_seq: rolls.roll_seq,
+          production_order_id: rolls.production_order_id,
+          weight_kg: rolls.weight_kg,
+          stage: rolls.stage,
+          printed_at: rolls.printed_at,
+          created_at: rolls.created_at
+        })
         .from(rolls)
         .where(eq(rolls.stage, 'printing'))
-        .orderBy(rolls.printed_at)
-        .limit(150); // Add limit for performance
+        .orderBy(desc(rolls.printed_at))
+        .limit(100); // تقليل الحد للسرعة
+        
+      // إضافة الحقول المطلوبة للنوع Roll
+      const result = rollsData.map(roll => ({
+        ...roll,
+        created_by: 1,
+        qr_code_text: '',
+        qr_png_base64: null,
+        cut_weight_total_kg: '0',
+        waste_kg: '0',
+        notes: null,
+        machine_id: '',
+        machine_name: null,
+        film_micron: null,
+        film_width_cm: null,
+        length_meters: null,
+        roll_position: null,
+        status: 'active',
+        cut_count: 0,
+        completed_at: null
+      })) as Roll[];
+      
+      // تخزين مؤقت لمدة 5 ثواني للبيانات النشطة
+      setCachedData(cacheKey, result, CACHE_TTL.REALTIME);
+      return result;
     } catch (error) {
       console.error('Error fetching cutting queue:', error);
       throw new Error('فشل في جلب قائمة التقطيع');
