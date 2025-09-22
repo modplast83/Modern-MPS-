@@ -4899,15 +4899,12 @@ export class DatabaseStorage implements IStorage {
         qr_png_base64: null,
         cut_weight_total_kg: '0',
         waste_kg: '0',
-        notes: null,
+        cut_completed_at: null,
+        performed_by: null,
         machine_id: '',
-        machine_name: null,
-        film_micron: null,
-        film_width_cm: null,
-        length_meters: null,
-        roll_position: null,
-        status: 'active',
-        cut_count: 0,
+        employee_id: null,
+        printed_by: null,
+        cut_by: null,
         completed_at: null
       })) as Roll[];
       
