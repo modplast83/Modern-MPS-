@@ -236,28 +236,50 @@ export const orders = pgTable('orders', {
   deliveryDateValid: check('delivery_date_valid', sql`${table.delivery_date} IS NULL OR ${table.delivery_date} >= CURRENT_DATE`)
 }));
 
-// 📋 جدول أوامر الإنتاج - Production Order Management with Roll Constraints  
-// INVARIANT B: ∑(Roll.weight_kg) ≤ ProductionOrder.final_quantity_kg + tolerance
+// 📋 جدول أوامر الإنتاج - NEW WORKFLOW: Multi-stage tracking with unlimited rolls
+// إزالة قيود الكمية والسماح بتتبع مراحل الإنتاج المتعددة
 // STATUS TRANSITIONS: pending → active → completed/cancelled
-// BUSINESS RULE: final_quantity_kg = quantity_kg * (1 + overrun_percentage/100)
 export const production_orders = pgTable('production_orders', {
   id: serial('id').primaryKey(),
-  production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(), // Auto-generated unique identifier
-  order_id: integer('order_id').notNull().references(() => orders.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT - cannot delete order with production orders
-  customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
-  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(), // CHECK: > 0
-  overrun_percentage: decimal('overrun_percentage', { precision: 5, scale: 2 }).notNull().default('5.00'), // CHECK: >= 0 AND <= 50
-  final_quantity_kg: decimal('final_quantity_kg', { precision: 10, scale: 2 }).notNull(), // Calculated: quantity_kg * (1 + overrun_percentage/100)
-  status: varchar('status', { length: 30 }).notNull().default('pending'), // ENUM: pending / active / completed / cancelled
+  production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(),
+  order_id: integer('order_id').notNull().references(() => orders.id, { onDelete: 'restrict' }),
+  customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id, { onDelete: 'restrict' }),
+  
+  // كمية الإنتاج الأساسية
+  quantity_kg: decimal('quantity_kg', { precision: 10, scale: 2 }).notNull(), // الكمية المطلوبة من الطلب
+  overrun_percentage: decimal('overrun_percentage', { precision: 5, scale: 2 }).notNull().default('5.00'),
+  final_quantity_kg: decimal('final_quantity_kg', { precision: 10, scale: 2 }).notNull(), // للمراجع فقط
+  
+  // NEW: حقول تتبع الكميات الفعلية لكل مرحلة
+  produced_quantity_kg: decimal('produced_quantity_kg', { precision: 10, scale: 2 }).notNull().default('0'), // مجموع أوزان جميع الرولات
+  printed_quantity_kg: decimal('printed_quantity_kg', { precision: 10, scale: 2 }).notNull().default('0'), // مجموع أوزان الرولات المطبوعة
+  net_quantity_kg: decimal('net_quantity_kg', { precision: 10, scale: 2 }).notNull().default('0'), // الكمية الصافية (بعد التقطيع - الهدر)
+  waste_quantity_kg: decimal('waste_quantity_kg', { precision: 10, scale: 2 }).notNull().default('0'), // مجموع هدر جميع الرولات
+  
+  // NEW: نسب الإكمال لكل مرحلة
+  film_completion_percentage: decimal('film_completion_percentage', { precision: 5, scale: 2 }).notNull().default('0'), // نسبة إكمال الفيلم
+  printing_completion_percentage: decimal('printing_completion_percentage', { precision: 5, scale: 2 }).notNull().default('0'), // نسبة إكمال الطباعة
+  cutting_completion_percentage: decimal('cutting_completion_percentage', { precision: 5, scale: 2 }).notNull().default('0'), // نسبة إكمال التقطيع
+  
+  status: varchar('status', { length: 30 }).notNull().default('pending'),
   created_at: timestamp('created_at').notNull().defaultNow()
 }, (table) => ({
-  // Check constraints for business rule enforcement
+  // تحديث القيود لتتناسب مع النظام الجديد
   quantityPositive: check('quantity_kg_positive', sql`${table.quantity_kg} > 0`),
   overrunPercentageValid: check('overrun_percentage_valid', sql`${table.overrun_percentage} >= 0 AND ${table.overrun_percentage} <= 50`),
   finalQuantityPositive: check('final_quantity_kg_positive', sql`${table.final_quantity_kg} > 0`),
   statusValid: check('production_status_valid', sql`${table.status} IN ('pending', 'active', 'completed', 'cancelled')`),
-  // Business logic constraint: final_quantity must be reasonable compared to base quantity
-  finalQuantityReasonable: check('final_quantity_reasonable', sql`${table.final_quantity_kg} >= ${table.quantity_kg} AND ${table.final_quantity_kg} <= ${table.quantity_kg} * 1.5`)
+  
+  // NEW: قيود الكميات الجديدة
+  producedQuantityNonNegative: check('produced_quantity_non_negative', sql`${table.produced_quantity_kg} >= 0`),
+  printedQuantityNonNegative: check('printed_quantity_non_negative', sql`${table.printed_quantity_kg} >= 0`),
+  netQuantityNonNegative: check('net_quantity_non_negative', sql`${table.net_quantity_kg} >= 0`),
+  wasteQuantityNonNegative: check('waste_quantity_non_negative', sql`${table.waste_quantity_kg} >= 0`),
+  
+  // NEW: قيود نسب الإكمال
+  filmCompletionValid: check('film_completion_valid', sql`${table.film_completion_percentage} >= 0 AND ${table.film_completion_percentage} <= 100`),
+  printingCompletionValid: check('printing_completion_valid', sql`${table.printing_completion_percentage} >= 0 AND ${table.printing_completion_percentage} <= 100`),
+  cuttingCompletionValid: check('cutting_completion_valid', sql`${table.cutting_completion_percentage} >= 0 AND ${table.cutting_completion_percentage} <= 100`)
 }));
 
 
@@ -1199,11 +1221,19 @@ export const insertNewOrderSchema = createInsertSchema(orders).omit({
   created_by: z.number().int().positive("معرف المستخدم مطلوب").optional()
 });
 
-// Enhanced Production Order Schema with Business Rule Validation  
+// Enhanced Production Order Schema with NEW WORKFLOW tracking fields
 export const insertProductionOrderSchema = createInsertSchema(production_orders).omit({
   id: true,
   created_at: true,
   production_order_number: true,
+  // NEW: حقول التتبع تحسب تلقائياً - لا نحتاجها في الإدخال
+  produced_quantity_kg: true,
+  printed_quantity_kg: true,
+  net_quantity_kg: true,
+  waste_quantity_kg: true,
+  film_completion_percentage: true,
+  printing_completion_percentage: true,
+  cutting_completion_percentage: true,
 }).extend({
   // INVARIANT A & F: Order must exist and be valid
   order_id: z.number().int().positive("معرف الطلب مطلوب"),

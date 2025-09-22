@@ -623,15 +623,15 @@ export class DataValidator {
   }
 
   /**
-   * Validate roll creation against business invariants
-   * INVARIANT B: Sum of roll weights ≤ ProductionOrder.final_quantity_kg + tolerance
+   * Validate roll creation - NEW WORKFLOW: Allow unlimited rolls with overrun
+   * إزالة القيود السابقة والسماح بإنشاء رولات متعددة مع overrun
    */
   async validateRollCreation(rollData: any): Promise<ValidationResult> {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
     
     try {
-      // Get production order
+      // Check production order exists
       const productionOrder = await this.storage.getProductionOrderById(rollData.production_order_id);
       if (!productionOrder) {
         errors.push({
@@ -644,41 +644,35 @@ export class DataValidator {
         return { isValid: false, errors, warnings };
       }
       
-      // Get existing rolls for this production order
-      const existingRolls = await this.storage.getRollsByProductionOrder(rollData.production_order_id);
-      const existingTotalWeight = existingRolls.reduce((sum, roll) => 
-        sum + parseFloat(roll.weight_kg || '0'), 0);
-      
-      // Calculate remaining capacity
-      const finalQuantity = parseFloat(productionOrder.final_quantity_kg || '0');
+      // Basic weight validation
       const proposedWeight = parseFloat(rollData.weight_kg || '0');
-      const newTotalWeight = existingTotalWeight + proposedWeight;
-      
-      // Get production settings for tolerance
-      const settings = await this.storage.getProductionSettings();
-      const tolerance = parseFloat(String(settings?.overrun_tolerance_percent ?? '3')) / 100;
-      const maxAllowedWeight = finalQuantity * (1 + tolerance);
-      
-      // INVARIANT B: Check weight constraint
-      if (newTotalWeight > maxAllowedWeight) {
+      if (proposedWeight <= 0) {
         errors.push({
           field: 'weight_kg',
-          message: `Roll weight exceeds production order limits. Current: ${existingTotalWeight}kg, Proposed: ${proposedWeight}kg, Max allowed: ${maxAllowedWeight}kg`,
-          message_ar: `وزن الرول يتجاوز حدود أمر الإنتاج. الحالي: ${existingTotalWeight} كيلو، المقترح: ${proposedWeight} كيلو، الحد الأقصى: ${maxAllowedWeight} كيلو`,
+          message: 'Roll weight must be positive',
+          message_ar: 'يجب أن يكون وزن الرول أكبر من صفر',
           severity: 'high',
-          rule_id: 'roll_weight_constraint'
+          rule_id: 'roll_weight_positive'
         });
       }
       
-      // Warning if approaching limit (90% of max)
-      if (newTotalWeight > maxAllowedWeight * 0.9 && errors.length === 0) {
-        warnings.push({
-          field: 'weight_kg',
-          message: 'Roll weight approaching production order limits',
-          message_ar: 'وزن الرول يقترب من حدود أمر الإنتاج',
-          suggestion: 'Consider reducing weight or creating additional production orders',
-          suggestion_ar: 'انظر في تقليل الوزن أو إنشاء أوامر إنتاج إضافية'
-        });
+      // إزالة قيود الوزن - السماح بإنشاء رولات متعددة مع تجاوز الكمية
+      // التسجيل فقط للمتابعة
+      const existingRolls = await this.storage.getRollsByProductionOrder(rollData.production_order_id);
+      const existingTotalWeight = existingRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg || '0'), 0);
+      const newTotalWeight = existingTotalWeight + proposedWeight;
+      const requiredQuantity = parseFloat(productionOrder.quantity_kg || '0');
+      
+      console.log(`[Roll Creation] Production Order ${rollData.production_order_id}:`);
+      console.log(`  Required: ${requiredQuantity}kg`);
+      console.log(`  Current: ${existingTotalWeight}kg`);
+      console.log(`  New roll: ${proposedWeight}kg`);
+      console.log(`  Total will be: ${newTotalWeight}kg`);
+      
+      // معلومات إضافية فقط - بدون قيود
+      if (newTotalWeight >= requiredQuantity) {
+        console.log(`  Status: Will exceed required quantity by ${(newTotalWeight - requiredQuantity).toFixed(2)}kg`);
       }
       
       return { isValid: errors.length === 0, errors, warnings };
