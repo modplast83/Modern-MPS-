@@ -2149,8 +2149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Database Configuration Routes
-  app.get("/api/database/configurations", async (req, res) => {
+  // Database Configuration Routes - Admin Only
+  app.get("/api/database/configurations", requireAdmin, async (req, res) => {
     try {
       const configurations = await storage.getDatabaseConfigurations();
       res.json(configurations);
@@ -2159,7 +2159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/configurations", async (req, res) => {
+  app.post("/api/database/configurations", requireAdmin, async (req, res) => {
     try {
       const configuration = await storage.createDatabaseConfiguration(req.body);
       res.json(configuration);
@@ -2168,7 +2168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/database/configurations/:id", async (req, res) => {
+  app.put("/api/database/configurations/:id", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -2194,7 +2194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/database/configurations/:id", async (req, res) => {
+  app.delete("/api/database/configurations/:id", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -2213,7 +2213,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/test-connection", async (req, res) => {
+  app.post("/api/database/test-connection", requireAdmin, async (req, res) => {
     try {
       const { type, host, port, database, username, password, ssl_enabled } = req.body;
       
@@ -2244,7 +2244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data mapping endpoints
-  app.get("/api/database/mappings/:configId", async (req, res) => {
+  app.get("/api/database/mappings/:configId", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.configId) {
@@ -2267,7 +2267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/mappings", async (req, res) => {
+  app.post("/api/database/mappings", requireAdmin, async (req, res) => {
     try {
       const mapping = await storage.createDataMapping(req.body);
       res.json(mapping);
@@ -2277,7 +2277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/database/mappings/:id", async (req, res) => {
+  app.put("/api/database/mappings/:id", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -2304,7 +2304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/database/mappings/:id", async (req, res) => {
+  app.delete("/api/database/mappings/:id", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -2325,7 +2325,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Data synchronization endpoints
-  app.post("/api/database/sync/:configId", async (req, res) => {
+  app.post("/api/database/sync/:configId", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.configId) {
@@ -2354,7 +2354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/database/sync-logs/:configId", async (req, res) => {
+  app.get("/api/database/sync-logs/:configId", requireAdmin, async (req, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.configId) {
@@ -4507,7 +4507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Database Management routes
-  app.get("/api/database/stats", async (req, res) => {
+  app.get("/api/database/stats", requireAdmin, async (req, res) => {
     try {
       const stats = await storage.getDatabaseStats();
       res.json(stats);
@@ -4517,7 +4517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/backup", async (req, res) => {
+  app.post("/api/database/backup", requireAdmin, async (req, res) => {
     try {
       const backup = await storage.createDatabaseBackup();
       
@@ -4533,7 +4533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/database/backup/download/:backupId", async (req, res) => {
+  app.get("/api/database/backup/download/:backupId", requireAdmin, async (req, res) => {
     try {
       const backupId = req.params.backupId;
       const backupFile = await storage.getBackupFile(backupId);
@@ -4547,7 +4547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/restore", async (req, res) => {
+  app.post("/api/database/restore", requireAdmin, async (req, res) => {
     try {
       const { backupData } = req.body;
       const result = await storage.restoreDatabaseBackup(backupData);
@@ -4558,7 +4558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/database/export/:tableName", async (req, res) => {
+  app.get("/api/database/export/:tableName", requireAdmin, async (req, res) => {
     try {
       const tableName = req.params.tableName;
       const format = req.query.format as string || 'csv';
@@ -4594,7 +4594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/import/:tableName", async (req, res) => {
+  app.post("/api/database/import/:tableName", requireAdmin, async (req, res) => {
     try {
       const tableName = req.params.tableName;
       const { data, format } = req.body;
@@ -4611,7 +4611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Enhanced batch import endpoint
-  app.post("/api/database/import/:tableName/batch", async (req, res) => {
+  app.post("/api/database/import/:tableName/batch", requireAdmin, async (req, res) => {
     try {
       const tableName = req.params.tableName;
       const { data, options } = req.body;
@@ -4831,7 +4831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/optimize", async (req, res) => {
+  app.post("/api/database/optimize", requireAdmin, async (req, res) => {
     try {
       const result = await storage.optimizeTables();
       res.json({ message: "تم تحسين الجداول بنجاح", result });
@@ -4841,7 +4841,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/integrity-check", async (req, res) => {
+  app.post("/api/database/integrity-check", requireAdmin, async (req, res) => {
     try {
       const result = await storage.checkDatabaseIntegrity();
       res.json({ message: "تم فحص تكامل قاعدة البيانات", result });
@@ -4851,7 +4851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/database/cleanup", async (req, res) => {
+  app.post("/api/database/cleanup", requireAdmin, async (req, res) => {
     try {
       const { daysOld } = req.body;
       const result = await storage.cleanupOldData(daysOld || 90);
