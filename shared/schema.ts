@@ -242,7 +242,7 @@ export const orders = pgTable('orders', {
 export const production_orders = pgTable('production_orders', {
   id: serial('id').primaryKey(),
   production_order_number: varchar('production_order_number', { length: 50 }).notNull().unique(),
-  order_id: integer('order_id').notNull().references(() => orders.id, { onDelete: 'restrict' }),
+  order_id: integer('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
   customer_product_id: integer('customer_product_id').notNull().references(() => customer_products.id, { onDelete: 'restrict' }),
   
   // كمية الإنتاج الأساسية
@@ -292,7 +292,7 @@ export const rolls = pgTable('rolls', {
   id: serial('id').primaryKey(),
   roll_seq: integer('roll_seq').notNull(), // Sequential number within production order, CHECK: > 0
   roll_number: varchar('roll_number', { length: 64 }).notNull().unique(), // Auto-generated format: PO001-R001
-  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id, { onDelete: 'restrict' }), // ON DELETE RESTRICT
+  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id, { onDelete: 'cascade' }), // ON DELETE CASCADE
   qr_code_text: text('qr_code_text').notNull(), // JSON string with roll metadata
   qr_png_base64: text('qr_png_base64'), // Base64 encoded QR code image
   stage: varchar('stage', { length: 20 }).notNull().default('film'), // ENUM: film / printing / cutting / done - sequential transitions only
@@ -339,8 +339,8 @@ export const cuts = pgTable('cuts', {
 // 🏪 جدول إيصالات المستودع (Warehouse Receipts)
 export const warehouse_receipts = pgTable('warehouse_receipts', {
   id: serial('id').primaryKey(),
-  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id),
-  cut_id: integer('cut_id').references(() => cuts.id),
+  production_order_id: integer('production_order_id').notNull().references(() => production_orders.id, { onDelete: 'cascade' }),
+  cut_id: integer('cut_id').references(() => cuts.id, { onDelete: 'set null' }),
   received_weight_kg: decimal('received_weight_kg', { precision: 12, scale: 3 }).notNull(),
   received_by: integer('received_by').references(() => users.id),
   created_at: timestamp('created_at').defaultNow()
@@ -357,8 +357,8 @@ export const production_settings = pgTable('production_settings', {
 // 🗑️ جدول الهدر
 export const waste = pgTable('waste', {
   id: serial('id').primaryKey(),
-  roll_id: integer('roll_id').references(() => rolls.id),
-  production_order_id: integer('production_order_id').references(() => production_orders.id),
+  roll_id: integer('roll_id').references(() => rolls.id, { onDelete: 'cascade' }),
+  production_order_id: integer('production_order_id').references(() => production_orders.id, { onDelete: 'cascade' }),
   quantity_wasted: decimal('quantity_wasted', { precision: 8, scale: 2 }).notNull(),
   reason: varchar('reason', { length: 100 }),
   stage: varchar('stage', { length: 50 }), // extruder / cutting / printing
@@ -399,7 +399,7 @@ export const maintenance_requests = pgTable('maintenance_requests', {
 export const maintenance_actions = pgTable('maintenance_actions', {
   id: serial('id').primaryKey(),
   action_number: varchar('action_number', { length: 50 }).notNull().unique(), // MA001, MA002, etc.
-  maintenance_request_id: integer('maintenance_request_id').notNull().references(() => maintenance_requests.id),
+  maintenance_request_id: integer('maintenance_request_id').notNull().references(() => maintenance_requests.id, { onDelete: 'cascade' }),
   action_type: varchar('action_type', { length: 50 }).notNull(), // فحص مبدئي / تغيير قطعة غيار / إصلاح مكانيكي / إصلاح كهربائي / إيقاف الماكينة
   description: text('description'),
   text_report: text('text_report'), // التقرير النصي
@@ -1737,7 +1737,7 @@ export const system_performance_metrics = pgTable('system_performance_metrics', 
 // جدول تسجيل الإجراءات التصحيحية
 export const corrective_actions = pgTable('corrective_actions', {
   id: serial('id').primaryKey(),
-  alert_id: integer('alert_id').references(() => system_alerts.id),
+  alert_id: integer('alert_id').references(() => system_alerts.id, { onDelete: 'cascade' }),
   action_type: varchar('action_type', { length: 30 }).notNull(), // manual, automated, escalated
   action_title: varchar('action_title', { length: 200 }).notNull(),
   action_description: text('action_description').notNull(),
