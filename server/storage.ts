@@ -306,7 +306,7 @@ export interface IStorage {
   
   
   // Rolls
-  getRolls(): Promise<Roll[]>;
+  getRolls(options?: { limit?: number; offset?: number; stage?: string }): Promise<Roll[]>;
   getRollsByProductionOrder(productionOrderId: number): Promise<Roll[]>;
   getRollsByStage(stage: string): Promise<Roll[]>;
   createRoll(roll: InsertRoll): Promise<Roll>;
@@ -1572,20 +1572,44 @@ export class DatabaseStorage implements IStorage {
 
 
 
-  async getRolls(): Promise<Roll[]> {
-    return await db.select().from(rolls).orderBy(desc(rolls.created_at));
+  async getRolls(options?: { limit?: number; offset?: number; stage?: string }): Promise<Roll[]> {
+    const limit = options?.limit || 50; // Default to 50 rolls
+    const offset = options?.offset || 0;
+    
+    // Build query based on options
+    if (options?.stage) {
+      return await db
+        .select()
+        .from(rolls)
+        .where(eq(rolls.stage, options.stage))
+        .orderBy(desc(rolls.created_at))
+        .limit(limit)
+        .offset(offset);
+    } else {
+      return await db
+        .select()
+        .from(rolls)
+        .orderBy(desc(rolls.created_at))
+        .limit(limit)
+        .offset(offset);
+    }
   }
 
   async getRollsByProductionOrder(productionOrderId: number): Promise<Roll[]> {
     return await db.select().from(rolls).where(eq(rolls.production_order_id, productionOrderId));
   }
 
-  async getRollsByStage(stage: string): Promise<Roll[]> {
+  async getRollsByStage(stage: string, options?: { limit?: number; offset?: number }): Promise<Roll[]> {
+    const limit = options?.limit || 100; // Default limit for stage-filtered results
+    const offset = options?.offset || 0;
+    
     return await db
       .select()
       .from(rolls)
       .where(eq(rolls.stage, stage))
-      .orderBy(desc(rolls.created_at));
+      .orderBy(desc(rolls.created_at))
+      .limit(limit)
+      .offset(offset);
   }
 
   async createRoll(insertRoll: InsertRoll): Promise<Roll> {
@@ -1660,15 +1684,21 @@ export class DatabaseStorage implements IStorage {
           );
         }
 
-        // STEP 4: Generate roll sequence number
-        const rollCount = await tx
+        // STEP 4: Generate global roll sequence number (01, 02, 03, etc.)
+        const totalRollCount = await tx
+          .select({ count: sql<number>`COUNT(*)` })
+          .from(rolls);
+        const globalRollNumber = (totalRollCount[0]?.count || 0) + 1;
+        
+        // Get roll count for this production order (for internal tracking)
+        const poRollCount = await tx
           .select({ count: sql<number>`COUNT(*)` })
           .from(rolls)
           .where(eq(rolls.production_order_id, insertRoll.production_order_id));
-        const nextRollSeq = (rollCount[0]?.count || 0) + 1;
+        const nextRollSeq = (poRollCount[0]?.count || 0) + 1;
 
         // STEP 5: Generate roll identifiers and QR code
-        const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}`;
+        const rollNumber = globalRollNumber.toString().padStart(2, '0');
         
         // إنشاء بيانات QR Code غنية
         const qrData = {
@@ -1677,7 +1707,8 @@ export class DatabaseStorage implements IStorage {
           weight_kg: insertRoll.weight_kg,
           machine_id: insertRoll.machine_id,
           created_at: new Date().toISOString(),
-          stage: 'film'
+          stage: 'film',
+          internal_ref: `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}`
         };
         
         const qrCodeText = JSON.stringify(qrData);
@@ -1712,7 +1743,7 @@ export class DatabaseStorage implements IStorage {
           } as any) // Type assertion for additional fields
           .returning();
           
-        console.log(`[Storage] Created roll ${rollNumber} with invariant validation:`, {
+        console.log(`[Storage] Created roll ${rollNumber} (${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}) with invariant validation:`, {
           rollWeight: rollWeightKg,
           newTotalWeight: newTotalWeight.toFixed(2),
           maxAllowed: maxAllowedWeight.toFixed(2),
@@ -1792,8 +1823,8 @@ export class DatabaseStorage implements IStorage {
         } catch (fkError: any) {
           if (fkError.code === '23503') {
             // FK constraint violation - manually delete children as fallback
+            // maintenance_reports will cascade from maintenance_actions deletion
             await tx.delete(maintenance_actions).where(eq(maintenance_actions.maintenance_request_id, id));
-            await tx.delete(maintenance_reports).where(eq(maintenance_reports.maintenance_request_id, id));
             await tx.delete(maintenance_requests).where(eq(maintenance_requests.id, id));
           } else {
             throw fkError;
