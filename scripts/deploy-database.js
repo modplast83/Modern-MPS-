@@ -182,28 +182,139 @@ async function handleSchemaConflicts(db) {
   try {
     // Handle specific known conflicts
     
-    // 1. Fix parent_id type in categories table
+    // 1. Fix admin_decisions table conflicts
+    console.log('   🔄 Checking admin_decisions table...');
+    try {
+      const adminDecisionsExists = await db.execute(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_name = 'admin_decisions' 
+        AND table_schema = 'public'
+      `);
+      
+      if (adminDecisionsExists.rows.length > 0) {
+        console.log('   📋 admin_decisions table exists, checking structure...');
+        
+        // Check if all required columns exist
+        const requiredColumns = [
+          { name: 'id', type: 'serial' },
+          { name: 'title', type: 'varchar(100)', required: true },
+          { name: 'title_ar', type: 'varchar(100)', required: false },
+          { name: 'description', type: 'text', required: false },
+          { name: 'target_type', type: 'varchar(20)', required: false },
+          { name: 'target_id', type: 'integer', required: false },
+          { name: 'date', type: 'date', required: true },
+          { name: 'issued_by', type: 'varchar(20)', required: false }
+        ];
+        
+        const existingColumns = await db.execute(`
+          SELECT column_name, data_type, character_maximum_length, is_nullable
+          FROM information_schema.columns 
+          WHERE table_name = 'admin_decisions' 
+          AND table_schema = 'public'
+          ORDER BY column_name
+        `);
+        
+        const columnMap = new Map(existingColumns.rows.map(col => [col.column_name, col]));
+        
+        // Add missing columns if needed
+        for (const reqCol of requiredColumns) {
+          if (!columnMap.has(reqCol.name)) {
+            let addColumnSQL = `ALTER TABLE admin_decisions ADD COLUMN ${reqCol.name}`;
+            
+            switch (reqCol.type) {
+              case 'serial':
+                addColumnSQL += ' SERIAL PRIMARY KEY';
+                break;
+              case 'varchar(100)':
+                addColumnSQL += ' VARCHAR(100)';
+                break;
+              case 'varchar(20)':
+                addColumnSQL += ' VARCHAR(20)';
+                break;
+              case 'text':
+                addColumnSQL += ' TEXT';
+                break;
+              case 'date':
+                addColumnSQL += ' DATE';
+                break;
+              case 'integer':
+                addColumnSQL += ' INTEGER';
+                break;
+            }
+            
+            if (reqCol.required) {
+              addColumnSQL += ' NOT NULL';
+            }
+            
+            try {
+              await db.execute(addColumnSQL);
+              console.log(`   ✅ Added missing column admin_decisions.${reqCol.name}`);
+            } catch (addError) {
+              console.log(`   ⚠️  Could not add admin_decisions.${reqCol.name}: ${addError.message}`);
+            }
+          }
+        }
+        
+        // Check for foreign key constraints
+        try {
+          const fkExists = await db.execute(`
+            SELECT constraint_name
+            FROM information_schema.table_constraints 
+            WHERE table_name = 'admin_decisions' 
+            AND constraint_type = 'FOREIGN KEY'
+            AND constraint_name LIKE '%issued_by%'
+          `);
+          
+          if (fkExists.rows.length === 0 && columnMap.has('issued_by')) {
+            await db.execute(`
+              ALTER TABLE admin_decisions 
+              ADD CONSTRAINT admin_decisions_issued_by_fkey 
+              FOREIGN KEY (issued_by) REFERENCES users(id)
+            `);
+            console.log('   ✅ Added foreign key constraint for admin_decisions.issued_by');
+          }
+        } catch (fkError) {
+          console.log(`   ⚠️  Could not add foreign key constraint: ${fkError.message}`);
+        }
+        
+      } else {
+        console.log('   ℹ️  admin_decisions table does not exist, will be created by schema');
+      }
+    } catch (adminDecisionsError) {
+      console.log(`   ⚠️  Could not check admin_decisions table: ${adminDecisionsError.message}`);
+    }
+    
+    // 2. Fix parent_id type in categories table
     console.log('   🔄 Updating categories.parent_id type...');
-    await db.execute(`
-      ALTER TABLE categories 
-      ALTER COLUMN parent_id TYPE varchar(20) 
-      USING parent_id::varchar(20)
-    `);
-    console.log('   ✅ Categories parent_id updated');
+    try {
+      await db.execute(`
+        ALTER TABLE categories 
+        ALTER COLUMN parent_id TYPE varchar(20) 
+        USING parent_id::varchar(20)
+      `);
+      console.log('   ✅ Categories parent_id updated');
+    } catch (categoriesError) {
+      console.log(`   ⚠️  Categories update skipped: ${categoriesError.message}`);
+    }
     
-    // 2. Fix customer name length
+    // 3. Fix customer name length
     console.log('   🔄 Updating customer name lengths...');
-    await db.execute(`
-      ALTER TABLE customers 
-      ALTER COLUMN name TYPE varchar(200)
-    `);
-    await db.execute(`
-      ALTER TABLE customers 
-      ALTER COLUMN name_ar TYPE varchar(200)
-    `);
-    console.log('   ✅ Customer name lengths updated');
+    try {
+      await db.execute(`
+        ALTER TABLE customers 
+        ALTER COLUMN name TYPE varchar(200)
+      `);
+      await db.execute(`
+        ALTER TABLE customers 
+        ALTER COLUMN name_ar TYPE varchar(200)
+      `);
+      console.log('   ✅ Customer name lengths updated');
+    } catch (customerError) {
+      console.log(`   ⚠️  Customer name update skipped: ${customerError.message}`);
+    }
     
-    // 3. Remove deprecated columns
+    // 4. Remove deprecated columns
     console.log('   🔄 Cleaning deprecated columns...');
     const deprecatedColumns = [
       { table: 'customer_products', column: 'customer_product_code' },
