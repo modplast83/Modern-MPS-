@@ -149,20 +149,6 @@ import {
   type InsertSystemAnalytics
 } from "@shared/schema";
 
-import {
-  erp_configurations,
-  erp_sync_logs, 
-  erp_entity_mappings,
-  database_configurations,
-  type ERPConfiguration,
-  type InsertERPConfiguration,
-  type ERPSyncLog,
-  type InsertERPSyncLog,
-  type ERPEntityMapping,
-  type InsertERPEntityMapping,
-  type DatabaseConfiguration,
-  type InsertDatabaseConfiguration
-} from "@shared/erp-schema";
 
 import { db, pool } from "./db";
 import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
@@ -348,31 +334,6 @@ export interface IStorage {
   getMixingRecipes(): Promise<MixingRecipe[]>;
   createMixingRecipe(recipe: any): Promise<MixingRecipe>;
   
-  // ERP Integration
-  getERPConfigurations(): Promise<any[]>;
-  createERPConfiguration(config: any): Promise<any>;
-  updateERPConfiguration(id: number, config: any): Promise<any>;
-  deleteERPConfiguration(id: number): Promise<boolean>;
-  getERPSyncLogs(configId?: number): Promise<any[]>;
-  createERPSyncLog(log: any): Promise<any>;
-  getERPEntityMappings(configId: number, entityType: string): Promise<any[]>;
-  createERPEntityMapping(mapping: any): Promise<any>;
-  
-  // Database Configuration
-  getDatabaseConfigurations(): Promise<DatabaseConfiguration[]>;
-  createDatabaseConfiguration(config: InsertDatabaseConfiguration): Promise<DatabaseConfiguration>;
-  updateDatabaseConfiguration(id: number, config: Partial<DatabaseConfiguration>): Promise<DatabaseConfiguration>;
-  deleteDatabaseConfiguration(id: number): Promise<boolean>;
-  
-  // Data Mapping
-  getDataMappings(configId: number): Promise<any[]>;
-  createDataMapping(mapping: any): Promise<any>;
-  updateDataMapping(id: number, mapping: any): Promise<any>;
-  deleteDataMapping(id: number): Promise<boolean>;
-  
-  // Data Synchronization
-  syncData(configId: number, entityType: string, direction: string): Promise<any>;
-  getSyncLogs(configId: number): Promise<any[]>;
   
   // Sections
   getSections(): Promise<Section[]>;
@@ -2839,164 +2800,6 @@ export class DatabaseStorage implements IStorage {
     return newRecipe;
   }
 
-  // ERP Integration Methods
-  async getERPConfigurations(): Promise<any[]> {
-    // For now, return mock data until we add the ERP tables to the main schema
-    return [
-      {
-        id: 1,
-        name: 'SAP Production System',
-        name_ar: 'نظام ساب للإنتاج',
-        type: 'SAP',
-        endpoint: 'https://sap-server.company.com:8000',
-        is_active: true,
-        last_sync: new Date('2025-01-31T10:00:00Z'),
-        sync_frequency: 60
-      },
-      {
-        id: 2,
-        name: 'Odoo CRM Integration',
-        name_ar: 'تكامل أودو لإدارة العملاء',
-        type: 'Odoo',
-        endpoint: 'https://odoo.company.com',
-        is_active: true,
-        last_sync: new Date('2025-01-31T09:30:00Z'),
-        sync_frequency: 120
-      },
-      {
-        id: 3,
-        name: 'Oracle Financials',
-        name_ar: 'نظام أوراكل المالي',
-        type: 'Oracle',
-        endpoint: 'https://oracle-fin.company.com',
-        is_active: false,
-        last_sync: null,
-        sync_frequency: 1440
-      }
-    ];
-  }
-
-  async createERPConfiguration(config: any): Promise<any> {
-    // Mock implementation - using incremental ID instead of timestamp
-    // In real implementation, this would use database auto-increment
-    const existingConfigs = await this.getERPConfigurations();
-    const nextId = Math.max(...existingConfigs.map(c => c.id || 0)) + 1;
-    const newConfig = {
-      id: nextId,
-      ...config,
-      created_at: new Date(),
-      updated_at: new Date()
-    };
-    return newConfig;
-  }
-
-  async updateERPConfiguration(id: number, config: any): Promise<any> {
-    // Mock implementation
-    return {
-      id,
-      ...config,
-      updated_at: new Date()
-    };
-  }
-
-  async deleteERPConfiguration(id: number): Promise<boolean> {
-    // Mock implementation
-    return true;
-  }
-
-  async getERPSyncLogs(configId?: number): Promise<any[]> {
-    // Mock sync logs
-    return [
-      {
-        id: 1,
-        erp_config_id: 1,
-        entity_type: 'customers',
-        operation: 'sync_in',
-        status: 'success',
-        records_processed: 150,
-        records_success: 148,
-        records_failed: 2,
-        sync_duration: 45,
-        created_at: new Date('2025-01-31T10:00:00Z'),
-        error_message: null
-      },
-      {
-        id: 2,
-        erp_config_id: 1,
-        entity_type: 'products',
-        operation: 'sync_in',
-        status: 'success',
-        records_processed: 85,
-        records_success: 85,
-        records_failed: 0,
-        sync_duration: 30,
-        created_at: new Date('2025-01-31T10:05:00Z'),
-        error_message: null
-      },
-      {
-        id: 3,
-        erp_config_id: 2,
-        entity_type: 'orders',
-        operation: 'sync_out',
-        status: 'failed',
-        records_processed: 25,
-        records_success: 0,
-        records_failed: 25,
-        sync_duration: 5,
-        created_at: new Date('2025-01-31T09:30:00Z'),
-        error_message: 'Authentication failed: Invalid credentials'
-      }
-    ].filter(log => !configId || log.erp_config_id === configId);
-  }
-
-  async createERPSyncLog(log: any): Promise<any> {
-    // Mock implementation - using incremental ID instead of timestamp
-    // In real implementation, this would use database auto-increment
-    const existingLogs = await this.getERPSyncLogs();
-    const nextId = Math.max(...existingLogs.map(l => l.id || 0)) + 1;
-    return {
-      id: nextId,
-      ...log,
-      created_at: new Date()
-    };
-  }
-
-  async getERPEntityMappings(configId: number, entityType: string): Promise<any[]> {
-    // Mock entity mappings
-    return [
-      {
-        id: 1,
-        erp_config_id: configId,
-        local_entity_type: entityType,
-        local_entity_id: 1,
-        external_entity_id: 'CUST_001',
-        sync_status: 'synced',
-        last_synced: new Date('2025-01-31T10:00:00Z')
-      },
-      {
-        id: 2,
-        erp_config_id: configId,
-        local_entity_type: entityType,
-        local_entity_id: 2,
-        external_entity_id: 'CUST_002',
-        sync_status: 'pending',
-        last_synced: new Date('2025-01-30T15:30:00Z')
-      }
-    ];
-  }
-
-  async createERPEntityMapping(mapping: any): Promise<any> {
-    // Mock implementation - using incremental ID instead of timestamp
-    // In real implementation, this would use database auto-increment
-    const existingMappings = await this.getERPEntityMappings(mapping.erp_config_id, mapping.local_entity_type);
-    const nextId = Math.max(...existingMappings.map(m => m.id || 0)) + 1;
-    return {
-      id: nextId,
-      ...mapping,
-      created_at: new Date(),
-      last_synced: new Date()
-    };
-  }
 
   // ============ HR System Implementation ============
 
@@ -3675,30 +3478,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // ============ Database Configuration Implementation ============
-
-  async getDatabaseConfigurations(): Promise<DatabaseConfiguration[]> {
-    return await db.select().from(database_configurations).orderBy(desc(database_configurations.created_at));
-  }
-
-  async createDatabaseConfiguration(config: InsertDatabaseConfiguration): Promise<DatabaseConfiguration> {
-    const [dbConfig] = await db.insert(database_configurations).values(config).returning();
-    return dbConfig;
-  }
-
-  async updateDatabaseConfiguration(id: number, updates: Partial<DatabaseConfiguration>): Promise<DatabaseConfiguration> {
-    const [dbConfig] = await db
-      .update(database_configurations)
-      .set({ ...updates, updated_at: new Date() })
-      .where(eq(database_configurations.id, id))
-      .returning();
-    return dbConfig;
-  }
-
-  async deleteDatabaseConfiguration(id: number): Promise<boolean> {
-    const result = await db.delete(database_configurations).where(eq(database_configurations.id, id));
-    return (result.rowCount || 0) > 0;
-  }
 
   // ============ Data Mapping Implementation ============
 

@@ -1798,5 +1798,3 @@ export const insertSystemAnalyticsSchema = createInsertSchema(system_analytics);
 // Sanitized user type that excludes sensitive fields like password
 export type SafeUser = Omit<User, 'password'>;
 
-// Import ERP schemas
-export * from './erp-schema';

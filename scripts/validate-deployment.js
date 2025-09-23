@@ -83,12 +83,6 @@ async function validateDeployment() {
     hasErrors = true;
   }
   
-  try {
-    await access('./shared/erp-schema.ts', constants.F_OK);
-    console.log('   ✅ ERP schema file exists');
-  } catch (error) {
-    console.log('   ⚠️  ERP schema file not found (optional)');
-  }
   
   // 5. Check drizzle config
   console.log('\n5. Drizzle Configuration:');
