@@ -193,21 +193,24 @@ function Router() {
 
 function App() {
   const queryClientInstance = React.useMemo(() => getQueryClient(), []);
-  
-  return (
-    <React.StrictMode>
-      <ErrorBoundary>
-        <QueryClientProvider client={queryClientInstance}>
-          <TooltipProvider>
-            <AuthProvider>
-              <Toaster />
-              <Router />
-            </AuthProvider>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </ErrorBoundary>
-    </React.StrictMode>
+
+  const content = (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClientInstance}>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Router />
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
+
+  // شغل StrictMode بس في الإنتاج
+  return process.env.NODE_ENV === "production"
+    ? <React.StrictMode>{content}</React.StrictMode>
+    : content;
 }
 
 export default App;
