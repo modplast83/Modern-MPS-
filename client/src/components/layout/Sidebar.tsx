@@ -96,13 +96,6 @@ const modules = [
     active: false
   },
   {
-    name: "تكامل ERP",
-    name_ar: "تكامل ERP",
-    icon: Link2,
-    path: "/erp-integration",
-    active: false
-  },
-  {
     name: "الإشعارات",
     name_ar: "الإشعارات",
     icon: Bell,

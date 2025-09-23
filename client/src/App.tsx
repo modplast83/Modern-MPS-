@@ -18,7 +18,6 @@ import Definitions from "./pages/definitions";
 import Settings from "./pages/settings";
 import Reports from "./pages/reports";
 import MLAnalytics from "./pages/ml-analytics";
-import ERPIntegration from "./pages/erp-integration";
 import Orders from "./pages/orders";
 import Notifications from "./pages/notifications";
 import WhatsAppSetup from "./pages/whatsapp-setup";
@@ -108,11 +107,6 @@ function Router() {
       <Route path="/ml-analytics">
         <ProtectedRoute>
           <MLAnalytics />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/erp-integration">
-        <ProtectedRoute>
-          <ERPIntegration />
         </ProtectedRoute>
       </Route>
       <Route path="/orders">

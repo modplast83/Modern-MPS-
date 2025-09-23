@@ -106,7 +106,7 @@ async function prepareDeployment() {
   
   // 4. Schema Files Check
   console.log('\n4. 📄 Checking schema files...');
-  const schemaFiles = ['./shared/schema.ts', './shared/erp-schema.ts'];
+  const schemaFiles = ['./shared/schema.ts'];
   for (const file of schemaFiles) {
     try {
       await access(file, constants.F_OK);
