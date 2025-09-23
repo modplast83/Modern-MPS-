@@ -460,6 +460,7 @@ export interface IStorage {
   updateLeaveRequest(id: number, updates: Partial<LeaveRequest>): Promise<LeaveRequest>;
   getLeaveRequestById(id: number): Promise<LeaveRequest | undefined>;
   getPendingLeaveRequests(): Promise<LeaveRequest[]>;
+  deleteLeaveRequest(id: number): Promise<void>;
   
   // HR System - Leave Balances
   getLeaveBalances(employeeId: string, year?: number): Promise<LeaveBalance[]>;
@@ -470,6 +471,7 @@ export interface IStorage {
   // Maintenance
   getMaintenanceRequests(): Promise<MaintenanceRequest[]>;
   createMaintenanceRequest(request: InsertMaintenanceRequest): Promise<MaintenanceRequest>;
+  deleteMaintenanceRequest(id: number): Promise<void>;
   
   // Quality
   getQualityChecks(): Promise<QualityCheck[]>;
@@ -593,6 +595,7 @@ export interface IStorage {
   updateSystemAlert(id: number, updates: Partial<SystemAlert>): Promise<SystemAlert>;
   resolveSystemAlert(id: number, resolvedBy: number, notes?: string): Promise<SystemAlert>;
   dismissSystemAlert(id: number, dismissedBy: number): Promise<SystemAlert>;
+  deleteSystemAlert(id: number): Promise<void>;
   getActiveAlertsCount(): Promise<number>;
   getCriticalAlertsCount(): Promise<number>;
   getAlertsByType(type: string): Promise<SystemAlert[]>;
@@ -1769,6 +1772,38 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return maintenanceRequest;
+  }
+
+  async deleteMaintenanceRequest(id: number): Promise<void> {
+    return await db.transaction(async (tx) => {
+      try {
+        // Delete related notifications first
+        await tx.delete(notifications).where(
+          and(
+            eq(notifications.context_type, 'maintenance_request'),
+            eq(notifications.context_id, id.toString())
+          )
+        );
+        
+        // Delete the maintenance request - FK cascades will handle maintenance_actions and maintenance_reports
+        // If FK cascades are not yet applied, we have a fallback
+        try {
+          await tx.delete(maintenance_requests).where(eq(maintenance_requests.id, id));
+        } catch (fkError: any) {
+          if (fkError.code === '23503') {
+            // FK constraint violation - manually delete children as fallback
+            await tx.delete(maintenance_actions).where(eq(maintenance_actions.maintenance_request_id, id));
+            await tx.delete(maintenance_reports).where(eq(maintenance_reports.maintenance_request_id, id));
+            await tx.delete(maintenance_requests).where(eq(maintenance_requests.id, id));
+          } else {
+            throw fkError;
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting maintenance request:', error);
+        throw new Error('فشل في حذف طلب الصيانة');
+      }
+    });
   }
 
   async getQualityChecks(): Promise<QualityCheck[]> {
@@ -3220,6 +3255,46 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(leave_requests.created_at));
   }
 
+  async deleteLeaveRequest(id: number): Promise<void> {
+    return await db.transaction(async (tx) => {
+      try {
+        // Get the leave request details first to restore leave balance if needed
+        const [leaveRequest] = await tx.select().from(leave_requests).where(eq(leave_requests.id, id));
+        
+        if (!leaveRequest) {
+          throw new Error('طلب الإجازة غير موجود');
+        }
+        
+        // If the leave request was approved, restore the leave balance
+        if (leaveRequest.final_status === 'approved') {
+          const requestYear = new Date(leaveRequest.start_date).getFullYear();
+          await tx.execute(sql`
+            UPDATE leave_balances 
+            SET used_days = GREATEST(0, used_days - ${leaveRequest.days_count}),
+                remaining_days = LEAST(allocated_days, remaining_days + ${leaveRequest.days_count})
+            WHERE employee_id = ${leaveRequest.employee_id} 
+              AND leave_type_id = ${leaveRequest.leave_type_id} 
+              AND year = ${requestYear}
+          `);
+        }
+        
+        // Delete related notifications
+        await tx.delete(notifications).where(
+          and(
+            eq(notifications.context_type, 'leave_request'),
+            eq(notifications.context_id, id.toString())
+          )
+        );
+        
+        // Then delete the leave request
+        await tx.delete(leave_requests).where(eq(leave_requests.id, id));
+      } catch (error) {
+        console.error('Error deleting leave request:', error);
+        throw new Error('فشل في حذف طلب الإجازة');
+      }
+    });
+  }
+
   // Leave Balances
   async getLeaveBalances(employeeId: string, year?: number): Promise<LeaveBalance[]> {
     if (year) {
@@ -4411,12 +4486,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUserRequest(id: number): Promise<void> {
-    try {
-      await db.execute(sql`DELETE FROM user_requests WHERE id = ${id}`);
-    } catch (error) {
-      console.error('Error deleting user request:', error);
-      throw new Error('فشل في حذف الطلب');
-    }
+    return await db.transaction(async (tx) => {
+      try {
+        // Delete related notifications first
+        await tx.delete(notifications).where(
+          and(
+            eq(notifications.context_type, 'user_request'),
+            eq(notifications.context_id, id.toString())
+          )
+        );
+        
+        // Then delete the user request
+        await tx.delete(user_requests).where(eq(user_requests.id, id));
+      } catch (error) {
+        console.error('Error deleting user request:', error);
+        throw new Error('فشل في حذف الطلب');
+      }
+    });
   }
 
   // ============ PRODUCTION FLOW MANAGEMENT ============
@@ -6136,6 +6222,37 @@ export class DatabaseStorage implements IStorage {
       console.error('Error dismissing system alert:', error);
       throw new Error('فشل في إغلاق التحذير');
     }
+  }
+
+  async deleteSystemAlert(id: number): Promise<void> {
+    return await db.transaction(async (tx) => {
+      try {
+        // Delete related notifications first
+        await tx.delete(notifications).where(
+          and(
+            eq(notifications.context_type, 'system_alert'),
+            eq(notifications.context_id, id.toString())
+          )
+        );
+        
+        // Delete the system alert - FK cascades will handle corrective_actions
+        // If FK cascades are not yet applied, we have a fallback
+        try {
+          await tx.delete(system_alerts).where(eq(system_alerts.id, id));
+        } catch (fkError: any) {
+          if (fkError.code === '23503') {
+            // FK constraint violation - manually delete children as fallback
+            await tx.delete(corrective_actions).where(eq(corrective_actions.alert_id, id));
+            await tx.delete(system_alerts).where(eq(system_alerts.id, id));
+          } else {
+            throw fkError;
+          }
+        }
+      } catch (error) {
+        console.error('Error deleting system alert:', error);
+        throw new Error('فشل في حذف التحذير');
+      }
+    });
   }
 
   async getActiveAlertsCount(): Promise<number> {
