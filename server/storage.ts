@@ -1214,18 +1214,21 @@ export class DatabaseStorage implements IStorage {
         return cached;
       }
       
-      // محسن: تقليل JOINs الثقيلة باستعلامات منفصلة وحدود أقل
+      // جلب بيانات الطلبات مع أسماء العملاء
       const ordersData = await db
         .select({
           id: orders.id,
           order_number: orders.order_number,
           customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
           status: orders.status,
           created_at: orders.created_at,
           delivery_date: orders.delivery_date,
           notes: orders.notes
         })
         .from(orders)
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
         .where(or(
           eq(orders.status, 'in_production'),
           eq(orders.status, 'waiting'),

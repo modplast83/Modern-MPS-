@@ -66,8 +66,8 @@ export default function HierarchicalOrdersView({ stage, onCreateRoll }: Hierarch
 
   // Filter based on search term and stage requirements
   const filteredOrders = ordersData.filter(order => {
-    // For film stage, exclude orders with pending status
-    if (stage === "film" && order.status === "pending") {
+    // For film stage, show only orders with "for_production" status
+    if (stage === "film" && order.status !== "for_production") {
       return false;
     }
     
