@@ -86,9 +86,16 @@ export function generateJobOrderNumber(): string {
 }
 
 /**
- * Generate roll number (with timestamp for tracking)
+ * Generate sequential roll number (01, 02, 03, etc.)
  */
-export function generateRollNumber(): string {
+export function generateRollNumber(rollCount: number): string {
+  return (rollCount + 1).toString().padStart(2, '0');
+}
+
+/**
+ * Generate legacy readable roll ID (kept for backward compatibility)
+ */
+export function generateReadableRollId(): string {
   return generateReadableId('R');
 }
 

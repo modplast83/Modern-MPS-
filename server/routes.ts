@@ -1319,15 +1319,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Rolls routes
+  // Rolls routes with pagination support
   app.get("/api/rolls", requireAuth, async (req, res) => {
     try {
-      const { stage } = req.query;
+      const { stage, limit, offset } = req.query;
+      const options = {
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+        stage: stage as string
+      };
+      
       if (stage) {
-        const rolls = await storage.getRollsByStage(stage as string);
+        const rolls = await storage.getRollsByStage(stage as string, {
+          limit: options.limit,
+          offset: options.offset
+        });
         res.json(rolls);
       } else {
-        const rolls = await storage.getRolls();
+        const rolls = await storage.getRolls(options);
         res.json(rolls);
       }
     } catch (error) {
