@@ -801,7 +801,7 @@ export default function Settings() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="language">اللغة المفضلة</Label>
-                        <Select value={userSettings.language || "ar"} onValueChange={(value) => setUserSettings(prev => ({ ...prev, language: value }))}>
+                        <Select value={userSettings.language ?? "ar"} onValueChange={(value) => setUserSettings(prev => ({ ...prev, language: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -961,7 +961,7 @@ export default function Settings() {
                         <div className="space-y-2">
                           <Label htmlFor="refreshInterval">فترة التحديث (بالثواني)</Label>
                           <Select 
-                            value={userSettings.dashboard.refreshInterval?.toString() || "30"} 
+                            value={(userSettings.dashboard.refreshInterval ?? 30).toString()} 
                             onValueChange={(value) => setUserSettings(prev => ({
                               ...prev,
                               dashboard: { ...prev.dashboard, refreshInterval: parseInt(value) }
@@ -1020,7 +1020,7 @@ export default function Settings() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="region">المنطقة</Label>
-                        <Select value={systemSettings.region} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, region: value }))}>
+                        <Select value={systemSettings.region ?? "الرياض"} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, region: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -1058,7 +1058,7 @@ export default function Settings() {
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="language">لغة النظام</Label>
-                        <Select value={systemSettings.language} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, language: value }))}>
+                        <Select value={systemSettings.language ?? "ar"} onValueChange={(value) => setSystemSettings(prev => ({ ...prev, language: value }))}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
