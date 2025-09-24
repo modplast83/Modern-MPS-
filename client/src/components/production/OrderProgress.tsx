@@ -131,7 +131,7 @@ export default function OrderProgress() {
         </CardHeader>
         <CardContent>
           <Select
-            value={selectedProductionOrderId?.toString() || ""}
+            value={selectedProductionOrderId?.toString() ?? ""}
             onValueChange={(value) => setSelectedProductionOrderId(parseInt(value))}
           >
             <SelectTrigger data-testid="select-job-order">

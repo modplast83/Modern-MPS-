@@ -619,7 +619,7 @@ export default function NotificationCenter() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">نوع الإشعار</label>
-                  <Select value={systemType || ""} onValueChange={(value: any) => setSystemType(value)}>
+                  <Select value={systemType ?? ""} onValueChange={(value: any) => setSystemType(value)}>
                     <SelectTrigger data-testid="select-system-type">
                       <SelectValue />
                     </SelectTrigger>
@@ -649,7 +649,7 @@ export default function NotificationCenter() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">الأولوية</label>
-                  <Select value={systemPriority || ""} onValueChange={(value: any) => setSystemPriority(value)}>
+                  <Select value={systemPriority ?? ""} onValueChange={(value: any) => setSystemPriority(value)}>
                     <SelectTrigger data-testid="select-system-priority">
                       <SelectValue />
                     </SelectTrigger>
@@ -664,7 +664,7 @@ export default function NotificationCenter() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">المستلم</label>
-                  <Select value={recipientType || ""} onValueChange={(value: any) => setRecipientType(value)}>
+                  <Select value={recipientType ?? ""} onValueChange={(value: any) => setRecipientType(value)}>
                     <SelectTrigger data-testid="select-recipient-type">
                       <SelectValue />
                     </SelectTrigger>
