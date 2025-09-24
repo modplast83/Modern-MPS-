@@ -69,29 +69,29 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     return stages;
   }, [currentUser, sections]);
 
-  // Fetch production queues - Optimized polling intervals to reduce server load
+  // Fetch production queues - Real-time updates for instant roll transitions
   const { data: filmQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/film-queue'],
-    refetchInterval: 90000, // Reduced from 30s to 90s (1.5 minutes)
-    staleTime: 60000 // Cache for 1 minute to reduce unnecessary requests
+    refetchInterval: 5000, // Every 5 seconds for real-time updates
+    staleTime: 1000 // Fresh data for instant updates
   });
 
   const { data: printingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/printing-queue'],
-    refetchInterval: 90000, // Reduced from 30s to 90s
-    staleTime: 60000
+    refetchInterval: 5000, // Every 5 seconds for real-time updates
+    staleTime: 1000
   });
 
   const { data: cuttingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/cutting-queue'],
-    refetchInterval: 90000, // Reduced from 30s to 90s
-    staleTime: 60000
+    refetchInterval: 5000, // Every 5 seconds for real-time updates
+    staleTime: 1000
   });
 
   const { data: groupedCuttingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/grouped-cutting-queue'],
-    refetchInterval: 90000, // Reduced from 30s to 90s
-    staleTime: 60000
+    refetchInterval: 5000, // Every 5 seconds for real-time updates
+    staleTime: 1000
   });
 
   // Set default active stage based on visible stages

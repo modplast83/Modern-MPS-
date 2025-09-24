@@ -57,8 +57,18 @@ export default function RollsTable({ stage }: RollsTableProps) {
       });
     },
     onSuccess: (_, { updates }) => {
+      // Invalidate all production-related queries for instant updates
       queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
       queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/film-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/printing-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/cutting-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/grouped-cutting-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      
+      // Force immediate refetch for real-time updates
+      queryClient.refetchQueries({ queryKey: ['/api/rolls'], type: 'active' });
+      
       toast({
         title: "تم تحديث الرول بنجاح",
         description: updates.stage ? 

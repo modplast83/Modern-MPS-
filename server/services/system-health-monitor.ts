@@ -67,13 +67,13 @@ export class SystemHealthMonitor extends EventEmitter {
   private readonly HEALTH_CHECK_INTERVAL = 10 * 60 * 1000; // تم زيادتها إلى 10 دقائق لتقليل الحساسية
   private readonly PERFORMANCE_RETENTION_DAYS = 30; // الاحتفاظ بالبيانات لمدة 30 يوم
   
-  // إعدادات التحذيرات - Significantly increased cooldowns to reduce spam
-  private readonly ALERT_COOLDOWN_MEMORY = 60 * 60 * 1000; // زيادة إلى ساعة كاملة للذاكرة
-  private readonly ALERT_COOLDOWN_DATABASE = 2 * 60 * 60 * 1000; // زيادة إلى ساعتين لقاعدة البيانات
-  private readonly ALERT_COOLDOWN_DEFAULT = 90 * 60 * 1000; // زيادة إلى 90 دقيقة افتراضي
+  // إعدادات التحذيرات - Drastically increased cooldowns to prevent spam
+  private readonly ALERT_COOLDOWN_MEMORY = 4 * 60 * 60 * 1000; // زيادة إلى 4 ساعات للذاكرة
+  private readonly ALERT_COOLDOWN_DATABASE = 8 * 60 * 60 * 1000; // زيادة إلى 8 ساعات لقاعدة البيانات
+  private readonly ALERT_COOLDOWN_DEFAULT = 6 * 60 * 60 * 1000; // زيادة إلى 6 ساعات افتراضي
   
-  // Sustained condition settings for hysteresis - Increased to reduce noise
-  private readonly SUSTAINED_CONDITION_COUNT = 5; // 5 consecutive checks before changing status
+  // Sustained condition settings for hysteresis - Dramatically increased to reduce noise
+  private readonly SUSTAINED_CONDITION_COUNT = 10; // 10 consecutive checks before changing status
 
   constructor(storage: IStorage) {
     super();
@@ -398,12 +398,12 @@ export class SystemHealthMonitor extends EventEmitter {
   }
 
   /**
-   * Calculate memory status based on proper thresholds - Increased thresholds to reduce false alerts
+   * Calculate memory status based on proper thresholds - Dramatically increased thresholds to reduce false alerts
    */
   private calculateMemoryStatus(memoryPercent: number): 'healthy' | 'warning' | 'critical' | 'unknown' {
-    if (memoryPercent > 98) {
+    if (memoryPercent > 99.5) {
       return 'critical';
-    } else if (memoryPercent > 90) {
+    } else if (memoryPercent > 95) {
       return 'warning';
     }
     return 'healthy';
@@ -632,7 +632,7 @@ export class SystemHealthMonitor extends EventEmitter {
       return timeSinceLastAlert >= cooldownPeriod;
     } catch (error) {
       console.error('[SystemHealthMonitor] خطأ في فحص Rate Limiting:', error);
-      return true; // في حالة الخطأ، نسمح بالتحذير
+      return false; // في حالة الخطأ، نمنع التحذير لتجنب السبام
     }
   }
 
