@@ -1,6 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
-import MemoryStore from "memorystore";
 import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -136,26 +135,15 @@ if (isProduction && !process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
-// Configure production-ready session store
-let sessionStore: any;
-if (isProduction) {
-  // Use PostgreSQL session store in production for scalability and persistence
-  const PgSession = connectPgSimple(session);
-  sessionStore = new PgSession({
-    conString: process.env.DATABASE_URL,
-    tableName: 'user_sessions',
-    createTableIfMissing: true,
-    pruneSessionInterval: 60 * 15 // Clean expired sessions every 15 minutes
-  });
-  console.log('✅ Using PostgreSQL session store for production');
-} else {
-  // Use MemoryStore only in development
-  const MemoryStoreSession = MemoryStore(session);
-  sessionStore = new MemoryStoreSession({
-    checkPeriod: 86400000 // prune expired entries every 24h
-  });
-  console.log('⚠️ Using MemoryStore session store for development only');
-}
+// Configure PostgreSQL session store for all environments to prevent session loss during restarts
+const PgSession = connectPgSimple(session);
+const sessionStore = new PgSession({
+  conString: process.env.DATABASE_URL,
+  tableName: 'user_sessions',
+  createTableIfMissing: true,
+  pruneSessionInterval: 60 * 15 // Clean expired sessions every 15 minutes
+});
+console.log(`✅ Using PostgreSQL session store for ${isProduction ? 'production' : 'development'} - sessions will persist across server restarts`);
 
 app.use(session({
   store: sessionStore,
@@ -163,7 +151,7 @@ app.use(session({
     console.error('🚨 CRITICAL: SESSION_SECRET missing in production');
     process.exit(1);
   })() : 'dev-secret-key-not-for-production'),
-  resave: false, // Optimized session handling
+  resave: true, // Force session persistence - ensures PostgreSQL session store reliability
   saveUninitialized: false, // Don't create session until something stored
   rolling: true, // Reset expiry on activity - crucial for keeping session alive
   cookie: {
@@ -176,7 +164,7 @@ app.use(session({
   unset: 'keep' // Keep the session even if we unset properties
 }));
 
-// Session extension middleware - extends session on any API call
+// Session extension middleware - extends session on any API call with enhanced reliability
 app.use((req, res, next) => {
   // For API requests, extend the session if it exists
   if (req.path.startsWith("/api") && req.session) {
@@ -185,11 +173,18 @@ app.use((req, res, next) => {
       // Touch the session to reset expiry with rolling sessions
       req.session.touch();
       
+      // Force save session for PostgreSQL reliability (non-blocking)
+      req.session.save((err: any) => {
+        if (err && !isProduction) {
+          console.warn(`Session save warning on ${req.path}:`, err);
+        }
+      });
+      
       // Log session extension for debugging (only in development)
       if (!isProduction && req.path !== "/api/me") {
         console.log(`🔄 Session extended for user ${req.session.userId} on ${req.path}`);
       }
-    } else if (req.path !== "/api/login") {
+    } else if (req.path !== "/api/login" && req.path !== "/api/health") {
       // Log unauthenticated API requests for debugging (only in development)
       if (!isProduction) {
         console.log(`⚠️ Unauthenticated API request: ${req.path}`);

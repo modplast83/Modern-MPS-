@@ -3,12 +3,35 @@ import { QueryClient, QueryFunction, QueryCache, MutationCache } from "@tanstack
 // Create a single instance to prevent multiple React contexts
 let globalQueryClient: QueryClient | undefined;
 
-// Global 401 handler - automatically logout user and redirect to login
+// Global 401 handler - automatically logout user and redirect to login (with timing protection)
+let recentLogoutTime = 0;
+let logoutCount = 0;
+const LOGOUT_COOLDOWN = 5000; // 5 seconds cooldown to prevent rapid logouts
+const MAX_RAPID_LOGOUTS = 3; // Maximum rapid logouts before backing off
+
 function handle401Error() {
+  const now = Date.now();
+  
   // Check if we're already on login page to prevent reload loops
   if (typeof window !== 'undefined' && window.location.pathname === '/login') {
     return; // Don't reload if already on login page
   }
+  
+  // Prevent rapid successive logouts (race condition protection)
+  if (now - recentLogoutTime < LOGOUT_COOLDOWN) {
+    logoutCount++;
+    console.warn(`Skipping logout due to recent logout attempt #${logoutCount} (race condition protection)`);
+    
+    // If we're getting too many rapid logouts, something is wrong - back off
+    if (logoutCount >= MAX_RAPID_LOGOUTS) {
+      console.error('Too many rapid logout attempts detected - possible session issue');
+      return;
+    }
+    return;
+  }
+  
+  recentLogoutTime = now;
+  logoutCount = 0; // Reset counter
   
   // Clear user data from localStorage
   localStorage.removeItem('mpbf_user');
