@@ -336,7 +336,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>سبب الحركة</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="اختياري - سبب الحركة" data-testid="input-reason" />
+                            <Input {...field} value={field.value ?? ""} placeholder="اختياري - سبب الحركة" data-testid="input-reason" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -350,7 +350,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>ملاحظات</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="ملاحظات إضافية" data-testid="textarea-notes" />
+                            <Textarea {...field} value={field.value ?? ""} placeholder="ملاحظات إضافية" data-testid="textarea-notes" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -390,6 +390,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>إضافة قطعة غيار استهلاكية جديدة</DialogTitle>
+                  <DialogDescription>
+                    إضافة قطعة غيار استهلاكية جديدة إلى النظام مع تحديد المواصفات والكميات
+                  </DialogDescription>
                 </DialogHeader>
                 <Form {...addForm}>
                   <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
@@ -431,7 +434,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>الباركود</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="الباركود (اختياري)" data-testid="input-barcode-add" />
+                              <Input {...field} value={field.value ?? ""} placeholder="الباركود (اختياري)" data-testid="input-barcode-add" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -445,7 +448,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>الموقع</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="موقع التخزين" data-testid="input-location" />
+                              <Input {...field} value={field.value ?? ""} placeholder="موقع التخزين" data-testid="input-location" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -522,7 +525,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>الوحدة</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-unit">
                                   <SelectValue />
@@ -547,7 +550,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>الحالة</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                               <FormControl>
                                 <SelectTrigger data-testid="select-status">
                                   <SelectValue />
@@ -572,7 +575,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>ملاحظات</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="ملاحظات إضافية" data-testid="textarea-notes-add" />
+                            <Textarea {...field} value={field.value ?? ""} placeholder="ملاحظات إضافية" data-testid="textarea-notes-add" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -729,7 +732,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                       <FormItem>
                         <FormLabel>الباركود</FormLabel>
                         <FormControl>
-                          <Input {...field} data-testid="input-edit-barcode" />
+                          <Input {...field} value={field.value ?? ""} data-testid="input-edit-barcode" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -743,7 +746,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                       <FormItem>
                         <FormLabel>الموقع</FormLabel>
                         <FormControl>
-                          <Input {...field} data-testid="input-edit-location" />
+                          <Input {...field} value={field.value ?? ""} data-testid="input-edit-location" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -820,7 +823,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>الوحدة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                           <FormControl>
                             <SelectTrigger data-testid="select-edit-unit">
                               <SelectValue />
@@ -845,7 +848,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>الحالة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                           <FormControl>
                             <SelectTrigger data-testid="select-edit-status">
                               <SelectValue />
@@ -870,7 +873,7 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     <FormItem>
                       <FormLabel>ملاحظات</FormLabel>
                       <FormControl>
-                        <Textarea {...field} data-testid="textarea-edit-notes" />
+                        <Textarea {...field} value={field.value ?? ""} data-testid="textarea-edit-notes" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
