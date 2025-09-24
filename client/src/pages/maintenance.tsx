@@ -517,12 +517,12 @@ export default function Maintenance() {
 
       {/* Action View Dialog */}
       <Dialog open={isActionViewDialogOpen} onOpenChange={setIsActionViewDialogOpen}>
-        <DialogContent className="max-w-2xl" aria-describedby="action-view-dialog-description">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل إجراء الصيانة</DialogTitle>
-            <div id="action-view-dialog-description" className="text-sm text-gray-600">
+            <DialogDescription>
               عرض تفاصيل إجراء الصيانة المحدد
-            </div>
+            </DialogDescription>
           </DialogHeader>
           {selectedAction && (() => {
             const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === selectedAction.performed_by) : null;

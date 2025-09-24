@@ -3213,6 +3213,9 @@ const masterBatchColors = [
                     <DialogTitle>
                       {editingItem ? "تحديث الموقع" : "إضافة موقع جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تحديث بيانات الموقع المحدد" : "إضافة موقع جديد لتخزين المواد والمنتجات"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -3303,6 +3306,9 @@ const masterBatchColors = [
                     <DialogTitle>
                       {editingItem ? "تحديث الماكينة" : "إضافة ماكينة جديدة"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تحديث بيانات الماكينة المحددة" : "إضافة ماكينة جديدة إلى خط الإنتاج"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -3404,6 +3410,9 @@ const masterBatchColors = [
                     <DialogTitle>
                       {editingItem ? "تحديث المستخدم" : "إضافة مستخدم جديد"}
                     </DialogTitle>
+                    <DialogDescription>
+                      {editingItem ? "تحديث بيانات المستخدم المحدد" : "إضافة مستخدم جديد إلى النظام"}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
