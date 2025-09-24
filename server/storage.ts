@@ -1648,21 +1648,15 @@ export class DatabaseStorage implements IStorage {
           );
         }
 
-        // STEP 4: Generate global roll sequence number (01, 02, 03, etc.)
-        const totalRollCount = await tx
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(rolls);
-        const globalRollNumber = (totalRollCount[0]?.count || 0) + 1;
-        
-        // Get roll count for this production order (for internal tracking)
+        // STEP 4: Generate sequential roll number for this production order
         const poRollCount = await tx
           .select({ count: sql<number>`COUNT(*)` })
           .from(rolls)
           .where(eq(rolls.production_order_id, insertRoll.production_order_id));
         const nextRollSeq = (poRollCount[0]?.count || 0) + 1;
 
-        // STEP 5: Generate roll identifiers and QR code
-        const rollNumber = globalRollNumber.toString().padStart(2, '0');
+        // STEP 5: Generate roll identifiers using production order number + sequence
+        const rollNumber = `${productionOrder.production_order_number}-${nextRollSeq.toString().padStart(2, '0')}`;
         
         // إنشاء بيانات QR Code غنية
         const qrData = {
@@ -4710,35 +4704,50 @@ export class DatabaseStorage implements IStorage {
         return cached;
       }
       
-      // محسن: استعلام منفصل للحصول على بيانات أساسية فقط
+      // محسن: استعلام مع بيانات العميل لمرحلة الطباعة
       const rollsData = await db
         .select({
           id: rolls.id,
           roll_seq: rolls.roll_seq,
           roll_number: rolls.roll_number,
           production_order_id: rolls.production_order_id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          order_number: orders.order_number,
           weight_kg: rolls.weight_kg,
           machine_id: rolls.machine_id,
           stage: rolls.stage,
           created_at: rolls.created_at,
           qr_code_text: rolls.qr_code_text,
-          qr_png_base64: rolls.qr_png_base64
+          qr_png_base64: rolls.qr_png_base64,
+          // بيانات العميل
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          // بيانات المنتج
+          item_name: items.name,
+          item_name_ar: items.name_ar,
+          size_caption: customer_products.size_caption
         })
         .from(rolls)
+        .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(eq(rolls.stage, 'film'))
         .orderBy(desc(rolls.created_at))
-        .limit(100); // قلل الحد للسرعة
+        .limit(100);
 
       // إذا لم توجد رولات، إرجاع مصفوفة فارغة
       if (rollsData.length === 0) {
         return [];
       }
       
-      // إرجاع البيانات الأساسية فقط للسرعة - يمكن إضافة بيانات إضافية لاحقاً عند الحاجة
+      // إرجاع البيانات مع معلومات العميل والطلب
       const result = rollsData.map(roll => ({
         ...roll,
         // إضافة الحقول المطلوبة للنوع Roll
-        created_by: 1, // قيمة افتراضية
+        created_by: 1,
         cut_weight_total_kg: '0',
         waste_kg: '0', 
         printed_at: null,
@@ -4750,9 +4759,7 @@ export class DatabaseStorage implements IStorage {
         roll_position: null,
         status: 'active',
         cut_count: 0,
-        completed_at: null,
-        production_order_number: '', // سيتم ملؤه لاحقاً
-        order_number: '' // سيتم ملؤه لاحقاً
+        completed_at: null
       })) as any[];
       
       // تخزين مؤقت لمدة 5 ثواني للبيانات النشطة
