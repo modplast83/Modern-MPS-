@@ -239,7 +239,7 @@ export default function RollCreationModal({
                 <FormItem>
                   <FormLabel>أمر الإنتاج *</FormLabel>
                   <Select
-                    value={field.value ? String(field.value) : undefined}
+                    value={field.value != null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange(Number.parseInt(value, 10))}
                     disabled={productionOrdersLoading}
                   >
@@ -333,7 +333,7 @@ export default function RollCreationModal({
               <FormItem>
                 <FormLabel>المكينة *</FormLabel>
                 <Select
-                  value={field.value || undefined}
+                  value={field.value ?? undefined}
                   onValueChange={field.onChange}
                   disabled={machinesLoading}
                 >
