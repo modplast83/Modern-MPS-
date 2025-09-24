@@ -174,7 +174,7 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
   return (
     <div className="space-y-4">
       {groupedData.map((orderGroup) => (
-        <Card key={orderGroup.order_id} className="border-l-4 border-l-blue-500">
+        <Card key={`order-${orderGroup.order_id}`} className="border-l-4 border-l-blue-500">
           <Collapsible 
             open={expandedOrders.has(orderGroup.order_id)}
             onOpenChange={() => toggleOrderExpanded(orderGroup.order_id)}
@@ -212,7 +212,7 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
               <CardContent className="pt-0">
                 <div className="space-y-3">
                   {orderGroup.production_orders.map((productionOrderGroup) => (
-                    <Card key={productionOrderGroup.production_order_id} className="bg-gray-50 border-l-2 border-l-orange-400">
+                    <Card key={`production-${productionOrderGroup.production_order_id}`} className="bg-gray-50 border-l-2 border-l-orange-400">
                       <Collapsible 
                         open={expandedProductionOrders.has(productionOrderGroup.production_order_id)}
                         onOpenChange={() => toggleProductionOrderExpanded(productionOrderGroup.production_order_id)}
@@ -243,7 +243,7 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
                           <CardContent className="pt-0">
                             <div className="space-y-2">
                               {productionOrderGroup.rolls.map((roll) => (
-                                <div key={roll.id} className="flex items-center justify-between p-3 bg-white rounded border">
+                                <div key={`roll-${roll.id}`} className="flex items-center justify-between p-3 bg-white rounded border">
                                   <div className="flex items-center space-x-3 space-x-reverse">
                                     <QrCode className="h-4 w-4 text-gray-400" />
                                     <div>
