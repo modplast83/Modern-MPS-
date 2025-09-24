@@ -549,7 +549,7 @@ export default function Warehouse() {
                                       <Select onValueChange={(value) => {
                                         field.onChange(value);
                                         form.setValue('item_id', '');
-                                      }} value={field.value || ""}>
+                                      }} value={field.value ?? ""}>
                                         <FormControl>
                                           <SelectTrigger>
                                             <SelectValue placeholder="اختر مجموعة المواد" />
@@ -574,7 +574,7 @@ export default function Warehouse() {
                                   render={({ field }) => (
                                     <FormItem>
                                       <FormLabel>الصنف</FormLabel>
-                                      <Select onValueChange={field.onChange} value={field.value || ""} disabled={!selectedMaterialGroupId}>
+                                      <Select onValueChange={field.onChange} value={field.value ?? ""} disabled={!selectedMaterialGroupId}>
                                         <FormControl>
                                           <SelectTrigger>
                                             <SelectValue placeholder={selectedMaterialGroupId ? "اختر الصنف" : "اختر مجموعة المواد أولاً"} />
@@ -601,7 +601,7 @@ export default function Warehouse() {
                                   render={({ field }) => (
                                     <FormItem>
                                       <FormLabel>الموقع</FormLabel>
-                                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                                      <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                         <FormControl>
                                           <SelectTrigger>
                                             <SelectValue placeholder="اختر الموقع" />
@@ -641,7 +641,7 @@ export default function Warehouse() {
                                     render={({ field }) => (
                                       <FormItem>
                                         <FormLabel>الوحدة</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                           <FormControl>
                                             <SelectTrigger>
                                               <SelectValue />
@@ -774,7 +774,7 @@ export default function Warehouse() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>صنف المخزون</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue placeholder="اختر الصنف" />
@@ -799,7 +799,7 @@ export default function Warehouse() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>نوع الحركة</FormLabel>
-                                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                                  <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                     <FormControl>
                                       <SelectTrigger>
                                         <SelectValue placeholder="اختر نوع الحركة" />
@@ -852,7 +852,7 @@ export default function Warehouse() {
                                 render={({ field }) => (
                                   <FormItem>
                                     <FormLabel>نوع المرجع</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value || ""}>
+                                    <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                       <FormControl>
                                         <SelectTrigger>
                                           <SelectValue placeholder="اختر النوع" />
