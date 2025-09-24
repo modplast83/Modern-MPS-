@@ -163,6 +163,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Double-check session (redundant with requireAuth but safer)
       if (!req.session?.userId || typeof req.session.userId !== 'number') {
+        // Debug session state in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('🔍 /api/me session debug:', {
+            sessionExists: !!req.session,
+            userId: req.session?.userId,
+            userIdType: typeof req.session?.userId,
+            sessionId: req.session?.id || 'no-session-id'
+          });
+        }
         return res.status(401).json({ 
           message: "جلسة غير صحيحة",
           success: false

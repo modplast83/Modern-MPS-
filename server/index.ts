@@ -169,7 +169,7 @@ app.use(session({
   cookie: {
     secure: 'auto', // Let Express determine security based on connection
     httpOnly: true, // ALWAYS prevent XSS - critical security fix
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - more reasonable session lifetime
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - extended session duration for better user experience
     sameSite: 'lax' // Better balance for same-origin requests
   },
   name: 'plastic-bag-session', // Custom session name
@@ -179,9 +179,22 @@ app.use(session({
 // Session extension middleware - extends session on any API call
 app.use((req, res, next) => {
   // For API requests, extend the session if it exists
-  if (req.path.startsWith("/api") && req.session && req.session.userId) {
-    // Touch the session to reset expiry with rolling sessions
-    req.session.touch();
+  if (req.path.startsWith("/api") && req.session) {
+    // Check if session has userId (authenticated session)
+    if (req.session.userId) {
+      // Touch the session to reset expiry with rolling sessions
+      req.session.touch();
+      
+      // Log session extension for debugging (only in development)
+      if (!isProduction && req.path !== "/api/me") {
+        console.log(`🔄 Session extended for user ${req.session.userId} on ${req.path}`);
+      }
+    } else if (req.path !== "/api/login") {
+      // Log unauthenticated API requests for debugging (only in development)
+      if (!isProduction) {
+        console.log(`⚠️ Unauthenticated API request: ${req.path}`);
+      }
+    }
   }
   next();
 });
