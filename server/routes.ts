@@ -133,11 +133,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       req.session.userId = user.id;
       
 
-      // Ensure session is saved before responding
+      // Ensure session is saved before responding with additional reliability measures
       req.session.save((err: any) => {
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
+        }
+        
+        // Force session persistence for MemoryStore reliability
+        if (req.session?.touch) {
+          req.session.touch();
+        }
+        
+        // Log successful session creation in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`✅ Session created and saved for user ${user.id}`);
         }
         
         // Session saved successfully - safe property access
