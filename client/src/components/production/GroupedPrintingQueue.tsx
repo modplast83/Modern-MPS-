@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { QrCode, Play, ChevronDown, ChevronRight } from "lucide-react";
+import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
@@ -47,6 +48,25 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
   const [processingId, setProcessingId] = useState<number | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
   const [expandedProductionOrders, setExpandedProductionOrders] = useState<Set<number>>(new Set());
+
+  // Helper function to calculate completion percentage
+  const calculateOrderProgress = (orderGroup: OrderGroup) => {
+    const totalRolls = orderGroup.total_rolls;
+    if (totalRolls === 0) return 0;
+    
+    // In printing stage, assume all rolls are ready for printing
+    // Progress is based on rolls that are successfully printed
+    // For now, we'll show that all rolls in the queue are pending printing
+    return 0; // All rolls in queue are pending printing
+  };
+
+  const calculateProductionOrderProgress = (productionOrderGroup: ProductionOrderGroup) => {
+    const totalRolls = productionOrderGroup.rolls_count;
+    if (totalRolls === 0) return 0;
+    
+    // Similar logic - all rolls in printing queue are pending
+    return 0; // All rolls are pending printing
+  };
 
   // Group items by order and production order
   const groupedData: OrderGroup[] = items.reduce((acc: OrderGroup[], item) => {
@@ -196,7 +216,13 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className="flex items-center space-x-3 space-x-reverse">
+                    <div className="text-sm text-muted-foreground">
+                      <div className="w-20">
+                        <Progress value={calculateOrderProgress(orderGroup)} className="h-2" />
+                        <span className="text-xs">{calculateOrderProgress(orderGroup)}%</span>
+                      </div>
+                    </div>
                     <Badge variant="secondary">
                       {orderGroup.total_rolls} رول
                     </Badge>
@@ -227,7 +253,13 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
                                 }
                                 <span className="font-medium">{productionOrderGroup.production_order_number}</span>
                               </div>
-                              <div className="flex items-center space-x-2 space-x-reverse">
+                              <div className="flex items-center space-x-3 space-x-reverse">
+                                <div className="text-sm text-muted-foreground">
+                                  <div className="w-16">
+                                    <Progress value={calculateProductionOrderProgress(productionOrderGroup)} className="h-2" />
+                                    <span className="text-xs">{calculateProductionOrderProgress(productionOrderGroup)}%</span>
+                                  </div>
+                                </div>
                                 <Badge variant="secondary" className="text-xs">
                                   {productionOrderGroup.rolls_count} رول
                                 </Badge>
