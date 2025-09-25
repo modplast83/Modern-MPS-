@@ -12,6 +12,8 @@ export function useProductionSSE() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isConnectedRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
 
   const handleProductionUpdate = useCallback((event: MessageEvent) => {
     try {
@@ -51,21 +53,30 @@ export function useProductionSSE() {
   }, [queryClient]);
 
   const connect = useCallback(() => {
+    // Don't connect if already connected or if we've exceeded max attempts
     if (eventSourceRef.current || isConnectedRef.current) {
       return; // Already connected or connecting
+    }
+
+    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+      console.log('[ProductionSSE] Max reconnection attempts reached, stopping...');
+      return;
     }
 
     try {
       console.log('[ProductionSSE] Connecting to production updates stream...');
       
-      const eventSource = new EventSource('/api/notifications/stream');
-      // Removed withCredentials to avoid CORS issues with wildcard origin
+      const eventSource = new EventSource('/api/notifications/stream', {
+        withCredentials: true
+      });
       
       eventSource.addEventListener('production_update', handleProductionUpdate);
       
       eventSource.onopen = () => {
         console.log('[ProductionSSE] Connected to production updates stream');
         isConnectedRef.current = true;
+        reconnectAttemptsRef.current = 0; // Reset reconnection attempts on successful connection
+        
         // Clear any reconnection timeout
         if (reconnectTimeoutRef.current) {
           clearTimeout(reconnectTimeoutRef.current);
@@ -83,12 +94,21 @@ export function useProductionSSE() {
           eventSourceRef.current = null;
         }
         
-        // Attempt to reconnect after 5 seconds
-        if (!reconnectTimeoutRef.current) {
+        // Increment reconnection attempts
+        reconnectAttemptsRef.current += 1;
+        
+        // Only attempt to reconnect if we haven't exceeded max attempts
+        if (reconnectAttemptsRef.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
+          // Exponential backoff: 2^(attempts-1) * 1000ms (1s, 2s, 4s, 8s, 16s)
+          const delay = Math.min(Math.pow(2, reconnectAttemptsRef.current - 1) * 1000, 30000);
+          
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('[ProductionSSE] Attempting to reconnect...');
+            console.log(`[ProductionSSE] Attempting to reconnect... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+            reconnectTimeoutRef.current = null;
             connect();
-          }, 5000);
+          }, delay);
+        } else {
+          console.log('[ProductionSSE] Max reconnection attempts reached or timeout already set');
         }
       };
       
@@ -97,6 +117,7 @@ export function useProductionSSE() {
     } catch (error) {
       console.error('[ProductionSSE] Failed to establish connection:', error);
       isConnectedRef.current = false;
+      reconnectAttemptsRef.current += 1;
     }
   }, [handleProductionUpdate]);
 
@@ -113,6 +134,7 @@ export function useProductionSSE() {
     }
     
     isConnectedRef.current = false;
+    reconnectAttemptsRef.current = 0; // Reset reconnection attempts
   }, []);
 
   // Manual refresh function for user-triggered updates
@@ -142,13 +164,6 @@ export function useProductionSSE() {
       disconnect();
     };
   }, [connect, disconnect]);
-
-  // Cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      disconnect();
-    };
-  }, [disconnect]);
 
   return {
     isConnected: isConnectedRef.current,
