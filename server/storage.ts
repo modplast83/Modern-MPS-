@@ -159,25 +159,106 @@ import { calculateProductionQuantities } from "@shared/quantity-utils";
 import { getDataValidator } from "./services/data-validator";
 import QRCode from 'qrcode';
 
-// ذاكرة تخزين مؤقت بسيطة للاستعلامات الثقيلة
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+// Enhanced cache system with memory optimization
+class OptimizedCache {
+  private cache = new Map<string, { data: any; timestamp: number; ttl: number; accessCount: number; lastAccess: number }>();
+  private maxSize = 1000; // Maximum cache entries
+  private cleanupInterval: NodeJS.Timeout;
+
+  constructor() {
+    // Cleanup stale entries every 2 minutes
+    this.cleanupInterval = setInterval(() => this.cleanup(), 2 * 60 * 1000);
+  }
+
+  get(key: string): any | null {
+    const cached = this.cache.get(key);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      cached.accessCount++;
+      cached.lastAccess = Date.now();
+      return cached.data;
+    }
+    this.cache.delete(key);
+    return null;
+  }
+
+  set(key: string, data: any, ttl: number): void {
+    // If cache is full, remove least recently used entries
+    if (this.cache.size >= this.maxSize) {
+      this.evictLRU();
+    }
+
+    this.cache.set(key, {
+      data,
+      timestamp: Date.now(),
+      ttl,
+      accessCount: 1,
+      lastAccess: Date.now()
+    });
+  }
+
+  delete(key: string): void {
+    this.cache.delete(key);
+  }
+
+  private evictLRU(): void {
+    let oldestKey: string | null = null;
+    let oldestAccess = Date.now();
+
+    // Use Array.from to avoid iterator issues
+    Array.from(this.cache.entries()).forEach(([key, value]) => {
+      if (value.lastAccess < oldestAccess) {
+        oldestAccess = value.lastAccess;
+        oldestKey = key;
+      }
+    });
+
+    if (oldestKey) {
+      this.cache.delete(oldestKey);
+    }
+  }
+
+  private cleanup(): void {
+    const now = Date.now();
+    const staleKeys: string[] = [];
+
+    // Use Array.from to avoid iterator issues
+    Array.from(this.cache.entries()).forEach(([key, value]) => {
+      if (now - value.timestamp > value.ttl) {
+        staleKeys.push(key);
+      }
+    });
+
+    staleKeys.forEach(key => this.cache.delete(key));
+    
+    if (staleKeys.length > 0) {
+      console.log(`[Cache] Cleaned up ${staleKeys.length} stale entries. Active: ${this.cache.size}`);
+    }
+  }
+
+  getStats(): { size: number; maxSize: number } {
+    return { size: this.cache.size, maxSize: this.maxSize };
+  }
+
+  shutdown(): void {
+    clearInterval(this.cleanupInterval);
+    this.cache.clear();
+  }
+}
+
+const cache = new OptimizedCache();
 const CACHE_TTL = {
-  REALTIME: 5 * 1000,  // 5 ثواني لقوائم الإنتاج
-  SHORT: 10 * 1000,   // 10 ثواني للبيانات النشطة
-  MEDIUM: 30 * 1000   // 30 ثانية للبيانات الثابتة نسبياً
+  REALTIME: 5 * 1000,  // 5 seconds for production queues
+  SHORT: 30 * 1000,   // 30 seconds for active data  
+  MEDIUM: 5 * 60 * 1000, // 5 minutes for relatively stable data
+  LONG: 15 * 60 * 1000   // 15 minutes for rarely changing data
 };
 
 function getCachedData(key: string): any | null {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < cached.ttl) {
-    return cached.data;
-  }
-  cache.delete(key);
-  return null;
+  return cache.get(key);
 }
 
 function setCachedData(key: string, data: any, ttl: number): void {
-  cache.set(key, { data, timestamp: Date.now(), ttl });
+  cache.set(key, data, ttl);
 }
 
 // Import notification manager to broadcast production updates

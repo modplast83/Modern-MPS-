@@ -1263,7 +1263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Get customer product info for intelligent calculation
+      // Get specific customer product info for intelligent calculation (optimized with cache)
       const customerProducts = await storage.getCustomerProducts();
       const customerProduct = customerProducts.find(cp => cp.id === parseInt(customer_product_id));
       
@@ -1318,7 +1318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         limit = 50 
       } = req.query;
 
-      // Build dynamic query with filters
+      // Build dynamic query with filters (performance optimized)
       const orders = await storage.getOrdersEnhanced({
         search: search as string,
         customer_id: customer_id as string,
