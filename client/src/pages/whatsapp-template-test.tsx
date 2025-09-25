@@ -34,8 +34,10 @@ export default function WhatsAppTemplateTest() {
   // استعلام الإشعارات مع cleanup مناسب
   const { data: notifications, refetch: refetchNotifications } = useQuery({
     queryKey: ['/api/notifications'],
-    refetchInterval: 5000,
-    gcTime: 60 * 1000, // 1 minute garbage collection for fast cleanup
+    refetchInterval: false, // Disabled polling to reduce server load
+    staleTime: 2 * 60 * 1000, // 2 minutes stale time
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   // تنظيف الاستعلامات عند إلغاء تحميل المكون

@@ -69,29 +69,37 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     return stages;
   }, [currentUser, sections]);
 
-  // Fetch production queues - Real-time updates for instant roll transitions
+  // Fetch production queues - Reduced polling for better performance
   const { data: filmQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/film-queue'],
-    refetchInterval: 5000, // Every 5 seconds for real-time updates
-    staleTime: 1000 // Fresh data for instant updates
+    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   const { data: printingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/printing-queue'],
-    refetchInterval: 5000, // Every 5 seconds for real-time updates
-    staleTime: 1000
+    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   const { data: cuttingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/cutting-queue'],
-    refetchInterval: 5000, // Every 5 seconds for real-time updates
-    staleTime: 1000
+    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   const { data: groupedCuttingQueue = [] } = useQuery<any[]>({
     queryKey: ['/api/production/grouped-cutting-queue'],
-    refetchInterval: 5000, // Every 5 seconds for real-time updates
-    staleTime: 1000
+    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
+    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   // Set default active stage based on visible stages
