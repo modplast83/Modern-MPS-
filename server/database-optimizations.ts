@@ -51,10 +51,10 @@ export async function createPerformanceIndexes(): Promise<void> {
       ON customer_products (customer_id);
     `);
 
-    // Index for notifications (user_id and created_at for recent notifications)
+    // Index for notifications (recipient_id and created_at for recent notifications)
     await db.execute(sql`
-      CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_user_created
-      ON notifications (user_id, created_at DESC);
+      CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_notifications_recipient_created
+      ON notifications (recipient_id, created_at DESC);
     `);
 
     // Index for notifications status (unread notifications)
