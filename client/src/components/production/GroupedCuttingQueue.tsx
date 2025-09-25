@@ -135,7 +135,7 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                   <CardTitle className="text-lg">
                     طلب رقم: {order.order_number}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base font-bold text-blue-700">
                     العميل: {order.customer_name_ar || order.customer_name || "غير محدد"}
                   </p>
                 </div>
