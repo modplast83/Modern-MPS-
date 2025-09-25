@@ -189,7 +189,7 @@ export default function GroupedPrintingQueue({ items }: GroupedPrintingQueueProp
                     }
                     <div className="text-right">
                       <CardTitle className="text-lg">
-                        {orderGroup.order_number} - {orderGroup.customer_name_ar}
+                        {orderGroup.order_number} - <span className="font-bold text-blue-700">{orderGroup.customer_name_ar}</span>
                       </CardTitle>
                       <p className="text-sm text-gray-600">
                         {orderGroup.item_name_ar} {orderGroup.size_caption && `- ${orderGroup.size_caption}`}
