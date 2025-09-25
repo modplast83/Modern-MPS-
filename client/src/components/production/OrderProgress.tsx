@@ -55,14 +55,20 @@ export default function OrderProgress() {
   // Fetch all production orders
   const { data: productionOrders = [] } = useQuery<ProductionOrder[]>({
     queryKey: ['/api/production-orders'],
-    refetchInterval: 30000
+    refetchInterval: false, // Disabled polling - use manual refresh
+    staleTime: 5 * 60 * 1000, // 5 minutes stale time
+    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   // Fetch progress for selected production order
   const { data: progress, isLoading: progressLoading } = useQuery<ProgressData>({
     queryKey: ['/api/production/order-progress', selectedProductionOrderId],
     enabled: !!selectedProductionOrderId,
-    refetchInterval: 15000
+    refetchInterval: false, // Disabled polling - use manual refresh
+    staleTime: 3 * 60 * 1000, // 3 minutes stale time
+    gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+    refetchOnWindowFocus: false // Prevent unnecessary refetches
   });
 
   // Fetch available cuts for warehouse receipt
