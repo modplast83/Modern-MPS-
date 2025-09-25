@@ -33,8 +33,23 @@ const DialogContent = React.forwardRef<
     hideCloseButton?: boolean;
   }
 >(({ className, children, hideCloseButton = false, ...props }, ref) => {
-  // Generate a unique ID for aria-describedby if not provided
-  const descriptionId = React.useId();
+  // Recursively check for DialogDescription in children tree
+  const hasDescendantDescription = (element: React.ReactNode): boolean => {
+    if (!React.isValidElement(element)) return false;
+    
+    if (element.type === DialogDescription || element.type === DialogPrimitive.Description) {
+      return true;
+    }
+    
+    if (element.props?.children) {
+      const children = React.Children.toArray(element.props.children);
+      return children.some(hasDescendantDescription);
+    }
+    
+    return false;
+  };
+
+  const hasDescription = React.Children.toArray(children).some(hasDescendantDescription);
   
   return (
     <DialogPortal>
@@ -51,8 +66,6 @@ const DialogContent = React.forwardRef<
           "data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
           className
         )}
-        // Ensure there's always an aria-describedby if not provided
-        aria-describedby={props["aria-describedby"] || descriptionId}
         {...props}
       >
         {children}
@@ -66,11 +79,11 @@ const DialogContent = React.forwardRef<
           </DialogPrimitive.Close>
         )}
         
-        {/* Hidden description for accessibility if no visible description is provided */}
-        {!props["aria-describedby"] && (
-          <span id={descriptionId} className="sr-only">
-            Dialog content
-          </span>
+        {/* Provide fallback DialogDescription only when none exists */}
+        {!hasDescription && (
+          <DialogDescription className="sr-only">
+            نافذة حوار
+          </DialogDescription>
         )}
       </DialogPrimitive.Content>
     </DialogPortal>

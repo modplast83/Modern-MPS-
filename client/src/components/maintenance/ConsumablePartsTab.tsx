@@ -690,6 +690,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>تعديل قطعة الغيار الاستهلاكية</DialogTitle>
+              <DialogDescription>
+                تعديل بيانات وتفاصيل قطعة الغيار الاستهلاكية المحددة
+              </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
               <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
