@@ -58,9 +58,8 @@ export function useProductionSSE() {
     try {
       console.log('[ProductionSSE] Connecting to production updates stream...');
       
-      const eventSource = new EventSource('/api/notifications/stream', {
-        withCredentials: true
-      });
+      const eventSource = new EventSource('/api/notifications/stream');
+      // Removed withCredentials to avoid CORS issues with wildcard origin
       
       eventSource.addEventListener('production_update', handleProductionUpdate);
       

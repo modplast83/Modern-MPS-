@@ -76,6 +76,7 @@ import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import { getNotificationManager, type SystemNotificationData } from "./services/notification-manager";
 import { setNotificationManager } from "./storage";
+import { createPerformanceIndexes, createTextSearchIndexes } from "./database-optimizations";
 import { 
   createAlertsRouter,
   createSystemHealthRouter,
@@ -522,6 +523,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notificationManager = getNotificationManager(storage);
         // Set notification manager in storage for production updates
         setNotificationManager(notificationManager);
+        
+        // Apply database optimizations on first initialization
+        console.log('[System] Applying database optimizations...');
+        createPerformanceIndexes().catch(err => 
+          console.error('[System] Database optimization failed:', err)
+        );
+        createTextSearchIndexes().catch(err => 
+          console.error('[System] Text search optimization failed:', err)
+        );
       }
 
       const userId = req.session?.userId;
@@ -568,6 +578,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notificationManager = getNotificationManager(storage);
         // Set notification manager in storage for production updates
         setNotificationManager(notificationManager);
+        
+        // Apply database optimizations on first initialization
+        console.log('[System] Applying database optimizations...');
+        createPerformanceIndexes().catch(err => 
+          console.error('[System] Database optimization failed:', err)
+        );
+        createTextSearchIndexes().catch(err => 
+          console.error('[System] Text search optimization failed:', err)
+        );
       }
 
       const notificationData: SystemNotificationData = req.body;
