@@ -180,10 +180,21 @@ function setCachedData(key: string, data: any, ttl: number): void {
   cache.set(key, { data, timestamp: Date.now(), ttl });
 }
 
+// Import notification manager to broadcast production updates
+let notificationManager: any = null;
+function setNotificationManager(nm: any): void {
+  notificationManager = nm;
+}
+
 // إزالة cache للمفاتيح المتعلقة بالإنتاج عند التحديث
-function invalidateProductionCache(): void {
+function invalidateProductionCache(updateType: 'film' | 'printing' | 'cutting' | 'all' = 'all'): void {
   const productionKeys = ['printing_queue', 'cutting_queue', 'hierarchical_orders', 'grouped_cutting_queue'];
   productionKeys.forEach(key => cache.delete(key));
+  
+  // Broadcast production update via SSE if notification manager is available
+  if (notificationManager) {
+    notificationManager.broadcastProductionUpdate(updateType);
+  }
 }
 
 // Database error handling utilities
@@ -1708,8 +1719,8 @@ export class DatabaseStorage implements IStorage {
           machineStatus: machine.status
         });
         
-        // إزالة cache بعد إنشاء رول جديد
-        invalidateProductionCache();
+        // إزالة cache بعد إنشاء رول جديد وإرسال تحديث SSE
+        invalidateProductionCache('all');
         
         return roll;
       });
@@ -6617,3 +6628,6 @@ export class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+
+// Export function to set notification manager from external modules
+export { setNotificationManager };

@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useProductionSSE } from "../../hooks/use-production-sse";
 import { useAuth } from "../../hooks/use-auth";
 import type { Section } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Play, Package, Scissors } from "lucide-react";
+import { Play, Package, Scissors, RefreshCw } from "lucide-react";
 import ProductionOrdersTable from "./ProductionOrdersTable";
 import RollsTable from "./RollsTable";
 import ProductionQueue from "./ProductionQueue";
@@ -29,6 +30,9 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
 
   // Get current user information from auth context
   const { user: currentUser } = useAuth();
+
+  // Use SSE for real-time production updates instead of polling
+  const { refreshProductionData } = useProductionSSE();
 
   // Get sections to map section IDs to names
   const { data: sections = [] } = useQuery<Section[]>({
@@ -114,6 +118,19 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     <Card className="mb-6">
       <Tabs value={activeStage} onValueChange={setActiveStage}>
         <div className="border-b border-gray-200">
+          <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-800">طوابير الإنتاج</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refreshProductionData}
+              className="flex items-center gap-2"
+              data-testid="button-refresh-production"
+            >
+              <RefreshCw className="h-4 w-4" />
+              تحديث
+            </Button>
+          </div>
           <TabsList className={`grid w-full ${
             visibleStages.length === 1 ? 'grid-cols-1' :
             visibleStages.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
