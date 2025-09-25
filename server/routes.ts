@@ -75,6 +75,7 @@ import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
 import { NotificationService } from "./services/notification-service";
 import { getNotificationManager, type SystemNotificationData } from "./services/notification-manager";
+import { setNotificationManager } from "./storage";
 import { 
   createAlertsRouter,
   createSystemHealthRouter,
@@ -519,6 +520,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize notification manager if not already done
       if (!notificationManager) {
         notificationManager = getNotificationManager(storage);
+        // Set notification manager in storage for production updates
+        setNotificationManager(notificationManager);
       }
 
       const userId = req.session?.userId;
@@ -563,6 +566,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize notification manager if not already done
       if (!notificationManager) {
         notificationManager = getNotificationManager(storage);
+        // Set notification manager in storage for production updates
+        setNotificationManager(notificationManager);
       }
 
       const notificationData: SystemNotificationData = req.body;

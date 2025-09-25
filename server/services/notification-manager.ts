@@ -39,6 +39,7 @@ export class NotificationManager extends EventEmitter {
   private storage: IStorage;
   private heartbeatInterval: NodeJS.Timeout | null = null;
   private cleanupInterval: NodeJS.Timeout | null = null;
+  private productionUpdateDebounce: NodeJS.Timeout | null = null;
 
   constructor(storage: IStorage) {
     super();
@@ -293,7 +294,75 @@ export class NotificationManager extends EventEmitter {
   shutdown(): void {
     if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
     if (this.cleanupInterval) clearInterval(this.cleanupInterval);
+    if (this.productionUpdateDebounce) clearTimeout(this.productionUpdateDebounce);
     this.connections.forEach((_, id) => this.removeConnection(id));
+  }
+
+  /**
+   * Send production queue update to all connected users (debounced)
+   */
+  broadcastProductionUpdate(updateType: 'film' | 'printing' | 'cutting' | 'all' = 'all'): void {
+    // Debounce to prevent spam - only send one update per 2 seconds
+    if (this.productionUpdateDebounce) {
+      clearTimeout(this.productionUpdateDebounce);
+    }
+    
+    this.productionUpdateDebounce = setTimeout(() => {
+      if (this.connections.size === 0) return;
+      
+      console.log(`[NotificationManager] Broadcasting production update: ${updateType}`);
+      
+      const updateMessage: SSEMessage = {
+        event: 'production_update',
+        data: {
+          type: updateType,
+          timestamp: new Date().toISOString(),
+          queues: updateType === 'all' ? ['film', 'printing', 'cutting'] : [updateType]
+        }
+      };
+      
+      // Send to all connected production users
+      this.connections.forEach(conn => {
+        this.sendToConnection(conn.id, conn.response, updateMessage);
+      });
+    }, 2000); // 2 second debounce
+  }
+
+  /**
+   * Send production queue update to specific users based on their roles/sections
+   */
+  async broadcastProductionUpdateToRoles(updateType: 'film' | 'printing' | 'cutting' | 'all' = 'all'): Promise<void> {
+    try {
+      // Get users who should receive production updates (production roles)
+      const productionRoles = [1, 2]; // Manager, Production Manager
+      
+      for (const roleId of productionRoles) {
+        const users = await this.storage.getSafeUsersByRole(roleId);
+        const activeUsers = users.filter(user => user.status === 'active');
+        
+        activeUsers.forEach(user => {
+          const userConnections = Array.from(this.connections.values())
+            .filter(conn => conn.userId === user.id);
+          
+          if (userConnections.length > 0) {
+            const updateMessage: SSEMessage = {
+              event: 'production_update',
+              data: {
+                type: updateType,
+                timestamp: new Date().toISOString(),
+                queues: updateType === 'all' ? ['film', 'printing', 'cutting'] : [updateType]
+              }
+            };
+            
+            userConnections.forEach(conn => {
+              this.sendToConnection(conn.id, conn.response, updateMessage);
+            });
+          }
+        });
+      }
+    } catch (error) {
+      console.error('[NotificationManager] Error broadcasting production update to roles:', error);
+    }
   }
 }
 
