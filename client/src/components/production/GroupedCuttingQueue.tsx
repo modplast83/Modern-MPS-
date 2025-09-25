@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Input } from "../ui/input";
 import { QrCode, Scissors, ChevronDown, ChevronUp, Clock, Package } from "lucide-react";
+import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -110,6 +111,34 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
     return rollWeight - cutWeight;
   };
 
+  // Helper function to calculate completion percentage for cutting stage
+  const calculateOrderProgress = (order: any) => {
+    if (!order.production_orders || order.production_orders.length === 0) return 0;
+    
+    let totalRolls = 0;
+    let cutRolls = 0;
+    
+    order.production_orders.forEach((po: any) => {
+      if (po.rolls && po.rolls.length > 0) {
+        totalRolls += po.rolls.length;
+        // In cutting queue, all rolls are ready for cutting but not yet cut
+        // cutRolls += po.rolls.filter((roll: any) => roll.cut_weight_total_kg > 0).length;
+      }
+    });
+    
+    return totalRolls > 0 ? Math.round((cutRolls / totalRolls) * 100) : 0;
+  };
+
+  const calculateProductionOrderProgress = (productionOrder: any) => {
+    if (!productionOrder.rolls || productionOrder.rolls.length === 0) return 0;
+    
+    const totalRolls = productionOrder.rolls.length;
+    // const cutRolls = productionOrder.rolls.filter((roll: any) => roll.cut_weight_total_kg > 0).length;
+    const cutRolls = 0; // All rolls in cutting queue are pending cutting
+    
+    return Math.round((cutRolls / totalRolls) * 100);
+  };
+
   if (items.length === 0) {
     return (
       <Card>
@@ -140,7 +169,13 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <div className="text-sm text-muted-foreground">
+                  <div className="w-20">
+                    <Progress value={calculateOrderProgress(order)} className="h-2" />
+                    <span className="text-xs">{calculateOrderProgress(order)}%</span>
+                  </div>
+                </div>
                 <Badge variant="outline">
                   {order.production_orders?.reduce((total: number, po: any) => 
                     total + (po.rolls?.length || 0), 0) || 0} رول
@@ -197,7 +232,13 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="text-sm text-muted-foreground">
+                              <div className="w-16">
+                                <Progress value={calculateProductionOrderProgress(productionOrder)} className="h-2" />
+                                <span className="text-xs">{calculateProductionOrderProgress(productionOrder)}%</span>
+                              </div>
+                            </div>
                             <Badge variant="secondary">
                               {productionOrder.rolls?.length || 0} رول
                             </Badge>
