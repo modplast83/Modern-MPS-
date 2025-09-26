@@ -252,7 +252,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
           </div>
           
           <div class="footer">
-            تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} | نظام إدارة الإنتاج
+            تاريخ الطباعة: ${new Date().toLocaleDateString('ar')} | نظام إدارة الإنتاج
           </div>
         </body>
         </html>

@@ -3751,7 +3751,7 @@ export class DatabaseStorage implements IStorage {
         tableCount: tableCount.rows[0]?.count || 0,
         totalRecords,
         databaseSize: dbSize.rows[0]?.size || '0 MB',
-        lastBackup: new Date().toLocaleDateString('ar-SA')
+        lastBackup: new Date().toLocaleDateString('ar')
       };
     } catch (error) {
       console.error('Error getting database stats:', error);
@@ -5249,7 +5249,7 @@ export class DatabaseStorage implements IStorage {
         customer_name: rollData.customer_name || 'غير محدد',
         weight_kg: `${rollData.weight_kg} كغ`,
         stage: this.getStageArabicName(rollData.stage || ''),
-        created_at: rollData.created_at ? new Date(rollData.created_at).toLocaleDateString('ar-SA') : '',
+        created_at: rollData.created_at ? new Date(rollData.created_at).toLocaleDateString('ar') : '',
         machine_name: rollData.machine_name_ar || rollData.machine_name || 'غير محدد',
         qr_png_base64: rollData.qr_png_base64 || '',
         label_dimensions: {

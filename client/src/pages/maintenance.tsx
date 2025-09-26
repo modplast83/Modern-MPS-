@@ -618,13 +618,13 @@ export default function Maintenance() {
                   <div>
                     <label className="text-sm font-medium text-gray-700">تاريخ التنفيذ</label>
                     <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.performed_at ? new Date(selectedAction.performed_at).toLocaleDateString('ar-SA') : 'غير محدد'}
+                      {selectedAction.performed_at ? new Date(selectedAction.performed_at).toLocaleDateString('ar') : 'غير محدد'}
                     </p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
                     <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.created_at ? new Date(selectedAction.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}
+                      {selectedAction.created_at ? new Date(selectedAction.created_at).toLocaleDateString('ar') : 'غير محدد'}
                     </p>
                   </div>
                 </div>
@@ -997,8 +997,8 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                           <p><strong>تقرير إهمال المشغل:</strong> ${action.operator_negligence_report || '-'}</p>
                           <p><strong>تقرير نصي:</strong> ${action.text_report || '-'}</p>
                           <p><strong>موافقة إدارية مطلوبة:</strong> ${action.requires_management_action ? 'نعم' : 'لا'}</p>
-                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString('ar-SA')}</p>
-                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString('ar-SA')}</p>
+                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString('ar')}</p>
+                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString('ar')}</p>
                         </div>
                       </div>
                     `;
@@ -1581,7 +1581,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                   </div>
                   <div>
                     <span className="font-medium">تاريخ الحادث: </span>
-                    {new Date(report.incident_date).toLocaleDateString('ar-SA')}
+                    {new Date(report.incident_date).toLocaleDateString('ar')}
                   </div>
                 </div>
               </div>

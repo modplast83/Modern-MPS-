@@ -150,7 +150,7 @@ export default function RecentRolls() {
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>
-                              {new Date(roll.created_at).toLocaleDateString('ar-SA', {
+                              {new Date(roll.created_at).toLocaleDateString('ar', {
                                 day: 'numeric',
                                 month: 'short',
                                 hour: '2-digit',
