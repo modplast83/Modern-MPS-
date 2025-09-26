@@ -473,7 +473,7 @@ export class NotificationService {
 
 مرحباً! هذه رسالة اختبار للتأكد من عمل خدمة الواتس اب بشكل صحيح.
 
-⏰ التوقيت: ${new Date().toLocaleString('ar-SA')}
+⏰ التوقيت: ${new Date().toLocaleString('ar')}
 ✅ الخدمة تعمل بنجاح
 
 شكراً لاستخدام نظامنا! 

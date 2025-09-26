@@ -437,7 +437,7 @@ const masterBatchColors = [
       </div>
 
       <div class="print-date">
-        تم الطباعة بتاريخ: ${new Date().toLocaleDateString('ar-SA')} - ${new Date().toLocaleTimeString('ar-SA')}
+        تم الطباعة بتاريخ: ${new Date().toLocaleDateString('ar')} - ${new Date().toLocaleTimeString('ar')}
       </div>
       
       <script>

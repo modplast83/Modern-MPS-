@@ -175,7 +175,7 @@ export default function Quality() {
                             {check.inspector_name}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(check.checked_at).toLocaleDateString('ar-SA')}
+                            {new Date(check.checked_at).toLocaleDateString('ar')}
                           </td>
                         </tr>
                       )) : (

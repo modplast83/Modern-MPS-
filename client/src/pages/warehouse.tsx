@@ -1574,7 +1574,7 @@ function ReceivedQuantitiesContent() {
                           <div key={receipt.receipt_id} className="text-xs bg-gray-50 p-2 rounded">
                             <div className="font-medium">إيصال #{receipt.receipt_id}</div>
                             <div className="text-gray-600">
-                              التاريخ: {new Date(receipt.receipt_date).toLocaleDateString('ar-SA')}
+                              التاريخ: {new Date(receipt.receipt_date).toLocaleDateString('ar')}
                             </div>
                             <div className="text-gray-600">
                               الكمية: {Number(receipt.received_weight_kg).toFixed(2)} كيلو
