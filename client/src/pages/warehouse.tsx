@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
@@ -8,7 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2, Truck, Factory, CheckCircle } from "lucide-react";
+import { Package, Plus, Search, AlertTriangle, TrendingUp, TrendingDown, Edit, Trash2, Truck, Factory, CheckCircle, ChevronDown, ChevronUp, Hash, ShoppingCart, Scale, FileText, User } from "lucide-react";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import { useForm } from "react-hook-form";
@@ -1480,7 +1480,10 @@ function ProductionHallContent() {
 // Received Quantities Component
 function ReceivedQuantitiesContent() {
   const { toast } = useToast();
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [sortBy, setSortBy] = useState<"date" | "weight" | "customer">("date");
+  
   // Fetch received quantities with detailed information
   const { data: receivedQuantities = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/warehouse/receipts-detailed'],
@@ -1488,14 +1491,57 @@ function ReceivedQuantitiesContent() {
     staleTime: 240000 // Cache for 4 minutes
   });
 
+  // Filter and sort data
+  const filteredData = useMemo(() => {
+    let filtered = receivedQuantities.filter(order => 
+      (order.order_number || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.customer_name_ar || order.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (order.item_name_ar || order.item_name || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "weight":
+          return Number(b.total_received_weight) - Number(a.total_received_weight);
+        case "customer":
+          return (a.customer_name_ar || a.customer_name || '').localeCompare(b.customer_name_ar || b.customer_name || '');
+        case "date":
+        default:
+          const aLatestDate = Math.max(...(a.receipts?.map((r: any) => new Date(r.receipt_date).getTime()) || [0]));
+          const bLatestDate = Math.max(...(b.receipts?.map((r: any) => new Date(r.receipt_date).getTime()) || [0]));
+          return bLatestDate - aLatestDate;
+      }
+    });
+  }, [receivedQuantities, searchTerm, sortBy]);
+
+  const toggleOrderExpansion = (orderNumber: string) => {
+    const newExpanded = new Set(expandedOrders);
+    if (newExpanded.has(orderNumber)) {
+      newExpanded.delete(orderNumber);
+    } else {
+      newExpanded.add(orderNumber);
+    }
+    setExpandedOrders(newExpanded);
+  };
+
+  const getTotalStats = () => {
+    const totalWeight = filteredData.reduce((sum, order) => sum + Number(order.total_received_weight || 0), 0);
+    const totalReceipts = filteredData.reduce((sum, order) => sum + (order.receipts?.length || 0), 0);
+    return { totalWeight, totalReceipts, totalOrders: filteredData.length };
+  };
+
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>الكميات المستلمة - مجمعة بحسب رقم الطلب</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5" />
+            الكميات المستلمة
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8" data-testid="loading-received-quantities">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
             جاري التحميل...
           </div>
         </CardContent>
@@ -1503,101 +1549,261 @@ function ReceivedQuantitiesContent() {
     );
   }
 
+  const stats = getTotalStats();
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>الكميات المستلمة - مجمعة بحسب رقم الطلب</CardTitle>
-        <CardDescription>
-          عرض جميع الكميات المستلمة من صالة الإنتاج مع تفاصيل العميل والمنتج
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {receivedQuantities.length === 0 ? (
-          <div className="text-center py-8 text-gray-500" data-testid="no-received-quantities">
-            لا توجد كميات مستلمة حتى الآن
+    <div className="space-y-6">
+      {/* Header with Statistics */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                الكميات المستلمة
+              </CardTitle>
+              <CardDescription>
+                عرض جميع الكميات المستلمة من صالة الإنتاج مجمعة بحسب رقم الطلب
+              </CardDescription>
+            </div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">رقم الطلب</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">اسم العميل</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">اسم المنتج</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">المقاس</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">إجمالي الكمية المستلمة</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">عدد الإيصالات</th>
-                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">التفاصيل</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {receivedQuantities.map((order: any) => (
-                  <tr key={order.order_number} className="hover:bg-gray-50">
-                    <td className="py-3 px-4" data-testid={`order-number-${order.order_number}`}>
-                      <div className="font-medium text-blue-600">{order.order_number}</div>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`customer-name-${order.order_number}`}>
-                      <div className="font-medium">{order.customer_name_ar || order.customer_name}</div>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`item-name-${order.order_number}`}>
-                      <div>{order.item_name_ar || order.item_name}</div>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`size-${order.order_number}`}>
-                      <div className="text-sm">
-                        {order.size_caption && (
-                          <div>{order.size_caption}</div>
-                        )}
-                        {order.width && (
-                          <div className="text-gray-500">العرض: {order.width}م</div>
-                        )}
-                        {order.thickness && (
-                          <div className="text-gray-500">السماكة: {order.thickness}مم</div>
-                        )}
-                        {order.raw_material && (
-                          <div className="text-gray-500">المادة: {order.raw_material}</div>
-                        )}
+        </CardHeader>
+        <CardContent>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-600">إجمالي الطلبات</span>
+              </div>
+              <div className="text-2xl font-bold text-blue-700">{stats.totalOrders}</div>
+            </div>
+            <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Scale className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium text-green-600">إجمالي الوزن</span>
+              </div>
+              <div className="text-2xl font-bold text-green-700">{stats.totalWeight.toFixed(2)} كيلو</div>
+            </div>
+            <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-orange-600" />
+                <span className="text-sm font-medium text-orange-600">إجمالي الإيصالات</span>
+              </div>
+              <div className="text-2xl font-bold text-orange-700">{stats.totalReceipts}</div>
+            </div>
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-purple-600" />
+                <span className="text-sm font-medium text-purple-600">متوسط الوزن/طلب</span>
+              </div>
+              <div className="text-2xl font-bold text-purple-700">
+                {stats.totalOrders > 0 ? (stats.totalWeight / stats.totalOrders).toFixed(2) : '0'} كيلو
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Filter Controls */}
+          <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="البحث بالطلب أو العميل أو المنتج..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-10"
+                data-testid="search-received-quantities"
+              />
+            </div>
+            <Select value={sortBy} onValueChange={(value: "date" | "weight" | "customer") => setSortBy(value)}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="ترتيب حسب" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">التاريخ (الأحدث أولاً)</SelectItem>
+                <SelectItem value="weight">الوزن (الأعلى أولاً)</SelectItem>
+                <SelectItem value="customer">اسم العميل (أ-ي)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Orders List */}
+      {filteredData.length === 0 ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="text-center text-gray-500" data-testid="no-received-quantities">
+              <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p className="text-lg font-medium mb-2">لا توجد كميات مستلمة</p>
+              <p className="text-sm">
+                {searchTerm ? "لا توجد نتائج مطابقة لبحثك" : "لا توجد كميات مستلمة حتى الآن"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {filteredData.map((order: any) => {
+            const isExpanded = expandedOrders.has(order.order_number);
+            const latestReceipt = order.receipts?.reduce((latest: any, current: any) => 
+              new Date(current.receipt_date) > new Date(latest.receipt_date) ? current : latest
+            ) || null;
+
+            return (
+              <Card key={order.order_number} className="overflow-hidden hover:shadow-md transition-shadow">
+                <div className="p-6">
+                  {/* Order Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+                          <Hash className="h-3 w-3 mr-1" />
+                          {order.order_number}
+                        </Badge>
+                        <Badge variant="secondary" className="bg-green-100 text-green-700">
+                          {order.receipts?.length || 0} إيصال
+                        </Badge>
                       </div>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`total-weight-${order.order_number}`}>
-                      <div className="font-semibold text-green-600">
-                        {Number(order.total_received_weight).toFixed(2)} كيلو
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">العميل</p>
+                          <p className="font-medium" data-testid={`customer-name-${order.order_number}`}>
+                            {order.customer_name_ar || order.customer_name}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">المنتج</p>
+                          <p className="font-medium" data-testid={`item-name-${order.order_number}`}>
+                            {order.item_name_ar || order.item_name}
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">إجمالي الوزن</p>
+                          <p className="font-bold text-green-600 text-lg" data-testid={`total-weight-${order.order_number}`}>
+                            {Number(order.total_received_weight).toFixed(2)} كيلو
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1">آخر استلام</p>
+                          <p className="text-sm">
+                            {latestReceipt ? new Date(latestReceipt.receipt_date).toLocaleDateString('ar') : '-'}
+                          </p>
+                        </div>
                       </div>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`receipt-count-${order.order_number}`}>
-                      <Badge variant="outline" className="text-blue-600 border-blue-600">
-                        {order.receipts?.length || 0} إيصال
-                      </Badge>
-                    </td>
-                    <td className="py-3 px-4" data-testid={`receipts-detail-${order.order_number}`}>
-                      <div className="space-y-1">
-                        {order.receipts?.map((receipt: any, index: number) => (
-                          <div key={receipt.receipt_id} className="text-xs bg-gray-50 p-2 rounded">
-                            <div className="font-medium">إيصال #{receipt.receipt_id}</div>
-                            <div className="text-gray-600">
-                              التاريخ: {new Date(receipt.receipt_date).toLocaleDateString('ar')}
-                            </div>
-                            <div className="text-gray-600">
-                              الكمية: {Number(receipt.received_weight_kg).toFixed(2)} كيلو
-                            </div>
-                            <div className="text-gray-600">
-                              المستلم: {receipt.received_by_name}
-                            </div>
-                            {receipt.production_order_number && (
-                              <div className="text-gray-600">
-                                أمر الإنتاج: {receipt.production_order_number}
+
+                      {/* Product Specifications */}
+                      {(order.size_caption || order.width || order.thickness || order.raw_material) && (
+                        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg" data-testid={`size-${order.order_number}`}>
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">مواصفات المنتج:</p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            {order.size_caption && (
+                              <div>
+                                <span className="text-gray-500">المقاس:</span>
+                                <span className="mr-1 font-medium">{order.size_caption}</span>
+                              </div>
+                            )}
+                            {order.width && (
+                              <div>
+                                <span className="text-gray-500">العرض:</span>
+                                <span className="mr-1 font-medium">{order.width}م</span>
+                              </div>
+                            )}
+                            {order.thickness && (
+                              <div>
+                                <span className="text-gray-500">السماكة:</span>
+                                <span className="mr-1 font-medium">{order.thickness}مم</span>
+                              </div>
+                            )}
+                            {order.raw_material && (
+                              <div>
+                                <span className="text-gray-500">المادة:</span>
+                                <span className="mr-1 font-medium">{order.raw_material}</span>
                               </div>
                             )}
                           </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleOrderExpansion(order.order_number)}
+                      className="ml-4"
+                      data-testid={`expand-order-${order.order_number}`}
+                    >
+                      {isExpanded ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-1" />
+                          إخفاء التفاصيل
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4 mr-1" />
+                          عرض التفاصيل
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Expanded Receipts Details */}
+                  {isExpanded && order.receipts && (
+                    <div className="border-t pt-4" data-testid={`receipts-detail-${order.order_number}`}>
+                      <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        تفاصيل الإيصالات ({order.receipts.length})
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {order.receipts.map((receipt: any) => (
+                          <div key={receipt.receipt_id} className="border rounded-lg p-4 bg-white dark:bg-gray-800 shadow-sm">
+                            <div className="flex items-center justify-between mb-3">
+                              <Badge variant="outline" className="text-xs">
+                                إيصال #{receipt.receipt_id}
+                              </Badge>
+                              <span className="text-xs text-gray-500">
+                                {new Date(receipt.receipt_date).toLocaleDateString('ar')}
+                              </span>
+                            </div>
+                            
+                            <div className="space-y-2 text-sm">
+                              <div className="flex items-center gap-2">
+                                <Scale className="h-3 w-3 text-green-600" />
+                                <span className="text-gray-600">الكمية:</span>
+                                <span className="font-semibold text-green-600">
+                                  {Number(receipt.received_weight_kg).toFixed(2)} كيلو
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                <User className="h-3 w-3 text-blue-600" />
+                                <span className="text-gray-600">المستلم:</span>
+                                <span className="font-medium">{receipt.received_by_name}</span>
+                              </div>
+                              
+                              {receipt.production_order_number && (
+                                <div className="flex items-center gap-2">
+                                  <Factory className="h-3 w-3 text-purple-600" />
+                                  <span className="text-gray-600">أمر الإنتاج:</span>
+                                  <span className="font-medium">{receipt.production_order_number}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
