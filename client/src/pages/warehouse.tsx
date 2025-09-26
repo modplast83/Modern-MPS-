@@ -490,17 +490,17 @@ export default function Warehouse() {
           </div>
 
           <Tabs defaultValue={activeLocationTab || "production-hall"} className="space-y-4">
-            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 5, 8)}`}>
-              <TabsTrigger value="production-hall">صالة الإنتاج</TabsTrigger>
-              <TabsTrigger value="received-quantities">الكميات المستلمة</TabsTrigger>
+            <TabsList className="flex flex-wrap w-full justify-start">
+              <TabsTrigger value="production-hall" className="shrink-0">صالة الإنتاج</TabsTrigger>
+              <TabsTrigger value="received-quantities" className="shrink-0">الكميات المستلمة</TabsTrigger>
               {locations.map((location: any) => (
-                <TabsTrigger key={location.id} value={location.id.toString()}>
+                <TabsTrigger key={location.id} value={location.id.toString()} className="shrink-0">
                   {location.name_ar || location.name}
                 </TabsTrigger>
               ))}
-              <TabsTrigger value="movements">حركات المخزون</TabsTrigger>
-              <TabsTrigger value="locations">إدارة المواقع</TabsTrigger>
-              <TabsTrigger value="reports">التقارير</TabsTrigger>
+              <TabsTrigger value="movements" className="shrink-0">حركات المخزون</TabsTrigger>
+              <TabsTrigger value="locations" className="shrink-0">إدارة المواقع</TabsTrigger>
+              <TabsTrigger value="reports" className="shrink-0">التقارير</TabsTrigger>
             </TabsList>
 
             {/* Production Hall Tab */}
