@@ -615,6 +615,7 @@ export interface IStorage {
   markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(receiptData: InsertWarehouseReceipt): Promise<WarehouseReceipt>;
+  getWarehouseReceiptsDetailed(): Promise<any[]>;
   getFilmQueue(): Promise<ProductionOrder[]>;
   getPrintingQueue(): Promise<Roll[]>;
   getCuttingQueue(): Promise<Roll[]>;
@@ -4667,6 +4668,92 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error creating warehouse receipt:', error);
       throw new Error('فشل في إنشاء إيصال المستودع');
+    }
+  }
+
+  // Get warehouse receipts with detailed information grouped by order number
+  async getWarehouseReceiptsDetailed(): Promise<any[]> {
+    try {
+      const receipts = await db
+        .select({
+          // Receipt information
+          receipt_id: warehouse_receipts.id,
+          receipt_date: warehouse_receipts.created_at,
+          received_weight_kg: warehouse_receipts.received_weight_kg,
+          received_by_id: warehouse_receipts.received_by,
+          
+          // Order information
+          order_id: orders.id,
+          order_number: orders.order_number,
+          
+          // Customer information
+          customer_id: customers.id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          
+          // Product information
+          item_name: items.name,
+          item_name_ar: items.name_ar,
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          
+          // Production order information
+          production_order_id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          
+          // Received by user information
+          received_by_name: users.username
+        })
+        .from(warehouse_receipts)
+        .leftJoin(production_orders, eq(warehouse_receipts.production_order_id, production_orders.id))
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(items, eq(customer_products.item_id, items.id))
+        .leftJoin(users, eq(warehouse_receipts.received_by, users.id))
+        .orderBy(desc(warehouse_receipts.created_at));
+
+      // Group receipts by order number
+      const groupedReceipts: { [key: string]: any } = {};
+      
+      receipts.forEach((receipt: any) => {
+        const orderNumber = receipt.order_number;
+        
+        if (!groupedReceipts[orderNumber]) {
+          groupedReceipts[orderNumber] = {
+            order_number: orderNumber,
+            customer_name: receipt.customer_name,
+            customer_name_ar: receipt.customer_name_ar,
+            item_name: receipt.item_name,
+            item_name_ar: receipt.item_name_ar,
+            size_caption: receipt.size_caption,
+            width: receipt.width,
+            thickness: receipt.thickness,
+            raw_material: receipt.raw_material,
+            receipts: [],
+            total_received_weight: 0
+          };
+        }
+        
+        // Add receipt to the group
+        groupedReceipts[orderNumber].receipts.push({
+          receipt_id: receipt.receipt_id,
+          receipt_date: receipt.receipt_date,
+          received_weight_kg: receipt.received_weight_kg,
+          received_by_name: receipt.received_by_name,
+          production_order_number: receipt.production_order_number
+        });
+        
+        // Add to total received weight
+        groupedReceipts[orderNumber].total_received_weight += parseFloat(receipt.received_weight_kg || 0);
+      });
+
+      return Object.values(groupedReceipts);
+    } catch (error) {
+      console.error('Error fetching detailed warehouse receipts:', error);
+      throw new Error('فشل في جلب تفاصيل إيصالات المستودع');
     }
   }
 

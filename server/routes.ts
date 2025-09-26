@@ -4927,6 +4927,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get warehouse receipts with detailed information grouped by order number
+  app.get("/api/warehouse/receipts-detailed", async (req, res) => {
+    try {
+      const receipts = await storage.getWarehouseReceiptsDetailed();
+      res.json(receipts);
+    } catch (error) {
+      console.error('Error fetching detailed warehouse receipts:', error);
+      res.status(500).json({ message: "خطأ في جلب تفاصيل إيصالات المستودع" });
+    }
+  });
+
   // Production Queues
   app.get("/api/production/film-queue", async (req, res) => {
     try {
