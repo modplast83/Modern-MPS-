@@ -300,7 +300,7 @@ export default function WhatsAppTroubleshoot() {
                       <p className="text-xs text-red-600">خطأ: {message.error_message}</p>
                     )}
                     <p className="text-xs text-gray-500">
-                      {new Date(message.created_at).toLocaleString('ar-SA')}
+                      {new Date(message.created_at).toLocaleString('ar')}
                     </p>
                   </div>
                 ))}

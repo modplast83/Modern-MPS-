@@ -4550,19 +4550,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           switch (req.body.status) {
             case 'حاضر':
-              messageTemplate = `مرحباً ${user.display_name_ar || user.username}، تم تسجيل حضورك اليوم بنجاح في ${new Date().toLocaleTimeString('ar-SA')}. نتمنى لك يوم عمل مثمر!`;
+              messageTemplate = `مرحباً ${user.display_name_ar || user.username}، تم تسجيل حضورك اليوم بنجاح في ${new Date().toLocaleTimeString('ar')}. نتمنى لك يوم عمل مثمر!`;
               priority = 'normal';
               break;
             case 'في الاستراحة':
-              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل بدء استراحة الغداء في ${new Date().toLocaleTimeString('ar-SA')}. استمتع بوقت راحتك!`;
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل بدء استراحة الغداء في ${new Date().toLocaleTimeString('ar')}. استمتع بوقت راحتك!`;
               priority = 'low';
               break;
             case 'يعمل':
-              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انتهاء استراحة الغداء في ${new Date().toLocaleTimeString('ar-SA')}. مرحباً بعودتك للعمل!`;
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انتهاء استراحة الغداء في ${new Date().toLocaleTimeString('ar')}. مرحباً بعودتك للعمل!`;
               priority = 'normal';
               break;
             case 'مغادر':
-              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انصرافك في ${new Date().toLocaleTimeString('ar-SA')}. شكراً لجهودك اليوم، نراك غداً!`;
+              messageTemplate = `${user.display_name_ar || user.username}، تم تسجيل انصرافك في ${new Date().toLocaleTimeString('ar')}. شكراً لجهودك اليوم، نراك غداً!`;
               priority = 'normal';
               break;
           }

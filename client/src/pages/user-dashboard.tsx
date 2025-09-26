@@ -908,7 +908,7 @@ export default function UserDashboard() {
                             <strong>الجزاء:</strong> {violation.penalty}
                           </p>
                           <p className="text-xs text-gray-500">
-                            التاريخ: {new Date(violation.date).toLocaleDateString('ar-SA')}
+                            التاريخ: {new Date(violation.date).toLocaleDateString('ar')}
                           </p>
                         </div>
                       ))}
@@ -1010,7 +1010,7 @@ export default function UserDashboard() {
                               </p>
                             )}
                             <p className="text-xs text-gray-500">
-                              التاريخ: {new Date(request.date).toLocaleDateString('ar-SA')}
+                              التاريخ: {new Date(request.date).toLocaleDateString('ar')}
                             </p>
                           </div>
                         ))}

@@ -230,7 +230,7 @@ export default function TrainingPrograms() {
 
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <Calendar className="w-3 h-3" />
-                <span>تم الإنشاء: {new Date(program.created_at).toLocaleDateString('ar-SA')}</span>
+                <span>تم الإنشاء: {new Date(program.created_at).toLocaleDateString('ar')}</span>
               </div>
 
               <div className="flex gap-2 pt-2">

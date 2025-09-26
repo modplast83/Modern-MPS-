@@ -273,8 +273,8 @@ export default function PerformanceReviews() {
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">فترة التقييم</p>
                   <p className="font-medium">
-                    {new Date(review.review_period_start).toLocaleDateString('ar-SA')} - 
-                    {new Date(review.review_period_end).toLocaleDateString('ar-SA')}
+                    {new Date(review.review_period_start).toLocaleDateString('ar')} - 
+                    {new Date(review.review_period_end).toLocaleDateString('ar')}
                   </p>
                 </div>
                 <div>
@@ -306,7 +306,7 @@ export default function PerformanceReviews() {
 
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <Calendar className="w-3 h-3" />
-                <span>تم الإنشاء: {new Date(review.created_at).toLocaleDateString('ar-SA')}</span>
+                <span>تم الإنشاء: {new Date(review.created_at).toLocaleDateString('ar')}</span>
               </div>
 
               <div className="flex gap-2 pt-2">
