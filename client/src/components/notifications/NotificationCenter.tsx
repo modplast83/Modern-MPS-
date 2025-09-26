@@ -553,7 +553,7 @@ export default function NotificationCenter() {
                             </p>
                             <div className="flex items-center gap-4 text-xs text-gray-500">
                               <span>نوع: {notification.type}</span>
-                              <span>تاريخ: {new Date(notification.created_at).toLocaleString('ar-SA')}</span>
+                              <span>تاريخ: {new Date(notification.created_at).toLocaleString('ar')}</span>
                               {notification.context_type && (
                                 <span>السياق: {notification.context_type}</span>
                               )}
@@ -858,7 +858,7 @@ export default function NotificationCenter() {
                             )}
                             <div className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {new Date(notification.created_at).toLocaleString('ar-SA')}
+                              {new Date(notification.created_at).toLocaleString('ar')}
                             </div>
                           </div>
                         </div>
