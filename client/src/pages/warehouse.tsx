@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -490,8 +490,9 @@ export default function Warehouse() {
           </div>
 
           <Tabs defaultValue={activeLocationTab || "production-hall"} className="space-y-4">
-            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 4, 8)}`}>
+            <TabsList className={`grid w-full grid-cols-${Math.min(locations.length + 5, 8)}`}>
               <TabsTrigger value="production-hall">صالة الإنتاج</TabsTrigger>
+              <TabsTrigger value="received-quantities">الكميات المستلمة</TabsTrigger>
               {locations.map((location: any) => (
                 <TabsTrigger key={location.id} value={location.id.toString()}>
                   {location.name_ar || location.name}
@@ -505,6 +506,11 @@ export default function Warehouse() {
             {/* Production Hall Tab */}
             <TabsContent value="production-hall" className="space-y-4">
               <ProductionHallContent />
+            </TabsContent>
+
+            {/* Received Quantities Tab */}
+            <TabsContent value="received-quantities" className="space-y-4">
+              <ReceivedQuantitiesContent />
             </TabsContent>
 
             {/* Dynamic location-based inventory tabs */}
@@ -1462,6 +1468,131 @@ function ProductionHallContent() {
                     </tr>
                   );
                 })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// Received Quantities Component
+function ReceivedQuantitiesContent() {
+  const { toast } = useToast();
+
+  // Fetch received quantities with detailed information
+  const { data: receivedQuantities = [], isLoading } = useQuery<any[]>({
+    queryKey: ['/api/warehouse/receipts-detailed'],
+    refetchInterval: 300000, // Refresh every 5 minutes
+    staleTime: 240000 // Cache for 4 minutes
+  });
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>الكميات المستلمة - مجمعة بحسب رقم الطلب</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8" data-testid="loading-received-quantities">
+            جاري التحميل...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>الكميات المستلمة - مجمعة بحسب رقم الطلب</CardTitle>
+        <CardDescription>
+          عرض جميع الكميات المستلمة من صالة الإنتاج مع تفاصيل العميل والمنتج
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {receivedQuantities.length === 0 ? (
+          <div className="text-center py-8 text-gray-500" data-testid="no-received-quantities">
+            لا توجد كميات مستلمة حتى الآن
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">رقم الطلب</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">اسم العميل</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">اسم المنتج</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">المقاس</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">إجمالي الكمية المستلمة</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">عدد الإيصالات</th>
+                  <th className="text-right py-3 px-4 font-medium text-gray-500 uppercase text-xs">التفاصيل</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {receivedQuantities.map((order: any) => (
+                  <tr key={order.order_number} className="hover:bg-gray-50">
+                    <td className="py-3 px-4" data-testid={`order-number-${order.order_number}`}>
+                      <div className="font-medium text-blue-600">{order.order_number}</div>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`customer-name-${order.order_number}`}>
+                      <div className="font-medium">{order.customer_name_ar || order.customer_name}</div>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`item-name-${order.order_number}`}>
+                      <div>{order.item_name_ar || order.item_name}</div>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`size-${order.order_number}`}>
+                      <div className="text-sm">
+                        {order.size_caption && (
+                          <div>{order.size_caption}</div>
+                        )}
+                        {order.width && (
+                          <div className="text-gray-500">العرض: {order.width}م</div>
+                        )}
+                        {order.thickness && (
+                          <div className="text-gray-500">السماكة: {order.thickness}مم</div>
+                        )}
+                        {order.raw_material && (
+                          <div className="text-gray-500">المادة: {order.raw_material}</div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`total-weight-${order.order_number}`}>
+                      <div className="font-semibold text-green-600">
+                        {Number(order.total_received_weight).toFixed(2)} كيلو
+                      </div>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`receipt-count-${order.order_number}`}>
+                      <Badge variant="outline" className="text-blue-600 border-blue-600">
+                        {order.receipts?.length || 0} إيصال
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4" data-testid={`receipts-detail-${order.order_number}`}>
+                      <div className="space-y-1">
+                        {order.receipts?.map((receipt: any, index: number) => (
+                          <div key={receipt.receipt_id} className="text-xs bg-gray-50 p-2 rounded">
+                            <div className="font-medium">إيصال #{receipt.receipt_id}</div>
+                            <div className="text-gray-600">
+                              التاريخ: {new Date(receipt.receipt_date).toLocaleDateString('ar-SA')}
+                            </div>
+                            <div className="text-gray-600">
+                              الكمية: {Number(receipt.received_weight_kg).toFixed(2)} كيلو
+                            </div>
+                            <div className="text-gray-600">
+                              المستلم: {receipt.received_by_name}
+                            </div>
+                            {receipt.production_order_number && (
+                              <div className="text-gray-600">
+                                أمر الإنتاج: {receipt.production_order_number}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
