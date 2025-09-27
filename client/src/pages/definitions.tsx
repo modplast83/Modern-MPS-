@@ -522,16 +522,16 @@ const masterBatchColors = [
     queryKey: ['/api/customer-products'],
     staleTime: 0,
   });
-  const { data: locations = [], isLoading: locationsLoading } = useQuery({
-    queryKey: ['/api/locations'],
-    staleTime: 0,
-  });
   const { data: machines = [], isLoading: machinesLoading } = useQuery({
     queryKey: ['/api/machines'],
     staleTime: 0,
   });
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['/api/users'],
+    staleTime: 0,
+  });
+  const { data: locations = [], isLoading: locationsLoading } = useQuery({
+    queryKey: ['/api/locations'],
     staleTime: 0,
   });
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
@@ -2263,6 +2263,121 @@ const masterBatchColors = [
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              {/* Locations Tab */}
+              <TabsContent value="locations" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5" />
+                        إدارة المواقع
+                      </CardTitle>
+                      <Button onClick={() => { resetForm(); setSelectedTab('locations'); setIsDialogOpen(true); }}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        إضافة موقع
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {locationsLoading ? (
+                      <div className="text-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الإحداثيات</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">نطاق التسامح</th>
+                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {(() => {
+                              const filteredLocations = getFilteredLocations();
+                              const paginatedLocations = paginateData(filteredLocations, currentPages.locations);
+                              return paginatedLocations.length > 0 ? (
+                                paginatedLocations.map((location: any) => (
+                                  <tr key={location.id} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                      {location.id}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                      {location.name_ar || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                      {location.name || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                      {location.coordinates || '-'}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                      {location.tolerance_range || '-'} متر
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                      <div className="flex items-center justify-center gap-2">
+                                        <Button 
+                                          variant="outline" 
+                                          size="sm"
+                                          onClick={() => {
+                                            setEditingItem(location);
+                                            setLocationForm({
+                                              name: location.name || '',
+                                              name_ar: location.name_ar || '',
+                                              type: location.type || 'city',
+                                              parent_id: location.parent_id || '',
+                                              coordinates: location.coordinates || '',
+                                              status: location.status || 'active'
+                                            });
+                                            setSelectedTab('locations');
+                                            setIsDialogOpen(true);
+                                          }}
+                                          data-testid={`button-edit-location-${location.id}`}
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                                    لا توجد مواقع مطابقة للبحث
+                                  </td>
+                                </tr>
+                              );
+                            })()}
+                          </tbody>
+                        </table>
+                        {(() => {
+                          const filteredLocations = getFilteredLocations();
+                          const totalPages = getTotalPages(filteredLocations.length);
+                          if (totalPages > 1) {
+                            return (
+                              <PaginationComponent
+                                currentPage={currentPages.locations}
+                                totalPages={totalPages}
+                                onPageChange={(page) => updatePage('locations', page)}
+                                totalItems={filteredLocations.length}
+                                itemsPerPage={itemsPerPage}
+                              />
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               </Tabs>
             </div>
             
