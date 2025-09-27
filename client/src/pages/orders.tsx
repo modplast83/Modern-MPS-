@@ -192,11 +192,16 @@ export default function Orders() {
         try {
           console.log('إنشاء أمر إنتاج:', prodOrder);
           
+          // Calculate final quantity with overrun
+          const overrunPercentage = prodOrder.overrun_percentage || 5.0;
+          const finalQuantityKg = prodOrder.quantity_kg * (1 + overrunPercentage / 100);
+          
           const productionOrderData = {
             order_id: newOrder.data?.id || newOrder.id,
             customer_product_id: prodOrder.customer_product_id,
             quantity_kg: prodOrder.quantity_kg,
-            overrun_percentage: prodOrder.overrun_percentage || 5.0,
+            overrun_percentage: overrunPercentage,
+            final_quantity_kg: finalQuantityKg,
           };
           
           console.log('بيانات أمر الإنتاج:', productionOrderData);
