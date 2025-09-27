@@ -1420,10 +1420,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/rolls/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
-      const roll = await storage.updateRoll(id, updates);
+      const { stage, weight_kg, waste_kg, cut_weight_total_kg } = req.body;
+      
+      // Prepare safe updates object
+      const safeUpdates: any = {};
+      
+      // Handle stage transitions securely with employee tracking
+      if (stage) {
+        safeUpdates.stage = stage;
+        const userId = req.session.userId;
+        
+        if (userId) {
+          if (stage === 'printing') {
+            safeUpdates.printed_by = userId;
+            safeUpdates.printed_at = new Date();
+          } else if (stage === 'cutting') {
+            safeUpdates.cut_by = userId;
+            // Note: cut_completed_at is set only when moving to 'done'
+          } else if (stage === 'done') {
+            safeUpdates.cut_completed_at = new Date();
+          }
+        }
+      }
+      
+      // Allow specific safe fields only (whitelist approach)
+      if (weight_kg !== undefined) safeUpdates.weight_kg = weight_kg;
+      if (waste_kg !== undefined) safeUpdates.waste_kg = waste_kg;
+      if (cut_weight_total_kg !== undefined) safeUpdates.cut_weight_total_kg = cut_weight_total_kg;
+      
+      const roll = await storage.updateRoll(id, safeUpdates);
       res.json(roll);
     } catch (error) {
+      console.error('Error updating roll:', error);
       res.status(400).json({ message: "خطأ في تحديث الرول" });
     }
   });

@@ -12,6 +12,7 @@ import {
   QrCode
 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
+import { useAuth } from "../../hooks/use-auth";
 import { apiRequest } from "../../lib/queryClient";
 import type { Roll } from "../../../../shared/schema";
 
@@ -42,6 +43,7 @@ const nextStage = {
 
 export default function RollsTable({ stage }: RollsTableProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: rolls = [], isLoading } = useQuery<RollWithDetails[]>({
@@ -88,15 +90,15 @@ export default function RollsTable({ stage }: RollsTableProps) {
   const moveToNextStage = (rollId: number, currentStage: string) => {
     const next = nextStage[currentStage as keyof typeof nextStage];
     if (!next) {
-      // Mark as completed
+      // Mark as completed - server will set cut_completed_at and cut_by from session
       updateRollMutation.mutate({
         id: rollId,
         updates: { 
-          stage: 'done',
-          cut_completed_at: new Date().toISOString()
+          stage: 'done'
         }
       });
     } else {
+      // Just advance to next stage - server will handle employee tracking from session
       updateRollMutation.mutate({
         id: rollId,
         updates: { 
