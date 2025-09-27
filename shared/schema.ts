@@ -1226,6 +1226,8 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
   id: true,
   created_at: true,
   production_order_number: true,
+  // SECURITY: final_quantity_kg calculated server-side only - never trust client values
+  final_quantity_kg: true,
   // NEW: حقول التتبع تحسب تلقائياً - لا نحتاجها في الإدخال
   produced_quantity_kg: true,
   printed_quantity_kg: true,
@@ -1260,16 +1262,7 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
       const num = parseFloat(val);
       return num >= 0 && num <= 50;
     }, "نسبة الزيادة يجب أن تكون بين 0 و 50 بالمئة"),
-  // Final quantity - automatically calculated but validated
-  final_quantity_kg: z.union([z.string(), z.number()])
-    .transform((val) => {
-      if (val === null || val === undefined || val === '') {
-        throw new Error("الكمية النهائية مطلوبة");
-      }
-      const num = typeof val === 'string' ? parseFloatSafe(val, "الكمية النهائية") : val;
-      return num.toString();
-    })
-    .refine((val) => parseFloat(val) > 0, "يجب أن تكون الكمية النهائية أكبر من صفر"),
+  // Note: final_quantity_kg is omitted - calculated server-side for security
   // Status validation
   status: z.enum(['pending', 'active', 'completed', 'cancelled']).default('pending')
 });
