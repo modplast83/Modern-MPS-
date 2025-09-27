@@ -1749,7 +1749,7 @@ export class DatabaseStorage implements IStorage {
         const nextRollSeq = (poRollCount[0]?.count || 0) + 1;
 
         // STEP 5: Generate roll identifiers using production order number + sequence
-        const rollNumber = `${productionOrder.production_order_number}-${nextRollSeq.toString().padStart(2, '0')}`;
+        const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, '0')}`;
         
         // إنشاء بيانات QR Code غنية
         const qrData = {
