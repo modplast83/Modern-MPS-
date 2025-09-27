@@ -1502,7 +1502,10 @@ export class DatabaseStorage implements IStorage {
         const existingTotalQuantity = existingProductionOrders.reduce(
           (sum, po) => sum + parseFloat(po.final_quantity_kg || po.quantity_kg || '0'), 0);
 
-        const proposedFinalQuantity = parseFloat(insertProductionOrder.final_quantity_kg || '0');
+        // Calculate the final quantity based on the base quantity and overrun
+        const initialBaseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || '0');
+        const overrunPercentage = parseFloat(insertProductionOrder.overrun_percentage || '5.0');
+        const proposedFinalQuantity = initialBaseQuantityKg * (1 + overrunPercentage / 100);
 
         // NOTE: INVARIANT A validation removed - orders table doesn't store total quantity
         // Individual production orders are validated separately for business rules
@@ -1547,8 +1550,8 @@ export class DatabaseStorage implements IStorage {
           throw new Error('منتج العميل غير موجود');
         }
         
-        // Use quantity_kg from the input
-        const baseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || '0');
+        // Use quantity_kg from the input (reusing variable from above)
+        const baseQuantityKg = initialBaseQuantityKg;
         
         // Calculate quantities based on punching type
         const punchingType = customerProduct.punching || null;
@@ -1558,7 +1561,8 @@ export class DatabaseStorage implements IStorage {
         const productionOrderData = {
           ...insertProductionOrder,
           production_order_number: productionOrderNumber,
-          quantity_kg: numberToDecimalString(quantityCalculation.finalQuantityKg)
+          quantity_kg: numberToDecimalString(baseQuantityKg),
+          final_quantity_kg: numberToDecimalString(quantityCalculation.finalQuantityKg)
         };
         
         // STEP 6: Create production order within transaction

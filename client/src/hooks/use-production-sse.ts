@@ -1,5 +1,6 @@
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './use-auth';
 
 interface ProductionSSEEvent {
   type: 'film' | 'printing' | 'cutting' | 'all';
@@ -8,10 +9,11 @@ interface ProductionSSEEvent {
 }
 
 export function useProductionSSE() {
+  const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isConnectedRef = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
 
@@ -53,6 +55,12 @@ export function useProductionSSE() {
   }, [queryClient]);
 
   const connect = useCallback(() => {
+    // Don't connect if not authenticated
+    if (!isAuthenticated || !user) {
+      console.log('[ProductionSSE] Not authenticated, skipping connection');
+      return;
+    }
+
     // Don't connect if already connected or if we've exceeded max attempts
     if (eventSourceRef.current && eventSourceRef.current.readyState !== EventSource.CLOSED) {
       return; // Already connected or connecting
@@ -80,7 +88,7 @@ export function useProductionSSE() {
       
       eventSource.onopen = () => {
         console.log('[ProductionSSE] Connected to production updates stream');
-        isConnectedRef.current = true;
+        setIsConnected(true);
         reconnectAttemptsRef.current = 0; // Reset reconnection attempts on successful connection
         
         // Clear any reconnection timeout
@@ -92,7 +100,7 @@ export function useProductionSSE() {
       
       eventSource.onerror = (error) => {
         console.error('[ProductionSSE] Connection error:', error);
-        isConnectedRef.current = false;
+        setIsConnected(false);
         
         // Only attempt reconnection if the connection is actually closed
         // EventSource automatically retries some errors, so we need to be careful
@@ -125,7 +133,7 @@ export function useProductionSSE() {
       
     } catch (error) {
       console.error('[ProductionSSE] Failed to establish connection:', error);
-      isConnectedRef.current = false;
+      setIsConnected(false);
       reconnectAttemptsRef.current += 1;
       
       // Try to reconnect if we haven't hit the limit
@@ -137,7 +145,7 @@ export function useProductionSSE() {
         }, delay);
       }
     }
-  }, [handleProductionUpdate]);
+  }, [handleProductionUpdate, isAuthenticated, user]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -151,7 +159,7 @@ export function useProductionSSE() {
       reconnectTimeoutRef.current = null;
     }
     
-    isConnectedRef.current = false;
+    setIsConnected(false);
     reconnectAttemptsRef.current = 0; // Reset reconnection attempts
   }, []);
 
@@ -174,17 +182,21 @@ export function useProductionSSE() {
   }, [queryClient]);
 
   useEffect(() => {
-    // Connect when hook is first used
-    connect();
+    // Only connect when authenticated
+    if (isAuthenticated && user) {
+      connect();
+    } else {
+      disconnect();
+    }
     
     // Cleanup on unmount
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+  }, [connect, disconnect, isAuthenticated, user]);
 
   return {
-    isConnected: isConnectedRef.current,
+    isConnected,
     connect,
     disconnect,
     refreshProductionData
