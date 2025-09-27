@@ -252,11 +252,13 @@ export const getQueryFn: <T>(options: {
       
     } catch (error: any) {
       // Handle AbortError gracefully during query cancellation
-      if (error.name === 'AbortError') {
+      if (error.name === 'AbortError' || (error instanceof DOMException && error.name === 'AbortError')) {
         // If signal was aborted, this is normal during component cleanup
-        // Log debug info but don't create console noise
-        // Silently handle query cancellation without any logging
-        throw error; // Still throw to signal cancellation to React Query
+        // Create a new error to avoid console logging while preserving cancellation behavior
+        const silentAbortError = new Error('Query cancelled');
+        (silentAbortError as any).name = 'AbortError';
+        (silentAbortError as any).silent = true;
+        throw silentAbortError;
       }
       
       if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
@@ -323,8 +325,9 @@ export function getQueryClient(): QueryClient {
             return;
           }
           
-          // Completely suppress AbortErrors during development - no propagation at all
-          if (import.meta.env.DEV && error?.name === 'AbortError') {
+          // Completely suppress AbortErrors - no propagation at all
+          if (error?.name === 'AbortError' || (error as any)?.silent || 
+              (error instanceof DOMException && error.name === 'AbortError')) {
             // Do not let AbortErrors propagate or log anything - complete silence
             return;
           }
@@ -332,7 +335,8 @@ export function getQueryClient(): QueryClient {
         },
         onSettled: (data, error, query) => {
           // Additional catch for AbortError at settled phase
-          if (import.meta.env.DEV && error?.name === 'AbortError') {
+          if (error?.name === 'AbortError' || (error as any)?.silent || 
+              (error instanceof DOMException && error.name === 'AbortError')) {
             return; // Suppress completely
           }
         }
@@ -347,8 +351,9 @@ export function getQueryClient(): QueryClient {
             return;
           }
           
-          // Silently handle AbortErrors during development
-          if (import.meta.env.DEV && error?.name === 'AbortError') {
+          // Silently handle AbortErrors
+          if (error?.name === 'AbortError' || (error as any)?.silent || 
+              (error instanceof DOMException && error.name === 'AbortError')) {
             // Silently handle mutation cancellation without any logging
             return;
           }
@@ -373,35 +378,71 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
     
     const originalConsoleError = console.error;
     
-    // Strict AbortError detection - only catch real AbortErrors
+    // Enhanced AbortError detection - catch all variations
     const isAbortError = (reason: any) => {
       if (!reason) return false;
       
       // Direct AbortError name check
       if (reason?.name === 'AbortError') return true;
       
+      // Silent error marker
+      if (reason?.silent) return true;
+      
       // DOMException AbortError check
       if (reason instanceof DOMException && reason.name === 'AbortError') return true;
       
-      // Strict message-based detection for known AbortError patterns
+      // Enhanced message-based detection for known AbortError patterns
       if (reason?.message && typeof reason.message === 'string') {
-        const message = reason.message;
-        return /^(signal is aborted|The user aborted a request|AbortError)/i.test(message);
+        const message = reason.message.toLowerCase();
+        return /^(signal is aborted|the user aborted|aborterror|query cancelled|cancelled|aborted)/.test(message);
+      }
+      
+      // Check for React Query specific abort patterns
+      if (reason?.toString && typeof reason.toString === 'function') {
+        const str = reason.toString().toLowerCase();
+        return str.includes('abort') && (str.includes('signal') || str.includes('query') || str.includes('cancelled'));
       }
       
       return false;
     };
     
-    // Single unhandled rejection handler
+    // Enhanced unhandled rejection handler
     window.addEventListener('unhandledrejection', (event) => {
       if (isAbortError(event.reason)) {
-        event.preventDefault(); // Sufficient to prevent console logging
+        event.preventDefault(); // Prevent console logging
+        event.stopPropagation(); // Stop further propagation
       }
     }, { capture: true });
     
-    // Minimal console filtering - only suppress strict AbortErrors  
+    // Also handle regular error events that might contain AbortErrors
+    window.addEventListener('error', (event) => {
+      if (isAbortError(event.error) || (event.message && isAbortError({ message: event.message }))) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, { capture: true });
+    
+    // Enhanced console filtering - suppress all AbortError variations
     console.error = (...args) => {
-      if (!args.some(arg => isAbortError(arg))) {
+      // Check if any argument is an AbortError or contains AbortError patterns
+      const hasAbortError = args.some(arg => {
+        if (isAbortError(arg)) return true;
+        
+        // Check for AbortError in nested objects or strings
+        if (typeof arg === 'string' && /abort.*error|signal.*abort|query.*cancel/i.test(arg)) {
+          return true;
+        }
+        
+        // Check for React Query AbortError patterns
+        if (typeof arg === 'object' && arg !== null) {
+          const str = JSON.stringify(arg).toLowerCase();
+          return str.includes('aborterror') || (str.includes('abort') && str.includes('signal'));
+        }
+        
+        return false;
+      });
+      
+      if (!hasAbortError) {
         originalConsoleError(...args);
       }
     };

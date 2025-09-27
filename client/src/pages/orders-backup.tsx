@@ -475,10 +475,17 @@ export default function Orders() {
 
       // Generate order number
       console.log('توليد رقم الطلب...');
-      const orderNumberResponse = await fetch('/api/orders/next-number');
-      if (!orderNumberResponse.ok) throw new Error('فشل في توليد رقم الطلب');
-      const { orderNumber } = await orderNumberResponse.json();
-      console.log('رقم الطلب المولد:', orderNumber);
+      let orderNumber;
+      try {
+        const orderNumberResponse = await fetch('/api/orders/next-number');
+        if (!orderNumberResponse.ok) throw new Error('فشل في توليد رقم الطلب');
+        const result = await orderNumberResponse.json();
+        orderNumber = result.orderNumber;
+        console.log('رقم الطلب المولد:', orderNumber);
+      } catch (error) {
+        console.error('خطأ في توليد رقم الطلب:', error);
+        throw new Error('فشل في توليد رقم الطلب. يرجى المحاولة مرة أخرى.');
+      }
       
       // Create the order first
       const orderData = {
@@ -514,44 +521,66 @@ export default function Orders() {
       );
       
       console.log('إنشاء أوامر الإنتاج...', validProductionOrders.length);
+      const createdProductionOrders = [];
+      const failedProductionOrders = [];
+      
       for (let i = 0; i < validProductionOrders.length; i++) {
         const prodOrder = validProductionOrders[i];
         
-        // Find the index of this production order in the original array
-        const originalIndex = productionOrdersInForm.findIndex(order => 
-          order.customer_product_id === prodOrder.customer_product_id &&
-          order.quantity_kg === prodOrder.quantity_kg
-        );
-        
-        // Get the calculated values from quantityPreviews
-        const quantityData = quantityPreviews[originalIndex];
-        const overrunPercentage = quantityData?.overrun_percentage || 5.0;
-        const finalQuantityKg = quantityData?.final_quantity_kg || (prodOrder.quantity_kg * 1.05);
-        
-        const productionOrderData = {
-          order_id: newOrder.data.id,
-          customer_product_id: parseInt(prodOrder.customer_product_id),
-          quantity_kg: prodOrder.quantity_kg.toString(),
-          overrun_percentage: overrunPercentage.toString(),
-          final_quantity_kg: finalQuantityKg.toString(),
-          status: prodOrder.status || 'pending'
-        };
-        
-        console.log(`إنشاء أمر إنتاج ${i + 1}:`, productionOrderData);
-        
-        const prodOrderResponse = await fetch('/api/production-orders', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(productionOrderData)
-        });
-        
-        if (!prodOrderResponse.ok) {
-          const errorText = await prodOrderResponse.text();
-          console.error(`خطأ في إنشاء أمر الإنتاج ${i + 1}:`, errorText);
-        } else {
-          const createdProdOrder = await prodOrderResponse.json();
-          console.log(`تم إنشاء أمر الإنتاج ${i + 1} بنجاح:`, createdProdOrder);
+        try {
+          // Find the index of this production order in the original array
+          const originalIndex = productionOrdersInForm.findIndex(order => 
+            order.customer_product_id === prodOrder.customer_product_id &&
+            order.quantity_kg === prodOrder.quantity_kg
+          );
+          
+          // Get the calculated values from quantityPreviews
+          const quantityData = quantityPreviews[originalIndex];
+          const overrunPercentage = quantityData?.overrun_percentage || 5.0;
+          const finalQuantityKg = quantityData?.final_quantity_kg || (prodOrder.quantity_kg * 1.05);
+          
+          const productionOrderData = {
+            order_id: newOrder.data.id,
+            customer_product_id: parseInt(prodOrder.customer_product_id),
+            quantity_kg: prodOrder.quantity_kg.toString(),
+            overrun_percentage: overrunPercentage.toString(),
+            final_quantity_kg: finalQuantityKg.toString(),
+            status: prodOrder.status || 'pending'
+          };
+          
+          console.log(`إنشاء أمر إنتاج ${i + 1}:`, productionOrderData);
+          
+          const prodOrderResponse = await fetch('/api/production-orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productionOrderData)
+          });
+          
+          if (!prodOrderResponse.ok) {
+            const errorText = await prodOrderResponse.text();
+            const errorMessage = `فشل في إنشاء أمر الإنتاج ${i + 1}: ${errorText}`;
+            console.error(errorMessage);
+            failedProductionOrders.push(errorMessage);
+          } else {
+            const createdProdOrder = await prodOrderResponse.json();
+            console.log(`تم إنشاء أمر الإنتاج ${i + 1} بنجاح:`, createdProdOrder);
+            createdProductionOrders.push(createdProdOrder);
+          }
+        } catch (error) {
+          const errorMessage = `خطأ في إنشاء أمر الإنتاج ${i + 1}: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`;
+          console.error(errorMessage);
+          failedProductionOrders.push(errorMessage);
         }
+      }
+      
+      // If any production orders failed, show a warning but don't fail the entire operation
+      if (failedProductionOrders.length > 0) {
+        console.warn('بعض أوامر الإنتاج فشلت في الإنشاء:', failedProductionOrders);
+        toast({
+          title: "تحذير",
+          description: `تم إنشاء الطلب ولكن فشل في إنشاء ${failedProductionOrders.length} من أوامر الإنتاج`,
+          variant: "destructive"
+        });
       }
       
       // Refresh data

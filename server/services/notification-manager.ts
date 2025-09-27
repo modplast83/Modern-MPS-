@@ -86,9 +86,20 @@ export class NotificationManager extends EventEmitter {
     const connection = this.connections.get(connectionId);
     if (connection) {
       try {
-        connection.response.end();
-      } catch {}
-      this.connections.delete(connectionId);
+        // Remove event listeners first to prevent memory leaks
+        connection.response.removeAllListeners('close');
+        connection.response.removeAllListeners('error');
+        
+        // Check if response is still writable before ending
+        if (!connection.response.headersSent || connection.response.writable) {
+          connection.response.end();
+        }
+      } catch (error) {
+        // Log but don't throw - connection cleanup should be resilient
+        console.warn(`[NotificationManager] Error cleaning up connection ${connectionId}:`, error);
+      } finally {
+        this.connections.delete(connectionId);
+      }
     }
   }
 
@@ -224,6 +235,13 @@ export class NotificationManager extends EventEmitter {
       const connection = this.connections.get(connectionId);
       if (!connection) return;
 
+      // Check if connection is still writable
+      if (response.destroyed || response.writableEnded || !response.writable) {
+        console.log(`[NotificationManager] Connection ${connectionId} is no longer writable, removing`);
+        this.removeConnection(connectionId);
+        return;
+      }
+
       let sseMessage = '';
       if (message.id) sseMessage += `id: ${message.id}\n`;
       if (message.event) sseMessage += `event: ${message.event}\n`;
@@ -232,7 +250,8 @@ export class NotificationManager extends EventEmitter {
 
       response.write(sseMessage);
       connection.lastHeartbeat = new Date();
-    } catch {
+    } catch (error) {
+      console.warn(`[NotificationManager] Error sending to connection ${connectionId}:`, error);
       this.removeConnection(connectionId);
     }
   }
@@ -242,7 +261,26 @@ export class NotificationManager extends EventEmitter {
    */
   private sendHeartbeat(): void {
     const ping = `:ping ${new Date().toISOString()}\n\n`;
-    this.connections.forEach(conn => conn.response.write(ping));
+    const stalConnections: string[] = [];
+    
+    this.connections.forEach((conn, connectionId) => {
+      try {
+        // Check if connection is still writable before sending heartbeat
+        if (conn.response.destroyed || conn.response.writableEnded || !conn.response.writable) {
+          stalConnections.push(connectionId);
+          return;
+        }
+        
+        conn.response.write(ping);
+        conn.lastHeartbeat = new Date();
+      } catch (error) {
+        console.warn(`[NotificationManager] Heartbeat failed for connection ${connectionId}:`, error);
+        stalConnections.push(connectionId);
+      }
+    });
+    
+    // Clean up stale connections
+    stalConnections.forEach(id => this.removeConnection(id));
   }
 
   private startHeartbeat(): void {
@@ -254,10 +292,21 @@ export class NotificationManager extends EventEmitter {
       const now = new Date();
       const stale: string[] = [];
       
-      // Memory optimization: check connections more efficiently
+      // Enhanced connection health check
       this.connections.forEach((conn, id) => {
         const diff = now.getTime() - conn.lastHeartbeat.getTime();
-        if (diff > 120000) stale.push(id); // 2 minutes timeout
+        
+        // Check for stale connections (2 minutes timeout)
+        if (diff > 120000) {
+          stale.push(id);
+          return;
+        }
+        
+        // Check for destroyed/closed connections
+        if (conn.response.destroyed || conn.response.writableEnded || !conn.response.writable) {
+          console.log(`[NotificationManager] Found destroyed connection ${id}, marking for cleanup`);
+          stale.push(id);
+        }
       });
       
       // Clean up stale connections
@@ -281,17 +330,32 @@ export class NotificationManager extends EventEmitter {
    */
   private performMemoryCleanup(): void {
     try {
+      console.log('[NotificationManager] Running memory cleanup...');
+      
+      // First, validate all connections and remove any that are invalid
+      const invalidConnections: string[] = [];
+      this.connections.forEach((conn, id) => {
+        if (conn.response.destroyed || conn.response.writableEnded || !conn.response.writable) {
+          invalidConnections.push(id);
+        }
+      });
+      
+      invalidConnections.forEach(id => this.removeConnection(id));
+      
+      // Clear accumulated event listeners (but don't remove all - be selective)
+      const listenerCounts = this.listenerCount('error') + this.listenerCount('close');
+      if (listenerCounts > this.connections.size * 2) {
+        console.log(`[NotificationManager] Found ${listenerCounts} listeners, cleaning up...`);
+        this.removeAllListeners('error');
+        this.removeAllListeners('close');
+      }
+      
       // Force garbage collection if available (development only)
       if (global.gc && process.env.NODE_ENV === 'development') {
-        console.log('[NotificationManager] Running memory cleanup...');
         global.gc();
       }
       
-      // Clear event listeners that might have accumulated
-      this.removeAllListeners();
-      
-      // Re-establish essential event listeners if needed
-      console.log(`[NotificationManager] Memory cleanup completed. Connections: ${this.connections.size}`);
+      console.log(`[NotificationManager] Memory cleanup completed. Active connections: ${this.connections.size}, Cleaned invalid: ${invalidConnections.length}`);
     } catch (error) {
       console.error('[NotificationManager] Memory cleanup failed:', error);
     }
@@ -328,10 +392,30 @@ export class NotificationManager extends EventEmitter {
   }
 
   shutdown(): void {
-    if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
-    if (this.cleanupInterval) clearInterval(this.cleanupInterval);
-    if (this.productionUpdateDebounce) clearTimeout(this.productionUpdateDebounce);
-    this.connections.forEach((_, id) => this.removeConnection(id));
+    console.log('[NotificationManager] Shutting down...');
+    
+    // Clear all intervals
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+    }
+    if (this.productionUpdateDebounce) {
+      clearTimeout(this.productionUpdateDebounce);
+      this.productionUpdateDebounce = null;
+    }
+    
+    // Clean up all connections
+    const connectionIds = Array.from(this.connections.keys());
+    connectionIds.forEach(id => this.removeConnection(id));
+    
+    // Clear all event listeners
+    this.removeAllListeners();
+    
+    console.log(`[NotificationManager] Shutdown complete. Cleaned up ${connectionIds.length} connections.`);
   }
 
   /**
