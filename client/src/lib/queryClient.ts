@@ -153,7 +153,75 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey, signal }) => {
     try {
-      const url = queryKey.join("/") as string;
+      // Handle query keys properly - first element is base URL
+      let url = queryKey[0] as string;
+      
+      // If there are additional query key elements, handle them based on their type
+      if (queryKey.length > 1) {
+        const remainingSegments = queryKey.slice(1);
+        
+        // Check if the last segment is an object (query parameters)
+        const lastSegment = remainingSegments[remainingSegments.length - 1];
+        
+        if (typeof lastSegment === 'object' && lastSegment !== null && !Array.isArray(lastSegment)) {
+          // Pattern: ['/api/endpoint', ...pathSegments, {queryParams}]
+          const pathSegments = remainingSegments.slice(0, -1);
+          const queryParams = lastSegment as Record<string, any>;
+          
+          // Add path segments to URL
+          if (pathSegments.length > 0) {
+            const pathParts = pathSegments
+              .filter(segment => segment !== undefined && segment !== null && segment !== '')
+              .map(segment => encodeURIComponent(String(segment)));
+            if (pathParts.length > 0) {
+              url += '/' + pathParts.join('/');
+            }
+          }
+          
+          // Add query parameters
+          const urlParams = new URLSearchParams();
+          Object.entries(queryParams).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              urlParams.append(key, String(value));
+            }
+          });
+          
+          const queryString = urlParams.toString();
+          if (queryString) {
+            url += (url.includes('?') ? '&' : '?') + queryString;
+          }
+        } else {
+          // All remaining segments are path parameters OR this is a special production monitoring case
+          // Check if this looks like a production monitoring endpoint that expects query params
+          const isProductionEndpoint = url.includes('/api/production/') && 
+            (url.includes('performance') || url.includes('metrics') || url.includes('utilization'));
+          
+          if (isProductionEndpoint && remainingSegments.length === 2) {
+            // Special case for production endpoints: ['/api/production/endpoint', dateFrom, dateTo]
+            const queryParams = new URLSearchParams();
+            queryParams.append('date_from', String(remainingSegments[0]));
+            queryParams.append('date_to', String(remainingSegments[1]));
+            url += '?' + queryParams.toString();
+          } else if (isProductionEndpoint && remainingSegments.length === 3) {
+            // Special case: ['/api/production/endpoint', userId, dateFrom, dateTo] 
+            const queryParams = new URLSearchParams();
+            if (remainingSegments[0] !== undefined && remainingSegments[0] !== null) {
+              queryParams.append('user_id', String(remainingSegments[0]));
+            }
+            queryParams.append('date_from', String(remainingSegments[1]));
+            queryParams.append('date_to', String(remainingSegments[2]));
+            url += '?' + queryParams.toString();
+          } else {
+            // Default behavior: treat as path segments (backward compatibility)
+            const pathParts = remainingSegments
+              .filter(segment => segment !== undefined && segment !== null && segment !== '')
+              .map(segment => encodeURIComponent(String(segment)));
+            if (pathParts.length > 0) {
+              url += '/' + pathParts.join('/');
+            }
+          }
+        }
+      }
       
       const res = await fetch(url, {
         credentials: "include",
