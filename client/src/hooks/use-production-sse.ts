@@ -54,13 +54,19 @@ export function useProductionSSE() {
 
   const connect = useCallback(() => {
     // Don't connect if already connected or if we've exceeded max attempts
-    if (eventSourceRef.current || isConnectedRef.current) {
+    if (eventSourceRef.current && eventSourceRef.current.readyState !== EventSource.CLOSED) {
       return; // Already connected or connecting
     }
 
     if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
       console.log('[ProductionSSE] Max reconnection attempts reached, stopping...');
       return;
+    }
+
+    // Clean up any existing connection first
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
     }
 
     try {
@@ -88,27 +94,30 @@ export function useProductionSSE() {
         console.error('[ProductionSSE] Connection error:', error);
         isConnectedRef.current = false;
         
-        // Close current connection
-        if (eventSourceRef.current) {
-          eventSourceRef.current.close();
-          eventSourceRef.current = null;
-        }
-        
-        // Increment reconnection attempts
-        reconnectAttemptsRef.current += 1;
-        
-        // Only attempt to reconnect if we haven't exceeded max attempts
-        if (reconnectAttemptsRef.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
-          // Exponential backoff: 2^(attempts-1) * 1000ms (1s, 2s, 4s, 8s, 16s)
-          const delay = Math.min(Math.pow(2, reconnectAttemptsRef.current - 1) * 1000, 30000);
+        // Only attempt reconnection if the connection is actually closed
+        // EventSource automatically retries some errors, so we need to be careful
+        if (eventSource.readyState === EventSource.CLOSED) {
+          // Clean up current connection
+          if (eventSourceRef.current === eventSource) {
+            eventSourceRef.current = null;
+          }
           
-          reconnectTimeoutRef.current = setTimeout(() => {
-            console.log(`[ProductionSSE] Attempting to reconnect... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
-            reconnectTimeoutRef.current = null;
-            connect();
-          }, delay);
-        } else {
-          console.log('[ProductionSSE] Max reconnection attempts reached or timeout already set');
+          // Increment reconnection attempts
+          reconnectAttemptsRef.current += 1;
+          
+          // Only attempt to reconnect if we haven't exceeded max attempts
+          if (reconnectAttemptsRef.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
+            // Exponential backoff: 2^(attempts-1) * 1000ms (1s, 2s, 4s, 8s, 16s)
+            const delay = Math.min(Math.pow(2, reconnectAttemptsRef.current - 1) * 1000, 30000);
+            
+            reconnectTimeoutRef.current = setTimeout(() => {
+              console.log(`[ProductionSSE] Attempting to reconnect... (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})`);
+              reconnectTimeoutRef.current = null;
+              connect();
+            }, delay);
+          } else {
+            console.log('[ProductionSSE] Max reconnection attempts reached or timeout already set');
+          }
         }
       };
       
@@ -118,6 +127,15 @@ export function useProductionSSE() {
       console.error('[ProductionSSE] Failed to establish connection:', error);
       isConnectedRef.current = false;
       reconnectAttemptsRef.current += 1;
+      
+      // Try to reconnect if we haven't hit the limit
+      if (reconnectAttemptsRef.current < maxReconnectAttempts && !reconnectTimeoutRef.current) {
+        const delay = Math.min(Math.pow(2, reconnectAttemptsRef.current - 1) * 1000, 30000);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectTimeoutRef.current = null;
+          connect();
+        }, delay);
+      }
     }
   }, [handleProductionUpdate]);
 
