@@ -1154,6 +1154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/orders/:id", 
     requireAuth,
+    requireAdmin,
     validateRequest({ params: commonSchemas.idParam }),
     async (req, res) => {
     try {
@@ -1233,7 +1234,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/production-orders", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertProductionOrderSchema.parse(req.body);
+      // Extract and validate basic fields first
+      const { customer_product_id, quantity_kg, overrun_percentage } = req.body;
+      
+      // Get customer product info for intelligent calculation
+      const customerProducts = await storage.getCustomerProducts();
+      const customerProduct = customerProducts.find(cp => cp.id === parseInt(customer_product_id));
+      
+      if (!customerProduct) {
+        return res.status(404).json({ 
+          message: "المنتج غير موجود",
+          success: false 
+        });
+      }
+
+      // Calculate final quantity using server-side logic (ignore client-provided value)
+      const quantityCalculation = calculateProductionQuantities(
+        parseFloat(quantity_kg), 
+        customerProduct.punching
+      );
+
+      // Prepare production order data with server-calculated final quantity
+      const productionOrderData = {
+        ...req.body,
+        // Override with server-calculated values for security
+        final_quantity_kg: quantityCalculation.finalQuantityKg,
+        overrun_percentage: overrun_percentage || quantityCalculation.overrunPercentage
+      };
+
+      const validatedData = insertProductionOrderSchema.parse(productionOrderData);
       const productionOrder = await storage.createProductionOrder(validatedData);
       res.status(201).json(productionOrder);
     } catch (error) {
@@ -1246,7 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/production-orders/:id", requireAuth, async (req, res) => {
+  app.put("/api/production-orders/:id", requireAuth, requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const validatedData = insertProductionOrderSchema.partial().parse(req.body);
@@ -1258,7 +1287,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/production-orders/:id", async (req, res) => {
+  app.delete("/api/production-orders/:id", requireAuth, requireAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       await storage.deleteProductionOrder(id);
@@ -3943,7 +3972,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/orders/:id", async (req, res) => {
+  app.put("/api/orders/:id", requireAuth, requireAdmin, async (req, res) => {
     try {
       const orderId = parseInt(req.params.id);
       const result = insertNewOrderSchema.safeParse(req.body);
@@ -3964,7 +3993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/orders/:id/status", requireAuth, async (req, res) => {
+  app.patch("/api/orders/:id/status", requireAuth, requireAdmin, async (req, res) => {
     try {
       const orderId = parseInt(req.params.id);
       const { status } = req.body;

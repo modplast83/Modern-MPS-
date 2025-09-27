@@ -192,16 +192,12 @@ export default function Orders() {
         try {
           console.log('إنشاء أمر إنتاج:', prodOrder);
           
-          // Calculate final quantity with overrun
-          const overrunPercentage = prodOrder.overrun_percentage || 5.0;
-          const finalQuantityKg = prodOrder.quantity_kg * (1 + overrunPercentage / 100);
-          
           const productionOrderData = {
             order_id: newOrder.data?.id || newOrder.id,
             customer_product_id: prodOrder.customer_product_id,
             quantity_kg: prodOrder.quantity_kg,
-            overrun_percentage: overrunPercentage,
-            final_quantity_kg: finalQuantityKg,
+            overrun_percentage: prodOrder.overrun_percentage || 5.0,
+            // final_quantity_kg will be calculated server-side for security
           };
           
           console.log('بيانات أمر الإنتاج:', productionOrderData);
@@ -227,9 +223,11 @@ export default function Orders() {
         }
       }
 
-      // Refresh data
+      // Refresh data - invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       
       // Close dialogs and reset forms
       setIsOrderDialogOpen(false);
@@ -288,9 +286,17 @@ export default function Orders() {
         method: 'DELETE'
       });
       
-      if (!response.ok) throw new Error('فشل في حذف الطلب');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل في حذف الطلب');
+      }
       
+      // Refresh all related data
       queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      
       toast({
         title: "تم الحذف بنجاح",
         description: `تم حذف الطلب ${order.order_number}`
@@ -298,7 +304,7 @@ export default function Orders() {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل في حذف الطلب",
+        description: error instanceof Error ? error.message : "فشل في حذف الطلب",
         variant: "destructive"
       });
     }
@@ -314,9 +320,17 @@ export default function Orders() {
         body: JSON.stringify({ status: newStatus })
       });
       
-      if (!response.ok) throw new Error('فشل في تحديث حالة الطلب');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'فشل في تحديث حالة الطلب');
+      }
       
+      // Refresh all related data
       queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      
       toast({
         title: "تم التحديث بنجاح",
         description: `تم تحديث حالة الطلب ${order.order_number}`
@@ -324,7 +338,7 @@ export default function Orders() {
     } catch (error) {
       toast({
         title: "خطأ",
-        description: "فشل في تحديث حالة الطلب",
+        description: error instanceof Error ? error.message : "فشل في تحديث حالة الطلب",
         variant: "destructive"
       });
     }
