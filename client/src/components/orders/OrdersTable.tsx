@@ -1,5 +1,6 @@
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { FileText, Eye, Trash2, Edit, RefreshCw, ChevronDown } from "lucide-react";
@@ -16,6 +17,9 @@ interface OrdersTableProps {
   onStatusChange: (order: any, status: string) => void;
   currentUser?: any;
   isAdmin?: boolean;
+  selectedOrders?: number[];
+  onOrderSelect?: (orderId: number, selected: boolean) => void;
+  onSelectAll?: (selected: boolean) => void;
 }
 
 export default function OrdersTable({
@@ -28,8 +32,27 @@ export default function OrdersTable({
   onDeleteOrder,
   onStatusChange,
   currentUser,
-  isAdmin = false
+  isAdmin = false,
+  selectedOrders = [],
+  onOrderSelect,
+  onSelectAll
 }: OrdersTableProps) {
+  
+  // Check if all orders are selected
+  const allOrdersSelected = orders.length > 0 && orders.every((order: any) => selectedOrders.includes(order.id));
+  const someOrdersSelected = selectedOrders.length > 0 && selectedOrders.length < orders.length;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (onSelectAll) {
+      onSelectAll(checked);
+    }
+  };
+
+  const handleOrderSelect = (orderId: number, checked: boolean) => {
+    if (onOrderSelect) {
+      onOrderSelect(orderId, checked);
+    }
+  };
   
   const getStatusBadge = (status: string) => {
     const statusMap: { [key: string]: { label: string; variant: any; color: string } } = {
@@ -77,6 +100,15 @@ export default function OrdersTable({
     <Table>
       <TableHeader>
         <TableRow>
+          {(onOrderSelect && onSelectAll) && (
+            <TableHead className="w-12">
+              <Checkbox
+                checked={allOrdersSelected ? true : someOrdersSelected ? "indeterminate" : false}
+                onCheckedChange={handleSelectAll}
+                data-testid="checkbox-select-all"
+              />
+            </TableHead>
+          )}
           <TableHead className="text-right">رقم الطلب</TableHead>
           <TableHead className="text-right">العميل</TableHead>
           <TableHead className="text-right">تاريخ الإنشاء</TableHead>
@@ -94,7 +126,16 @@ export default function OrdersTable({
           const { deliveryDate, daysRemaining } = calculateDeliveryInfo(order);
           
           return (
-            <TableRow key={order.id} data-testid={`order-row-${order.id}`}>
+            <TableRow key={order.id} data-testid={`order-row-${order.id}`} className={selectedOrders.includes(order.id) ? "bg-blue-50" : ""}>
+              {(onOrderSelect && onSelectAll) && (
+                <TableCell>
+                  <Checkbox
+                    checked={selectedOrders.includes(order.id)}
+                    onCheckedChange={(checked) => handleOrderSelect(order.id, !!checked)}
+                    data-testid={`checkbox-select-order-${order.id}`}
+                  />
+                </TableCell>
+              )}
               <TableCell className="font-medium" data-testid={`order-number-${order.id}`}>
                 {order.order_number}
               </TableCell>
