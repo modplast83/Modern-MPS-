@@ -1096,17 +1096,54 @@ export class DatabaseStorage implements IStorage {
         .from(production_orders)
         .where(eq(production_orders.order_id, id));
 
-      // Delete related records in correct order to avoid foreign key constraint violations
+      // Delete each production order with proper cascade deletion
+      // This ensures all dependent records (warehouse_receipts, waste, rolls, cuts) are handled
       for (const prodOrder of productionOrdersToDelete) {
         // Delete warehouse receipts first (they reference production_orders)
         await tx
           .delete(warehouse_receipts)
           .where(eq(warehouse_receipts.production_order_id, prodOrder.id));
 
+        // Delete waste records that reference this production order
+        await tx
+          .delete(waste)
+          .where(eq(waste.production_order_id, prodOrder.id));
+
+        // Get all rolls for this production order to handle cuts cascade
+        const rollsToDelete = await tx
+          .select({ id: rolls.id })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, prodOrder.id));
+
+        // Delete cuts for each roll (they reference rolls)
+        for (const roll of rollsToDelete) {
+          await tx
+            .delete(cuts)
+            .where(eq(cuts.roll_id, roll.id));
+        }
+
+        // Delete quality checks that might reference these rolls
+        for (const roll of rollsToDelete) {
+          await tx
+            .delete(quality_checks)
+            .where(and(
+              eq(quality_checks.target_type, 'roll'),
+              eq(quality_checks.target_id, roll.id)
+            ));
+        }
+
         // Delete all rolls for this production order
         await tx
           .delete(rolls)
           .where(eq(rolls.production_order_id, prodOrder.id));
+
+        // Delete related notifications
+        await tx
+          .delete(notifications)
+          .where(and(
+            eq(notifications.context_type, 'production_order'),
+            eq(notifications.context_id, prodOrder.id.toString())
+          ));
       }
 
       // Delete all production orders for this order
@@ -1114,9 +1151,20 @@ export class DatabaseStorage implements IStorage {
         .delete(production_orders)
         .where(eq(production_orders.order_id, id));
 
+      // Delete related notifications for the main order
+      await tx
+        .delete(notifications)
+        .where(and(
+          eq(notifications.context_type, 'order'),
+          eq(notifications.context_id, id.toString())
+        ));
+
       // Finally, delete the order itself
       await tx.delete(orders).where(eq(orders.id, id));
     });
+    
+    // Invalidate production caches after successful transaction completion
+    invalidateProductionCache('all');
   }
 
   async getOrdersForProduction(): Promise<any[]> {
@@ -1630,7 +1678,63 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProductionOrder(id: number): Promise<void> {
-    await db.delete(production_orders).where(eq(production_orders.id, id));
+    await db.transaction(async (tx) => {
+      // Delete related records in correct order to avoid foreign key constraint violations
+      
+      // Delete warehouse receipts first (they reference production_orders)
+      await tx
+        .delete(warehouse_receipts)
+        .where(eq(warehouse_receipts.production_order_id, id));
+
+      // Delete waste records that reference this production order
+      await tx
+        .delete(waste)
+        .where(eq(waste.production_order_id, id));
+
+      // Get all rolls for this production order to handle cuts cascade
+      const rollsToDelete = await tx
+        .select({ id: rolls.id })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, id));
+
+      // Delete cuts for each roll (they reference rolls)
+      for (const roll of rollsToDelete) {
+        await tx
+          .delete(cuts)
+          .where(eq(cuts.roll_id, roll.id));
+      }
+
+      // Delete quality checks that might reference these rolls
+      for (const roll of rollsToDelete) {
+        await tx
+          .delete(quality_checks)
+          .where(and(
+            eq(quality_checks.target_type, 'roll'),
+            eq(quality_checks.target_id, roll.id)
+          ));
+      }
+
+      // Delete all rolls for this production order
+      await tx
+        .delete(rolls)
+        .where(eq(rolls.production_order_id, id));
+
+      // Delete related notifications for this production order
+      await tx
+        .delete(notifications)
+        .where(and(
+          eq(notifications.context_type, 'production_order'),
+          eq(notifications.context_id, id.toString())
+        ));
+
+      // Finally, delete the production order itself
+      await tx
+        .delete(production_orders)
+        .where(eq(production_orders.id, id));
+    });
+    
+    // Invalidate production caches after successful transaction completion
+    invalidateProductionCache('all');
   }
 
 
