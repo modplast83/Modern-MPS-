@@ -1096,8 +1096,14 @@ export class DatabaseStorage implements IStorage {
         .from(production_orders)
         .where(eq(production_orders.order_id, id));
 
-      // Delete all rolls for each production order
+      // Delete related records in correct order to avoid foreign key constraint violations
       for (const prodOrder of productionOrdersToDelete) {
+        // Delete warehouse receipts first (they reference production_orders)
+        await tx
+          .delete(warehouse_receipts)
+          .where(eq(warehouse_receipts.production_order_id, prodOrder.id));
+
+        // Delete all rolls for this production order
         await tx
           .delete(rolls)
           .where(eq(rolls.production_order_id, prodOrder.id));
