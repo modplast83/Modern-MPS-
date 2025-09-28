@@ -344,6 +344,106 @@ export default function Orders() {
     }
   };
 
+  // Bulk action handlers
+  const handleBulkDelete = async (orderIds: number[]) => {
+    if (!isAdmin) {
+      toast({
+        title: "غير مخول",
+        description: "صلاحيات المدير مطلوبة لحذف الطلبات",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Delete orders one by one (could be optimized to a single API call)
+      const deletePromises = orderIds.map(orderId => 
+        fetch(`/api/orders/${orderId}`, { method: 'DELETE' })
+      );
+      
+      const responses = await Promise.allSettled(deletePromises);
+      
+      // Check for failures
+      const failures = responses.filter(response => 
+        response.status === 'rejected' || 
+        (response.status === 'fulfilled' && !response.value.ok)
+      );
+      
+      if (failures.length > 0) {
+        toast({
+          title: "تحذير",
+          description: `فشل حذف ${failures.length} من ${orderIds.length} طلب`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "تم الحذف بنجاح",
+          description: `تم حذف ${orderIds.length} طلب بنجاح`
+        });
+      }
+      
+      // Refresh all related data
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error instanceof Error ? error.message : "فشل في الحذف الجماعي",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (orderIds: number[], newStatus: string) => {
+    try {
+      // Update status for all selected orders
+      const updatePromises = orderIds.map(orderId => 
+        fetch(`/api/orders/${orderId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        })
+      );
+      
+      const responses = await Promise.allSettled(updatePromises);
+      
+      // Check for failures
+      const failures = responses.filter(response => 
+        response.status === 'rejected' || 
+        (response.status === 'fulfilled' && !response.value.ok)
+      );
+      
+      if (failures.length > 0) {
+        toast({
+          title: "تحذير",
+          description: `فشل تحديث ${failures.length} من ${orderIds.length} طلب`,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث حالة ${orderIds.length} طلب بنجاح`
+        });
+      }
+      
+      // Refresh all related data
+      queryClient.invalidateQueries({ queryKey: ['/api/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error instanceof Error ? error.message : "فشل في التحديث الجماعي",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleViewOrder = (order: any) => {
     setViewingOrder(order);
     setIsViewOrderDialogOpen(true);
@@ -480,6 +580,8 @@ export default function Orders() {
               onViewOrder={handleViewOrder}
               onPrintOrder={handlePrintOrder}
               onOrderSubmit={onOrderSubmit}
+              onBulkDelete={handleBulkDelete}
+              onBulkStatusChange={handleBulkStatusChange}
               currentUser={user}
               isAdmin={isAdmin}
             />
