@@ -8,12 +8,18 @@ import { cn } from "../../lib/utils";
 // Safe ToastProvider wrapper that handles React being null
 const ToastProvider: React.FC<React.ComponentProps<typeof ToastPrimitives.Provider>> = ({ children, ...props }) => {
   // Check if React hooks are available
-  if (!React || !React.useState || typeof React.useState !== 'function') {
+  if (typeof React === 'undefined' || React === null || typeof React.useState !== 'function') {
     console.warn("React hooks not available, rendering children without toast functionality");
-    return <>{children}</>;
+    return React && React.createElement ? React.createElement(React.Fragment, null, children) : children as any;
   }
 
   try {
+    // Check if ToastPrimitives.Provider is available and can be used
+    if (typeof ToastPrimitives?.Provider === 'undefined') {
+      console.warn("ToastPrimitives.Provider not available, rendering children without toast functionality");
+      return <>{children}</>;
+    }
+    
     return (
       <ToastPrimitives.Provider {...props}>
         {children}
