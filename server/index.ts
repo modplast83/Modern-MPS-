@@ -5,6 +5,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
 import { users } from "@shared/schema";
+import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 const app = express();
@@ -302,7 +303,7 @@ function sanitizeResponseForLogging(response: any): any {
       
       // Step 1: Test database connection first
       try {
-        await db.execute('SELECT 1 as test');
+        await db.execute(sql`SELECT 1 as test`);
         console.log("✅ Database connection verified");
       } catch (connectionError: any) {
         console.error("❌ Database connection failed:", connectionError?.message || connectionError);
@@ -320,7 +321,7 @@ function sanitizeResponseForLogging(response: any): any {
       }
       
       // Step 2: Check existing schema and handle table conflicts
-      const tableCheck = await db.execute(`
+      const tableCheck = await db.execute(sql`
         SELECT table_name FROM information_schema.tables 
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
         ORDER BY table_name
@@ -361,7 +362,7 @@ function sanitizeResponseForLogging(response: any): any {
           
           try {
             // Try to handle admin_decisions table conflicts specifically
-            const adminTableExists = await db.execute(`
+            const adminTableExists = await db.execute(sql`
               SELECT table_name FROM information_schema.tables 
               WHERE table_name = 'admin_decisions' AND table_schema = 'public'
             `);
@@ -377,15 +378,15 @@ function sanitizeResponseForLogging(response: any): any {
               
               for (const col of requiredColumns) {
                 try {
-                  const columnExists = await db.execute(`
+                  const columnExists = await db.execute(sql`
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name = 'admin_decisions' 
-                    AND column_name = '${col.name}' 
+                    AND column_name = ${col.name} 
                     AND table_schema = 'public'
                   `);
                   
                   if (columnExists.rows.length === 0) {
-                    await db.execute(`ALTER TABLE admin_decisions ADD COLUMN ${col.name} ${col.type}`);
+                    await db.execute(sql`ALTER TABLE admin_decisions ADD COLUMN ${sql.identifier(col.name)} ${sql.raw(col.type)}`);
                     console.log(`✅ Added missing column admin_decisions.${col.name}`);
                   }
                 } catch (columnError: any) {
@@ -420,7 +421,7 @@ function sanitizeResponseForLogging(response: any): any {
             }
             
             // Verify schema creation
-            const verifyTableCheck = await db.execute(`
+            const verifyTableCheck = await db.execute(sql`
               SELECT COUNT(*) as table_count
               FROM information_schema.tables 
               WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
@@ -462,7 +463,7 @@ function sanitizeResponseForLogging(response: any): any {
           
           for (const check of criticalChecks) {
             try {
-              await db.execute(`SELECT 1 FROM ${check.table} LIMIT 1`);
+              await db.execute(sql`SELECT 1 FROM ${sql.identifier(check.table)} LIMIT 1`);
               console.log(`✅ ${check.description} table accessible`);
             } catch (tableError: any) {
               const errorMsg = tableError?.message?.substring(0, 100);
