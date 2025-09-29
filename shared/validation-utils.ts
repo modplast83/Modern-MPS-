@@ -18,9 +18,9 @@ export interface ParseIntOptions {
  * @throws Error if parsing fails or validation constraints are not met
  */
 export const parseIntSafe = (
-  value: any, 
-  fieldName: string = "Value", 
-  options: ParseIntOptions = {}
+  value: any,
+  fieldName: string = "Value",
+  options: ParseIntOptions = {},
 ): number => {
   // Handle null/undefined
   if (value === null || value === undefined) {
@@ -34,31 +34,41 @@ export const parseIntSafe = (
 
   // Convert to string first to handle various input types
   const stringValue = String(value).trim();
-  
+
   // Parse the integer
   const parsed = parseInt(stringValue, 10);
-  
+
   // Check if parsing resulted in NaN
   if (isNaN(parsed)) {
-    throw new Error(`${fieldName} must be a valid integer (received: ${value})`);
+    throw new Error(
+      `${fieldName} must be a valid integer (received: ${value})`,
+    );
   }
 
   // Check if the original string was a valid integer representation
-  if (String(parsed) !== stringValue && !stringValue.includes('.')) {
-    throw new Error(`${fieldName} contains non-numeric characters (received: ${value})`);
+  if (String(parsed) !== stringValue && !stringValue.includes(".")) {
+    throw new Error(
+      `${fieldName} contains non-numeric characters (received: ${value})`,
+    );
   }
 
   // Apply validation constraints
   if (options.min !== undefined && parsed < options.min) {
-    throw new Error(`${fieldName} must be at least ${options.min} (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be at least ${options.min} (received: ${parsed})`,
+    );
   }
 
   if (options.max !== undefined && parsed > options.max) {
-    throw new Error(`${fieldName} must be at most ${options.max} (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be at most ${options.max} (received: ${parsed})`,
+    );
   }
 
   if (!options.allowZero && parsed === 0) {
-    throw new Error(`${fieldName} must be greater than 0 (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be greater than 0 (received: ${parsed})`,
+    );
   }
 
   return parsed;
@@ -73,9 +83,9 @@ export const parseIntSafe = (
  * @throws Error if parsing fails or validation constraints are not met
  */
 export const parseFloatSafe = (
-  value: any, 
-  fieldName: string = "Value", 
-  options: ParseIntOptions = {}
+  value: any,
+  fieldName: string = "Value",
+  options: ParseIntOptions = {},
 ): number => {
   // Handle null/undefined
   if (value === null || value === undefined) {
@@ -89,10 +99,10 @@ export const parseFloatSafe = (
 
   // Convert to string first to handle various input types
   const stringValue = String(value).trim();
-  
+
   // Parse the float
   const parsed = parseFloat(stringValue);
-  
+
   // Check if parsing resulted in NaN
   if (isNaN(parsed)) {
     throw new Error(`${fieldName} must be a valid number (received: ${value})`);
@@ -100,15 +110,21 @@ export const parseFloatSafe = (
 
   // Apply validation constraints
   if (options.min !== undefined && parsed < options.min) {
-    throw new Error(`${fieldName} must be at least ${options.min} (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be at least ${options.min} (received: ${parsed})`,
+    );
   }
 
   if (options.max !== undefined && parsed > options.max) {
-    throw new Error(`${fieldName} must be at most ${options.max} (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be at most ${options.max} (received: ${parsed})`,
+    );
   }
 
   if (!options.allowZero && parsed === 0) {
-    throw new Error(`${fieldName} must be greater than 0 (received: ${parsed})`);
+    throw new Error(
+      `${fieldName} must be greater than 0 (received: ${parsed})`,
+    );
   }
 
   return parsed;
@@ -123,30 +139,36 @@ export const parseFloatSafe = (
  * @throws Error if extraction fails
  */
 export const extractNumericId = (
-  idString: string | null | undefined, 
-  prefix: string, 
-  fieldName: string = "ID"
+  idString: string | null | undefined,
+  prefix: string,
+  fieldName: string = "ID",
 ): number => {
   if (!idString) {
     throw new Error(`${fieldName} cannot be null or empty`);
   }
 
   const trimmedId = idString.trim();
-  
+
   if (!trimmedId.startsWith(prefix)) {
-    throw new Error(`${fieldName} must start with '${prefix}' (received: ${idString})`);
+    throw new Error(
+      `${fieldName} must start with '${prefix}' (received: ${idString})`,
+    );
   }
 
   const numericPart = trimmedId.substring(prefix.length);
-  
+
   if (!numericPart) {
-    throw new Error(`${fieldName} is missing numeric part (received: ${idString})`);
+    throw new Error(
+      `${fieldName} is missing numeric part (received: ${idString})`,
+    );
   }
 
   try {
     return parseIntSafe(numericPart, `${fieldName} numeric part`, { min: 1 });
   } catch (error) {
-    throw new Error(`Invalid ${fieldName}: ${idString} - ${error instanceof Error ? error.message : 'Invalid format'}`);
+    throw new Error(
+      `Invalid ${fieldName}: ${idString} - ${error instanceof Error ? error.message : "Invalid format"}`,
+    );
   }
 };
 
@@ -158,23 +180,23 @@ export const extractNumericId = (
  * @returns Next ID in sequence
  */
 export const generateNextId = (
-  maxId: number | null | undefined, 
-  prefix: string, 
-  padLength: number = 3
+  maxId: number | null | undefined,
+  prefix: string,
+  padLength: number = 3,
 ): string => {
   // Handle null/undefined by starting from 1
   const currentMax = maxId ?? 0;
-  
+
   // Validate that maxId is a valid number if provided
   if (maxId !== null && maxId !== undefined && (isNaN(maxId) || maxId < 0)) {
     throw new Error(`Invalid maximum ID value: ${maxId}`);
   }
 
   const nextNumber = currentMax + 1;
-  
+
   // Pad with leading zeros
-  const paddedNumber = nextNumber.toString().padStart(padLength, '0');
-  
+  const paddedNumber = nextNumber.toString().padStart(padLength, "0");
+
   return `${prefix}${paddedNumber}`;
 };
 
@@ -185,7 +207,10 @@ export const generateNextId = (
  * @param fieldName - Name of the field for error messages
  * @returns Coerced positive integer
  */
-export const coercePositiveInt = (value: any, fieldName: string = "Value"): number => {
+export const coercePositiveInt = (
+  value: any,
+  fieldName: string = "Value",
+): number => {
   return parseIntSafe(value, fieldName, { min: 1 });
 };
 
@@ -195,7 +220,10 @@ export const coercePositiveInt = (value: any, fieldName: string = "Value"): numb
  * @param fieldName - Name of the field for error messages
  * @returns Coerced non-negative integer
  */
-export const coerceNonNegativeInt = (value: any, fieldName: string = "Value"): number => {
+export const coerceNonNegativeInt = (
+  value: any,
+  fieldName: string = "Value",
+): number => {
   return parseIntSafe(value, fieldName, { min: 0, allowZero: true });
 };
 
@@ -205,7 +233,10 @@ export const coerceNonNegativeInt = (value: any, fieldName: string = "Value"): n
  * @param fieldName - Name of the field for error messages
  * @returns Coerced positive float
  */
-export const coercePositiveFloat = (value: any, fieldName: string = "Value"): number => {
+export const coercePositiveFloat = (
+  value: any,
+  fieldName: string = "Value",
+): number => {
   return parseFloatSafe(value, fieldName, { min: 0.01 });
 };
 
@@ -215,6 +246,9 @@ export const coercePositiveFloat = (value: any, fieldName: string = "Value"): nu
  * @param fieldName - Name of the field for error messages
  * @returns Coerced non-negative float
  */
-export const coerceNonNegativeFloat = (value: any, fieldName: string = "Value"): number => {
+export const coerceNonNegativeFloat = (
+  value: any,
+  fieldName: string = "Value",
+): number => {
   return parseFloatSafe(value, fieldName, { min: 0, allowZero: true });
 };

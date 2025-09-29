@@ -1,8 +1,8 @@
-import React from 'react';
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { Button } from './ui/button';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import React from "react";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Button } from "./ui/button";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface QueryErrorBoundaryProps {
   children: React.ReactNode;
@@ -19,10 +19,12 @@ export function QueryErrorBoundary({ children }: QueryErrorBoundaryProps) {
               <AlertTitle>خطأ في البيانات</AlertTitle>
               <AlertDescription className="mt-2">
                 فشل في تحميل البيانات. يرجى المحاولة مرة أخرى.
-                {process.env.NODE_ENV === 'development' && (
+                {process.env.NODE_ENV === "development" && (
                   <details className="mt-2 text-xs">
                     <summary>تفاصيل الخطأ:</summary>
-                    <pre className="mt-1 whitespace-pre-wrap">{error?.message}</pre>
+                    <pre className="mt-1 whitespace-pre-wrap">
+                      {error?.message}
+                    </pre>
                   </details>
                 )}
               </AlertDescription>
@@ -67,14 +69,15 @@ class ErrorBoundary extends React.Component<
   }
 
   componentDidCatch(error: any, errorInfo: any) {
-    console.error('Query error boundary caught:', error, errorInfo);
+    console.error("Query error boundary caught:", error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return this.props.fallbackRender({
         error: this.state.error,
-        resetErrorBoundary: () => this.setState({ hasError: false, error: null })
+        resetErrorBoundary: () =>
+          this.setState({ hasError: false, error: null }),
       });
     }
 

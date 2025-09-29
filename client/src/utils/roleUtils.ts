@@ -2,7 +2,7 @@ import type { AuthUser } from "@/types";
 
 export function isUserAdmin(user: AuthUser | null): boolean {
   if (!user) return false;
-  
+
   // Check if user has admin role (role_id 1 is typically admin)
   return user.role_id === 1;
 }

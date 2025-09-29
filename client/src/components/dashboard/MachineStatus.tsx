@@ -4,18 +4,18 @@ import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { Progress } from "../ui/progress";
-import { formatNumber, formatPercentage } from '../../lib/formatNumber';
-import { 
-  Settings, 
-  Activity, 
-  AlertTriangle, 
-  CheckCircle2, 
-  XCircle, 
+import { formatNumber, formatPercentage } from "../../lib/formatNumber";
+import {
+  Settings,
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
   Clock,
   Zap,
   Thermometer,
   Gauge,
-  Plus
+  Plus,
 } from "lucide-react";
 
 interface MachineStatusProps {
@@ -29,29 +29,29 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'operational':
-        return 'bg-green-100 text-green-800';
-      case 'maintenance':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'down':
-        return 'bg-red-100 text-red-800';
-      case 'idle':
-        return 'bg-gray-100 text-gray-800';
+      case "operational":
+        return "bg-green-100 text-green-800";
+      case "maintenance":
+        return "bg-yellow-100 text-yellow-800";
+      case "down":
+        return "bg-red-100 text-red-800";
+      case "idle":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'operational':
-        return 'يعمل';
-      case 'maintenance':
-        return 'صيانة';
-      case 'down':
-        return 'متوقف';
-      case 'idle':
-        return 'خامل';
+      case "operational":
+        return "يعمل";
+      case "maintenance":
+        return "صيانة";
+      case "down":
+        return "متوقف";
+      case "idle":
+        return "خامل";
       default:
         return status;
     }
@@ -59,13 +59,13 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'operational':
+      case "operational":
         return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case 'maintenance':
+      case "maintenance":
         return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
-      case 'down':
+      case "down":
         return <XCircle className="w-4 h-4 text-red-600" />;
-      case 'idle':
+      case "idle":
         return <Clock className="w-4 h-4 text-gray-600" />;
       default:
         return <Settings className="w-4 h-4 text-gray-600" />;
@@ -102,9 +102,15 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
 
   // Calculate summary stats
   const machineList = Array.isArray(machines) ? machines : [];
-  const operationalMachines = machineList.filter((m: any) => m.status === 'operational').length;
-  const maintenanceMachines = machineList.filter((m: any) => m.status === 'maintenance').length;
-  const downMachines = machineList.filter((m: any) => m.status === 'down').length;
+  const operationalMachines = machineList.filter(
+    (m: any) => m.status === "operational",
+  ).length;
+  const maintenanceMachines = machineList.filter(
+    (m: any) => m.status === "maintenance",
+  ).length;
+  const downMachines = machineList.filter(
+    (m: any) => m.status === "down",
+  ).length;
 
   return (
     <Card>
@@ -119,7 +125,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
             رول جديد
           </Button>
         </div>
-        
+
         {/* Summary badges */}
         <div className="flex gap-2 mt-3">
           <Badge variant="default" className="bg-green-100 text-green-800">
@@ -137,13 +143,16 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
           )}
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-0">
         <ScrollArea className="h-80">
           {machineList.length > 0 ? (
             <div className="p-4 space-y-4">
               {machineList.map((machine: any) => (
-                <div key={machine.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                <div
+                  key={machine.id}
+                  className="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-start gap-3">
                       <div className="mt-1">
@@ -158,7 +167,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                             {getStatusText(machine.status)}
                           </Badge>
                         </div>
-                        
+
                         <div className="text-sm text-gray-600">
                           {machine.type && (
                             <div className="flex items-center gap-1 mb-1">
@@ -166,7 +175,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                               <span>{machine.type}</span>
                             </div>
                           )}
-                          
+
                           {machine.section_id && (
                             <div className="flex items-center gap-1">
                               <Activity className="w-3 h-3" />
@@ -176,7 +185,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                         </div>
                       </div>
                     </div>
-                    
+
                     {machine.production_rate && (
                       <div className="text-right">
                         <div className="text-sm font-medium text-gray-900">
@@ -188,9 +197,9 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                       </div>
                     )}
                   </div>
-                  
+
                   {/* Machine metrics */}
-                  {machine.status === 'operational' && (
+                  {machine.status === "operational" && (
                     <div className="space-y-2">
                       {/* Efficiency */}
                       <div className="flex items-center justify-between text-xs">
@@ -199,34 +208,58 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                           <span>الكفاءة</span>
                         </div>
                         <span className="font-medium">
-                          {formatPercentage(machine.efficiency || Math.floor(Math.random() * 20 + 80))}
+                          {formatPercentage(
+                            machine.efficiency ||
+                              Math.floor(Math.random() * 20 + 80),
+                          )}
                         </span>
                       </div>
-                      <Progress 
-                        value={machine.efficiency || Math.floor(Math.random() * 20 + 80)} 
+                      <Progress
+                        value={
+                          machine.efficiency ||
+                          Math.floor(Math.random() * 20 + 80)
+                        }
                         className="h-1"
                       />
-                      
+
                       {/* Additional metrics row */}
                       <div className="grid grid-cols-3 gap-2 text-xs text-gray-600 mt-2">
                         <div className="flex items-center gap-1">
                           <Thermometer className="w-3 h-3" />
-                          <span>{formatNumber(machine.temperature || Math.floor(Math.random() * 20 + 180))}°</span>
+                          <span>
+                            {formatNumber(
+                              machine.temperature ||
+                                Math.floor(Math.random() * 20 + 180),
+                            )}
+                            °
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Zap className="w-3 h-3" />
-                          <span>{formatNumber(machine.power || Math.floor(Math.random() * 50 + 150))}W</span>
+                          <span>
+                            {formatNumber(
+                              machine.power ||
+                                Math.floor(Math.random() * 50 + 150),
+                            )}
+                            W
+                          </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Activity className="w-3 h-3" />
-                          <span>{formatNumber(machine.speed || Math.floor(Math.random() * 500 + 1000))} م/د</span>
+                          <span>
+                            {formatNumber(
+                              machine.speed ||
+                                Math.floor(Math.random() * 500 + 1000),
+                            )}{" "}
+                            م/د
+                          </span>
                         </div>
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Maintenance info */}
-                  {machine.status === 'maintenance' && (
+                  {machine.status === "maintenance" && (
                     <div className="text-xs text-gray-600 bg-yellow-50 p-2 rounded">
                       <div className="flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3 text-yellow-600" />
@@ -234,9 +267,9 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Down status info */}
-                  {machine.status === 'down' && (
+                  {machine.status === "down" && (
                     <div className="text-xs text-gray-600 bg-red-50 p-2 rounded">
                       <div className="flex items-center gap-1">
                         <XCircle className="w-3 h-3 text-red-600" />
@@ -251,7 +284,9 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
             <div className="p-8 text-center">
               <Settings className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-600 mb-2">لا توجد مكائن مسجلة</p>
-              <p className="text-sm text-gray-500">أضف مكائن من صفحة التعريفات</p>
+              <p className="text-sm text-gray-500">
+                أضف مكائن من صفحة التعريفات
+              </p>
             </div>
           )}
         </ScrollArea>

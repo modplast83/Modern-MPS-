@@ -1,5 +1,11 @@
 import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Search } from "lucide-react";
 
 interface OrdersSearchProps {
@@ -9,11 +15,11 @@ interface OrdersSearchProps {
   setStatusFilter: (status: string) => void;
 }
 
-export default function OrdersSearch({ 
-  searchTerm, 
-  setSearchTerm, 
-  statusFilter, 
-  setStatusFilter 
+export default function OrdersSearch({
+  searchTerm,
+  setSearchTerm,
+  statusFilter,
+  setStatusFilter,
 }: OrdersSearchProps) {
   return (
     <div className="flex space-x-2 space-x-reverse">

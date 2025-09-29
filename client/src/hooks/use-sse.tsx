@@ -1,6 +1,6 @@
 // @refresh reset
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from './use-auth';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAuth } from "./use-auth";
 
 // SSE event types
 export interface SSENotification {
@@ -10,7 +10,7 @@ export interface SSENotification {
   message: string;
   message_ar?: string;
   type: string;
-  priority: 'low' | 'normal' | 'high' | 'urgent';
+  priority: "low" | "normal" | "high" | "urgent";
   context_type?: string;
   context_id?: string;
   created_at: string;
@@ -33,7 +33,10 @@ export interface SSEConnectionState {
 // Event handlers interface
 export interface SSEEventHandlers {
   onNotification?: (notification: SSENotification) => void;
-  onRecentNotifications?: (data: { notifications: SSENotification[]; count: number }) => void;
+  onRecentNotifications?: (data: {
+    notifications: SSENotification[];
+    count: number;
+  }) => void;
   onHeartbeat?: () => void;
   onConnected?: () => void;
   onError?: (error: Event) => void;
@@ -58,63 +61,75 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
 
   // Calculate exponential backoff delay
   const getReconnectDelay = useCallback(() => {
-    const exponentialDelay = baseReconnectDelay * Math.pow(2, reconnectAttempts.current);
+    const exponentialDelay =
+      baseReconnectDelay * Math.pow(2, reconnectAttempts.current);
     return Math.min(exponentialDelay, maxReconnectDelay);
   }, []);
 
   // Play notification sound based on priority
-  const playNotificationSound = useCallback((priority: string, shouldPlaySound: boolean = true) => {
-    if (!shouldPlaySound) return;
+  const playNotificationSound = useCallback(
+    (priority: string, shouldPlaySound: boolean = true) => {
+      if (!shouldPlaySound) return;
 
-    try {
-      // Create audio context for playing notification sounds
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      
-      // Different frequencies for different priorities
-      const frequencies: Record<string, number> = {
-        low: 300,
-        normal: 400,
-        high: 600,
-        urgent: 800
-      };
+      try {
+        // Create audio context for playing notification sounds
+        const audioContext = new (window.AudioContext ||
+          (window as any).webkitAudioContext)();
 
-      const frequency = frequencies[priority] || frequencies.normal;
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+        // Different frequencies for different priorities
+        const frequencies: Record<string, number> = {
+          low: 300,
+          normal: 400,
+          high: 600,
+          urgent: 800,
+        };
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+        const frequency = frequencies[priority] || frequencies.normal;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
 
-      oscillator.frequency.value = frequency;
-      oscillator.type = 'sine';
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
 
-      // Volume based on priority
-      const volume = priority === 'urgent' ? 0.3 : priority === 'high' ? 0.2 : 0.1;
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.frequency.value = frequency;
+        oscillator.type = "sine";
 
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5);
+        // Volume based on priority
+        const volume =
+          priority === "urgent" ? 0.3 : priority === "high" ? 0.2 : 0.1;
+        gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(
+          0.01,
+          audioContext.currentTime + 0.5,
+        );
 
-      // Play multiple beeps for urgent notifications
-      if (priority === 'urgent') {
-        setTimeout(() => {
-          const oscillator2 = audioContext.createOscillator();
-          const gainNode2 = audioContext.createGain();
-          oscillator2.connect(gainNode2);
-          gainNode2.connect(audioContext.destination);
-          oscillator2.frequency.value = frequency;
-          oscillator2.type = 'sine';
-          gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-          gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-          oscillator2.start();
-          oscillator2.stop(audioContext.currentTime + 0.3);
-        }, 600);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+
+        // Play multiple beeps for urgent notifications
+        if (priority === "urgent") {
+          setTimeout(() => {
+            const oscillator2 = audioContext.createOscillator();
+            const gainNode2 = audioContext.createGain();
+            oscillator2.connect(gainNode2);
+            gainNode2.connect(audioContext.destination);
+            oscillator2.frequency.value = frequency;
+            oscillator2.type = "sine";
+            gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode2.gain.exponentialRampToValueAtTime(
+              0.01,
+              audioContext.currentTime + 0.3,
+            );
+            oscillator2.start();
+            oscillator2.stop(audioContext.currentTime + 0.3);
+          }, 600);
+        }
+      } catch (error) {
+        console.warn("Could not play notification sound:", error);
       }
-    } catch (error) {
-      console.warn('Could not play notification sound:', error);
-    }
-  }, []);
+    },
+    [],
+  );
 
   // Clean up existing connection
   const cleanup = useCallback(() => {
@@ -122,55 +137,55 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
-    
+
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
 
-    setConnectionState(prev => ({
+    setConnectionState((prev) => ({
       ...prev,
       isConnected: false,
-      isConnecting: false
+      isConnecting: false,
     }));
   }, []);
 
   // Establish SSE connection
   const connect = useCallback(() => {
     if (!isAuthenticated || !user) {
-      console.log('[SSE] Not authenticated, skipping connection');
+      console.log("[SSE] Not authenticated, skipping connection");
       return;
     }
 
     if (eventSourceRef.current) {
-      console.log('[SSE] Connection already exists');
+      console.log("[SSE] Connection already exists");
       return;
     }
 
-    setConnectionState(prev => ({
+    setConnectionState((prev) => ({
       ...prev,
       isConnecting: true,
-      error: null
+      error: null,
     }));
 
-    console.log('[SSE] Establishing connection...');
+    console.log("[SSE] Establishing connection...");
 
     try {
-      const eventSource = new EventSource('/api/notifications/stream', {
-        withCredentials: true
+      const eventSource = new EventSource("/api/notifications/stream", {
+        withCredentials: true,
       });
 
       eventSourceRef.current = eventSource;
 
       // Handle connection opened
       eventSource.onopen = () => {
-        console.log('[SSE] Connection established successfully');
+        console.log("[SSE] Connection established successfully");
         reconnectAttempts.current = 0;
-        setConnectionState(prev => ({
+        setConnectionState((prev) => ({
           ...prev,
           isConnected: true,
           isConnecting: false,
-          error: null
+          error: null,
         }));
       };
 
@@ -178,38 +193,38 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          setConnectionState(prev => ({
+          setConnectionState((prev) => ({
             ...prev,
-            lastMessage: { event: 'message', data }
+            lastMessage: { event: "message", data },
           }));
-          console.log('[SSE] Received message:', data);
+          console.log("[SSE] Received message:", data);
         } catch (error) {
-          console.error('[SSE] Error parsing message:', error);
+          console.error("[SSE] Error parsing message:", error);
         }
       };
 
       // Handle specific events
-      
+
       // Connection confirmation
-      eventSource.addEventListener('connected', (event) => {
+      eventSource.addEventListener("connected", (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('[SSE] Connected event received:', data);
+          console.log("[SSE] Connected event received:", data);
           eventHandlers?.onConnected?.();
         } catch (error) {
-          console.error('[SSE] Error parsing connected event:', error);
+          console.error("[SSE] Error parsing connected event:", error);
         }
       });
 
       // New notification received
-      eventSource.addEventListener('notification', (event) => {
+      eventSource.addEventListener("notification", (event) => {
         try {
           const notification: SSENotification = JSON.parse(event.data);
-          console.log('[SSE] Notification received:', notification);
-          
-          setConnectionState(prev => ({
+          console.log("[SSE] Notification received:", notification);
+
+          setConnectionState((prev) => ({
             ...prev,
-            lastMessage: { event: 'notification', data: notification }
+            lastMessage: { event: "notification", data: notification },
           }));
 
           // Play sound if specified
@@ -219,84 +234,95 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
 
           // Call handler if provided
           eventHandlers?.onNotification?.(notification);
-
         } catch (error) {
-          console.error('[SSE] Error parsing notification event:', error);
+          console.error("[SSE] Error parsing notification event:", error);
         }
       });
 
       // Recent notifications on connection
-      eventSource.addEventListener('recent_notifications', (event) => {
+      eventSource.addEventListener("recent_notifications", (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('[SSE] Recent notifications received:', data);
+          console.log("[SSE] Recent notifications received:", data);
           eventHandlers?.onRecentNotifications?.(data);
         } catch (error) {
-          console.error('[SSE] Error parsing recent notifications:', error);
+          console.error("[SSE] Error parsing recent notifications:", error);
         }
       });
 
       // Heartbeat to keep connection alive
-      eventSource.addEventListener('heartbeat', (event) => {
+      eventSource.addEventListener("heartbeat", (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('[SSE] Heartbeat received:', data.timestamp);
+          console.log("[SSE] Heartbeat received:", data.timestamp);
           eventHandlers?.onHeartbeat?.();
         } catch (error) {
-          console.error('[SSE] Error parsing heartbeat:', error);
+          console.error("[SSE] Error parsing heartbeat:", error);
         }
       });
 
       // Handle connection errors
       eventSource.onerror = (event) => {
-        console.error('[SSE] Connection error:', event);
-        
-        const errorMessage = eventSource.readyState === EventSource.CLOSED 
-          ? 'اتصال مقطوع' 
-          : 'خطأ في الاتصال';
+        console.error("[SSE] Connection error:", event);
 
-        setConnectionState(prev => ({
+        const errorMessage =
+          eventSource.readyState === EventSource.CLOSED
+            ? "اتصال مقطوع"
+            : "خطأ في الاتصال";
+
+        setConnectionState((prev) => ({
           ...prev,
           isConnected: false,
           isConnecting: false,
-          error: errorMessage
+          error: errorMessage,
         }));
 
         // Call error handler
         eventHandlers?.onError?.(event);
 
         // Attempt to reconnect if not manually closed
-        if (eventSource.readyState !== EventSource.CLOSED && reconnectAttempts.current < maxReconnectAttempts) {
+        if (
+          eventSource.readyState !== EventSource.CLOSED &&
+          reconnectAttempts.current < maxReconnectAttempts
+        ) {
           const delay = getReconnectDelay();
-          console.log(`[SSE] Attempting reconnection in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
-          
+          console.log(
+            `[SSE] Attempting reconnection in ${delay}ms (attempt ${reconnectAttempts.current + 1})`,
+          );
+
           reconnectAttempts.current++;
           reconnectTimeoutRef.current = setTimeout(() => {
             cleanup();
             connect();
           }, delay);
         } else if (reconnectAttempts.current >= maxReconnectAttempts) {
-          console.error('[SSE] Max reconnection attempts reached');
-          setConnectionState(prev => ({
+          console.error("[SSE] Max reconnection attempts reached");
+          setConnectionState((prev) => ({
             ...prev,
-            error: 'فشل في إعادة الاتصال - يرجى تحديث الصفحة'
+            error: "فشل في إعادة الاتصال - يرجى تحديث الصفحة",
           }));
         }
       };
-
     } catch (error) {
-      console.error('[SSE] Error creating EventSource:', error);
-      setConnectionState(prev => ({
+      console.error("[SSE] Error creating EventSource:", error);
+      setConnectionState((prev) => ({
         ...prev,
         isConnecting: false,
-        error: 'فشل في إنشاء الاتصال'
+        error: "فشل في إنشاء الاتصال",
       }));
     }
-  }, [isAuthenticated, user, eventHandlers, cleanup, getReconnectDelay, playNotificationSound]);
+  }, [
+    isAuthenticated,
+    user,
+    eventHandlers,
+    cleanup,
+    getReconnectDelay,
+    playNotificationSound,
+  ]);
 
   // Manual reconnection function
   const reconnect = useCallback(() => {
-    console.log('[SSE] Manual reconnection requested');
+    console.log("[SSE] Manual reconnection requested");
     reconnectAttempts.current = 0;
     cleanup();
     setTimeout(connect, 1000); // Small delay to ensure cleanup is complete
@@ -304,7 +330,7 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
 
   // Disconnect manually
   const disconnect = useCallback(() => {
-    console.log('[SSE] Manual disconnection requested');
+    console.log("[SSE] Manual disconnection requested");
     cleanup();
     eventHandlers?.onClose?.();
   }, [cleanup, eventHandlers]);
@@ -312,10 +338,10 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
   // Auto-connect when authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
-      console.log('[SSE] User authenticated, establishing connection');
+      console.log("[SSE] User authenticated, establishing connection");
       connect();
     } else {
-      console.log('[SSE] User not authenticated, cleaning up connection');
+      console.log("[SSE] User not authenticated, cleaning up connection");
       cleanup();
     }
 
@@ -330,15 +356,28 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
   // Handle page visibility changes - reconnect when page becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && isAuthenticated && user && !connectionState.isConnected && !connectionState.isConnecting) {
-        console.log('[SSE] Page became visible, attempting to reconnect');
+      if (
+        document.visibilityState === "visible" &&
+        isAuthenticated &&
+        user &&
+        !connectionState.isConnected &&
+        !connectionState.isConnecting
+      ) {
+        console.log("[SSE] Page became visible, attempting to reconnect");
         reconnect();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [isAuthenticated, user, connectionState.isConnected, connectionState.isConnecting, reconnect]);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [
+    isAuthenticated,
+    user,
+    connectionState.isConnected,
+    connectionState.isConnecting,
+    reconnect,
+  ]);
 
   return {
     connectionState,

@@ -19,29 +19,29 @@ export default function HRTabs() {
 
       <Tabs defaultValue="attendance" className="w-full">
         <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
-          <TabsTrigger 
-            value="attendance" 
+          <TabsTrigger
+            value="attendance"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Clock className="w-4 h-4" />
             إدارة الحضور
           </TabsTrigger>
-          <TabsTrigger 
-            value="training" 
+          <TabsTrigger
+            value="training"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <GraduationCap className="w-4 h-4" />
             التدريب الميداني
           </TabsTrigger>
-          <TabsTrigger 
-            value="performance" 
+          <TabsTrigger
+            value="performance"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Target className="w-4 h-4" />
             تقييم الأداء
           </TabsTrigger>
-          <TabsTrigger 
-            value="leaves" 
+          <TabsTrigger
+            value="leaves"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Calendar className="w-4 h-4" />

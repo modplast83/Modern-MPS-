@@ -2,8 +2,8 @@ import OpenAI from "openai";
 import { storage } from "../storage";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 interface IntelligentReport {
@@ -17,14 +17,16 @@ interface IntelligentReport {
 
 export class AIReports {
   // توليد تقرير الإنتاج الذكي
-  static async generateProductionReport(_params?: any): Promise<IntelligentReport> {
+  static async generateProductionReport(
+    _params?: any,
+  ): Promise<IntelligentReport> {
     try {
       // جمع البيانات
       const stats = await storage.getDashboardStats();
       const productionOrders = await storage.getAllProductionOrders();
       const machines = await storage.getMachines();
       const rolls = await storage.getRolls();
-      
+
       // تحليل البيانات باستخدام AI
       const analysis = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -42,7 +44,7 @@ export class AIReports {
     "metric1": "قيمة1",
     "metric2": "قيمة2"
   }
-}`
+}`,
           },
           {
             role: "user",
@@ -55,15 +57,15 @@ export class AIReports {
 عدد المكائن: ${machines.length}
 عدد الرولات: ${rolls.length}
 
-قدم تحليلاً شاملاً مع توصيات عملية.`
-          }
+قدم تحليلاً شاملاً مع توصيات عملية.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(analysis.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(analysis.choices[0].message.content || "{}");
+
       return {
         title: result.title || "تقرير الإنتاج الذكي",
         summary: result.summary || "تحليل شامل لأداء الإنتاج",
@@ -74,21 +76,23 @@ export class AIReports {
           productionOrders: productionOrders.length,
           machines: machines.length,
           rolls: rolls.length,
-          key_metrics: result.key_metrics || {}
-        }
+          key_metrics: result.key_metrics || {},
+        },
       };
     } catch (error) {
-      console.error('Production report error:', error);
-      throw new Error('فشل في توليد تقرير الإنتاج');
+      console.error("Production report error:", error);
+      throw new Error("فشل في توليد تقرير الإنتاج");
     }
   }
 
   // توليد تقرير الجودة الذكي
-  static async generateQualityReport(_params?: any): Promise<IntelligentReport> {
+  static async generateQualityReport(
+    _params?: any,
+  ): Promise<IntelligentReport> {
     try {
       const qualityChecks = await storage.getQualityChecks();
       const stats = await storage.getDashboardStats();
-      
+
       const analysis = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -98,7 +102,7 @@ export class AIReports {
 - اتجاهات الجودة
 - نقاط الضعف
 - التوصيات للتحسين
-- مؤشرات الأداء الرئيسية`
+- مؤشرات الأداء الرئيسية`,
           },
           {
             role: "user",
@@ -107,15 +111,15 @@ export class AIReports {
 عدد فحوصات الجودة: ${qualityChecks.length}
 نسبة الهدر: ${stats.wastePercentage}%
 
-قدم تحليلاً متخصصاً في الجودة مع توصيات محددة.`
-          }
+قدم تحليلاً متخصصاً في الجودة مع توصيات محددة.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(analysis.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(analysis.choices[0].message.content || "{}");
+
       return {
         title: result.title || "تقرير الجودة الذكي",
         summary: result.summary || "تحليل شامل لمؤشرات الجودة",
@@ -125,22 +129,24 @@ export class AIReports {
           qualityScore: stats.qualityScore,
           qualityChecks: qualityChecks.length,
           wastePercentage: stats.wastePercentage,
-          checks: qualityChecks.slice(0, 10)
-        }
+          checks: qualityChecks.slice(0, 10),
+        },
       };
     } catch (error) {
-      console.error('Quality report error:', error);
-      throw new Error('فشل في توليد تقرير الجودة');
+      console.error("Quality report error:", error);
+      throw new Error("فشل في توليد تقرير الجودة");
     }
   }
 
   // توليد تقرير الصيانة الذكي
-  static async generateMaintenanceReport(_params?: any): Promise<IntelligentReport> {
+  static async generateMaintenanceReport(
+    _params?: any,
+  ): Promise<IntelligentReport> {
     try {
       const machines = await storage.getMachines();
       // الحصول على سجلات الصيانة (محاكاة حتى يتم إضافة الوظيفة)
       const maintenanceRecords: any[] = [];
-      
+
       const analysis = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -150,26 +156,26 @@ export class AIReports {
 - حالة المكائن
 - جدولة الصيانة الوقائية
 - التكاليف والكفاءة
-- توصيات التحسين`
+- توصيات التحسين`,
           },
           {
             role: "user",
             content: `بيانات الصيانة:
 عدد المكائن: ${machines.length}
-المكائن النشطة: ${machines.filter((m: any) => m.status === 'active').length}
-المكائن في الصيانة: ${machines.filter((m: any) => m.status === 'maintenance').length}
-المكائن المتوقفة: ${machines.filter((m: any) => m.status === 'down').length}
+المكائن النشطة: ${machines.filter((m: any) => m.status === "active").length}
+المكائن في الصيانة: ${machines.filter((m: any) => m.status === "maintenance").length}
+المكائن المتوقفة: ${machines.filter((m: any) => m.status === "down").length}
 سجلات الصيانة: ${maintenanceRecords.length}
 
-قدم تحليلاً متخصصاً في الصيانة.`
-          }
+قدم تحليلاً متخصصاً في الصيانة.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(analysis.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(analysis.choices[0].message.content || "{}");
+
       return {
         title: result.title || "تقرير الصيانة الذكي",
         summary: result.summary || "تحليل شامل لحالة المكائن والصيانة",
@@ -177,15 +183,18 @@ export class AIReports {
         recommendations: result.recommendations || [],
         data: {
           totalMachines: machines.length,
-          activeMachines: machines.filter((m: any) => m.status === 'active').length,
-          maintenanceMachines: machines.filter((m: any) => m.status === 'maintenance').length,
-          downMachines: machines.filter((m: any) => m.status === 'down').length,
-          maintenanceRecords: maintenanceRecords.length
-        }
+          activeMachines: machines.filter((m: any) => m.status === "active")
+            .length,
+          maintenanceMachines: machines.filter(
+            (m: any) => m.status === "maintenance",
+          ).length,
+          downMachines: machines.filter((m: any) => m.status === "down").length,
+          maintenanceRecords: maintenanceRecords.length,
+        },
       };
     } catch (error) {
-      console.error('Maintenance report error:', error);
-      throw new Error('فشل في توليد تقرير الصيانة');
+      console.error("Maintenance report error:", error);
+      throw new Error("فشل في توليد تقرير الصيانة");
     }
   }
 
@@ -195,7 +204,7 @@ export class AIReports {
       const customers = await storage.getCustomers();
       const orders = await storage.getAllOrders();
       const stats = await storage.getDashboardStats();
-      
+
       const analysis = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -205,7 +214,7 @@ export class AIReports {
 - أداء المبيعات
 - تحليل العملاء
 - الاتجاهات والفرص
-- استراتيجيات النمو`
+- استراتيجيات النمو`,
           },
           {
             role: "user",
@@ -213,18 +222,18 @@ export class AIReports {
 عدد العملاء: ${customers.length}
 عدد الطلبات: ${orders.length}
 الطلبات النشطة: ${stats.activeOrders}
-الطلبات المكتملة: ${orders.filter((o: any) => o.status === 'completed').length}
-الطلبات المُسلمة: ${orders.filter((o: any) => o.status === 'delivered').length}
+الطلبات المكتملة: ${orders.filter((o: any) => o.status === "completed").length}
+الطلبات المُسلمة: ${orders.filter((o: any) => o.status === "delivered").length}
 
-قدم تحليلاً تجارياً شاملاً.`
-          }
+قدم تحليلاً تجارياً شاملاً.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(analysis.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(analysis.choices[0].message.content || "{}");
+
       return {
         title: result.title || "تقرير المبيعات والعملاء الذكي",
         summary: result.summary || "تحليل شامل لأداء المبيعات والعملاء",
@@ -234,36 +243,41 @@ export class AIReports {
           totalCustomers: customers.length,
           totalOrders: orders.length,
           activeOrders: stats.activeOrders,
-          completedOrders: orders.filter((o: any) => o.status === 'completed').length,
-          deliveredOrders: orders.filter((o: any) => o.status === 'delivered').length
-        }
+          completedOrders: orders.filter((o: any) => o.status === "completed")
+            .length,
+          deliveredOrders: orders.filter((o: any) => o.status === "delivered")
+            .length,
+        },
       };
     } catch (error) {
-      console.error('Sales report error:', error);
-      throw new Error('فشل في توليد تقرير المبيعات');
+      console.error("Sales report error:", error);
+      throw new Error("فشل في توليد تقرير المبيعات");
     }
   }
 
   // توليد تقرير مخصص
-  static async generateCustomReport(reportType: string, _params?: any): Promise<IntelligentReport> {
+  static async generateCustomReport(
+    reportType: string,
+    _params?: any,
+  ): Promise<IntelligentReport> {
     try {
       // جمع البيانات حسب نوع التقرير
       let data = {};
       let contextDescription = "";
-      
+
       switch (reportType.toLowerCase()) {
-        case 'inventory':
-        case 'مخزون':
+        case "inventory":
+        case "مخزون":
           data = await this.gatherInventoryData();
           contextDescription = "بيانات المخزون والمستودع";
           break;
-        case 'hr':
-        case 'موارد_بشرية':
+        case "hr":
+        case "موارد_بشرية":
           data = await this.gatherHRData();
           contextDescription = "بيانات الموارد البشرية";
           break;
-        case 'financial':
-        case 'مالي':
+        case "financial":
+        case "مالي":
           data = await this.gatherFinancialData();
           contextDescription = "البيانات المالية والتكاليف";
           break;
@@ -271,7 +285,7 @@ export class AIReports {
           data = await storage.getDashboardStats();
           contextDescription = "البيانات العامة للنظام";
       }
-      
+
       const analysis = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -281,31 +295,31 @@ export class AIReports {
 - تحليل الوضع الحالي
 - المؤشرات الرئيسية
 - التحديات والفرص
-- توصيات عملية قابلة للتنفيذ`
+- توصيات عملية قابلة للتنفيذ`,
           },
           {
             role: "user",
             content: `نوع التقرير: ${reportType}
 البيانات: ${JSON.stringify(data, null, 2)}
 
-قدم تحليلاً شاملاً ومتخصصاً.`
-          }
+قدم تحليلاً شاملاً ومتخصصاً.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(analysis.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(analysis.choices[0].message.content || "{}");
+
       return {
         title: result.title || `تقرير ${reportType} الذكي`,
         summary: result.summary || `تحليل شامل لـ ${contextDescription}`,
         insights: result.insights || [],
         recommendations: result.recommendations || [],
-        data
+        data,
       };
     } catch (error) {
-      console.error('Custom report error:', error);
+      console.error("Custom report error:", error);
       throw new Error(`فشل في توليد تقرير ${reportType}`);
     }
   }
@@ -317,15 +331,17 @@ export class AIReports {
       const inventory: any[] = [];
       const locations: any[] = [];
       const movements: any[] = [];
-      
+
       return {
         totalItems: inventory.length,
         totalLocations: locations.length,
         totalMovements: movements.length,
-        lowStockItems: inventory.filter((item: any) => (item.current_stock || 0) < (item.min_stock || 10)).length
+        lowStockItems: inventory.filter(
+          (item: any) => (item.current_stock || 0) < (item.min_stock || 10),
+        ).length,
       };
     } catch (error) {
-      return { error: 'فشل في جمع بيانات المخزون' };
+      return { error: "فشل في جمع بيانات المخزون" };
     }
   }
 
@@ -336,15 +352,15 @@ export class AIReports {
       // محاكاة بيانات الموارد البشرية حتى يتم إضافة الوظائف
       const attendance: any[] = [];
       const training: any[] = [];
-      
+
       return {
         totalEmployees: users.length,
-        activeEmployees: users.filter(u => u.status === 'active').length,
+        activeEmployees: users.filter((u) => u.status === "active").length,
         attendanceRecords: attendance.length,
-        trainingRecords: training.length
+        trainingRecords: training.length,
       };
     } catch (error) {
-      return { error: 'فشل في جمع بيانات الموارد البشرية' };
+      return { error: "فشل في جمع بيانات الموارد البشرية" };
     }
   }
 
@@ -353,16 +369,18 @@ export class AIReports {
     try {
       const orders = await storage.getAllOrders();
       const stats = await storage.getDashboardStats();
-      
+
       return {
         totalOrders: orders.length,
-        completedOrders: orders.filter((o: any) => o.status === 'completed').length,
-        deliveredOrders: orders.filter((o: any) => o.status === 'delivered').length,
+        completedOrders: orders.filter((o: any) => o.status === "completed")
+          .length,
+        deliveredOrders: orders.filter((o: any) => o.status === "delivered")
+          .length,
         productionRate: stats.productionRate,
-        wastePercentage: stats.wastePercentage
+        wastePercentage: stats.wastePercentage,
       };
     } catch (error) {
-      return { error: 'فشل في جمع البيانات المالية' };
+      return { error: "فشل في جمع البيانات المالية" };
     }
   }
 }

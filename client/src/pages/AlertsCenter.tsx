@@ -1,20 +1,31 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
-import { ScrollArea } from '../components/ui/scroll-area';
-import { Separator } from '../components/ui/separator';
-import { 
-  AlertTriangle, 
-  Shield, 
-  Activity, 
-  Database, 
-  Factory, 
-  Package, 
-  Settings, 
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Badge } from "../components/ui/badge";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
+import { ScrollArea } from "../components/ui/scroll-area";
+import { Separator } from "../components/ui/separator";
+import {
+  AlertTriangle,
+  Shield,
+  Activity,
+  Database,
+  Factory,
+  Package,
+  Settings,
   CheckCircle2,
   XCircle,
   Clock,
@@ -26,14 +37,20 @@ import {
   Filter,
   Search,
   ChevronRight,
-  Zap
-} from 'lucide-react';
-import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { apiRequest } from '../lib/queryClient';
-import { useToast } from '../hooks/use-toast';
-import { formatDistanceToNow, format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+  Zap,
+} from "lucide-react";
+import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { apiRequest } from "../lib/queryClient";
+import { useToast } from "../hooks/use-toast";
+import { formatDistanceToNow, format } from "date-fns";
+import { ar } from "date-fns/locale";
 
 // أنواع البيانات
 interface SystemAlert {
@@ -50,7 +67,11 @@ interface SystemAlert {
   status: string;
   requires_action: boolean;
   context_data?: Record<string, any>;
-  suggested_actions?: {action: string; priority: number; description?: string}[];
+  suggested_actions?: {
+    action: string;
+    priority: number;
+    description?: string;
+  }[];
   target_users?: number[];
   target_roles?: number[];
   occurrences: number;
@@ -82,90 +103,102 @@ interface HealthStatus {
  * مركز التحذيرات الذكية الشامل
  */
 export default function AlertsCenter() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterSeverity, setFilterSeverity] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('active');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterSeverity, setFilterSeverity] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("active");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // جلب التحذيرات
-  const { data: alerts = [], isLoading: alertsLoading } = useQuery<SystemAlert[]>({
-    queryKey: ['/api/alerts', { 
-      status: filterStatus, 
-      type: filterType === 'all' ? undefined : filterType,
-      severity: filterSeverity === 'all' ? undefined : filterSeverity 
-    }],
-    refetchInterval: 30000 // تحديث كل 30 ثانية
+  const { data: alerts = [], isLoading: alertsLoading } = useQuery<
+    SystemAlert[]
+  >({
+    queryKey: [
+      "/api/alerts",
+      {
+        status: filterStatus,
+        type: filterType === "all" ? undefined : filterType,
+        severity: filterSeverity === "all" ? undefined : filterSeverity,
+      },
+    ],
+    refetchInterval: 30000, // تحديث كل 30 ثانية
   });
 
   // جلب إحصائيات التحذيرات
   const { data: stats } = useQuery<AlertStats>({
-    queryKey: ['/api/alerts/stats'],
-    refetchInterval: 60000 // تحديث كل دقيقة
+    queryKey: ["/api/alerts/stats"],
+    refetchInterval: 60000, // تحديث كل دقيقة
   });
 
   // جلب حالة النظام
   const { data: healthStatus } = useQuery<HealthStatus>({
-    queryKey: ['/api/system/health'],
-    refetchInterval: 30000
+    queryKey: ["/api/system/health"],
+    refetchInterval: 30000,
   });
 
   // حل التحذير
   const resolveAlertMutation = useMutation({
-    mutationFn: async ({ alertId, notes }: { alertId: number; notes?: string }) => {
+    mutationFn: async ({
+      alertId,
+      notes,
+    }: {
+      alertId: number;
+      notes?: string;
+    }) => {
       return apiRequest(`/api/alerts/${alertId}/resolve`, {
-        method: 'POST',
-        body: JSON.stringify({ notes })
+        method: "POST",
+        body: JSON.stringify({ notes }),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts/stats"] });
       toast({
         title: "تم حل التحذير بنجاح",
-        description: "تم تحديث حالة التحذير"
+        description: "تم تحديث حالة التحذير",
       });
     },
     onError: (error: any) => {
       toast({
         title: "خطأ في حل التحذير",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // إغلاق التحذير
   const dismissAlertMutation = useMutation({
     mutationFn: async (alertId: number) => {
       return apiRequest(`/api/alerts/${alertId}/dismiss`, {
-        method: 'POST'
+        method: "POST",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/alerts/stats'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/alerts/stats"] });
       toast({
         title: "تم إغلاق التحذير",
-        description: "تم إغلاق التحذير بنجاح"
+        description: "تم إغلاق التحذير بنجاح",
       });
     },
     onError: (error: any) => {
       toast({
         title: "خطأ في إغلاق التحذير",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // فلترة التحذيرات
   const filteredAlerts = alerts.filter((alert: SystemAlert) => {
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch =
+      searchQuery === "" ||
       alert.title_ar.toLowerCase().includes(searchQuery.toLowerCase()) ||
       alert.message_ar.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesSearch;
   });
 
@@ -178,7 +211,7 @@ export default function AlertsCenter() {
       quality: CheckCircle2,
       maintenance: Settings,
       security: Shield,
-      performance: Activity
+      performance: Activity,
     };
     return icons[type as keyof typeof icons] || AlertTriangle;
   };
@@ -186,21 +219,30 @@ export default function AlertsCenter() {
   // الحصول على أيقونة الخطورة
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'destructive';
-      case 'high': return 'destructive';
-      case 'medium': return 'warning';
-      case 'low': return 'secondary';
-      default: return 'secondary';
+      case "critical":
+        return "destructive";
+      case "high":
+        return "destructive";
+      case "medium":
+        return "warning";
+      case "low":
+        return "secondary";
+      default:
+        return "secondary";
     }
   };
 
   // الحصول على أيقونة الحالة
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return AlertTriangle;
-      case 'resolved': return CheckCircle2;
-      case 'dismissed': return XCircle;
-      default: return Clock;
+      case "active":
+        return AlertTriangle;
+      case "resolved":
+        return CheckCircle2;
+      case "dismissed":
+        return XCircle;
+      default:
+        return Clock;
     }
   };
 
@@ -236,26 +278,48 @@ export default function AlertsCenter() {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className={`text-2xl font-bold ${
-                  healthStatus.overall_status === 'healthy' ? 'text-green-600' : 
-                  healthStatus.overall_status === 'warning' ? 'text-yellow-600' : 'text-red-600'
-                }`}>
-                  {healthStatus.overall_status === 'healthy' ? 'سليم' :
-                   healthStatus.overall_status === 'warning' ? 'تحذير' : 'خطر'}
+                <div
+                  className={`text-2xl font-bold ${
+                    healthStatus.overall_status === "healthy"
+                      ? "text-green-600"
+                      : healthStatus.overall_status === "warning"
+                        ? "text-yellow-600"
+                        : "text-red-600"
+                  }`}
+                >
+                  {healthStatus.overall_status === "healthy"
+                    ? "سليم"
+                    : healthStatus.overall_status === "warning"
+                      ? "تحذير"
+                      : "خطر"}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">الحالة العامة</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  الحالة العامة
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{healthStatus.healthy_checks}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">فحوصات سليمة</div>
+                <div className="text-2xl font-bold text-green-600">
+                  {healthStatus.healthy_checks}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  فحوصات سليمة
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">{healthStatus.warning_checks}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">تحذيرات</div>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {healthStatus.warning_checks}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  تحذيرات
+                </div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">{healthStatus.critical_checks}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">حالات خطرة</div>
+                <div className="text-2xl font-bold text-red-600">
+                  {healthStatus.critical_checks}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">
+                  حالات خطرة
+                </div>
               </div>
             </div>
           </CardContent>
@@ -269,7 +333,9 @@ export default function AlertsCenter() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">إجمالي التحذيرات</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    إجمالي التحذيرات
+                  </p>
                   <p className="text-2xl font-bold">{stats.total_alerts}</p>
                 </div>
                 <Bell className="w-8 h-8 text-blue-600" />
@@ -281,8 +347,12 @@ export default function AlertsCenter() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">تحذيرات نشطة</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.active_alerts}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    تحذيرات نشطة
+                  </p>
+                  <p className="text-2xl font-bold text-orange-600">
+                    {stats.active_alerts}
+                  </p>
                 </div>
                 <AlertTriangle className="w-8 h-8 text-orange-600" />
               </div>
@@ -293,8 +363,12 @@ export default function AlertsCenter() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">تحذيرات حرجة</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.critical_alerts}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    تحذيرات حرجة
+                  </p>
+                  <p className="text-2xl font-bold text-red-600">
+                    {stats.critical_alerts}
+                  </p>
                 </div>
                 <AlertCircle className="w-8 h-8 text-red-600" />
               </div>
@@ -305,8 +379,12 @@ export default function AlertsCenter() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">تم حلها اليوم</p>
-                  <p className="text-2xl font-bold text-green-600">{stats.resolved_today}</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    تم حلها اليوم
+                  </p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {stats.resolved_today}
+                  </p>
                 </div>
                 <CheckCircle2 className="w-8 h-8 text-green-600" />
               </div>
@@ -333,7 +411,10 @@ export default function AlertsCenter() {
             </div>
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-40" data-testid="select-filter-status">
+              <SelectTrigger
+                className="w-40"
+                data-testid="select-filter-status"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -360,7 +441,10 @@ export default function AlertsCenter() {
             </Select>
 
             <Select value={filterSeverity} onValueChange={setFilterSeverity}>
-              <SelectTrigger className="w-40" data-testid="select-filter-severity">
+              <SelectTrigger
+                className="w-40"
+                data-testid="select-filter-severity"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -389,7 +473,9 @@ export default function AlertsCenter() {
               <div className="flex items-center justify-center h-32">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">جاري تحميل التحذيرات...</p>
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    جاري تحميل التحذيرات...
+                  </p>
                 </div>
               </div>
             ) : filteredAlerts.length === 0 ? (
@@ -407,58 +493,84 @@ export default function AlertsCenter() {
                 {filteredAlerts.map((alert: SystemAlert) => {
                   const TypeIcon = getTypeIcon(alert.type);
                   const StatusIcon = getStatusIcon(alert.status);
-                  
+
                   return (
-                    <Card key={alert.id} className={`border-r-4 ${
-                      alert.severity === 'critical' ? 'border-r-red-500' :
-                      alert.severity === 'high' ? 'border-r-orange-500' :
-                      alert.severity === 'medium' ? 'border-r-yellow-500' :
-                      'border-r-blue-500'
-                    }`}>
+                    <Card
+                      key={alert.id}
+                      className={`border-r-4 ${
+                        alert.severity === "critical"
+                          ? "border-r-red-500"
+                          : alert.severity === "high"
+                            ? "border-r-orange-500"
+                            : alert.severity === "medium"
+                              ? "border-r-yellow-500"
+                              : "border-r-blue-500"
+                      }`}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
                           <div className="flex items-start gap-3 flex-1">
                             <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
                               <TypeIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                             </div>
-                            
+
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
                                   {alert.title_ar}
                                 </h3>
-                                <Badge variant={getSeverityColor(alert.severity)}>
-                                  {alert.severity === 'critical' ? 'حرج' :
-                                   alert.severity === 'high' ? 'عالي' :
-                                   alert.severity === 'medium' ? 'متوسط' : 'منخفض'}
+                                <Badge
+                                  variant={getSeverityColor(alert.severity)}
+                                >
+                                  {alert.severity === "critical"
+                                    ? "حرج"
+                                    : alert.severity === "high"
+                                      ? "عالي"
+                                      : alert.severity === "medium"
+                                        ? "متوسط"
+                                        : "منخفض"}
                                 </Badge>
                                 <Badge variant="outline">
-                                  {alert.type === 'system' ? 'نظام' :
-                                   alert.type === 'production' ? 'إنتاج' :
-                                   alert.type === 'inventory' ? 'مخزون' :
-                                   alert.type === 'quality' ? 'جودة' :
-                                   alert.type === 'maintenance' ? 'صيانة' :
-                                   alert.type === 'security' ? 'أمان' : alert.type}
+                                  {alert.type === "system"
+                                    ? "نظام"
+                                    : alert.type === "production"
+                                      ? "إنتاج"
+                                      : alert.type === "inventory"
+                                        ? "مخزون"
+                                        : alert.type === "quality"
+                                          ? "جودة"
+                                          : alert.type === "maintenance"
+                                            ? "صيانة"
+                                            : alert.type === "security"
+                                              ? "أمان"
+                                              : alert.type}
                                 </Badge>
                               </div>
-                              
+
                               <p className="text-gray-600 dark:text-gray-300 mb-3">
                                 {alert.message_ar}
                               </p>
-                              
+
                               <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                                 <div className="flex items-center gap-1">
                                   <StatusIcon className="w-4 h-4" />
-                                  {alert.status === 'active' ? 'نشط' :
-                                   alert.status === 'resolved' ? 'محلول' :
-                                   alert.status === 'dismissed' ? 'مغلق' : alert.status}
+                                  {alert.status === "active"
+                                    ? "نشط"
+                                    : alert.status === "resolved"
+                                      ? "محلول"
+                                      : alert.status === "dismissed"
+                                        ? "مغلق"
+                                        : alert.status}
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Clock className="w-4 h-4" />
-                                  {formatDistanceToNow(new Date(alert.created_at), { 
-                                    addSuffix: true, 
-                                    locale: ar 
-                                  })}
+                                  {formatDistanceToNow(
+                                    new Date(alert.created_at),
+                                    {
+                                      addSuffix: true,
+                                      locale: ar,
+                                    },
+                                  )}
                                 </div>
                                 {alert.occurrences > 1 && (
                                   <div className="flex items-center gap-1">
@@ -469,30 +581,41 @@ export default function AlertsCenter() {
                               </div>
 
                               {/* الإجراءات المقترحة */}
-                              {alert.suggested_actions && alert.suggested_actions.length > 0 && (
-                                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                                  <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                                    إجراءات مقترحة:
-                                  </p>
-                                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                                    {alert.suggested_actions.map((action, index) => (
-                                      <li key={index} className="flex items-center gap-2">
-                                        <ChevronRight className="w-3 h-3" />
-                                        {action.description || action.action}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
+                              {alert.suggested_actions &&
+                                alert.suggested_actions.length > 0 && (
+                                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                                      إجراءات مقترحة:
+                                    </p>
+                                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                                      {alert.suggested_actions.map(
+                                        (action, index) => (
+                                          <li
+                                            key={index}
+                                            className="flex items-center gap-2"
+                                          >
+                                            <ChevronRight className="w-3 h-3" />
+                                            {action.description ||
+                                              action.action}
+                                          </li>
+                                        ),
+                                      )}
+                                    </ul>
+                                  </div>
+                                )}
                             </div>
                           </div>
 
                           {/* أزرار الإجراءات */}
-                          {alert.status === 'active' && (
+                          {alert.status === "active" && (
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
-                                onClick={() => resolveAlertMutation.mutate({ alertId: alert.id })}
+                                onClick={() =>
+                                  resolveAlertMutation.mutate({
+                                    alertId: alert.id,
+                                  })
+                                }
                                 disabled={resolveAlertMutation.isPending}
                                 data-testid={`button-resolve-${alert.id}`}
                               >
@@ -502,7 +625,9 @@ export default function AlertsCenter() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => dismissAlertMutation.mutate(alert.id)}
+                                onClick={() =>
+                                  dismissAlertMutation.mutate(alert.id)
+                                }
                                 disabled={dismissAlertMutation.isPending}
                                 data-testid={`button-dismiss-${alert.id}`}
                               >

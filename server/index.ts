@@ -9,96 +9,166 @@ import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 const app = express();
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: false, limit: '50mb' }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
 // Security function to check for plaintext passwords
 async function performPasswordSecurityCheck(): Promise<void> {
   // Check if security check should be skipped via environment variable
-  if (process.env.SKIP_SECURITY_CHECK === 'true') {
-    console.warn("⚠️ SECURITY CHECK BYPASSED: SKIP_SECURITY_CHECK environment variable is set");
+  if (process.env.SKIP_SECURITY_CHECK === "true") {
+    console.warn(
+      "⚠️ SECURITY CHECK BYPASSED: SKIP_SECURITY_CHECK environment variable is set",
+    );
     console.warn("⚠️ This should only be used temporarily during deployment");
-    console.warn("⚠️ Please remove SKIP_SECURITY_CHECK and fix any password issues immediately");
+    console.warn(
+      "⚠️ Please remove SKIP_SECURITY_CHECK and fix any password issues immediately",
+    );
     return;
   }
 
   try {
     console.log("🔒 Performing startup password security check...");
-    
+
     const allUsers = await db.select().from(users);
     let plaintextPasswordsFound = 0;
     const problematicUserIds: number[] = [];
-    
+
     for (const user of allUsers) {
       if (!user.password) {
-        console.warn(`⚠️ User ${user.id} (${user.username}) has no password set`);
+        console.warn(
+          `⚠️ User ${user.id} (${user.username}) has no password set`,
+        );
         continue;
       }
-      
+
       // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-      const isHashedPassword = user.password.startsWith('$2a$') || 
-                             user.password.startsWith('$2b$') || 
-                             user.password.startsWith('$2y$');
-      
+      const isHashedPassword =
+        user.password.startsWith("$2a$") ||
+        user.password.startsWith("$2b$") ||
+        user.password.startsWith("$2y$");
+
       if (!isHashedPassword) {
         plaintextPasswordsFound++;
         problematicUserIds.push(user.id);
-        console.error(`🚨 SECURITY ALERT: User ${user.id} (${user.username}) has plaintext password!`);
+        console.error(
+          `🚨 SECURITY ALERT: User ${user.id} (${user.username}) has plaintext password!`,
+        );
       }
     }
-    
+
     if (plaintextPasswordsFound > 0) {
-      console.error(`🚨 CRITICAL SECURITY ISSUE: Found ${plaintextPasswordsFound} user(s) with plaintext passwords!`);
-      console.error(`🚨 Affected user IDs: [${problematicUserIds.join(', ')}]`);
-      console.error(`🚨 This is a security vulnerability that must be addressed immediately!`);
-      console.error(`🚨 All passwords should be hashed with bcrypt before storage.`);
-      
+      console.error(
+        `🚨 CRITICAL SECURITY ISSUE: Found ${plaintextPasswordsFound} user(s) with plaintext passwords!`,
+      );
+      console.error(`🚨 Affected user IDs: [${problematicUserIds.join(", ")}]`);
+      console.error(
+        `🚨 This is a security vulnerability that must be addressed immediately!`,
+      );
+      console.error(
+        `🚨 All passwords should be hashed with bcrypt before storage.`,
+      );
+
       // In production, you might want to take more drastic action:
       // - Exit the application
       // - Send alerts to administrators
       // - Disable affected accounts
-      
+
       if (app.get("env") === "production") {
-        console.error(`🚨 PRODUCTION SECURITY VIOLATION: Application startup blocked due to plaintext passwords`);
-        console.error(`🚨 Security check failure causing crash loop in production environment`);
-        console.error(`🚨 Run the password hashing script immediately after the initial deploy with SKIP_SECURITY_CHECK enabled`);
-        console.error(`┌─────────────────────────────────────────────────────────────────────┐`);
-        console.error(`│                    DEPLOYMENT FIX INSTRUCTIONS                     │`);
-        console.error(`├─────────────────────────────────────────────────────────────────────┤`);
-        console.error(`│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`);
-        console.error(`│         (exact string 'true' required)                             │`);
-        console.error(`│ Step 2: Deploy application (will start successfully with bypass)   │`);
-        console.error(`│ Step 3: Run: node scripts/hash-passwords.js                        │`);
-        console.error(`│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`);
-        console.error(`│ Step 5: Redeploy application (security check will pass)            │`);
-        console.error(`└─────────────────────────────────────────────────────────────────────┘`);
-        console.error(`🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`);
+        console.error(
+          `🚨 PRODUCTION SECURITY VIOLATION: Application startup blocked due to plaintext passwords`,
+        );
+        console.error(
+          `🚨 Security check failure causing crash loop in production environment`,
+        );
+        console.error(
+          `🚨 Run the password hashing script immediately after the initial deploy with SKIP_SECURITY_CHECK enabled`,
+        );
+        console.error(
+          `┌─────────────────────────────────────────────────────────────────────┐`,
+        );
+        console.error(
+          `│                    DEPLOYMENT FIX INSTRUCTIONS                     │`,
+        );
+        console.error(
+          `├─────────────────────────────────────────────────────────────────────┤`,
+        );
+        console.error(
+          `│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`,
+        );
+        console.error(
+          `│         (exact string 'true' required)                             │`,
+        );
+        console.error(
+          `│ Step 2: Deploy application (will start successfully with bypass)   │`,
+        );
+        console.error(
+          `│ Step 3: Run: node scripts/hash-passwords.js                        │`,
+        );
+        console.error(
+          `│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`,
+        );
+        console.error(
+          `│ Step 5: Redeploy application (security check will pass)            │`,
+        );
+        console.error(
+          `└─────────────────────────────────────────────────────────────────────┘`,
+        );
+        console.error(
+          `🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`,
+        );
         process.exit(1); // Exit in production to prevent security risk
       }
     } else {
-      console.log(`✅ Password security check passed: All ${allUsers.length} user passwords are properly hashed`);
+      console.log(
+        `✅ Password security check passed: All ${allUsers.length} user passwords are properly hashed`,
+      );
     }
-    
   } catch (error) {
     console.error("❌ Password security check failed:", error);
-    
+
     // In production, fail-safe approach
     if (app.get("env") === "production") {
-      console.error("🚨 Production security check failure - shutting down for safety");
-      console.error(`┌─────────────────────────────────────────────────────────────────────┐`);
-      console.error(`│                    DEPLOYMENT FIX INSTRUCTIONS                     │`);
-      console.error(`├─────────────────────────────────────────────────────────────────────┤`);
-      console.error(`│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`);
-      console.error(`│         (exact string 'true' required)                             │`);
-      console.error(`│ Step 2: Deploy application (will start successfully with bypass)   │`);
-      console.error(`│ Step 3: Run: node scripts/hash-passwords.js                        │`);
-      console.error(`│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`);
-      console.error(`│ Step 5: Redeploy application (security check will pass)            │`);
-      console.error(`└─────────────────────────────────────────────────────────────────────┘`);
-      console.error(`🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`);
+      console.error(
+        "🚨 Production security check failure - shutting down for safety",
+      );
+      console.error(
+        `┌─────────────────────────────────────────────────────────────────────┐`,
+      );
+      console.error(
+        `│                    DEPLOYMENT FIX INSTRUCTIONS                     │`,
+      );
+      console.error(
+        `├─────────────────────────────────────────────────────────────────────┤`,
+      );
+      console.error(
+        `│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`,
+      );
+      console.error(
+        `│         (exact string 'true' required)                             │`,
+      );
+      console.error(
+        `│ Step 2: Deploy application (will start successfully with bypass)   │`,
+      );
+      console.error(
+        `│ Step 3: Run: node scripts/hash-passwords.js                        │`,
+      );
+      console.error(
+        `│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`,
+      );
+      console.error(
+        `│ Step 5: Redeploy application (security check will pass)            │`,
+      );
+      console.error(
+        `└─────────────────────────────────────────────────────────────────────┘`,
+      );
+      console.error(
+        `🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`,
+      );
       process.exit(1);
     } else {
-      console.warn("⚠️ Development mode: continuing despite security check failure");
+      console.warn(
+        "⚠️ Development mode: continuing despite security check failure",
+      );
     }
   }
 }
@@ -106,38 +176,47 @@ async function performPasswordSecurityCheck(): Promise<void> {
 // Configure CORS with strict allowlist - must be before session middleware
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   // Strict allowlist of trusted origins
   const allowedOrigins = [
-    'http://localhost:5000',
-    'https://localhost:5000',
-    'http://127.0.0.1:5000',
-    'https://127.0.0.1:5000',
+    "http://localhost:5000",
+    "https://localhost:5000",
+    "http://127.0.0.1:5000",
+    "https://127.0.0.1:5000",
     // Add specific Replit deployment URLs here - replace with actual URLs
     // Example: 'https://your-app-name.replit.app'
   ];
-  
+
   // Add current host for same-origin requests
-  const currentHost = req.get('host');
+  const currentHost = req.get("host");
   if (currentHost) {
     allowedOrigins.push(`http://${currentHost}`);
     allowedOrigins.push(`https://${currentHost}`);
   }
-  
+
   if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
+    res.header("Access-Control-Allow-Origin", origin);
   } else if (!origin) {
     // For same-origin requests (no origin header), allow the request
-    res.header('Access-Control-Allow-Origin', currentHost ? `https://${currentHost}` : 'https://localhost:5000');
+    res.header(
+      "Access-Control-Allow-Origin",
+      currentHost ? `https://${currentHost}` : "https://localhost:5000",
+    );
   }
   // Explicitly reject unauthorized origins - no wildcard '*' when credentials are enabled
-  
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS,PATCH');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma, Cookie, Set-Cookie');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  
-  if (req.method === 'OPTIONS') {
+
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,PUT,POST,DELETE,OPTIONS,PATCH",
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma, Cookie, Set-Cookie",
+  );
+  res.header("Access-Control-Expose-Headers", "Set-Cookie");
+
+  if (req.method === "OPTIONS") {
     res.sendStatus(200);
   } else {
     next();
@@ -145,15 +224,17 @@ app.use((req, res, next) => {
 });
 
 // Configure Express to trust proxy for correct session handling in production
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // Configure session store with security validation
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === "production";
 
 // Security validation: Require SESSION_SECRET in production
 if (isProduction && !process.env.SESSION_SECRET) {
-  console.error('🚨 SECURITY ERROR: SESSION_SECRET environment variable is required in production');
-  console.error('🚨 Please set SESSION_SECRET to a secure random value');
+  console.error(
+    "🚨 SECURITY ERROR: SESSION_SECRET environment variable is required in production",
+  );
+  console.error("🚨 Please set SESSION_SECRET to a secure random value");
   process.exit(1);
 }
 
@@ -161,30 +242,38 @@ if (isProduction && !process.env.SESSION_SECRET) {
 const PgSession = connectPgSimple(session);
 const sessionStore = new PgSession({
   conString: process.env.DATABASE_URL,
-  tableName: 'user_sessions',
+  tableName: "user_sessions",
   createTableIfMissing: true,
-  pruneSessionInterval: 60 * 15 // Clean expired sessions every 15 minutes
+  pruneSessionInterval: 60 * 15, // Clean expired sessions every 15 minutes
 });
-console.log(`✅ Using PostgreSQL session store for ${isProduction ? 'production' : 'development'} - sessions will persist across server restarts`);
+console.log(
+  `✅ Using PostgreSQL session store for ${isProduction ? "production" : "development"} - sessions will persist across server restarts`,
+);
 
-app.use(session({
-  store: sessionStore,
-  secret: process.env.SESSION_SECRET || (isProduction ? (() => {
-    console.error('🚨 CRITICAL: SESSION_SECRET missing in production');
-    process.exit(1);
-  })() : 'dev-secret-key-not-for-production'),
-  resave: true, // Force session persistence - ensures PostgreSQL session store reliability
-  saveUninitialized: false, // Don't create session until something stored
-  rolling: true, // Reset expiry on activity - crucial for keeping session alive
-  cookie: {
-    secure: 'auto', // Let Express determine security based on connection
-    httpOnly: true, // ALWAYS prevent XSS - critical security fix
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - extended session duration for better user experience
-    sameSite: 'lax' // Better balance for same-origin requests
-  },
-  name: 'plastic-bag-session', // Custom session name
-  unset: 'keep' // Keep the session even if we unset properties
-}));
+app.use(
+  session({
+    store: sessionStore,
+    secret:
+      process.env.SESSION_SECRET ||
+      (isProduction
+        ? (() => {
+            console.error("🚨 CRITICAL: SESSION_SECRET missing in production");
+            process.exit(1);
+          })()
+        : "dev-secret-key-not-for-production"),
+    resave: true, // Force session persistence - ensures PostgreSQL session store reliability
+    saveUninitialized: false, // Don't create session until something stored
+    rolling: true, // Reset expiry on activity - crucial for keeping session alive
+    cookie: {
+      secure: "auto", // Let Express determine security based on connection
+      httpOnly: true, // ALWAYS prevent XSS - critical security fix
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days - extended session duration for better user experience
+      sameSite: "lax", // Better balance for same-origin requests
+    },
+    name: "plastic-bag-session", // Custom session name
+    unset: "keep", // Keep the session even if we unset properties
+  }),
+);
 
 // Session extension middleware - extends session on any API call with enhanced reliability
 app.use((req, res, next) => {
@@ -194,17 +283,19 @@ app.use((req, res, next) => {
     if (req.session.userId) {
       // Touch the session to reset expiry with rolling sessions
       req.session.touch();
-      
+
       // Force save session for PostgreSQL reliability (non-blocking)
       req.session.save((err: any) => {
         if (err && !isProduction) {
           console.warn(`Session save warning on ${req.path}:`, err);
         }
       });
-      
+
       // Log session extension for debugging (only in development)
       if (!isProduction && req.path !== "/api/me") {
-        console.log(`🔄 Session extended for user ${req.session.userId} on ${req.path}`);
+        console.log(
+          `🔄 Session extended for user ${req.session.userId} on ${req.path}`,
+        );
       }
     } else if (req.path !== "/api/login" && req.path !== "/api/health") {
       // Log unauthenticated API requests for debugging (only in development)
@@ -229,20 +320,21 @@ app.use((req, res, next) => {
 
   res.on("finish", () => {
     const duration = Date.now() - start;
-    
+
     // Skip logging spam HEAD requests to /api (likely from browser extensions/dev tools)
-    if (req.method === 'HEAD' && path === '/api') {
+    if (req.method === "HEAD" && path === "/api") {
       return;
     }
-    
+
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      
+
       // Security: Only log response metadata in production, never response bodies
       // Response bodies may contain sensitive data like passwords, tokens, PII
       if (!isProduction && capturedJsonResponse) {
         // In development, sanitize sensitive fields before logging
-        const sanitizedResponse = sanitizeResponseForLogging(capturedJsonResponse);
+        const sanitizedResponse =
+          sanitizeResponseForLogging(capturedJsonResponse);
         if (Object.keys(sanitizedResponse).length > 0) {
           logLine += ` :: ${JSON.stringify(sanitizedResponse)}`;
         }
@@ -261,35 +353,58 @@ app.use((req, res, next) => {
 
 // Security function to sanitize response data for logging
 function sanitizeResponseForLogging(response: any): any {
-  if (!response || typeof response !== 'object') {
+  if (!response || typeof response !== "object") {
     return {};
   }
-  
+
   // List of sensitive field patterns to exclude from logs
   const sensitiveFields = [
-    'password', 'passwd', 'pwd', 'secret', 'token', 'key', 'auth',
-    'session', 'cookie', 'authorization', 'credential', 'private',
-    'ssn', 'social', 'email', 'phone', 'address', 'ip', 'personal',
-    'card', 'payment', 'billing', 'account', 'user_id', 'userId'
+    "password",
+    "passwd",
+    "pwd",
+    "secret",
+    "token",
+    "key",
+    "auth",
+    "session",
+    "cookie",
+    "authorization",
+    "credential",
+    "private",
+    "ssn",
+    "social",
+    "email",
+    "phone",
+    "address",
+    "ip",
+    "personal",
+    "card",
+    "payment",
+    "billing",
+    "account",
+    "user_id",
+    "userId",
   ];
-  
+
   const sanitized: any = {};
-  
+
   for (const [key, value] of Object.entries(response)) {
     const keyLower = key.toLowerCase();
-    const isSensitive = sensitiveFields.some(field => keyLower.includes(field));
-    
+    const isSensitive = sensitiveFields.some((field) =>
+      keyLower.includes(field),
+    );
+
     if (isSensitive) {
-      sanitized[key] = '[REDACTED]';
+      sanitized[key] = "[REDACTED]";
     } else if (Array.isArray(value)) {
       sanitized[key] = `[Array:${value.length}]`;
-    } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = '[Object]';
+    } else if (typeof value === "object" && value !== null) {
+      sanitized[key] = "[Object]";
     } else {
       sanitized[key] = value;
     }
   }
-  
+
   return sanitized;
 }
 
@@ -298,84 +413,123 @@ function sanitizeResponseForLogging(response: any): any {
   if (app.get("env") === "production") {
     try {
       console.log("🚀 Initializing production database...");
-      
-      const { db } = await import('./db.js');
-      
+
+      const { db } = await import("./db.js");
+
       // Step 1: Test database connection first
       try {
         await db.execute(sql`SELECT 1 as test`);
         console.log("✅ Database connection verified");
       } catch (connectionError: any) {
-        console.error("❌ Database connection failed:", connectionError?.message || connectionError);
-        
+        console.error(
+          "❌ Database connection failed:",
+          connectionError?.message || connectionError,
+        );
+
         // Provide specific guidance based on error type
-        if (connectionError?.message?.includes('connect')) {
-          console.error("💡 Connection issue - check DATABASE_URL configuration");
-        } else if (connectionError?.message?.includes('timeout')) {
-          console.error("💡 Timeout - database may be overloaded or network issue");
-        } else if (connectionError?.message?.includes('auth')) {
-          console.error("💡 Authentication failed - verify database credentials");
+        if (connectionError?.message?.includes("connect")) {
+          console.error(
+            "💡 Connection issue - check DATABASE_URL configuration",
+          );
+        } else if (connectionError?.message?.includes("timeout")) {
+          console.error(
+            "💡 Timeout - database may be overloaded or network issue",
+          );
+        } else if (connectionError?.message?.includes("auth")) {
+          console.error(
+            "💡 Authentication failed - verify database credentials",
+          );
         }
-        
+
         throw connectionError;
       }
-      
+
       // Step 2: Check existing schema and handle table conflicts
       const tableCheck = await db.execute(sql`
         SELECT table_name FROM information_schema.tables 
         WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
         ORDER BY table_name
       `);
-      
-      const existingTables = tableCheck.rows.map(row => row.table_name);
+
+      const existingTables = tableCheck.rows.map((row) => row.table_name);
       const isNewDatabase = existingTables.length === 0;
-      
-      console.log(`📊 Database status: ${isNewDatabase ? 'Fresh (new)' : `Existing (${existingTables.length} tables)`}`);
-      
+
+      console.log(
+        `📊 Database status: ${isNewDatabase ? "Fresh (new)" : `Existing (${existingTables.length} tables)`}`,
+      );
+
       if (!isNewDatabase) {
         // Log existing tables for debugging
-        console.log("📋 Existing tables:", existingTables.slice(0, 10).join(', ') + 
-                   (existingTables.length > 10 ? ` ... and ${existingTables.length - 10} more` : ''));
-        
+        console.log(
+          "📋 Existing tables:",
+          existingTables.slice(0, 10).join(", ") +
+            (existingTables.length > 10
+              ? ` ... and ${existingTables.length - 10} more`
+              : ""),
+        );
+
         // Check for specific tables that might cause conflicts
-        const criticalTables = ['admin_decisions', 'users', 'customers', 'orders'];
-        const conflictingTables = criticalTables.filter(table => existingTables.includes(table));
-        
+        const criticalTables = [
+          "admin_decisions",
+          "users",
+          "customers",
+          "orders",
+        ];
+        const conflictingTables = criticalTables.filter((table) =>
+          existingTables.includes(table),
+        );
+
         if (conflictingTables.length > 0) {
-          console.log("🔍 Found existing critical tables:", conflictingTables.join(', '));
-          console.log("⚠️  Will handle potential schema conflicts carefully...");
+          console.log(
+            "🔍 Found existing critical tables:",
+            conflictingTables.join(", "),
+          );
+          console.log(
+            "⚠️  Will handle potential schema conflicts carefully...",
+          );
         }
       }
-      
+
       // Step 3: Try primary migration approach first
       try {
-        const { migrate } = await import('drizzle-orm/neon-serverless/migrator');
-        await migrate(db, { migrationsFolder: './migrations' });
+        const { migrate } = await import(
+          "drizzle-orm/neon-serverless/migrator"
+        );
+        await migrate(db, { migrationsFolder: "./migrations" });
         console.log("✅ Database migrations completed via migrate()");
       } catch (migrationError: any) {
-        console.log("⚠️ Standard migration failed, trying alternative approaches...");
-        console.log("Migration error:", migrationError?.message || migrationError);
-        
+        console.log(
+          "⚠️ Standard migration failed, trying alternative approaches...",
+        );
+        console.log(
+          "Migration error:",
+          migrationError?.message || migrationError,
+        );
+
         // Step 4: Handle specific migration errors
-        if (migrationError?.message?.includes('admin_decisions')) {
-          console.log("🔧 Detected admin_decisions table conflict, applying specific fixes...");
-          
+        if (migrationError?.message?.includes("admin_decisions")) {
+          console.log(
+            "🔧 Detected admin_decisions table conflict, applying specific fixes...",
+          );
+
           try {
             // Try to handle admin_decisions table conflicts specifically
             const adminTableExists = await db.execute(sql`
               SELECT table_name FROM information_schema.tables 
               WHERE table_name = 'admin_decisions' AND table_schema = 'public'
             `);
-            
+
             if (adminTableExists.rows.length > 0) {
-              console.log("📋 admin_decisions table exists, checking for missing columns...");
-              
+              console.log(
+                "📋 admin_decisions table exists, checking for missing columns...",
+              );
+
               // Check for required columns and add if missing
               const requiredColumns = [
-                { name: 'title_ar', type: 'VARCHAR(100)' },
-                { name: 'issued_by', type: 'VARCHAR(20)' }
+                { name: "title_ar", type: "VARCHAR(100)" },
+                { name: "issued_by", type: "VARCHAR(20)" },
               ];
-              
+
               for (const col of requiredColumns) {
                 try {
                   const columnExists = await db.execute(sql`
@@ -384,133 +538,192 @@ function sanitizeResponseForLogging(response: any): any {
                     AND column_name = ${col.name} 
                     AND table_schema = 'public'
                   `);
-                  
+
                   if (columnExists.rows.length === 0) {
-                    await db.execute(sql`ALTER TABLE admin_decisions ADD COLUMN ${sql.identifier(col.name)} ${sql.raw(col.type)}`);
-                    console.log(`✅ Added missing column admin_decisions.${col.name}`);
+                    await db.execute(
+                      sql`ALTER TABLE admin_decisions ADD COLUMN ${sql.identifier(col.name)} ${sql.raw(col.type)}`,
+                    );
+                    console.log(
+                      `✅ Added missing column admin_decisions.${col.name}`,
+                    );
                   }
                 } catch (columnError: any) {
-                  console.log(`⚠️  Could not add column ${col.name}: ${columnError?.message}`);
+                  console.log(
+                    `⚠️  Could not add column ${col.name}: ${columnError?.message}`,
+                  );
                 }
               }
             }
           } catch (tableFixError: any) {
-            console.log("⚠️  Could not fix admin_decisions table:", tableFixError?.message);
+            console.log(
+              "⚠️  Could not fix admin_decisions table:",
+              tableFixError?.message,
+            );
           }
         }
-        
+
         // Step 5: Alternative approach - implement real fallback for fresh database
         if (isNewDatabase) {
-          console.log("🆕 Fresh database detected - attempting schema creation via drizzle-kit push");
-          
+          console.log(
+            "🆕 Fresh database detected - attempting schema creation via drizzle-kit push",
+          );
+
           try {
             // Import child_process for executing drizzle-kit
-            const { exec } = await import('child_process');
-            const { promisify } = await import('util');
+            const { exec } = await import("child_process");
+            const { promisify } = await import("util");
             const execAsync = promisify(exec);
-            
+
             console.log("📋 Running drizzle-kit push to create schema...");
-            const pushResult = await execAsync('npx drizzle-kit push --force', {
-              env: { ...process.env, NODE_ENV: 'production' },
-              timeout: 60000 // 60 second timeout
+            const pushResult = await execAsync("npx drizzle-kit push --force", {
+              env: { ...process.env, NODE_ENV: "production" },
+              timeout: 60000, // 60 second timeout
             });
-            
+
             console.log("✅ Schema created successfully via drizzle-kit push");
             if (pushResult.stdout) {
               console.log("   Output:", pushResult.stdout.substring(0, 200));
             }
-            
+
             // Verify schema creation
             const verifyTableCheck = await db.execute(sql`
               SELECT COUNT(*) as table_count
               FROM information_schema.tables 
               WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
             `);
-            
-            const newTableCount = parseInt(String(verifyTableCheck.rows[0].table_count));
-            console.log(`✅ Schema verification: ${newTableCount} tables created`);
-            
+
+            const newTableCount = parseInt(
+              String(verifyTableCheck.rows[0].table_count),
+            );
+            console.log(
+              `✅ Schema verification: ${newTableCount} tables created`,
+            );
+
             if (newTableCount === 0) {
-              console.error("❌ Schema creation failed - no tables were created");
-              console.error("🚨 CRITICAL: Cannot start application without database schema");
-              console.error("💡 Manual intervention required - check DATABASE_URL and permissions");
+              console.error(
+                "❌ Schema creation failed - no tables were created",
+              );
+              console.error(
+                "🚨 CRITICAL: Cannot start application without database schema",
+              );
+              console.error(
+                "💡 Manual intervention required - check DATABASE_URL and permissions",
+              );
               process.exit(1);
             }
-            
           } catch (pushError: any) {
-            console.error("❌ Schema creation via drizzle-kit failed:", pushError?.message);
+            console.error(
+              "❌ Schema creation via drizzle-kit failed:",
+              pushError?.message,
+            );
             console.error("🚨 CRITICAL: Fresh database cannot be initialized");
             console.error("💡 This may be due to:");
             console.error("   - Missing drizzle-kit package");
             console.error("   - Database permission issues");
             console.error("   - Network connectivity problems");
             console.error("   - Invalid DATABASE_URL configuration");
-            
+
             // For fresh database, we cannot continue without schema
             process.exit(1);
           }
         } else {
           console.log("🔄 Existing database - checking table accessibility...");
-          
+
           // Test critical table access and fail fast if missing
           const criticalChecks = [
-            { table: 'users', description: 'User authentication', required: true },
-            { table: 'customers', description: 'Customer management', required: false },
-            { table: 'orders', description: 'Order processing', required: false }
+            {
+              table: "users",
+              description: "User authentication",
+              required: true,
+            },
+            {
+              table: "customers",
+              description: "Customer management",
+              required: false,
+            },
+            {
+              table: "orders",
+              description: "Order processing",
+              required: false,
+            },
           ];
-          
+
           let criticalFailures = 0;
-          
+
           for (const check of criticalChecks) {
             try {
-              await db.execute(sql`SELECT 1 FROM ${sql.identifier(check.table)} LIMIT 1`);
+              await db.execute(
+                sql`SELECT 1 FROM ${sql.identifier(check.table)} LIMIT 1`,
+              );
               console.log(`✅ ${check.description} table accessible`);
             } catch (tableError: any) {
               const errorMsg = tableError?.message?.substring(0, 100);
               console.log(`⚠️  ${check.description} table issue: ${errorMsg}`);
-              
-              if (check.required && tableError?.message?.includes('does not exist')) {
+
+              if (
+                check.required &&
+                tableError?.message?.includes("does not exist")
+              ) {
                 criticalFailures++;
-                console.error(`🚨 CRITICAL: Required table '${check.table}' is missing`);
+                console.error(
+                  `🚨 CRITICAL: Required table '${check.table}' is missing`,
+                );
               }
             }
           }
-          
+
           // Fail fast if critical tables are missing
           if (criticalFailures > 0) {
-            console.error(`❌ Database schema is incomplete: ${criticalFailures} critical table(s) missing`);
-            console.error("🚨 CRITICAL: Cannot start application with incomplete schema");
-            console.error("💡 This indicates a partial migration or corrupted database");
+            console.error(
+              `❌ Database schema is incomplete: ${criticalFailures} critical table(s) missing`,
+            );
+            console.error(
+              "🚨 CRITICAL: Cannot start application with incomplete schema",
+            );
+            console.error(
+              "💡 This indicates a partial migration or corrupted database",
+            );
             console.error("📋 Required actions:");
             console.error("   1. Run database migration scripts manually");
             console.error("   2. Check deployment logs for migration failures");
-            console.error("   3. Verify DATABASE_URL points to correct database");
+            console.error(
+              "   3. Verify DATABASE_URL points to correct database",
+            );
             console.error("   4. Consider restoring from backup if available");
-            
+
             process.exit(1);
           }
         }
       }
-      
     } catch (error: any) {
-      console.error("❌ Database initialization failed:", error?.message || error);
-      
+      console.error(
+        "❌ Database initialization failed:",
+        error?.message || error,
+      );
+
       // Enhanced error diagnostics
-      if (error?.message?.includes('ENOTFOUND')) {
+      if (error?.message?.includes("ENOTFOUND")) {
         console.error("💡 DNS resolution failed - check DATABASE_URL hostname");
-      } else if (error?.message?.includes('ECONNREFUSED')) {
+      } else if (error?.message?.includes("ECONNREFUSED")) {
         console.error("💡 Connection refused - database server may be down");
-      } else if (error?.message?.includes('relation') && error?.message?.includes('does not exist')) {
+      } else if (
+        error?.message?.includes("relation") &&
+        error?.message?.includes("does not exist")
+      ) {
         console.error("💡 Table missing - this is normal for fresh deployment");
-      } else if (error?.message?.includes('permission denied')) {
+      } else if (error?.message?.includes("permission denied")) {
         console.error("💡 Permission denied - check database user privileges");
-      } else if (error?.message?.includes('syntax error')) {
+      } else if (error?.message?.includes("syntax error")) {
         console.error("💡 SQL syntax error - check migration files");
       }
-      
-      console.error("🔄 Continuing with server startup - database will be retried on first request");
-      console.error("📚 For persistent issues, check the deployment logs and database status");
-      
+
+      console.error(
+        "🔄 Continuing with server startup - database will be retried on first request",
+      );
+      console.error(
+        "📚 For persistent issues, check the deployment logs and database status",
+      );
+
       // Don't exit - let the server start and handle database issues gracefully
     }
   }
@@ -519,16 +732,16 @@ function sanitizeResponseForLogging(response: any): any {
   await performPasswordSecurityCheck();
 
   // API-specific middleware to ensure JSON responses (MUST be before routes)
-  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+  app.use("/api/*", (req: Request, res: Response, next: NextFunction) => {
     // Set JSON content type for all API responses
-    res.setHeader('Content-Type', 'application/json');
+    res.setHeader("Content-Type", "application/json");
     next();
   });
 
   const server = await registerRoutes(app);
 
   // 404 handler for unmatched API routes (MUST be after routes)
-  app.use('/api/*', (req: Request, res: Response, next: NextFunction) => {
+  app.use("/api/*", (req: Request, res: Response, next: NextFunction) => {
     // If no route matched, send 404 JSON response instead of falling through to HTML
     if (!res.headersSent) {
       return res.status(404).json({ message: "API endpoint not found" });
@@ -537,16 +750,19 @@ function sanitizeResponseForLogging(response: any): any {
   });
 
   // Error handling middleware for API routes (MUST be after routes)
-  app.use('/api/*', (err: any, req: Request, res: Response, next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-    
-    // Ensure we always return JSON for API routes
-    if (!res.headersSent) {
-      res.status(status).json({ message });
-    }
-    console.error('API Error:', err);
-  });
+  app.use(
+    "/api/*",
+    (err: any, req: Request, res: Response, next: NextFunction) => {
+      const status = err.status || err.statusCode || 500;
+      const message = err.message || "Internal Server Error";
+
+      // Ensure we always return JSON for API routes
+      if (!res.headersSent) {
+        res.status(status).json({ message });
+      }
+      console.error("API Error:", err);
+    },
+  );
 
   // General error handling middleware
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -570,12 +786,15 @@ function sanitizeResponseForLogging(response: any): any {
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(
+    {
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
 })();

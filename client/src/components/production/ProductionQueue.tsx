@@ -11,7 +11,10 @@ interface ProductionQueueProps {
   items: any[];
 }
 
-export default function ProductionQueue({ queueType, items }: ProductionQueueProps) {
+export default function ProductionQueue({
+  queueType,
+  items,
+}: ProductionQueueProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -20,54 +23,58 @@ export default function ProductionQueue({ queueType, items }: ProductionQueuePro
     mutationFn: async (rollId: number) => {
       if (queueType === "printing") {
         const response = await fetch(`/api/rolls/${rollId}/print`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' }
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || 'فشل في تسجيل الطباعة');
+          throw new Error(error.message || "فشل في تسجيل الطباعة");
         }
-        
+
         return response.json();
       } else if (queueType === "cutting") {
         // For cutting, we'll need to show a cutting form
         // For now, just mark as cut with full weight
-        const response = await fetch('/api/cuts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/cuts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             roll_id: rollId,
-            cut_weight_kg: items.find(item => item.id === rollId)?.weight_kg || 0,
-            pieces_count: 1
-          })
+            cut_weight_kg:
+              items.find((item) => item.id === rollId)?.weight_kg || 0,
+            pieces_count: 1,
+          }),
         });
-        
+
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || 'فشل في تسجيل التقطيع');
+          throw new Error(error.message || "فشل في تسجيل التقطيع");
         }
-        
+
         return response.json();
       }
     },
     onSuccess: () => {
       toast({
         title: "تم بنجاح",
-        description: queueType === "printing" ? "تم تسجيل الطباعة" : "تم تسجيل التقطيع"
+        description:
+          queueType === "printing" ? "تم تسجيل الطباعة" : "تم تسجيل التقطيع",
       });
-      queryClient.invalidateQueries({ queryKey: [`/api/production/${queueType}-queue`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
+      queryClient.invalidateQueries({
+        queryKey: [`/api/production/${queueType}-queue`],
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       setProcessingId(null);
     },
     onError: (error: Error) => {
       toast({
         title: "خطأ",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
       setProcessingId(null);
-    }
+    },
   });
 
   const handleProcess = (rollId: number) => {
@@ -86,7 +93,7 @@ export default function ProductionQueue({ queueType, items }: ProductionQueuePro
 
   const getActionButton = (item: any) => {
     const isProcessing = processingId === item.id;
-    
+
     if (queueType === "printing") {
       return (
         <Button
@@ -137,18 +144,25 @@ export default function ProductionQueue({ queueType, items }: ProductionQueuePro
               <div className="flex items-center space-x-4 space-x-reverse">
                 <QrCode className="h-6 w-6 text-gray-400" />
                 <div>
-                  <p className="font-medium" data-testid={`text-roll-number-${item.id}`}>
+                  <p
+                    className="font-medium"
+                    data-testid={`text-roll-number-${item.id}`}
+                  >
                     {item.roll_number || `رول ${item.id}`}
                   </p>
                   <p className="text-sm text-gray-500">
-                    الوزن: {parseFloat(item.weight_kg || item.weight || 0).toFixed(2)} كجم
+                    الوزن:{" "}
+                    {parseFloat(item.weight_kg || item.weight || 0).toFixed(2)}{" "}
+                    كجم
                   </p>
                   {item.machine_id && (
-                    <p className="text-xs text-gray-400">المكينة: {item.machine_id}</p>
+                    <p className="text-xs text-gray-400">
+                      المكينة: {item.machine_id}
+                    </p>
                   )}
                 </div>
               </div>
-              
+
               <div className="flex items-center space-x-2 space-x-reverse">
                 {getStatusBadge(item)}
                 {getActionButton(item)}

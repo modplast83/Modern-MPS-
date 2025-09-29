@@ -1,9 +1,13 @@
 import OpenAI from "openai";
-import { generateCustomerId, generateOrderNumber, generateJobOrderNumber } from "@shared/id-generator";
+import {
+  generateCustomerId,
+  generateOrderNumber,
+  generateJobOrderNumber,
+} from "@shared/id-generator";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 export class AIHelpers {
@@ -27,28 +31,28 @@ export class AIHelpers {
   "tax_number": "الرقم الضريبي (اختياري)"
 }
 
-إذا لم تجد معلومة محددة، اتركها فارغة أو null.`
+إذا لم تجد معلومة محددة، اتركها فارغة أو null.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       // إنشاء ID تلقائي إذا لم يكن موجوداً
       if (!result.id) {
         result.id = generateCustomerId();
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Customer data extraction error:', error);
-      throw new Error('فشل في استخراج بيانات العميل من النص');
+      console.error("Customer data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات العميل من النص");
     }
   }
 
@@ -69,33 +73,33 @@ export class AIHelpers {
   "status": "حالة الطلب - pending/for_production/completed/delivered"
 }
 
-إذا لم تجد معلومة محددة، استخدم قيماً افتراضية مناسبة.`
+إذا لم تجد معلومة محددة، استخدم قيماً افتراضية مناسبة.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       // إنشاء رقم طلب تلقائي
       if (!result.order_number) {
         result.order_number = generateOrderNumber();
       }
-      
+
       // حالة افتراضية
       if (!result.status) {
-        result.status = 'pending';
+        result.status = "pending";
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Order data extraction error:', error);
-      throw new Error('فشل في استخراج بيانات الطلب من النص');
+      console.error("Order data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات الطلب من النص");
     }
   }
 
@@ -116,33 +120,33 @@ export class AIHelpers {
   "status": "حالة أمر التشغيل - pending/in_progress/completed"
 }
 
-استخرج الأرقام والمعرفات بدقة.`
+استخرج الأرقام والمعرفات بدقة.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       // إنشاء رقم أمر تشغيل تلقائي
       if (!result.job_number) {
         result.job_number = generateJobOrderNumber();
       }
-      
+
       // حالة افتراضية
       if (!result.status) {
-        result.status = 'pending';
+        result.status = "pending";
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Job order data extraction error:', error);
-      throw new Error('فشل في استخراج بيانات أمر التشغيل من النص');
+      console.error("Job order data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات أمر التشغيل من النص");
     }
   }
 
@@ -163,33 +167,36 @@ export class AIHelpers {
   "status": "حالة المكينة - active/maintenance/down"
 }
 
-حدد نوع المكينة بدقة حسب الوصف.`
+حدد نوع المكينة بدقة حسب الوصف.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       // حالة افتراضية
       if (!result.status) {
-        result.status = 'active';
+        result.status = "active";
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Machine data extraction error:', error);
-      throw new Error('فشل في استخراج بيانات المكينة من النص');
+      console.error("Machine data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات المكينة من النص");
     }
   }
 
   // استخراج بيانات التحديث من النص
-  static async extractUpdateData(text: string, entityType: string): Promise<any> {
+  static async extractUpdateData(
+    text: string,
+    entityType: string,
+  ): Promise<any> {
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -218,26 +225,29 @@ export class AIHelpers {
   }
 }
 
-استخرج المعرف والحقول المطلوب تحديثها فقط.`
+استخرج المعرف والحقول المطلوب تحديثها فقط.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
+      return JSON.parse(response.choices[0].message.content || "{}");
     } catch (error) {
-      console.error('Update data extraction error:', error);
-      throw new Error('فشل في استخراج بيانات التحديث من النص');
+      console.error("Update data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات التحديث من النص");
     }
   }
 
   // استخراج المعرف من النص
-  static async extractIdFromText(text: string, entityType: string): Promise<string> {
+  static async extractIdFromText(
+    text: string,
+    entityType: string,
+  ): Promise<string> {
     try {
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -251,24 +261,24 @@ export class AIHelpers {
 للمكائن: ابحث عن أرقام أو أسماء المكائن
 لأوامر التشغيل: ابحث عن JO أو رقم أمر التشغيل
 
-أرجع فقط المعرف بدون تفسير.`
+أرجع فقط المعرف بدون تفسير.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
-        temperature: 0.1
+        temperature: 0.1,
       });
 
       const result = response.choices[0].message.content?.trim();
       if (!result) {
         throw new Error(`لم يتم العثور على معرف الـ ${entityType} في النص`);
       }
-      
+
       return result;
     } catch (error) {
-      console.error('ID extraction error:', error);
+      console.error("ID extraction error:", error);
       throw new Error(`فشل في استخراج معرف الـ ${entityType} من النص`);
     }
   }
@@ -290,20 +300,20 @@ export class AIHelpers {
   "limit": "عدد النتائج المطلوبة"
 }
 
-إذا لم يتم تحديد مرشح معين، لا تدرجه في النتيجة.`
+إذا لم يتم تحديد مرشح معين، لا تدرجه في النتيجة.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.1
+        temperature: 0.1,
       });
 
-      return JSON.parse(response.choices[0].message.content || '{}');
+      return JSON.parse(response.choices[0].message.content || "{}");
     } catch (error) {
-      console.error('Filters extraction error:', error);
+      console.error("Filters extraction error:", error);
       return {};
     }
   }
@@ -311,44 +321,45 @@ export class AIHelpers {
   // ترجمة الحالات إلى العربية
   static translateStatus(status: string): string {
     const statusMap: Record<string, string> = {
-      'pending': 'في الانتظار',
-      'for_production': 'للإنتاج',
-      'in_progress': 'قيد التنفيذ',
-      'completed': 'مكتمل',
-      'delivered': 'مُسلم',
-      'active': 'نشط',
-      'maintenance': 'صيانة',
-      'down': 'متوقف',
-      'for_printing': 'للطباعة',
-      'for_cutting': 'للقطع',
-      'done': 'منجز'
+      pending: "في الانتظار",
+      for_production: "للإنتاج",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتمل",
+      delivered: "مُسلم",
+      active: "نشط",
+      maintenance: "صيانة",
+      down: "متوقف",
+      for_printing: "للطباعة",
+      for_cutting: "للقطع",
+      done: "منجز",
     };
-    
+
     return statusMap[status] || status;
   }
 
   // تحليل بيانات الإنتاج
   static analyzeProductionData(stats: any): string {
     let analysis = "";
-    
+
     if (stats.productionRate < 70) {
       analysis += "معدل الإنتاج منخفض - يُنصح بمراجعة عمليات الإنتاج. ";
     } else if (stats.productionRate > 90) {
       analysis += "معدل الإنتاج ممتاز! ";
     }
-    
+
     if (stats.qualityScore < 80) {
-      analysis += "نسبة الجودة تحتاج تحسين - يُنصح بمراجعة إجراءات فحص الجودة. ";
+      analysis +=
+        "نسبة الجودة تحتاج تحسين - يُنصح بمراجعة إجراءات فحص الجودة. ";
     }
-    
+
     if (stats.wastePercentage > 5) {
       analysis += "نسبة الهدر مرتفعة - يُنصح بتحليل أسباب الهدر وتقليلها. ";
     }
-    
+
     if (stats.activeOrders > 10) {
       analysis += "عدد كبير من الطلبات النشطة - قد تحتاج لزيادة الإنتاجية. ";
     }
-    
+
     return analysis || "الأداء ضمن المعدلات الطبيعية.";
   }
 
@@ -376,27 +387,27 @@ export class AIHelpers {
 3. أضف LIMIT للحد من النتائج
 4. تجنب استعلامات معقدة
 
-أرجع فقط SQL بدون شرح.`
+أرجع فقط SQL بدون شرح.`,
           },
           {
             role: "user",
-            content: text
-          }
+            content: text,
+          },
         ],
-        temperature: 0.1
+        temperature: 0.1,
       });
 
       const sql = response.choices[0].message.content?.trim();
-      
+
       // فحص أمان أساسي
-      if (!sql || !sql.toLowerCase().startsWith('select')) {
-        throw new Error('استعلام غير آمن');
+      if (!sql || !sql.toLowerCase().startsWith("select")) {
+        throw new Error("استعلام غير آمن");
       }
-      
+
       return sql;
     } catch (error) {
-      console.error('SQL generation error:', error);
-      throw new Error('فشل في توليد استعلام SQL من النص');
+      console.error("SQL generation error:", error);
+      throw new Error("فشل في توليد استعلام SQL من النص");
     }
   }
 }

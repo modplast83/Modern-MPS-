@@ -5,21 +5,70 @@ import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "../components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "../components/ui/form";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Wrench, AlertTriangle, CheckCircle, Clock, Calendar, Plus, FileText, AlertCircle, Users, Eye, Printer, Edit, Trash2 } from "lucide-react";
+import {
+  Wrench,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Calendar,
+  Plus,
+  FileText,
+  AlertCircle,
+  Users,
+  Eye,
+  Printer,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
-import { generateActionNumber, generateMaintenanceReportNumber, generateOperatorReportNumber } from "../../../shared/id-generator";
+import {
+  generateActionNumber,
+  generateMaintenanceReportNumber,
+  generateOperatorReportNumber,
+} from "../../../shared/id-generator";
 import ConsumablePartsTab from "../components/maintenance/ConsumablePartsTab";
 
 // Schema definitions for forms
@@ -68,7 +117,9 @@ const maintenanceRequestSchema = z.object({
 
 export default function Maintenance() {
   const [currentTab, setCurrentTab] = useState("requests");
-  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(
+    null,
+  );
   const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [isActionViewDialogOpen, setIsActionViewDialogOpen] = useState(false);
@@ -89,9 +140,11 @@ export default function Maintenance() {
     queryKey: ["/api/maintenance-reports"],
   });
 
-  const { data: operatorReports, isLoading: loadingOperatorReports } = useQuery({
-    queryKey: ["/api/operator-negligence-reports"],
-  });
+  const { data: operatorReports, isLoading: loadingOperatorReports } = useQuery(
+    {
+      queryKey: ["/api/operator-negligence-reports"],
+    },
+  );
 
   const { data: users } = useQuery({
     queryKey: ["/api/users"],
@@ -108,28 +161,29 @@ export default function Maintenance() {
   // Mutations for creating new records
   const createActionMutation = useMutation({
     mutationFn: (data: any) => {
-      console.log('Sending maintenance action data:', data);
-      return apiRequest("/api/maintenance-actions", { 
-        method: "POST", 
-        body: JSON.stringify(data) 
+      console.log("Sending maintenance action data:", data);
+      return apiRequest("/api/maintenance-actions", {
+        method: "POST",
+        body: JSON.stringify(data),
       });
     },
     onSuccess: (result) => {
-      console.log('Maintenance action created successfully:', result);
+      console.log("Maintenance action created successfully:", result);
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-actions"] });
       toast({ title: "تم إنشاء إجراء الصيانة بنجاح" });
     },
     onError: (error) => {
-      console.error('Failed to create maintenance action:', error);
+      console.error("Failed to create maintenance action:", error);
       toast({ title: "فشل في إنشاء إجراء الصيانة", variant: "destructive" });
     },
   });
 
   const createReportMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/maintenance-reports", { 
-      method: "POST", 
-      body: JSON.stringify(data) 
-    }),
+    mutationFn: (data: any) =>
+      apiRequest("/api/maintenance-reports", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-reports"] });
       toast({ title: "تم إنشاء بلاغ الصيانة بنجاح" });
@@ -140,16 +194,22 @@ export default function Maintenance() {
   });
 
   const createOperatorReportMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/operator-negligence-reports", { 
-      method: "POST", 
-      body: JSON.stringify(data) 
-    }),
+    mutationFn: (data: any) =>
+      apiRequest("/api/operator-negligence-reports", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/operator-negligence-reports"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/operator-negligence-reports"],
+      });
       toast({ title: "تم إنشاء بلاغ إهمال المشغل بنجاح" });
     },
     onError: () => {
-      toast({ title: "فشل في إنشاء بلاغ إهمال المشغل", variant: "destructive" });
+      toast({
+        title: "فشل في إنشاء بلاغ إهمال المشغل",
+        variant: "destructive",
+      });
     },
   });
 
@@ -160,47 +220,49 @@ export default function Maintenance() {
         ...data,
         reported_by: user?.id?.toString() || "",
       };
-      return apiRequest("/api/maintenance-requests", { 
-        method: "POST", 
-        body: JSON.stringify(requestData) 
+      return apiRequest("/api/maintenance-requests", {
+        method: "POST",
+        body: JSON.stringify(requestData),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/maintenance-requests"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/maintenance-requests"],
+      });
       setIsRequestDialogOpen(false);
       toast({ title: "تم إنشاء طلب الصيانة بنجاح" });
     },
     onError: (error) => {
-      console.error('Error creating maintenance request:', error);
+      console.error("Error creating maintenance request:", error);
       toast({ title: "فشل في إنشاء طلب الصيانة", variant: "destructive" });
     },
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'pending':
-        return 'قيد الانتظار';
-      case 'in_progress':
-        return 'قيد التنفيذ';
-      case 'completed':
-        return 'مكتمل';
-      case 'cancelled':
-        return 'ملغي';
+      case "pending":
+        return "قيد الانتظار";
+      case "in_progress":
+        return "قيد التنفيذ";
+      case "completed":
+        return "مكتمل";
+      case "cancelled":
+        return "ملغي";
       default:
         return status;
     }
@@ -208,25 +270,25 @@ export default function Maintenance() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
-      case 'high':
-        return 'عالية';
-      case 'medium':
-        return 'متوسطة';
-      case 'low':
-        return 'منخفضة';
+      case "high":
+        return "عالية";
+      case "medium":
+        return "متوسطة";
+      case "low":
+        return "منخفضة";
       default:
         return priority;
     }
@@ -235,15 +297,19 @@ export default function Maintenance() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="flex">
         <Sidebar />
         <MobileNav />
-        
+
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">إدارة الصيانة</h1>
-            <p className="text-gray-600">نظام متكامل لإدارة الصيانة وتتبع الأعطال</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              إدارة الصيانة
+            </h1>
+            <p className="text-gray-600">
+              نظام متكامل لإدارة الصيانة وتتبع الأعطال
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -251,9 +317,13 @@ export default function Maintenance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">إجمالي الطلبات</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      إجمالي الطلبات
+                    </p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {Array.isArray(maintenanceRequests) ? maintenanceRequests.length : 0}
+                      {Array.isArray(maintenanceRequests)
+                        ? maintenanceRequests.length
+                        : 0}
                     </p>
                   </div>
                   <Wrench className="w-8 h-8 text-blue-500" />
@@ -265,9 +335,15 @@ export default function Maintenance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">قيد الانتظار</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      قيد الانتظار
+                    </p>
                     <p className="text-2xl font-bold text-yellow-600">
-                      {Array.isArray(maintenanceRequests) ? maintenanceRequests.filter((r: any) => r.status === 'pending').length : 0}
+                      {Array.isArray(maintenanceRequests)
+                        ? maintenanceRequests.filter(
+                            (r: any) => r.status === "pending",
+                          ).length
+                        : 0}
                     </p>
                   </div>
                   <Clock className="w-8 h-8 text-yellow-500" />
@@ -279,9 +355,15 @@ export default function Maintenance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">قيد التنفيذ</p>
+                    <p className="text-sm font-medium text-gray-600">
+                      قيد التنفيذ
+                    </p>
                     <p className="text-2xl font-bold text-blue-600">
-                      {Array.isArray(maintenanceRequests) ? maintenanceRequests.filter((r: any) => r.status === 'in_progress').length : 0}
+                      {Array.isArray(maintenanceRequests)
+                        ? maintenanceRequests.filter(
+                            (r: any) => r.status === "in_progress",
+                          ).length
+                        : 0}
                     </p>
                   </div>
                   <AlertTriangle className="w-8 h-8 text-blue-500" />
@@ -295,7 +377,11 @@ export default function Maintenance() {
                   <div>
                     <p className="text-sm font-medium text-gray-600">مكتملة</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {Array.isArray(maintenanceRequests) ? maintenanceRequests.filter((r: any) => r.status === 'completed').length : 0}
+                      {Array.isArray(maintenanceRequests)
+                        ? maintenanceRequests.filter(
+                            (r: any) => r.status === "completed",
+                          ).length
+                        : 0}
                     </p>
                   </div>
                   <CheckCircle className="w-8 h-8 text-green-500" />
@@ -305,7 +391,11 @@ export default function Maintenance() {
           </div>
 
           {/* Main Tabs */}
-          <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <Tabs
+            value={currentTab}
+            onValueChange={setCurrentTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="requests" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
@@ -319,15 +409,24 @@ export default function Maintenance() {
                 <FileText className="h-4 w-4" />
                 بلاغات الصيانة
               </TabsTrigger>
-              <TabsTrigger value="negligence" className="flex items-center gap-2">
+              <TabsTrigger
+                value="negligence"
+                className="flex items-center gap-2"
+              >
                 <AlertCircle className="h-4 w-4" />
                 بلاغات إهمال المشغلين
               </TabsTrigger>
-              <TabsTrigger value="spare-parts" className="flex items-center gap-2">
+              <TabsTrigger
+                value="spare-parts"
+                className="flex items-center gap-2"
+              >
                 <Users className="h-4 w-4" />
                 قطع الغيار
               </TabsTrigger>
-              <TabsTrigger value="consumable-parts" className="flex items-center gap-2">
+              <TabsTrigger
+                value="consumable-parts"
+                className="flex items-center gap-2"
+              >
                 <Wrench className="h-4 w-4" />
                 قطع غيار استهلاكية
               </TabsTrigger>
@@ -339,14 +438,17 @@ export default function Maintenance() {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>طلبات الصيانة</CardTitle>
-                    <Dialog open={isRequestDialogOpen} onOpenChange={setIsRequestDialogOpen}>
+                    <Dialog
+                      open={isRequestDialogOpen}
+                      onOpenChange={setIsRequestDialogOpen}
+                    >
                       <DialogTrigger asChild>
                         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                           <Plus className="h-4 w-4 mr-2" />
                           طلب صيانة جديد
                         </Button>
                       </DialogTrigger>
-                      <MaintenanceRequestDialog 
+                      <MaintenanceRequestDialog
                         machines={machines}
                         users={users}
                         onSubmit={createRequestMutation.mutate}
@@ -359,7 +461,9 @@ export default function Maintenance() {
                   {loadingRequests ? (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        جاري التحميل...
+                      </p>
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
@@ -393,63 +497,99 @@ export default function Maintenance() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {Array.isArray(maintenanceRequests) && maintenanceRequests.length > 0 ? maintenanceRequests.map((request: any) => {
-                            // Get machine name from machines array
-                            const machine = Array.isArray(machines) ? machines.find((m: any) => m.id === request.machine_id) : null;
-                            const machineName = machine ? machine.name_ar || machine.name : request.machine_id;
-                            
-                            // Get assigned user name from users array
-                            const assignedUser = Array.isArray(users) && request.assigned_to ? 
-                              users.find((u: any) => u.id.toString() === request.assigned_to.toString()) : null;
-                            const assignedName = assignedUser ? (assignedUser.full_name || assignedUser.username) : 'غير محدد';
-                            
-                            return (
-                              <tr key={request.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                  {request.request_number}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                  {machineName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                  {request.issue_type === 'mechanical' ? 'ميكانيكية' : 
-                                   request.issue_type === 'electrical' ? 'كهربائية' : 
-                                   'أخرى'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <Badge variant={
-                                    request.urgency_level === 'urgent' ? 'destructive' : 
-                                    request.urgency_level === 'medium' ? 'default' : 
-                                    'secondary'
-                                  }>
-                                    {request.urgency_level === 'urgent' ? 'عاجل' : 
-                                     request.urgency_level === 'medium' ? 'متوسط' : 
-                                     'عادي'}
-                                  </Badge>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                                    {getStatusText(request.status)}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
-                                  {request.description}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                  {assignedName}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                  {new Date(request.date_reported).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit'
-                                  })}
-                                </td>
-                              </tr>
-                            );
-                          }) : (
+                          {Array.isArray(maintenanceRequests) &&
+                          maintenanceRequests.length > 0 ? (
+                            maintenanceRequests.map((request: any) => {
+                              // Get machine name from machines array
+                              const machine = Array.isArray(machines)
+                                ? machines.find(
+                                    (m: any) => m.id === request.machine_id,
+                                  )
+                                : null;
+                              const machineName = machine
+                                ? machine.name_ar || machine.name
+                                : request.machine_id;
+
+                              // Get assigned user name from users array
+                              const assignedUser =
+                                Array.isArray(users) && request.assigned_to
+                                  ? users.find(
+                                      (u: any) =>
+                                        u.id.toString() ===
+                                        request.assigned_to.toString(),
+                                    )
+                                  : null;
+                              const assignedName = assignedUser
+                                ? assignedUser.full_name ||
+                                  assignedUser.username
+                                : "غير محدد";
+
+                              return (
+                                <tr
+                                  key={request.id}
+                                  className="hover:bg-gray-50"
+                                >
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                    {request.request_number}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    {machineName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    {request.issue_type === "mechanical"
+                                      ? "ميكانيكية"
+                                      : request.issue_type === "electrical"
+                                        ? "كهربائية"
+                                        : "أخرى"}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <Badge
+                                      variant={
+                                        request.urgency_level === "urgent"
+                                          ? "destructive"
+                                          : request.urgency_level === "medium"
+                                            ? "default"
+                                            : "secondary"
+                                      }
+                                    >
+                                      {request.urgency_level === "urgent"
+                                        ? "عاجل"
+                                        : request.urgency_level === "medium"
+                                          ? "متوسط"
+                                          : "عادي"}
+                                    </Badge>
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                    <span
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
+                                    >
+                                      {getStatusText(request.status)}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                                    {request.description}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    {assignedName}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                    {new Date(
+                                      request.date_reported,
+                                    ).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                    })}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          ) : (
                             <tr>
-                              <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                              <td
+                                colSpan={8}
+                                className="px-6 py-4 text-center text-gray-500"
+                              >
                                 لا توجد طلبات صيانة مسجلة
                               </td>
                             </tr>
@@ -464,7 +604,7 @@ export default function Maintenance() {
 
             {/* Maintenance Actions Tab */}
             <TabsContent value="actions">
-              <MaintenanceActionsTab 
+              <MaintenanceActionsTab
                 actions={maintenanceActions}
                 requests={maintenanceRequests}
                 users={users}
@@ -479,7 +619,7 @@ export default function Maintenance() {
 
             {/* Maintenance Reports Tab */}
             <TabsContent value="reports">
-              <MaintenanceReportsTab 
+              <MaintenanceReportsTab
                 reports={maintenanceReports}
                 machines={machines}
                 users={users}
@@ -490,7 +630,7 @@ export default function Maintenance() {
 
             {/* Operator Negligence Tab */}
             <TabsContent value="negligence">
-              <OperatorNegligenceTab 
+              <OperatorNegligenceTab
                 reports={operatorReports}
                 users={users}
                 isLoading={loadingOperatorReports}
@@ -500,7 +640,7 @@ export default function Maintenance() {
 
             {/* Spare Parts Tab */}
             <TabsContent value="spare-parts">
-              <SparePartsTab 
+              <SparePartsTab
                 spareParts={Array.isArray(spareParts) ? spareParts : []}
                 isLoading={false}
               />
@@ -510,13 +650,15 @@ export default function Maintenance() {
             <TabsContent value="consumable-parts">
               <ConsumablePartsTab />
             </TabsContent>
-
           </Tabs>
         </main>
       </div>
 
       {/* Action View Dialog */}
-      <Dialog open={isActionViewDialogOpen} onOpenChange={setIsActionViewDialogOpen}>
+      <Dialog
+        open={isActionViewDialogOpen}
+        onOpenChange={setIsActionViewDialogOpen}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>تفاصيل إجراء الصيانة</DialogTitle>
@@ -524,125 +666,200 @@ export default function Maintenance() {
               عرض تفاصيل إجراء الصيانة المحدد
             </DialogDescription>
           </DialogHeader>
-          {selectedAction && (() => {
-            const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === selectedAction.performed_by) : null;
-            const maintenanceRequest = Array.isArray(maintenanceRequests) ? maintenanceRequests.find((r: any) => r.id === selectedAction.maintenance_request_id) : null;
-            
-            return (
-              <div className="space-y-6">
-                {/* Basic Information */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">رقم الإجراء</label>
-                    <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">{selectedAction.action_number}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">رقم طلب الصيانة</label>
-                    <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">{maintenanceRequest?.request_number || selectedAction.maintenance_request_id}</p>
-                  </div>
-                </div>
+          {selectedAction &&
+            (() => {
+              const performedByUser = Array.isArray(users)
+                ? users.find(
+                    (u: any) => u.id.toString() === selectedAction.performed_by,
+                  )
+                : null;
+              const maintenanceRequest = Array.isArray(maintenanceRequests)
+                ? maintenanceRequests.find(
+                    (r: any) => r.id === selectedAction.maintenance_request_id,
+                  )
+                : null;
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">نوع الإجراء</label>
-                    <div className="mt-1">
-                      <Badge variant="outline" className="text-sm">
-                        {selectedAction.action_type}
-                      </Badge>
+              return (
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        رقم الإجراء
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">
+                        {selectedAction.action_number}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        رقم طلب الصيانة
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">
+                        {maintenanceRequest?.request_number ||
+                          selectedAction.maintenance_request_id}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">المنفذ</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {performedByUser ? (performedByUser.display_name_ar || performedByUser.display_name || performedByUser.username) : selectedAction.performed_by}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Description */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">وصف الإجراء</label>
-                  <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-3 rounded min-h-[60px]">
-                    {selectedAction.description || 'لا يوجد وصف'}
-                  </p>
-                </div>
-
-                {/* Technical Reports */}
-                {selectedAction.text_report && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">التقرير النصي</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-blue-50 p-3 rounded min-h-[60px] border border-blue-200">
-                      {selectedAction.text_report}
-                    </p>
-                  </div>
-                )}
-
-                {/* Spare Parts and Machining Requests */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">طلب قطع غيار</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.spare_parts_request || 'لا يوجد'}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">طلب مخرطة</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.machining_request || 'لا يوجد'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Management Actions */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">يتطلب إجراء إداري</label>
-                    <div className="mt-1">
-                      <Badge variant={selectedAction.requires_management_action ? "destructive" : "secondary"}>
-                        {selectedAction.requires_management_action ? "نعم" : "لا"}
-                      </Badge>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        نوع الإجراء
+                      </label>
+                      <div className="mt-1">
+                        <Badge variant="outline" className="text-sm">
+                          {selectedAction.action_type}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        المنفذ
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                        {performedByUser
+                          ? performedByUser.display_name_ar ||
+                            performedByUser.display_name ||
+                            performedByUser.username
+                          : selectedAction.performed_by}
+                      </p>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">تم إشعار الإدارة</label>
-                    <div className="mt-1">
-                      <Badge variant={selectedAction.management_notified ? "default" : "secondary"}>
-                        {selectedAction.management_notified ? "نعم" : "لا"}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Date Information */}
-                <div className="grid grid-cols-2 gap-4">
+                  {/* Description */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">تاريخ التنفيذ</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.performed_at ? new Date(selectedAction.performed_at).toLocaleDateString('ar') : 'غير محدد'}
+                    <label className="text-sm font-medium text-gray-700">
+                      وصف الإجراء
+                    </label>
+                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-3 rounded min-h-[60px]">
+                      {selectedAction.description || "لا يوجد وصف"}
                     </p>
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
-                      {selectedAction.created_at ? new Date(selectedAction.created_at).toLocaleDateString('ar') : 'غير محدد'}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Machine Information */}
-                {maintenanceRequest && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">معلومات الماكينة</label>
-                    <div className="mt-1 bg-blue-50 p-3 rounded border border-blue-200">
-                      <p className="text-sm"><strong>معرف الماكينة:</strong> {maintenanceRequest.machine_id}</p>
-                      <p className="text-sm"><strong>نوع المشكلة:</strong> {maintenanceRequest.issue_type}</p>
-                      <p className="text-sm"><strong>مستوى الأولوية:</strong> {maintenanceRequest.urgency_level}</p>
+                  {/* Technical Reports */}
+                  {selectedAction.text_report && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        التقرير النصي
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-blue-50 p-3 rounded min-h-[60px] border border-blue-200">
+                        {selectedAction.text_report}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Spare Parts and Machining Requests */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        طلب قطع غيار
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                        {selectedAction.spare_parts_request || "لا يوجد"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        طلب مخرطة
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                        {selectedAction.machining_request || "لا يوجد"}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
-            );
-          })()}
+
+                  {/* Management Actions */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        يتطلب إجراء إداري
+                      </label>
+                      <div className="mt-1">
+                        <Badge
+                          variant={
+                            selectedAction.requires_management_action
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {selectedAction.requires_management_action
+                            ? "نعم"
+                            : "لا"}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        تم إشعار الإدارة
+                      </label>
+                      <div className="mt-1">
+                        <Badge
+                          variant={
+                            selectedAction.management_notified
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
+                          {selectedAction.management_notified ? "نعم" : "لا"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Date Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        تاريخ التنفيذ
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                        {selectedAction.performed_at
+                          ? new Date(
+                              selectedAction.performed_at,
+                            ).toLocaleDateString("ar")
+                          : "غير محدد"}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        تاريخ الإنشاء
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                        {selectedAction.created_at
+                          ? new Date(
+                              selectedAction.created_at,
+                            ).toLocaleDateString("ar")
+                          : "غير محدد"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Machine Information */}
+                  {maintenanceRequest && (
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        معلومات الماكينة
+                      </label>
+                      <div className="mt-1 bg-blue-50 p-3 rounded border border-blue-200">
+                        <p className="text-sm">
+                          <strong>معرف الماكينة:</strong>{" "}
+                          {maintenanceRequest.machine_id}
+                        </p>
+                        <p className="text-sm">
+                          <strong>نوع المشكلة:</strong>{" "}
+                          {maintenanceRequest.issue_type}
+                        </p>
+                        <p className="text-sm">
+                          <strong>مستوى الأولوية:</strong>{" "}
+                          {maintenanceRequest.urgency_level}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
         </DialogContent>
       </Dialog>
     </div>
@@ -650,10 +867,17 @@ export default function Maintenance() {
 }
 
 // Maintenance Actions Tab Component
-function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAction, onViewAction }: any) {
+function MaintenanceActionsTab({
+  actions,
+  requests,
+  users,
+  isLoading,
+  onCreateAction,
+  onViewAction,
+}: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
-  
+
   // Add spare parts query and user context
   const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
   const { user } = useAuth();
@@ -677,30 +901,30 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
   // Set current user as performer when dialog opens or user changes
   useEffect(() => {
     if (user?.id) {
-      form.setValue('performed_by', user.id.toString());
+      form.setValue("performed_by", user.id.toString());
     }
   }, [user, form]);
 
   const onSubmit = async (data: any) => {
     try {
-      console.log('Form data submitted:', data);
-      
+      console.log("Form data submitted:", data);
+
       // Generate action number
       const actionNumber = generateActionNumber();
-      
+
       const submitData = {
         ...data,
         action_number: actionNumber,
         request_created_by: "1", // Should be current user
       };
-      
-      console.log('Submitting action data:', submitData);
+
+      console.log("Submitting action data:", submitData);
       await onCreateAction(submitData);
-      
+
       setIsDialogOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Error creating maintenance action:', error);
+      console.error("Error creating maintenance action:", error);
     }
   };
 
@@ -724,7 +948,10 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                 </DialogDescription>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -732,25 +959,34 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>طلب الصيانة</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                          <Select
+                            onValueChange={(value) =>
+                              field.onChange(parseInt(value))
+                            }
+                          >
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="اختر طلب الصيانة" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {Array.isArray(requests) && requests.map((request: any) => (
-                                <SelectItem key={request.id} value={request.id.toString()}>
-                                  {request.request_number} - {request.description}
-                                </SelectItem>
-                              ))}
+                              {Array.isArray(requests) &&
+                                requests.map((request: any) => (
+                                  <SelectItem
+                                    key={request.id}
+                                    value={request.id.toString()}
+                                  >
+                                    {request.request_number} -{" "}
+                                    {request.description}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="action_type"
@@ -764,11 +1000,21 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="فحص مبدئي">فحص مبدئي</SelectItem>
-                              <SelectItem value="تغيير قطعة غيار">تغيير قطعة غيار</SelectItem>
-                              <SelectItem value="إصلاح مكانيكي">إصلاح مكانيكي</SelectItem>
-                              <SelectItem value="إصلاح كهربائي">إصلاح كهربائي</SelectItem>
-                              <SelectItem value="إيقاف الماكينة">إيقاف الماكينة</SelectItem>
+                              <SelectItem value="فحص مبدئي">
+                                فحص مبدئي
+                              </SelectItem>
+                              <SelectItem value="تغيير قطعة غيار">
+                                تغيير قطعة غيار
+                              </SelectItem>
+                              <SelectItem value="إصلاح مكانيكي">
+                                إصلاح مكانيكي
+                              </SelectItem>
+                              <SelectItem value="إصلاح كهربائي">
+                                إصلاح كهربائي
+                              </SelectItem>
+                              <SelectItem value="إيقاف الماكينة">
+                                إيقاف الماكينة
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -776,7 +1022,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="performed_by"
@@ -784,16 +1030,18 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       <FormItem>
                         <FormLabel>المنفذ</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             {...field}
-                            value={user?.id ? user.id.toString() : ''}
+                            value={user?.id ? user.id.toString() : ""}
                             type="hidden"
                             className="hidden"
                           />
                         </FormControl>
                         <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded border">
                           <div className="font-medium text-sm">
-                            {user ? `${user.display_name || user.username} (${user.id})` : 'جاري التحميل...'}
+                            {user
+                              ? `${user.display_name || user.username} (${user.id})`
+                              : "جاري التحميل..."}
                           </div>
                           <div className="text-xs text-gray-600 dark:text-gray-400">
                             سيتم تسجيل الإجراء باسم المستخدم الحالي
@@ -803,7 +1051,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -811,13 +1059,16 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       <FormItem>
                         <FormLabel>وصف الإجراء</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="اكتب وصفاً مفصلاً للإجراء المتخذ" />
+                          <Textarea
+                            {...field}
+                            placeholder="اكتب وصفاً مفصلاً للإجراء المتخذ"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -826,13 +1077,16 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormItem>
                           <FormLabel>التقرير النصي</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="تقرير مفصل عن العملية" />
+                            <Textarea
+                              {...field}
+                              placeholder="تقرير مفصل عن العملية"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="spare_parts_request"
@@ -840,21 +1094,36 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormItem>
                           <FormLabel>طلب قطع غيار</FormLabel>
                           <FormControl>
-                            <Select value={field.value} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                            >
                               <SelectTrigger>
                                 <SelectValue placeholder="اختر قطعة الغيار المطلوبة" />
                               </SelectTrigger>
                               <SelectContent>
-                                {Array.isArray(spareParts) && spareParts.length > 0 ? (
+                                {Array.isArray(spareParts) &&
+                                spareParts.length > 0 ? (
                                   spareParts
-                                    .filter(part => part.part_id && part.part_name && part.code)
+                                    .filter(
+                                      (part) =>
+                                        part.part_id &&
+                                        part.part_name &&
+                                        part.code,
+                                    )
                                     .map((part: any) => (
-                                    <SelectItem key={part.part_id} value={`${part.part_name}_${part.code}_${part.part_id}`}>
-                                      {part.part_name} ({part.code}) - {part.machine_name}
-                                    </SelectItem>
-                                  ))
+                                      <SelectItem
+                                        key={part.part_id}
+                                        value={`${part.part_name}_${part.code}_${part.part_id}`}
+                                      >
+                                        {part.part_name} ({part.code}) -{" "}
+                                        {part.machine_name}
+                                      </SelectItem>
+                                    ))
                                 ) : (
-                                  <SelectItem value="no_parts">لا توجد قطع غيار متاحة</SelectItem>
+                                  <SelectItem value="no_parts">
+                                    لا توجد قطع غيار متاحة
+                                  </SelectItem>
                                 )}
                               </SelectContent>
                             </Select>
@@ -864,7 +1133,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -873,13 +1142,16 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormItem>
                           <FormLabel>طلب مخرطة</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="تفاصيل طلب المخرطة إن وجد" />
+                            <Textarea
+                              {...field}
+                              placeholder="تفاصيل طلب المخرطة إن وجد"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="operator_negligence_report"
@@ -887,14 +1159,17 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <FormItem>
                           <FormLabel>تبليغ إهمال المشغل</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="تقرير عن إهمال المشغل إن وجد" />
+                            <Textarea
+                              {...field}
+                              placeholder="تقرير عن إهمال المشغل إن وجد"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -915,7 +1190,7 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="management_notified"
@@ -936,9 +1211,13 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                       )}
                     />
                   </div>
-                  
+
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button type="submit">حفظ الإجراء</Button>
@@ -953,30 +1232,60 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              جاري التحميل...
+            </p>
           </div>
         ) : Array.isArray(actions) && actions.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300 text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">رقم الإجراء</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">رقم طلب الصيانة</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">نوع الإجراء</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">الوصف</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">المنفذ</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">طلب قطع غيار</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">طلب مخرطة</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">موافقة إدارية</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">تاريخ التنفيذ</th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">الإجراءات</th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    رقم الإجراء
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    رقم طلب الصيانة
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    نوع الإجراء
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    الوصف
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    المنفذ
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    طلب قطع غيار
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    طلب مخرطة
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    موافقة إدارية
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    تاريخ التنفيذ
+                  </th>
+                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
+                    الإجراءات
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {actions.map((action: any) => {
-                  const performedByUser = Array.isArray(users) ? users.find((u: any) => u.id.toString() === action.performed_by) : null;
-                  const maintenanceRequest = Array.isArray(requests) ? requests.find((r: any) => r.id === action.maintenance_request_id) : null;
-                  
+                  const performedByUser = Array.isArray(users)
+                    ? users.find(
+                        (u: any) => u.id.toString() === action.performed_by,
+                      )
+                    : null;
+                  const maintenanceRequest = Array.isArray(requests)
+                    ? requests.find(
+                        (r: any) => r.id === action.maintenance_request_id,
+                      )
+                    : null;
+
                   const handleView = () => {
                     onViewAction?.(action);
                   };
@@ -990,66 +1299,79 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         <div style="margin: 20px 0;">
                           <p><strong>رقم طلب الصيانة:</strong> ${maintenanceRequest?.request_number || action.maintenance_request_id}</p>
                           <p><strong>نوع الإجراء:</strong> ${action.action_type}</p>
-                          <p><strong>الوصف:</strong> ${action.description || '-'}</p>
-                          <p><strong>المنفذ:</strong> ${performedByUser ? (performedByUser.full_name || performedByUser.username) : action.performed_by}</p>
-                          <p><strong>طلب قطع غيار:</strong> ${action.spare_parts_request || '-'}</p>
-                          <p><strong>طلب مخرطة:</strong> ${action.machining_request || '-'}</p>
-                          <p><strong>تقرير إهمال المشغل:</strong> ${action.operator_negligence_report || '-'}</p>
-                          <p><strong>تقرير نصي:</strong> ${action.text_report || '-'}</p>
-                          <p><strong>موافقة إدارية مطلوبة:</strong> ${action.requires_management_action ? 'نعم' : 'لا'}</p>
-                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString('ar')}</p>
-                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString('ar')}</p>
+                          <p><strong>الوصف:</strong> ${action.description || "-"}</p>
+                          <p><strong>المنفذ:</strong> ${performedByUser ? performedByUser.full_name || performedByUser.username : action.performed_by}</p>
+                          <p><strong>طلب قطع غيار:</strong> ${action.spare_parts_request || "-"}</p>
+                          <p><strong>طلب مخرطة:</strong> ${action.machining_request || "-"}</p>
+                          <p><strong>تقرير إهمال المشغل:</strong> ${action.operator_negligence_report || "-"}</p>
+                          <p><strong>تقرير نصي:</strong> ${action.text_report || "-"}</p>
+                          <p><strong>موافقة إدارية مطلوبة:</strong> ${action.requires_management_action ? "نعم" : "لا"}</p>
+                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString("ar")}</p>
+                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString("ar")}</p>
                         </div>
                       </div>
                     `;
-                    
-                    const printWindow = window.open('', '_blank');
+
+                    const printWindow = window.open("", "_blank");
                     printWindow?.document.write(printContent);
                     printWindow?.document.close();
                     printWindow?.print();
                   };
 
                   const handleDelete = async () => {
-                    if (confirm(`هل أنت متأكد من حذف الإجراء ${action.action_number}؟`)) {
+                    if (
+                      confirm(
+                        `هل أنت متأكد من حذف الإجراء ${action.action_number}؟`,
+                      )
+                    ) {
                       try {
                         await fetch(`/api/maintenance-actions/${action.id}`, {
-                          method: 'DELETE',
+                          method: "DELETE",
                         });
                         window.location.reload();
                       } catch (error) {
-                        alert('حدث خطأ في حذف الإجراء');
+                        alert("حدث خطأ في حذف الإجراء");
                       }
                     }
                   };
 
                   const handleEdit = () => {
-                    alert(`تعديل الإجراء ${action.action_number} - سيتم تطوير هذه الميزة قريباً`);
+                    alert(
+                      `تعديل الإجراء ${action.action_number} - سيتم تطوير هذه الميزة قريباً`,
+                    );
                   };
-                  
+
                   return (
                     <tr key={action.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2 text-center font-medium text-blue-600">
                         {action.action_number}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center font-medium text-green-600">
-                        {maintenanceRequest?.request_number || `MO${action.maintenance_request_id.toString().padStart(3, '0')}`}
+                        {maintenanceRequest?.request_number ||
+                          `MO${action.maintenance_request_id.toString().padStart(3, "0")}`}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        <Badge
+                          variant="outline"
+                          className="bg-blue-50 text-blue-700"
+                        >
                           {action.action_type}
                         </Badge>
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {action.description || '-'}
+                        {action.description || "-"}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
-                        {performedByUser ? (performedByUser.full_name || performedByUser.username) : action.performed_by}
+                        {performedByUser
+                          ? performedByUser.full_name ||
+                            performedByUser.username
+                          : action.performed_by}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {action.spare_parts_request || '-'}
+                        {action.spare_parts_request || "-"}
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
-                        {action.machining_request || '-'}
+                        {action.machining_request || "-"}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
                         {action.requires_management_action ? (
@@ -1059,18 +1381,24 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
                         )}
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
-                        {new Date(action.action_date).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit'
-                        })}
+                        {new Date(action.action_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                          },
+                        )}
                         <br />
                         <span className="text-xs text-gray-500">
-                          {new Date(action.action_date).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
+                          {new Date(action.action_date).toLocaleTimeString(
+                            "en-US",
+                            {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            },
+                          )}
                         </span>
                       </td>
                       <td className="border border-gray-300 px-4 py-2 text-center">
@@ -1131,7 +1459,13 @@ function MaintenanceActionsTab({ actions, requests, users, isLoading, onCreateAc
 }
 
 // Maintenance Reports Tab Component
-function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateReport }: any) {
+function MaintenanceReportsTab({
+  reports,
+  machines,
+  users,
+  isLoading,
+  onCreateReport,
+}: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm({
@@ -1151,19 +1485,19 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
   const onSubmit = async (data: any) => {
     try {
       const reportNumber = generateMaintenanceReportNumber();
-      
+
       await onCreateReport({
         ...data,
         report_number: reportNumber,
         reported_by_user_id: 1, // Should be current user
-        status: 'open',
-        estimated_repair_time: data.estimated_repair_time || null
+        status: "open",
+        estimated_repair_time: data.estimated_repair_time || null,
       });
-      
+
       setIsDialogOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Error creating maintenance report:', error);
+      console.error("Error creating maintenance report:", error);
     }
   };
 
@@ -1184,7 +1518,10 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                 <DialogTitle>إضافة بلاغ صيانة جديد</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1199,19 +1536,29 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="breakdown">عطل في الماكينة</SelectItem>
-                              <SelectItem value="malfunction">خلل في الأداء</SelectItem>
+                              <SelectItem value="breakdown">
+                                عطل في الماكينة
+                              </SelectItem>
+                              <SelectItem value="malfunction">
+                                خلل في الأداء
+                              </SelectItem>
                               <SelectItem value="safety">مشكلة أمان</SelectItem>
-                              <SelectItem value="quality">مشكلة جودة</SelectItem>
-                              <SelectItem value="preventive">صيانة وقائية مطلوبة</SelectItem>
-                              <SelectItem value="spare_parts">طلب قطع غيار</SelectItem>
+                              <SelectItem value="quality">
+                                مشكلة جودة
+                              </SelectItem>
+                              <SelectItem value="preventive">
+                                صيانة وقائية مطلوبة
+                              </SelectItem>
+                              <SelectItem value="spare_parts">
+                                طلب قطع غيار
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="severity"
@@ -1236,7 +1583,7 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="title"
@@ -1250,7 +1597,7 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -1258,13 +1605,16 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                       <FormItem>
                         <FormLabel>وصف المشكلة</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="وصف مفصل للمشكلة والأعراض" />
+                          <Textarea
+                            {...field}
+                            placeholder="وصف مفصل للمشكلة والأعراض"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1273,13 +1623,16 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                         <FormItem>
                           <FormLabel>الماكينة (اختياري)</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="رقم أو اسم الماكينة" />
+                            <Input
+                              {...field}
+                              placeholder="رقم أو اسم الماكينة"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="estimated_repair_time"
@@ -1287,11 +1640,13 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                         <FormItem>
                           <FormLabel>الوقت المتوقع للإصلاح (ساعات)</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              step="0.1" 
-                              {...field} 
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                            <Input
+                              type="number"
+                              step="0.1"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -1299,9 +1654,13 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                       )}
                     />
                   </div>
-                  
+
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button type="submit">إرسال البلاغ</Button>
@@ -1316,22 +1675,34 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              جاري التحميل...
+            </p>
           </div>
         ) : Array.isArray(reports) && reports.length > 0 ? (
           <div className="space-y-4">
             {reports.map((report: any) => (
               <div key={report.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{report.report_number} - {report.title}</h3>
+                  <h3 className="font-semibold">
+                    {report.report_number} - {report.title}
+                  </h3>
                   <div className="flex gap-2">
-                    <Badge variant={report.severity === 'critical' ? 'destructive' : 'secondary'}>
+                    <Badge
+                      variant={
+                        report.severity === "critical"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
                       {report.severity}
                     </Badge>
                     <Badge>{report.status}</Badge>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {report.description}
+                </p>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">نوع البلاغ: </span>
@@ -1339,10 +1710,10 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
                   </div>
                   <div>
                     <span className="font-medium">تاريخ الإبلاغ: </span>
-                    {new Date(report.created_at).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: '2-digit',
-                      day: '2-digit'
+                    {new Date(report.created_at).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
                     })}
                   </div>
                 </div>
@@ -1361,7 +1732,12 @@ function MaintenanceReportsTab({ reports, machines, users, isLoading, onCreateRe
 }
 
 // Operator Negligence Tab Component
-function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: any) {
+function OperatorNegligenceTab({
+  reports,
+  users,
+  isLoading,
+  onCreateReport,
+}: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const form = useForm({
@@ -1381,20 +1757,21 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
   const onSubmit = async (data: any) => {
     try {
       const reportNumber = generateOperatorReportNumber();
-      
+
       await onCreateReport({
         ...data,
         report_number: reportNumber,
         reported_by_user_id: 1, // Should be current user
-        report_date: new Date().toISOString().split('T')[0],
-        status: 'pending',
-        follow_up_required: data.severity === 'high' || data.severity === 'critical'
+        report_date: new Date().toISOString().split("T")[0],
+        status: "pending",
+        follow_up_required:
+          data.severity === "high" || data.severity === "critical",
       });
-      
+
       setIsDialogOpen(false);
       form.reset();
     } catch (error) {
-      console.error('Error creating operator negligence report:', error);
+      console.error("Error creating operator negligence report:", error);
     }
   };
 
@@ -1415,7 +1792,10 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                 <DialogTitle>إضافة بلاغ إهمال مشغل</DialogTitle>
               </DialogHeader>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1424,13 +1804,16 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                         <FormItem>
                           <FormLabel>معرف المشغل</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="رقم المشغل أو كود التعريف" />
+                            <Input
+                              {...field}
+                              placeholder="رقم المشغل أو كود التعريف"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="operator_name"
@@ -1438,14 +1821,17 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                         <FormItem>
                           <FormLabel>اسم المشغل</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="الاسم الكامل للمشغل" />
+                            <Input
+                              {...field}
+                              placeholder="الاسم الكامل للمشغل"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1460,7 +1846,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="incident_type"
@@ -1474,12 +1860,24 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="safety_violation">مخالفة قواعد الأمان</SelectItem>
-                              <SelectItem value="equipment_misuse">سوء استخدام المعدات</SelectItem>
-                              <SelectItem value="procedure_violation">عدم اتباع الإجراءات</SelectItem>
-                              <SelectItem value="quality_negligence">إهمال الجودة</SelectItem>
-                              <SelectItem value="time_violation">مخالفة الوقت</SelectItem>
-                              <SelectItem value="maintenance_neglect">إهمال الصيانة</SelectItem>
+                              <SelectItem value="safety_violation">
+                                مخالفة قواعد الأمان
+                              </SelectItem>
+                              <SelectItem value="equipment_misuse">
+                                سوء استخدام المعدات
+                              </SelectItem>
+                              <SelectItem value="procedure_violation">
+                                عدم اتباع الإجراءات
+                              </SelectItem>
+                              <SelectItem value="quality_negligence">
+                                إهمال الجودة
+                              </SelectItem>
+                              <SelectItem value="time_violation">
+                                مخالفة الوقت
+                              </SelectItem>
+                              <SelectItem value="maintenance_neglect">
+                                إهمال الصيانة
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1487,7 +1885,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={form.control}
                     name="description"
@@ -1495,13 +1893,16 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                       <FormItem>
                         <FormLabel>وصف الحادث</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="وصف مفصل لما حدث والظروف المحيطة" />
+                          <Textarea
+                            {...field}
+                            placeholder="وصف مفصل لما حدث والظروف المحيطة"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
@@ -1526,7 +1927,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="immediate_actions_taken"
@@ -1534,16 +1935,23 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                         <FormItem>
                           <FormLabel>الإجراءات المتخذة فوراً</FormLabel>
                           <FormControl>
-                            <Textarea {...field} placeholder="ما تم اتخاذه من إجراءات فورية" />
+                            <Textarea
+                              {...field}
+                              placeholder="ما تم اتخاذه من إجراءات فورية"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
-                  
+
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button type="submit">إرسال البلاغ</Button>
@@ -1558,22 +1966,34 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
         {isLoading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              جاري التحميل...
+            </p>
           </div>
         ) : Array.isArray(reports) && reports.length > 0 ? (
           <div className="space-y-4">
             {reports.map((report: any) => (
               <div key={report.id} className="border rounded-lg p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">{report.report_number} - {report.operator_name}</h3>
+                  <h3 className="font-semibold">
+                    {report.report_number} - {report.operator_name}
+                  </h3>
                   <div className="flex gap-2">
-                    <Badge variant={report.severity === 'critical' ? 'destructive' : 'secondary'}>
+                    <Badge
+                      variant={
+                        report.severity === "critical"
+                          ? "destructive"
+                          : "secondary"
+                      }
+                    >
                       {report.severity}
                     </Badge>
                     <Badge>{report.status}</Badge>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  {report.description}
+                </p>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">نوع الإهمال: </span>
@@ -1581,7 +2001,7 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
                   </div>
                   <div>
                     <span className="font-medium">تاريخ الحادث: </span>
-                    {new Date(report.incident_date).toLocaleDateString('ar')}
+                    {new Date(report.incident_date).toLocaleDateString("ar")}
                   </div>
                 </div>
               </div>
@@ -1599,7 +2019,12 @@ function OperatorNegligenceTab({ reports, users, isLoading, onCreateReport }: an
 }
 
 // Maintenance Request Dialog Component
-function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any) {
+function MaintenanceRequestDialog({
+  machines,
+  users,
+  onSubmit,
+  isLoading,
+}: any) {
   const form = useForm({
     resolver: zodResolver(maintenanceRequestSchema),
     defaultValues: {
@@ -1615,17 +2040,23 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
     // Convert "none" back to empty string for the API
     const submitData = {
       ...data,
-      assigned_to: data.assigned_to === "none" ? "" : data.assigned_to
+      assigned_to: data.assigned_to === "none" ? "" : data.assigned_to,
     };
     onSubmit(submitData);
     form.reset();
   };
 
   return (
-    <DialogContent className="sm:max-w-[600px]" aria-describedby="maintenance-request-description">
+    <DialogContent
+      className="sm:max-w-[600px]"
+      aria-describedby="maintenance-request-description"
+    >
       <DialogHeader>
         <DialogTitle>طلب صيانة جديد</DialogTitle>
-        <p id="maintenance-request-description" className="text-sm text-gray-600">
+        <p
+          id="maintenance-request-description"
+          className="text-sm text-gray-600"
+        >
           أنشئ طلب صيانة جديد للمعدات التي تحتاج إلى إصلاح أو صيانة
         </p>
       </DialogHeader>
@@ -1639,20 +2070,33 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>المعدة</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر المعدة" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Array.isArray(machines) && machines
-                        .filter(machine => machine.id && machine.id !== '' && machine.id !== null && machine.id !== undefined)
-                        .map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.id.toString()}>
-                          {machine.name_ar}
-                        </SelectItem>
-                      ))}
+                      {Array.isArray(machines) &&
+                        machines
+                          .filter(
+                            (machine) =>
+                              machine.id &&
+                              machine.id !== "" &&
+                              machine.id !== null &&
+                              machine.id !== undefined,
+                          )
+                          .map((machine: any) => (
+                            <SelectItem
+                              key={machine.id}
+                              value={machine.id.toString()}
+                            >
+                              {machine.name_ar}
+                            </SelectItem>
+                          ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -1666,7 +2110,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>نوع المشكلة</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر نوع المشكلة" />
@@ -1691,7 +2138,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>مستوى الإلحاح</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value || ""}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="اختر مستوى الإلحاح" />
@@ -1715,7 +2165,10 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
             render={({ field }) => (
               <FormItem>
                 <FormLabel>المكلف بالإصلاح (اختياري)</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value || ""}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="اختر الفني" />
@@ -1723,13 +2176,14 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="none">بدون تكليف</SelectItem>
-                    {Array.isArray(users) && users
-                      .filter((user: any) => user.role === 'technician')
-                      .map((user: any) => (
-                        <SelectItem key={user.id} value={user.id.toString()}>
-                          {user.full_name || user.username}
-                        </SelectItem>
-                      ))}
+                    {Array.isArray(users) &&
+                      users
+                        .filter((user: any) => user.role === "technician")
+                        .map((user: any) => (
+                          <SelectItem key={user.id} value={user.id.toString()}>
+                            {user.full_name || user.username}
+                          </SelectItem>
+                        ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -1744,7 +2198,7 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
               <FormItem>
                 <FormLabel>وصف المشكلة</FormLabel>
                 <FormControl>
-                  <Textarea 
+                  <Textarea
                     placeholder="اشرح المشكلة أو نوع الصيانة المطلوبة..."
                     className="min-h-[100px]"
                     {...field}
@@ -1756,8 +2210,8 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
           />
 
           <div className="flex justify-end gap-2">
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
@@ -1771,7 +2225,13 @@ function MaintenanceRequestDialog({ machines, users, onSubmit, isLoading }: any)
 }
 
 // Spare Parts Tab Component
-function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading: boolean }) {
+function SparePartsTab({
+  spareParts,
+  isLoading,
+}: {
+  spareParts: any[];
+  isLoading: boolean;
+}) {
   const [selectedPart, setSelectedPart] = useState<any>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -1782,10 +2242,11 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
   // Create spare part mutation
   const createSparePartMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("/api/spare-parts", { 
-      method: "POST", 
-      body: JSON.stringify(data) 
-    }),
+    mutationFn: (data: any) =>
+      apiRequest("/api/spare-parts", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       toast({ title: "تم إنشاء قطعة الغيار بنجاح" });
@@ -1798,10 +2259,11 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
   // Update spare part mutation
   const updateSparePartMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) => apiRequest(`/api/spare-parts/${id}`, { 
-      method: "PUT", 
-      body: JSON.stringify(data) 
-    }),
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
+      apiRequest(`/api/spare-parts/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       toast({ title: "تم تحديث قطعة الغيار بنجاح" });
@@ -1815,9 +2277,10 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
   // Delete spare part mutation
   const deleteSparePartMutation = useMutation({
-    mutationFn: (id: number) => apiRequest(`/api/spare-parts/${id}`, { 
-      method: "DELETE" 
-    }),
+    mutationFn: (id: number) =>
+      apiRequest(`/api/spare-parts/${id}`, {
+        method: "DELETE",
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/spare-parts"] });
       toast({ title: "تم حذف قطعة الغيار بنجاح" });
@@ -1852,7 +2315,9 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">إدارة قطع الغيار</h3>
+        <h3 className="text-lg font-semibold text-gray-900">
+          إدارة قطع الغيار
+        </h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -1860,14 +2325,23 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
               إضافة قطعة غيار جديدة
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md" aria-describedby="spare-part-dialog-description">
+          <DialogContent
+            className="max-w-md"
+            aria-describedby="spare-part-dialog-description"
+          >
             <DialogHeader>
               <DialogTitle>إضافة قطعة غيار جديدة</DialogTitle>
-              <div id="spare-part-dialog-description" className="text-sm text-gray-600">
+              <div
+                id="spare-part-dialog-description"
+                className="text-sm text-gray-600"
+              >
                 أضف قطعة غيار جديدة إلى المخزون
               </div>
             </DialogHeader>
-            <SparePartForm onSubmit={createSparePartMutation.mutate} isLoading={createSparePartMutation.isPending} />
+            <SparePartForm
+              onSubmit={createSparePartMutation.mutate}
+              isLoading={createSparePartMutation.isPending}
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -1909,43 +2383,63 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {Array.isArray(spareParts) && spareParts.length > 0 ? spareParts.map((part: any) => (
-                    <tr key={part.part_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                        {part.part_id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        {part.machine_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        {part.part_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        {part.code}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        {part.serial_number}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
-                        {part.specifications}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                        <div className="flex justify-center gap-2">
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleView(part)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => handleEdit(part)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600" onClick={() => handleDelete(part)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  )) : (
+                  {Array.isArray(spareParts) && spareParts.length > 0 ? (
+                    spareParts.map((part: any) => (
+                      <tr key={part.part_id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                          {part.part_id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          {part.machine_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          {part.part_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          {part.code}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          {part.serial_number}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                          {part.specifications}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          <div className="flex justify-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleView(part)}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleEdit(part)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-600"
+                              onClick={() => handleDelete(part)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                      <td
+                        colSpan={7}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
                         لا توجد قطع غيار مسجلة
                       </td>
                     </tr>
@@ -1959,10 +2453,16 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-md" aria-describedby="view-spare-part-dialog-description">
+        <DialogContent
+          className="max-w-md"
+          aria-describedby="view-spare-part-dialog-description"
+        >
           <DialogHeader>
             <DialogTitle>تفاصيل قطعة الغيار</DialogTitle>
-            <div id="view-spare-part-dialog-description" className="text-sm text-gray-600">
+            <div
+              id="view-spare-part-dialog-description"
+              className="text-sm text-gray-600"
+            >
               عرض تفاصيل قطعة الغيار المحددة
             </div>
           </DialogHeader>
@@ -1970,31 +2470,55 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">رقم القطعة</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedPart.part_id}</p>
+                  <label className="text-sm font-medium text-gray-700">
+                    رقم القطعة
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedPart.part_id}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">الكود</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedPart.code}</p>
+                  <label className="text-sm font-medium text-gray-700">
+                    الكود
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedPart.code}
+                  </p>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">اسم الماكينة</label>
-                <p className="text-sm text-gray-900 mt-1">{selectedPart.machine_name}</p>
+                <label className="text-sm font-medium text-gray-700">
+                  اسم الماكينة
+                </label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedPart.machine_name}
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">اسم القطعة</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedPart.part_name}</p>
+                  <label className="text-sm font-medium text-gray-700">
+                    اسم القطعة
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedPart.part_name}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">الرقم التسلسلي</label>
-                  <p className="text-sm text-gray-900 mt-1">{selectedPart.serial_number}</p>
+                  <label className="text-sm font-medium text-gray-700">
+                    الرقم التسلسلي
+                  </label>
+                  <p className="text-sm text-gray-900 mt-1">
+                    {selectedPart.serial_number}
+                  </p>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">المواصفات</label>
-                <p className="text-sm text-gray-900 mt-1">{selectedPart.specifications}</p>
+                <label className="text-sm font-medium text-gray-700">
+                  المواصفات
+                </label>
+                <p className="text-sm text-gray-900 mt-1">
+                  {selectedPart.specifications}
+                </p>
               </div>
             </div>
           )}
@@ -2003,17 +2527,25 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-md" aria-describedby="edit-spare-part-dialog-description">
+        <DialogContent
+          className="max-w-md"
+          aria-describedby="edit-spare-part-dialog-description"
+        >
           <DialogHeader>
             <DialogTitle>تعديل قطعة الغيار</DialogTitle>
-            <div id="edit-spare-part-dialog-description" className="text-sm text-gray-600">
+            <div
+              id="edit-spare-part-dialog-description"
+              className="text-sm text-gray-600"
+            >
               تعديل بيانات قطعة الغيار
             </div>
           </DialogHeader>
           {selectedPart && (
-            <SparePartEditForm 
+            <SparePartEditForm
               part={selectedPart}
-              onSubmit={(data) => updateSparePartMutation.mutate({ id: selectedPart.id, data })}
+              onSubmit={(data) =>
+                updateSparePartMutation.mutate({ id: selectedPart.id, data })
+              }
               isLoading={updateSparePartMutation.isPending}
             />
           )}
@@ -2022,24 +2554,31 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!partToDelete} onOpenChange={() => setPartToDelete(null)}>
-        <DialogContent className="max-w-md" aria-describedby="delete-spare-part-dialog-description">
+        <DialogContent
+          className="max-w-md"
+          aria-describedby="delete-spare-part-dialog-description"
+        >
           <DialogHeader>
             <DialogTitle>تأكيد الحذف</DialogTitle>
-            <div id="delete-spare-part-dialog-description" className="text-sm text-gray-600">
+            <div
+              id="delete-spare-part-dialog-description"
+              className="text-sm text-gray-600"
+            >
               هل أنت متأكد من حذف قطعة الغيار؟
             </div>
           </DialogHeader>
           {partToDelete && (
             <div className="space-y-4">
               <p className="text-sm text-gray-700">
-                سيتم حذف قطعة الغيار <strong>{partToDelete.part_id}</strong> - {partToDelete.part_name} نهائياً.
+                سيتم حذف قطعة الغيار <strong>{partToDelete.part_id}</strong> -{" "}
+                {partToDelete.part_name} نهائياً.
               </p>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setPartToDelete(null)}>
                   إلغاء
                 </Button>
-                <Button 
-                  variant="destructive" 
+                <Button
+                  variant="destructive"
                   onClick={confirmDelete}
                   disabled={deleteSparePartMutation.isPending}
                 >
@@ -2055,41 +2594,48 @@ function SparePartsTab({ spareParts, isLoading }: { spareParts: any[], isLoading
 }
 
 // Spare Part Form Component
-function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void, isLoading: boolean }) {
+function SparePartForm({
+  onSubmit,
+  isLoading,
+}: {
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
   const { data: spareParts } = useQuery({ queryKey: ["/api/spare-parts"] });
   const { data: machines } = useQuery({ queryKey: ["/api/machines"] });
 
   // Generate next part ID automatically
   const generateNextPartId = (currentSpareParts: any[]) => {
-    if (!Array.isArray(currentSpareParts)) return 'SP001';
-    
+    if (!Array.isArray(currentSpareParts)) return "SP001";
+
     const partNumbers = currentSpareParts
       .map((part: any) => part.part_id)
       .filter((id: string) => id && id.match(/^SP\d+$/))
-      .map((id: string) => parseInt(id.replace('SP', '')))
+      .map((id: string) => parseInt(id.replace("SP", "")))
       .filter((num: number) => !isNaN(num));
-    
-    const nextNumber = partNumbers.length > 0 ? Math.max(...partNumbers) + 1 : 1;
-    return `SP${nextNumber.toString().padStart(3, '0')}`;
+
+    const nextNumber =
+      partNumbers.length > 0 ? Math.max(...partNumbers) + 1 : 1;
+    return `SP${nextNumber.toString().padStart(3, "0")}`;
   };
 
   const form = useForm({
     defaultValues: {
-      part_id: 'SP001',
-      machine_name: '',
-      part_name: '',
-      code: '',
-      serial_number: '',
-      specifications: ''
-    }
+      part_id: "SP001",
+      machine_name: "",
+      part_name: "",
+      code: "",
+      serial_number: "",
+      specifications: "",
+    },
   });
 
   // Update part_id when spare parts data changes
   useEffect(() => {
     if (spareParts && Array.isArray(spareParts)) {
       const nextId = generateNextPartId(spareParts);
-      if (nextId !== form.getValues('part_id')) {
-        form.setValue('part_id', nextId);
+      if (nextId !== form.getValues("part_id")) {
+        form.setValue("part_id", nextId);
       }
     }
   }, [spareParts, form]);
@@ -2145,12 +2691,19 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
                       machines.map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.id ? `machine_${machine.id}` : "unknown"}>
+                        <SelectItem
+                          key={machine.id}
+                          value={
+                            machine.id ? `machine_${machine.id}` : "unknown"
+                          }
+                        >
                           {machine.name_ar || machine.name} ({machine.id})
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="no_machines">لا توجد ماكينات متاحة</SelectItem>
+                      <SelectItem value="no_machines">
+                        لا توجد ماكينات متاحة
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -2205,8 +2758,8 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
@@ -2219,18 +2772,26 @@ function SparePartForm({ onSubmit, isLoading }: { onSubmit: (data: any) => void,
 }
 
 // Spare Part Edit Form Component
-function SparePartEditForm({ part, onSubmit, isLoading }: { part: any, onSubmit: (data: any) => void, isLoading: boolean }) {
+function SparePartEditForm({
+  part,
+  onSubmit,
+  isLoading,
+}: {
+  part: any;
+  onSubmit: (data: any) => void;
+  isLoading: boolean;
+}) {
   const { data: machines } = useQuery({ queryKey: ["/api/machines"] });
 
   const form = useForm({
     defaultValues: {
-      part_id: part.part_id || '',
-      machine_name: part.machine_name || '',
-      part_name: part.part_name || '',
-      code: part.code || '',
-      serial_number: part.serial_number || '',
-      specifications: part.specifications || ''
-    }
+      part_id: part.part_id || "",
+      machine_name: part.machine_name || "",
+      part_name: part.part_name || "",
+      code: part.code || "",
+      serial_number: part.serial_number || "",
+      specifications: part.specifications || "",
+    },
   });
 
   const handleSubmit = (data: any) => {
@@ -2284,12 +2845,19 @@ function SparePartEditForm({ part, onSubmit, isLoading }: { part: any, onSubmit:
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
                       machines.map((machine: any) => (
-                        <SelectItem key={machine.id} value={machine.id ? `machine_${machine.id}` : "unknown"}>
+                        <SelectItem
+                          key={machine.id}
+                          value={
+                            machine.id ? `machine_${machine.id}` : "unknown"
+                          }
+                        >
                           {machine.name_ar || machine.name} ({machine.id})
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="no_machines">لا توجد ماكينات متاحة</SelectItem>
+                      <SelectItem value="no_machines">
+                        لا توجد ماكينات متاحة
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -2344,8 +2912,8 @@ function SparePartEditForm({ part, onSubmit, isLoading }: { part: any, onSubmit:
         />
 
         <div className="flex justify-end gap-2 pt-4">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             disabled={isLoading}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >

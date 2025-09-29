@@ -10,21 +10,24 @@
  * @returns Formatted decimal string
  * @throws Error if value is invalid
  */
-export function toDecimalString(value: number | string, precision: number = 3): string {
-  if (value === null || value === undefined || value === '') {
-    throw new Error('قيمة فارغة أو غير محددة - لا يمكن تحويلها إلى رقم عشري');
+export function toDecimalString(
+  value: number | string,
+  precision: number = 3,
+): string {
+  if (value === null || value === undefined || value === "") {
+    throw new Error("قيمة فارغة أو غير محددة - لا يمكن تحويلها إلى رقم عشري");
   }
-  
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  
+
+  const num = typeof value === "string" ? parseFloat(value) : value;
+
   if (isNaN(num)) {
-    throw new Error('قيمة غير صحيحة - لا يمكن تحويلها إلى رقم عشري');
+    throw new Error("قيمة غير صحيحة - لا يمكن تحويلها إلى رقم عشري");
   }
-  
+
   if (num < 0) {
-    throw new Error('القيمة يجب أن تكون موجبة');
+    throw new Error("القيمة يجب أن تكون موجبة");
   }
-  
+
   return num.toFixed(precision);
 }
 
@@ -34,17 +37,20 @@ export function toDecimalString(value: number | string, precision: number = 3): 
  * @param precision - Number of decimal places (default: 3)
  * @returns Formatted decimal string or '0' for invalid values
  */
-export function toDecimalStringSafe(value: number | string | null | undefined, precision: number = 3): string {
-  if (value === null || value === undefined || value === '') {
-    return '0';
+export function toDecimalStringSafe(
+  value: number | string | null | undefined,
+  precision: number = 3,
+): string {
+  if (value === null || value === undefined || value === "") {
+    return "0";
   }
-  
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  
+
+  const num = typeof value === "string" ? parseFloat(value) : value;
+
   if (isNaN(num)) {
-    return '0';
+    return "0";
   }
-  
+
   return num.toFixed(precision);
 }
 
@@ -55,17 +61,21 @@ export function toDecimalStringSafe(value: number | string | null | undefined, p
  * @param precision - Decimal precision (default: 3)
  * @returns Normalized decimal number
  */
-export function normalizeDecimal(value: number | string, maxValue: number = 100000, precision: number = 3): number {
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  
+export function normalizeDecimal(
+  value: number | string,
+  maxValue: number = 100000,
+  precision: number = 3,
+): number {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+
   if (isNaN(num) || num < 0) {
-    throw new Error('القيمة يجب أن تكون رقماً موجباً');
+    throw new Error("القيمة يجب أن تكون رقماً موجباً");
   }
-  
+
   if (num > maxValue) {
-    throw new Error('القيمة تتجاوز الحد الأقصى المسموح');
+    throw new Error("القيمة تتجاوز الحد الأقصى المسموح");
   }
-  
+
   return Number(num.toFixed(precision));
 }
 
@@ -76,17 +86,17 @@ export function normalizeDecimal(value: number | string, maxValue: number = 1000
  * @throws Error if value is invalid
  */
 export function parseDecimal(value: any): number {
-  if (typeof value === 'number' && !isNaN(value)) {
+  if (typeof value === "number" && !isNaN(value)) {
     return value;
   }
-  
-  if (typeof value === 'string' && value.trim() !== '') {
+
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = parseFloat(value);
     if (!isNaN(parsed)) {
       return parsed;
     }
   }
-  
+
   throw new Error(`قيمة غير صحيحة: ${value} - لا يمكن تحويلها إلى رقم`);
 }
 
@@ -97,17 +107,17 @@ export function parseDecimal(value: any): number {
  * @returns Parsed decimal number
  */
 export function parseDecimalSafe(value: any, defaultValue: number = 0): number {
-  if (typeof value === 'number' && !isNaN(value)) {
+  if (typeof value === "number" && !isNaN(value)) {
     return value;
   }
-  
-  if (typeof value === 'string' && value.trim() !== '') {
+
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = parseFloat(value);
     if (!isNaN(parsed)) {
       return parsed;
     }
   }
-  
+
   return defaultValue;
 }
 
@@ -118,19 +128,23 @@ export function parseDecimalSafe(value: any, defaultValue: number = 0): number {
  * @param removeTrailingZeros - Whether to remove trailing zeros
  * @returns Formatted string
  */
-export function formatDecimalDisplay(value: number | string | null | undefined, precision: number = 3, removeTrailingZeros: boolean = true): string {
+export function formatDecimalDisplay(
+  value: number | string | null | undefined,
+  precision: number = 3,
+  removeTrailingZeros: boolean = true,
+): string {
   const num = parseDecimalSafe(value, 0);
-  
+
   if (num === 0) {
-    return '0';
+    return "0";
   }
-  
+
   let formatted = num.toFixed(precision);
-  
+
   if (removeTrailingZeros) {
-    formatted = formatted.replace(/\.?0+$/, '');
+    formatted = formatted.replace(/\.?0+$/, "");
   }
-  
+
   return formatted;
 }
 
@@ -141,7 +155,11 @@ export function formatDecimalDisplay(value: number | string | null | undefined, 
  * @param max - Maximum allowed value
  * @returns true if valid, false otherwise
  */
-export function isValidDecimal(value: any, min: number = 0, max: number = 100000): boolean {
+export function isValidDecimal(
+  value: any,
+  min: number = 0,
+  max: number = 100000,
+): boolean {
   try {
     const num = parseDecimal(value);
     return num >= min && num <= max;
@@ -174,8 +192,11 @@ export function normalizePercentage(value: number | string): number {
  * @param precision - Decimal places
  * @returns Decimal string for database
  */
-export function numberToDecimalString(value: number, precision: number = 3): string {
-  if (typeof value !== 'number' || isNaN(value) || value < 0) {
+export function numberToDecimalString(
+  value: number,
+  precision: number = 3,
+): string {
+  if (typeof value !== "number" || isNaN(value) || value < 0) {
     throw new Error(`قيمة رقمية غير صحيحة: ${value}`);
   }
   return value.toFixed(precision);
@@ -191,5 +212,5 @@ export default {
   isValidDecimal,
   normalizeWeight,
   normalizePercentage,
-  numberToDecimalString
+  numberToDecimalString,
 };

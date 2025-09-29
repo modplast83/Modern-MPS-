@@ -4,15 +4,15 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { formatNumber, formatPercentage } from '../../lib/formatNumber';
-import { 
-  Play, 
-  Clock, 
-  Users, 
-  CheckCircle, 
-  BookOpen, 
+import { formatNumber, formatPercentage } from "../../lib/formatNumber";
+import {
+  Play,
+  Clock,
+  Users,
+  CheckCircle,
+  BookOpen,
   Plus,
-  Calendar
+  Calendar,
 } from "lucide-react";
 
 interface TrainingProgram {
@@ -22,7 +22,7 @@ interface TrainingProgram {
   description?: string;
   description_ar?: string;
   category: string;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  difficulty_level: "beginner" | "intermediate" | "advanced";
   duration_hours: number;
   max_participants?: number;
   is_active: boolean;
@@ -35,7 +35,7 @@ interface TrainingEnrollment {
   employee_id: number;
   program_id: number;
   enrolled_date: string;
-  completion_status: 'not_started' | 'in_progress' | 'completed' | 'dropped';
+  completion_status: "not_started" | "in_progress" | "completed" | "dropped";
   completion_date?: string;
   score?: number;
   certificate_issued: boolean;
@@ -44,59 +44,85 @@ interface TrainingEnrollment {
 export default function TrainingPrograms() {
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
 
-  const { data: programs = [], isLoading: programsLoading } = useQuery<TrainingProgram[]>({
-    queryKey: ['/api/hr/training-programs'],
-    initialData: []
+  const { data: programs = [], isLoading: programsLoading } = useQuery<
+    TrainingProgram[]
+  >({
+    queryKey: ["/api/hr/training-programs"],
+    initialData: [],
   });
 
-  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<TrainingEnrollment[]>({
-    queryKey: ['/api/hr/training-enrollments'],
-    initialData: []
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<
+    TrainingEnrollment[]
+  >({
+    queryKey: ["/api/hr/training-enrollments"],
+    initialData: [],
   });
 
   const getDifficultyColor = (level: string) => {
     switch (level) {
-      case 'beginner': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'advanced': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "beginner":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "intermediate":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "advanced":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getDifficultyText = (level: string) => {
     switch (level) {
-      case 'beginner': return 'مبتدئ';
-      case 'intermediate': return 'متوسط';
-      case 'advanced': return 'متقدم';
-      default: return level;
+      case "beginner":
+        return "مبتدئ";
+      case "intermediate":
+        return "متوسط";
+      case "advanced":
+        return "متقدم";
+      default:
+        return level;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'not_started': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-      case 'dropped': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "not_started":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      case "dropped":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed': return 'مكتمل';
-      case 'in_progress': return 'قيد التنفيذ';
-      case 'not_started': return 'لم يبدأ';
-      case 'dropped': return 'متوقف';
-      default: return status;
+      case "completed":
+        return "مكتمل";
+      case "in_progress":
+        return "قيد التنفيذ";
+      case "not_started":
+        return "لم يبدأ";
+      case "dropped":
+        return "متوقف";
+      default:
+        return status;
     }
   };
 
   const getEnrollmentProgress = (programId: number) => {
-    const programEnrollments = enrollments.filter(e => e.program_id === programId);
+    const programEnrollments = enrollments.filter(
+      (e) => e.program_id === programId,
+    );
     if (programEnrollments.length === 0) return 0;
-    
-    const completed = programEnrollments.filter(e => e.completion_status === 'completed').length;
+
+    const completed = programEnrollments.filter(
+      (e) => e.completion_status === "completed",
+    ).length;
     return Math.round((completed / programEnrollments.length) * 100);
   };
 
@@ -105,7 +131,9 @@ export default function TrainingPrograms() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل البرامج التدريبية...</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            جاري تحميل البرامج التدريبية...
+          </p>
         </div>
       </div>
     );
@@ -135,8 +163,12 @@ export default function TrainingPrograms() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي البرامج</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(programs.length)}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي البرامج
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatNumber(programs.length)}
+                </p>
               </div>
               <BookOpen className="w-8 h-8 text-blue-600" />
             </div>
@@ -147,9 +179,11 @@ export default function TrainingPrograms() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">البرامج النشطة</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  البرامج النشطة
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatNumber(programs.filter(p => p.is_active).length)}
+                  {formatNumber(programs.filter((p) => p.is_active).length)}
                 </p>
               </div>
               <Play className="w-8 h-8 text-green-600" />
@@ -161,8 +195,12 @@ export default function TrainingPrograms() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي التسجيلات</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(enrollments.length)}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي التسجيلات
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatNumber(enrollments.length)}
+                </p>
               </div>
               <Users className="w-8 h-8 text-purple-600" />
             </div>
@@ -173,11 +211,21 @@ export default function TrainingPrograms() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">معدل الإنجاز</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  معدل الإنجاز
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatPercentage(enrollments.length > 0 
-                    ? Math.round((enrollments.filter(e => e.completion_status === 'completed').length / enrollments.length) * 100)
-                    : 0)}
+                  {formatPercentage(
+                    enrollments.length > 0
+                      ? Math.round(
+                          (enrollments.filter(
+                            (e) => e.completion_status === "completed",
+                          ).length /
+                            enrollments.length) *
+                            100,
+                        )
+                      : 0,
+                  )}
                 </p>
               </div>
               <CheckCircle className="w-8 h-8 text-emerald-600" />
@@ -193,8 +241,12 @@ export default function TrainingPrograms() {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <CardTitle className="text-lg mb-2">{program.title_ar || program.title}</CardTitle>
-                  <Badge className={getDifficultyColor(program.difficulty_level)}>
+                  <CardTitle className="text-lg mb-2">
+                    {program.title_ar || program.title}
+                  </CardTitle>
+                  <Badge
+                    className={getDifficultyColor(program.difficulty_level)}
+                  >
                     {getDifficultyText(program.difficulty_level)}
                   </Badge>
                 </div>
@@ -203,12 +255,14 @@ export default function TrainingPrograms() {
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
-                {program.description_ar || program.description || "لا يوجد وصف متاح"}
+                {program.description_ar ||
+                  program.description ||
+                  "لا يوجد وصف متاح"}
               </p>
-              
+
               <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
@@ -225,17 +279,23 @@ export default function TrainingPrograms() {
                   <span>معدل الإنجاز</span>
                   <span>{getEnrollmentProgress(program.id)}%</span>
                 </div>
-                <Progress value={getEnrollmentProgress(program.id)} className="h-2" />
+                <Progress
+                  value={getEnrollmentProgress(program.id)}
+                  className="h-2"
+                />
               </div>
 
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <Calendar className="w-3 h-3" />
-                <span>تم الإنشاء: {new Date(program.created_at).toLocaleDateString('ar')}</span>
+                <span>
+                  تم الإنشاء:{" "}
+                  {new Date(program.created_at).toLocaleDateString("ar")}
+                </span>
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="flex-1"
                   onClick={() => setSelectedProgram(program.id)}
                 >
