@@ -186,23 +186,17 @@ function Router() {
 }
 
 function App() {
-  // Ensure React is available before creating query client
-  if (!React || !React.useMemo) {
-    console.error("React is not properly loaded");
-    return <div>Loading...</div>;
-  }
-
   const queryClientInstance = React.useMemo(() => getQueryClient(), []);
 
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClientInstance}>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
+        {/* <TooltipProvider> */}
+          {/* <AuthProvider> */}
+            {/* <Toaster /> */}
             <Router />
-          </AuthProvider>
-        </TooltipProvider>
+          {/* </AuthProvider> */}
+        {/* </TooltipProvider> */}
       </QueryClientProvider>
     </ErrorBoundary>
   );

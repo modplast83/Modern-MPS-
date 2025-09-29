@@ -5,31 +5,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "../../lib/utils";
 
-// Safe TooltipProvider wrapper that handles React being null
-const TooltipProvider: React.FC<React.ComponentProps<typeof TooltipPrimitive.Provider>> = ({ children, ...props }) => {
-  // Check if React hooks are available
-  if (typeof React === 'undefined' || React === null || typeof React.useRef !== 'function') {
-    console.warn("React hooks not available, rendering children without tooltip functionality");
-    return React && React.createElement ? React.createElement(React.Fragment, null, children) : children as any;
-  }
-
-  try {
-    // Check if TooltipPrimitive.Provider is available and can be used
-    if (typeof TooltipPrimitive?.Provider === 'undefined') {
-      console.warn("TooltipPrimitive.Provider not available, rendering children without tooltip functionality");
-      return <>{children}</>;
-    }
-    
-    return (
-      <TooltipPrimitive.Provider {...props}>
-        {children}
-      </TooltipPrimitive.Provider>
-    );
-  } catch (error) {
-    console.error("TooltipProvider error:", error);
-    return <>{children}</>;
-  }
-};
+const TooltipProvider = TooltipPrimitive.Provider;
 
 const Tooltip = TooltipPrimitive.Root;
 
