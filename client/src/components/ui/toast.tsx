@@ -5,7 +5,25 @@ import { X } from "lucide-react";
 
 import { cn } from "../../lib/utils";
 
-const ToastProvider = ToastPrimitives.Provider;
+// Safe ToastProvider wrapper that handles React being null
+const ToastProvider: React.FC<React.ComponentProps<typeof ToastPrimitives.Provider>> = ({ children, ...props }) => {
+  // Check if React hooks are available
+  if (!React || !React.useState || typeof React.useState !== 'function') {
+    console.warn("React hooks not available, rendering children without toast functionality");
+    return <>{children}</>;
+  }
+
+  try {
+    return (
+      <ToastPrimitives.Provider {...props}>
+        {children}
+      </ToastPrimitives.Provider>
+    );
+  } catch (error) {
+    console.error("ToastProvider error:", error);
+    return <>{children}</>;
+  }
+};
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
