@@ -1904,12 +1904,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof Error) {
         console.error("Error message:", error.message);
       }
-      res
-        .status(400)
-        .json({
-          message: "بيانات غير صحيحة",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(400).json({
+        message: "بيانات غير صحيحة",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -1921,12 +1919,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(customer);
     } catch (error) {
       console.error("Customer update error:", error);
-      res
-        .status(400)
-        .json({
-          message: "خطأ في تحديث العميل",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(400).json({
+        message: "خطأ في تحديث العميل",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -2194,12 +2190,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(category);
     } catch (error) {
       console.error("Category creation error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء الفئة",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء الفئة",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -2221,12 +2215,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(category);
     } catch (error) {
       console.error("Category update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث الفئة",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث الفئة",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -2237,12 +2229,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "تم حذف الفئة بنجاح" });
     } catch (error) {
       console.error("Category deletion error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في حذف الفئة",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في حذف الفئة",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3104,12 +3094,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(machine);
     } catch (error) {
       console.error("Machine update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث الماكينة",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث الماكينة",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3184,12 +3172,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error("User creation error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء المستخدم",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء المستخدم",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3272,12 +3258,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (error) {
       console.error("User update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث المستخدم",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث المستخدم",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3300,12 +3284,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(role);
     } catch (error) {
       console.error("Role creation error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء الدور",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء الدور",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3333,12 +3315,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(role);
     } catch (error) {
       console.error("Role update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث الدور",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث الدور",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3359,12 +3339,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "تم حذف الدور بنجاح" });
     } catch (error) {
       console.error("Role deletion error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في حذف الدور",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في حذف الدور",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3405,12 +3383,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(section);
     } catch (error) {
       console.error("Section creation error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء القسم",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء القسم",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3486,12 +3462,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         "Error stack:",
         error instanceof Error ? error.stack : "No stack trace",
       );
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء الصنف",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء الصنف",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3529,12 +3503,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(item);
     } catch (error) {
       console.error("Item update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث الصنف",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث الصنف",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3643,12 +3615,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(location);
     } catch (error) {
       console.error("Location creation error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في إنشاء الموقع",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في إنشاء الموقع",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
@@ -3660,12 +3630,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(location);
     } catch (error) {
       console.error("Location update error:", error);
-      res
-        .status(500)
-        .json({
-          message: "خطأ في تحديث الموقع",
-          error: error instanceof Error ? error.message : "Unknown error",
-        });
+      res.status(500).json({
+        message: "خطأ في تحديث الموقع",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 
