@@ -5,7 +5,25 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "../../lib/utils";
 
-const TooltipProvider = TooltipPrimitive.Provider;
+// Safe TooltipProvider wrapper that handles React being null
+const TooltipProvider: React.FC<React.ComponentProps<typeof TooltipPrimitive.Provider>> = ({ children, ...props }) => {
+  // Check if React hooks are available
+  if (!React || !React.useRef || typeof React.useRef !== 'function') {
+    console.warn("React hooks not available, rendering children without tooltip functionality");
+    return <>{children}</>;
+  }
+
+  try {
+    return (
+      <TooltipPrimitive.Provider {...props}>
+        {children}
+      </TooltipPrimitive.Provider>
+    );
+  } catch (error) {
+    console.error("TooltipProvider error:", error);
+    return <>{children}</>;
+  }
+};
 
 const Tooltip = TooltipPrimitive.Root;
 

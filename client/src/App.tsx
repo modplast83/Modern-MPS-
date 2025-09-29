@@ -1,4 +1,4 @@
-import React from "react";
+import * as React from "react";
 import { Switch, Route } from "wouter";
 import { getQueryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -186,9 +186,15 @@ function Router() {
 }
 
 function App() {
+  // Ensure React is available before creating query client
+  if (!React || !React.useMemo) {
+    console.error("React is not properly loaded");
+    return <div>Loading...</div>;
+  }
+
   const queryClientInstance = React.useMemo(() => getQueryClient(), []);
 
-  const content = (
+  return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClientInstance}>
         <TooltipProvider>
@@ -199,13 +205,6 @@ function App() {
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
-  );
-
-  // شغل StrictMode بس في الإنتاج
-  return process.env.NODE_ENV === "production" ? (
-    <React.StrictMode>{content}</React.StrictMode>
-  ) : (
-    content
   );
 }
 
