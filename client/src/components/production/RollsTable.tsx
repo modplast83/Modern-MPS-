@@ -2,14 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { 
-  ArrowRight, 
-  Package, 
-  Clock, 
-  CheckCircle, 
+import {
+  ArrowRight,
+  Package,
+  Clock,
+  CheckCircle,
   AlertCircle,
   Tag,
-  QrCode
+  QrCode,
 } from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 import { useAuth } from "../../hooks/use-auth";
@@ -31,14 +31,14 @@ interface RollWithDetails extends Roll {
 
 const stageLabels = {
   film: "مرحلة الفيلم",
-  printing: "مرحلة الطباعة", 
-  cutting: "مرحلة التقطيع"
+  printing: "مرحلة الطباعة",
+  cutting: "مرحلة التقطيع",
 };
 
 const nextStage = {
   film: "printing",
   printing: "cutting",
-  cutting: null
+  cutting: null,
 };
 
 export default function RollsTable({ stage }: RollsTableProps) {
@@ -47,44 +47,54 @@ export default function RollsTable({ stage }: RollsTableProps) {
   const queryClient = useQueryClient();
 
   const { data: rolls = [], isLoading } = useQuery<RollWithDetails[]>({
-    queryKey: ['/api/rolls', stage],
-    queryFn: () => fetch(`/api/rolls?stage=${stage}`).then(res => res.json())
+    queryKey: ["/api/rolls", stage],
+    queryFn: () => fetch(`/api/rolls?stage=${stage}`).then((res) => res.json()),
   });
 
   const updateRollMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
       return await apiRequest(`/api/rolls/${id}`, {
-        method: 'PATCH',
-        body: JSON.stringify(updates)
+        method: "PATCH",
+        body: JSON.stringify(updates),
       });
     },
     onSuccess: (_, { updates }) => {
       // Invalidate all production-related queries for instant updates
-      queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/film-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/printing-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/cutting-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/grouped-cutting-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/hierarchical-orders'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/film-queue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/printing-queue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/cutting-queue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/grouped-cutting-queue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/hierarchical-orders"],
+      });
+
       // Force immediate refetch for real-time updates
-      queryClient.refetchQueries({ queryKey: ['/api/rolls'], type: 'active' });
-      
+      queryClient.refetchQueries({ queryKey: ["/api/rolls"], type: "active" });
+
       toast({
         title: "تم تحديث الرول بنجاح",
-        description: updates.stage ? 
-          `تم نقل الرول إلى ${stageLabels[updates.stage as keyof typeof stageLabels]}` :
-          "تم تحديث بيانات الرول"
+        description: updates.stage
+          ? `تم نقل الرول إلى ${stageLabels[updates.stage as keyof typeof stageLabels]}`
+          : "تم تحديث بيانات الرول",
       });
     },
     onError: () => {
       toast({
         title: "خطأ في التحديث",
         description: "فشل في تحديث الرول",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const moveToNextStage = (rollId: number, currentStage: string) => {
@@ -93,17 +103,17 @@ export default function RollsTable({ stage }: RollsTableProps) {
       // Mark as completed - server will set cut_completed_at and cut_by from session
       updateRollMutation.mutate({
         id: rollId,
-        updates: { 
-          stage: 'done'
-        }
+        updates: {
+          stage: "done",
+        },
       });
     } else {
       // Just advance to next stage - server will handle employee tracking from session
       updateRollMutation.mutate({
         id: rollId,
-        updates: { 
-          stage: next
-        }
+        updates: {
+          stage: next,
+        },
       });
     }
   };
@@ -112,9 +122,9 @@ export default function RollsTable({ stage }: RollsTableProps) {
     try {
       const response = await fetch(`/api/rolls/${rollId}/label`);
       const labelData = await response.json();
-      
+
       // إنشاء نافذة طباعة جديدة
-      const printWindow = window.open('', '_blank', 'width=400,height=500');
+      const printWindow = window.open("", "_blank", "width=400,height=500");
       if (!printWindow) {
         toast({
           title: "خطأ في فتح نافذة الطباعة",
@@ -244,17 +254,21 @@ export default function RollsTable({ stage }: RollsTableProps) {
               </div>
             </div>
             
-            ${labelData.qr_png_base64 ? `
+            ${
+              labelData.qr_png_base64
+                ? `
             <div class="qr-section">
               <img src="data:image/png;base64,${labelData.qr_png_base64}" 
                    alt="QR Code" class="qr-code" />
               <div style="font-size: 8px; margin-top: 3px;">امسح للمعلومات</div>
             </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           
           <div class="footer">
-            تاريخ الطباعة: ${new Date().toLocaleDateString('ar')} | نظام إدارة الإنتاج
+            تاريخ الطباعة: ${new Date().toLocaleDateString("ar")} | نظام إدارة الإنتاج
           </div>
         </body>
         </html>
@@ -262,7 +276,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
 
       printWindow.document.write(labelHTML);
       printWindow.document.close();
-      
+
       // انتظار تحميل الصور ثم طباعة
       setTimeout(() => {
         printWindow.print();
@@ -275,7 +289,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
         variant: "default",
       });
     } catch (error) {
-      console.error('Error printing label:', error);
+      console.error("Error printing label:", error);
       toast({
         title: "خطأ في طباعة الليبل",
         description: "حدث خطأ أثناء توليد الليبل للطباعة",
@@ -286,36 +300,41 @@ export default function RollsTable({ stage }: RollsTableProps) {
 
   const getStatusColor = (stage: string) => {
     switch (stage) {
-      case 'done':
-        return 'bg-green-100 text-green-800';
-      case 'cutting':
-        return 'bg-blue-100 text-blue-800';
-      case 'printing':
-      case 'film':
-        return 'bg-yellow-100 text-yellow-800';
+      case "done":
+        return "bg-green-100 text-green-800";
+      case "cutting":
+        return "bg-blue-100 text-blue-800";
+      case "printing":
+      case "film":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (stage: string) => {
     switch (stage) {
-      case 'done': return 'مكتمل';
-      case 'cutting': return 'مرحلة التقطيع';
-      case 'printing': return 'مرحلة الطباعة';
-      case 'film': return 'مرحلة الفيلم';
-      default: return stage;
+      case "done":
+        return "مكتمل";
+      case "cutting":
+        return "مرحلة التقطيع";
+      case "printing":
+        return "مرحلة الطباعة";
+      case "film":
+        return "مرحلة الفيلم";
+      default:
+        return stage;
     }
   };
 
   const getStatusIcon = (stage: string) => {
     switch (stage) {
-      case 'done':
+      case "done":
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'cutting':
+      case "cutting":
         return <Clock className="w-4 h-4 text-blue-600 animate-spin" />;
-      case 'printing':
-      case 'film':
+      case "printing":
+      case "film":
         return <AlertCircle className="w-4 h-4 text-yellow-600" />;
       default:
         return <Package className="w-4 h-4 text-gray-600" />;
@@ -415,7 +434,9 @@ export default function RollsTable({ stage }: RollsTableProps) {
                     {roll.production_order_number || "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {roll.weight_kg ? parseFloat(roll.weight_kg.toString()).toFixed(1) : "غير محدد"}
+                    {roll.weight_kg
+                      ? parseFloat(roll.weight_kg.toString()).toFixed(1)
+                      : "غير محدد"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {roll.machine_name_ar || roll.machine_name || "غير محدد"}
@@ -424,42 +445,55 @@ export default function RollsTable({ stage }: RollsTableProps) {
                     <div className="space-y-1">
                       {/* إنتاج */}
                       <div className="flex items-center gap-1 text-xs">
-                        <span className="font-medium text-blue-600">إنتاج:</span>
+                        <span className="font-medium text-blue-600">
+                          إنتاج:
+                        </span>
                         <span>{`مستخدم ${roll.created_by || "غير محدد"}`}</span>
                       </div>
                       <div className="text-xs text-gray-400">
-                        {roll.created_at ? new Date(roll.created_at).toLocaleDateString('ar') : ""}
+                        {roll.created_at
+                          ? new Date(roll.created_at).toLocaleDateString("ar")
+                          : ""}
                       </div>
-                      
+
                       {/* طباعة */}
                       {roll.printed_by && (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="font-medium text-green-600">طباعة:</span>
+                          <span className="font-medium text-green-600">
+                            طباعة:
+                          </span>
                           <span>{`مستخدم ${roll.printed_by}`}</span>
                         </div>
                       )}
                       {roll.printed_at && (
                         <div className="text-xs text-gray-400">
-                          {new Date(roll.printed_at).toLocaleDateString('ar')}
+                          {new Date(roll.printed_at).toLocaleDateString("ar")}
                         </div>
                       )}
-                      
+
                       {/* قص */}
                       {roll.cut_by && (
                         <div className="flex items-center gap-1 text-xs">
-                          <span className="font-medium text-purple-600">قص:</span>
+                          <span className="font-medium text-purple-600">
+                            قص:
+                          </span>
                           <span>{`مستخدم ${roll.cut_by}`}</span>
                         </div>
                       )}
                       {roll.cut_completed_at && (
                         <div className="text-xs text-gray-400">
-                          {new Date(roll.cut_completed_at).toLocaleDateString('ar')}
+                          {new Date(roll.cut_completed_at).toLocaleDateString(
+                            "ar",
+                          )}
                         </div>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge variant="secondary" className={getStatusColor(roll.stage || "")}>
+                    <Badge
+                      variant="secondary"
+                      className={getStatusColor(roll.stage || "")}
+                    >
                       <div className="flex items-center gap-1">
                         {getStatusIcon(roll.stage || "")}
                         {getStatusText(roll.stage || "")}
@@ -479,29 +513,35 @@ export default function RollsTable({ stage }: RollsTableProps) {
                         <Tag className="w-3 h-3" />
                         ليبل
                       </Button>
-                      
+
                       {/* زر QR */}
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(`/api/rolls/${roll.id}/qr`, '_blank')}
+                        onClick={() =>
+                          window.open(`/api/rolls/${roll.id}/qr`, "_blank")
+                        }
                         className="flex items-center gap-1"
                         data-testid={`button-qr-${roll.id}`}
                       >
                         <QrCode className="w-3 h-3" />
                         QR
                       </Button>
-                      
+
                       {/* زر نقل المرحلة */}
-                      {(roll.stage || "") !== 'done' ? (
+                      {(roll.stage || "") !== "done" ? (
                         <Button
                           size="sm"
-                          onClick={() => moveToNextStage(roll.id, roll.stage || "film")}
+                          onClick={() =>
+                            moveToNextStage(roll.id, roll.stage || "film")
+                          }
                           disabled={updateRollMutation.isPending}
                           className="flex items-center gap-1"
                           data-testid={`button-next-stage-${roll.id}`}
                         >
-                          {nextStage[(roll.stage || "film") as keyof typeof nextStage] ? (
+                          {nextStage[
+                            (roll.stage || "film") as keyof typeof nextStage
+                          ] ? (
                             <>
                               <ArrowRight className="w-3 h-3" />
                               نقل للمرحلة التالية
@@ -514,7 +554,10 @@ export default function RollsTable({ stage }: RollsTableProps) {
                           )}
                         </Button>
                       ) : (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           مكتمل
                         </Badge>
                       )}

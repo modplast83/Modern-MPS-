@@ -3,25 +3,45 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
-import { formatNumber } from '../../lib/formatNumber';
-import { 
-  Shield, 
-  Heart, 
-  Flame, 
+import { formatNumber } from "../../lib/formatNumber";
+import {
+  Shield,
+  Heart,
+  Flame,
   Wrench,
   Film,
   Printer,
   Scissors,
-  Users, 
-  MapPin, 
-  Clock, 
+  Users,
+  MapPin,
+  Clock,
   Plus,
   Star,
   Calendar,
@@ -31,7 +51,7 @@ import {
   MoreHorizontal,
   Eye,
   Edit,
-  Trash
+  Trash,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,14 +71,14 @@ const trainingProgramSchema = z.object({
   practical_requirements: z.string().optional(),
   instructor_id: z.number().optional(),
   department_id: z.string().optional(),
-  status: z.string().default('active')
+  status: z.string().default("active"),
 });
 
 const enrollmentSchema = z.object({
   program_id: z.string().min(1, "برنامج التدريب مطلوب"),
   employee_id: z.string().min(1, "الموظف مطلوب"),
   training_date: z.string().min(1, "تاريخ التدريب مطلوب"),
-  attendance_notes: z.string().optional()
+  attendance_notes: z.string().optional(),
 });
 
 const evaluationSchema = z.object({
@@ -75,7 +95,7 @@ const evaluationSchema = z.object({
   strengths: z.string().optional(),
   areas_for_improvement: z.string().optional(),
   additional_notes: z.string().optional(),
-  recommendation: z.string().min(1, "التوصية مطلوبة")
+  recommendation: z.string().min(1, "التوصية مطلوبة"),
 });
 
 interface TrainingProgram {
@@ -132,12 +152,15 @@ interface TrainingEvaluation {
 }
 
 export default function FieldTrainingPrograms() {
-  const [selectedView, setSelectedView] = useState<'programs' | 'enrollments' | 'evaluations'>('programs');
+  const [selectedView, setSelectedView] = useState<
+    "programs" | "enrollments" | "evaluations"
+  >("programs");
   const [isCreateProgramOpen, setIsCreateProgramOpen] = useState(false);
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
-  const [selectedEnrollment, setSelectedEnrollment] = useState<TrainingEnrollment | null>(null);
-  
+  const [selectedEnrollment, setSelectedEnrollment] =
+    useState<TrainingEnrollment | null>(null);
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -145,12 +168,12 @@ export default function FieldTrainingPrograms() {
   const programForm = useForm<z.infer<typeof trainingProgramSchema>>({
     resolver: zodResolver(trainingProgramSchema),
     defaultValues: {
-      category: 'general',
-      training_scope: 'safety',
+      category: "general",
+      training_scope: "safety",
       duration_hours: 4,
       max_participants: 20,
-      status: 'active'
-    }
+      status: "active",
+    },
   });
 
   const enrollmentForm = useForm<z.infer<typeof enrollmentSchema>>({
@@ -158,9 +181,9 @@ export default function FieldTrainingPrograms() {
     defaultValues: {
       program_id: "",
       employee_id: "",
-      training_date: new Date().toISOString().split('T')[0],
-      attendance_notes: ""
-    }
+      training_date: new Date().toISOString().split("T")[0],
+      attendance_notes: "",
+    },
   });
 
   const evaluationForm = useForm<z.infer<typeof evaluationSchema>>({
@@ -170,7 +193,7 @@ export default function FieldTrainingPrograms() {
       program_id: "",
       employee_id: "",
       evaluator_id: "1",
-      evaluation_date: new Date().toISOString().split('T')[0],
+      evaluation_date: new Date().toISOString().split("T")[0],
       theoretical_understanding: "3",
       practical_skills: "3",
       safety_compliance: "3",
@@ -179,75 +202,85 @@ export default function FieldTrainingPrograms() {
       strengths: "",
       areas_for_improvement: "",
       additional_notes: "",
-      recommendation: "pass"
-    }
+      recommendation: "pass",
+    },
   });
 
   // Queries
-  const { data: programs = [], isLoading: programsLoading } = useQuery<TrainingProgram[]>({
-    queryKey: ['/api/hr/training-programs'],
+  const { data: programs = [], isLoading: programsLoading } = useQuery<
+    TrainingProgram[]
+  >({
+    queryKey: ["/api/hr/training-programs"],
     enabled: false, // Disable for now to test
-    initialData: []
+    initialData: [],
   });
 
-  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<TrainingEnrollment[]>({
-    queryKey: ['/api/hr/training-enrollments'],
+  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<
+    TrainingEnrollment[]
+  >({
+    queryKey: ["/api/hr/training-enrollments"],
     enabled: false, // Disable for now to test
-    initialData: []
+    initialData: [],
   });
 
-  const { data: evaluations = [], isLoading: evaluationsLoading } = useQuery<TrainingEvaluation[]>({
-    queryKey: ['/api/hr/training-evaluations'],
+  const { data: evaluations = [], isLoading: evaluationsLoading } = useQuery<
+    TrainingEvaluation[]
+  >({
+    queryKey: ["/api/hr/training-evaluations"],
     enabled: false, // Disable for now to test
-    initialData: []
+    initialData: [],
   });
 
   const { data: users = [] } = useQuery({
-    queryKey: ['/api/users'],
+    queryKey: ["/api/users"],
     enabled: false, // Disable for now to test
-    initialData: []
+    initialData: [],
   });
 
   const { data: sections = [] } = useQuery({
-    queryKey: ['/api/sections'],
+    queryKey: ["/api/sections"],
     enabled: false, // Disable for now to test
-    initialData: []
+    initialData: [],
   });
 
   // Mutations
   const createProgramMutation = useMutation({
-    mutationFn: (data: z.infer<typeof trainingProgramSchema>) => 
-      apiRequest('/api/hr/training-programs', { method: 'POST', body: data }),
+    mutationFn: (data: z.infer<typeof trainingProgramSchema>) =>
+      apiRequest("/api/hr/training-programs", { method: "POST", body: data }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/hr/training-programs'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/hr/training-programs"],
+      });
       setIsCreateProgramOpen(false);
       programForm.reset();
       toast({ title: "تم إنشاء برنامج التدريب بنجاح" });
     },
     onError: () => {
       toast({ title: "خطأ في إنشاء برنامج التدريب", variant: "destructive" });
-    }
+    },
   });
 
   const createEnrollmentMutation = useMutation({
-    mutationFn: (data: any) => 
-      apiRequest('/api/hr/training-enrollments', { 
-        method: 'POST', 
+    mutationFn: (data: any) =>
+      apiRequest("/api/hr/training-enrollments", {
+        method: "POST",
         body: {
           ...data,
           program_id: parseInt(data.program_id),
-          employee_id: parseInt(data.employee_id)
-        }
+          employee_id: parseInt(data.employee_id),
+        },
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/hr/training-enrollments'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/hr/training-enrollments"],
+      });
       setIsEnrollmentOpen(false);
       enrollmentForm.reset();
       toast({ title: "تم تسجيل الموظف في التدريب بنجاح" });
     },
     onError: () => {
       toast({ title: "خطأ في تسجيل الموظف", variant: "destructive" });
-    }
+    },
   });
 
   const createEvaluationMutation = useMutation({
@@ -263,147 +296,214 @@ export default function FieldTrainingPrograms() {
         safety_compliance: parseInt(data.safety_compliance),
         teamwork: parseInt(data.teamwork),
         communication: parseInt(data.communication),
-        overall_rating: Math.round((
-          parseInt(data.theoretical_understanding) +
-          parseInt(data.practical_skills) +
-          parseInt(data.safety_compliance) +
-          parseInt(data.teamwork) +
-          parseInt(data.communication)
-        ) / 5 * 10) / 10
+        overall_rating:
+          Math.round(
+            ((parseInt(data.theoretical_understanding) +
+              parseInt(data.practical_skills) +
+              parseInt(data.safety_compliance) +
+              parseInt(data.teamwork) +
+              parseInt(data.communication)) /
+              5) *
+              10,
+          ) / 10,
       };
-      return apiRequest('/api/hr/training-evaluations', { method: 'POST', body: processedData });
+      return apiRequest("/api/hr/training-evaluations", {
+        method: "POST",
+        body: processedData,
+      });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/hr/training-evaluations'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/hr/training-evaluations"],
+      });
       setIsEvaluationOpen(false);
       evaluationForm.reset();
       toast({ title: "تم حفظ تقييم التدريب بنجاح" });
     },
     onError: () => {
       toast({ title: "خطأ في حفظ التقييم", variant: "destructive" });
-    }
+    },
   });
 
   // Helper functions
   const getScopeIcon = (scope: string) => {
     switch (scope) {
-      case 'safety': return <Shield className="w-4 h-4" />;
-      case 'first_aid': return <Heart className="w-4 h-4" />;
-      case 'fire_safety': return <Flame className="w-4 h-4" />;
-      case 'technical': return <Wrench className="w-4 h-4" />;
-      case 'film': return <Film className="w-4 h-4" />;
-      case 'printing': return <Printer className="w-4 h-4" />;
-      case 'cutting': return <Scissors className="w-4 h-4" />;
-      default: return <Shield className="w-4 h-4" />;
+      case "safety":
+        return <Shield className="w-4 h-4" />;
+      case "first_aid":
+        return <Heart className="w-4 h-4" />;
+      case "fire_safety":
+        return <Flame className="w-4 h-4" />;
+      case "technical":
+        return <Wrench className="w-4 h-4" />;
+      case "film":
+        return <Film className="w-4 h-4" />;
+      case "printing":
+        return <Printer className="w-4 h-4" />;
+      case "cutting":
+        return <Scissors className="w-4 h-4" />;
+      default:
+        return <Shield className="w-4 h-4" />;
     }
   };
 
   const getScopeText = (scope: string) => {
     switch (scope) {
-      case 'safety': return 'السلامة المهنية';
-      case 'first_aid': return 'الإسعافات الأولية';
-      case 'fire_safety': return 'السلامة من الحريق';
-      case 'technical': return 'التقني';
-      case 'film': return 'الفيلم';
-      case 'printing': return 'الطباعة';
-      case 'cutting': return 'التقطيع';
-      default: return scope;
+      case "safety":
+        return "السلامة المهنية";
+      case "first_aid":
+        return "الإسعافات الأولية";
+      case "fire_safety":
+        return "السلامة من الحريق";
+      case "technical":
+        return "التقني";
+      case "film":
+        return "الفيلم";
+      case "printing":
+        return "الطباعة";
+      case "cutting":
+        return "التقطيع";
+      default:
+        return scope;
     }
   };
 
   const getCategoryText = (category: string) => {
     switch (category) {
-      case 'general': return 'تدريب عام';
-      case 'department_specific': return 'تدريب متخصص';
-      default: return category;
+      case "general":
+        return "تدريب عام";
+      case "department_specific":
+        return "تدريب متخصص";
+      default:
+        return category;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'inactive': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-      case 'draft': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "active":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "inactive":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      case "draft":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'active': return 'نشط';
-      case 'inactive': return 'غير نشط';
-      case 'draft': return 'مسودة';
-      default: return status;
+      case "active":
+        return "نشط";
+      case "inactive":
+        return "غير نشط";
+      case "draft":
+        return "مسودة";
+      default:
+        return status;
     }
   };
 
   const getAttendanceStatusColor = (status: string) => {
     switch (status) {
-      case 'attended': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'absent': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'enrolled': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'cancelled': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "attended":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "absent":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "enrolled":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getAttendanceStatusText = (status: string) => {
     switch (status) {
-      case 'attended': return 'حضر';
-      case 'absent': return 'غائب';
-      case 'enrolled': return 'مسجل';
-      case 'cancelled': return 'ملغى';
-      default: return status;
+      case "attended":
+        return "حضر";
+      case "absent":
+        return "غائب";
+      case "enrolled":
+        return "مسجل";
+      case "cancelled":
+        return "ملغى";
+      default:
+        return status;
     }
   };
 
   const getCompletionStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'failed': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'not_started': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "failed":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "not_started":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getCompletionStatusText = (status: string) => {
     switch (status) {
-      case 'completed': return 'مكتمل';
-      case 'failed': return 'راسب';
-      case 'not_started': return 'لم يبدأ';
-      default: return status;
+      case "completed":
+        return "مكتمل";
+      case "failed":
+        return "راسب";
+      case "not_started":
+        return "لم يبدأ";
+      default:
+        return status;
     }
   };
 
   const getRecommendationColor = (recommendation: string) => {
     switch (recommendation) {
-      case 'pass': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'fail': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      case 'needs_retraining': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "pass":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "fail":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "needs_retraining":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getRecommendationText = (recommendation: string) => {
     switch (recommendation) {
-      case 'pass': return 'نجح';
-      case 'fail': return 'رسب';
-      case 'needs_retraining': return 'يحتاج إعادة تدريب';
-      default: return recommendation;
+      case "pass":
+        return "نجح";
+      case "fail":
+        return "رسب";
+      case "needs_retraining":
+        return "يحتاج إعادة تدريب";
+      default:
+        return recommendation;
     }
   };
 
   const calculateOverallRating = (evaluation: TrainingEvaluation) => {
-    return Math.round((
-      evaluation.theoretical_understanding +
-      evaluation.practical_skills +
-      evaluation.safety_compliance +
-      evaluation.teamwork +
-      evaluation.communication
-    ) / 5 * 10) / 10;
+    return (
+      Math.round(
+        ((evaluation.theoretical_understanding +
+          evaluation.practical_skills +
+          evaluation.safety_compliance +
+          evaluation.teamwork +
+          evaluation.communication) /
+          5) *
+          10,
+      ) / 10
+    );
   };
 
-  const onCreateProgram = async (data: z.infer<typeof trainingProgramSchema>) => {
+  const onCreateProgram = async (
+    data: z.infer<typeof trainingProgramSchema>,
+  ) => {
     await createProgramMutation.mutateAsync(data);
   };
 
@@ -417,9 +517,9 @@ export default function FieldTrainingPrograms() {
 
   const openEvaluationDialog = (enrollment: TrainingEnrollment) => {
     setSelectedEnrollment(enrollment);
-    evaluationForm.setValue('enrollment_id', enrollment.id.toString());
-    evaluationForm.setValue('program_id', enrollment.program_id.toString());
-    evaluationForm.setValue('employee_id', enrollment.employee_id.toString());
+    evaluationForm.setValue("enrollment_id", enrollment.id.toString());
+    evaluationForm.setValue("program_id", enrollment.program_id.toString());
+    evaluationForm.setValue("employee_id", enrollment.employee_id.toString());
     setIsEvaluationOpen(true);
   };
 
@@ -428,7 +528,9 @@ export default function FieldTrainingPrograms() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">جاري تحميل برامج التدريب...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            جاري تحميل برامج التدريب...
+          </p>
         </div>
       </div>
     );
@@ -447,9 +549,15 @@ export default function FieldTrainingPrograms() {
           </p>
         </div>
 
-        <Dialog open={isCreateProgramOpen} onOpenChange={setIsCreateProgramOpen}>
+        <Dialog
+          open={isCreateProgramOpen}
+          onOpenChange={setIsCreateProgramOpen}
+        >
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2" data-testid="button-create-program">
+            <Button
+              className="flex items-center gap-2"
+              data-testid="button-create-program"
+            >
               <Plus className="w-4 h-4" />
               إضافة برنامج تدريبي
             </Button>
@@ -462,7 +570,10 @@ export default function FieldTrainingPrograms() {
               </DialogDescription>
             </DialogHeader>
             <Form {...programForm}>
-              <form onSubmit={programForm.handleSubmit(onCreateProgram)} className="space-y-4">
+              <form
+                onSubmit={programForm.handleSubmit(onCreateProgram)}
+                className="space-y-4"
+              >
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={programForm.control}
@@ -484,7 +595,10 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>العنوان (عربي)</FormLabel>
                         <FormControl>
-                          <Input {...field} data-testid="input-program-title-ar" />
+                          <Input
+                            {...field}
+                            data-testid="input-program-title-ar"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -500,13 +614,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>فئة التدريب</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-program-category">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="general">تدريب عام</SelectItem>
-                              <SelectItem value="department_specific">تدريب متخصص</SelectItem>
+                              <SelectItem value="department_specific">
+                                تدريب متخصص
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -521,14 +640,23 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>نوع التدريب</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-program-scope">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="safety">السلامة المهنية</SelectItem>
-                              <SelectItem value="first_aid">الإسعافات الأولية</SelectItem>
-                              <SelectItem value="fire_safety">السلامة من الحريق</SelectItem>
+                              <SelectItem value="safety">
+                                السلامة المهنية
+                              </SelectItem>
+                              <SelectItem value="first_aid">
+                                الإسعافات الأولية
+                              </SelectItem>
+                              <SelectItem value="fire_safety">
+                                السلامة من الحريق
+                              </SelectItem>
                               <SelectItem value="technical">التقني</SelectItem>
                               <SelectItem value="film">الفيلم</SelectItem>
                               <SelectItem value="printing">الطباعة</SelectItem>
@@ -550,10 +678,12 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>مدة التدريب (ساعات)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value))
+                            }
                             data-testid="input-program-duration"
                           />
                         </FormControl>
@@ -568,10 +698,12 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>العدد الأقصى للمشاركين</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          <Input
+                            type="number"
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value))
+                            }
                             data-testid="input-program-max-participants"
                           />
                         </FormControl>
@@ -586,7 +718,10 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>مكان التدريب</FormLabel>
                         <FormControl>
-                          <Input {...field} data-testid="input-program-location" />
+                          <Input
+                            {...field}
+                            data-testid="input-program-location"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -595,16 +730,16 @@ export default function FieldTrainingPrograms() {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
+                  <Button
+                    type="button"
+                    variant="outline"
                     onClick={() => setIsCreateProgramOpen(false)}
                     data-testid="button-cancel-program"
                   >
                     إلغاء
                   </Button>
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={createProgramMutation.isPending}
                     data-testid="button-save-program"
                   >
@@ -620,8 +755,8 @@ export default function FieldTrainingPrograms() {
       {/* View Tabs */}
       <div className="flex gap-2 border-b">
         <Button
-          variant={selectedView === 'programs' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('programs')}
+          variant={selectedView === "programs" ? "default" : "ghost"}
+          onClick={() => setSelectedView("programs")}
           className="rounded-b-none"
           data-testid="tab-programs"
         >
@@ -629,8 +764,8 @@ export default function FieldTrainingPrograms() {
           برامج التدريب
         </Button>
         <Button
-          variant={selectedView === 'enrollments' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('enrollments')}
+          variant={selectedView === "enrollments" ? "default" : "ghost"}
+          onClick={() => setSelectedView("enrollments")}
           className="rounded-b-none"
           data-testid="tab-enrollments"
         >
@@ -638,8 +773,8 @@ export default function FieldTrainingPrograms() {
           التسجيلات
         </Button>
         <Button
-          variant={selectedView === 'evaluations' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('evaluations')}
+          variant={selectedView === "evaluations" ? "default" : "ghost"}
+          onClick={() => setSelectedView("evaluations")}
           className="rounded-b-none"
           data-testid="tab-evaluations"
         >
@@ -649,28 +784,42 @@ export default function FieldTrainingPrograms() {
       </div>
 
       {/* Programs View */}
-      {selectedView === 'programs' && (
+      {selectedView === "programs" && (
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {programs.map((program) => (
-            <Card key={program.id} className="border-2 hover:border-blue-300 transition-colors" data-testid={`card-program-${program.id}`}>
+            <Card
+              key={program.id}
+              className="border-2 hover:border-blue-300 transition-colors"
+              data-testid={`card-program-${program.id}`}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {getScopeIcon(program.training_scope)}
-                    <span className="text-sm text-gray-500">{getScopeText(program.training_scope)}</span>
+                    <span className="text-sm text-gray-500">
+                      {getScopeText(program.training_scope)}
+                    </span>
                   </div>
                   <Badge className={getStatusColor(program.status)}>
                     {getStatusText(program.status)}
                   </Badge>
                 </div>
-                <CardTitle className="text-lg" data-testid={`text-program-title-${program.id}`}>
+                <CardTitle
+                  className="text-lg"
+                  data-testid={`text-program-title-${program.id}`}
+                >
                   {program.title_ar || program.title}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
-                <p className="text-gray-600 dark:text-gray-300 text-sm" data-testid={`text-program-description-${program.id}`}>
-                  {program.description_ar || program.description || "لا يوجد وصف"}
+                <p
+                  className="text-gray-600 dark:text-gray-300 text-sm"
+                  data-testid={`text-program-description-${program.id}`}
+                >
+                  {program.description_ar ||
+                    program.description ||
+                    "لا يوجد وصف"}
                 </p>
 
                 <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -700,11 +849,16 @@ export default function FieldTrainingPrograms() {
 
                 <div className="flex items-center justify-between pt-2">
                   <div className="text-xs text-gray-500">
-                    تم الإنشاء: {format(new Date(program.created_at), 'dd/MM/yyyy')}
+                    تم الإنشاء:{" "}
+                    {format(new Date(program.created_at), "dd/MM/yyyy")}
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
-                    <Button size="sm" variant="outline" data-testid={`button-view-${program.id}`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      data-testid={`button-view-${program.id}`}
+                    >
                       <Eye className="w-4 h-4" />
                     </Button>
                   </div>
@@ -717,11 +871,16 @@ export default function FieldTrainingPrograms() {
             <Card className="col-span-full">
               <CardContent className="flex flex-col items-center justify-center p-8">
                 <Shield className="w-16 h-16 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد برامج تدريبية</h3>
+                <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                  لا توجد برامج تدريبية
+                </h3>
                 <p className="text-gray-500 text-center mb-4">
                   ابدأ بإضافة برامج التدريب الميداني للموظفين
                 </p>
-                <Button onClick={() => setIsCreateProgramOpen(true)} data-testid="button-create-first-program">
+                <Button
+                  onClick={() => setIsCreateProgramOpen(true)}
+                  data-testid="button-create-first-program"
+                >
                   <Plus className="w-4 h-4 ml-2" />
                   إضافة برنامج تدريبي
                 </Button>
@@ -732,7 +891,7 @@ export default function FieldTrainingPrograms() {
       )}
 
       {/* Enrollments View */}
-      {selectedView === 'enrollments' && (
+      {selectedView === "enrollments" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">التسجيلات في التدريب</h3>
@@ -751,7 +910,10 @@ export default function FieldTrainingPrograms() {
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...enrollmentForm}>
-                  <form onSubmit={enrollmentForm.handleSubmit(onCreateEnrollment)} className="space-y-4">
+                  <form
+                    onSubmit={enrollmentForm.handleSubmit(onCreateEnrollment)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={enrollmentForm.control}
                       name="program_id"
@@ -759,16 +921,29 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>برنامج التدريب</FormLabel>
                           <FormControl>
-                            <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value || ""}
+                              onValueChange={field.onChange}
+                            >
                               <SelectTrigger data-testid="select-training-program">
                                 <SelectValue placeholder="اختر برنامج التدريب" />
                               </SelectTrigger>
                               <SelectContent>
-                                {programs.filter(program => program && program.id && program.id.toString().trim() !== '').map((program) => (
-                                  <SelectItem key={program.id} value={program.id.toString()}>
-                                    {program.title_ar || program.title}
-                                  </SelectItem>
-                                ))}
+                                {programs
+                                  .filter(
+                                    (program) =>
+                                      program &&
+                                      program.id &&
+                                      program.id.toString().trim() !== "",
+                                  )
+                                  .map((program) => (
+                                    <SelectItem
+                                      key={program.id}
+                                      value={program.id.toString()}
+                                    >
+                                      {program.title_ar || program.title}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -784,16 +959,31 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>الموظف</FormLabel>
                           <FormControl>
-                            <Select value={field.value || ""} onValueChange={field.onChange}>
+                            <Select
+                              value={field.value || ""}
+                              onValueChange={field.onChange}
+                            >
                               <SelectTrigger data-testid="select-enrollment-employee">
                                 <SelectValue placeholder="اختر الموظف" />
                               </SelectTrigger>
                               <SelectContent>
-                                {users.filter((user: any) => user && user.id && user.id.toString().trim() !== '').map((user: any) => (
-                                  <SelectItem key={user.id} value={user.id.toString()}>
-                                    {user.display_name_ar || user.display_name || user.username}
-                                  </SelectItem>
-                                ))}
+                                {users
+                                  .filter(
+                                    (user: any) =>
+                                      user &&
+                                      user.id &&
+                                      user.id.toString().trim() !== "",
+                                  )
+                                  .map((user: any) => (
+                                    <SelectItem
+                                      key={user.id}
+                                      value={user.id.toString()}
+                                    >
+                                      {user.display_name_ar ||
+                                        user.display_name ||
+                                        user.username}
+                                    </SelectItem>
+                                  ))}
                               </SelectContent>
                             </Select>
                           </FormControl>
@@ -809,7 +999,11 @@ export default function FieldTrainingPrograms() {
                         <FormItem>
                           <FormLabel>تاريخ التدريب</FormLabel>
                           <FormControl>
-                            <Input type="date" {...field} data-testid="input-enrollment-training-date" />
+                            <Input
+                              type="date"
+                              {...field}
+                              data-testid="input-enrollment-training-date"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -817,16 +1011,22 @@ export default function FieldTrainingPrograms() {
                     />
 
                     <div className="flex justify-end gap-2">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={() => setIsEnrollmentOpen(false)}
                         data-testid="button-cancel-enrollment"
                       >
                         إلغاء
                       </Button>
-                      <Button type="submit" disabled={createEnrollmentMutation.isPending} data-testid="button-submit-enrollment">
-                        {createEnrollmentMutation.isPending ? "جاري التسجيل..." : "تسجيل"}
+                      <Button
+                        type="submit"
+                        disabled={createEnrollmentMutation.isPending}
+                        data-testid="button-submit-enrollment"
+                      >
+                        {createEnrollmentMutation.isPending
+                          ? "جاري التسجيل..."
+                          : "تسجيل"}
                       </Button>
                     </div>
                   </form>
@@ -837,32 +1037,56 @@ export default function FieldTrainingPrograms() {
 
           <div className="grid gap-4">
             {enrollments.map((enrollment) => (
-              <Card key={enrollment.id} data-testid={`card-enrollment-${enrollment.id}`}>
+              <Card
+                key={enrollment.id}
+                data-testid={`card-enrollment-${enrollment.id}`}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center gap-4">
-                        <span className="font-medium" data-testid={`text-enrollment-program-${enrollment.id}`}>
+                        <span
+                          className="font-medium"
+                          data-testid={`text-enrollment-program-${enrollment.id}`}
+                        >
                           برنامج التدريب #{enrollment.program_id}
                         </span>
-                        <Badge className={getAttendanceStatusColor(enrollment.attendance_status)}>
-                          {getAttendanceStatusText(enrollment.attendance_status)}
+                        <Badge
+                          className={getAttendanceStatusColor(
+                            enrollment.attendance_status,
+                          )}
+                        >
+                          {getAttendanceStatusText(
+                            enrollment.attendance_status,
+                          )}
                         </Badge>
-                        <Badge className={getCompletionStatusColor(enrollment.completion_status)}>
-                          {getCompletionStatusText(enrollment.completion_status)}
+                        <Badge
+                          className={getCompletionStatusColor(
+                            enrollment.completion_status,
+                          )}
+                        >
+                          {getCompletionStatusText(
+                            enrollment.completion_status,
+                          )}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>الموظف: {enrollment.employee_id}</span>
                         {enrollment.training_date && (
-                          <span>تاريخ التدريب: {format(new Date(enrollment.training_date), 'dd/MM/yyyy')}</span>
+                          <span>
+                            تاريخ التدريب:{" "}
+                            {format(
+                              new Date(enrollment.training_date),
+                              "dd/MM/yyyy",
+                            )}
+                          </span>
                         )}
                         {enrollment.final_score && (
                           <span>الدرجة: {enrollment.final_score}%</span>
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       {enrollment.certificate_issued && (
                         <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
@@ -870,10 +1094,10 @@ export default function FieldTrainingPrograms() {
                           شهادة صادرة
                         </Badge>
                       )}
-                      
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
+
+                      <Button
+                        size="sm"
+                        variant="outline"
                         onClick={() => openEvaluationDialog(enrollment)}
                         data-testid={`button-evaluate-${enrollment.id}`}
                       >
@@ -889,11 +1113,16 @@ export default function FieldTrainingPrograms() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-8">
                   <Users className="w-16 h-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد تسجيلات</h3>
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    لا توجد تسجيلات
+                  </h3>
                   <p className="text-gray-500 text-center mb-4">
                     لم يتم تسجيل أي موظفين في التدريبات بعد
                   </p>
-                  <Button onClick={() => setIsEnrollmentOpen(true)} data-testid="button-create-first-enrollment">
+                  <Button
+                    onClick={() => setIsEnrollmentOpen(true)}
+                    data-testid="button-create-first-enrollment"
+                  >
                     <Plus className="w-4 h-4 ml-2" />
                     تسجيل موظف
                   </Button>
@@ -905,7 +1134,7 @@ export default function FieldTrainingPrograms() {
       )}
 
       {/* Evaluations View */}
-      {selectedView === 'evaluations' && (
+      {selectedView === "evaluations" && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold">تقييمات التدريب</h3>
@@ -913,47 +1142,79 @@ export default function FieldTrainingPrograms() {
 
           <div className="grid gap-4">
             {evaluations.map((evaluation) => (
-              <Card key={evaluation.id} data-testid={`card-evaluation-${evaluation.id}`}>
+              <Card
+                key={evaluation.id}
+                data-testid={`card-evaluation-${evaluation.id}`}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="space-y-3 flex-1">
                       <div className="flex items-center gap-4">
-                        <span className="font-medium" data-testid={`text-evaluation-program-${evaluation.id}`}>
-                          برنامج #{evaluation.program_id} - موظف #{evaluation.employee_id}
+                        <span
+                          className="font-medium"
+                          data-testid={`text-evaluation-program-${evaluation.id}`}
+                        >
+                          برنامج #{evaluation.program_id} - موظف #
+                          {evaluation.employee_id}
                         </span>
-                        <Badge className={getRecommendationColor(evaluation.recommendation)}>
+                        <Badge
+                          className={getRecommendationColor(
+                            evaluation.recommendation,
+                          )}
+                        >
                           {getRecommendationText(evaluation.recommendation)}
                         </Badge>
                         <span className="text-sm text-gray-500">
-                          التقييم الإجمالي: {calculateOverallRating(evaluation)}/5
+                          التقييم الإجمالي: {calculateOverallRating(evaluation)}
+                          /5
                         </span>
                       </div>
-                      
+
                       <div className="grid grid-cols-5 gap-4 text-sm">
                         <div className="text-center">
-                          <span className="block text-gray-500">الفهم النظري</span>
-                          <span className="font-medium">{evaluation.theoretical_understanding}/5</span>
+                          <span className="block text-gray-500">
+                            الفهم النظري
+                          </span>
+                          <span className="font-medium">
+                            {evaluation.theoretical_understanding}/5
+                          </span>
                         </div>
                         <div className="text-center">
-                          <span className="block text-gray-500">المهارات العملية</span>
-                          <span className="font-medium">{evaluation.practical_skills}/5</span>
+                          <span className="block text-gray-500">
+                            المهارات العملية
+                          </span>
+                          <span className="font-medium">
+                            {evaluation.practical_skills}/5
+                          </span>
                         </div>
                         <div className="text-center">
                           <span className="block text-gray-500">السلامة</span>
-                          <span className="font-medium">{evaluation.safety_compliance}/5</span>
+                          <span className="font-medium">
+                            {evaluation.safety_compliance}/5
+                          </span>
                         </div>
                         <div className="text-center">
-                          <span className="block text-gray-500">العمل الجماعي</span>
-                          <span className="font-medium">{evaluation.teamwork}/5</span>
+                          <span className="block text-gray-500">
+                            العمل الجماعي
+                          </span>
+                          <span className="font-medium">
+                            {evaluation.teamwork}/5
+                          </span>
                         </div>
                         <div className="text-center">
                           <span className="block text-gray-500">التواصل</span>
-                          <span className="font-medium">{evaluation.communication}/5</span>
+                          <span className="font-medium">
+                            {evaluation.communication}/5
+                          </span>
                         </div>
                       </div>
 
                       <div className="text-xs text-gray-500">
-                        تاريخ التقييم: {format(new Date(evaluation.evaluation_date), 'dd/MM/yyyy')}
+                        تاريخ التقييم:{" "}
+                        {format(
+                          new Date(evaluation.evaluation_date),
+                          "dd/MM/yyyy",
+                        )}
                       </div>
                     </div>
                   </div>
@@ -965,7 +1226,9 @@ export default function FieldTrainingPrograms() {
               <Card>
                 <CardContent className="flex flex-col items-center justify-center p-8">
                   <Star className="w-16 h-16 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-600 mb-2">لا توجد تقييمات</h3>
+                  <h3 className="text-lg font-semibold text-gray-600 mb-2">
+                    لا توجد تقييمات
+                  </h3>
                   <p className="text-gray-500 text-center mb-4">
                     لم يتم إجراء أي تقييمات للتدريب بعد
                   </p>
@@ -986,7 +1249,10 @@ export default function FieldTrainingPrograms() {
             </DialogDescription>
           </DialogHeader>
           <Form {...evaluationForm}>
-            <form onSubmit={evaluationForm.handleSubmit(onCreateEvaluation)} className="space-y-4">
+            <form
+              onSubmit={evaluationForm.handleSubmit(onCreateEvaluation)}
+              className="space-y-4"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={evaluationForm.control}
@@ -995,7 +1261,11 @@ export default function FieldTrainingPrograms() {
                     <FormItem>
                       <FormLabel>تاريخ التقييم</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} data-testid="input-evaluation-date" />
+                        <Input
+                          type="date"
+                          {...field}
+                          data-testid="input-evaluation-date"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1008,14 +1278,19 @@ export default function FieldTrainingPrograms() {
                     <FormItem>
                       <FormLabel>التوصية</FormLabel>
                       <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
                           <SelectTrigger data-testid="select-recommendation">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="pass">نجح</SelectItem>
                             <SelectItem value="fail">رسب</SelectItem>
-                            <SelectItem value="needs_retraining">يحتاج إعادة تدريب</SelectItem>
+                            <SelectItem value="needs_retraining">
+                              يحتاج إعادة تدريب
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -1035,13 +1310,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>الفهم النظري</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-theoretical">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(num => (
-                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1057,13 +1337,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>المهارات العملية</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-practical">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(num => (
-                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1079,13 +1364,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>الالتزام بالسلامة</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-safety">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(num => (
-                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1101,13 +1391,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>العمل الجماعي</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-teamwork">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(num => (
-                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1123,13 +1418,18 @@ export default function FieldTrainingPrograms() {
                       <FormItem>
                         <FormLabel>التواصل</FormLabel>
                         <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
                             <SelectTrigger data-testid="select-communication">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {[1,2,3,4,5].map(num => (
-                                <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                              {[1, 2, 3, 4, 5].map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -1149,7 +1449,11 @@ export default function FieldTrainingPrograms() {
                     <FormItem>
                       <FormLabel>نقاط القوة</FormLabel>
                       <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-strengths" />
+                        <Textarea
+                          {...field}
+                          rows={3}
+                          data-testid="textarea-strengths"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1162,7 +1466,11 @@ export default function FieldTrainingPrograms() {
                     <FormItem>
                       <FormLabel>مجالات التحسين</FormLabel>
                       <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-improvements" />
+                        <Textarea
+                          {...field}
+                          rows={3}
+                          data-testid="textarea-improvements"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1177,7 +1485,11 @@ export default function FieldTrainingPrograms() {
                   <FormItem>
                     <FormLabel>ملاحظات إضافية</FormLabel>
                     <FormControl>
-                      <Textarea {...field} rows={2} data-testid="textarea-additional-notes" />
+                      <Textarea
+                        {...field}
+                        rows={2}
+                        data-testid="textarea-additional-notes"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1185,16 +1497,22 @@ export default function FieldTrainingPrograms() {
               />
 
               <div className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => setIsEvaluationOpen(false)}
                   data-testid="button-cancel-evaluation"
                 >
                   إلغاء
                 </Button>
-                <Button type="submit" disabled={createEvaluationMutation.isPending} data-testid="button-save-evaluation">
-                  {createEvaluationMutation.isPending ? "جاري الحفظ..." : "حفظ التقييم"}
+                <Button
+                  type="submit"
+                  disabled={createEvaluationMutation.isPending}
+                  data-testid="button-save-evaluation"
+                >
+                  {createEvaluationMutation.isPending
+                    ? "جاري الحفظ..."
+                    : "حفظ التقييم"}
                 </Button>
               </div>
             </form>

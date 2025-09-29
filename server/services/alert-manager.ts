@@ -1,14 +1,14 @@
-import { EventEmitter } from 'events';
-import type { IStorage } from '../storage';
-import type { 
-  SystemAlert, 
-  InsertSystemAlert, 
+import { EventEmitter } from "events";
+import type { IStorage } from "../storage";
+import type {
+  SystemAlert,
+  InsertSystemAlert,
   AlertRule,
   InsertAlertRule,
   CorrectiveAction,
-  InsertCorrectiveAction 
-} from '@shared/schema';
-import { getNotificationManager } from './notification-manager';
+  InsertCorrectiveAction,
+} from "@shared/schema";
+import { getNotificationManager } from "./notification-manager";
 
 /**
  * نظام إدارة التحذيرات الذكية
@@ -18,13 +18,13 @@ export class AlertManager extends EventEmitter {
   private alertRules: Map<number, AlertRule> = new Map();
   private activeAlerts: Map<number, SystemAlert> = new Map();
   private suppressedAlerts: Set<string> = new Set();
-  
+
   private readonly DEFAULT_SUPPRESSION_TIME = 60 * 60 * 1000; // ساعة واحدة
 
   constructor(storage: IStorage) {
     super();
     this.storage = storage;
-    console.log('[AlertManager] نظام إدارة التحذيرات مُفعل');
+    console.log("[AlertManager] نظام إدارة التحذيرات مُفعل");
     this.initialize();
   }
 
@@ -32,9 +32,9 @@ export class AlertManager extends EventEmitter {
     try {
       await this.loadActiveRules();
       await this.loadActiveAlerts();
-      console.log('[AlertManager] تم تشغيل نظام إدارة التحذيرات بنجاح ✅');
+      console.log("[AlertManager] تم تشغيل نظام إدارة التحذيرات بنجاح ✅");
     } catch (error) {
-      console.error('[AlertManager] خطأ في تشغيل نظام إدارة التحذيرات:', error);
+      console.error("[AlertManager] خطأ في تشغيل نظام إدارة التحذيرات:", error);
     }
   }
 
@@ -45,18 +45,18 @@ export class AlertManager extends EventEmitter {
       for (const rule of rules) this.alertRules.set(rule.id, rule);
       console.log(`[AlertManager] تم تحميل ${rules.length} قاعدة تحذير نشطة`);
     } catch (error) {
-      console.error('[AlertManager] خطأ في تحميل قواعد التحذيرات:', error);
+      console.error("[AlertManager] خطأ في تحميل قواعد التحذيرات:", error);
     }
   }
 
   private async loadActiveAlerts(): Promise<void> {
     try {
-      const alerts = await this.storage.getSystemAlerts({ status: 'active' });
+      const alerts = await this.storage.getSystemAlerts({ status: "active" });
       this.activeAlerts.clear();
       for (const alert of alerts) this.activeAlerts.set(alert.id, alert);
       console.log(`[AlertManager] تم تحميل ${alerts.length} تحذير نشط`);
     } catch (error) {
-      console.error('[AlertManager] خطأ في تحميل التحذيرات النشطة:', error);
+      console.error("[AlertManager] خطأ في تحميل التحذيرات النشطة:", error);
     }
   }
 
@@ -71,16 +71,20 @@ export class AlertManager extends EventEmitter {
     source: string;
     source_id?: string;
     context_data?: Record<string, any>;
-    suggested_actions?: {action: string; priority: number; description?: string}[];
+    suggested_actions?: {
+      action: string;
+      priority: number;
+      description?: string;
+    }[];
     target_users?: number[];
     target_roles?: number[];
     requires_action?: boolean;
   }): Promise<SystemAlert> {
     try {
-      const suppressKey = `${alertData.source}-${alertData.source_id || ''}-${alertData.type}`;
+      const suppressKey = `${alertData.source}-${alertData.source_id || ""}-${alertData.type}`;
       if (this.suppressedAlerts.has(suppressKey)) {
         console.log(`[AlertManager] تحذير مكبوت مؤقتاً: ${alertData.title_ar}`);
-        throw new Error('التحذير مكبوت مؤقتاً لمنع التكرار');
+        throw new Error("التحذير مكبوت مؤقتاً لمنع التكرار");
       }
 
       const insertData: InsertSystemAlert = {
@@ -101,7 +105,7 @@ export class AlertManager extends EventEmitter {
         notification_sent: false,
         first_occurrence: new Date(),
         last_occurrence: new Date(),
-        occurrences: 1
+        occurrences: 1,
       };
 
       const alert = await this.storage.createSystemAlert(insertData);
@@ -114,37 +118,50 @@ export class AlertManager extends EventEmitter {
         await this.createCorrectiveActions(alert);
       }
 
-      this.emit('alertCreated', alert);
-      console.log(`[AlertManager] تم إنشاء تحذير جديد: ${alert.title_ar} (${alert.severity})`);
+      this.emit("alertCreated", alert);
+      console.log(
+        `[AlertManager] تم إنشاء تحذير جديد: ${alert.title_ar} (${alert.severity})`,
+      );
       return alert;
     } catch (error) {
-      console.error('[AlertManager] خطأ في إنشاء التحذير:', error);
+      console.error("[AlertManager] خطأ في إنشاء التحذير:", error);
       throw error;
     }
   }
 
-  async resolveAlert(alertId: number, resolvedBy: number, notes?: string): Promise<SystemAlert> {
+  async resolveAlert(
+    alertId: number,
+    resolvedBy: number,
+    notes?: string,
+  ): Promise<SystemAlert> {
     try {
-      const alert = await this.storage.resolveSystemAlert(alertId, resolvedBy, notes);
+      const alert = await this.storage.resolveSystemAlert(
+        alertId,
+        resolvedBy,
+        notes,
+      );
       this.activeAlerts.delete(alertId);
-      this.emit('alertResolved', alert);
+      this.emit("alertResolved", alert);
       console.log(`[AlertManager] تم حل التحذير: ${alert.title_ar}`);
       return alert;
     } catch (error) {
-      console.error('[AlertManager] خطأ في حل التحذير:', error);
+      console.error("[AlertManager] خطأ في حل التحذير:", error);
       throw error;
     }
   }
 
-  async dismissAlert(alertId: number, dismissedBy: number): Promise<SystemAlert> {
+  async dismissAlert(
+    alertId: number,
+    dismissedBy: number,
+  ): Promise<SystemAlert> {
     try {
       const alert = await this.storage.dismissSystemAlert(alertId, dismissedBy);
       this.activeAlerts.delete(alertId);
-      this.emit('alertDismissed', alert);
+      this.emit("alertDismissed", alert);
       console.log(`[AlertManager] تم إغلاق التحذير: ${alert.title_ar}`);
       return alert;
     } catch (error) {
-      console.error('[AlertManager] خطأ في إغلاق التحذير:', error);
+      console.error("[AlertManager] خطأ في إغلاق التحذير:", error);
       throw error;
     }
   }
@@ -152,29 +169,31 @@ export class AlertManager extends EventEmitter {
   private async sendAlertNotifications(alert: SystemAlert): Promise<void> {
     try {
       // تجاهل إشعارات severity = low
-      if (alert.severity === 'low') {
-        console.log(`[AlertManager] تم تجاهل إشعار منخفض الأولوية: ${alert.title_ar}`);
+      if (alert.severity === "low") {
+        console.log(
+          `[AlertManager] تم تجاهل إشعار منخفض الأولوية: ${alert.title_ar}`,
+        );
         return;
       }
 
       const notificationManager = getNotificationManager(this.storage);
       const notification = {
-        title: alert.title_ar || 'تحذير نظام',
-        message: alert.message_ar || 'تم إنشاء تحذير جديد',
+        title: alert.title_ar || "تحذير نظام",
+        message: alert.message_ar || "تم إنشاء تحذير جديد",
         type: alert.type,
         priority: this.getNotificationPriority(alert.severity),
         context_type: alert.type,
         context_id: alert.source_id,
-        sound: alert.severity === 'critical',
-        icon: this.getAlertIcon(alert.type)
+        sound: alert.severity === "critical",
+        icon: this.getAlertIcon(alert.type),
       };
 
       if (alert.target_roles && alert.target_roles.length > 0) {
         for (const roleId of alert.target_roles) {
           await notificationManager.sendToRole(roleId, {
             ...notification,
-            recipient_type: 'role',
-            recipient_id: roleId.toString()
+            recipient_type: "role",
+            recipient_id: roleId.toString(),
           });
         }
       }
@@ -183,15 +202,17 @@ export class AlertManager extends EventEmitter {
         for (const userId of alert.target_users) {
           await notificationManager.sendToUser(userId, {
             ...notification,
-            recipient_type: 'user',
-            recipient_id: userId.toString()
+            recipient_type: "user",
+            recipient_id: userId.toString(),
           });
         }
       }
 
-      await this.storage.updateSystemAlert(alert.id, { notification_sent: true });
+      await this.storage.updateSystemAlert(alert.id, {
+        notification_sent: true,
+      });
     } catch (error) {
-      console.error('[AlertManager] خطأ في إرسال إشعارات التحذير:', error);
+      console.error("[AlertManager] خطأ في إرسال إشعارات التحذير:", error);
     }
   }
 
@@ -201,17 +222,17 @@ export class AlertManager extends EventEmitter {
       for (const suggestion of alert.suggested_actions) {
         const actionData: InsertCorrectiveAction = {
           alert_id: alert.id,
-          action_type: 'automated',
+          action_type: "automated",
           action_title: suggestion.action,
           action_description: suggestion.description || suggestion.action,
           action_description_ar: suggestion.description || suggestion.action,
           priority: this.getPriorityFromNumber(suggestion.priority),
-          created_by: 1
+          created_by: 1,
         };
         await this.storage.createCorrectiveAction(actionData);
       }
     } catch (error) {
-      console.error('[AlertManager] خطأ في إنشاء الإجراءات التصحيحية:', error);
+      console.error("[AlertManager] خطأ في إنشاء الإجراءات التصحيحية:", error);
     }
   }
 
@@ -229,7 +250,11 @@ export class AlertManager extends EventEmitter {
     severity: string;
     notification_template?: string;
     notification_template_ar?: string;
-    escalation_rules?: {delay_minutes: number; severity: string; target_roles: number[]}[];
+    escalation_rules?: {
+      delay_minutes: number;
+      severity: string;
+      target_roles: number[];
+    }[];
     suppress_duration?: number;
     created_by: number;
   }): Promise<AlertRule> {
@@ -250,14 +275,14 @@ export class AlertManager extends EventEmitter {
         notification_template_ar: ruleData.notification_template_ar,
         escalation_rules: ruleData.escalation_rules,
         suppress_duration: ruleData.suppress_duration || 60,
-        created_by: ruleData.created_by
+        created_by: ruleData.created_by,
       };
       const rule = await this.storage.createAlertRule(insertData);
       this.alertRules.set(rule.id, rule);
       console.log(`[AlertManager] تم إنشاء قاعدة تحذير جديدة: ${rule.name_ar}`);
       return rule;
     } catch (error) {
-      console.error('[AlertManager] خطأ في إنشاء قاعدة التحذير:', error);
+      console.error("[AlertManager] خطأ في إنشاء قاعدة التحذير:", error);
       throw error;
     }
   }
@@ -267,50 +292,70 @@ export class AlertManager extends EventEmitter {
       const rule = this.alertRules.get(ruleId);
       if (!rule || !rule.is_enabled) return false;
 
-      const threshold = parseFloat(rule.threshold_value || '0');
+      const threshold = parseFloat(rule.threshold_value || "0");
       const operator = rule.comparison_operator;
       let triggered = false;
 
       switch (operator) {
-        case '>': triggered = currentValue > threshold; break;
-        case '<': triggered = currentValue < threshold; break;
-        case '>=': triggered = currentValue >= threshold; break;
-        case '<=': triggered = currentValue <= threshold; break;
-        case '=': triggered = currentValue === threshold; break;
-        case '!=': triggered = currentValue !== threshold; break;
+        case ">":
+          triggered = currentValue > threshold;
+          break;
+        case "<":
+          triggered = currentValue < threshold;
+          break;
+        case ">=":
+          triggered = currentValue >= threshold;
+          break;
+        case "<=":
+          triggered = currentValue <= threshold;
+          break;
+        case "=":
+          triggered = currentValue === threshold;
+          break;
+        case "!=":
+          triggered = currentValue !== threshold;
+          break;
       }
 
       if (triggered) await this.triggerRuleAlert(rule, currentValue);
       return triggered;
     } catch (error) {
-      console.error('[AlertManager] خطأ في تقييم قاعدة التحذير:', error);
+      console.error("[AlertManager] خطأ في تقييم قاعدة التحذير:", error);
       return false;
     }
   }
 
-  private async triggerRuleAlert(rule: AlertRule, currentValue: number): Promise<void> {
+  private async triggerRuleAlert(
+    rule: AlertRule,
+    currentValue: number,
+  ): Promise<void> {
     try {
       const alertData = {
         title: `Rule Alert: ${rule.name}`,
         title_ar: `تحذير قاعدة: ${rule.name_ar}`,
-        message: rule.notification_template || `${rule.name} triggered with value ${currentValue}`,
-        message_ar: rule.notification_template_ar || `${rule.name_ar} تم تفعيله بقيمة ${currentValue}`,
+        message:
+          rule.notification_template ||
+          `${rule.name} triggered with value ${currentValue}`,
+        message_ar:
+          rule.notification_template_ar ||
+          `${rule.name_ar} تم تفعيله بقيمة ${currentValue}`,
         type: rule.monitor_type,
-        category: 'warning',
+        category: "warning",
         severity: rule.severity,
-        source: 'alert_rule',
+        source: "alert_rule",
         source_id: rule.id.toString(),
         context_data: {
           rule_id: rule.id,
           current_value: currentValue,
           threshold: rule.threshold_value,
-          operator: rule.comparison_operator
+          operator: rule.comparison_operator,
         },
-        requires_action: rule.severity === 'critical' || rule.severity === 'high'
+        requires_action:
+          rule.severity === "critical" || rule.severity === "high",
       };
       await this.createAlert(alertData);
     } catch (error) {
-      console.error('[AlertManager] خطأ في تفعيل تحذير القاعدة:', error);
+      console.error("[AlertManager] خطأ في تفعيل تحذير القاعدة:", error);
     }
   }
 
@@ -321,45 +366,59 @@ export class AlertManager extends EventEmitter {
 
   private getSuppressDuration(severity: string): number {
     switch (severity) {
-      case 'critical': return 30 * 60 * 1000;
-      case 'high': return 60 * 60 * 1000;
-      case 'medium': return 2 * 60 * 60 * 1000;
-      case 'low': return 4 * 60 * 60 * 1000;
-      default: return this.DEFAULT_SUPPRESSION_TIME;
+      case "critical":
+        return 30 * 60 * 1000;
+      case "high":
+        return 60 * 60 * 1000;
+      case "medium":
+        return 2 * 60 * 60 * 1000;
+      case "low":
+        return 4 * 60 * 60 * 1000;
+      default:
+        return this.DEFAULT_SUPPRESSION_TIME;
     }
   }
 
   private getNotificationPriority(severity: string): string {
     switch (severity) {
-      case 'critical': return 'urgent';
-      case 'high': return 'high';
-      case 'medium': return 'normal';
-      case 'low': return 'low';
-      default: return 'normal';
+      case "critical":
+        return "urgent";
+      case "high":
+        return "high";
+      case "medium":
+        return "normal";
+      case "low":
+        return "low";
+      default:
+        return "normal";
     }
   }
 
   private getPriorityFromNumber(priority: number): string {
     switch (priority) {
-      case 1: return 'high';
-      case 2: return 'medium';
-      case 3: return 'low';
-      default: return 'medium';
+      case 1:
+        return "high";
+      case 2:
+        return "medium";
+      case 3:
+        return "low";
+      default:
+        return "medium";
     }
   }
 
   private getAlertIcon(type: string): string {
     const icons = {
-      system: '⚙️',
-      production: '🏭',
-      quality: '✅',
-      inventory: '📦',
-      maintenance: '🔧',
-      security: '🔒',
-      database: '💾',
-      performance: '📊'
+      system: "⚙️",
+      production: "🏭",
+      quality: "✅",
+      inventory: "📦",
+      maintenance: "🔧",
+      security: "🔒",
+      database: "💾",
+      performance: "📊",
     };
-    return icons[type as keyof typeof icons] || '🚨';
+    return icons[type as keyof typeof icons] || "🚨";
   }
 
   async getAlertStatistics(): Promise<{
@@ -386,17 +445,20 @@ export class AlertManager extends EventEmitter {
         critical_alerts: criticalAlerts,
         resolved_today: 0,
         by_type: byType,
-        by_severity: bySeverity
+        by_severity: bySeverity,
       };
     } catch (error) {
-      console.error('[AlertManager] خطأ في الحصول على إحصائيات التحذيرات:', error);
+      console.error(
+        "[AlertManager] خطأ في الحصول على إحصائيات التحذيرات:",
+        error,
+      );
       return {
         total_alerts: 0,
         active_alerts: 0,
         critical_alerts: 0,
         resolved_today: 0,
         by_type: {},
-        by_severity: {}
+        by_severity: {},
       };
     }
   }
@@ -405,9 +467,9 @@ export class AlertManager extends EventEmitter {
     try {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-      console.log('[AlertManager] تم تنظيف التحذيرات القديمة');
+      console.log("[AlertManager] تم تنظيف التحذيرات القديمة");
     } catch (error) {
-      console.error('[AlertManager] خطأ في تنظيف التحذيرات القديمة:', error);
+      console.error("[AlertManager] خطأ في تنظيف التحذيرات القديمة:", error);
     }
   }
 
@@ -416,9 +478,9 @@ export class AlertManager extends EventEmitter {
       this.alertRules.clear();
       this.activeAlerts.clear();
       this.suppressedAlerts.clear();
-      console.log('[AlertManager] تم إيقاف نظام إدارة التحذيرات');
+      console.log("[AlertManager] تم إيقاف نظام إدارة التحذيرات");
     } catch (error) {
-      console.error('[AlertManager] خطأ في إيقاف نظام إدارة التحذيرات:', error);
+      console.error("[AlertManager] خطأ في إيقاف نظام إدارة التحذيرات:", error);
     }
   }
 }

@@ -4,7 +4,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Button } from "../ui/button";
 import { Dialog, DialogTrigger } from "../ui/dialog";
 import { Alert, AlertDescription } from "../ui/alert";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 import { Plus, Trash2, RefreshCw, ChevronDown } from "lucide-react";
 import OrdersSearch from "./OrdersSearch";
 import OrdersTable from "./OrdersTable";
@@ -63,12 +68,11 @@ export default function OrdersTabs({
   onBulkDelete,
   onBulkStatusChange,
   currentUser,
-  isAdmin = false
+  isAdmin = false,
 }: OrdersTabsProps) {
-  
   // Bulk selection state
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
-  
+
   const handleCloseOrderDialog = () => {
     setIsOrderDialogOpen(false);
   };
@@ -76,9 +80,9 @@ export default function OrdersTabs({
   // Bulk selection handlers
   const handleOrderSelect = (orderId: number, selected: boolean) => {
     if (selected) {
-      setSelectedOrders(prev => [...prev, orderId]);
+      setSelectedOrders((prev) => [...prev, orderId]);
     } else {
-      setSelectedOrders(prev => prev.filter(id => id !== orderId));
+      setSelectedOrders((prev) => prev.filter((id) => id !== orderId));
     }
   };
 
@@ -92,10 +96,10 @@ export default function OrdersTabs({
 
   const handleBulkDelete = async () => {
     if (!onBulkDelete || selectedOrders.length === 0 || !isAdmin) return;
-    
+
     const confirmMessage = `هل أنت متأكد من حذف ${selectedOrders.length} طلب؟ هذا الإجراء لا يمكن التراجع عنه.`;
     if (!confirm(confirmMessage)) return;
-    
+
     try {
       await onBulkDelete(selectedOrders);
       setSelectedOrders([]);
@@ -106,7 +110,7 @@ export default function OrdersTabs({
 
   const handleBulkStatusChange = async (status: string) => {
     if (!onBulkStatusChange || selectedOrders.length === 0) return;
-    
+
     try {
       await onBulkStatusChange(selectedOrders, status);
       setSelectedOrders([]);
@@ -134,7 +138,10 @@ export default function OrdersTabs({
                   statusFilter={statusFilter}
                   setStatusFilter={setStatusFilter}
                 />
-                <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+                <Dialog
+                  open={isOrderDialogOpen}
+                  onOpenChange={setIsOrderDialogOpen}
+                >
                   <DialogTrigger asChild>
                     <Button onClick={onAddOrder} data-testid="button-add-order">
                       <Plus className="h-4 w-4 mr-2" />
@@ -169,25 +176,35 @@ export default function OrdersTabs({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => handleBulkStatusChange('for_production')}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleBulkStatusChange("for_production")
+                            }
+                          >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                               إلى الإنتاج
                             </div>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleBulkStatusChange('on_hold')}>
+                          <DropdownMenuItem
+                            onClick={() => handleBulkStatusChange("on_hold")}
+                          >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
                               إيقاف مؤقت
                             </div>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleBulkStatusChange('pending')}>
+                          <DropdownMenuItem
+                            onClick={() => handleBulkStatusChange("pending")}
+                          >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                               في الانتظار
                             </div>
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleBulkStatusChange('completed')}>
+                          <DropdownMenuItem
+                            onClick={() => handleBulkStatusChange("completed")}
+                          >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                               مكتمل
@@ -237,7 +254,7 @@ export default function OrdersTabs({
             />
           </CardContent>
         </Card>
-        
+
         {/* Orders Form Dialog */}
         <OrdersForm
           isOpen={isOrderDialogOpen}

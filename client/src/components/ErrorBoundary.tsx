@@ -1,12 +1,19 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { Button } from './ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './ui/card';
-import { Alert, AlertDescription, AlertTitle } from './ui/alert';
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { Button } from "./ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
 interface Props {
   children: ReactNode;
-  fallback?: 'page' | 'component' | 'inline';
+  fallback?: "page" | "component" | "inline";
   title?: string;
   description?: string;
   showReload?: boolean;
@@ -30,17 +37,17 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Call custom error handler if provided
     this.props.onError?.(error, errorInfo);
 
     // Log to production error tracking service if available
-    if (import.meta.env.PROD && typeof window !== 'undefined') {
+    if (import.meta.env.PROD && typeof window !== "undefined") {
       // In production, you might want to send to an error tracking service
       // window.gtag?.('event', 'exception', {
       //   description: error.message,
@@ -59,14 +66,20 @@ class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      const fallback = this.props.fallback || 'page';
-      const title = this.props.title || 'حدث خطأ غير متوقع';
-      const description = this.props.description || 'عذراً، حدث خطأ في التطبيق. يرجى المحاولة مرة أخرى.';
+      const fallback = this.props.fallback || "page";
+      const title = this.props.title || "حدث خطأ غير متوقع";
+      const description =
+        this.props.description ||
+        "عذراً، حدث خطأ في التطبيق. يرجى المحاولة مرة أخرى.";
 
       // Inline error display for small components
-      if (fallback === 'inline') {
+      if (fallback === "inline") {
         return (
-          <Alert variant="destructive" className="my-2" data-testid="error-inline">
+          <Alert
+            variant="destructive"
+            className="my-2"
+            data-testid="error-inline"
+          >
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>خطأ</AlertTitle>
             <AlertDescription>
@@ -87,7 +100,7 @@ class ErrorBoundary extends Component<Props, State> {
       }
 
       // Component-level error display
-      if (fallback === 'component') {
+      if (fallback === "component") {
         return (
           <Card className="w-full" data-testid="error-component">
             <CardContent className="p-4">
@@ -95,22 +108,35 @@ class ErrorBoundary extends Component<Props, State> {
                 <AlertTriangle className="h-5 w-5 text-destructive" />
                 <h3 className="font-medium text-destructive">{title}</h3>
               </div>
-              <p className="text-sm text-muted-foreground mb-3">{description}</p>
+              <p className="text-sm text-muted-foreground mb-3">
+                {description}
+              </p>
               {import.meta.env.DEV && this.state.error && (
                 <details className="mb-3 text-xs">
-                  <summary className="cursor-pointer text-muted-foreground">تفاصيل الخطأ</summary>
+                  <summary className="cursor-pointer text-muted-foreground">
+                    تفاصيل الخطأ
+                  </summary>
                   <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
                     {this.state.error.message}
                   </pre>
                 </details>
               )}
               <div className="flex gap-2">
-                <Button onClick={this.handleReset} variant="outline" size="sm" data-testid="button-retry-component">
+                <Button
+                  onClick={this.handleReset}
+                  variant="outline"
+                  size="sm"
+                  data-testid="button-retry-component"
+                >
                   <RefreshCw className="h-4 w-4 ml-1" />
                   إعادة المحاولة
                 </Button>
                 {this.props.showReload && (
-                  <Button onClick={this.handleReload} size="sm" data-testid="button-reload-component">
+                  <Button
+                    onClick={this.handleReload}
+                    size="sm"
+                    data-testid="button-reload-component"
+                  >
                     <Home className="h-4 w-4 ml-1" />
                     العودة للرئيسية
                   </Button>
@@ -123,7 +149,10 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Full page error display (default)
       return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-background" data-testid="error-page">
+        <div
+          className="min-h-screen flex items-center justify-center p-4 bg-background"
+          data-testid="error-page"
+        >
           <Card className="w-full max-w-lg">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -135,11 +164,17 @@ class ErrorBoundary extends Component<Props, State> {
             <CardContent>
               {import.meta.env.DEV && this.state.error && (
                 <div className="mt-4 p-3 bg-muted rounded-md text-sm">
-                  <p className="font-semibold text-destructive mb-2">تفاصيل الخطأ:</p>
-                  <code className="text-xs break-all">{this.state.error.message}</code>
+                  <p className="font-semibold text-destructive mb-2">
+                    تفاصيل الخطأ:
+                  </p>
+                  <code className="text-xs break-all">
+                    {this.state.error.message}
+                  </code>
                   {this.state.errorInfo && (
                     <details className="mt-2 text-xs">
-                      <summary className="cursor-pointer">معلومات إضافية</summary>
+                      <summary className="cursor-pointer">
+                        معلومات إضافية
+                      </summary>
                       <pre className="mt-1 whitespace-pre-wrap text-xs">
                         {this.state.errorInfo.componentStack}
                       </pre>
@@ -149,11 +184,18 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             </CardContent>
             <CardFooter className="flex gap-2 justify-center">
-              <Button onClick={this.handleReset} variant="outline" data-testid="button-retry-page">
+              <Button
+                onClick={this.handleReset}
+                variant="outline"
+                data-testid="button-retry-page"
+              >
                 <RefreshCw className="w-4 h-4 ml-2" />
                 إعادة المحاولة
               </Button>
-              <Button onClick={this.handleReload} data-testid="button-reload-page">
+              <Button
+                onClick={this.handleReload}
+                data-testid="button-reload-page"
+              >
                 إعادة تحميل الصفحة
               </Button>
             </CardFooter>

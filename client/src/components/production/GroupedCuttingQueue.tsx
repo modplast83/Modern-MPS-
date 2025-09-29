@@ -3,11 +3,36 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "../ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../ui/collapsible";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
 import { Input } from "../ui/input";
-import { QrCode, Scissors, ChevronDown, ChevronUp, Clock, Package } from "lucide-react";
+import {
+  QrCode,
+  Scissors,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Package,
+} from "lucide-react";
 import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -15,8 +40,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 const cutFormSchema = z.object({
-  cut_weight_kg: z.coerce.number().positive("الوزن الصافي يجب أن يكون أكبر من صفر"),
-  pieces_count: z.coerce.number().positive("عدد القطع يجب أن يكون أكبر من صفر").optional()
+  cut_weight_kg: z.coerce
+    .number()
+    .positive("الوزن الصافي يجب أن يكون أكبر من صفر"),
+  pieces_count: z.coerce
+    .number()
+    .positive("عدد القطع يجب أن يكون أكبر من صفر")
+    .optional(),
 });
 
 type CutFormData = z.infer<typeof cutFormSchema>;
@@ -25,11 +55,17 @@ interface GroupedCuttingQueueProps {
   items: any[];
 }
 
-export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps) {
+export default function GroupedCuttingQueue({
+  items,
+}: GroupedCuttingQueueProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>({});
-  const [expandedProductionOrders, setExpandedProductionOrders] = useState<Record<number, boolean>>({});
+  const [expandedOrders, setExpandedOrders] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [expandedProductionOrders, setExpandedProductionOrders] = useState<
+    Record<number, boolean>
+  >({});
   const [selectedRoll, setSelectedRoll] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -37,33 +73,41 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
     resolver: zodResolver(cutFormSchema),
     defaultValues: {
       cut_weight_kg: 0,
-      pieces_count: 1
-    }
+      pieces_count: 1,
+    },
   });
 
   const cutMutation = useMutation({
-    mutationFn: async (data: { roll_id: number; cut_weight_kg: number; pieces_count?: number }) => {
-      const response = await fetch('/api/cuts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+    mutationFn: async (data: {
+      roll_id: number;
+      cut_weight_kg: number;
+      pieces_count?: number;
+    }) => {
+      const response = await fetch("/api/cuts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'فشل في تسجيل التقطيع');
+        throw new Error(error.message || "فشل في تسجيل التقطيع");
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
       toast({
         title: "تم بنجاح",
-        description: "تم تسجيل التقطيع وحساب الهدر"
+        description: "تم تسجيل التقطيع وحساب الهدر",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/grouped-cutting-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/production/cutting-queue'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/rolls'] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/grouped-cutting-queue"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/production/cutting-queue"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       setDialogOpen(false);
       setSelectedRoll(null);
       form.reset();
@@ -72,38 +116,38 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
       toast({
         title: "خطأ",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const handleCutSubmit = (data: CutFormData) => {
     if (!selectedRoll) return;
-    
+
     cutMutation.mutate({
       roll_id: selectedRoll.id,
       cut_weight_kg: data.cut_weight_kg,
-      pieces_count: data.pieces_count
+      pieces_count: data.pieces_count,
     });
   };
 
   const openCutDialog = (roll: any) => {
     setSelectedRoll(roll);
-    form.setValue('cut_weight_kg', parseFloat(roll.weight_kg) || 0);
+    form.setValue("cut_weight_kg", parseFloat(roll.weight_kg) || 0);
     setDialogOpen(true);
   };
 
   const toggleOrderExpansion = (orderId: number) => {
-    setExpandedOrders(prev => ({
+    setExpandedOrders((prev) => ({
       ...prev,
-      [orderId]: !prev[orderId]
+      [orderId]: !prev[orderId],
     }));
   };
 
   const toggleProductionOrderExpansion = (productionOrderId: number) => {
-    setExpandedProductionOrders(prev => ({
+    setExpandedProductionOrders((prev) => ({
       ...prev,
-      [productionOrderId]: !prev[productionOrderId]
+      [productionOrderId]: !prev[productionOrderId],
     }));
   };
 
@@ -113,11 +157,12 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
 
   // Helper function to calculate completion percentage for cutting stage
   const calculateOrderProgress = (order: any) => {
-    if (!order.production_orders || order.production_orders.length === 0) return 0;
-    
+    if (!order.production_orders || order.production_orders.length === 0)
+      return 0;
+
     let totalRolls = 0;
     let cutRolls = 0;
-    
+
     order.production_orders.forEach((po: any) => {
       if (po.rolls && po.rolls.length > 0) {
         totalRolls += po.rolls.length;
@@ -125,17 +170,17 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
         // cutRolls += po.rolls.filter((roll: any) => roll.cut_weight_total_kg > 0).length;
       }
     });
-    
+
     return totalRolls > 0 ? Math.round((cutRolls / totalRolls) * 100) : 0;
   };
 
   const calculateProductionOrderProgress = (productionOrder: any) => {
     if (!productionOrder.rolls || productionOrder.rolls.length === 0) return 0;
-    
+
     const totalRolls = productionOrder.rolls.length;
     // const cutRolls = productionOrder.rolls.filter((roll: any) => roll.cut_weight_total_kg > 0).length;
     const cutRolls = 0; // All rolls in cutting queue are pending cutting
-    
+
     return Math.round((cutRolls / totalRolls) * 100);
   };
 
@@ -165,20 +210,31 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                     طلب رقم: {order.order_number}
                   </CardTitle>
                   <p className="text-base font-bold text-blue-700">
-                    العميل: {order.customer_name_ar || order.customer_name || "غير محدد"}
+                    العميل:{" "}
+                    {order.customer_name_ar ||
+                      order.customer_name ||
+                      "غير محدد"}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-sm text-muted-foreground">
                   <div className="w-20">
-                    <Progress value={calculateOrderProgress(order)} className="h-2" />
-                    <span className="text-xs">{calculateOrderProgress(order)}%</span>
+                    <Progress
+                      value={calculateOrderProgress(order)}
+                      className="h-2"
+                    />
+                    <span className="text-xs">
+                      {calculateOrderProgress(order)}%
+                    </span>
                   </div>
                 </div>
                 <Badge variant="outline">
-                  {order.production_orders?.reduce((total: number, po: any) => 
-                    total + (po.rolls?.length || 0), 0) || 0} رول
+                  {order.production_orders?.reduce(
+                    (total: number, po: any) => total + (po.rolls?.length || 0),
+                    0,
+                  ) || 0}{" "}
+                  رول
                 </Badge>
                 <Button
                   variant="ghost"
@@ -201,7 +257,10 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
               <CardContent className="pt-0">
                 <div className="space-y-4">
                   {order.production_orders?.map((productionOrder: any) => (
-                    <Card key={productionOrder.id} className="bg-gray-50 border-l-2 border-l-green-400">
+                    <Card
+                      key={productionOrder.id}
+                      className="bg-gray-50 border-l-2 border-l-green-400"
+                    >
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div>
@@ -209,25 +268,33 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                               {productionOrder.production_order_number}
                             </h4>
                             <p className="text-sm text-muted-foreground">
-                              {productionOrder.item_name_ar || productionOrder.item_name || "غير محدد"}
+                              {productionOrder.item_name_ar ||
+                                productionOrder.item_name ||
+                                "غير محدد"}
                             </p>
                             <div className="grid grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
                               {productionOrder.size_caption && (
                                 <div>
                                   <span className="font-medium">المقاس: </span>
-                                  <span className="text-muted-foreground">{productionOrder.size_caption}</span>
+                                  <span className="text-muted-foreground">
+                                    {productionOrder.size_caption}
+                                  </span>
                                 </div>
                               )}
                               {productionOrder.thickness && (
                                 <div>
                                   <span className="font-medium">السماكة: </span>
-                                  <span className="text-muted-foreground">{productionOrder.thickness}</span>
+                                  <span className="text-muted-foreground">
+                                    {productionOrder.thickness}
+                                  </span>
                                 </div>
                               )}
                               {productionOrder.raw_material && (
                                 <div>
                                   <span className="font-medium">الخامة: </span>
-                                  <span className="text-muted-foreground">{productionOrder.raw_material}</span>
+                                  <span className="text-muted-foreground">
+                                    {productionOrder.raw_material}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -235,8 +302,18 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                           <div className="flex items-center gap-3">
                             <div className="text-sm text-muted-foreground">
                               <div className="w-16">
-                                <Progress value={calculateProductionOrderProgress(productionOrder)} className="h-2" />
-                                <span className="text-xs">{calculateProductionOrderProgress(productionOrder)}%</span>
+                                <Progress
+                                  value={calculateProductionOrderProgress(
+                                    productionOrder,
+                                  )}
+                                  className="h-2"
+                                />
+                                <span className="text-xs">
+                                  {calculateProductionOrderProgress(
+                                    productionOrder,
+                                  )}
+                                  %
+                                </span>
                               </div>
                             </div>
                             <Badge variant="secondary">
@@ -245,7 +322,11 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => toggleProductionOrderExpansion(productionOrder.id)}
+                              onClick={() =>
+                                toggleProductionOrderExpansion(
+                                  productionOrder.id,
+                                )
+                              }
                               data-testid={`button-expand-production-${productionOrder.id}`}
                             >
                               {expandedProductionOrders[productionOrder.id] ? (
@@ -258,7 +339,9 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                         </div>
                       </CardHeader>
 
-                      <Collapsible open={expandedProductionOrders[productionOrder.id]}>
+                      <Collapsible
+                        open={expandedProductionOrders[productionOrder.id]}
+                      >
                         <CollapsibleContent>
                           <CardContent className="pt-0">
                             <div className="space-y-3">
@@ -270,26 +353,41 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                                         <QrCode className="h-5 w-5 text-gray-400" />
                                         <div>
                                           <p className="font-medium text-sm">
-                                            رول {roll.roll_seq}: {roll.roll_number}
+                                            رول {roll.roll_seq}:{" "}
+                                            {roll.roll_number}
                                           </p>
                                           <p className="text-xs text-gray-500">
-                                            الوزن: {parseFloat(roll.weight_kg || 0).toFixed(2)} كجم
+                                            الوزن:{" "}
+                                            {parseFloat(
+                                              roll.weight_kg || 0,
+                                            ).toFixed(2)}{" "}
+                                            كجم
                                           </p>
                                           {roll.cut_weight_total_kg > 0 && (
                                             <div className="text-xs space-y-1 mt-1">
                                               <p className="text-green-600">
-                                                الوزن الصافي: {parseFloat(roll.cut_weight_total_kg).toFixed(2)} كجم
+                                                الوزن الصافي:{" "}
+                                                {parseFloat(
+                                                  roll.cut_weight_total_kg,
+                                                ).toFixed(2)}{" "}
+                                                كجم
                                               </p>
                                               <p className="text-red-600">
-                                                الهدر: {parseFloat(roll.waste_kg).toFixed(2)} كجم
+                                                الهدر:{" "}
+                                                {parseFloat(
+                                                  roll.waste_kg,
+                                                ).toFixed(2)}{" "}
+                                                كجم
                                               </p>
                                             </div>
                                           )}
                                         </div>
                                       </div>
-                                      
+
                                       <div className="flex items-center space-x-2 space-x-reverse">
-                                        <Badge variant="outline">جاهز للتقطيع</Badge>
+                                        <Badge variant="outline">
+                                          جاهز للتقطيع
+                                        </Badge>
                                         <Button
                                           onClick={() => openCutDialog(roll)}
                                           disabled={cutMutation.isPending}
@@ -326,18 +424,22 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
               إدخال بيانات تقطيع الرول وتحديد الكميات المطلوبة
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedRoll && (
             <div className="space-y-4">
               <div className="p-3 bg-gray-50 rounded-lg">
                 <p className="font-medium">{selectedRoll.roll_number}</p>
                 <p className="text-sm text-gray-500">
-                  الوزن الأصلي: {parseFloat(selectedRoll.weight_kg || 0).toFixed(2)} كجم
+                  الوزن الأصلي:{" "}
+                  {parseFloat(selectedRoll.weight_kg || 0).toFixed(2)} كجم
                 </p>
               </div>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleCutSubmit)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(handleCutSubmit)}
+                  className="space-y-4"
+                >
                   <FormField
                     control={form.control}
                     name="cut_weight_kg"
@@ -345,9 +447,9 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                       <FormItem>
                         <FormLabel>الوزن الصافي المقطع (كجم)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            step="0.01" 
+                          <Input
+                            type="number"
+                            step="0.01"
                             placeholder="أدخل الوزن الصافي"
                             {...field}
                             data-testid="input-cut-weight"
@@ -365,8 +467,8 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                       <FormItem>
                         <FormLabel>عدد القطع (اختياري)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             placeholder="أدخل عدد القطع"
                             {...field}
                             data-testid="input-pieces-count"
@@ -377,12 +479,25 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                     )}
                   />
 
-                  {form.watch('cut_weight_kg') > 0 && selectedRoll && (
+                  {form.watch("cut_weight_kg") > 0 && selectedRoll && (
                     <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                       <p className="text-sm">
                         <span className="font-medium">الهدر المحسوب: </span>
-                        <span className={calculateWaste(parseFloat(selectedRoll.weight_kg), form.watch('cut_weight_kg')) > 0 ? 'text-red-600' : 'text-green-600'}>
-                          {calculateWaste(parseFloat(selectedRoll.weight_kg), form.watch('cut_weight_kg')).toFixed(2)} كجم
+                        <span
+                          className={
+                            calculateWaste(
+                              parseFloat(selectedRoll.weight_kg),
+                              form.watch("cut_weight_kg"),
+                            ) > 0
+                              ? "text-red-600"
+                              : "text-green-600"
+                          }
+                        >
+                          {calculateWaste(
+                            parseFloat(selectedRoll.weight_kg),
+                            form.watch("cut_weight_kg"),
+                          ).toFixed(2)}{" "}
+                          كجم
                         </span>
                       </p>
                     </div>
@@ -402,7 +517,9 @@ export default function GroupedCuttingQueue({ items }: GroupedCuttingQueueProps)
                       disabled={cutMutation.isPending}
                       data-testid="button-confirm-cut"
                     >
-                      {cutMutation.isPending ? "جاري التقطيع..." : "تأكيد التقطيع"}
+                      {cutMutation.isPending
+                        ? "جاري التقطيع..."
+                        : "تأكيد التقطيع"}
                     </Button>
                   </div>
                 </form>

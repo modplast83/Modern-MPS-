@@ -4,7 +4,14 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "./ui/table";
 import { Badge } from "./ui/badge";
 import { Checkbox } from "./ui/checkbox";
 import { useToast } from "../hooks/use-toast";
@@ -15,13 +22,13 @@ import { Plus, Edit, Trash2, Shield, Check, X } from "lucide-react";
 export default function RoleManagementTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [newRole, setNewRole] = useState({
     name: "",
     name_ar: "",
-    permissions: [] as string[]
+    permissions: [] as string[],
   });
-  
+
   const [editingRole, setEditingRole] = useState<any | null>(null);
 
   // Available permissions list
@@ -33,27 +40,31 @@ export default function RoleManagementTab() {
     { id: "manage_quality", name: "إدارة الجودة", category: "الجودة" },
     { id: "manage_inventory", name: "إدارة المخزون", category: "المخزون" },
     { id: "manage_users", name: "إدارة المستخدمين", category: "المستخدمين" },
-    { id: "manage_hr", name: "إدارة الموارد البشرية", category: "الموارد البشرية" },
+    {
+      id: "manage_hr",
+      name: "إدارة الموارد البشرية",
+      category: "الموارد البشرية",
+    },
     { id: "view_reports", name: "عرض التقارير", category: "التقارير" },
     { id: "manage_settings", name: "إدارة الإعدادات", category: "النظام" },
-    { id: "manage_definitions", name: "إدارة التعريفات", category: "النظام" }
+    { id: "manage_definitions", name: "إدارة التعريفات", category: "النظام" },
   ];
 
   // Fetch roles
   const { data: roles = [], isLoading } = useQuery<any[]>({
-    queryKey: ['/api/roles']
+    queryKey: ["/api/roles"],
   });
 
   // Create role mutation
   const createRoleMutation = useMutation({
     mutationFn: async (roleData: any) => {
-      return await apiRequest('/api/roles', {
-        method: 'POST',
-        body: JSON.stringify(roleData)
+      return await apiRequest("/api/roles", {
+        method: "POST",
+        body: JSON.stringify(roleData),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       setNewRole({ name: "", name_ar: "", permissions: [] });
       toast({
         title: "تم إنشاء الدور بنجاح",
@@ -66,19 +77,19 @@ export default function RoleManagementTab() {
         description: "حدث خطأ أثناء إنشاء الدور",
         variant: "destructive",
       });
-    }
+    },
   });
 
   // Update role mutation
   const updateRoleMutation = useMutation({
     mutationFn: async ({ id, roleData }: { id: number; roleData: any }) => {
       return await apiRequest(`/api/roles/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(roleData)
+        method: "PUT",
+        body: JSON.stringify(roleData),
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       setEditingRole(null);
       toast({
         title: "تم تحديث الدور بنجاح",
@@ -91,18 +102,18 @@ export default function RoleManagementTab() {
         description: "حدث خطأ أثناء تحديث الدور",
         variant: "destructive",
       });
-    }
+    },
   });
 
   // Delete role mutation
   const deleteRoleMutation = useMutation({
     mutationFn: async (id: number) => {
       return await apiRequest(`/api/roles/${id}`, {
-        method: 'DELETE'
+        method: "DELETE",
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/roles'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/roles"] });
       toast({
         title: "تم حذف الدور بنجاح",
         description: "تم إزالة الدور من النظام",
@@ -114,7 +125,7 @@ export default function RoleManagementTab() {
         description: "حدث خطأ أثناء حذف الدور",
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleCreateRole = () => {
@@ -134,25 +145,29 @@ export default function RoleManagementTab() {
     if (editingRole) {
       updateRoleMutation.mutate({
         id: editingRole.id,
-        roleData: editingRole
+        roleData: editingRole,
       });
     }
   };
 
-  const handlePermissionChange = (permissionId: string, checked: boolean, isEditing = false) => {
+  const handlePermissionChange = (
+    permissionId: string,
+    checked: boolean,
+    isEditing = false,
+  ) => {
     if (isEditing && editingRole) {
       setEditingRole({
         ...editingRole,
-        permissions: checked 
+        permissions: checked
           ? [...editingRole.permissions, permissionId]
-          : editingRole.permissions.filter((p: string) => p !== permissionId)
+          : editingRole.permissions.filter((p: string) => p !== permissionId),
       });
     } else {
       setNewRole({
         ...newRole,
-        permissions: checked 
+        permissions: checked
           ? [...newRole.permissions, permissionId]
-          : newRole.permissions.filter(p => p !== permissionId)
+          : newRole.permissions.filter((p) => p !== permissionId),
       });
     }
   };
@@ -178,7 +193,9 @@ export default function RoleManagementTab() {
               <Input
                 id="roleName"
                 value={newRole.name}
-                onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                onChange={(e) =>
+                  setNewRole({ ...newRole, name: e.target.value })
+                }
                 placeholder="admin, manager, operator..."
               />
             </div>
@@ -187,7 +204,9 @@ export default function RoleManagementTab() {
               <Input
                 id="roleNameAr"
                 value={newRole.name_ar}
-                onChange={(e) => setNewRole({ ...newRole, name_ar: e.target.value })}
+                onChange={(e) =>
+                  setNewRole({ ...newRole, name_ar: e.target.value })
+                }
                 placeholder="مدير، مشرف، مشغل..."
               />
             </div>
@@ -197,11 +216,14 @@ export default function RoleManagementTab() {
             <Label>الصلاحيات</Label>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availablePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-center space-x-2 space-x-reverse">
+                <div
+                  key={permission.id}
+                  className="flex items-center space-x-2 space-x-reverse"
+                >
                   <Checkbox
                     id={`new-${permission.id}`}
                     checked={newRole.permissions.includes(permission.id)}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       handlePermissionChange(permission.id, checked as boolean)
                     }
                   />
@@ -265,7 +287,12 @@ export default function RoleManagementTab() {
                     {editingRole?.id === role.id ? (
                       <Input
                         value={editingRole.name}
-                        onChange={(e) => setEditingRole({ ...editingRole, name: e.target.value })}
+                        onChange={(e) =>
+                          setEditingRole({
+                            ...editingRole,
+                            name: e.target.value,
+                          })
+                        }
                         className="max-w-[150px]"
                       />
                     ) : (
@@ -276,7 +303,12 @@ export default function RoleManagementTab() {
                     {editingRole?.id === role.id ? (
                       <Input
                         value={editingRole.name_ar}
-                        onChange={(e) => setEditingRole({ ...editingRole, name_ar: e.target.value })}
+                        onChange={(e) =>
+                          setEditingRole({
+                            ...editingRole,
+                            name_ar: e.target.value,
+                          })
+                        }
                         className="max-w-[150px]"
                       />
                     ) : (
@@ -290,27 +322,39 @@ export default function RoleManagementTab() {
                           الصلاحيات المتاحة:
                         </div>
                         <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
-                          {availablePermissions.slice(0, 6).map((permission) => (
-                            <div key={permission.id} className="flex items-center space-x-2 space-x-reverse text-xs">
-                              <Checkbox
-                                id={`table-edit-${permission.id}`}
-                                checked={editingRole.permissions?.includes(permission.id)}
-                                onCheckedChange={(checked) => 
-                                  handlePermissionChange(permission.id, checked as boolean, true)
-                                }
-                                className="w-3 h-3"
-                              />
-                              <label
-                                htmlFor={`table-edit-${permission.id}`}
-                                className="text-xs leading-none cursor-pointer"
+                          {availablePermissions
+                            .slice(0, 6)
+                            .map((permission) => (
+                              <div
+                                key={permission.id}
+                                className="flex items-center space-x-2 space-x-reverse text-xs"
                               >
-                                {permission.name}
-                              </label>
-                            </div>
-                          ))}
+                                <Checkbox
+                                  id={`table-edit-${permission.id}`}
+                                  checked={editingRole.permissions?.includes(
+                                    permission.id,
+                                  )}
+                                  onCheckedChange={(checked) =>
+                                    handlePermissionChange(
+                                      permission.id,
+                                      checked as boolean,
+                                      true,
+                                    )
+                                  }
+                                  className="w-3 h-3"
+                                />
+                                <label
+                                  htmlFor={`table-edit-${permission.id}`}
+                                  className="text-xs leading-none cursor-pointer"
+                                >
+                                  {permission.name}
+                                </label>
+                              </div>
+                            ))}
                           {availablePermissions.length > 6 && (
                             <div className="text-xs text-muted-foreground">
-                              و {availablePermissions.length - 6} صلاحيات أخرى...
+                              و {availablePermissions.length - 6} صلاحيات
+                              أخرى...
                             </div>
                           )}
                         </div>
@@ -329,17 +373,22 @@ export default function RoleManagementTab() {
                                 title: `صلاحيات الدور: ${role.name_ar}`,
                                 description: (
                                   <div className="space-y-1">
-                                    {role.permissions.slice(0, 5).map((permId: string) => {
-                                      const perm = availablePermissions.find(p => p.id === permId);
-                                      return perm ? (
-                                        <div key={permId} className="text-xs">
-                                          • {perm.name}
-                                        </div>
-                                      ) : null;
-                                    })}
+                                    {role.permissions
+                                      .slice(0, 5)
+                                      .map((permId: string) => {
+                                        const perm = availablePermissions.find(
+                                          (p) => p.id === permId,
+                                        );
+                                        return perm ? (
+                                          <div key={permId} className="text-xs">
+                                            • {perm.name}
+                                          </div>
+                                        ) : null;
+                                      })}
                                     {role.permissions.length > 5 && (
                                       <div className="text-xs text-muted-foreground">
-                                        و {role.permissions.length - 5} صلاحيات أخرى...
+                                        و {role.permissions.length - 5} صلاحيات
+                                        أخرى...
                                       </div>
                                     )}
                                   </div>
@@ -423,18 +472,26 @@ export default function RoleManagementTab() {
               تفاصيل صلاحيات الدور: {editingRole.name_ar}
             </CardTitle>
             <p className="text-sm text-muted-foreground">
-              يمكنك تعديل الصلاحيات الأساسية في الجدول أعلاه، أو استخدام هذا القسم لإدارة جميع الصلاحيات
+              يمكنك تعديل الصلاحيات الأساسية في الجدول أعلاه، أو استخدام هذا
+              القسم لإدارة جميع الصلاحيات
             </p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {availablePermissions.map((permission) => (
-                <div key={permission.id} className="flex items-center space-x-2 space-x-reverse">
+                <div
+                  key={permission.id}
+                  className="flex items-center space-x-2 space-x-reverse"
+                >
                   <Checkbox
                     id={`edit-${permission.id}`}
                     checked={editingRole.permissions?.includes(permission.id)}
-                    onCheckedChange={(checked) => 
-                      handlePermissionChange(permission.id, checked as boolean, true)
+                    onCheckedChange={(checked) =>
+                      handlePermissionChange(
+                        permission.id,
+                        checked as boolean,
+                        true,
+                      )
                     }
                   />
                   <label
@@ -449,7 +506,7 @@ export default function RoleManagementTab() {
                 </div>
               ))}
             </div>
-            
+
             <div className="mt-6 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
                 المجموع: {editingRole.permissions?.length || 0} صلاحية محددة
@@ -458,20 +515,24 @@ export default function RoleManagementTab() {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setEditingRole({
-                    ...editingRole,
-                    permissions: availablePermissions.map(p => p.id)
-                  })}
+                  onClick={() =>
+                    setEditingRole({
+                      ...editingRole,
+                      permissions: availablePermissions.map((p) => p.id),
+                    })
+                  }
                 >
                   تحديد الكل
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setEditingRole({
-                    ...editingRole,
-                    permissions: []
-                  })}
+                  onClick={() =>
+                    setEditingRole({
+                      ...editingRole,
+                      permissions: [],
+                    })
+                  }
                 >
                   إلغاء تحديد الكل
                 </Button>

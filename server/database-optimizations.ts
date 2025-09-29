@@ -1,5 +1,5 @@
-import { db } from './db';
-import { sql } from 'drizzle-orm';
+import { db } from "./db";
+import { sql } from "drizzle-orm";
 
 /**
  * Database optimization utilities to improve query performance
@@ -7,7 +7,7 @@ import { sql } from 'drizzle-orm';
 
 export async function createPerformanceIndexes(): Promise<void> {
   try {
-    console.log('[DB Optimization] Creating performance indexes...');
+    console.log("[DB Optimization] Creating performance indexes...");
 
     // Index for production orders queries (commonly filtered by status and order_id)
     await db.execute(sql`
@@ -63,17 +63,16 @@ export async function createPerformanceIndexes(): Promise<void> {
       ON notifications (status);
     `);
 
-    console.log('[DB Optimization] Performance indexes created successfully');
-
+    console.log("[DB Optimization] Performance indexes created successfully");
   } catch (error) {
-    console.error('[DB Optimization] Error creating indexes:', error);
+    console.error("[DB Optimization] Error creating indexes:", error);
     // Don't throw - indexes might already exist
   }
 }
 
 export async function createTextSearchIndexes(): Promise<void> {
   try {
-    console.log('[DB Optimization] Creating text search indexes...');
+    console.log("[DB Optimization] Creating text search indexes...");
 
     // Enable trigram extension for better text search
     await db.execute(sql`CREATE EXTENSION IF NOT EXISTS pg_trgm;`);
@@ -90,16 +89,18 @@ export async function createTextSearchIndexes(): Promise<void> {
       ON items USING GIN ((name || ' ' || COALESCE(name_ar, '')) gin_trgm_ops);
     `);
 
-    console.log('[DB Optimization] Text search indexes created successfully');
-
+    console.log("[DB Optimization] Text search indexes created successfully");
   } catch (error) {
-    console.error('[DB Optimization] Error creating text search indexes:', error);
+    console.error(
+      "[DB Optimization] Error creating text search indexes:",
+      error,
+    );
   }
 }
 
 export async function optimizeDatabase(): Promise<void> {
   try {
-    console.log('[DB Optimization] Running database optimization...');
+    console.log("[DB Optimization] Running database optimization...");
 
     // Update table statistics
     await db.execute(sql`ANALYZE;`);
@@ -108,11 +109,10 @@ export async function optimizeDatabase(): Promise<void> {
     await db.execute(sql`VACUUM ANALYZE production_orders;`);
     await db.execute(sql`VACUUM ANALYZE rolls;`);
     await db.execute(sql`VACUUM ANALYZE notifications;`);
-    
-    console.log('[DB Optimization] Database optimization completed');
 
+    console.log("[DB Optimization] Database optimization completed");
   } catch (error) {
-    console.error('[DB Optimization] Error optimizing database:', error);
+    console.error("[DB Optimization] Error optimizing database:", error);
   }
 }
 
@@ -143,11 +143,10 @@ export async function getQueryPerformanceStats(): Promise<any> {
 
     return {
       slowQueries: slowQueries.rows || [],
-      tableStats: tableStats.rows || []
+      tableStats: tableStats.rows || [],
     };
-
   } catch (error) {
-    console.error('[DB Optimization] Error getting performance stats:', error);
+    console.error("[DB Optimization] Error getting performance stats:", error);
     return { slowQueries: [], tableStats: [] };
   }
 }

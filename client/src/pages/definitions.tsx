@@ -3,17 +3,58 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "../components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "../components/ui/dialog";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest, queryClient } from "../lib/queryClient";
-import { Building2, Users, Cog, Package, Plus, Edit, Trash2, Printer, Search, Filter, MapPin, Settings, User, Copy, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Building2,
+  Users,
+  Cog,
+  Package,
+  Plus,
+  Edit,
+  Trash2,
+  Printer,
+  Search,
+  Filter,
+  MapPin,
+  Settings,
+  User,
+  Copy,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { formatNumber } from "../lib/formatNumber";
 
 export default function Definitions() {
@@ -28,7 +69,7 @@ export default function Definitions() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickSearch, setQuickSearch] = useState("");
-  
+
   // Pagination states for each tab
   const [currentPages, setCurrentPages] = useState({
     customers: 1,
@@ -38,7 +79,7 @@ export default function Definitions() {
     customerProducts: 1,
     locations: 1,
     machines: 1,
-    users: 1
+    users: 1,
   });
   const itemsPerPage = 25;
 
@@ -56,116 +97,320 @@ export default function Definitions() {
 
   // Helper function to update page for specific tab
   const updatePage = (tab: string, page: number) => {
-    setCurrentPages(prev => ({
+    setCurrentPages((prev) => ({
       ...prev,
-      [tab]: page
+      [tab]: page,
     }));
   };
 
   // Form states
   const [customerForm, setCustomerForm] = useState({
-    name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', 
-    tax_number: '', phone: '', sales_rep_id: ''
+    name: "",
+    name_ar: "",
+    code: "",
+    user_id: "",
+    plate_drawer_code: "",
+    city: "",
+    address: "",
+    tax_number: "",
+    phone: "",
+    sales_rep_id: "",
   });
   const [sectionForm, setSectionForm] = useState({
-    name: '', name_ar: '', description: ''
+    name: "",
+    name_ar: "",
+    description: "",
   });
   const [itemForm, setItemForm] = useState({
-    name: '', name_ar: '', code: '', category_id: 'none', status: 'active'
+    name: "",
+    name_ar: "",
+    code: "",
+    category_id: "none",
+    status: "active",
   });
   const [categoryForm, setCategoryForm] = useState({
-    name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active'
+    name: "",
+    name_ar: "",
+    code: "",
+    parent_id: "none",
+    description: "",
+    status: "active",
   });
   const [customerProductForm, setCustomerProductForm] = useState({
-    customer_id: 'none', 
-    category_id: 'none',
-    item_id: 'none', 
-    size_caption: '', 
-    width: '', 
-    left_facing: '', 
-    right_facing: '', 
-    thickness: '', 
-    printing_cylinder: 'بدون طباعة', 
-    cutting_length_cm: '', 
-    raw_material: '', 
-    master_batch_id: '', 
-    is_printed: false, 
-    cutting_unit: '', 
-    punching: '', 
-    unit_weight_kg: '', 
-    unit_quantity: '', 
-    package_weight_kg: '', 
-    cliche_front_design: '', 
-    cliche_back_design: '', 
-    front_design_filename: '',
-    back_design_filename: '',
-    notes: '', 
-    status: 'active'
+    customer_id: "none",
+    category_id: "none",
+    item_id: "none",
+    size_caption: "",
+    width: "",
+    left_facing: "",
+    right_facing: "",
+    thickness: "",
+    printing_cylinder: "بدون طباعة",
+    cutting_length_cm: "",
+    raw_material: "",
+    master_batch_id: "",
+    is_printed: false,
+    cutting_unit: "",
+    punching: "",
+    unit_weight_kg: "",
+    unit_quantity: "",
+    package_weight_kg: "",
+    cliche_front_design: "",
+    cliche_back_design: "",
+    front_design_filename: "",
+    back_design_filename: "",
+    notes: "",
+    status: "active",
   });
   const [locationForm, setLocationForm] = useState({
-    name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active'
+    name: "",
+    name_ar: "",
+    type: "city",
+    parent_id: "",
+    coordinates: "",
+    status: "active",
   });
   const [machineForm, setMachineForm] = useState({
-    name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active'
+    name: "",
+    name_ar: "",
+    type: "extruder",
+    section_id: "none",
+    status: "active",
   });
   const [userForm, setUserForm] = useState({
-    username: '', display_name: '', display_name_ar: '', role_id: 'none', section_id: 'none', status: 'active'
+    username: "",
+    display_name: "",
+    display_name_ar: "",
+    role_id: "none",
+    section_id: "none",
+    status: "active",
   });
 
- // Master Batch Colors (24 من الكتالوج)
-const masterBatchColors = [
-  { id: 'PT-111111', name: 'White',       name_ar: 'أبيض',        color: '#FFFFFF', textColor: '#000000' },
-  { id: 'PT-000000', name: 'Black',       name_ar: 'أسود',        color: '#000000', textColor: '#FFFFFF' },
-  { id: 'PT-160060', name: 'Terracotta',       name_ar: 'تيراكوتا',         color: '#CC4E3A', textColor: '#FFFFFF' },
-  { id: 'PT-160061', name: 'Coffee Brown',     name_ar: 'بني قهوة',         color: '#4B2E2B', textColor: '#FFFFFF' },
-  { id: 'PT-160055', name: 'Chocolate',        name_ar: 'بني شوكولا',       color: '#7B3F00', textColor: '#FFFFFF' },
-  { id: 'PT-102004', name: 'Dark Silver',      name_ar: 'فضي داكن',         color: '#6E6E6E', textColor: '#000000' },
-  { id: 'PT-101008', name: 'Gold',             name_ar: 'ذهبي',             color: '#D4AF37', textColor: '#000000' },
-  { id: 'PT-150245', name: 'Pistachio Green',  name_ar: 'أخضر فستقي',       color: '#93C572', textColor: '#000000' },
-  { id: 'PT-150086', name: 'Light Green',      name_ar: 'أخضر فاتح',        color: '#90EE90', textColor: '#000000' },
-  { id: 'PT-170028', name: 'Light Grey',       name_ar: 'رمادي فاتح',       color: '#B0B0B0', textColor: '#000000' },
-  { id: 'PT-180361', name: 'Dark Pink',        name_ar: 'وردي داكن',        color: '#D81B60', textColor: '#FFFFFF' },
-  { id: 'PT-180374', name: 'Pastel Pink',      name_ar: 'وردي باستيل',      color: '#FFB6C1', textColor: '#000000' },
-  { id: 'PT-180375', name: 'Baby Pink',        name_ar: 'وردي فاتح',        color: '#F4C2C2', textColor: '#000000' },
-  { id: 'PT-140079', name: 'Light Blue',       name_ar: 'أزرق فاتح',        color: '#66B2FF', textColor: '#000000' },
-  { id: 'PT-140340', name: 'Dark Blue',        name_ar: 'أزرق داكن',        color: '#0033A0', textColor: '#FFFFFF' },
-  { id: 'PT-140352', name: 'Pure Blue',        name_ar: 'أزرق صافي',        color: '#0057FF', textColor: '#FFFFFF' },
-  { id: 'PT-140080', name: 'African Violet',   name_ar: 'بنفسجي أفريقي',    color: '#B284BE', textColor: '#000000' },
-  { id: 'PT-140114', name: 'Royal Purple',     name_ar: 'بنفسجي ملكي',      color: '#613399', textColor: '#FFFFFF' },
-  { id: 'PT-120074', name: 'Dark Ivory',       name_ar: 'عاجي داكن',        color: '#E2DCC8', textColor: '#000000' },
-  { id: 'PT-130232-A', name: 'Sunflower Yellow', name_ar: 'أصفر دوار الشمس', color: '#FFDA03', textColor: '#000000' },
-  { id: 'PT-130112', name: 'Lemon Yellow',     name_ar: 'أصفر ليموني',      color: '#FFF44F', textColor: '#000000' },
-  { id: 'PT-130231', name: 'Yellow',           name_ar: 'أصفر',             color: '#FFD000', textColor: '#000000' },
-  { id: 'PT-130232-B', name: 'Golden Yellow',  name_ar: 'أصفر ذهبي',        color: '#FFC000', textColor: '#000000' },
-  { id: 'PT-180370', name: 'Orange',           name_ar: 'برتقالي 805',      color: '#FF7A00', textColor: '#FFFFFF' },
-  { id: 'PT-180363', name: 'Orange',           name_ar: 'برتقالي 801',      color: '#FF5A1F', textColor: '#FFFFFF' },
-  { id: 'PT-180122', name: 'Tomato Red',       name_ar: 'أحمر طماطمي',       color: '#E53935', textColor: '#FFFFFF' },
-  { id: 'PT-MIX', name: 'MIX',       name_ar: 'مخلوط',        color: '#E2DCC8', textColor: '#000000' },
-  { id: 'PT-CLEAR', name: 'CLEAR',       name_ar: 'شفاف',        color: '#E2DCC8', textColor: '#000000' },
-  
-];
-
+  // Master Batch Colors (24 من الكتالوج)
+  const masterBatchColors = [
+    {
+      id: "PT-111111",
+      name: "White",
+      name_ar: "أبيض",
+      color: "#FFFFFF",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-000000",
+      name: "Black",
+      name_ar: "أسود",
+      color: "#000000",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-160060",
+      name: "Terracotta",
+      name_ar: "تيراكوتا",
+      color: "#CC4E3A",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-160061",
+      name: "Coffee Brown",
+      name_ar: "بني قهوة",
+      color: "#4B2E2B",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-160055",
+      name: "Chocolate",
+      name_ar: "بني شوكولا",
+      color: "#7B3F00",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-102004",
+      name: "Dark Silver",
+      name_ar: "فضي داكن",
+      color: "#6E6E6E",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-101008",
+      name: "Gold",
+      name_ar: "ذهبي",
+      color: "#D4AF37",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-150245",
+      name: "Pistachio Green",
+      name_ar: "أخضر فستقي",
+      color: "#93C572",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-150086",
+      name: "Light Green",
+      name_ar: "أخضر فاتح",
+      color: "#90EE90",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-170028",
+      name: "Light Grey",
+      name_ar: "رمادي فاتح",
+      color: "#B0B0B0",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-180361",
+      name: "Dark Pink",
+      name_ar: "وردي داكن",
+      color: "#D81B60",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-180374",
+      name: "Pastel Pink",
+      name_ar: "وردي باستيل",
+      color: "#FFB6C1",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-180375",
+      name: "Baby Pink",
+      name_ar: "وردي فاتح",
+      color: "#F4C2C2",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-140079",
+      name: "Light Blue",
+      name_ar: "أزرق فاتح",
+      color: "#66B2FF",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-140340",
+      name: "Dark Blue",
+      name_ar: "أزرق داكن",
+      color: "#0033A0",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-140352",
+      name: "Pure Blue",
+      name_ar: "أزرق صافي",
+      color: "#0057FF",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-140080",
+      name: "African Violet",
+      name_ar: "بنفسجي أفريقي",
+      color: "#B284BE",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-140114",
+      name: "Royal Purple",
+      name_ar: "بنفسجي ملكي",
+      color: "#613399",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-120074",
+      name: "Dark Ivory",
+      name_ar: "عاجي داكن",
+      color: "#E2DCC8",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-130232-A",
+      name: "Sunflower Yellow",
+      name_ar: "أصفر دوار الشمس",
+      color: "#FFDA03",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-130112",
+      name: "Lemon Yellow",
+      name_ar: "أصفر ليموني",
+      color: "#FFF44F",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-130231",
+      name: "Yellow",
+      name_ar: "أصفر",
+      color: "#FFD000",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-130232-B",
+      name: "Golden Yellow",
+      name_ar: "أصفر ذهبي",
+      color: "#FFC000",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-180370",
+      name: "Orange",
+      name_ar: "برتقالي 805",
+      color: "#FF7A00",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-180363",
+      name: "Orange",
+      name_ar: "برتقالي 801",
+      color: "#FF5A1F",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-180122",
+      name: "Tomato Red",
+      name_ar: "أحمر طماطمي",
+      color: "#E53935",
+      textColor: "#FFFFFF",
+    },
+    {
+      id: "PT-MIX",
+      name: "MIX",
+      name_ar: "مخلوط",
+      color: "#E2DCC8",
+      textColor: "#000000",
+    },
+    {
+      id: "PT-CLEAR",
+      name: "CLEAR",
+      name_ar: "شفاف",
+      color: "#E2DCC8",
+      textColor: "#000000",
+    },
+  ];
 
   // Generate printing cylinder options
   const printingCylinderOptions = [
-    { value: 'بدون طباعة', label: 'بدون طباعة' },
+    { value: "بدون طباعة", label: "بدون طباعة" },
     ...Array.from({ length: 16 }, (_, i) => {
       const size = (i + 1) * 2 + 6; // 8, 10, 12, ..., 38
       return { value: `${size}"`, label: `${size}"` };
     }),
-    { value: '39"', label: '39"' }
+    { value: '39"', label: '39"' },
   ];
 
   // Automatic calculations
   React.useEffect(() => {
     // Auto-calculate cutting length based on printing cylinder
-    if (customerProductForm.printing_cylinder && customerProductForm.printing_cylinder !== 'بدون طباعة') {
-      const cylinderNumber = parseInt(customerProductForm.printing_cylinder.replace(/\D/g, ''));
+    if (
+      customerProductForm.printing_cylinder &&
+      customerProductForm.printing_cylinder !== "بدون طباعة"
+    ) {
+      const cylinderNumber = parseInt(
+        customerProductForm.printing_cylinder.replace(/\D/g, ""),
+      );
       if (cylinderNumber) {
         const calculatedLength = Math.round(cylinderNumber * 2.54); // Convert inches to cm
-        setCustomerProductForm(prev => ({
+        setCustomerProductForm((prev) => ({
           ...prev,
-          cutting_length_cm: calculatedLength.toString()
+          cutting_length_cm: calculatedLength.toString(),
         }));
       }
     }
@@ -173,7 +418,11 @@ const masterBatchColors = [
 
   // Helper Functions
   const handleDeleteCustomerProduct = (product: any) => {
-    if (window.confirm(`هل أنت متأكد من حذف منتج العميل "${product.size_caption || 'بدون وصف'}"؟`)) {
+    if (
+      window.confirm(
+        `هل أنت متأكد من حذف منتج العميل "${product.size_caption || "بدون وصف"}"؟`,
+      )
+    ) {
       deleteCustomerProductMutation.mutate(product.id);
     }
   };
@@ -181,62 +430,70 @@ const masterBatchColors = [
   const handleCloneCustomerProduct = (product: any) => {
     // Clone product data and reset form with cloned data
     const clonedData = {
-      customer_id: product.customer_id || 'none',
-      category_id: product.category_id || 'none',
-      item_id: product.item_id || 'none',
-      size_caption: `نسخة من ${product.size_caption || ''}`,
-      width: product.width || '',
-      left_facing: product.left_facing || '',
-      right_facing: product.right_facing || '',
-      thickness: product.thickness || '',
-      printing_cylinder: product.printing_cylinder || 'بدون طباعة',
-      cutting_length_cm: product.cutting_length_cm || '',
-      raw_material: product.raw_material || '',
-      master_batch_id: product.master_batch_id || '',
+      customer_id: product.customer_id || "none",
+      category_id: product.category_id || "none",
+      item_id: product.item_id || "none",
+      size_caption: `نسخة من ${product.size_caption || ""}`,
+      width: product.width || "",
+      left_facing: product.left_facing || "",
+      right_facing: product.right_facing || "",
+      thickness: product.thickness || "",
+      printing_cylinder: product.printing_cylinder || "بدون طباعة",
+      cutting_length_cm: product.cutting_length_cm || "",
+      raw_material: product.raw_material || "",
+      master_batch_id: product.master_batch_id || "",
       is_printed: product.is_printed || false,
-      cutting_unit: product.cutting_unit || '',
-      punching: product.punching || '',
-      unit_weight_kg: product.unit_weight_kg || '',
-      unit_quantity: product.unit_quantity || '',
-      package_weight_kg: product.package_weight_kg || '',
-      cliche_front_design: product.cliche_front_design || '',
-      cliche_back_design: product.cliche_back_design || '',
-      notes: product.notes || '',
-      status: 'active'
+      cutting_unit: product.cutting_unit || "",
+      punching: product.punching || "",
+      unit_weight_kg: product.unit_weight_kg || "",
+      unit_quantity: product.unit_quantity || "",
+      package_weight_kg: product.package_weight_kg || "",
+      cliche_front_design: product.cliche_front_design || "",
+      cliche_back_design: product.cliche_back_design || "",
+      notes: product.notes || "",
+      status: "active",
     };
-    
+
     setCustomerProductForm({
       ...clonedData,
-      front_design_filename: '',
-      back_design_filename: ''
+      front_design_filename: "",
+      back_design_filename: "",
     });
     setEditingItem(null); // Ensure it's a new record
-    setSelectedTab('customer-products');
+    setSelectedTab("customer-products");
     setIsDialogOpen(true);
     toast({ title: "تم نسخ بيانات المنتج - يمكنك تعديلها والحفظ" });
   };
 
   const handlePrintCustomerProduct = (product: any) => {
     // Create a detailed print view
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
       toast({ title: "خطأ في فتح نافذة الطباعة", variant: "destructive" });
       return;
     }
 
-    const customerName = Array.isArray(customers) ? 
-      customers.find((c: any) => c.id === product.customer_id)?.name_ar || 
-      customers.find((c: any) => c.id === product.customer_id)?.name || 'غير محدد' : 'غير محدد';
-    
-    const categoryName = Array.isArray(categories) ? 
-      categories.find((c: any) => c.id === product.category_id)?.name_ar || 
-      categories.find((c: any) => c.id === product.category_id)?.name || 'غير محدد' : 'غير محدد';
-    
-    const itemName = Array.isArray(items) ? 
-      items.find((i: any) => i.id === product.item_id)?.name_ar || 
-      items.find((i: any) => i.id === product.item_id)?.name || 'غير محدد' : 'غير محدد';
+    const customerName = Array.isArray(customers)
+      ? customers.find((c: any) => c.id === product.customer_id)?.name_ar ||
+        customers.find((c: any) => c.id === product.customer_id)?.name ||
+        "غير محدد"
+      : "غير محدد";
 
-    const masterBatchColor = masterBatchColors.find(mb => mb.id === product.master_batch_id);
+    const categoryName = Array.isArray(categories)
+      ? categories.find((c: any) => c.id === product.category_id)?.name_ar ||
+        categories.find((c: any) => c.id === product.category_id)?.name ||
+        "غير محدد"
+      : "غير محدد";
+
+    const itemName = Array.isArray(items)
+      ? items.find((i: any) => i.id === product.item_id)?.name_ar ||
+        items.find((i: any) => i.id === product.item_id)?.name ||
+        "غير محدد"
+      : "غير محدد";
+
+    const masterBatchColor = masterBatchColors.find(
+      (mb) => mb.id === product.master_batch_id,
+    );
 
     const printContent = `
     <!DOCTYPE html>
@@ -339,7 +596,7 @@ const masterBatchColors = [
         </div>
         <div class="detail-row">
           <span class="detail-label">وصف المقاس:</span>
-          <span class="detail-value">${product.size_caption || '-'}</span>
+          <span class="detail-value">${product.size_caption || "-"}</span>
         </div>
       </div>
 
@@ -347,23 +604,23 @@ const masterBatchColors = [
         <h3>المقاسات والأبعاد</h3>
         <div class="detail-row">
           <span class="detail-label">العرض (سم):</span>
-          <span class="detail-value">${product.width || '-'}</span>
+          <span class="detail-value">${product.width || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">الوجه الأيسر (سم):</span>
-          <span class="detail-value">${product.left_facing || '-'}</span>
+          <span class="detail-value">${product.left_facing || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">الوجه الأيمن (سم):</span>
-          <span class="detail-value">${product.right_facing || '-'}</span>
+          <span class="detail-value">${product.right_facing || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">السمك (ميكرون):</span>
-          <span class="detail-value">${product.thickness || '-'}</span>
+          <span class="detail-value">${product.thickness || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">طول القطع (سم):</span>
-          <span class="detail-value">${product.cutting_length_cm || '-'}</span>
+          <span class="detail-value">${product.cutting_length_cm || "-"}</span>
         </div>
       </div>
 
@@ -371,28 +628,29 @@ const masterBatchColors = [
         <h3>الطباعة والإنتاج</h3>
         <div class="detail-row">
           <span class="detail-label">اسطوانة الطباعة:</span>
-          <span class="detail-value">${product.printing_cylinder || 'بدون طباعة'}</span>
+          <span class="detail-value">${product.printing_cylinder || "بدون طباعة"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">هل مطبوع:</span>
-          <span class="detail-value">${product.is_printed ? 'نعم' : 'لا'}</span>
+          <span class="detail-value">${product.is_printed ? "نعم" : "لا"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">المادة الخام:</span>
-          <span class="detail-value">${product.raw_material || '-'}</span>
+          <span class="detail-value">${product.raw_material || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">الماستر باتش:</span>
           <span class="detail-value">
-            ${masterBatchColor ? 
-              `<span class="color-box" style="background-color: ${masterBatchColor.color}; ${masterBatchColor.color === 'transparent' ? 'background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;' : ''}"></span>${masterBatchColor.name_ar}` : 
-              (product.master_batch_id || '-')
+            ${
+              masterBatchColor
+                ? `<span class="color-box" style="background-color: ${masterBatchColor.color}; ${masterBatchColor.color === "transparent" ? "background-image: linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%); background-size: 8px 8px; background-position: 0 0, 0 4px, 4px -4px, -4px 0px;" : ""}"></span>${masterBatchColor.name_ar}`
+                : product.master_batch_id || "-"
             }
           </span>
         </div>
         <div class="detail-row">
           <span class="detail-label">التخريم:</span>
-          <span class="detail-value">${product.punching || '-'}</span>
+          <span class="detail-value">${product.punching || "-"}</span>
         </div>
       </div>
 
@@ -400,19 +658,19 @@ const masterBatchColors = [
         <h3>الوزن والكميات</h3>
         <div class="detail-row">
           <span class="detail-label">وحدة القطع:</span>
-          <span class="detail-value">${product.cutting_unit || '-'}</span>
+          <span class="detail-value">${product.cutting_unit || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">وزن الوحدة (كيلو):</span>
-          <span class="detail-value">${product.unit_weight_kg || '-'}</span>
+          <span class="detail-value">${product.unit_weight_kg || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">الكمية لكل وحدة:</span>
-          <span class="detail-value">${product.unit_quantity || '-'}</span>
+          <span class="detail-value">${product.unit_quantity || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">وزن التعبئة (كيلو):</span>
-          <span class="detail-value">${product.package_weight_kg || '-'}</span>
+          <span class="detail-value">${product.package_weight_kg || "-"}</span>
         </div>
       </div>
 
@@ -420,24 +678,24 @@ const masterBatchColors = [
         <h3>التصاميم والملاحظات</h3>
         <div class="detail-row">
           <span class="detail-label">تصميم الواجهة الأمامية:</span>
-          <span class="detail-value">${product.cliche_front_design || '-'}</span>
+          <span class="detail-value">${product.cliche_front_design || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">تصميم الواجهة الخلفية:</span>
-          <span class="detail-value">${product.cliche_back_design || '-'}</span>
+          <span class="detail-value">${product.cliche_back_design || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">ملاحظات:</span>
-          <span class="detail-value">${product.notes || '-'}</span>
+          <span class="detail-value">${product.notes || "-"}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">الحالة:</span>
-          <span class="detail-value">${product.status === 'active' ? 'نشط' : 'غير نشط'}</span>
+          <span class="detail-value">${product.status === "active" ? "نشط" : "غير نشط"}</span>
         </div>
       </div>
 
       <div class="print-date">
-        تم الطباعة بتاريخ: ${new Date().toLocaleDateString('ar')} - ${new Date().toLocaleTimeString('ar')}
+        تم الطباعة بتاريخ: ${new Date().toLocaleDateString("ar")} - ${new Date().toLocaleTimeString("ar")}
       </div>
       
       <script>
@@ -458,31 +716,37 @@ const masterBatchColors = [
 
   // Auto-set printing status based on cylinder selection
   React.useEffect(() => {
-    const isPrinted = customerProductForm.printing_cylinder !== 'بدون طباعة';
-    setCustomerProductForm(prev => ({
+    const isPrinted = customerProductForm.printing_cylinder !== "بدون طباعة";
+    setCustomerProductForm((prev) => ({
       ...prev,
-      is_printed: isPrinted
+      is_printed: isPrinted,
     }));
   }, [customerProductForm.printing_cylinder]);
 
   // Auto-generate size caption
   React.useEffect(() => {
-    const { width, right_facing, left_facing, cutting_length_cm } = customerProductForm;
+    const { width, right_facing, left_facing, cutting_length_cm } =
+      customerProductForm;
     if (width && right_facing && left_facing && cutting_length_cm) {
       const w = parseFloat(width);
       const rf = parseFloat(right_facing);
       const lf = parseFloat(left_facing);
       const cl = parseFloat(cutting_length_cm);
-      
+
       if (w && rf && lf && cl) {
         const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
-        setCustomerProductForm(prev => ({
+        setCustomerProductForm((prev) => ({
           ...prev,
-          size_caption: sizeCaption
+          size_caption: sizeCaption,
         }));
       }
     }
-  }, [customerProductForm.width, customerProductForm.right_facing, customerProductForm.left_facing, customerProductForm.cutting_length_cm]);
+  }, [
+    customerProductForm.width,
+    customerProductForm.right_facing,
+    customerProductForm.left_facing,
+    customerProductForm.cutting_length_cm,
+  ]);
 
   // Auto-calculate package weight
   React.useEffect(() => {
@@ -490,12 +754,12 @@ const masterBatchColors = [
     if (unit_weight_kg && unit_quantity) {
       const unitWeight = parseFloat(unit_weight_kg);
       const quantity = parseInt(unit_quantity);
-      
+
       if (unitWeight && quantity) {
         const packageWeight = unitWeight * quantity;
-        setCustomerProductForm(prev => ({
+        setCustomerProductForm((prev) => ({
           ...prev,
-          package_weight_kg: packageWeight.toFixed(3)
+          package_weight_kg: packageWeight.toFixed(3),
         }));
       }
     }
@@ -503,39 +767,40 @@ const masterBatchColors = [
 
   // Data queries
   const { data: customers = [], isLoading: customersLoading } = useQuery({
-    queryKey: ['/api/customers'],
+    queryKey: ["/api/customers"],
     staleTime: 0,
   });
   const { data: sections = [], isLoading: sectionsLoading } = useQuery({
-    queryKey: ['/api/sections'],
+    queryKey: ["/api/sections"],
     staleTime: 0,
   });
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
-    queryKey: ['/api/categories'],
+    queryKey: ["/api/categories"],
     staleTime: 0,
   });
   const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ['/api/items'],
+    queryKey: ["/api/items"],
     staleTime: 0,
   });
-  const { data: customerProducts = [], isLoading: customerProductsLoading } = useQuery({
-    queryKey: ['/api/customer-products'],
-    staleTime: 0,
-  });
+  const { data: customerProducts = [], isLoading: customerProductsLoading } =
+    useQuery({
+      queryKey: ["/api/customer-products"],
+      staleTime: 0,
+    });
   const { data: machines = [], isLoading: machinesLoading } = useQuery({
-    queryKey: ['/api/machines'],
+    queryKey: ["/api/machines"],
     staleTime: 0,
   });
   const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/users'],
+    queryKey: ["/api/users"],
     staleTime: 0,
   });
   const { data: locations = [], isLoading: locationsLoading } = useQuery({
-    queryKey: ['/api/locations'],
+    queryKey: ["/api/locations"],
     staleTime: 0,
   });
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
-    queryKey: ['/api/roles'],
+    queryKey: ["/api/roles"],
     staleTime: 0,
   });
 
@@ -543,21 +808,28 @@ const masterBatchColors = [
   React.useEffect(() => {
     // Auto-set cutting unit based on item category
     const { category_id } = customerProductForm;
-    if (category_id && category_id !== 'none' && Array.isArray(categories) && categories.length > 0) {
-      const category = (categories as any[]).find((cat: any) => cat.id === category_id);
+    if (
+      category_id &&
+      category_id !== "none" &&
+      Array.isArray(categories) &&
+      categories.length > 0
+    ) {
+      const category = (categories as any[]).find(
+        (cat: any) => cat.id === category_id,
+      );
       if (category) {
-        let cuttingUnit = 'قطعة';
-        if (category.name_ar?.includes('أكياس')) {
-          cuttingUnit = 'كيس';
-        } else if (category.name_ar?.includes('رولات')) {
-          cuttingUnit = 'رول';
-        } else if (category.name_ar?.includes('أغطية')) {
-          cuttingUnit = 'غطاء';
+        let cuttingUnit = "قطعة";
+        if (category.name_ar?.includes("أكياس")) {
+          cuttingUnit = "كيس";
+        } else if (category.name_ar?.includes("رولات")) {
+          cuttingUnit = "رول";
+        } else if (category.name_ar?.includes("أغطية")) {
+          cuttingUnit = "غطاء";
         }
-        
-        setCustomerProductForm(prev => ({
+
+        setCustomerProductForm((prev) => ({
           ...prev,
-          cutting_unit: cuttingUnit
+          cutting_unit: cuttingUnit,
         }));
       }
     }
@@ -566,80 +838,132 @@ const masterBatchColors = [
   // Filter helper function
   const filterData = (data: any[], searchFields: string[]) => {
     if (!Array.isArray(data)) return [];
-    
+
     return data
-      .filter(item => {
+      .filter((item) => {
         // Status filter
-        const statusMatch = statusFilter === "all" || 
-          (statusFilter === "active" && (item.status === "active" || item.status === "operational")) ||
-          (statusFilter === "inactive" && (item.status === "inactive" || item.status === "down" || item.status === "maintenance"));
-        
+        const statusMatch =
+          statusFilter === "all" ||
+          (statusFilter === "active" &&
+            (item.status === "active" || item.status === "operational")) ||
+          (statusFilter === "inactive" &&
+            (item.status === "inactive" ||
+              item.status === "down" ||
+              item.status === "maintenance"));
+
         // Search filter
-        const searchMatch = !quickSearch || searchFields.some(field => {
-          const value = item[field];
-          if (value === null || value === undefined) return false;
-          return value.toString().toLowerCase().includes(quickSearch.toLowerCase());
-        });
-        
+        const searchMatch =
+          !quickSearch ||
+          searchFields.some((field) => {
+            const value = item[field];
+            if (value === null || value === undefined) return false;
+            return value
+              .toString()
+              .toLowerCase()
+              .includes(quickSearch.toLowerCase());
+          });
+
         return statusMatch && searchMatch;
       })
       .sort((a, b) => {
         // Sort by ID (number) ascending
-        const aId = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) || 0 : (a.id || 0);
-        const bId = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) || 0 : (b.id || 0);
+        const aId =
+          typeof a.id === "string"
+            ? parseInt(a.id.replace(/\D/g, "")) || 0
+            : a.id || 0;
+        const bId =
+          typeof b.id === "string"
+            ? parseInt(b.id.replace(/\D/g, "")) || 0
+            : b.id || 0;
         return aId - bId;
       });
   };
 
   // Specific filter functions
-  const getFilteredCustomers = () => filterData(customers as any[], ['name', 'name_ar', 'phone', 'email', 'address', 'id']);
-  const getFilteredSections = () => filterData(sections as any[], ['name', 'name_ar', 'description', 'id']);
-  const getFilteredCategories = () => filterData(categories as any[], ['name', 'name_ar', 'description', 'id']);
-  const getFilteredItems = () => filterData(items as any[], ['name', 'name_ar', 'category_id', 'id']);
+  const getFilteredCustomers = () =>
+    filterData(customers as any[], [
+      "name",
+      "name_ar",
+      "phone",
+      "email",
+      "address",
+      "id",
+    ]);
+  const getFilteredSections = () =>
+    filterData(sections as any[], ["name", "name_ar", "description", "id"]);
+  const getFilteredCategories = () =>
+    filterData(categories as any[], ["name", "name_ar", "description", "id"]);
+  const getFilteredItems = () =>
+    filterData(items as any[], ["name", "name_ar", "category_id", "id"]);
   const getFilteredCustomerProducts = () => {
-    const filtered = (customerProducts as any[]).filter((product: any) => {
-      // Status filter
-      const statusMatch = statusFilter === "all" || 
-        (statusFilter === "active" && product.status === "active") ||
-        (statusFilter === "inactive" && product.status === "inactive");
-      
-      // Search filter - enhanced for customer products
-      const searchMatch = !quickSearch || [
-        product.size_caption,
-        product.raw_material,
-        product.master_batch_id,
-        product.notes,
-        product.id,
-        // Search in related customer name
-        (customers as any[]).find((c: any) => c.id === product.customer_id)?.name_ar,
-        (customers as any[]).find((c: any) => c.id === product.customer_id)?.name,
-        // Search in related item name
-        (items as any[]).find((i: any) => i.id === product.item_id)?.name_ar,
-        (items as any[]).find((i: any) => i.id === product.item_id)?.name
-      ].some((field: any) => {
-        if (field === null || field === undefined) return false;
-        return field.toString().toLowerCase().includes(quickSearch.toLowerCase());
+    const filtered = (customerProducts as any[])
+      .filter((product: any) => {
+        // Status filter
+        const statusMatch =
+          statusFilter === "all" ||
+          (statusFilter === "active" && product.status === "active") ||
+          (statusFilter === "inactive" && product.status === "inactive");
+
+        // Search filter - enhanced for customer products
+        const searchMatch =
+          !quickSearch ||
+          [
+            product.size_caption,
+            product.raw_material,
+            product.master_batch_id,
+            product.notes,
+            product.id,
+            // Search in related customer name
+            (customers as any[]).find((c: any) => c.id === product.customer_id)
+              ?.name_ar,
+            (customers as any[]).find((c: any) => c.id === product.customer_id)
+              ?.name,
+            // Search in related item name
+            (items as any[]).find((i: any) => i.id === product.item_id)
+              ?.name_ar,
+            (items as any[]).find((i: any) => i.id === product.item_id)?.name,
+          ].some((field: any) => {
+            if (field === null || field === undefined) return false;
+            return field
+              .toString()
+              .toLowerCase()
+              .includes(quickSearch.toLowerCase());
+          });
+
+        return statusMatch && searchMatch;
+      })
+      .sort((a: any, b: any) => {
+        const aId =
+          typeof a.id === "string"
+            ? parseInt(a.id.replace(/\D/g, "")) || 0
+            : a.id || 0;
+        const bId =
+          typeof b.id === "string"
+            ? parseInt(b.id.replace(/\D/g, "")) || 0
+            : b.id || 0;
+        return aId - bId;
       });
-      
-      return statusMatch && searchMatch;
-    }).sort((a: any, b: any) => {
-      const aId = typeof a.id === 'string' ? parseInt(a.id.replace(/\D/g, '')) || 0 : (a.id || 0);
-      const bId = typeof b.id === 'string' ? parseInt(b.id.replace(/\D/g, '')) || 0 : (b.id || 0);
-      return aId - bId;
-    });
     return filtered;
   };
-  const getFilteredLocations = () => filterData(locations as any[], ['name', 'name_ar', 'type', 'id']);
-  const getFilteredMachines = () => filterData(machines as any[], ['name', 'name_ar', 'type', 'id']);
-  const getFilteredUsers = () => filterData(users as any[], ['username', 'display_name', 'display_name_ar', 'id']);
+  const getFilteredLocations = () =>
+    filterData(locations as any[], ["name", "name_ar", "type", "id"]);
+  const getFilteredMachines = () =>
+    filterData(machines as any[], ["name", "name_ar", "type", "id"]);
+  const getFilteredUsers = () =>
+    filterData(users as any[], [
+      "username",
+      "display_name",
+      "display_name_ar",
+      "id",
+    ]);
 
   // Pagination component
-  const PaginationComponent = ({ 
-    currentPage, 
-    totalPages, 
-    onPageChange, 
+  const PaginationComponent = ({
+    currentPage,
+    totalPages,
+    onPageChange,
     totalItems,
-    itemsPerPage
+    itemsPerPage,
   }: {
     currentPage: number;
     totalPages: number;
@@ -671,13 +995,16 @@ const masterBatchColors = [
         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              عرض <span className="font-medium">{startItem}</span> إلى{' '}
-              <span className="font-medium">{endItem}</span> من{' '}
+              عرض <span className="font-medium">{startItem}</span> إلى{" "}
+              <span className="font-medium">{endItem}</span> من{" "}
               <span className="font-medium">{totalItems}</span> نتيجة
             </p>
           </div>
           <div>
-            <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <nav
+              className="inline-flex -space-x-px rounded-md shadow-sm"
+              aria-label="Pagination"
+            >
               <Button
                 variant="outline"
                 size="sm"
@@ -687,15 +1014,18 @@ const masterBatchColors = [
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              
+
               {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => {
-                  return page === 1 || 
-                         page === totalPages || 
-                         (page >= currentPage - 2 && page <= currentPage + 2);
+                .filter((page) => {
+                  return (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= currentPage - 2 && page <= currentPage + 2)
+                  );
                 })
                 .map((page, index, array) => {
-                  const showEllipsis = index > 0 && array[index - 1] !== page - 1;
+                  const showEllipsis =
+                    index > 0 && array[index - 1] !== page - 1;
                   return (
                     <div key={page}>
                       {showEllipsis && (
@@ -714,7 +1044,7 @@ const masterBatchColors = [
                     </div>
                   );
                 })}
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -732,7 +1062,7 @@ const masterBatchColors = [
   };
 
   // All mutations for different entities
-  
+
   // Customer mutations
   const createCustomerMutation = useMutation({
     mutationFn: (data: any) => {
@@ -740,18 +1070,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء العميل بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء العميل:', error);
+      console.error("خطأ في إنشاء العميل:", error);
       toast({ title: "خطأ في إنشاء العميل", variant: "destructive" });
-    }
+    },
   });
 
   const updateCustomerMutation = useMutation({
@@ -760,18 +1090,18 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customers'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث العميل بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث العميل:', error);
+      console.error("خطأ في تحديث العميل:", error);
       toast({ title: "خطأ في تحديث العميل", variant: "destructive" });
-    }
+    },
   });
 
   // Section mutations
@@ -781,18 +1111,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sections"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء القسم بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء القسم:', error);
+      console.error("خطأ في إنشاء القسم:", error);
       toast({ title: "خطأ في إنشاء القسم", variant: "destructive" });
-    }
+    },
   });
 
   const updateSectionMutation = useMutation({
@@ -801,18 +1131,18 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/sections'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sections"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث القسم بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث القسم:', error);
+      console.error("خطأ في تحديث القسم:", error);
       toast({ title: "خطأ في تحديث القسم", variant: "destructive" });
-    }
+    },
   });
 
   // Category mutations
@@ -822,18 +1152,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء الفئة بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء الفئة:', error);
+      console.error("خطأ في إنشاء الفئة:", error);
       toast({ title: "خطأ في إنشاء الفئة", variant: "destructive" });
-    }
+    },
   });
 
   const updateCategoryMutation = useMutation({
@@ -842,18 +1172,18 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/categories'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث الفئة بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث الفئة:', error);
+      console.error("خطأ في تحديث الفئة:", error);
       toast({ title: "خطأ في تحديث الفئة", variant: "destructive" });
-    }
+    },
   });
 
   // Item mutations
@@ -863,21 +1193,21 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to create item');
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to create item");
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/items"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء الصنف بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء الصنف:', error);
+      console.error("خطأ في إنشاء الصنف:", error);
       toast({ title: "خطأ في إنشاء الصنف", variant: "destructive" });
-    }
+    },
   });
 
   const updateItemMutation = useMutation({
@@ -886,21 +1216,21 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to update item');
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to update item");
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/items'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/items"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث الصنف بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث الصنف:', error);
+      console.error("خطأ في تحديث الصنف:", error);
       toast({ title: "خطأ في تحديث الصنف", variant: "destructive" });
-    }
+    },
   });
 
   // Customer Product mutations
@@ -910,21 +1240,21 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to create customer product');
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to create customer product");
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-products"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء منتج العميل بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء منتج العميل:', error);
+      console.error("خطأ في إنشاء منتج العميل:", error);
       toast({ title: "خطأ في إنشاء منتج العميل", variant: "destructive" });
-    }
+    },
   });
 
   const updateCustomerProductMutation = useMutation({
@@ -933,21 +1263,21 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to update customer product');
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to update customer product");
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-products"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث منتج العميل بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث منتج العميل:', error);
+      console.error("خطأ في تحديث منتج العميل:", error);
       toast({ title: "خطأ في تحديث منتج العميل", variant: "destructive" });
-    }
+    },
   });
 
   // Delete Customer Product Mutation
@@ -956,19 +1286,19 @@ const masterBatchColors = [
       return fetch(`/api/customer-products/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-      }).then(res => {
-        if (!res.ok) throw new Error('Failed to delete');
+      }).then((res) => {
+        if (!res.ok) throw new Error("Failed to delete");
         return res.json();
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/customer-products'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customer-products"] });
       toast({ title: "تم حذف منتج العميل بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في حذف منتج العميل:', error);
+      console.error("خطأ في حذف منتج العميل:", error);
       toast({ title: "خطأ في حذف منتج العميل", variant: "destructive" });
-    }
+    },
   });
 
   // Location mutations
@@ -978,18 +1308,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/locations"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء الموقع بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء الموقع:', error);
+      console.error("خطأ في إنشاء الموقع:", error);
       toast({ title: "خطأ في إنشاء الموقع", variant: "destructive" });
-    }
+    },
   });
 
   const updateLocationMutation = useMutation({
@@ -998,18 +1328,18 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/locations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/locations"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث الموقع بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث الموقع:', error);
+      console.error("خطأ في تحديث الموقع:", error);
       toast({ title: "خطأ في تحديث الموقع", variant: "destructive" });
-    }
+    },
   });
 
   // Machine mutations
@@ -1019,18 +1349,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/machines"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء الماكينة بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء الماكينة:', error);
+      console.error("خطأ في إنشاء الماكينة:", error);
       toast({ title: "خطأ في إنشاء الماكينة", variant: "destructive" });
-    }
+    },
   });
 
   const updateMachineMutation = useMutation({
@@ -1039,18 +1369,18 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/machines'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/machines"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث الماكينة بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث الماكينة:', error);
+      console.error("خطأ في تحديث الماكينة:", error);
       toast({ title: "خطأ في تحديث الماكينة", variant: "destructive" });
-    }
+    },
   });
 
   // User mutations
@@ -1060,18 +1390,18 @@ const masterBatchColors = [
         method: "POST",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم إنشاء المستخدم بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في إنشاء المستخدم:', error);
+      console.error("خطأ في إنشاء المستخدم:", error);
       toast({ title: "خطأ في إنشاء المستخدم", variant: "destructive" });
-    }
+    },
   });
 
   const updateUserMutation = useMutation({
@@ -1080,55 +1410,99 @@ const masterBatchColors = [
         method: "PUT",
         body: JSON.stringify(data),
         headers: { "Content-Type": "application/json" },
-      }).then(res => res.json());
+      }).then((res) => res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
       resetForm();
       setIsDialogOpen(false);
       toast({ title: "تم تحديث المستخدم بنجاح" });
     },
     onError: (error: any) => {
-      console.error('خطأ في تحديث المستخدم:', error);
+      console.error("خطأ في تحديث المستخدم:", error);
       toast({ title: "خطأ في تحديث المستخدم", variant: "destructive" });
-    }
+    },
   });
 
   // Event handlers
   const resetForm = () => {
-    setCustomerForm({ name: '', name_ar: '', code: '', user_id: '', plate_drawer_code: '', city: '', address: '', tax_number: '', phone: '', sales_rep_id: '' });
-    setSectionForm({ name: '', name_ar: '', description: '' });
-    setCategoryForm({ name: '', name_ar: '', code: '', parent_id: 'none', description: '', status: 'active' });
-    setItemForm({ name: '', name_ar: '', code: '', category_id: 'none', status: 'active' });
-    setCustomerProductForm({ 
-      customer_id: 'none', 
-      category_id: 'none',
-      item_id: 'none', 
-      size_caption: '', 
-      width: '', 
-      left_facing: '', 
-      right_facing: '', 
-      thickness: '', 
-      printing_cylinder: 'بدون طباعة', 
-      cutting_length_cm: '', 
-      raw_material: '', 
-      master_batch_id: '', 
-      is_printed: false, 
-      cutting_unit: '', 
-      punching: '', 
-      unit_weight_kg: '', 
-      unit_quantity: '', 
-      package_weight_kg: '', 
-      cliche_front_design: '', 
-      cliche_back_design: '', 
-      front_design_filename: '',
-      back_design_filename: '',
-      notes: '', 
-      status: 'active' 
+    setCustomerForm({
+      name: "",
+      name_ar: "",
+      code: "",
+      user_id: "",
+      plate_drawer_code: "",
+      city: "",
+      address: "",
+      tax_number: "",
+      phone: "",
+      sales_rep_id: "",
     });
-    setLocationForm({ name: '', name_ar: '', type: 'city', parent_id: '', coordinates: '', status: 'active' });
-    setMachineForm({ name: '', name_ar: '', type: 'extruder', section_id: 'none', status: 'active' });
-    setUserForm({ username: '', display_name: '', display_name_ar: '', role_id: 'none', section_id: 'none', status: 'active' });
+    setSectionForm({ name: "", name_ar: "", description: "" });
+    setCategoryForm({
+      name: "",
+      name_ar: "",
+      code: "",
+      parent_id: "none",
+      description: "",
+      status: "active",
+    });
+    setItemForm({
+      name: "",
+      name_ar: "",
+      code: "",
+      category_id: "none",
+      status: "active",
+    });
+    setCustomerProductForm({
+      customer_id: "none",
+      category_id: "none",
+      item_id: "none",
+      size_caption: "",
+      width: "",
+      left_facing: "",
+      right_facing: "",
+      thickness: "",
+      printing_cylinder: "بدون طباعة",
+      cutting_length_cm: "",
+      raw_material: "",
+      master_batch_id: "",
+      is_printed: false,
+      cutting_unit: "",
+      punching: "",
+      unit_weight_kg: "",
+      unit_quantity: "",
+      package_weight_kg: "",
+      cliche_front_design: "",
+      cliche_back_design: "",
+      front_design_filename: "",
+      back_design_filename: "",
+      notes: "",
+      status: "active",
+    });
+    setLocationForm({
+      name: "",
+      name_ar: "",
+      type: "city",
+      parent_id: "",
+      coordinates: "",
+      status: "active",
+    });
+    setMachineForm({
+      name: "",
+      name_ar: "",
+      type: "extruder",
+      section_id: "none",
+      status: "active",
+    });
+    setUserForm({
+      username: "",
+      display_name: "",
+      display_name_ar: "",
+      role_id: "none",
+      section_id: "none",
+      status: "active",
+    });
     setEditingItem(null);
   };
 
@@ -1138,13 +1512,17 @@ const masterBatchColors = [
       <div className="flex min-h-screen">
         <Sidebar />
         <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 lg:p-6"
-              style={{ marginRight: '16rem' }}>
+        <main
+          className="flex-1 lg:mr-64 p-4 lg:p-6"
+          style={{ marginRight: "16rem" }}
+        >
           <div className="w-full space-y-4">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">التعريفات الأساسية</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                التعريفات الأساسية
+              </h1>
             </div>
-            
+
             {/* Search and Filter Controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center gap-4">
@@ -1176,18 +1554,24 @@ const masterBatchColors = [
 
             {/* Tabs */}
             <div className="w-full">
-              <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-4 w-full">
-                <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full h-auto p-1 bg-white rounded-lg border border-gray-200 shadow-sm gap-1"
-                  dir="rtl">
-                  <TabsTrigger 
-                    value="customers" 
+              <Tabs
+                value={selectedTab}
+                onValueChange={setSelectedTab}
+                className="space-y-4 w-full"
+              >
+                <TabsList
+                  className="grid grid-cols-4 lg:grid-cols-8 w-full h-auto p-1 bg-white rounded-lg border border-gray-200 shadow-sm gap-1"
+                  dir="rtl"
+                >
+                  <TabsTrigger
+                    value="customers"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
                              transition-all duration-200 rounded-md min-w-0 flex-1"
                   >
                     العملاء
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="sections"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1195,7 +1579,7 @@ const masterBatchColors = [
                   >
                     الأقسام
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="categories"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1203,7 +1587,7 @@ const masterBatchColors = [
                   >
                     الفئات
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="items"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1211,7 +1595,7 @@ const masterBatchColors = [
                   >
                     الأصناف
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="customer-products"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-2 py-2 text-xs font-medium
@@ -1219,7 +1603,7 @@ const masterBatchColors = [
                   >
                     منتجات العملاء
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="locations"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1227,7 +1611,7 @@ const masterBatchColors = [
                   >
                     المواقع
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="machines"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1235,7 +1619,7 @@ const masterBatchColors = [
                   >
                     المكائن
                   </TabsTrigger>
-                  <TabsTrigger 
+                  <TabsTrigger
                     value="users"
                     className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
                              text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
@@ -1245,1154 +1629,1594 @@ const masterBatchColors = [
                   </TabsTrigger>
                 </TabsList>
 
-              {/* Customers Tab */}
-              <TabsContent value="customers" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Building2 className="w-5 h-5" />
-                        إدارة العملاء
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('customers'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة عميل
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {customersLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                {/* Customers Tab */}
+                <TabsContent value="customers" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="w-5 h-5" />
+                          إدارة العملاء
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("customers");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة عميل
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الهاتف</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">المدينة</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredCustomers = getFilteredCustomers();
-                              const paginatedCustomers = paginateData(filteredCustomers, currentPages.customers);
-                              return paginatedCustomers.length > 0 ? (
-                                paginatedCustomers.map((customer: any) => (
-                                  <tr key={customer.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {customer.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {customer.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {customer.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {customer.phone || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {customer.city || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(customer);
-                                            setCustomerForm({
-                                              name: customer.name || '',
-                                              name_ar: customer.name_ar || '',
-                                              code: customer.code || '',
-                                              user_id: customer.user_id || '',
-                                              plate_drawer_code: customer.plate_drawer_code || '',
-                                              city: customer.city || '',
-                                              address: customer.address || '',
-                                              tax_number: customer.tax_number || '',
-                                              phone: customer.phone || '',
-                                              sales_rep_id: customer.sales_rep_id || ''
-                                            });
-                                            setSelectedTab('customers');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                                    {quickSearch || statusFilter !== "all" ? 
-                                      "لا توجد نتائج مطابقة للفلاتر المحددة" : 
-                                      "لا توجد بيانات متاحة"}
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredCustomers = getFilteredCustomers();
-                          const totalPages = getTotalPages(filteredCustomers.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.customers}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('customers', page)}
-                                totalItems={filteredCustomers.length}
-                                itemsPerPage={itemsPerPage}
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Categories Tab */}
-              <TabsContent value="categories" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="w-5 h-5" />
-                        إدارة الفئات
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('categories'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة فئة
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {categoriesLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الكود</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredCategories = getFilteredCategories();
-                              const paginatedCategories = paginateData(filteredCategories, currentPages.categories);
-                              return paginatedCategories.length > 0 ? (
-                                paginatedCategories.map((category: any) => (
-                                  <tr key={category.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {category.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {category.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {category.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {category.code || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(category);
-                                            setCategoryForm({
-                                              name: category.name || '',
-                                              name_ar: category.name_ar || '',
-                                              code: category.code || '',
-                                              parent_id: category.parent_id || 'none',
-                                              description: category.description || '',
-                                              status: category.status || 'active'
-                                            });
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                                    {quickSearch || statusFilter !== "all" ? 
-                                      "لا توجد نتائج مطابقة للفلاتر المحددة" : 
-                                      "لا توجد بيانات متاحة"}
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredCategories = getFilteredCategories();
-                          const totalPages = getTotalPages(filteredCategories.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.categories}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('categories', page)}
-                                totalItems={filteredCategories.length}
-                                itemsPerPage={itemsPerPage}
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              {/* Sections Tab */}
-              <TabsContent value="sections" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Cog className="w-5 h-5" />
-                        إدارة الأقسام
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('sections'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة قسم
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {sectionsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الوصف</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredSections = getFilteredSections();
-                              const paginatedSections = paginateData(filteredSections, currentPages.sections);
-                              return paginatedSections.length > 0 ? (
-                                paginatedSections.map((section: any) => (
-                                  <tr key={section.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {section.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {section.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {section.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {section.description || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(section);
-                                            setSectionForm({
-                                              name: section.name || '',
-                                              name_ar: section.name_ar || '',
-                                              description: section.description || ''
-                                            });
-                                            setSelectedTab('sections');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد أقسام مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredSections = getFilteredSections();
-                          const totalPages = getTotalPages(filteredSections.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.sections}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('sections', page)}
-                                totalItems={filteredSections.length}
-                                itemsPerPage={itemsPerPage}
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Items Tab */}
-              <TabsContent value="items" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="w-5 h-5" />
-                        إدارة الأصناف
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('items'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة صنف
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {itemsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الفئة</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredItems = getFilteredItems();
-                              const paginatedItems = paginateData(filteredItems, currentPages.items);
-                              return paginatedItems.length > 0 ? (
-                                paginatedItems.map((item: any) => (
-                                  <tr key={item.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {item.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {item.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {item.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {item.category_id || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(item);
-                                            setItemForm({
-                                              name: item.name || '',
-                                              name_ar: item.name_ar || '',
-                                              code: item.code || '',
-                                              category_id: item.category_id || 'none',
-                                              status: item.status || 'active'
-                                            });
-                                            setSelectedTab('items');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد أصناف مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredItems = getFilteredItems();
-                          const totalPages = getTotalPages(filteredItems.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.items}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('items', page)}
-                                totalItems={filteredItems.length}
-                                itemsPerPage={itemsPerPage}
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Customer Products Tab */}
-              <TabsContent value="customer-products" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Package className="w-5 h-5" />
-                        منتجات العملاء
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('customer-products'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة منتج
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {customerProductsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم العميل</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم الصنف</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">وصف المقاس</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الطباعة/القطع</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">المادة الخام</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الماستر باتش</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">التخريم</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">الوحدة</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">وزن التعبئة</th>
-                              <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredCustomerProducts = getFilteredCustomerProducts();
-                              const paginatedCustomerProducts = paginateData(filteredCustomerProducts, currentPages.customerProducts);
-                              return paginatedCustomerProducts.length > 0 ? (
-                                paginatedCustomerProducts.map((product: any) => {
-                                  // Find customer details
-                                  const customer = Array.isArray(customers) ? customers.find((c: any) => c.id === product.customer_id) : null;
-                                  // Find item details
-                                  const item = Array.isArray(items) ? items.find((i: any) => i.id === product.item_id) : null;
-                                  
-                                  return (
-                                    <tr key={product.id} className="hover:bg-gray-50">
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                        {product.id}
+                    </CardHeader>
+                    <CardContent>
+                      {customersLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الهاتف
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  المدينة
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredCustomers =
+                                  getFilteredCustomers();
+                                const paginatedCustomers = paginateData(
+                                  filteredCustomers,
+                                  currentPages.customers,
+                                );
+                                return paginatedCustomers.length > 0 ? (
+                                  paginatedCustomers.map((customer: any) => (
+                                    <tr
+                                      key={customer.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {customer.id}
                                       </td>
-                                      <td className="px-3 py-4 text-sm text-gray-900 text-center">
-                                        <div className="flex flex-col items-center">
-                                          <span className="font-medium">{customer?.name_ar || customer?.name || '-'}</span>
-                                          <span className="text-xs text-gray-500">{customer?.name || '-'}</span>
-                                        </div>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {customer.name_ar || "-"}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {item?.name_ar || item?.name || '-'}
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {customer.name || "-"}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.size_caption || '-'}
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {customer.phone || "-"}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.is_printed ? 
-                                          (product.printing_cylinder || 'بدون طباعة') : 
-                                          (product.cutting_length_cm ? `${formatNumber(parseFloat(product.cutting_length_cm))} سم` : '-')
-                                        }
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {customer.city || "-"}
                                       </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.raw_material || '-'}
-                                      </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {(() => {
-                                          const masterBatchColor = masterBatchColors.find(mb => mb.id === product.master_batch_id);
-                                          return masterBatchColor ? (
-                                            <div className="flex items-center justify-center gap-2">
-                                              <div 
-                                                className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
-                                                style={{ backgroundColor: masterBatchColor.color }}
-                                                title={masterBatchColor.name}
-                                              ></div>
-                                              <span className="text-xs font-medium text-gray-700">
-                                                {masterBatchColor.name_ar}
-                                              </span>
-                                            </div>
-                                          ) : (
-                                            product.master_batch_id || '-'
-                                          );
-                                        })()}
-                                      </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.punching || '-'}
-                                      </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.cutting_unit || '-'}
-                                      </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
-                                        {product.package_weight_kg ? `${formatNumber(parseFloat(product.package_weight_kg))} كغ` : '-'}
-                                      </td>
-                                      <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                        <div className="flex items-center justify-center gap-1">
-                                          {/* Edit Button */}
-                                          <Button 
-                                            variant="outline" 
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
                                             size="sm"
                                             onClick={() => {
-                                              setEditingItem(product);
-                                              setCustomerProductForm({
-                                                customer_id: product.customer_id || 'none',
-                                                category_id: product.category_id || 'none',
-                                                item_id: product.item_id || 'none',
-                                                size_caption: product.size_caption || '',
-                                                width: product.width || '',
-                                                left_facing: product.left_facing || '',
-                                                right_facing: product.right_facing || '',
-                                                thickness: product.thickness || '',
-                                                printing_cylinder: product.printing_cylinder || 'بدون طباعة',
-                                                cutting_length_cm: product.cutting_length_cm || '',
-                                                raw_material: product.raw_material || '',
-                                                master_batch_id: product.master_batch_id || '',
-                                                is_printed: product.is_printed || false,
-                                                cutting_unit: product.cutting_unit || '',
-                                                punching: product.punching || '',
-                                                unit_weight_kg: product.unit_weight_kg || '',
-                                                unit_quantity: product.unit_quantity || '',
-                                                package_weight_kg: product.package_weight_kg || '',
-                                                cliche_front_design: product.cliche_front_design || '',
-                                                cliche_back_design: product.cliche_back_design || '',
-                                                front_design_filename: '',
-                                                back_design_filename: '',
-                                                notes: product.notes || '',
-                                                status: product.status || 'active'
+                                              setEditingItem(customer);
+                                              setCustomerForm({
+                                                name: customer.name || "",
+                                                name_ar: customer.name_ar || "",
+                                                code: customer.code || "",
+                                                user_id: customer.user_id || "",
+                                                plate_drawer_code:
+                                                  customer.plate_drawer_code ||
+                                                  "",
+                                                city: customer.city || "",
+                                                address: customer.address || "",
+                                                tax_number:
+                                                  customer.tax_number || "",
+                                                phone: customer.phone || "",
+                                                sales_rep_id:
+                                                  customer.sales_rep_id || "",
                                               });
-                                              setSelectedTab('customer-products');
+                                              setSelectedTab("customers");
                                               setIsDialogOpen(true);
                                             }}
-                                            title="تحديث"
                                           >
-                                            <Edit className="w-3 h-3" />
-                                          </Button>
-                                          
-                                          {/* Clone Button */}
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleCloneCustomerProduct(product)}
-                                            title="استنساخ"
-                                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                          >
-                                            <Copy className="w-3 h-3" />
-                                          </Button>
-                                          
-                                          {/* Print Button */}
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handlePrintCustomerProduct(product)}
-                                            title="طباعة"
-                                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                                          >
-                                            <Printer className="w-3 h-3" />
-                                          </Button>
-                                          
-                                          {/* Delete Button */}
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleDeleteCustomerProduct(product)}
-                                            title="حذف"
-                                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                            disabled={deleteCustomerProductMutation.isPending}
-                                          >
-                                            {deleteCustomerProductMutation.isPending ? (
-                                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                                            ) : (
-                                              <Trash2 className="w-3 h-3" />
-                                            )}
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
                                     </tr>
-                                  );
-                                })
-                              ) : (
-                                <tr>
-                                  <td colSpan={11} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد منتجات مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredCustomerProducts = getFilteredCustomerProducts();
-                          const totalPages = getTotalPages(filteredCustomerProducts.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.customerProducts}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('customerProducts', page)}
-                                totalItems={filteredCustomerProducts.length}
-                                itemsPerPage={itemsPerPage}
-                              />
-                            );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Locations Tab */}
-              <TabsContent value="locations" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <MapPin className="w-5 h-5" />
-                        إدارة المواقع
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('locations'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة موقع
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {locationsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
-                      </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">النوع</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredLocations = getFilteredLocations();
-                              const paginatedLocations = paginateData(filteredLocations, currentPages.locations);
-                              return paginatedLocations.length > 0 ? (
-                                paginatedLocations.map((location: any) => (
-                                  <tr key={location.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {location.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.type || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(location);
-                                            setLocationForm({
-                                              name: location.name || '',
-                                              name_ar: location.name_ar || '',
-                                              type: location.type || 'city',
-                                              parent_id: location.parent_id || '',
-                                              coordinates: location.coordinates || '',
-                                              status: location.status || 'active'
-                                            });
-                                            setSelectedTab('locations');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={6}
+                                      className="px-6 py-4 text-center text-gray-500"
+                                    >
+                                      {quickSearch || statusFilter !== "all"
+                                        ? "لا توجد نتائج مطابقة للفلاتر المحددة"
+                                        : "لا توجد بيانات متاحة"}
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد مواقع مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredLocations = getFilteredLocations();
-                          const totalPages = getTotalPages(filteredLocations.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.locations}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('locations', page)}
-                                totalItems={filteredLocations.length}
-                                itemsPerPage={itemsPerPage}
-                              />
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredCustomers = getFilteredCustomers();
+                            const totalPages = getTotalPages(
+                              filteredCustomers.length,
                             );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.customers}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("customers", page)
+                                  }
+                                  totalItems={filteredCustomers.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Machines Tab */}
-              <TabsContent value="machines" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <Settings className="w-5 h-5" />
-                        إدارة الماكينات
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('machines'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة ماكينة
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {machinesLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                {/* Categories Tab */}
+                <TabsContent value="categories" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          إدارة الفئات
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("categories");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة فئة
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">النوع</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredMachines = getFilteredMachines();
-                              const paginatedMachines = paginateData(filteredMachines, currentPages.machines);
-                              return paginatedMachines.length > 0 ? (
-                                paginatedMachines.map((machine: any) => (
-                                  <tr key={machine.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {machine.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {machine.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {machine.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {machine.type || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(machine);
-                                            setMachineForm({
-                                              name: machine.name || '',
-                                              name_ar: machine.name_ar || '',
-                                              type: machine.type || 'extruder',
-                                              section_id: machine.section_id || '',
-                                              status: machine.status || 'active'
-                                            });
-                                            setSelectedTab('machines');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {categoriesLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الكود
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredCategories =
+                                  getFilteredCategories();
+                                const paginatedCategories = paginateData(
+                                  filteredCategories,
+                                  currentPages.categories,
+                                );
+                                return paginatedCategories.length > 0 ? (
+                                  paginatedCategories.map((category: any) => (
+                                    <tr
+                                      key={category.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {category.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {category.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {category.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {category.code || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(category);
+                                              setCategoryForm({
+                                                name: category.name || "",
+                                                name_ar: category.name_ar || "",
+                                                code: category.code || "",
+                                                parent_id:
+                                                  category.parent_id || "none",
+                                                description:
+                                                  category.description || "",
+                                                status:
+                                                  category.status || "active",
+                                              });
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-4 text-center text-gray-500"
+                                    >
+                                      {quickSearch || statusFilter !== "all"
+                                        ? "لا توجد نتائج مطابقة للفلاتر المحددة"
+                                        : "لا توجد بيانات متاحة"}
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد ماكينات مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredMachines = getFilteredMachines();
-                          const totalPages = getTotalPages(filteredMachines.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.machines}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('machines', page)}
-                                totalItems={filteredMachines.length}
-                                itemsPerPage={itemsPerPage}
-                              />
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredCategories = getFilteredCategories();
+                            const totalPages = getTotalPages(
+                              filteredCategories.length,
                             );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.categories}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("categories", page)
+                                  }
+                                  totalItems={filteredCategories.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Users Tab */}
-              <TabsContent value="users" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <User className="w-5 h-5" />
-                        إدارة المستخدمين
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('users'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة مستخدم
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {usersLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                {/* Sections Tab */}
+                <TabsContent value="sections" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Cog className="w-5 h-5" />
+                          إدارة الأقسام
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("sections");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة قسم
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">اسم المستخدم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">القسم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الدور</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredUsers = getFilteredUsers();
-                              const paginatedUsers = paginateData(filteredUsers, currentPages.users);
-                              return paginatedUsers.length > 0 ? (
-                                paginatedUsers.map((user: any) => (
-                                  <tr key={user.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {user.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {user.username || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {user.display_name || user.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {(() => {
-                                        if (!user.section_id) return '-';
-                                        // Map numeric section_id to section string ID
-                                        const sectionMapping: { [key: number]: string } = {
-                                          1: 'SEC01',
-                                          2: 'SEC02', 
-                                          3: 'SEC03',
-                                          4: 'SEC04',
-                                          5: 'SEC05',
-                                          6: 'SEC06',
-                                          7: 'SEC07'
-                                        };
-                                        const sectionId = sectionMapping[user.section_id];
-                                        const section = Array.isArray(sections) && sections.find((s: any) => s.id === sectionId);
-                                        return section ? (section.name_ar || section.name) : `قسم ${user.section_id}`;
-                                      })()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {(() => {
-                                        if (!user.role_id) return '-';
-                                        const role = Array.isArray(roles) && roles.find((r: any) => r.id === user.role_id);
-                                        return role ? (role.name_ar || role.name) : '-';
-                                      })()}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(user);
-                                            setUserForm({
-                                              username: user.username || '',
-                                              display_name: user.display_name || '',
-                                              display_name_ar: user.display_name_ar || '',
-                                              role_id: user.role_id ? `ROLE0${user.role_id < 10 ? '0' + user.role_id : user.role_id}` : 'none',
-                                              section_id: (() => {
-                                                if (!user.section_id) return 'none';
-                                                const sectionMapping: { [key: number]: string } = {
-                                                  1: 'SEC01', 2: 'SEC02', 3: 'SEC03', 4: 'SEC04', 
-                                                  5: 'SEC05', 6: 'SEC06', 7: 'SEC07'
-                                                };
-                                                return sectionMapping[user.section_id] || 'none';
-                                              })(),
-                                              status: user.status || 'active'
-                                            });
-                                            setSelectedTab('users');
-                                            setIsDialogOpen(true);
-                                          }}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {sectionsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الوصف
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredSections = getFilteredSections();
+                                const paginatedSections = paginateData(
+                                  filteredSections,
+                                  currentPages.sections,
+                                );
+                                return paginatedSections.length > 0 ? (
+                                  paginatedSections.map((section: any) => (
+                                    <tr
+                                      key={section.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {section.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {section.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {section.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {section.description || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(section);
+                                              setSectionForm({
+                                                name: section.name || "",
+                                                name_ar: section.name_ar || "",
+                                                description:
+                                                  section.description || "",
+                                              });
+                                              setSelectedTab("sections");
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد أقسام مطابقة للبحث
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد مستخدمين مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredUsers = getFilteredUsers();
-                          const totalPages = getTotalPages(filteredUsers.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.users}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('users', page)}
-                                totalItems={filteredUsers.length}
-                                itemsPerPage={itemsPerPage}
-                              />
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredSections = getFilteredSections();
+                            const totalPages = getTotalPages(
+                              filteredSections.length,
                             );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.sections}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("sections", page)
+                                  }
+                                  totalItems={filteredSections.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
-              {/* Locations Tab */}
-              <TabsContent value="locations" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="flex items-center gap-2">
-                        <MapPin className="w-5 h-5" />
-                        إدارة المواقع
-                      </CardTitle>
-                      <Button onClick={() => { resetForm(); setSelectedTab('locations'); setIsDialogOpen(true); }}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        إضافة موقع
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {locationsLoading ? (
-                      <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                        <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+                {/* Items Tab */}
+                <TabsContent value="items" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          إدارة الأصناف
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("items");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة صنف
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الرقم</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم العربي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الاسم الإنجليزي</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">الإحداثيات</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">نطاق التسامح</th>
-                              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">العمليات</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {(() => {
-                              const filteredLocations = getFilteredLocations();
-                              const paginatedLocations = paginateData(filteredLocations, currentPages.locations);
-                              return paginatedLocations.length > 0 ? (
-                                paginatedLocations.map((location: any) => (
-                                  <tr key={location.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
-                                      {location.id}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.name_ar || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.coordinates || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                      {location.tolerance_range || '-'} متر
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                      <div className="flex items-center justify-center gap-2">
-                                        <Button 
-                                          variant="outline" 
-                                          size="sm"
-                                          onClick={() => {
-                                            setEditingItem(location);
-                                            setLocationForm({
-                                              name: location.name || '',
-                                              name_ar: location.name_ar || '',
-                                              type: location.type || 'city',
-                                              parent_id: location.parent_id || '',
-                                              coordinates: location.coordinates || '',
-                                              status: location.status || 'active'
-                                            });
-                                            setSelectedTab('locations');
-                                            setIsDialogOpen(true);
-                                          }}
-                                          data-testid={`button-edit-location-${location.id}`}
-                                        >
-                                          <Edit className="w-4 h-4" />
-                                        </Button>
-                                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {itemsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الفئة
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredItems = getFilteredItems();
+                                const paginatedItems = paginateData(
+                                  filteredItems,
+                                  currentPages.items,
+                                );
+                                return paginatedItems.length > 0 ? (
+                                  paginatedItems.map((item: any) => (
+                                    <tr
+                                      key={item.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {item.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {item.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {item.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {item.category_id || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(item);
+                                              setItemForm({
+                                                name: item.name || "",
+                                                name_ar: item.name_ar || "",
+                                                code: item.code || "",
+                                                category_id:
+                                                  item.category_id || "none",
+                                                status: item.status || "active",
+                                              });
+                                              setSelectedTab("items");
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد أصناف مطابقة للبحث
                                     </td>
                                   </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                                    لا توجد مواقع مطابقة للبحث
-                                  </td>
-                                </tr>
-                              );
-                            })()}
-                          </tbody>
-                        </table>
-                        {(() => {
-                          const filteredLocations = getFilteredLocations();
-                          const totalPages = getTotalPages(filteredLocations.length);
-                          if (totalPages > 1) {
-                            return (
-                              <PaginationComponent
-                                currentPage={currentPages.locations}
-                                totalPages={totalPages}
-                                onPageChange={(page) => updatePage('locations', page)}
-                                totalItems={filteredLocations.length}
-                                itemsPerPage={itemsPerPage}
-                              />
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredItems = getFilteredItems();
+                            const totalPages = getTotalPages(
+                              filteredItems.length,
                             );
-                          }
-                          return null;
-                        })()}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.items}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("items", page)
+                                  }
+                                  totalItems={filteredItems.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
 
+                {/* Customer Products Tab */}
+                <TabsContent value="customer-products" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          منتجات العملاء
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("customer-products");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة منتج
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {customerProductsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم العميل
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم الصنف
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  وصف المقاس
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الطباعة/القطع
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  المادة الخام
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الماستر باتش
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  التخريم
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الوحدة
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  وزن التعبئة
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredCustomerProducts =
+                                  getFilteredCustomerProducts();
+                                const paginatedCustomerProducts = paginateData(
+                                  filteredCustomerProducts,
+                                  currentPages.customerProducts,
+                                );
+                                return paginatedCustomerProducts.length > 0 ? (
+                                  paginatedCustomerProducts.map(
+                                    (product: any) => {
+                                      // Find customer details
+                                      const customer = Array.isArray(customers)
+                                        ? customers.find(
+                                            (c: any) =>
+                                              c.id === product.customer_id,
+                                          )
+                                        : null;
+                                      // Find item details
+                                      const item = Array.isArray(items)
+                                        ? items.find(
+                                            (i: any) =>
+                                              i.id === product.item_id,
+                                          )
+                                        : null;
+
+                                      return (
+                                        <tr
+                                          key={product.id}
+                                          className="hover:bg-gray-50"
+                                        >
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                            {product.id}
+                                          </td>
+                                          <td className="px-3 py-4 text-sm text-gray-900 text-center">
+                                            <div className="flex flex-col items-center">
+                                              <span className="font-medium">
+                                                {customer?.name_ar ||
+                                                  customer?.name ||
+                                                  "-"}
+                                              </span>
+                                              <span className="text-xs text-gray-500">
+                                                {customer?.name || "-"}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {item?.name_ar || item?.name || "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.size_caption || "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.is_printed
+                                              ? product.printing_cylinder ||
+                                                "بدون طباعة"
+                                              : product.cutting_length_cm
+                                                ? `${formatNumber(parseFloat(product.cutting_length_cm))} سم`
+                                                : "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.raw_material || "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {(() => {
+                                              const masterBatchColor =
+                                                masterBatchColors.find(
+                                                  (mb) =>
+                                                    mb.id ===
+                                                    product.master_batch_id,
+                                                );
+                                              return masterBatchColor ? (
+                                                <div className="flex items-center justify-center gap-2">
+                                                  <div
+                                                    className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
+                                                    style={{
+                                                      backgroundColor:
+                                                        masterBatchColor.color,
+                                                    }}
+                                                    title={
+                                                      masterBatchColor.name
+                                                    }
+                                                  ></div>
+                                                  <span className="text-xs font-medium text-gray-700">
+                                                    {masterBatchColor.name_ar}
+                                                  </span>
+                                                </div>
+                                              ) : (
+                                                product.master_batch_id || "-"
+                                              );
+                                            })()}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.punching || "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.cutting_unit || "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                                            {product.package_weight_kg
+                                              ? `${formatNumber(parseFloat(product.package_weight_kg))} كغ`
+                                              : "-"}
+                                          </td>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                            <div className="flex items-center justify-center gap-1">
+                                              {/* Edit Button */}
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setEditingItem(product);
+                                                  setCustomerProductForm({
+                                                    customer_id:
+                                                      product.customer_id ||
+                                                      "none",
+                                                    category_id:
+                                                      product.category_id ||
+                                                      "none",
+                                                    item_id:
+                                                      product.item_id || "none",
+                                                    size_caption:
+                                                      product.size_caption ||
+                                                      "",
+                                                    width: product.width || "",
+                                                    left_facing:
+                                                      product.left_facing || "",
+                                                    right_facing:
+                                                      product.right_facing ||
+                                                      "",
+                                                    thickness:
+                                                      product.thickness || "",
+                                                    printing_cylinder:
+                                                      product.printing_cylinder ||
+                                                      "بدون طباعة",
+                                                    cutting_length_cm:
+                                                      product.cutting_length_cm ||
+                                                      "",
+                                                    raw_material:
+                                                      product.raw_material ||
+                                                      "",
+                                                    master_batch_id:
+                                                      product.master_batch_id ||
+                                                      "",
+                                                    is_printed:
+                                                      product.is_printed ||
+                                                      false,
+                                                    cutting_unit:
+                                                      product.cutting_unit ||
+                                                      "",
+                                                    punching:
+                                                      product.punching || "",
+                                                    unit_weight_kg:
+                                                      product.unit_weight_kg ||
+                                                      "",
+                                                    unit_quantity:
+                                                      product.unit_quantity ||
+                                                      "",
+                                                    package_weight_kg:
+                                                      product.package_weight_kg ||
+                                                      "",
+                                                    cliche_front_design:
+                                                      product.cliche_front_design ||
+                                                      "",
+                                                    cliche_back_design:
+                                                      product.cliche_back_design ||
+                                                      "",
+                                                    front_design_filename: "",
+                                                    back_design_filename: "",
+                                                    notes: product.notes || "",
+                                                    status:
+                                                      product.status ||
+                                                      "active",
+                                                  });
+                                                  setSelectedTab(
+                                                    "customer-products",
+                                                  );
+                                                  setIsDialogOpen(true);
+                                                }}
+                                                title="تحديث"
+                                              >
+                                                <Edit className="w-3 h-3" />
+                                              </Button>
+
+                                              {/* Clone Button */}
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleCloneCustomerProduct(
+                                                    product,
+                                                  )
+                                                }
+                                                title="استنساخ"
+                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                              >
+                                                <Copy className="w-3 h-3" />
+                                              </Button>
+
+                                              {/* Print Button */}
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handlePrintCustomerProduct(
+                                                    product,
+                                                  )
+                                                }
+                                                title="طباعة"
+                                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                              >
+                                                <Printer className="w-3 h-3" />
+                                              </Button>
+
+                                              {/* Delete Button */}
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() =>
+                                                  handleDeleteCustomerProduct(
+                                                    product,
+                                                  )
+                                                }
+                                                title="حذف"
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                disabled={
+                                                  deleteCustomerProductMutation.isPending
+                                                }
+                                              >
+                                                {deleteCustomerProductMutation.isPending ? (
+                                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                                                ) : (
+                                                  <Trash2 className="w-3 h-3" />
+                                                )}
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      );
+                                    },
+                                  )
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={11}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد منتجات مطابقة للبحث
+                                    </td>
+                                  </tr>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredCustomerProducts =
+                              getFilteredCustomerProducts();
+                            const totalPages = getTotalPages(
+                              filteredCustomerProducts.length,
+                            );
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.customerProducts}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("customerProducts", page)
+                                  }
+                                  totalItems={filteredCustomerProducts.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Locations Tab */}
+                <TabsContent value="locations" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          إدارة المواقع
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("locations");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة موقع
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {locationsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  النوع
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredLocations =
+                                  getFilteredLocations();
+                                const paginatedLocations = paginateData(
+                                  filteredLocations,
+                                  currentPages.locations,
+                                );
+                                return paginatedLocations.length > 0 ? (
+                                  paginatedLocations.map((location: any) => (
+                                    <tr
+                                      key={location.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {location.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.type || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(location);
+                                              setLocationForm({
+                                                name: location.name || "",
+                                                name_ar: location.name_ar || "",
+                                                type: location.type || "city",
+                                                parent_id:
+                                                  location.parent_id || "",
+                                                coordinates:
+                                                  location.coordinates || "",
+                                                status:
+                                                  location.status || "active",
+                                              });
+                                              setSelectedTab("locations");
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مواقع مطابقة للبحث
+                                    </td>
+                                  </tr>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredLocations = getFilteredLocations();
+                            const totalPages = getTotalPages(
+                              filteredLocations.length,
+                            );
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.locations}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("locations", page)
+                                  }
+                                  totalItems={filteredLocations.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Machines Tab */}
+                <TabsContent value="machines" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Settings className="w-5 h-5" />
+                          إدارة الماكينات
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("machines");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة ماكينة
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {machinesLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  النوع
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredMachines = getFilteredMachines();
+                                const paginatedMachines = paginateData(
+                                  filteredMachines,
+                                  currentPages.machines,
+                                );
+                                return paginatedMachines.length > 0 ? (
+                                  paginatedMachines.map((machine: any) => (
+                                    <tr
+                                      key={machine.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {machine.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {machine.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {machine.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {machine.type || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(machine);
+                                              setMachineForm({
+                                                name: machine.name || "",
+                                                name_ar: machine.name_ar || "",
+                                                type:
+                                                  machine.type || "extruder",
+                                                section_id:
+                                                  machine.section_id || "",
+                                                status:
+                                                  machine.status || "active",
+                                              });
+                                              setSelectedTab("machines");
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد ماكينات مطابقة للبحث
+                                    </td>
+                                  </tr>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredMachines = getFilteredMachines();
+                            const totalPages = getTotalPages(
+                              filteredMachines.length,
+                            );
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.machines}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("machines", page)
+                                  }
+                                  totalItems={filteredMachines.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Users Tab */}
+                <TabsContent value="users" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <User className="w-5 h-5" />
+                          إدارة المستخدمين
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("users");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة مستخدم
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {usersLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم المستخدم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  القسم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الدور
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredUsers = getFilteredUsers();
+                                const paginatedUsers = paginateData(
+                                  filteredUsers,
+                                  currentPages.users,
+                                );
+                                return paginatedUsers.length > 0 ? (
+                                  paginatedUsers.map((user: any) => (
+                                    <tr
+                                      key={user.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {user.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {user.username || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {user.display_name || user.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {(() => {
+                                          if (!user.section_id) return "-";
+                                          // Map numeric section_id to section string ID
+                                          const sectionMapping: {
+                                            [key: number]: string;
+                                          } = {
+                                            1: "SEC01",
+                                            2: "SEC02",
+                                            3: "SEC03",
+                                            4: "SEC04",
+                                            5: "SEC05",
+                                            6: "SEC06",
+                                            7: "SEC07",
+                                          };
+                                          const sectionId =
+                                            sectionMapping[user.section_id];
+                                          const section =
+                                            Array.isArray(sections) &&
+                                            sections.find(
+                                              (s: any) => s.id === sectionId,
+                                            );
+                                          return section
+                                            ? section.name_ar || section.name
+                                            : `قسم ${user.section_id}`;
+                                        })()}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {(() => {
+                                          if (!user.role_id) return "-";
+                                          const role =
+                                            Array.isArray(roles) &&
+                                            roles.find(
+                                              (r: any) => r.id === user.role_id,
+                                            );
+                                          return role
+                                            ? role.name_ar || role.name
+                                            : "-";
+                                        })()}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(user);
+                                              setUserForm({
+                                                username: user.username || "",
+                                                display_name:
+                                                  user.display_name || "",
+                                                display_name_ar:
+                                                  user.display_name_ar || "",
+                                                role_id: user.role_id
+                                                  ? `ROLE0${user.role_id < 10 ? "0" + user.role_id : user.role_id}`
+                                                  : "none",
+                                                section_id: (() => {
+                                                  if (!user.section_id)
+                                                    return "none";
+                                                  const sectionMapping: {
+                                                    [key: number]: string;
+                                                  } = {
+                                                    1: "SEC01",
+                                                    2: "SEC02",
+                                                    3: "SEC03",
+                                                    4: "SEC04",
+                                                    5: "SEC05",
+                                                    6: "SEC06",
+                                                    7: "SEC07",
+                                                  };
+                                                  return (
+                                                    sectionMapping[
+                                                      user.section_id
+                                                    ] || "none"
+                                                  );
+                                                })(),
+                                                status: user.status || "active",
+                                              });
+                                              setSelectedTab("users");
+                                              setIsDialogOpen(true);
+                                            }}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={5}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مستخدمين مطابقة للبحث
+                                    </td>
+                                  </tr>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredUsers = getFilteredUsers();
+                            const totalPages = getTotalPages(
+                              filteredUsers.length,
+                            );
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.users}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("users", page)
+                                  }
+                                  totalItems={filteredUsers.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Locations Tab */}
+                <TabsContent value="locations" className="space-y-6">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          إدارة المواقع
+                        </CardTitle>
+                        <Button
+                          onClick={() => {
+                            resetForm();
+                            setSelectedTab("locations");
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة موقع
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {locationsLoading ? (
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الإحداثيات
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  نطاق التسامح
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {(() => {
+                                const filteredLocations =
+                                  getFilteredLocations();
+                                const paginatedLocations = paginateData(
+                                  filteredLocations,
+                                  currentPages.locations,
+                                );
+                                return paginatedLocations.length > 0 ? (
+                                  paginatedLocations.map((location: any) => (
+                                    <tr
+                                      key={location.id}
+                                      className="hover:bg-gray-50"
+                                    >
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                        {location.id}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.name_ar || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.coordinates || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {location.tolerance_range || "-"} متر
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                              setEditingItem(location);
+                                              setLocationForm({
+                                                name: location.name || "",
+                                                name_ar: location.name_ar || "",
+                                                type: location.type || "city",
+                                                parent_id:
+                                                  location.parent_id || "",
+                                                coordinates:
+                                                  location.coordinates || "",
+                                                status:
+                                                  location.status || "active",
+                                              });
+                                              setSelectedTab("locations");
+                                              setIsDialogOpen(true);
+                                            }}
+                                            data-testid={`button-edit-location-${location.id}`}
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td
+                                      colSpan={6}
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مواقع مطابقة للبحث
+                                    </td>
+                                  </tr>
+                                );
+                              })()}
+                            </tbody>
+                          </table>
+                          {(() => {
+                            const filteredLocations = getFilteredLocations();
+                            const totalPages = getTotalPages(
+                              filteredLocations.length,
+                            );
+                            if (totalPages > 1) {
+                              return (
+                                <PaginationComponent
+                                  currentPage={currentPages.locations}
+                                  totalPages={totalPages}
+                                  onPageChange={(page) =>
+                                    updatePage("locations", page)
+                                  }
+                                  totalItems={filteredLocations.length}
+                                  itemsPerPage={itemsPerPage}
+                                />
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
               </Tabs>
             </div>
-            
+
             {/* All Dialogs for different entities */}
-            
+
             {/* Customer Add/Edit Dialog */}
-            {selectedTab === 'customers' && (
+            {selectedTab === "customers" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="customer-dialog-description">
+                <DialogContent
+                  className="max-w-4xl max-h-[90vh] overflow-y-auto"
+                  aria-describedby="customer-dialog-description"
+                >
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث العميل" : "إضافة عميل جديد"}
                     </DialogTitle>
                     <DialogDescription id="customer-dialog-description">
-                      {editingItem ? "تعديل بيانات العميل الحالي" : "إضافة عميل جديد إلى النظام"}
+                      {editingItem
+                        ? "تعديل بيانات العميل الحالي"
+                        : "إضافة عميل جديد إلى النظام"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -2402,7 +3226,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={customerForm.name_ar}
-                          onChange={(e) => setCustomerForm({...customerForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم العميل بالعربية"
                           className="mt-1"
                         />
@@ -2412,7 +3241,12 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={customerForm.name}
-                          onChange={(e) => setCustomerForm({...customerForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Customer Name"
                           className="mt-1"
                         />
@@ -2424,7 +3258,12 @@ const masterBatchColors = [
                         <Input
                           id="code"
                           value={customerForm.code}
-                          onChange={(e) => setCustomerForm({...customerForm, code: e.target.value})}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              code: e.target.value,
+                            })
+                          }
                           placeholder="كود العميل"
                           className="mt-1"
                         />
@@ -2434,7 +3273,12 @@ const masterBatchColors = [
                         <Input
                           id="phone"
                           value={customerForm.phone}
-                          onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              phone: e.target.value,
+                            })
+                          }
                           placeholder="رقم الهاتف"
                           className="mt-1"
                         />
@@ -2444,7 +3288,12 @@ const masterBatchColors = [
                         <Input
                           id="city"
                           value={customerForm.city}
-                          onChange={(e) => setCustomerForm({...customerForm, city: e.target.value})}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              city: e.target.value,
+                            })
+                          }
                           placeholder="المدينة"
                           className="mt-1"
                         />
@@ -2455,33 +3304,50 @@ const masterBatchColors = [
                       <Input
                         id="address"
                         value={customerForm.address}
-                        onChange={(e) => setCustomerForm({...customerForm, address: e.target.value})}
+                        onChange={(e) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            address: e.target.value,
+                          })
+                        }
                         placeholder="العنوان كاملاً"
                         className="mt-1"
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateCustomerMutation.mutate({ id: editingItem.id, data: customerForm });
+                          updateCustomerMutation.mutate({
+                            id: editingItem.id,
+                            data: customerForm,
+                          });
                         } else {
                           createCustomerMutation.mutate(customerForm);
                         }
                       }}
-                      disabled={createCustomerMutation.isPending || updateCustomerMutation.isPending}
+                      disabled={
+                        createCustomerMutation.isPending ||
+                        updateCustomerMutation.isPending
+                      }
                     >
-                      {createCustomerMutation.isPending || updateCustomerMutation.isPending ? (
+                      {createCustomerMutation.isPending ||
+                      updateCustomerMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -2490,7 +3356,7 @@ const masterBatchColors = [
             )}
 
             {/* Section Add/Edit Dialog */}
-            {selectedTab === 'sections' && (
+            {selectedTab === "sections" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -2498,7 +3364,9 @@ const masterBatchColors = [
                       {editingItem ? "تحديث القسم" : "إضافة قسم جديد"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تعديل بيانات القسم الحالي" : "إضافة قسم جديد للمؤسسة"}
+                      {editingItem
+                        ? "تعديل بيانات القسم الحالي"
+                        : "إضافة قسم جديد للمؤسسة"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -2508,7 +3376,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={sectionForm.name_ar}
-                          onChange={(e) => setSectionForm({...sectionForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setSectionForm({
+                              ...sectionForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم القسم بالعربية"
                           className="mt-1"
                         />
@@ -2518,7 +3391,12 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={sectionForm.name}
-                          onChange={(e) => setSectionForm({...sectionForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setSectionForm({
+                              ...sectionForm,
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Section Name"
                           className="mt-1"
                         />
@@ -2529,33 +3407,50 @@ const masterBatchColors = [
                       <Input
                         id="description"
                         value={sectionForm.description}
-                        onChange={(e) => setSectionForm({...sectionForm, description: e.target.value})}
+                        onChange={(e) =>
+                          setSectionForm({
+                            ...sectionForm,
+                            description: e.target.value,
+                          })
+                        }
                         placeholder="وصف القسم (اختياري)"
                         className="mt-1"
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateSectionMutation.mutate({ id: editingItem.id, data: sectionForm });
+                          updateSectionMutation.mutate({
+                            id: editingItem.id,
+                            data: sectionForm,
+                          });
                         } else {
                           createSectionMutation.mutate(sectionForm);
                         }
                       }}
-                      disabled={createSectionMutation.isPending || updateSectionMutation.isPending}
+                      disabled={
+                        createSectionMutation.isPending ||
+                        updateSectionMutation.isPending
+                      }
                     >
-                      {createSectionMutation.isPending || updateSectionMutation.isPending ? (
+                      {createSectionMutation.isPending ||
+                      updateSectionMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -2564,7 +3459,7 @@ const masterBatchColors = [
             )}
 
             {/* Category Add/Edit Dialog */}
-            {selectedTab === 'categories' && (
+            {selectedTab === "categories" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -2572,7 +3467,9 @@ const masterBatchColors = [
                       {editingItem ? "تحديث الفئة" : "إضافة فئة جديدة"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تعديل بيانات الفئة الحالية" : "إضافة فئة جديدة لتصنيف المنتجات"}
+                      {editingItem
+                        ? "تعديل بيانات الفئة الحالية"
+                        : "إضافة فئة جديدة لتصنيف المنتجات"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -2582,7 +3479,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={categoryForm.name_ar}
-                          onChange={(e) => setCategoryForm({...categoryForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setCategoryForm({
+                              ...categoryForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم الفئة بالعربية"
                           className="mt-1"
                         />
@@ -2592,63 +3494,97 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={categoryForm.name}
-                          onChange={(e) => setCategoryForm({...categoryForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setCategoryForm({
+                              ...categoryForm,
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Category Name"
                           className="mt-1"
                         />
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="code">الكود</Label>
                         <Input
                           id="code"
                           value={categoryForm.code}
-                          onChange={(e) => setCategoryForm({...categoryForm, code: e.target.value})}
+                          onChange={(e) =>
+                            setCategoryForm({
+                              ...categoryForm,
+                              code: e.target.value,
+                            })
+                          }
                           placeholder="كود الفئة (اختياري)"
                           className="mt-1"
                         />
                       </div>
                       <div>
                         <Label htmlFor="parent_id">الفئة الرئيسية</Label>
-                        <Select 
-                          value={categoryForm.parent_id} 
-                          onValueChange={(value) => setCategoryForm({...categoryForm, parent_id: value})}
+                        <Select
+                          value={categoryForm.parent_id}
+                          onValueChange={(value) =>
+                            setCategoryForm({
+                              ...categoryForm,
+                              parent_id: value,
+                            })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر الفئة الرئيسية" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">بدون فئة رئيسية</SelectItem>
-                            {Array.isArray(categories) && categories
-                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
-                              .map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id.toString()}>
-                                {cat.name_ar || cat.name} ({cat.id})
-                              </SelectItem>
-                            ))}
+                            <SelectItem value="none">
+                              بدون فئة رئيسية
+                            </SelectItem>
+                            {Array.isArray(categories) &&
+                              categories
+                                .filter(
+                                  (cat) =>
+                                    cat.id &&
+                                    cat.id !== "" &&
+                                    cat.id !== null &&
+                                    cat.id !== undefined,
+                                )
+                                .map((cat: any) => (
+                                  <SelectItem
+                                    key={cat.id}
+                                    value={cat.id.toString()}
+                                  >
+                                    {cat.name_ar || cat.name} ({cat.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="description">الوصف</Label>
                       <Input
                         id="description"
                         value={categoryForm.description}
-                        onChange={(e) => setCategoryForm({...categoryForm, description: e.target.value})}
+                        onChange={(e) =>
+                          setCategoryForm({
+                            ...categoryForm,
+                            description: e.target.value,
+                          })
+                        }
                         placeholder="وصف الفئة (اختياري)"
                         className="mt-1"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="status">الحالة</Label>
-                      <Select 
-                        value={categoryForm.status} 
-                        onValueChange={(value) => setCategoryForm({...categoryForm, status: value})}
+                      <Select
+                        value={categoryForm.status}
+                        onValueChange={(value) =>
+                          setCategoryForm({ ...categoryForm, status: value })
+                        }
                       >
                         <SelectTrigger className="mt-1">
                           <SelectValue />
@@ -2661,29 +3597,38 @@ const masterBatchColors = [
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateCategoryMutation.mutate({ 
-                            id: editingItem.id, 
-                            data: categoryForm 
+                          updateCategoryMutation.mutate({
+                            id: editingItem.id,
+                            data: categoryForm,
                           });
                         } else {
                           createCategoryMutation.mutate(categoryForm);
                         }
                       }}
-                      disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                      disabled={
+                        createCategoryMutation.isPending ||
+                        updateCategoryMutation.isPending
+                      }
                     >
-                      {createCategoryMutation.isPending || updateCategoryMutation.isPending ? (
+                      {createCategoryMutation.isPending ||
+                      updateCategoryMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -2692,7 +3637,7 @@ const masterBatchColors = [
             )}
 
             {/* Items Add/Edit Dialog */}
-            {selectedTab === 'items' && (
+            {selectedTab === "items" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -2700,7 +3645,9 @@ const masterBatchColors = [
                       {editingItem ? "تحديث الصنف" : "إضافة صنف جديد"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تعديل بيانات الصنف الحالي" : "إضافة صنف جديد إلى المخزون"}
+                      {editingItem
+                        ? "تعديل بيانات الصنف الحالي"
+                        : "إضافة صنف جديد إلى المخزون"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -2710,7 +3657,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={itemForm.name_ar}
-                          onChange={(e) => setItemForm({...itemForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setItemForm({
+                              ...itemForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم الصنف بالعربية"
                           className="mt-1"
                         />
@@ -2720,7 +3672,9 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={itemForm.name}
-                          onChange={(e) => setItemForm({...itemForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setItemForm({ ...itemForm, name: e.target.value })
+                          }
                           placeholder="Item Name"
                           className="mt-1"
                         />
@@ -2732,55 +3686,81 @@ const masterBatchColors = [
                         <Input
                           id="code"
                           value={itemForm.code}
-                          onChange={(e) => setItemForm({...itemForm, code: e.target.value})}
+                          onChange={(e) =>
+                            setItemForm({ ...itemForm, code: e.target.value })
+                          }
                           placeholder="كود الصنف"
                           className="mt-1"
                         />
                       </div>
                       <div>
                         <Label htmlFor="category_id">الفئة</Label>
-                        <Select 
-                          value={itemForm.category_id} 
-                          onValueChange={(value) => setItemForm({...itemForm, category_id: value})}
+                        <Select
+                          value={itemForm.category_id}
+                          onValueChange={(value) =>
+                            setItemForm({ ...itemForm, category_id: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر الفئة" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون فئة</SelectItem>
-                            {Array.isArray(categories) && categories
-                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
-                              .map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id.toString()}>
-                                {cat.name_ar || cat.name} ({cat.id})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(categories) &&
+                              categories
+                                .filter(
+                                  (cat) =>
+                                    cat.id &&
+                                    cat.id !== "" &&
+                                    cat.id !== null &&
+                                    cat.id !== undefined,
+                                )
+                                .map((cat: any) => (
+                                  <SelectItem
+                                    key={cat.id}
+                                    value={cat.id.toString()}
+                                  >
+                                    {cat.name_ar || cat.name} ({cat.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateItemMutation.mutate({ id: editingItem.id, data: itemForm });
+                          updateItemMutation.mutate({
+                            id: editingItem.id,
+                            data: itemForm,
+                          });
                         } else {
                           createItemMutation.mutate(itemForm);
                         }
                       }}
-                      disabled={createItemMutation.isPending || updateItemMutation.isPending}
+                      disabled={
+                        createItemMutation.isPending ||
+                        updateItemMutation.isPending
+                      }
                     >
-                      {createItemMutation.isPending || updateItemMutation.isPending ? (
+                      {createItemMutation.isPending ||
+                      updateItemMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -2789,15 +3769,19 @@ const masterBatchColors = [
             )}
 
             {/* Customer Products Add/Edit Dialog */}
-            {selectedTab === 'customer-products' && (
+            {selectedTab === "customer-products" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] w-full mx-4">
                   <DialogHeader>
                     <DialogTitle className="text-lg sm:text-xl">
-                      {editingItem ? "تحديث منتج العميل" : "إضافة منتج عميل جديد"}
+                      {editingItem
+                        ? "تحديث منتج العميل"
+                        : "إضافة منتج عميل جديد"}
                     </DialogTitle>
                     <DialogDescription className="text-sm sm:text-base">
-                      {editingItem ? "تعديل بيانات منتج العميل الحالي" : "إضافة منتج جديد لعميل محدد"}
+                      {editingItem
+                        ? "تعديل بيانات منتج العميل الحالي"
+                        : "إضافة منتج جديد لعميل محدد"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-6 py-4 px-2 sm:px-0">
@@ -2805,34 +3789,50 @@ const masterBatchColors = [
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="customer_id">العميل *</Label>
-                        <Select 
-                          value={customerProductForm.customer_id} 
-                          onValueChange={(value) => setCustomerProductForm({...customerProductForm, customer_id: value})}
+                        <Select
+                          value={customerProductForm.customer_id}
+                          onValueChange={(value) =>
+                            setCustomerProductForm({
+                              ...customerProductForm,
+                              customer_id: value,
+                            })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر العميل" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر العميل</SelectItem>
-                            {Array.isArray(customers) && customers
-                              .filter(customer => customer.id && customer.id !== '' && customer.id !== null && customer.id !== undefined)
-                              .map((customer: any) => (
-                              <SelectItem key={customer.id} value={customer.id.toString()}>
-                                {customer.name_ar || customer.name} ({customer.id})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(customers) &&
+                              customers
+                                .filter(
+                                  (customer) =>
+                                    customer.id &&
+                                    customer.id !== "" &&
+                                    customer.id !== null &&
+                                    customer.id !== undefined,
+                                )
+                                .map((customer: any) => (
+                                  <SelectItem
+                                    key={customer.id}
+                                    value={customer.id.toString()}
+                                  >
+                                    {customer.name_ar || customer.name} (
+                                    {customer.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label htmlFor="category_id">الفئة</Label>
-                        <Select 
-                          value={customerProductForm.category_id} 
+                        <Select
+                          value={customerProductForm.category_id}
                           onValueChange={(value) => {
                             setCustomerProductForm({
-                              ...customerProductForm, 
+                              ...customerProductForm,
                               category_id: value,
-                              item_id: '' // Reset item selection when category changes
+                              item_id: "", // Reset item selection when category changes
                             });
                           }}
                         >
@@ -2841,45 +3841,78 @@ const masterBatchColors = [
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر الفئة</SelectItem>
-                            {Array.isArray(categories) && categories
-                              .filter(cat => cat.id && cat.id !== '' && cat.id !== null && cat.id !== undefined)
-                              .map((cat: any) => (
-                              <SelectItem key={cat.id} value={cat.id.toString()}>
-                                {cat.name_ar || cat.name} ({cat.id})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(categories) &&
+                              categories
+                                .filter(
+                                  (cat) =>
+                                    cat.id &&
+                                    cat.id !== "" &&
+                                    cat.id !== null &&
+                                    cat.id !== undefined,
+                                )
+                                .map((cat: any) => (
+                                  <SelectItem
+                                    key={cat.id}
+                                    value={cat.id.toString()}
+                                  >
+                                    {cat.name_ar || cat.name} ({cat.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label htmlFor="item_id">الصنف</Label>
-                        <Select 
-                          value={customerProductForm.item_id} 
-                          onValueChange={(value) => setCustomerProductForm({...customerProductForm, item_id: value})}
-                          disabled={!customerProductForm.category_id || customerProductForm.category_id === 'none'}
+                        <Select
+                          value={customerProductForm.item_id}
+                          onValueChange={(value) =>
+                            setCustomerProductForm({
+                              ...customerProductForm,
+                              item_id: value,
+                            })
+                          }
+                          disabled={
+                            !customerProductForm.category_id ||
+                            customerProductForm.category_id === "none"
+                          }
                         >
                           <SelectTrigger className="mt-1">
-                            <SelectValue placeholder={
-                              !customerProductForm.category_id || customerProductForm.category_id === 'none' 
-                                ? "اختر الفئة أولاً" 
-                                : "اختر الصنف"
-                            } />
+                            <SelectValue
+                              placeholder={
+                                !customerProductForm.category_id ||
+                                customerProductForm.category_id === "none"
+                                  ? "اختر الفئة أولاً"
+                                  : "اختر الصنف"
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">اختر الصنف</SelectItem>
-                            {Array.isArray(items) && items
-                              .filter((item: any) => 
-                                customerProductForm.category_id && 
-                                customerProductForm.category_id !== 'none' && 
-                                item.category_id === customerProductForm.category_id
-                              )
-                              .filter(item => item.id && item.id !== '' && item.id !== null && item.id !== undefined)
-                              .map((item: any) => (
-                                <SelectItem key={item.id} value={item.id.toString()}>
-                                  {item.name_ar || item.name} ({item.code})
-                                </SelectItem>
-                              ))
-                            }
+                            {Array.isArray(items) &&
+                              items
+                                .filter(
+                                  (item: any) =>
+                                    customerProductForm.category_id &&
+                                    customerProductForm.category_id !==
+                                      "none" &&
+                                    item.category_id ===
+                                      customerProductForm.category_id,
+                                )
+                                .filter(
+                                  (item) =>
+                                    item.id &&
+                                    item.id !== "" &&
+                                    item.id !== null &&
+                                    item.id !== undefined,
+                                )
+                                .map((item: any) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.id.toString()}
+                                  >
+                                    {item.name_ar || item.name} ({item.code})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -2887,10 +3920,14 @@ const masterBatchColors = [
 
                     {/* وصف الحجم والتثقيب */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">مواصفات المنتج</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        مواصفات المنتج
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="size_caption">مقاس المنتج (يُحسب تلقائياً)</Label>
+                          <Label htmlFor="size_caption">
+                            مقاس المنتج (يُحسب تلقائياً)
+                          </Label>
                           <Input
                             id="size_caption"
                             value={customerProductForm.size_caption}
@@ -2901,9 +3938,14 @@ const masterBatchColors = [
                         </div>
                         <div>
                           <Label htmlFor="punching">التخريم</Label>
-                          <Select 
-                            value={customerProductForm.punching} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, punching: value})}
+                          <Select
+                            value={customerProductForm.punching}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                punching: value,
+                              })
+                            }
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="اختر نوع التخريم" />
@@ -2911,7 +3953,9 @@ const masterBatchColors = [
                             <SelectContent>
                               <SelectItem value="بدون">بدون</SelectItem>
                               <SelectItem value="علاقي">علاقي</SelectItem>
-                              <SelectItem value="علاقي هوك">علاقي هوك</SelectItem>
+                              <SelectItem value="علاقي هوك">
+                                علاقي هوك
+                              </SelectItem>
                               <SelectItem value="بنانة">بنانة</SelectItem>
                             </SelectContent>
                           </Select>
@@ -2921,16 +3965,25 @@ const masterBatchColors = [
 
                     {/* الأبعاد والقياسات بالترتيب المطلوب */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الأبعاد والقياسات</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الأبعاد والقياسات
+                      </h4>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="right_facing">الجانب الأيمن (سم)</Label>
+                          <Label htmlFor="right_facing">
+                            الجانب الأيمن (سم)
+                          </Label>
                           <Input
                             id="right_facing"
                             type="number"
                             step="0.01"
                             value={customerProductForm.right_facing}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, right_facing: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                right_facing: e.target.value,
+                              })
+                            }
                             placeholder="0.00"
                             className="mt-1"
                           />
@@ -2942,19 +3995,31 @@ const masterBatchColors = [
                             type="number"
                             step="0.01"
                             value={customerProductForm.width}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, width: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                width: e.target.value,
+                              })
+                            }
                             placeholder="0.00"
                             className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="left_facing">الجانب الأيسر (سم)</Label>
+                          <Label htmlFor="left_facing">
+                            الجانب الأيسر (سم)
+                          </Label>
                           <Input
                             id="left_facing"
                             type="number"
                             step="0.01"
                             value={customerProductForm.left_facing}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, left_facing: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                left_facing: e.target.value,
+                              })
+                            }
                             placeholder="0.00"
                             className="mt-1"
                           />
@@ -2966,7 +4031,12 @@ const masterBatchColors = [
                             type="number"
                             step="0.01"
                             value={customerProductForm.thickness}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, thickness: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                thickness: e.target.value,
+                              })
+                            }
                             placeholder="0.00"
                             className="mt-1"
                           />
@@ -2976,38 +4046,66 @@ const masterBatchColors = [
 
                     {/* الطباعة والقطع */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">مواصفات الطباعة والقطع</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        مواصفات الطباعة والقطع
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="printing_cylinder">أسطوانة الطباعة</Label>
-                          <Select 
-                            value={customerProductForm.printing_cylinder} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, printing_cylinder: value})}
+                          <Label htmlFor="printing_cylinder">
+                            أسطوانة الطباعة
+                          </Label>
+                          <Select
+                            value={customerProductForm.printing_cylinder}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                printing_cylinder: value,
+                              })
+                            }
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="اختر الأسطوانة" />
                             </SelectTrigger>
                             <SelectContent>
                               {printingCylinderOptions
-                                .filter(option => option.value && option.value !== '' && option.value !== null && option.value !== undefined)
+                                .filter(
+                                  (option) =>
+                                    option.value &&
+                                    option.value !== "" &&
+                                    option.value !== null &&
+                                    option.value !== undefined,
+                                )
                                 .map((option) => (
-                                <SelectItem key={option.value} value={option.value.toString()}>
-                                  {option.label}
-                                </SelectItem>
-                              ))}
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value.toString()}
+                                  >
+                                    {option.label}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="cutting_length_cm">طول القطع (سم)</Label>
+                          <Label htmlFor="cutting_length_cm">
+                            طول القطع (سم)
+                          </Label>
                           <Input
                             id="cutting_length_cm"
                             type="number"
                             value={customerProductForm.cutting_length_cm}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, cutting_length_cm: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                cutting_length_cm: e.target.value,
+                              })
+                            }
                             placeholder="يحسب تلقائياً أو أدخل يدوياً"
                             className="mt-1"
-                            disabled={customerProductForm.printing_cylinder !== 'بدون طباعة'}
+                            disabled={
+                              customerProductForm.printing_cylinder !==
+                              "بدون طباعة"
+                            }
                           />
                         </div>
                         <div className="flex items-center gap-3 mt-6 p-3 bg-gray-50 rounded-md">
@@ -3018,13 +4116,23 @@ const masterBatchColors = [
                             className="rounded w-4 h-4"
                             disabled
                           />
-                          <Label htmlFor="is_printed" className="text-gray-600 text-sm">منتج مطبوع (يتم تحديده تلقائياً)</Label>
+                          <Label
+                            htmlFor="is_printed"
+                            className="text-gray-600 text-sm"
+                          >
+                            منتج مطبوع (يتم تحديده تلقائياً)
+                          </Label>
                         </div>
                         <div>
                           <Label htmlFor="cutting_unit">وحدة القطع</Label>
-                          <Select 
-                            value={customerProductForm.cutting_unit} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, cutting_unit: value})}
+                          <Select
+                            value={customerProductForm.cutting_unit}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                cutting_unit: value,
+                              })
+                            }
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="اختر الوحدة" />
@@ -3042,13 +4150,20 @@ const masterBatchColors = [
 
                     {/* المواد والخامات */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">المواد والخامات</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        المواد والخامات
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="raw_material">المادة الخام</Label>
-                          <Select 
-                            value={customerProductForm.raw_material} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, raw_material: value})}
+                          <Select
+                            value={customerProductForm.raw_material}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                raw_material: value,
+                              })
+                            }
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="اختر المادة الخام" />
@@ -3061,10 +4176,17 @@ const masterBatchColors = [
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="master_batch_id">لون الماستر باتش</Label>
-                          <Select 
-                            value={customerProductForm.master_batch_id} 
-                            onValueChange={(value) => setCustomerProductForm({...customerProductForm, master_batch_id: value})}
+                          <Label htmlFor="master_batch_id">
+                            لون الماستر باتش
+                          </Label>
+                          <Select
+                            value={customerProductForm.master_batch_id}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                master_batch_id: value,
+                              })
+                            }
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue placeholder="اختر اللون" />
@@ -3072,23 +4194,41 @@ const masterBatchColors = [
                             <SelectContent>
                               <SelectItem value="none">بدون لون</SelectItem>
                               {masterBatchColors
-                                .filter(color => color.id && color.id !== '' && color.id !== null && color.id !== undefined)
+                                .filter(
+                                  (color) =>
+                                    color.id &&
+                                    color.id !== "" &&
+                                    color.id !== null &&
+                                    color.id !== undefined,
+                                )
                                 .map((color) => (
-                                <SelectItem key={color.id} value={color.id.toString()}>
-                                  <div className="flex items-center gap-3">
-                                    <div 
-                                      className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
-                                      style={{ 
-                                        backgroundColor: color.color,
-                                        border: color.id === 'transparent' ? '2px dashed #ccc' : `2px solid ${color.color}`
-                                      }}
-                                    >
-                                      {color.id === 'transparent' && <span className="text-xs text-gray-400">⊘</span>}
+                                  <SelectItem
+                                    key={color.id}
+                                    value={color.id.toString()}
+                                  >
+                                    <div className="flex items-center gap-3">
+                                      <div
+                                        className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
+                                        style={{
+                                          backgroundColor: color.color,
+                                          border:
+                                            color.id === "transparent"
+                                              ? "2px dashed #ccc"
+                                              : `2px solid ${color.color}`,
+                                        }}
+                                      >
+                                        {color.id === "transparent" && (
+                                          <span className="text-xs text-gray-400">
+                                            ⊘
+                                          </span>
+                                        )}
+                                      </div>
+                                      <span className="font-medium">
+                                        {color.name_ar}
+                                      </span>
                                     </div>
-                                    <span className="font-medium">{color.name_ar}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -3097,16 +4237,25 @@ const masterBatchColors = [
 
                     {/* الأوزان والكميات */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الأوزان والكميات</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الأوزان والكميات
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
-                          <Label htmlFor="unit_weight_kg">وزن الوحدة (كغ)</Label>
+                          <Label htmlFor="unit_weight_kg">
+                            وزن الوحدة (كغ)
+                          </Label>
                           <Input
                             id="unit_weight_kg"
                             type="number"
                             step="0.001"
                             value={customerProductForm.unit_weight_kg}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, unit_weight_kg: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                unit_weight_kg: e.target.value,
+                              })
+                            }
                             placeholder="0.00"
                             className="mt-1"
                           />
@@ -3117,13 +4266,20 @@ const masterBatchColors = [
                             id="unit_quantity"
                             type="number"
                             value={customerProductForm.unit_quantity}
-                            onChange={(e) => setCustomerProductForm({...customerProductForm, unit_quantity: e.target.value})}
+                            onChange={(e) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                unit_quantity: e.target.value,
+                              })
+                            }
                             placeholder="0"
                             className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="package_weight_kg">وزن العبوة (كغ) - محسوب تلقائياً</Label>
+                          <Label htmlFor="package_weight_kg">
+                            وزن العبوة (كغ) - محسوب تلقائياً
+                          </Label>
                           <Input
                             id="package_weight_kg"
                             type="number"
@@ -3139,10 +4295,14 @@ const masterBatchColors = [
 
                     {/* الكليشيهات والتصاميم */}
                     <div className="space-y-4">
-                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">الكليشيهات والتصاميم</h4>
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الكليشيهات والتصاميم
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="cliche_front_design">تصميم الوجه الأمامي</Label>
+                          <Label htmlFor="cliche_front_design">
+                            تصميم الوجه الأمامي
+                          </Label>
                           <div className="space-y-2">
                             <Input
                               id="cliche_front_design"
@@ -3153,21 +4313,22 @@ const masterBatchColors = [
                                 if (file) {
                                   // Validate file size (max 5MB)
                                   if (file.size > 5 * 1024 * 1024) {
-                                    toast({ 
-                                      title: "حجم الملف كبير جداً", 
-                                      description: "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
-                                      variant: "destructive"
+                                    toast({
+                                      title: "حجم الملف كبير جداً",
+                                      description:
+                                        "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+                                      variant: "destructive",
                                     });
                                     return;
                                   }
-                                  
+
                                   const reader = new FileReader();
                                   reader.onload = (e) => {
                                     const result = e.target?.result as string;
                                     setCustomerProductForm({
-                                      ...customerProductForm, 
+                                      ...customerProductForm,
                                       cliche_front_design: result,
-                                      front_design_filename: file.name
+                                      front_design_filename: file.name,
                                     });
                                   };
                                   reader.readAsDataURL(file);
@@ -3187,11 +4348,13 @@ const masterBatchColors = [
                                   variant="destructive"
                                   size="sm"
                                   className="absolute top-1 right-1 h-6 w-6 p-0"
-                                  onClick={() => setCustomerProductForm({
-                                    ...customerProductForm, 
-                                    cliche_front_design: '',
-                                    front_design_filename: ''
-                                  })}
+                                  onClick={() =>
+                                    setCustomerProductForm({
+                                      ...customerProductForm,
+                                      cliche_front_design: "",
+                                      front_design_filename: "",
+                                    })
+                                  }
                                 >
                                   ✕
                                 </Button>
@@ -3200,7 +4363,9 @@ const masterBatchColors = [
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="cliche_back_design">تصميم الوجه الخلفي</Label>
+                          <Label htmlFor="cliche_back_design">
+                            تصميم الوجه الخلفي
+                          </Label>
                           <div className="space-y-2">
                             <Input
                               id="cliche_back_design"
@@ -3211,21 +4376,22 @@ const masterBatchColors = [
                                 if (file) {
                                   // Validate file size (max 5MB)
                                   if (file.size > 5 * 1024 * 1024) {
-                                    toast({ 
-                                      title: "حجم الملف كبير جداً", 
-                                      description: "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
-                                      variant: "destructive"
+                                    toast({
+                                      title: "حجم الملف كبير جداً",
+                                      description:
+                                        "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+                                      variant: "destructive",
                                     });
                                     return;
                                   }
-                                  
+
                                   const reader = new FileReader();
                                   reader.onload = (e) => {
                                     const result = e.target?.result as string;
                                     setCustomerProductForm({
-                                      ...customerProductForm, 
+                                      ...customerProductForm,
                                       cliche_back_design: result,
-                                      back_design_filename: file.name
+                                      back_design_filename: file.name,
                                     });
                                   };
                                   reader.readAsDataURL(file);
@@ -3245,11 +4411,13 @@ const masterBatchColors = [
                                   variant="destructive"
                                   size="sm"
                                   className="absolute top-1 right-1 h-6 w-6 p-0"
-                                  onClick={() => setCustomerProductForm({
-                                    ...customerProductForm, 
-                                    cliche_back_design: '',
-                                    back_design_filename: ''
-                                  })}
+                                  onClick={() =>
+                                    setCustomerProductForm({
+                                      ...customerProductForm,
+                                      cliche_back_design: "",
+                                      back_design_filename: "",
+                                    })
+                                  }
                                 >
                                   ✕
                                 </Button>
@@ -3262,11 +4430,18 @@ const masterBatchColors = [
 
                     {/* ملاحظات */}
                     <div>
-                      <Label htmlFor="notes" className="text-base">ملاحظات</Label>
+                      <Label htmlFor="notes" className="text-base">
+                        ملاحظات
+                      </Label>
                       <textarea
                         id="notes"
                         value={customerProductForm.notes}
-                        onChange={(e) => setCustomerProductForm({...customerProductForm, notes: e.target.value})}
+                        onChange={(e) =>
+                          setCustomerProductForm({
+                            ...customerProductForm,
+                            notes: e.target.value,
+                          })
+                        }
                         placeholder="أي ملاحظات إضافية حول المنتج..."
                         className="mt-2 w-full p-3 border border-gray-300 rounded-md resize-none text-right"
                         rows={4}
@@ -3275,8 +4450,8 @@ const masterBatchColors = [
                     </div>
                   </div>
                   <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       onClick={() => setIsDialogOpen(false)}
                       className="w-full sm:w-auto order-2 sm:order-1"
                     >
@@ -3287,32 +4462,61 @@ const masterBatchColors = [
                         // Convert string fields to numbers for validation
                         const processedData = {
                           ...customerProductForm,
-                          cutting_length_cm: customerProductForm.cutting_length_cm ? parseInt(customerProductForm.cutting_length_cm) : undefined,
-                          unit_quantity: customerProductForm.unit_quantity ? parseInt(customerProductForm.unit_quantity) : undefined,
-                          width: customerProductForm.width ? parseFloat(customerProductForm.width) : undefined,
-                          left_facing: customerProductForm.left_facing ? parseFloat(customerProductForm.left_facing) : undefined,
-                          right_facing: customerProductForm.right_facing ? parseFloat(customerProductForm.right_facing) : undefined,
-                          thickness: customerProductForm.thickness ? parseFloat(customerProductForm.thickness) : undefined,
-                          unit_weight_kg: customerProductForm.unit_weight_kg ? parseFloat(customerProductForm.unit_weight_kg) : undefined,
-                          package_weight_kg: customerProductForm.package_weight_kg ? parseFloat(customerProductForm.package_weight_kg) : undefined,
+                          cutting_length_cm:
+                            customerProductForm.cutting_length_cm
+                              ? parseInt(customerProductForm.cutting_length_cm)
+                              : undefined,
+                          unit_quantity: customerProductForm.unit_quantity
+                            ? parseInt(customerProductForm.unit_quantity)
+                            : undefined,
+                          width: customerProductForm.width
+                            ? parseFloat(customerProductForm.width)
+                            : undefined,
+                          left_facing: customerProductForm.left_facing
+                            ? parseFloat(customerProductForm.left_facing)
+                            : undefined,
+                          right_facing: customerProductForm.right_facing
+                            ? parseFloat(customerProductForm.right_facing)
+                            : undefined,
+                          thickness: customerProductForm.thickness
+                            ? parseFloat(customerProductForm.thickness)
+                            : undefined,
+                          unit_weight_kg: customerProductForm.unit_weight_kg
+                            ? parseFloat(customerProductForm.unit_weight_kg)
+                            : undefined,
+                          package_weight_kg:
+                            customerProductForm.package_weight_kg
+                              ? parseFloat(
+                                  customerProductForm.package_weight_kg,
+                                )
+                              : undefined,
                         };
-                        
+
                         if (editingItem) {
-                          updateCustomerProductMutation.mutate({ id: editingItem.id, data: processedData });
+                          updateCustomerProductMutation.mutate({
+                            id: editingItem.id,
+                            data: processedData,
+                          });
                         } else {
                           createCustomerProductMutation.mutate(processedData);
                         }
                       }}
-                      disabled={createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending}
+                      disabled={
+                        createCustomerProductMutation.isPending ||
+                        updateCustomerProductMutation.isPending
+                      }
                       className="w-full sm:w-auto order-1 sm:order-2"
                     >
-                      {createCustomerProductMutation.isPending || updateCustomerProductMutation.isPending ? (
+                      {createCustomerProductMutation.isPending ||
+                      updateCustomerProductMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -3321,7 +4525,7 @@ const masterBatchColors = [
             )}
 
             {/* Locations Add/Edit Dialog */}
-            {selectedTab === 'locations' && (
+            {selectedTab === "locations" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -3329,7 +4533,9 @@ const masterBatchColors = [
                       {editingItem ? "تحديث الموقع" : "إضافة موقع جديد"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تحديث بيانات الموقع المحدد" : "إضافة موقع جديد لتخزين المواد والمنتجات"}
+                      {editingItem
+                        ? "تحديث بيانات الموقع المحدد"
+                        : "إضافة موقع جديد لتخزين المواد والمنتجات"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -3339,7 +4545,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={locationForm.name_ar}
-                          onChange={(e) => setLocationForm({...locationForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setLocationForm({
+                              ...locationForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم الموقع بالعربية"
                           className="mt-1"
                         />
@@ -3349,7 +4560,12 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={locationForm.name}
-                          onChange={(e) => setLocationForm({...locationForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setLocationForm({
+                              ...locationForm,
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Location Name"
                           className="mt-1"
                         />
@@ -3358,9 +4574,11 @@ const masterBatchColors = [
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="type">النوع</Label>
-                        <Select 
-                          value={locationForm.type} 
-                          onValueChange={(value) => setLocationForm({...locationForm, type: value})}
+                        <Select
+                          value={locationForm.type}
+                          onValueChange={(value) =>
+                            setLocationForm({ ...locationForm, type: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue />
@@ -3378,7 +4596,12 @@ const masterBatchColors = [
                         <Input
                           id="coordinates"
                           value={locationForm.coordinates}
-                          onChange={(e) => setLocationForm({...locationForm, coordinates: e.target.value})}
+                          onChange={(e) =>
+                            setLocationForm({
+                              ...locationForm,
+                              coordinates: e.target.value,
+                            })
+                          }
                           placeholder="lat,lng"
                           className="mt-1"
                         />
@@ -3386,26 +4609,38 @@ const masterBatchColors = [
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateLocationMutation.mutate({ id: editingItem.id, data: locationForm });
+                          updateLocationMutation.mutate({
+                            id: editingItem.id,
+                            data: locationForm,
+                          });
                         } else {
                           createLocationMutation.mutate(locationForm);
                         }
                       }}
-                      disabled={createLocationMutation.isPending || updateLocationMutation.isPending}
+                      disabled={
+                        createLocationMutation.isPending ||
+                        updateLocationMutation.isPending
+                      }
                     >
-                      {createLocationMutation.isPending || updateLocationMutation.isPending ? (
+                      {createLocationMutation.isPending ||
+                      updateLocationMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -3414,7 +4649,7 @@ const masterBatchColors = [
             )}
 
             {/* Machines Add/Edit Dialog */}
-            {selectedTab === 'machines' && (
+            {selectedTab === "machines" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -3422,7 +4657,9 @@ const masterBatchColors = [
                       {editingItem ? "تحديث الماكينة" : "إضافة ماكينة جديدة"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تحديث بيانات الماكينة المحددة" : "إضافة ماكينة جديدة إلى خط الإنتاج"}
+                      {editingItem
+                        ? "تحديث بيانات الماكينة المحددة"
+                        : "إضافة ماكينة جديدة إلى خط الإنتاج"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
@@ -3432,7 +4669,12 @@ const masterBatchColors = [
                         <Input
                           id="name_ar"
                           value={machineForm.name_ar}
-                          onChange={(e) => setMachineForm({...machineForm, name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setMachineForm({
+                              ...machineForm,
+                              name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم الماكينة بالعربية"
                           className="mt-1"
                         />
@@ -3442,7 +4684,12 @@ const masterBatchColors = [
                         <Input
                           id="name"
                           value={machineForm.name}
-                          onChange={(e) => setMachineForm({...machineForm, name: e.target.value})}
+                          onChange={(e) =>
+                            setMachineForm({
+                              ...machineForm,
+                              name: e.target.value,
+                            })
+                          }
                           placeholder="Machine Name"
                           className="mt-1"
                         />
@@ -3451,9 +4698,11 @@ const masterBatchColors = [
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="type">النوع</Label>
-                        <Select 
-                          value={machineForm.type} 
-                          onValueChange={(value) => setMachineForm({...machineForm, type: value})}
+                        <Select
+                          value={machineForm.type}
+                          onValueChange={(value) =>
+                            setMachineForm({ ...machineForm, type: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue />
@@ -3468,48 +4717,76 @@ const masterBatchColors = [
                       </div>
                       <div>
                         <Label htmlFor="section_id">القسم</Label>
-                        <Select 
-                          value={machineForm.section_id} 
-                          onValueChange={(value) => setMachineForm({...machineForm, section_id: value})}
+                        <Select
+                          value={machineForm.section_id}
+                          onValueChange={(value) =>
+                            setMachineForm({
+                              ...machineForm,
+                              section_id: value,
+                            })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر القسم" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون قسم</SelectItem>
-                            {Array.isArray(sections) && sections
-                              .filter(section => section.id && section.id !== '' && section.id !== null && section.id !== undefined)
-                              .map((section: any) => (
-                              <SelectItem key={section.id} value={section.id.toString()}>
-                                {section.name_ar || section.name} ({section.id})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(sections) &&
+                              sections
+                                .filter(
+                                  (section) =>
+                                    section.id &&
+                                    section.id !== "" &&
+                                    section.id !== null &&
+                                    section.id !== undefined,
+                                )
+                                .map((section: any) => (
+                                  <SelectItem
+                                    key={section.id}
+                                    value={section.id.toString()}
+                                  >
+                                    {section.name_ar || section.name} (
+                                    {section.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateMachineMutation.mutate({ id: editingItem.id, data: machineForm });
+                          updateMachineMutation.mutate({
+                            id: editingItem.id,
+                            data: machineForm,
+                          });
                         } else {
                           createMachineMutation.mutate(machineForm);
                         }
                       }}
-                      disabled={createMachineMutation.isPending || updateMachineMutation.isPending}
+                      disabled={
+                        createMachineMutation.isPending ||
+                        updateMachineMutation.isPending
+                      }
                     >
-                      {createMachineMutation.isPending || updateMachineMutation.isPending ? (
+                      {createMachineMutation.isPending ||
+                      updateMachineMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>
@@ -3518,7 +4795,7 @@ const masterBatchColors = [
             )}
 
             {/* Users Add/Edit Dialog */}
-            {selectedTab === 'users' && (
+            {selectedTab === "users" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
@@ -3526,17 +4803,26 @@ const masterBatchColors = [
                       {editingItem ? "تحديث المستخدم" : "إضافة مستخدم جديد"}
                     </DialogTitle>
                     <DialogDescription>
-                      {editingItem ? "تحديث بيانات المستخدم المحدد" : "إضافة مستخدم جديد إلى النظام"}
+                      {editingItem
+                        ? "تحديث بيانات المستخدم المحدد"
+                        : "إضافة مستخدم جديد إلى النظام"}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="display_name_ar">الاسم بالعربية *</Label>
+                        <Label htmlFor="display_name_ar">
+                          الاسم بالعربية *
+                        </Label>
                         <Input
                           id="display_name_ar"
                           value={userForm.display_name_ar}
-                          onChange={(e) => setUserForm({...userForm, display_name_ar: e.target.value})}
+                          onChange={(e) =>
+                            setUserForm({
+                              ...userForm,
+                              display_name_ar: e.target.value,
+                            })
+                          }
                           placeholder="اسم المستخدم بالعربية"
                           className="mt-1"
                         />
@@ -3546,7 +4832,12 @@ const masterBatchColors = [
                         <Input
                           id="display_name"
                           value={userForm.display_name}
-                          onChange={(e) => setUserForm({...userForm, display_name: e.target.value})}
+                          onChange={(e) =>
+                            setUserForm({
+                              ...userForm,
+                              display_name: e.target.value,
+                            })
+                          }
                           placeholder="Display Name"
                           className="mt-1"
                         />
@@ -3558,29 +4849,46 @@ const masterBatchColors = [
                         <Input
                           id="username"
                           value={userForm.username}
-                          onChange={(e) => setUserForm({...userForm, username: e.target.value})}
+                          onChange={(e) =>
+                            setUserForm({
+                              ...userForm,
+                              username: e.target.value,
+                            })
+                          }
                           placeholder="username"
                           className="mt-1"
                         />
                       </div>
                       <div>
                         <Label htmlFor="role_id">الدور</Label>
-                        <Select 
-                          value={userForm.role_id} 
-                          onValueChange={(value) => setUserForm({...userForm, role_id: value})}
+                        <Select
+                          value={userForm.role_id}
+                          onValueChange={(value) =>
+                            setUserForm({ ...userForm, role_id: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر الدور" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون دور</SelectItem>
-                            {Array.isArray(roles) && roles
-                              .filter(role => role.id && role.id !== '' && role.id !== null && role.id !== undefined)
-                              .map((role: any) => (
-                              <SelectItem key={role.id} value={`ROLE0${role.id}`}>
-                                {role.name_ar || role.name}
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(roles) &&
+                              roles
+                                .filter(
+                                  (role) =>
+                                    role.id &&
+                                    role.id !== "" &&
+                                    role.id !== null &&
+                                    role.id !== undefined,
+                                )
+                                .map((role: any) => (
+                                  <SelectItem
+                                    key={role.id}
+                                    value={`ROLE0${role.id}`}
+                                  >
+                                    {role.name_ar || role.name}
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -3588,30 +4896,45 @@ const masterBatchColors = [
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="section_id">القسم</Label>
-                        <Select 
-                          value={userForm.section_id} 
-                          onValueChange={(value) => setUserForm({...userForm, section_id: value})}
+                        <Select
+                          value={userForm.section_id}
+                          onValueChange={(value) =>
+                            setUserForm({ ...userForm, section_id: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر القسم" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="none">بدون قسم</SelectItem>
-                            {Array.isArray(sections) && sections
-                              .filter(section => section.id && section.id !== '' && section.id !== null && section.id !== undefined)
-                              .map((section: any) => (
-                              <SelectItem key={section.id} value={section.id.toString()}>
-                                {section.name_ar || section.name} ({section.id})
-                              </SelectItem>
-                            ))}
+                            {Array.isArray(sections) &&
+                              sections
+                                .filter(
+                                  (section) =>
+                                    section.id &&
+                                    section.id !== "" &&
+                                    section.id !== null &&
+                                    section.id !== undefined,
+                                )
+                                .map((section: any) => (
+                                  <SelectItem
+                                    key={section.id}
+                                    value={section.id.toString()}
+                                  >
+                                    {section.name_ar || section.name} (
+                                    {section.id})
+                                  </SelectItem>
+                                ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
                         <Label htmlFor="status">الحالة</Label>
-                        <Select 
-                          value={userForm.status} 
-                          onValueChange={(value) => setUserForm({...userForm, status: value})}
+                        <Select
+                          value={userForm.status}
+                          onValueChange={(value) =>
+                            setUserForm({ ...userForm, status: value })
+                          }
                         >
                           <SelectTrigger className="mt-1">
                             <SelectValue placeholder="اختر الحالة" />
@@ -3625,26 +4948,38 @@ const masterBatchColors = [
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsDialogOpen(false)}
+                    >
                       إلغاء
                     </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
-                          updateUserMutation.mutate({ id: editingItem.id, data: userForm });
+                          updateUserMutation.mutate({
+                            id: editingItem.id,
+                            data: userForm,
+                          });
                         } else {
                           createUserMutation.mutate(userForm);
                         }
                       }}
-                      disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                      disabled={
+                        createUserMutation.isPending ||
+                        updateUserMutation.isPending
+                      }
                     >
-                      {createUserMutation.isPending || updateUserMutation.isPending ? (
+                      {createUserMutation.isPending ||
+                      updateUserMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
+                      ) : editingItem ? (
+                        "تحديث"
                       ) : (
-                        editingItem ? "تحديث" : "حفظ"
+                        "حفظ"
                       )}
                     </Button>
                   </DialogFooter>

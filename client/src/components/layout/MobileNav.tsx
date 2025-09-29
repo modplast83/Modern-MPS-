@@ -1,19 +1,29 @@
-import { 
+import {
   Home,
-  Cog, 
-  Warehouse, 
-  ClipboardCheck, 
+  Cog,
+  Warehouse,
+  ClipboardCheck,
   Database,
-  BarChart3
+  BarChart3,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
 const navItems = [
   { name: "الرئيسية", name_ar: "الرئيسية", icon: Home, path: "/" },
   { name: "الإنتاج", name_ar: "الإنتاج", icon: Cog, path: "/production" },
-  { name: "المستودع", name_ar: "المستودع", icon: Warehouse, path: "/warehouse" },
+  {
+    name: "المستودع",
+    name_ar: "المستودع",
+    icon: Warehouse,
+    path: "/warehouse",
+  },
   { name: "الجودة", name_ar: "الجودة", icon: ClipboardCheck, path: "/quality" },
-  { name: "التعريفات", name_ar: "التعريفات", icon: Database, path: "/definitions" },
+  {
+    name: "التعريفات",
+    name_ar: "التعريفات",
+    icon: Database,
+    path: "/definitions",
+  },
 ];
 
 export default function MobileNav() {
@@ -25,12 +35,12 @@ export default function MobileNav() {
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path;
-          
+
           return (
             <Link key={item.name} href={item.path}>
-              <button 
+              <button
                 className={`flex flex-col items-center p-2 min-w-0 ${
-                  isActive ? 'text-blue-600' : 'text-gray-600'
+                  isActive ? "text-blue-600" : "text-gray-600"
                 }`}
               >
                 <Icon className="h-5 w-5 mb-1" />

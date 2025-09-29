@@ -6,7 +6,10 @@ interface OrdersStatsProps {
   productionOrders: any[];
 }
 
-export default function OrdersStats({ orders, productionOrders }: OrdersStatsProps) {
+export default function OrdersStats({
+  orders,
+  productionOrders,
+}: OrdersStatsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
@@ -38,7 +41,10 @@ export default function OrdersStats({ orders, productionOrders }: OrdersStatsPro
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-yellow-600">
-            {productionOrders.filter((po: any) => po.status === 'in_progress').length}
+            {
+              productionOrders.filter((po: any) => po.status === "in_progress")
+                .length
+            }
           </div>
           <p className="text-xs text-muted-foreground">أمر قيد التنفيذ</p>
         </CardContent>
@@ -51,7 +57,10 @@ export default function OrdersStats({ orders, productionOrders }: OrdersStatsPro
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-600">
-            {productionOrders.filter((po: any) => po.status === 'completed').length}
+            {
+              productionOrders.filter((po: any) => po.status === "completed")
+                .length
+            }
           </div>
           <p className="text-xs text-muted-foreground">أمر مكتمل</p>
         </CardContent>

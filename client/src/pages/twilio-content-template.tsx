@@ -1,9 +1,22 @@
-import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Alert, AlertDescription } from '../components/ui/alert';
-import { Badge } from '../components/ui/badge';
-import { CheckCircle, AlertTriangle, ExternalLink, Copy, FileText, Settings } from 'lucide-react';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Badge } from "../components/ui/badge";
+import {
+  CheckCircle,
+  AlertTriangle,
+  ExternalLink,
+  Copy,
+  FileText,
+  Settings,
+} from "lucide-react";
 
 export default function TwilioContentTemplate() {
   const [copied, setCopied] = useState(false);
@@ -15,64 +28,64 @@ export default function TwilioContentTemplate() {
   };
 
   const currentStatus = {
-    metaTemplate: 'welcome_hxc4485f514cb7d4536026fc56250f75e7',
-    businessId: '795259496521200',
-    metaBusinessManagerId: '8726984570657839',
-    twilioAccountSid: 'ACe4ba2fd2e98be5b019c354539404cc29',
-    twilioPhoneNumber: '+15557911537',
-    allCredentialsReady: true
+    metaTemplate: "welcome_hxc4485f514cb7d4536026fc56250f75e7",
+    businessId: "795259496521200",
+    metaBusinessManagerId: "8726984570657839",
+    twilioAccountSid: "ACe4ba2fd2e98be5b019c354539404cc29",
+    twilioPhoneNumber: "+15557911537",
+    allCredentialsReady: true,
   };
 
   const contentTemplateSteps = [
     {
-      id: 'access-console',
-      title: 'الدخول إلى Twilio Console',
-      description: 'الوصول إلى Content Template Builder',
+      id: "access-console",
+      title: "الدخول إلى Twilio Console",
+      description: "الوصول إلى Content Template Builder",
       completed: false,
       actions: [
-        'اذهب إلى console.twilio.com',
-        'سجل الدخول بحسابك',
+        "اذهب إلى console.twilio.com",
+        "سجل الدخول بحسابك",
         'اختر "Content" من القائمة الجانبية',
-        'اختر "Content Template Builder"'
-      ]
+        'اختر "Content Template Builder"',
+      ],
     },
     {
-      id: 'create-template',
-      title: 'إنشاء Content Template جديد',
-      description: 'ربط Meta template مع Twilio',
+      id: "create-template",
+      title: "إنشاء Content Template جديد",
+      description: "ربط Meta template مع Twilio",
       completed: false,
       actions: [
         'اضغط "Create new template"',
         'اختر "WhatsApp" كنوع المحتوى',
         'اختر "Pre-approved template" كمصدر',
-        'أدخل WhatsApp Business Account ID: 795259496521200',
-        'أدخل Meta template name: welcome_hxc4485f514cb7d4536026fc56250f75e7'
-      ]
+        "أدخل WhatsApp Business Account ID: 795259496521200",
+        "أدخل Meta template name: welcome_hxc4485f514cb7d4536026fc56250f75e7",
+      ],
     },
     {
-      id: 'configure-template',
-      title: 'تكوين القالب',
-      description: 'إعداد المتغيرات والمحتوى',
+      id: "configure-template",
+      title: "تكوين القالب",
+      description: "إعداد المتغيرات والمحتوى",
       completed: false,
       actions: [
         'أدخل اسم القالب: "MPBF Welcome Template"',
-        'اختر اللغة: Arabic (ar)',
-        'أضف متغير واحد للنص الديناميكي',
-        'احفظ القالب واحصل على ContentSid'
-      ]
+        "اختر اللغة: Arabic (ar)",
+        "أضف متغير واحد للنص الديناميكي",
+        "احفظ القالب واحصل على ContentSid",
+      ],
     },
     {
-      id: 'get-content-sid',
-      title: 'الحصول على ContentSid',
-      description: 'نسخ معرف القالب للاستخدام في الكود',
+      id: "get-content-sid",
+      title: "الحصول على ContentSid",
+      description: "نسخ معرف القالب للاستخدام في الكود",
       completed: true,
       actions: [
-        '✅ تم الحصول على ContentSid: HXc4485f514cb7d4536026fc56250f75e7',
-        '✅ تم إضافة TWILIO_CONTENT_SID في Replit Secrets',
-        '✅ النظام محدث لاستخدام Content Template',
-        '✅ خطأ 63016 تم حله نهائياً'
-      ]
-    }
+        "✅ تم الحصول على ContentSid: HXc4485f514cb7d4536026fc56250f75e7",
+        "✅ تم إضافة TWILIO_CONTENT_SID في Replit Secrets",
+        "✅ النظام محدث لاستخدام Content Template",
+        "✅ خطأ 63016 تم حله نهائياً",
+      ],
+    },
   ];
 
   const codeExample = `// تحديث server/services/notification-service.ts
@@ -96,7 +109,6 @@ async sendWhatsAppTemplateMessage(
   return (
     <div className="min-h-screen bg-gray-50 p-4" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-6">
-        
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -111,8 +123,9 @@ async sendWhatsAppTemplateMessage(
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>سبب الخطأ 63016:</strong> Twilio لا يتعرف على Meta template ID مباشرة. 
-            يجب إنشاء Content Template في Twilio Console وربطه بالقالب المُوافق عليه من Meta.
+            <strong>سبب الخطأ 63016:</strong> Twilio لا يتعرف على Meta template
+            ID مباشرة. يجب إنشاء Content Template في Twilio Console وربطه
+            بالقالب المُوافق عليه من Meta.
           </AlertDescription>
         </Alert>
 
@@ -132,47 +145,49 @@ async sendWhatsAppTemplateMessage(
                   {currentStatus.metaTemplate}
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Business Account ID:</Label>
                 <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                   {currentStatus.businessId}
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Twilio Account SID:</Label>
                 <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                   {currentStatus.twilioAccountSid}
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Twilio Phone Number:</Label>
                 <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                   {currentStatus.twilioPhoneNumber}
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Meta Business Manager ID:</Label>
                 <div className="font-mono text-xs bg-gray-100 p-2 rounded mt-1">
                   {currentStatus.metaBusinessManagerId}
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Content Template SID:</Label>
                 <div className="font-mono text-xs bg-green-100 p-2 rounded mt-1">
                   HXc4485f514cb7d4536026fc56250f75e7
                 </div>
               </div>
-              
+
               <div>
                 <Label className="font-medium">Status:</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-700 font-medium">إعداد مكتمل! ✅</span>
+                  <span className="text-sm text-green-700 font-medium">
+                    إعداد مكتمل! ✅
+                  </span>
                 </div>
               </div>
             </div>
@@ -182,7 +197,7 @@ async sendWhatsAppTemplateMessage(
         {/* Step-by-Step Guide */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-gray-900">خطوات الإعداد</h2>
-          
+
           {contentTemplateSteps.map((step, index) => (
             <Card key={step.id}>
               <CardHeader>
@@ -193,8 +208,14 @@ async sendWhatsAppTemplateMessage(
                     </span>
                     <span>{step.title}</span>
                   </div>
-                  <Badge className={step.completed ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>
-                    {step.completed ? 'مكتمل' : 'مطلوب'}
+                  <Badge
+                    className={
+                      step.completed
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }
+                  >
+                    {step.completed ? "مكتمل" : "مطلوب"}
                   </Badge>
                 </CardTitle>
                 <CardDescription>{step.description}</CardDescription>
@@ -202,7 +223,10 @@ async sendWhatsAppTemplateMessage(
               <CardContent>
                 <div className="space-y-2">
                   {step.actions.map((action, actionIndex) => (
-                    <div key={actionIndex} className="flex items-start gap-2 text-sm">
+                    <div
+                      key={actionIndex}
+                      className="flex items-start gap-2 text-sm"
+                    >
                       <span className="text-blue-500 mt-1">•</span>
                       <span>{action}</span>
                     </div>
@@ -235,8 +259,12 @@ async sendWhatsAppTemplateMessage(
                 className="absolute top-2 left-2"
                 onClick={() => copyToClipboard(codeExample)}
               >
-                {copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                {copied ? 'تم النسخ' : 'نسخ'}
+                {copied ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+                {copied ? "تم النسخ" : "نسخ"}
               </Button>
             </div>
           </CardContent>
@@ -250,7 +278,10 @@ async sendWhatsAppTemplateMessage(
           <CardContent className="text-blue-700 space-y-2">
             <div className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 mt-1 text-blue-600" />
-              <span>استخدم Meta template name الكامل: welcome_hxc4485f514cb7d4536026fc56250f75e7</span>
+              <span>
+                استخدم Meta template name الكامل:
+                welcome_hxc4485f514cb7d4536026fc56250f75e7
+              </span>
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="h-4 w-4 mt-1 text-blue-600" />
@@ -277,38 +308,80 @@ async sendWhatsAppTemplateMessage(
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button variant="outline" className="h-auto p-4 justify-start" asChild>
-                <a href="https://console.twilio.com/us1/develop/sms/content-template-builder" target="_blank" rel="noopener noreferrer">
+              <Button
+                variant="outline"
+                className="h-auto p-4 justify-start"
+                asChild
+              >
+                <a
+                  href="https://console.twilio.com/us1/develop/sms/content-template-builder"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="text-right">
-                    <div className="font-medium">Twilio Content Template Builder</div>
-                    <div className="text-sm text-gray-500">إنشاء Content Template</div>
+                    <div className="font-medium">
+                      Twilio Content Template Builder
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      إنشاء Content Template
+                    </div>
                   </div>
                 </a>
               </Button>
-              
-              <Button variant="outline" className="h-auto p-4 justify-start" asChild>
-                <a href="https://console.twilio.com/us1/develop/sms/content-template-builder/templates" target="_blank" rel="noopener noreferrer">
+
+              <Button
+                variant="outline"
+                className="h-auto p-4 justify-start"
+                asChild
+              >
+                <a
+                  href="https://console.twilio.com/us1/develop/sms/content-template-builder/templates"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="text-right">
                     <div className="font-medium">My Content Templates</div>
-                    <div className="text-sm text-gray-500">إدارة القوالب الحالية</div>
+                    <div className="text-sm text-gray-500">
+                      إدارة القوالب الحالية
+                    </div>
                   </div>
                 </a>
               </Button>
-              
-              <Button variant="outline" className="h-auto p-4 justify-start" asChild>
-                <a href="https://support.twilio.com/hc/en-us/articles/1260803965049-Sending-WhatsApp-template-messages-with-Twilio-Content-Templates" target="_blank" rel="noopener noreferrer">
+
+              <Button
+                variant="outline"
+                className="h-auto p-4 justify-start"
+                asChild
+              >
+                <a
+                  href="https://support.twilio.com/hc/en-us/articles/1260803965049-Sending-WhatsApp-template-messages-with-Twilio-Content-Templates"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="text-right">
                     <div className="font-medium">Twilio Documentation</div>
-                    <div className="text-sm text-gray-500">دليل Content Templates</div>
+                    <div className="text-sm text-gray-500">
+                      دليل Content Templates
+                    </div>
                   </div>
                 </a>
               </Button>
-              
-              <Button variant="outline" className="h-auto p-4 justify-start" asChild>
-                <a href="https://business.facebook.com/wa/manage/message-templates/" target="_blank" rel="noopener noreferrer">
+
+              <Button
+                variant="outline"
+                className="h-auto p-4 justify-start"
+                asChild
+              >
+                <a
+                  href="https://business.facebook.com/wa/manage/message-templates/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <div className="text-right">
                     <div className="font-medium">Meta Message Templates</div>
-                    <div className="text-sm text-gray-500">إدارة قوالب Meta</div>
+                    <div className="text-sm text-gray-500">
+                      إدارة قوالب Meta
+                    </div>
                   </div>
                 </a>
               </Button>
@@ -320,8 +393,9 @@ async sendWhatsAppTemplateMessage(
         <Alert>
           <CheckCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>الخطوة التالية:</strong> بعد إنشاء Content Template والحصول على ContentSid، 
-            أرسل لي المعرف وسأقوم بتحديث النظام ليستخدمه في إرسال الرسائل.
+            <strong>الخطوة التالية:</strong> بعد إنشاء Content Template والحصول
+            على ContentSid، أرسل لي المعرف وسأقوم بتحديث النظام ليستخدمه في
+            إرسال الرسائل.
           </AlertDescription>
         </Alert>
       </div>
@@ -330,5 +404,9 @@ async sendWhatsAppTemplateMessage(
 }
 
 function Label({ className, children, ...props }: any) {
-  return <label className={`text-sm font-medium ${className || ''}`} {...props}>{children}</label>;
+  return (
+    <label className={`text-sm font-medium ${className || ""}`} {...props}>
+      {children}
+    </label>
+  );
 }

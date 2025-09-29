@@ -8,12 +8,23 @@ import { Badge } from "../ui/badge";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import ErrorBoundary from "../ErrorBoundary";
-import { Bot, User, Send, Mic, MicOff, Volume2, FileText, Bell, TrendingUp, Settings } from "lucide-react";
+import {
+  Bot,
+  User,
+  Send,
+  Mic,
+  MicOff,
+  Volume2,
+  FileText,
+  Bell,
+  TrendingUp,
+  Settings,
+} from "lucide-react";
 import { generateMessageId } from "../../../../shared/id-generator";
 
 interface Message {
   id: string;
-  type: 'user' | 'assistant';
+  type: "user" | "assistant";
   content: string;
   timestamp: Date;
 }
@@ -21,8 +32,8 @@ interface Message {
 export default function AIAssistant() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      type: 'assistant',
+      id: "1",
+      type: "assistant",
       content: `🤖 مرحباً! أنا مساعدك الذكي المتطور في نظام MPBF Next.
 
 **قدراتي المتقدمة:**
@@ -40,76 +51,81 @@ export default function AIAssistant() {
 • "أرسل تنبيه صيانة للمكائن المتوقفة"
 
 كيف يمكنني مساعدتك اليوم؟`,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ]);
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const { toast } = useToast();
 
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
-    { 
-      label: 'تقرير الإنتاج', 
-      icon: TrendingUp, 
-      command: 'اعرض لي تقرير الإنتاج الذكي',
-      description: 'تحليل شامل للإنتاج مع توصيات'
+    {
+      label: "تقرير الإنتاج",
+      icon: TrendingUp,
+      command: "اعرض لي تقرير الإنتاج الذكي",
+      description: "تحليل شامل للإنتاج مع توصيات",
     },
-    { 
-      label: 'إضافة عميل', 
-      icon: User, 
-      command: 'أضف عميل جديد',
-      description: 'إضافة عميل جديد بالذكاء الاصطناعي'
+    {
+      label: "إضافة عميل",
+      icon: User,
+      command: "أضف عميل جديد",
+      description: "إضافة عميل جديد بالذكاء الاصطناعي",
     },
-    { 
-      label: 'فحص الإشعارات', 
-      icon: Bell, 
-      command: 'اعرض الإشعارات والتنبيهات النشطة',
-      description: 'مراجعة التنبيهات الذكية'
+    {
+      label: "فحص الإشعارات",
+      icon: Bell,
+      command: "اعرض الإشعارات والتنبيهات النشطة",
+      description: "مراجعة التنبيهات الذكية",
     },
-    { 
-      label: 'حالة المكائن', 
-      icon: Settings, 
-      command: 'ما هي حالة المكائن حالياً؟',
-      description: 'مراجعة حالة جميع المكائن'
-    }
+    {
+      label: "حالة المكائن",
+      icon: Settings,
+      command: "ما هي حالة المكائن حالياً؟",
+      description: "مراجعة حالة جميع المكائن",
+    },
   ];
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message, context: 'factory_operations', userId: 1 })
+        body: JSON.stringify({
+          message,
+          context: "factory_operations",
+          userId: 1,
+        }),
       });
       return response.json();
     },
     onSuccess: (response: any) => {
       const assistantMessage: Message = {
         id: generateMessageId(),
-        type: 'assistant',
-        content: response.reply || 'عذراً، لم أستطع معالجة طلبك في الوقت الحالي.',
-        timestamp: new Date()
+        type: "assistant",
+        content:
+          response.reply || "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.",
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
     },
     onError: () => {
       const errorMessage: Message = {
         id: generateMessageId(),
-        type: 'assistant',
-        content: 'عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.',
-        timestamp: new Date()
+        type: "assistant",
+        content: "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
       toast({
         title: "خطأ في المساعد الذكي",
         description: "لا يمكن الوصول لخدمة المساعد الذكي حالياً",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   const handleSendMessage = (message?: string) => {
@@ -118,14 +134,14 @@ export default function AIAssistant() {
 
     const userMessage: Message = {
       id: generateMessageId(),
-      type: 'user',
+      type: "user",
       content: messageToSend,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     sendMessageMutation.mutate(messageToSend);
-    setInputValue('');
+    setInputValue("");
     setShowQuickActions(false);
   };
 
@@ -134,7 +150,7 @@ export default function AIAssistant() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
@@ -146,15 +162,15 @@ export default function AIAssistant() {
       setIsListening(true);
       toast({
         title: "الاستماع نشط",
-        description: "تحدث الآن..."
+        description: "تحدث الآن...",
       });
-      
+
       // Simulate voice recognition (replace with actual implementation)
       const timeoutId = setTimeout(() => {
         setIsListening(false);
         setInputValue("ما هو حالة الإنتاج اليوم؟");
       }, 3000);
-      
+
       // Store timeout ID for cleanup
       (window as any).__voiceTimeout = timeoutId;
     } else {
@@ -168,9 +184,9 @@ export default function AIAssistant() {
   };
 
   const speakMessage = (content: string) => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(content);
-      utterance.lang = 'ar-SA';
+      utterance.lang = "ar-SA";
       speechSynthesis.speak(utterance);
     }
   };
@@ -192,25 +208,31 @@ export default function AIAssistant() {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
-                <div className={`flex gap-2 max-w-[80%] ${message.type === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.type === 'user' ? 'bg-blue-100' : 'bg-green-100'
-                  }`}>
-                    {message.type === 'user' ? (
+                <div
+                  className={`flex gap-2 max-w-[80%] ${message.type === "user" ? "flex-row-reverse" : "flex-row"}`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      message.type === "user" ? "bg-blue-100" : "bg-green-100"
+                    }`}
+                  >
+                    {message.type === "user" ? (
                       <User className="w-4 h-4 text-blue-600" />
                     ) : (
                       <Bot className="w-4 h-4 text-green-600" />
                     )}
                   </div>
-                  <div className={`rounded-lg p-3 ${
-                    message.type === 'user' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-100 text-gray-900'
-                  }`}>
+                  <div
+                    className={`rounded-lg p-3 ${
+                      message.type === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 text-gray-900"
+                    }`}
+                  >
                     <p className="text-sm">{message.content}</p>
-                    {message.type === 'assistant' && (
+                    {message.type === "assistant" && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -233,8 +255,14 @@ export default function AIAssistant() {
                   <div className="bg-gray-100 rounded-lg p-3">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.1s" }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.2s" }}
+                      ></div>
                     </div>
                   </div>
                 </div>
@@ -242,7 +270,7 @@ export default function AIAssistant() {
             )}
           </div>
         </ScrollArea>
-        
+
         <div className="p-4 border-t">
           <div className="flex gap-2">
             <Input
@@ -257,9 +285,13 @@ export default function AIAssistant() {
               variant="outline"
               size="sm"
               onClick={toggleVoiceInput}
-              className={isListening ? 'bg-red-100 text-red-600' : ''}
+              className={isListening ? "bg-red-100 text-red-600" : ""}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? (
+                <MicOff className="w-4 h-4" />
+              ) : (
+                <Mic className="w-4 h-4" />
+              )}
             </Button>
             <Button
               onClick={() => handleSendMessage()}

@@ -4,16 +4,16 @@ import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { formatNumber, formatPercentage } from '../../lib/formatNumber';
-import { 
-  Target, 
+import { formatNumber, formatPercentage } from "../../lib/formatNumber";
+import {
+  Target,
   Star,
   TrendingUp,
   Calendar,
   User,
   Plus,
   BarChart3,
-  Award
+  Award,
 } from "lucide-react";
 
 interface PerformanceReview {
@@ -22,10 +22,15 @@ interface PerformanceReview {
   review_period_start: string;
   review_period_end: string;
   reviewer_id: number;
-  review_type: 'annual' | 'quarterly' | 'project_based' | 'probation';
-  status: 'draft' | 'in_progress' | 'completed' | 'approved';
+  review_type: "annual" | "quarterly" | "project_based" | "probation";
+  status: "draft" | "in_progress" | "completed" | "approved";
   overall_score?: number;
-  overall_rating?: 'excellent' | 'very_good' | 'good' | 'needs_improvement' | 'unsatisfactory';
+  overall_rating?:
+    | "excellent"
+    | "very_good"
+    | "good"
+    | "needs_improvement"
+    | "unsatisfactory";
   goals_for_next_period?: string;
   development_plan?: string;
   reviewer_comments?: string;
@@ -48,86 +53,127 @@ interface PerformanceCriteria {
 export default function PerformanceReviews() {
   const [selectedReview, setSelectedReview] = useState<number | null>(null);
 
-  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<PerformanceReview[]>({
-    queryKey: ['/api/hr/performance-reviews'],
-    initialData: []
+  const { data: reviews = [], isLoading: reviewsLoading } = useQuery<
+    PerformanceReview[]
+  >({
+    queryKey: ["/api/hr/performance-reviews"],
+    initialData: [],
   });
 
-  const { data: criteria = [], isLoading: criteriaLoading } = useQuery<PerformanceCriteria[]>({
-    queryKey: ['/api/hr/performance-criteria'],
-    initialData: []
+  const { data: criteria = [], isLoading: criteriaLoading } = useQuery<
+    PerformanceCriteria[]
+  >({
+    queryKey: ["/api/hr/performance-criteria"],
+    initialData: [],
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'draft': return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
-      case 'approved': return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "draft":
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+      case "approved":
+        return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed': return 'مكتمل';
-      case 'in_progress': return 'قيد المراجعة';
-      case 'draft': return 'مسودة';
-      case 'approved': return 'معتمد';
-      default: return status;
+      case "completed":
+        return "مكتمل";
+      case "in_progress":
+        return "قيد المراجعة";
+      case "draft":
+        return "مسودة";
+      case "approved":
+        return "معتمد";
+      default:
+        return status;
     }
   };
 
   const getRatingColor = (rating: string) => {
     switch (rating) {
-      case 'excellent': return 'text-green-600 dark:text-green-400';
-      case 'very_good': return 'text-blue-600 dark:text-blue-400';
-      case 'good': return 'text-yellow-600 dark:text-yellow-400';
-      case 'needs_improvement': return 'text-orange-600 dark:text-orange-400';
-      case 'unsatisfactory': return 'text-red-600 dark:text-red-400';
-      default: return 'text-gray-600 dark:text-gray-400';
+      case "excellent":
+        return "text-green-600 dark:text-green-400";
+      case "very_good":
+        return "text-blue-600 dark:text-blue-400";
+      case "good":
+        return "text-yellow-600 dark:text-yellow-400";
+      case "needs_improvement":
+        return "text-orange-600 dark:text-orange-400";
+      case "unsatisfactory":
+        return "text-red-600 dark:text-red-400";
+      default:
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
   const getRatingText = (rating: string) => {
     switch (rating) {
-      case 'excellent': return 'ممتاز';
-      case 'very_good': return 'جيد جداً';
-      case 'good': return 'جيد';
-      case 'needs_improvement': return 'يحتاج تحسين';
-      case 'unsatisfactory': return 'غير مرضي';
-      default: return rating;
+      case "excellent":
+        return "ممتاز";
+      case "very_good":
+        return "جيد جداً";
+      case "good":
+        return "جيد";
+      case "needs_improvement":
+        return "يحتاج تحسين";
+      case "unsatisfactory":
+        return "غير مرضي";
+      default:
+        return rating;
     }
   };
 
   const getReviewTypeText = (type: string) => {
     switch (type) {
-      case 'annual': return 'تقييم سنوي';
-      case 'quarterly': return 'تقييم ربع سنوي';
-      case 'project_based': return 'تقييم مشروع';
-      case 'probation': return 'تقييم فترة تجريبية';
-      default: return type;
+      case "annual":
+        return "تقييم سنوي";
+      case "quarterly":
+        return "تقييم ربع سنوي";
+      case "project_based":
+        return "تقييم مشروع";
+      case "probation":
+        return "تقييم فترة تجريبية";
+      default:
+        return type;
     }
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600 dark:text-green-400';
-    if (score >= 80) return 'text-blue-600 dark:text-blue-400';
-    if (score >= 70) return 'text-yellow-600 dark:text-yellow-400';
-    if (score >= 60) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
+    if (score >= 90) return "text-green-600 dark:text-green-400";
+    if (score >= 80) return "text-blue-600 dark:text-blue-400";
+    if (score >= 70) return "text-yellow-600 dark:text-yellow-400";
+    if (score >= 60) return "text-orange-600 dark:text-orange-400";
+    return "text-red-600 dark:text-red-400";
   };
 
-  const averageScore = reviews.length > 0 
-    ? parseFloat((reviews.filter(r => r.overall_score).reduce((sum, r) => sum + (r.overall_score || 0), 0) / reviews.filter(r => r.overall_score).length).toFixed(1))
-    : 0;
+  const averageScore =
+    reviews.length > 0
+      ? parseFloat(
+          (
+            reviews
+              .filter((r) => r.overall_score)
+              .reduce((sum, r) => sum + (r.overall_score || 0), 0) /
+            reviews.filter((r) => r.overall_score).length
+          ).toFixed(1),
+        )
+      : 0;
 
   if (reviewsLoading || criteriaLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل تقييمات الأداء...</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            جاري تحميل تقييمات الأداء...
+          </p>
         </div>
       </div>
     );
@@ -157,8 +203,12 @@ export default function PerformanceReviews() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">إجمالي التقييمات</p>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{formatNumber(reviews.length)}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي التقييمات
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {formatNumber(reviews.length)}
+                </p>
               </div>
               <Target className="w-8 h-8 text-blue-600" />
             </div>
@@ -169,8 +219,12 @@ export default function PerformanceReviews() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">المتوسط العام</p>
-                <p className={`text-2xl font-bold ${getScoreColor(averageScore)}`}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  المتوسط العام
+                </p>
+                <p
+                  className={`text-2xl font-bold ${getScoreColor(averageScore)}`}
+                >
                   {formatPercentage(averageScore)}
                 </p>
               </div>
@@ -183,9 +237,16 @@ export default function PerformanceReviews() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">التقييمات المكتملة</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  التقييمات المكتملة
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatNumber(reviews.filter(r => r.status === 'completed' || r.status === 'approved').length)}
+                  {formatNumber(
+                    reviews.filter(
+                      (r) =>
+                        r.status === "completed" || r.status === "approved",
+                    ).length,
+                  )}
                 </p>
               </div>
               <Award className="w-8 h-8 text-purple-600" />
@@ -197,9 +258,13 @@ export default function PerformanceReviews() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-400">قيد المراجعة</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  قيد المراجعة
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {formatNumber(reviews.filter(r => r.status === 'in_progress').length)}
+                  {formatNumber(
+                    reviews.filter((r) => r.status === "in_progress").length,
+                  )}
                 </p>
               </div>
               <TrendingUp className="w-8 h-8 text-orange-600" />
@@ -219,13 +284,22 @@ export default function PerformanceReviews() {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {criteria.map((criterion) => (
-              <div key={criterion.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+              <div
+                key={criterion.id}
+                className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800"
+              >
                 <div className="flex justify-between items-start mb-2">
-                  <h4 className="font-medium">{criterion.name_ar || criterion.name}</h4>
-                  <Badge variant="outline">{formatPercentage(criterion.weight)}</Badge>
+                  <h4 className="font-medium">
+                    {criterion.name_ar || criterion.name}
+                  </h4>
+                  <Badge variant="outline">
+                    {formatPercentage(criterion.weight)}
+                  </Badge>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {criterion.description_ar || criterion.description || "لا يوجد وصف"}
+                  {criterion.description_ar ||
+                    criterion.description ||
+                    "لا يوجد وصف"}
                 </p>
                 <div className="mt-2">
                   <Badge variant="secondary" className="text-xs">
@@ -238,7 +312,9 @@ export default function PerformanceReviews() {
           {criteria.length === 0 && (
             <div className="text-center py-8">
               <Star className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 dark:text-gray-400">لا توجد معايير تقييم محددة</p>
+              <p className="text-gray-600 dark:text-gray-400">
+                لا توجد معايير تقييم محددة
+              </p>
               <Button variant="outline" className="mt-2">
                 إضافة معايير التقييم
               </Button>
@@ -267,14 +343,21 @@ export default function PerformanceReviews() {
                 </Badge>
               </div>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400">فترة التقييم</p>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    فترة التقييم
+                  </p>
                   <p className="font-medium">
-                    {new Date(review.review_period_start).toLocaleDateString('ar')} - 
-                    {new Date(review.review_period_end).toLocaleDateString('ar')}
+                    {new Date(review.review_period_start).toLocaleDateString(
+                      "ar",
+                    )}{" "}
+                    -
+                    {new Date(review.review_period_end).toLocaleDateString(
+                      "ar",
+                    )}
                   </p>
                 </div>
                 <div>
@@ -286,8 +369,12 @@ export default function PerformanceReviews() {
               {review.overall_score && (
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">النتيجة الإجمالية</span>
-                    <span className={`font-bold ${getScoreColor(review.overall_score)}`}>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      النتيجة الإجمالية
+                    </span>
+                    <span
+                      className={`font-bold ${getScoreColor(review.overall_score)}`}
+                    >
                       {formatPercentage(review.overall_score)}
                     </span>
                   </div>
@@ -297,8 +384,12 @@ export default function PerformanceReviews() {
 
               {review.overall_rating && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">التقدير العام</span>
-                  <Badge className={`${getRatingColor(review.overall_rating)} bg-transparent border`}>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    التقدير العام
+                  </span>
+                  <Badge
+                    className={`${getRatingColor(review.overall_rating)} bg-transparent border`}
+                  >
                     {getRatingText(review.overall_rating)}
                   </Badge>
                 </div>
@@ -306,12 +397,15 @@ export default function PerformanceReviews() {
 
               <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
                 <Calendar className="w-3 h-3" />
-                <span>تم الإنشاء: {new Date(review.created_at).toLocaleDateString('ar')}</span>
+                <span>
+                  تم الإنشاء:{" "}
+                  {new Date(review.created_at).toLocaleDateString("ar")}
+                </span>
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="flex-1"
                   onClick={() => setSelectedReview(review.id)}
                 >

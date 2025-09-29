@@ -58,7 +58,7 @@ export interface MachineStatus {
   name: string;
   name_ar?: string;
   type: string;
-  status: 'active' | 'maintenance' | 'down';
+  status: "active" | "maintenance" | "down";
   section_id?: number;
   current_employee?: string;
   productivity?: number;
@@ -67,7 +67,7 @@ export interface MachineStatus {
 export interface ChatMessage {
   id: string;
   content: string;
-  sender: 'user' | 'assistant';
+  sender: "user" | "assistant";
   timestamp: Date;
 }
 
@@ -75,7 +75,7 @@ export interface ProductionStage {
   id: string;
   name: string;
   name_ar: string;
-  key: 'film' | 'printing' | 'cutting';
+  key: "film" | "printing" | "cutting";
   active: boolean;
 }
 

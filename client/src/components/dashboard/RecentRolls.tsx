@@ -3,46 +3,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
-import { 
-  Package, 
-  Clock, 
-  User, 
-  Settings, 
-  CheckCircle2, 
+import {
+  Package,
+  Clock,
+  User,
+  Settings,
+  CheckCircle2,
   AlertCircle,
-  RefreshCw 
+  RefreshCw,
 } from "lucide-react";
 
 export default function RecentRolls() {
-  const { data: rolls = [], isLoading, refetch } = useQuery({
+  const {
+    data: rolls = [],
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["/api/rolls"],
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'failed':
-        return 'bg-red-100 text-red-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "failed":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'مكتمل';
-      case 'in_progress':
-        return 'قيد التنفيذ';
-      case 'pending':
-        return 'في الانتظار';
-      case 'failed':
-        return 'فشل';
+      case "completed":
+        return "مكتمل";
+      case "in_progress":
+        return "قيد التنفيذ";
+      case "pending":
+        return "في الانتظار";
+      case "failed":
+        return "فشل";
       default:
         return status;
     }
@@ -50,13 +54,13 @@ export default function RecentRolls() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed':
+      case "completed":
         return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case 'in_progress':
+      case "in_progress":
         return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
-      case 'pending':
+      case "pending":
         return <Clock className="w-4 h-4 text-yellow-600" />;
-      case 'failed':
+      case "failed":
         return <AlertCircle className="w-4 h-4 text-red-600" />;
       default:
         return <Package className="w-4 h-4 text-gray-600" />;
@@ -111,12 +115,13 @@ export default function RecentRolls() {
           {recentRolls.length > 0 ? (
             <div className="p-4 space-y-4">
               {recentRolls.map((roll: any) => (
-                <div key={roll.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                <div
+                  key={roll.id}
+                  className="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3">
-                      <div className="mt-1">
-                        {getStatusIcon(roll.status)}
-                      </div>
+                      <div className="mt-1">{getStatusIcon(roll.status)}</div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h4 className="font-medium text-gray-900 truncate">
@@ -126,42 +131,45 @@ export default function RecentRolls() {
                             {getStatusText(roll.status)}
                           </Badge>
                         </div>
-                        
+
                         <div className="space-y-1 text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <Package className="w-3 h-3" />
                             <span>أمر إنتاج: {roll.production_order_id}</span>
                           </div>
-                          
+
                           {roll.machine_id && (
                             <div className="flex items-center gap-1">
                               <Settings className="w-3 h-3" />
                               <span>ماكينة: {roll.machine_id}</span>
                             </div>
                           )}
-                          
+
                           {roll.employee_id && (
                             <div className="flex items-center gap-1">
                               <User className="w-3 h-3" />
                               <span>عامل: {roll.employee_id}</span>
                             </div>
                           )}
-                          
+
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>
-                              {new Date(roll.created_at).toLocaleDateString('ar', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
+                              {new Date(roll.created_at).toLocaleDateString(
+                                "ar",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       {roll.length && (
                         <div className="text-sm font-medium text-gray-900">
@@ -175,22 +183,31 @@ export default function RecentRolls() {
                       )}
                     </div>
                   </div>
-                  
+
                   {/* Progress bar for in-progress rolls */}
-                  {roll.status === 'in_progress' && roll.length && roll.target_length && (
-                    <div className="mt-3">
-                      <div className="flex justify-between text-xs text-gray-600 mb-1">
-                        <span>التقدم</span>
-                        <span>{Math.round((roll.length / roll.target_length) * 100)}%</span>
+                  {roll.status === "in_progress" &&
+                    roll.length &&
+                    roll.target_length && (
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>التقدم</span>
+                          <span>
+                            {Math.round(
+                              (roll.length / roll.target_length) * 100,
+                            )}
+                            %
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min((roll.length / roll.target_length) * 100, 100)}%`,
+                            }}
+                          ></div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min((roll.length / roll.target_length) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               ))}
             </div>

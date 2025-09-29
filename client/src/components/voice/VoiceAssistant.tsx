@@ -1,24 +1,30 @@
-import { useState, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { useSpeechRecognition } from '../../hooks/use-speech-recognition';
-import { useSpeechSynthesis } from '../../hooks/use-speech-synthesis';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Mic, 
-  MicOff, 
-  Volume2, 
-  VolumeX, 
+import { useState, useEffect } from "react";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Badge } from "../ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { useSpeechRecognition } from "../../hooks/use-speech-recognition";
+import { useSpeechSynthesis } from "../../hooks/use-speech-synthesis";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
   MessageSquare,
   Settings,
   Languages,
   Loader2,
   CheckCircle,
   AlertCircle,
-  Globe
-} from 'lucide-react';
+  Globe,
+} from "lucide-react";
 
 interface VoiceCommand {
   command: string;
@@ -33,14 +39,15 @@ interface AIResponse {
   data?: any;
 }
 
-type ArabicDialect = 'standard' | 'egyptian' | 'gulf' | 'levantine' | 'maghreb';
+type ArabicDialect = "standard" | "egyptian" | "gulf" | "levantine" | "maghreb";
 
 export function VoiceAssistant() {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [language, setLanguage] = useState<'ar-SA' | 'en-US'>('ar-SA');
-  const [selectedDialect, setSelectedDialect] = useState<ArabicDialect>('standard');
+  const [language, setLanguage] = useState<"ar-SA" | "en-US">("ar-SA");
+  const [selectedDialect, setSelectedDialect] =
+    useState<ArabicDialect>("standard");
   const [commandHistory, setCommandHistory] = useState<VoiceCommand[]>([]);
-  const [currentResponse, setCurrentResponse] = useState<string>('');
+  const [currentResponse, setCurrentResponse] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -51,12 +58,12 @@ export function VoiceAssistant() {
     startListening,
     stopListening,
     resetTranscript,
-    confidence
+    confidence,
   } = useSpeechRecognition({
     continuous: false,
     interimResults: true,
     language: language,
-    dialect: language === 'ar-SA' ? selectedDialect : undefined
+    dialect: language === "ar-SA" ? selectedDialect : undefined,
   });
 
   const {
@@ -66,27 +73,27 @@ export function VoiceAssistant() {
     isSupported: isSpeechSupported,
     getArabicVoices,
     getVoicesByDialect,
-    getAvailableDialects
+    getAvailableDialects,
   } = useSpeechSynthesis();
 
   // AI Assistant mutation
   const aiMutation = useMutation({
     mutationFn: async (command: string) => {
-      const response = await fetch('/api/ai/voice-command', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+      const response = await fetch("/api/ai/voice-command", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           command,
           language,
-          dialect: language === 'ar-SA' ? selectedDialect : undefined,
-          context: 'voice_assistant'
-        })
+          dialect: language === "ar-SA" ? selectedDialect : undefined,
+          context: "voice_assistant",
+        }),
       });
-      
+
       if (!response.ok) {
-        throw new Error('فشل في معالجة الأمر الصوتي');
+        throw new Error("فشل في معالجة الأمر الصوتي");
       }
-      
+
       return response.json() as Promise<AIResponse>;
     },
     onSuccess: (data, command) => {
@@ -94,17 +101,17 @@ export function VoiceAssistant() {
         command,
         confidence,
         timestamp: new Date(),
-        response: data.message
+        response: data.message,
       };
-      
-      setCommandHistory(prev => [newCommand, ...prev.slice(0, 9)]);
+
+      setCommandHistory((prev) => [newCommand, ...prev.slice(0, 9)]);
       setCurrentResponse(data.message);
-      
+
       // Speak the response with selected dialect
       if (isEnabled && data.message) {
-        speak(data.message, { 
+        speak(data.message, {
           lang: language,
-          dialect: language === 'ar-SA' ? selectedDialect : undefined
+          dialect: language === "ar-SA" ? selectedDialect : undefined,
         });
       }
 
@@ -114,23 +121,29 @@ export function VoiceAssistant() {
       }
     },
     onError: (error) => {
-      const errorMsg = language === 'ar-SA' 
-        ? 'عذراً، لم أتمكن من فهم الأمر' 
-        : 'Sorry, I could not understand the command';
-      
+      const errorMsg =
+        language === "ar-SA"
+          ? "عذراً، لم أتمكن من فهم الأمر"
+          : "Sorry, I could not understand the command";
+
       setCurrentResponse(errorMsg);
       if (isEnabled) {
-        speak(errorMsg, { 
+        speak(errorMsg, {
           lang: language,
-          dialect: language === 'ar-SA' ? selectedDialect : undefined
+          dialect: language === "ar-SA" ? selectedDialect : undefined,
         });
       }
-    }
+    },
   });
 
   // Process voice command when transcript is final
   useEffect(() => {
-    if (transcript && !isListening && transcript.trim().length > 2 && isEnabled) {
+    if (
+      transcript &&
+      !isListening &&
+      transcript.trim().length > 2 &&
+      isEnabled
+    ) {
       aiMutation.mutate(transcript);
       resetTranscript();
     }
@@ -138,21 +151,21 @@ export function VoiceAssistant() {
 
   const executeVoiceAction = (action: string, data: any) => {
     switch (action) {
-      case 'navigate':
+      case "navigate":
         if (data?.route) {
           window.location.href = data.route;
         }
         break;
-      case 'refresh_data':
+      case "refresh_data":
         if (data?.queryKey) {
           queryClient.invalidateQueries({ queryKey: [data.queryKey] });
         }
         break;
-      case 'show_stats':
-        queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      case "show_stats":
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
         break;
       default:
-        console.log('Unknown voice action:', action);
+        console.log("Unknown voice action:", action);
     }
   };
 
@@ -175,30 +188,31 @@ export function VoiceAssistant() {
   };
 
   const toggleLanguage = () => {
-    const newLang = language === 'ar-SA' ? 'en-US' : 'ar-SA';
+    const newLang = language === "ar-SA" ? "en-US" : "ar-SA";
     setLanguage(newLang);
-    
-    const message = newLang === 'ar-SA' 
-      ? 'تم تغيير اللغة إلى العربية' 
-      : 'Language changed to English';
-    
-    speak(message, { 
+
+    const message =
+      newLang === "ar-SA"
+        ? "تم تغيير اللغة إلى العربية"
+        : "Language changed to English";
+
+    speak(message, {
       lang: newLang,
-      dialect: newLang === 'ar-SA' ? selectedDialect : undefined
+      dialect: newLang === "ar-SA" ? selectedDialect : undefined,
     });
   };
 
   const handleDialectChange = (newDialect: ArabicDialect) => {
     setSelectedDialect(newDialect);
-    
+
     const dialectNames: Record<ArabicDialect, string> = {
-      'standard': 'العربية الفصحى',
-      'egyptian': 'اللهجة المصرية',
-      'gulf': 'اللهجة الخليجية',
-      'levantine': 'اللهجة الشامية',
-      'maghreb': 'اللهجة المغاربية'
+      standard: "العربية الفصحى",
+      egyptian: "اللهجة المصرية",
+      gulf: "اللهجة الخليجية",
+      levantine: "اللهجة الشامية",
+      maghreb: "اللهجة المغاربية",
     };
-    
+
     const message = `تم تغيير اللهجة إلى ${dialectNames[newDialect]}`;
     speak(message, { dialect: newDialect });
   };
@@ -210,10 +224,9 @@ export function VoiceAssistant() {
           <div className="text-center text-muted-foreground">
             <AlertCircle className="mx-auto h-8 w-8 mb-2" />
             <p className="text-sm">
-              {language === 'ar-SA' 
-                ? 'المتصفح لا يدعم الأوامر الصوتية'
-                : 'Voice commands not supported in this browser'
-              }
+              {language === "ar-SA"
+                ? "المتصفح لا يدعم الأوامر الصوتية"
+                : "Voice commands not supported in this browser"}
             </p>
           </div>
         </CardContent>
@@ -229,13 +242,18 @@ export function VoiceAssistant() {
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              {language === 'ar-SA' ? 'المساعد الصوتي' : 'Voice Assistant'}
+              {language === "ar-SA" ? "المساعد الصوتي" : "Voice Assistant"}
             </CardTitle>
-            
+
             <div className="flex items-center gap-2">
               {/* Dialect Selector for Arabic */}
-              {language === 'ar-SA' && (
-                <Select value={selectedDialect} onValueChange={(value: ArabicDialect) => handleDialectChange(value)}>
+              {language === "ar-SA" && (
+                <Select
+                  value={selectedDialect}
+                  onValueChange={(value: ArabicDialect) =>
+                    handleDialectChange(value)
+                  }
+                >
                   <SelectTrigger className="w-[140px] h-8">
                     <Globe className="h-4 w-4 mr-1" />
                     <SelectValue />
@@ -249,7 +267,7 @@ export function VoiceAssistant() {
                   </SelectContent>
                 </Select>
               )}
-              
+
               <Button
                 variant="outline"
                 size="sm"
@@ -257,9 +275,9 @@ export function VoiceAssistant() {
                 className="gap-2"
               >
                 <Languages className="h-4 w-4" />
-                {language === 'ar-SA' ? 'عربي' : 'EN'}
+                {language === "ar-SA" ? "عربي" : "EN"}
               </Button>
-              
+
               <Button
                 variant={isEnabled ? "default" : "outline"}
                 size="sm"
@@ -267,10 +285,13 @@ export function VoiceAssistant() {
                 className="gap-2"
               >
                 <Settings className="h-4 w-4" />
-                {isEnabled 
-                  ? (language === 'ar-SA' ? 'مفعل' : 'ON') 
-                  : (language === 'ar-SA' ? 'غير مفعل' : 'OFF')
-                }
+                {isEnabled
+                  ? language === "ar-SA"
+                    ? "مفعل"
+                    : "ON"
+                  : language === "ar-SA"
+                    ? "غير مفعل"
+                    : "OFF"}
               </Button>
             </div>
           </div>
@@ -289,12 +310,12 @@ export function VoiceAssistant() {
               {isListening ? (
                 <>
                   <MicOff className="h-5 w-5" />
-                  {language === 'ar-SA' ? 'إيقاف' : 'Stop'}
+                  {language === "ar-SA" ? "إيقاف" : "Stop"}
                 </>
               ) : (
                 <>
                   <Mic className="h-5 w-5" />
-                  {language === 'ar-SA' ? 'تحدث' : 'Speak'}
+                  {language === "ar-SA" ? "تحدث" : "Speak"}
                 </>
               )}
             </Button>
@@ -306,14 +327,14 @@ export function VoiceAssistant() {
                 className="gap-2"
               >
                 <VolumeX className="h-4 w-4" />
-                {language === 'ar-SA' ? 'إيقاف الصوت' : 'Stop Audio'}
+                {language === "ar-SA" ? "إيقاف الصوت" : "Stop Audio"}
               </Button>
             )}
 
             {aiMutation.isPending && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                {language === 'ar-SA' ? 'جاري المعالجة...' : 'Processing...'}
+                {language === "ar-SA" ? "جاري المعالجة..." : "Processing..."}
               </div>
             )}
           </div>
@@ -324,7 +345,7 @@ export function VoiceAssistant() {
               <div className="flex items-center gap-2 mb-2">
                 <Mic className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium">
-                  {language === 'ar-SA' ? 'النص المسموع:' : 'Transcript:'}
+                  {language === "ar-SA" ? "النص المسموع:" : "Transcript:"}
                 </span>
                 {confidence > 0 && (
                   <Badge variant="secondary" className="text-xs">
@@ -333,7 +354,8 @@ export function VoiceAssistant() {
                 )}
               </div>
               <p className="text-sm">
-                {transcript || (language === 'ar-SA' ? 'استمع...' : 'Listening...')}
+                {transcript ||
+                  (language === "ar-SA" ? "استمع..." : "Listening...")}
               </p>
             </div>
           )}
@@ -344,7 +366,7 @@ export function VoiceAssistant() {
               <div className="flex items-center gap-2 mb-2">
                 <Volume2 className="h-4 w-4 text-blue-500" />
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                  {language === 'ar-SA' ? 'رد المساعد:' : 'Assistant Response:'}
+                  {language === "ar-SA" ? "رد المساعد:" : "Assistant Response:"}
                 </span>
               </div>
               <p className="text-sm text-blue-800 dark:text-blue-200">
@@ -356,25 +378,27 @@ export function VoiceAssistant() {
           {/* Voice Commands Help with Dialect Examples */}
           <div className="text-xs text-muted-foreground">
             <p className="font-medium mb-1">
-              {language === 'ar-SA' ? 'أمثلة على الأوامر الصوتية:' : 'Voice command examples:'}
+              {language === "ar-SA"
+                ? "أمثلة على الأوامر الصوتية:"
+                : "Voice command examples:"}
             </p>
             <ul className="space-y-1">
-              {language === 'ar-SA' ? (
-                selectedDialect === 'egyptian' ? (
+              {language === "ar-SA" ? (
+                selectedDialect === "egyptian" ? (
                   <>
                     <li>• "وريني إحصائيات الإنتاج"</li>
                     <li>• "روح لصفحة الطلبات"</li>
                     <li>• "إيه حالة المكن؟"</li>
                     <li>• "اعمل طلب جديد"</li>
                   </>
-                ) : selectedDialect === 'gulf' ? (
+                ) : selectedDialect === "gulf" ? (
                   <>
                     <li>• "خلني أشوف إحصائيات الإنتاج"</li>
                     <li>• "روح لصفحة الطلبيات"</li>
                     <li>• "شلون حالة المكائن؟"</li>
                     <li>• "سوي طلب جديد"</li>
                   </>
-                ) : selectedDialect === 'levantine' ? (
+                ) : selectedDialect === "levantine" ? (
                   <>
                     <li>• "فيني شوف إحصائيات الإنتاج"</li>
                     <li>• "روح عصفحة الطلبات"</li>
@@ -398,12 +422,18 @@ export function VoiceAssistant() {
                 </>
               )}
             </ul>
-            
-            {language === 'ar-SA' && selectedDialect !== 'standard' && (
+
+            {language === "ar-SA" && selectedDialect !== "standard" && (
               <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
-                💡 يمكنك استخدام اللهجة {selectedDialect === 'egyptian' ? 'المصرية' : 
-                  selectedDialect === 'gulf' ? 'الخليجية' : 
-                  selectedDialect === 'levantine' ? 'الشامية' : 'المغاربية'} أو العربية الفصحى
+                💡 يمكنك استخدام اللهجة{" "}
+                {selectedDialect === "egyptian"
+                  ? "المصرية"
+                  : selectedDialect === "gulf"
+                    ? "الخليجية"
+                    : selectedDialect === "levantine"
+                      ? "الشامية"
+                      : "المغاربية"}{" "}
+                أو العربية الفصحى
               </p>
             )}
           </div>
@@ -415,7 +445,7 @@ export function VoiceAssistant() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base">
-              {language === 'ar-SA' ? 'سجل الأوامر' : 'Command History'}
+              {language === "ar-SA" ? "سجل الأوامر" : "Command History"}
             </CardTitle>
           </CardHeader>
           <CardContent>

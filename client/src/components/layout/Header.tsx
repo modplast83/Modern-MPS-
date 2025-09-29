@@ -15,15 +15,17 @@ export default function Header() {
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center space-x-4 space-x-reverse">
           <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
-            <img 
-              src={FactoryLogoHPNGWg} 
-              alt="شعار مصنع الأكياس البلاستيكية" 
+            <img
+              src={FactoryLogoHPNGWg}
+              alt="شعار مصنع الأكياس البلاستيكية"
               className="w-full h-full object-contain mt-[0px] mb-[0px] pt-[0px] pb-[0px]"
             />
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">MPBF Next</h1>
-            <p className="text-sm text-gray-600">نظام إدارة مصنع الأكياس البلاستيكية</p>
+            <p className="text-sm text-gray-600">
+              نظام إدارة مصنع الأكياس البلاستيكية
+            </p>
           </div>
         </div>
 
@@ -32,7 +34,7 @@ export default function Header() {
             <Bot className="h-4 w-4 ml-2" />
             <span className="hidden sm:inline">المساعد الذكي</span>
           </Button>
-          
+
           <NotificationBell />
 
           <div className="flex items-center space-x-3 space-x-reverse">
@@ -42,11 +44,16 @@ export default function Header() {
               </p>
               <p className="text-xs text-gray-600">مدير الإنتاج</p>
             </div>
-            <button 
+            <button
               onClick={logout}
               className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
             >
-              {(user?.display_name_ar || user?.display_name || user?.username || 'م').charAt(0)}
+              {(
+                user?.display_name_ar ||
+                user?.display_name ||
+                user?.username ||
+                "م"
+              ).charAt(0)}
             </button>
           </div>
         </div>

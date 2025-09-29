@@ -1,10 +1,10 @@
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  Tooltip, 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
@@ -25,23 +25,26 @@ interface InteractivePieChartProps {
 }
 
 const COLORS = [
-  '#3b82f6', // blue
-  '#10b981', // emerald
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#84cc16', // lime
-  '#f97316', // orange
-  '#ec4899', // pink
-  '#6b7280'  // gray
+  "#3b82f6", // blue
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#06b6d4", // cyan
+  "#84cc16", // lime
+  "#f97316", // orange
+  "#ec4899", // pink
+  "#6b7280", // gray
 ];
 
 const CustomTooltip = ({ active, payload, formatValue }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
-      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg" dir="rtl">
+      <div
+        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
+        dir="rtl"
+      >
         <p className="font-medium text-gray-900">{data.name}</p>
         <p className="text-sm" style={{ color: data.fill }}>
           {`القيمة: ${formatValue ? formatValue(data.value) : data.value}`}
@@ -57,7 +60,15 @@ const CustomTooltip = ({ active, payload, formatValue }: any) => {
   return null;
 };
 
-const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+const renderCustomLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  name,
+}: any) => {
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -66,11 +77,11 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   if (percent < 0.05) return null; // Don't show label for slices less than 5%
 
   return (
-    <text 
-      x={x} 
-      y={y} 
-      fill="white" 
-      textAnchor={x > cx ? 'start' : 'end'} 
+    <text
+      x={x}
+      y={y}
+      fill="white"
+      textAnchor={x > cx ? "start" : "end"}
       dominantBaseline="central"
       fontSize={12}
       fontWeight="bold"
@@ -93,23 +104,29 @@ export function InteractivePieChart({
   formatValue,
   className = "",
   innerRadius = 0,
-  outerRadius = 80
+  outerRadius = 80,
 }: InteractivePieChartProps) {
   // Calculate percentages
   const total = data.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
-  const dataWithPercentages = data.map(item => ({
+  const dataWithPercentages = data.map((item) => ({
     ...item,
-    percentage: total > 0 ? (item[valueKey] / total) * 100 : 0
+    percentage: total > 0 ? (item[valueKey] / total) * 100 : 0,
   }));
 
   return (
     <Card className={`${className}`} data-testid="chart-interactive-pie">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900" data-testid="text-chart-title">
+        <CardTitle
+          className="text-lg font-semibold text-gray-900"
+          data-testid="text-chart-title"
+        >
           {title}
         </CardTitle>
         {description && (
-          <p className="text-sm text-gray-600" data-testid="text-chart-description">
+          <p
+            className="text-sm text-gray-600"
+            data-testid="text-chart-description"
+          >
             {description}
           </p>
         )}
@@ -130,18 +147,21 @@ export function InteractivePieChart({
               nameKey={nameKey}
             >
               {dataWithPercentages.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                <Cell
+                  key={`cell-${index}`}
+                  fill={colors[index % colors.length]}
+                />
               ))}
             </Pie>
-            <Tooltip 
-              content={<CustomTooltip formatValue={formatValue} />}
-            />
+            <Tooltip content={<CustomTooltip formatValue={formatValue} />} />
             {showLegend && (
-              <Legend 
-                verticalAlign="bottom" 
+              <Legend
+                verticalAlign="bottom"
                 height={36}
                 iconType="circle"
-                formatter={(value) => <span className="text-sm text-gray-700">{value}</span>}
+                formatter={(value) => (
+                  <span className="text-sm text-gray-700">{value}</span>
+                )}
               />
             )}
           </PieChart>

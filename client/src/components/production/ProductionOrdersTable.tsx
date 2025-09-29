@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
 import { Eye, Plus } from "lucide-react";
 import type { ProductionOrderWithDetails } from "@/types";
-import { formatNumber, formatWeight } from '../../lib/formatNumber';
+import { formatNumber, formatWeight } from "../../lib/formatNumber";
 
 const formatPercentage = (value: number): string => {
   return `${value}%`;
@@ -14,9 +14,17 @@ interface ProductionOrdersTableProps {
   onCreateRoll: (productionOrderId?: number) => void;
 }
 
-export default function ProductionOrdersTable({ stage, onCreateRoll }: ProductionOrdersTableProps) {
-  const { data: productionOrders = [], isLoading } = useQuery<ProductionOrderWithDetails[]>({
-    queryKey: stage === 'film' ? ['/api/production/film-queue'] : ['/api/production-orders', stage],
+export default function ProductionOrdersTable({
+  stage,
+  onCreateRoll,
+}: ProductionOrdersTableProps) {
+  const { data: productionOrders = [], isLoading } = useQuery<
+    ProductionOrderWithDetails[]
+  >({
+    queryKey:
+      stage === "film"
+        ? ["/api/production/film-queue"]
+        : ["/api/production-orders", stage],
   });
 
   if (isLoading) {
@@ -32,7 +40,9 @@ export default function ProductionOrdersTable({ stage, onCreateRoll }: Productio
   if (productionOrders.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">لا توجد أوامر إنتاج في هذه المرحلة</p>
+        <p className="text-muted-foreground">
+          لا توجد أوامر إنتاج في هذه المرحلة
+        </p>
       </div>
     );
   }
@@ -69,8 +79,9 @@ export default function ProductionOrdersTable({ stage, onCreateRoll }: Productio
           {productionOrders.map((order) => {
             const required = parseFloat(order.quantity_required) || 0;
             const produced = parseFloat(order.quantity_produced) || 0;
-            const progress = required > 0 ? Math.round((produced / required) * 100) : 0;
-            
+            const progress =
+              required > 0 ? Math.round((produced / required) * 100) : 0;
+
             let progressColor = "bg-primary";
             if (progress < 30) progressColor = "bg-danger";
             else if (progress < 70) progressColor = "bg-warning";
@@ -84,7 +95,10 @@ export default function ProductionOrdersTable({ stage, onCreateRoll }: Productio
                   {order.customer_name_ar || order.customer_name || "غير محدد"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {(order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد"}
+                  {(order as any).item_name_ar ||
+                    (order as any).item_name ||
+                    (order as any).size_caption ||
+                    "غير محدد"}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatWeight(required)}
@@ -95,18 +109,20 @@ export default function ProductionOrdersTable({ stage, onCreateRoll }: Productio
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="w-full bg-gray-200 rounded-full h-2 ml-3">
-                      <div 
+                      <div
                         className={`h-2 rounded-full ${progressColor}`}
                         style={{ width: `${Math.min(progress, 100)}%` }}
                       ></div>
                     </div>
-                    <span className="text-sm text-gray-900">{formatPercentage(progress)}</span>
+                    <span className="text-sm text-gray-900">
+                      {formatPercentage(progress)}
+                    </span>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-2 space-x-reverse">
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       onClick={() => onCreateRoll(order.id)}
                       className="text-primary hover:text-primary/80"
@@ -114,8 +130,8 @@ export default function ProductionOrdersTable({ stage, onCreateRoll }: Productio
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="sm"
                       className="text-gray-600 hover:text-gray-800"
                     >

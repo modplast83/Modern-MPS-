@@ -1,23 +1,23 @@
-import { 
-  ComposedChart, 
+import {
+  ComposedChart,
   Bar,
   Line,
   Area,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface ChartElement {
-  type: 'bar' | 'line' | 'area';
+  type: "bar" | "line" | "area";
   key: string;
   name: string;
   color: string;
-  yAxisId?: 'left' | 'right';
+  yAxisId?: "left" | "right";
 }
 
 interface ComboChartProps {
@@ -35,13 +35,23 @@ interface ComboChartProps {
   rightAxisLabel?: string;
 }
 
-const CustomTooltip = ({ active, payload, label, formatValue, formatRightAxis }: any) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  formatValue,
+  formatRightAxis,
+}: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg" dir="rtl">
+      <div
+        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
+        dir="rtl"
+      >
         <p className="font-medium text-gray-900">{`${label}`}</p>
         {payload.map((entry: any, index: number) => {
-          const formatter = entry.yAxisId === 'right' ? formatRightAxis : formatValue;
+          const formatter =
+            entry.yAxisId === "right" ? formatRightAxis : formatValue;
           return (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${formatter ? formatter(entry.value) : entry.value}`}
@@ -66,18 +76,24 @@ export function ComboChart({
   formatRightAxis,
   className = "",
   leftAxisLabel,
-  rightAxisLabel
+  rightAxisLabel,
 }: ComboChartProps) {
-  const hasRightAxis = elements.some(el => el.yAxisId === 'right');
+  const hasRightAxis = elements.some((el) => el.yAxisId === "right");
 
   return (
     <Card className={`${className}`} data-testid="chart-combo">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900" data-testid="text-chart-title">
+        <CardTitle
+          className="text-lg font-semibold text-gray-900"
+          data-testid="text-chart-title"
+        >
           {title}
         </CardTitle>
         {description && (
-          <p className="text-sm text-gray-600" data-testid="text-chart-description">
+          <p
+            className="text-sm text-gray-600"
+            data-testid="text-chart-description"
+          >
             {description}
           </p>
         )}
@@ -94,46 +110,63 @@ export function ComboChart({
             }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis 
+            <XAxis
               dataKey={xAxisKey}
-              tick={{ fontSize: 12, fill: '#374151' }}
-              tickLine={{ stroke: '#d1d5db' }}
-              axisLine={{ stroke: '#d1d5db' }}
+              tick={{ fontSize: 12, fill: "#374151" }}
+              tickLine={{ stroke: "#d1d5db" }}
+              axisLine={{ stroke: "#d1d5db" }}
             />
-            <YAxis 
+            <YAxis
               yAxisId="left"
-              tick={{ fontSize: 12, fill: '#374151' }}
-              tickLine={{ stroke: '#d1d5db' }}
-              axisLine={{ stroke: '#d1d5db' }}
+              tick={{ fontSize: 12, fill: "#374151" }}
+              tickLine={{ stroke: "#d1d5db" }}
+              axisLine={{ stroke: "#d1d5db" }}
               tickFormatter={formatValue}
-              label={leftAxisLabel ? { value: leftAxisLabel, angle: -90, position: 'insideLeft' } : undefined}
+              label={
+                leftAxisLabel
+                  ? { value: leftAxisLabel, angle: -90, position: "insideLeft" }
+                  : undefined
+              }
             />
             {hasRightAxis && (
-              <YAxis 
+              <YAxis
                 yAxisId="right"
                 orientation="right"
-                tick={{ fontSize: 12, fill: '#374151' }}
-                tickLine={{ stroke: '#d1d5db' }}
-                axisLine={{ stroke: '#d1d5db' }}
+                tick={{ fontSize: 12, fill: "#374151" }}
+                tickLine={{ stroke: "#d1d5db" }}
+                axisLine={{ stroke: "#d1d5db" }}
                 tickFormatter={formatRightAxis || formatValue}
-                label={rightAxisLabel ? { value: rightAxisLabel, angle: 90, position: 'insideRight' } : undefined}
+                label={
+                  rightAxisLabel
+                    ? {
+                        value: rightAxisLabel,
+                        angle: 90,
+                        position: "insideRight",
+                      }
+                    : undefined
+                }
               />
             )}
-            <Tooltip 
-              content={<CustomTooltip formatValue={formatValue} formatRightAxis={formatRightAxis} />}
+            <Tooltip
+              content={
+                <CustomTooltip
+                  formatValue={formatValue}
+                  formatRightAxis={formatRightAxis}
+                />
+              }
             />
             {showLegend && <Legend />}
-            
+
             {elements.map((element) => {
               const commonProps = {
                 key: element.key,
                 dataKey: element.key,
                 name: element.name,
-                yAxisId: element.yAxisId || 'left'
+                yAxisId: element.yAxisId || "left",
               };
 
               switch (element.type) {
-                case 'bar':
+                case "bar":
                   return (
                     <Bar
                       {...commonProps}
@@ -141,7 +174,7 @@ export function ComboChart({
                       radius={[2, 2, 0, 0]}
                     />
                   );
-                case 'line':
+                case "line":
                   return (
                     <Line
                       {...commonProps}
@@ -149,10 +182,14 @@ export function ComboChart({
                       stroke={element.color}
                       strokeWidth={2}
                       dot={{ fill: element.color, strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: element.color, strokeWidth: 2 }}
+                      activeDot={{
+                        r: 6,
+                        stroke: element.color,
+                        strokeWidth: 2,
+                      }}
                     />
                   );
-                case 'area':
+                case "area":
                   return (
                     <Area
                       {...commonProps}

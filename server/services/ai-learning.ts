@@ -1,8 +1,8 @@
 import OpenAI from "openai";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY 
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 interface LearningData {
@@ -11,7 +11,7 @@ interface LearningData {
   context: string;
   success: boolean;
   execution_time: number;
-  user_feedback?: 'positive' | 'negative' | 'neutral';
+  user_feedback?: "positive" | "negative" | "neutral";
   timestamp: Date;
 }
 
@@ -44,7 +44,7 @@ export class AILearning {
     context: string,
     success: boolean,
     executionTime: number,
-    userFeedback?: 'positive' | 'negative' | 'neutral'
+    userFeedback?: "positive" | "negative" | "neutral",
   ): Promise<void> {
     try {
       const learningEntry: LearningData = {
@@ -54,7 +54,7 @@ export class AILearning {
         success,
         execution_time: executionTime,
         user_feedback: userFeedback,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       this.learningData.push(learningEntry);
@@ -73,9 +73,11 @@ export class AILearning {
         await this.analyzeLearningPatterns();
       }
 
-      console.log(`📊 تم تسجيل بيانات التعلم: ${actionType} - نجح: ${success} - وقت التنفيذ: ${executionTime}ms`);
+      console.log(
+        `📊 تم تسجيل بيانات التعلم: ${actionType} - نجح: ${success} - وقت التنفيذ: ${executionTime}ms`,
+      );
     } catch (error) {
-      console.error('Learning data recording error:', error);
+      console.error("Learning data recording error:", error);
     }
   }
 
@@ -84,7 +86,7 @@ export class AILearning {
     try {
       // تجميع البيانات حسب نوع الإجراء
       const actionGroups = this.groupByAction();
-      
+
       for (const [actionType, data] of Object.entries(actionGroups)) {
         const insight = await this.generateActionInsight(actionType, data);
         if (insight) {
@@ -97,32 +99,38 @@ export class AILearning {
         this.insights = this.insights.slice(-100);
       }
 
-      console.log(`🧠 تم تحليل ${Object.keys(actionGroups).length} نوع من الإجراءات`);
+      console.log(
+        `🧠 تم تحليل ${Object.keys(actionGroups).length} نوع من الإجراءات`,
+      );
     } catch (error) {
-      console.error('Learning patterns analysis error:', error);
+      console.error("Learning patterns analysis error:", error);
     }
   }
 
   // تجميع البيانات حسب نوع الإجراء
   private static groupByAction(): Record<string, LearningData[]> {
     const groups: Record<string, LearningData[]> = {};
-    
+
     for (const entry of this.learningData) {
       if (!groups[entry.action_type]) {
         groups[entry.action_type] = [];
       }
       groups[entry.action_type].push(entry);
     }
-    
+
     return groups;
   }
 
   // توليد رؤى للإجراء
-  private static async generateActionInsight(actionType: string, data: LearningData[]): Promise<LearningInsight | null> {
+  private static async generateActionInsight(
+    actionType: string,
+    data: LearningData[],
+  ): Promise<LearningInsight | null> {
     try {
-      const successRate = data.filter(d => d.success).length / data.length;
-      const avgExecutionTime = data.reduce((sum, d) => sum + d.execution_time, 0) / data.length;
-      
+      const successRate = data.filter((d) => d.success).length / data.length;
+      const avgExecutionTime =
+        data.reduce((sum, d) => sum + d.execution_time, 0) / data.length;
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -140,7 +148,7 @@ export class AILearning {
 - تحسين الأداء
 - تقليل وقت التنفيذ
 - زيادة معدل النجاح
-- تحسين تجربة المستخدم`
+- تحسين تجربة المستخدم`,
           },
           {
             role: "user",
@@ -148,27 +156,27 @@ export class AILearning {
 عدد المحاولات: ${data.length}
 معدل النجاح: ${(successRate * 100).toFixed(1)}%
 متوسط وقت التنفيذ: ${avgExecutionTime.toFixed(0)}ms
-التعليقات الإيجابية: ${data.filter(d => d.user_feedback === 'positive').length}
-التعليقات السلبية: ${data.filter(d => d.user_feedback === 'negative').length}
+التعليقات الإيجابية: ${data.filter((d) => d.user_feedback === "positive").length}
+التعليقات السلبية: ${data.filter((d) => d.user_feedback === "negative").length}
 
-حلل هذه البيانات وقدم رؤى للتحسين.`
-          }
+حلل هذه البيانات وقدم رؤى للتحسين.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       return {
         pattern: result.pattern || `نمط ${actionType}`,
         frequency: data.length,
         success_rate: successRate,
         recommendations: result.recommendations || [],
-        improvement_areas: result.improvement_areas || []
+        improvement_areas: result.improvement_areas || [],
       };
     } catch (error) {
-      console.error('Action insight generation error:', error);
+      console.error("Action insight generation error:", error);
       return null;
     }
   }
@@ -176,10 +184,10 @@ export class AILearning {
   // تحديث أنماط المستخدم
   private static async updateUserPatterns(userId: number): Promise<void> {
     try {
-      const userData = this.learningData.filter(d => d.user_id === userId);
-      
+      const userData = this.learningData.filter((d) => d.user_id === userId);
+
       if (userData.length < 10) return; // نحتاج بيانات كافية للتحليل
-      
+
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -193,51 +201,53 @@ export class AILearning {
   "peak_usage_times": ["أوقات الذروة"],
   "success_patterns": ["الأنماط الناجحة"],
   "areas_for_improvement": ["مجالات التحسين"]
-}`
+}`,
           },
           {
             role: "user",
             content: `بيانات المستخدم ${userId}:
 عدد الإجراءات: ${userData.length}
-معدل النجاح الإجمالي: ${(userData.filter(d => d.success).length / userData.length * 100).toFixed(1)}%
-الإجراءات الشائعة: ${Array.from(new Set(userData.map(d => d.action_type))).join(', ')}
+معدل النجاح الإجمالي: ${((userData.filter((d) => d.success).length / userData.length) * 100).toFixed(1)}%
+الإجراءات الشائعة: ${Array.from(new Set(userData.map((d) => d.action_type))).join(", ")}
 متوسط وقت التنفيذ: ${(userData.reduce((sum, d) => sum + d.execution_time, 0) / userData.length).toFixed(0)}ms
 
-حلل أنماط هذا المستخدم.`
-          }
+حلل أنماط هذا المستخدم.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.3
+        temperature: 0.3,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
-      
+      const result = JSON.parse(response.choices[0].message.content || "{}");
+
       this.userPatterns.set(userId, {
         user_id: userId,
         common_actions: result.common_actions || [],
         preferred_workflows: result.preferred_workflows || [],
         peak_usage_times: result.peak_usage_times || [],
         success_patterns: result.success_patterns || [],
-        areas_for_improvement: result.areas_for_improvement || []
+        areas_for_improvement: result.areas_for_improvement || [],
       });
-      
+
       console.log(`👤 تم تحديث أنماط المستخدم ${userId}`);
     } catch (error) {
-      console.error('User patterns update error:', error);
+      console.error("User patterns update error:", error);
     }
   }
 
   // الحصول على توصيات مخصصة للمستخدم
-  static async getPersonalizedRecommendations(userId: number): Promise<string[]> {
+  static async getPersonalizedRecommendations(
+    userId: number,
+  ): Promise<string[]> {
     try {
       const userPattern = this.userPatterns.get(userId);
-      const userData = this.learningData.filter(d => d.user_id === userId);
-      
+      const userData = this.learningData.filter((d) => d.user_id === userId);
+
       if (!userPattern || userData.length < 5) {
         return [
           "استخدم المساعد الصوتي لتسريع العمليات",
           "استفد من التقارير الذكية لتحليل الأداء",
-          "راجع إعدادات النظام لتخصيص تجربتك"
+          "راجع إعدادات النظام لتخصيص تجربتك",
         ];
       }
 
@@ -251,27 +261,27 @@ export class AILearning {
 أرجع قائمة من التوصيات العملية بتنسيق JSON:
 {
   "recommendations": ["توصية 1", "توصية 2", "..."]
-}`
+}`,
           },
           {
             role: "user",
             content: `أنماط المستخدم ${userId}:
-الإجراءات الشائعة: ${userPattern.common_actions.join(', ')}
-سلاسل العمل المفضلة: ${userPattern.preferred_workflows.join(', ')}
-معدل النجاح: ${(userData.filter(d => d.success).length / userData.length * 100).toFixed(1)}%
-مجالات التحسين: ${userPattern.areas_for_improvement.join(', ')}
+الإجراءات الشائعة: ${userPattern.common_actions.join(", ")}
+سلاسل العمل المفضلة: ${userPattern.preferred_workflows.join(", ")}
+معدل النجاح: ${((userData.filter((d) => d.success).length / userData.length) * 100).toFixed(1)}%
+مجالات التحسين: ${userPattern.areas_for_improvement.join(", ")}
 
-قدم توصيات شخصية لتحسين الإنتاجية.`
-          }
+قدم توصيات شخصية لتحسين الإنتاجية.`,
+          },
         ],
         response_format: { type: "json_object" },
-        temperature: 0.4
+        temperature: 0.4,
       });
 
-      const result = JSON.parse(response.choices[0].message.content || '{}');
+      const result = JSON.parse(response.choices[0].message.content || "{}");
       return result.recommendations || [];
     } catch (error) {
-      console.error('Personalized recommendations error:', error);
+      console.error("Personalized recommendations error:", error);
       return ["استمر في استكشاف ميزات النظام لتحسين الإنتاجية"];
     }
   }
@@ -279,29 +289,38 @@ export class AILearning {
   // الحصول على إحصائيات التعلم
   static getLearningStatistics(): any {
     const totalActions = this.learningData.length;
-    const successfulActions = this.learningData.filter(d => d.success).length;
-    const averageExecutionTime = totalActions > 0 
-      ? this.learningData.reduce((sum, d) => sum + d.execution_time, 0) / totalActions 
-      : 0;
-    
-    const actionTypes = Array.from(new Set(this.learningData.map(d => d.action_type)));
-    const uniqueUsers = Array.from(new Set(this.learningData.map(d => d.user_id)));
-    
+    const successfulActions = this.learningData.filter((d) => d.success).length;
+    const averageExecutionTime =
+      totalActions > 0
+        ? this.learningData.reduce((sum, d) => sum + d.execution_time, 0) /
+          totalActions
+        : 0;
+
+    const actionTypes = Array.from(
+      new Set(this.learningData.map((d) => d.action_type)),
+    );
+    const uniqueUsers = Array.from(
+      new Set(this.learningData.map((d) => d.user_id)),
+    );
+
     return {
       total_actions: totalActions,
-      success_rate: totalActions > 0 ? (successfulActions / totalActions * 100).toFixed(1) + '%' : '0%',
-      average_execution_time: averageExecutionTime.toFixed(0) + 'ms',
+      success_rate:
+        totalActions > 0
+          ? ((successfulActions / totalActions) * 100).toFixed(1) + "%"
+          : "0%",
+      average_execution_time: averageExecutionTime.toFixed(0) + "ms",
       unique_action_types: actionTypes.length,
       active_users: uniqueUsers.length,
       insights_generated: this.insights.length,
-      user_patterns_tracked: this.userPatterns.size
+      user_patterns_tracked: this.userPatterns.size,
     };
   }
 
   // الحصول على رؤى محددة
   static getInsightsByAction(actionType: string): LearningInsight[] {
-    return this.insights.filter(insight => 
-      insight.pattern.toLowerCase().includes(actionType.toLowerCase())
+    return this.insights.filter((insight) =>
+      insight.pattern.toLowerCase().includes(actionType.toLowerCase()),
     );
   }
 
@@ -311,7 +330,7 @@ export class AILearning {
       learning_data: this.learningData,
       insights: this.insights,
       user_patterns: Array.from(this.userPatterns.entries()),
-      export_timestamp: new Date().toISOString()
+      export_timestamp: new Date().toISOString(),
     };
   }
 
@@ -327,26 +346,33 @@ export class AILearning {
       if (data.user_patterns) {
         this.userPatterns = new Map(data.user_patterns);
       }
-      
-      console.log('📥 تم استيراد بيانات التعلم بنجاح');
+
+      console.log("📥 تم استيراد بيانات التعلم بنجاح");
     } catch (error) {
-      console.error('Learning data import error:', error);
+      console.error("Learning data import error:", error);
     }
   }
 
   // تنظيف البيانات القديمة (أكثر من 30 يوم)
   static cleanupOldData(): void {
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    
+
     const beforeCount = this.learningData.length;
-    this.learningData = this.learningData.filter(d => d.timestamp > thirtyDaysAgo);
+    this.learningData = this.learningData.filter(
+      (d) => d.timestamp > thirtyDaysAgo,
+    );
     const afterCount = this.learningData.length;
-    
-    console.log(`🧹 تم تنظيف ${beforeCount - afterCount} إدخال قديم من بيانات التعلم`);
+
+    console.log(
+      `🧹 تم تنظيف ${beforeCount - afterCount} إدخال قديم من بيانات التعلم`,
+    );
   }
 }
 
 // تنظيف دوري للبيانات القديمة (كل 24 ساعة)
-setInterval(() => {
-  AILearning.cleanupOldData();
-}, 24 * 60 * 60 * 1000);
+setInterval(
+  () => {
+    AILearning.cleanupOldData();
+  },
+  24 * 60 * 60 * 1000,
+);

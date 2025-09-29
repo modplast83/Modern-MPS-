@@ -4,7 +4,9 @@ import { Button } from "../ui/button";
 import { Shield, Users, Star } from "lucide-react";
 
 export default function SimpleFieldTraining() {
-  const [selectedView, setSelectedView] = useState<'programs' | 'enrollments' | 'evaluations'>('programs');
+  const [selectedView, setSelectedView] = useState<
+    "programs" | "enrollments" | "evaluations"
+  >("programs");
 
   return (
     <div className="space-y-6" dir="rtl">
@@ -23,8 +25,8 @@ export default function SimpleFieldTraining() {
       {/* View Tabs */}
       <div className="flex gap-2 border-b">
         <Button
-          variant={selectedView === 'programs' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('programs')}
+          variant={selectedView === "programs" ? "default" : "ghost"}
+          onClick={() => setSelectedView("programs")}
           className="rounded-b-none"
           data-testid="tab-programs"
         >
@@ -32,8 +34,8 @@ export default function SimpleFieldTraining() {
           برامج التدريب
         </Button>
         <Button
-          variant={selectedView === 'enrollments' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('enrollments')}
+          variant={selectedView === "enrollments" ? "default" : "ghost"}
+          onClick={() => setSelectedView("enrollments")}
           className="rounded-b-none"
           data-testid="tab-enrollments"
         >
@@ -41,8 +43,8 @@ export default function SimpleFieldTraining() {
           التسجيلات
         </Button>
         <Button
-          variant={selectedView === 'evaluations' ? 'default' : 'ghost'}
-          onClick={() => setSelectedView('evaluations')}
+          variant={selectedView === "evaluations" ? "default" : "ghost"}
+          onClick={() => setSelectedView("evaluations")}
           className="rounded-b-none"
           data-testid="tab-evaluations"
         >
@@ -52,11 +54,13 @@ export default function SimpleFieldTraining() {
       </div>
 
       {/* Content based on selected view */}
-      {selectedView === 'programs' && (
+      {selectedView === "programs" && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8">
             <Shield className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">نظام التدريب الميداني</h3>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              نظام التدريب الميداني
+            </h3>
             <p className="text-gray-500 text-center">
               تم تحويل النظام من التدريب الإلكتروني إلى التدريب الميداني بنجاح
             </p>
@@ -64,11 +68,13 @@ export default function SimpleFieldTraining() {
         </Card>
       )}
 
-      {selectedView === 'enrollments' && (
+      {selectedView === "enrollments" && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8">
             <Users className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">إدارة التسجيلات</h3>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              إدارة التسجيلات
+            </h3>
             <p className="text-gray-500 text-center">
               تسجيل الموظفين في برامج التدريب الميداني
             </p>
@@ -76,11 +82,13 @@ export default function SimpleFieldTraining() {
         </Card>
       )}
 
-      {selectedView === 'evaluations' && (
+      {selectedView === "evaluations" && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8">
             <Star className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">نظام التقييم</h3>
+            <h3 className="text-lg font-semibold text-gray-600 mb-2">
+              نظام التقييم
+            </h3>
             <p className="text-gray-500 text-center">
               تقييم التدريب مع معايير الفهم النظري والمهارات العملية والسلامة
             </p>

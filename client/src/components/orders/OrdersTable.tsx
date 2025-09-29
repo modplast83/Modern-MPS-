@@ -1,9 +1,28 @@
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { FileText, Eye, Trash2, Edit, RefreshCw, ChevronDown } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import {
+  FileText,
+  Eye,
+  Trash2,
+  Edit,
+  RefreshCw,
+  ChevronDown,
+} from "lucide-react";
 import { format } from "date-fns";
 
 interface OrdersTableProps {
@@ -35,12 +54,14 @@ export default function OrdersTable({
   isAdmin = false,
   selectedOrders = [],
   onOrderSelect,
-  onSelectAll
+  onSelectAll,
 }: OrdersTableProps) {
-  
   // Check if all orders are selected
-  const allOrdersSelected = orders.length > 0 && orders.every((order: any) => selectedOrders.includes(order.id));
-  const someOrdersSelected = selectedOrders.length > 0 && selectedOrders.length < orders.length;
+  const allOrdersSelected =
+    orders.length > 0 &&
+    orders.every((order: any) => selectedOrders.includes(order.id));
+  const someOrdersSelected =
+    selectedOrders.length > 0 && selectedOrders.length < orders.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (onSelectAll) {
@@ -53,23 +74,69 @@ export default function OrdersTable({
       onOrderSelect(orderId, checked);
     }
   };
-  
+
   const getStatusBadge = (status: string) => {
-    const statusMap: { [key: string]: { label: string; variant: any; color: string } } = {
-      waiting: { label: 'انتظار', variant: 'secondary', color: 'bg-yellow-100 text-yellow-800' },
-      pending: { label: 'معلق', variant: 'secondary', color: 'bg-yellow-100 text-yellow-800' },
-      in_production: { label: 'انتاج', variant: 'default', color: 'bg-blue-100 text-blue-800' },
-      for_production: { label: 'للإنتاج', variant: 'default', color: 'bg-blue-100 text-blue-800' },
-      paused: { label: 'معلق', variant: 'destructive', color: 'bg-red-100 text-red-800' },
-      on_hold: { label: 'إيقاف مؤقت', variant: 'destructive', color: 'bg-red-100 text-red-800' },
-      completed: { label: 'مكتمل', variant: 'default', color: 'bg-green-100 text-green-800' },
-      received: { label: 'مستلم', variant: 'default', color: 'bg-purple-100 text-purple-800' },
-      delivered: { label: 'تم التوصيل', variant: 'default', color: 'bg-gray-100 text-gray-800' },
-      cancelled: { label: 'ملغي', variant: 'destructive', color: 'bg-red-100 text-red-800' }
+    const statusMap: {
+      [key: string]: { label: string; variant: any; color: string };
+    } = {
+      waiting: {
+        label: "انتظار",
+        variant: "secondary",
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      pending: {
+        label: "معلق",
+        variant: "secondary",
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      in_production: {
+        label: "انتاج",
+        variant: "default",
+        color: "bg-blue-100 text-blue-800",
+      },
+      for_production: {
+        label: "للإنتاج",
+        variant: "default",
+        color: "bg-blue-100 text-blue-800",
+      },
+      paused: {
+        label: "معلق",
+        variant: "destructive",
+        color: "bg-red-100 text-red-800",
+      },
+      on_hold: {
+        label: "إيقاف مؤقت",
+        variant: "destructive",
+        color: "bg-red-100 text-red-800",
+      },
+      completed: {
+        label: "مكتمل",
+        variant: "default",
+        color: "bg-green-100 text-green-800",
+      },
+      received: {
+        label: "مستلم",
+        variant: "default",
+        color: "bg-purple-100 text-purple-800",
+      },
+      delivered: {
+        label: "تم التوصيل",
+        variant: "default",
+        color: "bg-gray-100 text-gray-800",
+      },
+      cancelled: {
+        label: "ملغي",
+        variant: "destructive",
+        color: "bg-red-100 text-red-800",
+      },
     };
 
-    const statusInfo = statusMap[status] || { label: status, variant: 'outline', color: 'bg-gray-100 text-gray-800' };
-    
+    const statusInfo = statusMap[status] || {
+      label: status,
+      variant: "outline",
+      color: "bg-gray-100 text-gray-800",
+    };
+
     return (
       <Badge className={statusInfo.color} data-testid={`status-${status}`}>
         {statusInfo.label}
@@ -84,15 +151,17 @@ export default function OrdersTable({
 
     const createdDate = new Date(order.created_at);
     const deliveryDate = new Date(createdDate);
-    deliveryDate.setDate(deliveryDate.getDate() + parseInt(order.delivery_days));
-    
+    deliveryDate.setDate(
+      deliveryDate.getDate() + parseInt(order.delivery_days),
+    );
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     deliveryDate.setHours(0, 0, 0, 0);
-    
+
     const timeDiff = deliveryDate.getTime() - today.getTime();
     const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    
+
     return { deliveryDate, daysRemaining };
   };
 
@@ -100,10 +169,16 @@ export default function OrdersTable({
     <Table>
       <TableHeader>
         <TableRow>
-          {(onOrderSelect && onSelectAll) && (
+          {onOrderSelect && onSelectAll && (
             <TableHead className="w-12">
               <Checkbox
-                checked={allOrdersSelected ? true : someOrdersSelected ? "indeterminate" : false}
+                checked={
+                  allOrdersSelected
+                    ? true
+                    : someOrdersSelected
+                      ? "indeterminate"
+                      : false
+                }
                 onCheckedChange={handleSelectAll}
                 data-testid="checkbox-select-all"
               />
@@ -121,32 +196,49 @@ export default function OrdersTable({
       </TableHeader>
       <TableBody>
         {orders.map((order: any) => {
-          const customer = customers.find((c: any) => c.id === order.customer_id);
-          const user = users.find((u: any) => u.id === parseInt(order.created_by));
+          const customer = customers.find(
+            (c: any) => c.id === order.customer_id,
+          );
+          const user = users.find(
+            (u: any) => u.id === parseInt(order.created_by),
+          );
           const { deliveryDate, daysRemaining } = calculateDeliveryInfo(order);
-          
+
           return (
-            <TableRow key={order.id} data-testid={`order-row-${order.id}`} className={selectedOrders.includes(order.id) ? "bg-blue-50" : ""}>
-              {(onOrderSelect && onSelectAll) && (
+            <TableRow
+              key={order.id}
+              data-testid={`order-row-${order.id}`}
+              className={selectedOrders.includes(order.id) ? "bg-blue-50" : ""}
+            >
+              {onOrderSelect && onSelectAll && (
                 <TableCell>
                   <Checkbox
                     checked={selectedOrders.includes(order.id)}
-                    onCheckedChange={(checked) => handleOrderSelect(order.id, !!checked)}
+                    onCheckedChange={(checked) =>
+                      handleOrderSelect(order.id, !!checked)
+                    }
                     data-testid={`checkbox-select-order-${order.id}`}
                   />
                 </TableCell>
               )}
-              <TableCell className="font-medium" data-testid={`order-number-${order.id}`}>
+              <TableCell
+                className="font-medium"
+                data-testid={`order-number-${order.id}`}
+              >
                 {order.order_number}
               </TableCell>
               <TableCell data-testid={`customer-${order.id}`}>
                 <div className="text-right">
-                  <div className="font-medium">{customer?.name_ar || customer?.name}</div>
+                  <div className="font-medium">
+                    {customer?.name_ar || customer?.name}
+                  </div>
                   <div className="text-sm text-gray-500">{customer?.id}</div>
                 </div>
               </TableCell>
               <TableCell data-testid={`created-date-${order.id}`}>
-                {order.created_at ? format(new Date(order.created_at), 'dd/MM/yyyy') : '-'}
+                {order.created_at
+                  ? format(new Date(order.created_at), "dd/MM/yyyy")
+                  : "-"}
               </TableCell>
               <TableCell data-testid={`created-by-${order.id}`}>
                 <div className="text-right">
@@ -160,27 +252,33 @@ export default function OrdersTable({
                     <>
                       <div className="font-medium">
                         {daysRemaining > 0 ? (
-                          <span className="text-green-600">{daysRemaining} يوم متبقي</span>
+                          <span className="text-green-600">
+                            {daysRemaining} يوم متبقي
+                          </span>
                         ) : daysRemaining === 0 ? (
-                          <span className="text-orange-600">يجب التسليم اليوم</span>
+                          <span className="text-orange-600">
+                            يجب التسليم اليوم
+                          </span>
                         ) : (
-                          <span className="text-red-600">متأخر {Math.abs(daysRemaining)} يوم</span>
+                          <span className="text-red-600">
+                            متأخر {Math.abs(daysRemaining)} يوم
+                          </span>
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        التسليم: {format(deliveryDate, 'dd/MM/yyyy')}
+                        التسليم: {format(deliveryDate, "dd/MM/yyyy")}
                       </div>
                     </>
                   ) : (
-                    '-'
+                    "-"
                   )}
                 </div>
               </TableCell>
               <TableCell data-testid={`notes-${order.id}`}>
-                {order.notes || '-'}
+                {order.notes || "-"}
               </TableCell>
               <TableCell className="text-center">
-                {getStatusBadge(order.status || 'pending')}
+                {getStatusBadge(order.status || "pending")}
               </TableCell>
               <TableCell>
                 <div className="flex space-x-2 space-x-reverse">
@@ -230,25 +328,33 @@ export default function OrdersTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => onStatusChange(order, 'for_production')}>
+                      <DropdownMenuItem
+                        onClick={() => onStatusChange(order, "for_production")}
+                      >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                           إلى الإنتاج
                         </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onStatusChange(order, 'on_hold')}>
+                      <DropdownMenuItem
+                        onClick={() => onStatusChange(order, "on_hold")}
+                      >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
                           إيقاف مؤقت
                         </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onStatusChange(order, 'pending')}>
+                      <DropdownMenuItem
+                        onClick={() => onStatusChange(order, "pending")}
+                      >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
                           في الانتظار
                         </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onStatusChange(order, 'completed')}>
+                      <DropdownMenuItem
+                        onClick={() => onStatusChange(order, "completed")}
+                      >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
                           مكتمل

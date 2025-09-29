@@ -2,33 +2,71 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 import { Badge } from "../ui/badge";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit, Trash2, Package, Search, QrCode, ArrowDown, ArrowUp, AlertTriangle } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Search,
+  QrCode,
+  ArrowDown,
+  ArrowUp,
+  AlertTriangle,
+} from "lucide-react";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import { useAuth } from "../../hooks/use-auth";
-import { insertConsumablePartSchema, insertConsumablePartTransactionSchema } from "../../../../shared/schema";
+import {
+  insertConsumablePartSchema,
+  insertConsumablePartTransactionSchema,
+} from "../../../../shared/schema";
 
 // Extend shared schemas with UI-specific validation rules
 const consumablePartSchema = insertConsumablePartSchema.extend({
-  current_quantity: z.coerce.number().min(0, "الكمية يجب أن تكون صفر أو أكثر").default(0),
+  current_quantity: z.coerce
+    .number()
+    .min(0, "الكمية يجب أن تكون صفر أو أكثر")
+    .default(0),
   min_quantity: z.coerce.number().min(0).optional(),
   max_quantity: z.coerce.number().min(0).optional(),
 });
 
-const barcodeTransactionSchema = insertConsumablePartTransactionSchema.extend({
-  barcode: z.string().min(1, "الباركود مطلوب"),
-  quantity: z.coerce.number().min(1, "الكمية يجب أن تكون أكبر من صفر"),
-  manual_entry: z.boolean().default(false),
-}).omit({ consumable_part_id: true, performed_by: true });
+const barcodeTransactionSchema = insertConsumablePartTransactionSchema
+  .extend({
+    barcode: z.string().min(1, "الباركود مطلوب"),
+    quantity: z.coerce.number().min(1, "الكمية يجب أن تكون أكبر من صفر"),
+    manual_entry: z.boolean().default(false),
+  })
+  .omit({ consumable_part_id: true, performed_by: true });
 
 type ConsumablePartFormData = z.infer<typeof consumablePartSchema>;
 type BarcodeTransactionFormData = z.infer<typeof barcodeTransactionSchema>;
@@ -38,7 +76,10 @@ interface ConsumablePartsTabProps {
   isLoading?: boolean;
 }
 
-export default function ConsumablePartsTab({ consumableParts: propParts, isLoading: propLoading }: ConsumablePartsTabProps) {
+export default function ConsumablePartsTab({
+  consumableParts: propParts,
+  isLoading: propLoading,
+}: ConsumablePartsTabProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
@@ -49,7 +90,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
   const { user } = useAuth();
 
   // Fetch consumable parts data
-  const { data: consumableParts, isLoading, isError: partsError } = useQuery({
+  const {
+    data: consumableParts,
+    isLoading,
+    isError: partsError,
+  } = useQuery({
     queryKey: ["/api/consumable-parts"],
     enabled: !propParts,
   });
@@ -101,12 +146,21 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
       addForm.reset();
     },
     onError: () => {
-      toast({ title: "فشل في إضافة قطعة الغيار الاستهلاكية", variant: "destructive" });
+      toast({
+        title: "فشل في إضافة قطعة الغيار الاستهلاكية",
+        variant: "destructive",
+      });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<ConsumablePartFormData> }) =>
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: Partial<ConsumablePartFormData>;
+    }) =>
       apiRequest(`/api/consumable-parts/${id}`, {
         method: "PATCH",
         body: JSON.stringify(data),
@@ -118,7 +172,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
       setEditingPart(null);
     },
     onError: () => {
-      toast({ title: "فشل في تحديث قطعة الغيار الاستهلاكية", variant: "destructive" });
+      toast({
+        title: "فشل في تحديث قطعة الغيار الاستهلاكية",
+        variant: "destructive",
+      });
     },
   });
 
@@ -132,7 +189,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
       toast({ title: "تم حذف قطعة الغيار الاستهلاكية بنجاح" });
     },
     onError: () => {
-      toast({ title: "فشل في حذف قطعة الغيار الاستهلاكية", variant: "destructive" });
+      toast({
+        title: "فشل في حذف قطعة الغيار الاستهلاكية",
+        variant: "destructive",
+      });
     },
   });
 
@@ -155,16 +215,18 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/consumable-parts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/consumable-parts-transactions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["/api/consumable-parts-transactions"],
+      });
       toast({ title: "تم تسجيل الحركة بنجاح" });
       setIsTransactionDialogOpen(false);
       transactionForm.reset();
     },
     onError: (error: any) => {
-      toast({ 
-        title: "فشل في تسجيل الحركة", 
+      toast({
+        title: "فشل في تسجيل الحركة",
         description: error.message,
-        variant: "destructive" 
+        variant: "destructive",
       });
     },
   });
@@ -175,7 +237,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
     return (
       part.code?.toLowerCase().includes(searchLower) ||
       part.type?.toLowerCase().includes(searchLower) ||
-      String(part.part_id || '').toLowerCase().includes(searchLower) ||
+      String(part.part_id || "")
+        .toLowerCase()
+        .includes(searchLower) ||
       part.barcode?.toLowerCase().includes(searchLower)
     );
   });
@@ -220,7 +284,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="default" className="bg-green-100 text-green-800">نشط</Badge>;
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            نشط
+          </Badge>
+        );
       case "inactive":
         return <Badge variant="secondary">غير نشط</Badge>;
       case "maintenance":
@@ -253,11 +321,18 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                 data-testid="input-search"
               />
             </div>
-            
+
             {/* Barcode Transaction Dialog */}
-            <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
+            <Dialog
+              open={isTransactionDialogOpen}
+              onOpenChange={setIsTransactionDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button variant="outline" className="bg-blue-50 hover:bg-blue-100" data-testid="button-barcode">
+                <Button
+                  variant="outline"
+                  className="bg-blue-50 hover:bg-blue-100"
+                  data-testid="button-barcode"
+                >
                   <QrCode className="h-4 w-4 mr-2" />
                   حركة باركود
                 </Button>
@@ -270,7 +345,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...transactionForm}>
-                  <form onSubmit={transactionForm.handleSubmit(onTransactionSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={transactionForm.handleSubmit(onTransactionSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={transactionForm.control}
                       name="barcode"
@@ -278,7 +356,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>الباركود</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="امسح أو أدخل الباركود" data-testid="input-barcode" />
+                            <Input
+                              {...field}
+                              placeholder="امسح أو أدخل الباركود"
+                              data-testid="input-barcode"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -292,7 +374,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>نوع الحركة</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
                               <FormControl>
                                 <SelectTrigger data-testid="select-transaction-type">
                                   <SelectValue />
@@ -319,7 +404,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                                 {...field}
                                 type="number"
                                 min="1"
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(parseInt(e.target.value))
+                                }
                                 data-testid="input-quantity"
                               />
                             </FormControl>
@@ -336,7 +423,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>سبب الحركة</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ""} placeholder="اختياري - سبب الحركة" data-testid="input-reason" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="اختياري - سبب الحركة"
+                              data-testid="input-reason"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -350,7 +442,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>ملاحظات</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value ?? ""} placeholder="ملاحظات إضافية" data-testid="textarea-notes" />
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="ملاحظات إضافية"
+                              data-testid="textarea-notes"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -371,7 +468,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         disabled={transactionMutation.isPending}
                         data-testid="button-submit-transaction"
                       >
-                        {transactionMutation.isPending ? "جاري التسجيل..." : "تسجيل الحركة"}
+                        {transactionMutation.isPending
+                          ? "جاري التسجيل..."
+                          : "تسجيل الحركة"}
                       </Button>
                     </div>
                   </form>
@@ -382,7 +481,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
             {/* Add Consumable Part Dialog */}
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-green-600 hover:bg-green-700 text-white" data-testid="button-add">
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  data-testid="button-add"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   إضافة قطعة غيار
                 </Button>
@@ -391,11 +493,15 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                 <DialogHeader>
                   <DialogTitle>إضافة قطعة غيار استهلاكية جديدة</DialogTitle>
                   <DialogDescription>
-                    إضافة قطعة غيار استهلاكية جديدة إلى النظام مع تحديد المواصفات والكميات
+                    إضافة قطعة غيار استهلاكية جديدة إلى النظام مع تحديد
+                    المواصفات والكميات
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...addForm}>
-                  <form onSubmit={addForm.handleSubmit(onAddSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={addForm.handleSubmit(onAddSubmit)}
+                    className="space-y-4"
+                  >
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
                         control={addForm.control}
@@ -404,7 +510,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>الكود</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="كود قطعة الغيار" data-testid="input-code" />
+                              <Input
+                                {...field}
+                                placeholder="كود قطعة الغيار"
+                                data-testid="input-code"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -418,7 +528,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>النوع</FormLabel>
                             <FormControl>
-                              <Input {...field} placeholder="نوع قطعة الغيار" data-testid="input-type" />
+                              <Input
+                                {...field}
+                                placeholder="نوع قطعة الغيار"
+                                data-testid="input-type"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -434,7 +548,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>الباركود</FormLabel>
                             <FormControl>
-                              <Input {...field} value={field.value ?? ""} placeholder="الباركود (اختياري)" data-testid="input-barcode-add" />
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                placeholder="الباركود (اختياري)"
+                                data-testid="input-barcode-add"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -448,7 +567,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                           <FormItem>
                             <FormLabel>الموقع</FormLabel>
                             <FormControl>
-                              <Input {...field} value={field.value ?? ""} placeholder="موقع التخزين" data-testid="input-location" />
+                              <Input
+                                {...field}
+                                value={field.value ?? ""}
+                                placeholder="موقع التخزين"
+                                data-testid="input-location"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -468,7 +592,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                                 {...field}
                                 type="number"
                                 min="0"
-                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                onChange={(e) =>
+                                  field.onChange(parseInt(e.target.value))
+                                }
                                 data-testid="input-current-quantity"
                               />
                             </FormControl>
@@ -488,7 +614,13 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                                 {...field}
                                 type="number"
                                 min="0"
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? parseInt(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                                 data-testid="input-min-quantity"
                               />
                             </FormControl>
@@ -508,7 +640,13 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                                 {...field}
                                 type="number"
                                 min="0"
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                                onChange={(e) =>
+                                  field.onChange(
+                                    e.target.value
+                                      ? parseInt(e.target.value)
+                                      : undefined,
+                                  )
+                                }
                                 data-testid="input-max-quantity"
                               />
                             </FormControl>
@@ -525,7 +663,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>الوحدة</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value ?? undefined}
+                            >
                               <FormControl>
                                 <SelectTrigger data-testid="select-unit">
                                   <SelectValue />
@@ -550,7 +691,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>الحالة</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value ?? undefined}
+                            >
                               <FormControl>
                                 <SelectTrigger data-testid="select-status">
                                   <SelectValue />
@@ -558,8 +702,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                               </FormControl>
                               <SelectContent>
                                 <SelectItem value="active">نشط</SelectItem>
-                                <SelectItem value="inactive">غير نشط</SelectItem>
-                                <SelectItem value="maintenance">صيانة</SelectItem>
+                                <SelectItem value="inactive">
+                                  غير نشط
+                                </SelectItem>
+                                <SelectItem value="maintenance">
+                                  صيانة
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                             <FormMessage />
@@ -575,7 +723,12 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                         <FormItem>
                           <FormLabel>ملاحظات</FormLabel>
                           <FormControl>
-                            <Textarea {...field} value={field.value ?? ""} placeholder="ملاحظات إضافية" data-testid="textarea-notes-add" />
+                            <Textarea
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="ملاحظات إضافية"
+                              data-testid="textarea-notes-add"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -608,9 +761,14 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="text-center py-8" data-testid="loading-state">جاري التحميل...</div>
+          <div className="text-center py-8" data-testid="loading-state">
+            جاري التحميل...
+          </div>
         ) : partsError ? (
-          <div className="text-center py-8 text-red-600" data-testid="error-state">
+          <div
+            className="text-center py-8 text-red-600"
+            data-testid="error-state"
+          >
             <AlertTriangle className="h-12 w-12 mx-auto mb-4" />
             <p>فشل في تحميل قطع الغيار الاستهلاكية</p>
           </div>
@@ -619,42 +777,88 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">معرف القطعة</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكود</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">النوع</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الكمية</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الحالة</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">الباركود</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">العمليات</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    معرف القطعة
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    الكود
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    النوع
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    الكمية
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    الحالة
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    الباركود
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                    العمليات
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredParts.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500" data-testid="empty-state">
-                      {searchTerm ? 'لا توجد نتائج للبحث' : 'لا توجد قطع غيار استهلاكية'}
+                    <td
+                      colSpan={7}
+                      className="px-6 py-8 text-center text-gray-500"
+                      data-testid="empty-state"
+                    >
+                      {searchTerm
+                        ? "لا توجد نتائج للبحث"
+                        : "لا توجد قطع غيار استهلاكية"}
                     </td>
                   </tr>
                 ) : (
                   filteredParts.map((part: any) => (
-                    <tr key={part.id} className="hover:bg-gray-50" data-testid={`row-part-${part.id}`}>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900" data-testid={`text-part-id-${part.id}`}>
+                    <tr
+                      key={part.id}
+                      className="hover:bg-gray-50"
+                      data-testid={`row-part-${part.id}`}
+                    >
+                      <td
+                        className="px-6 py-4 text-sm font-medium text-gray-900"
+                        data-testid={`text-part-id-${part.id}`}
+                      >
                         {part.part_id}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900" data-testid={`text-code-${part.id}`}>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-900"
+                        data-testid={`text-code-${part.id}`}
+                      >
                         {part.code}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900" data-testid={`text-type-${part.id}`}>
+                      <td
+                        className="px-6 py-4 text-sm text-gray-900"
+                        data-testid={`text-type-${part.id}`}
+                      >
                         {part.type}
                       </td>
-                      <td className="px-6 py-4 text-sm" data-testid={`text-quantity-${part.id}`}>
-                        {getQuantityStatus(part.current_quantity, part.min_quantity)} {part.unit}
+                      <td
+                        className="px-6 py-4 text-sm"
+                        data-testid={`text-quantity-${part.id}`}
+                      >
+                        {getQuantityStatus(
+                          part.current_quantity,
+                          part.min_quantity,
+                        )}{" "}
+                        {part.unit}
                       </td>
-                      <td className="px-6 py-4" data-testid={`badge-status-${part.id}`}>
+                      <td
+                        className="px-6 py-4"
+                        data-testid={`badge-status-${part.id}`}
+                      >
                         {getStatusBadge(part.status)}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500" data-testid={`text-barcode-${part.id}`}>
-                        {part.barcode || '-'}
+                      <td
+                        className="px-6 py-4 text-sm text-gray-500"
+                        data-testid={`text-barcode-${part.id}`}
+                      >
+                        {part.barcode || "-"}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex space-x-2 space-x-reverse">
@@ -695,7 +899,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
               </DialogDescription>
             </DialogHeader>
             <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <form
+                onSubmit={editForm.handleSubmit(onEditSubmit)}
+                className="space-y-4"
+              >
                 {/* Same form fields as add form but using editForm */}
                 <div className="grid grid-cols-2 gap-4">
                   <FormField
@@ -735,7 +942,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                       <FormItem>
                         <FormLabel>الباركود</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} data-testid="input-edit-barcode" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            data-testid="input-edit-barcode"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -749,7 +960,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                       <FormItem>
                         <FormLabel>الموقع</FormLabel>
                         <FormControl>
-                          <Input {...field} value={field.value ?? ""} data-testid="input-edit-location" />
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            data-testid="input-edit-location"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -769,7 +984,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                             {...field}
                             type="number"
                             min="0"
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(parseInt(e.target.value))
+                            }
                             data-testid="input-edit-current-quantity"
                           />
                         </FormControl>
@@ -789,7 +1006,13 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                             {...field}
                             type="number"
                             min="0"
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : undefined,
+                              )
+                            }
                             data-testid="input-edit-min-quantity"
                           />
                         </FormControl>
@@ -809,7 +1032,13 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                             {...field}
                             type="number"
                             min="0"
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : undefined,
+                              )
+                            }
                             data-testid="input-edit-max-quantity"
                           />
                         </FormControl>
@@ -826,7 +1055,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>الوحدة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-edit-unit">
                               <SelectValue />
@@ -851,7 +1083,10 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>الحالة</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? undefined}
+                        >
                           <FormControl>
                             <SelectTrigger data-testid="select-edit-status">
                               <SelectValue />
@@ -876,7 +1111,11 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     <FormItem>
                       <FormLabel>ملاحظات</FormLabel>
                       <FormControl>
-                        <Textarea {...field} value={field.value ?? ""} data-testid="textarea-edit-notes" />
+                        <Textarea
+                          {...field}
+                          value={field.value ?? ""}
+                          data-testid="textarea-edit-notes"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -897,7 +1136,9 @@ export default function ConsumablePartsTab({ consumableParts: propParts, isLoadi
                     disabled={updateMutation.isPending}
                     data-testid="button-submit-edit"
                   >
-                    {updateMutation.isPending ? "جاري الحفظ..." : "حفظ التغييرات"}
+                    {updateMutation.isPending
+                      ? "جاري الحفظ..."
+                      : "حفظ التغييرات"}
                   </Button>
                 </div>
               </form>

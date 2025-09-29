@@ -18,17 +18,17 @@ export function calculateOverrunPercentage(punching?: string | null): number {
   }
 
   const punchingLower = punching.toLowerCase();
-  
+
   // Hook products get 20% overrun - Support both Arabic "علاقي" and English "hook"
-  if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
+  if (punchingLower.includes("hook") || punchingLower.includes("علاقي")) {
     return 20.0;
   }
-  
+
   // Banana products get 10% overrun - Support both Arabic "بنانة" and English "banana"
-  if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
+  if (punchingLower.includes("banana") || punchingLower.includes("بنانة")) {
     return 10.0;
   }
-  
+
   // All other products get 5% overrun
   return 5.0;
 }
@@ -39,8 +39,11 @@ export function calculateOverrunPercentage(punching?: string | null): number {
  * @param overrunPercentage The overrun percentage (5, 10, or 20)
  * @returns The final quantity with overrun applied
  */
-export function calculateFinalQuantity(baseQuantity: number, overrunPercentage: number): number {
-  const multiplier = 1 + (overrunPercentage / 100);
+export function calculateFinalQuantity(
+  baseQuantity: number,
+  overrunPercentage: number,
+): number {
+  const multiplier = 1 + overrunPercentage / 100;
   return baseQuantity * multiplier;
 }
 
@@ -52,29 +55,35 @@ export function calculateFinalQuantity(baseQuantity: number, overrunPercentage: 
  */
 export function calculateProductionQuantities(
   baseQuantityKg: number,
-  punching?: string | null
+  punching?: string | null,
 ): {
   overrunPercentage: number;
   finalQuantityKg: number;
   overrunReason: string;
 } {
   const overrunPercentage = calculateOverrunPercentage(punching);
-  const finalQuantityKg = calculateFinalQuantity(baseQuantityKg, overrunPercentage);
-  
-  let overrunReason = 'منتج عادي';
+  const finalQuantityKg = calculateFinalQuantity(
+    baseQuantityKg,
+    overrunPercentage,
+  );
+
+  let overrunReason = "منتج عادي";
   if (punching) {
     const punchingLower = punching.toLowerCase();
-    if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
-      overrunReason = 'منتج علاقي (Hook)';
-    } else if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
-      overrunReason = 'منتج بنانة (Banana)';
+    if (punchingLower.includes("hook") || punchingLower.includes("علاقي")) {
+      overrunReason = "منتج علاقي (Hook)";
+    } else if (
+      punchingLower.includes("banana") ||
+      punchingLower.includes("بنانة")
+    ) {
+      overrunReason = "منتج بنانة (Banana)";
     }
   }
-  
+
   return {
     overrunPercentage,
     finalQuantityKg,
-    overrunReason
+    overrunReason,
   };
 }
 
@@ -83,7 +92,9 @@ export function calculateProductionQuantities(
  * @param overrunPercentage The overrun percentage
  * @returns Formatted string in Arabic
  */
-export function formatOverrunPercentageArabic(overrunPercentage: number): string {
+export function formatOverrunPercentageArabic(
+  overrunPercentage: number,
+): string {
   return `${overrunPercentage}%`;
 }
 
@@ -95,18 +106,18 @@ export function formatOverrunPercentageArabic(overrunPercentage: number): string
  */
 export function getOverrunReasonDescription(punching?: string | null): string {
   if (!punching) {
-    return 'نسبة الإضافة الافتراضية للمنتجات العادية';
+    return "نسبة الإضافة الافتراضية للمنتجات العادية";
   }
-  
+
   const punchingLower = punching.toLowerCase();
-  
-  if (punchingLower.includes('hook') || punchingLower.includes('علاقي')) {
-    return 'نسبة إضافة عالية للمنتجات العلاقية (Hook) - 20%';
+
+  if (punchingLower.includes("hook") || punchingLower.includes("علاقي")) {
+    return "نسبة إضافة عالية للمنتجات العلاقية (Hook) - 20%";
   }
-  
-  if (punchingLower.includes('banana') || punchingLower.includes('بنانة')) {
-    return 'نسبة إضافة متوسطة لمنتجات البنانة (Banana) - 10%';
+
+  if (punchingLower.includes("banana") || punchingLower.includes("بنانة")) {
+    return "نسبة إضافة متوسطة لمنتجات البنانة (Banana) - 10%";
   }
-  
-  return 'نسبة الإضافة الافتراضية للمنتجات العادية - 5%';
+
+  return "نسبة الإضافة الافتراضية للمنتجات العادية - 5%";
 }
