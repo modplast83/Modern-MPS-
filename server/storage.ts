@@ -1693,7 +1693,14 @@ export class DatabaseStorage implements IStorage {
           quantity_kg: production_orders.quantity_kg,
           overrun_percentage: production_orders.overrun_percentage,
           final_quantity_kg: production_orders.final_quantity_kg,
-          produced_quantity_kg: production_orders.produced_quantity_kg,
+          // حساب الكمية المنتجة من مجموع وزن الرولات
+          produced_quantity_kg: sql<string>`
+            COALESCE((
+              SELECT SUM(weight_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0)
+          `,
           printed_quantity_kg: production_orders.printed_quantity_kg,
           net_quantity_kg: production_orders.net_quantity_kg,
           waste_quantity_kg: production_orders.waste_quantity_kg,
