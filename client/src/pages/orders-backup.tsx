@@ -78,7 +78,7 @@ import {
   parseIntSafe,
   coercePositiveInt,
   parseFloatSafe,
-} from "@shared/validation-utils";
+} from "../../../shared/validation-utils";
 
 // Master batch colors mapping for Arabic display
 const masterBatchColors = [

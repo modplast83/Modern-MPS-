@@ -48,7 +48,7 @@ import { useAuth } from "../../hooks/use-auth";
 import {
   insertConsumablePartSchema,
   insertConsumablePartTransactionSchema,
-} from "@shared/schema";
+} from "../../../../shared/schema";
 
 // Extend shared schemas with UI-specific validation rules
 const consumablePartSchema = insertConsumablePartSchema.extend({

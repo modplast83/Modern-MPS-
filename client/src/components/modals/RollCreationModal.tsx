@@ -31,7 +31,7 @@ import { apiRequest } from "../../lib/queryClient";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import type { ProductionOrder, Machine } from "@shared/schema";
+import type { ProductionOrder, Machine } from "../../../../shared/schema";
 import ErrorBoundary from "../ErrorBoundary";
 
 interface RollCreationModalProps {

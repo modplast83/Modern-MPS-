@@ -4,7 +4,7 @@ import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../hooks/use-auth";
 import { useToast } from "../hooks/use-toast";
-import { parseIntSafe } from "@shared/validation-utils";
+import { parseIntSafe } from "../../../shared/validation-utils";
 import { format } from "date-fns";
 import { isUserAdmin } from "../utils/roleUtils";
 import { OrdersStats, OrdersTabs } from "../components/orders";
