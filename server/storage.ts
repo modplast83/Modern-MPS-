@@ -6057,6 +6057,14 @@ export class DatabaseStorage implements IStorage {
           quantity_kg: production_orders.quantity_kg,
           status: production_orders.status,
           created_at: production_orders.created_at,
+          // حساب الكمية المنتجة من مجموع وزن الرولات
+          produced_quantity_kg: sql<string>`
+            COALESCE((
+              SELECT SUM(weight_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0)
+          `,
         })
         .from(production_orders)
         .leftJoin(orders, eq(production_orders.order_id, orders.id))
