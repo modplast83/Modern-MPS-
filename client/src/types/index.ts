@@ -24,7 +24,7 @@ export interface ProductionOrderWithDetails {
   order_id: number;
   product_id: number;
   quantity_required: string;
-  quantity_produced: string;
+  produced_quantity_kg: string;
   status: string;
   created_at: string;
   customer_name?: string;

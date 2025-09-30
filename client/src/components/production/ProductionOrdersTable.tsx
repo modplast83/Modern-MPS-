@@ -78,7 +78,7 @@ export default function ProductionOrdersTable({
         <tbody className="bg-white divide-y divide-gray-200">
           {productionOrders.map((order) => {
             const required = parseFloat(order.quantity_required) || 0;
-            const produced = parseFloat(order.quantity_produced) || 0;
+            const produced = parseFloat(order.produced_quantity_kg) || 0;
             const progress =
               required > 0 ? Math.round((produced / required) * 100) : 0;
 
