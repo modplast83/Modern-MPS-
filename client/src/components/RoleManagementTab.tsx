@@ -16,7 +16,7 @@ import { Badge } from "./ui/badge";
 import { Checkbox } from "./ui/checkbox";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
-import { type Role } from "../../../shared/schema";
+import { type Role } from "@shared/schema";
 import { Plus, Edit, Trash2, Shield, Check, X } from "lucide-react";
 
 export default function RoleManagementTab() {

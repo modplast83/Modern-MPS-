@@ -20,7 +20,7 @@ import {
   TrendingUp,
   Settings,
 } from "lucide-react";
-import { generateMessageId } from "../../../../shared/id-generator";
+import { generateMessageId } from "@shared/id-generator";
 
 interface Message {
   id: string;

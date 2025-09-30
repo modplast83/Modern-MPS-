@@ -68,7 +68,7 @@ import {
   generateActionNumber,
   generateMaintenanceReportNumber,
   generateOperatorReportNumber,
-} from "../../../shared/id-generator";
+} from "@shared/id-generator";
 import ConsumablePartsTab from "../components/maintenance/ConsumablePartsTab";
 
 // Schema definitions for forms
