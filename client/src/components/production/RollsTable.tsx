@@ -14,7 +14,7 @@ import {
 import { useToast } from "../../hooks/use-toast";
 import { useAuth } from "../../hooks/use-auth";
 import { apiRequest } from "../../lib/queryClient";
-import type { Roll } from "../../../../shared/schema";
+import type { Roll } from "@shared/schema";
 
 interface RollsTableProps {
   stage: string;
