@@ -545,7 +545,31 @@ export default function OrdersForm({
                             className="h-auto min-h-[50px] w-full"
                             data-testid={`select-product-${index}`}
                           >
-                            <SelectValue placeholder="اختر المنتج" />
+                            <SelectValue placeholder="اختر المنتج">
+                              {prodOrder.customer_product_id && (() => {
+                                const selectedProduct = filteredCustomerProducts.find(
+                                  (p: any) => p.id === prodOrder.customer_product_id
+                                );
+                                if (selectedProduct) {
+                                  const item = items.find(
+                                    (item: any) => item.id === selectedProduct.item_id
+                                  );
+                                  return (
+                                    <div className="text-right">
+                                      <div className="font-medium">
+                                        {item?.name_ar || item?.name || "منتج غير محدد"}
+                                      </div>
+                                      {selectedProduct.size_caption && (
+                                        <div className="text-xs text-gray-500">
+                                          {selectedProduct.size_caption}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return "اختر المنتج";
+                              })()}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent className="max-w-[750px] w-[750px]">
                             {filteredCustomerProducts.map((product: any) => (
