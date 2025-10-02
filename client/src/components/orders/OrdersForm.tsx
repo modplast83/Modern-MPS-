@@ -236,7 +236,7 @@ export default function OrdersForm({
     resolver: zodResolver(orderFormSchema),
     defaultValues: {
       customer_id: "",
-      delivery_days: 7,
+      delivery_days: 15,
       notes: "",
     },
   });
@@ -376,12 +376,12 @@ export default function OrdersForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-xl">
             {editingOrder ? "تعديل الطلب" : "إضافة طلب جديد"}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             {editingOrder
               ? "تعديل تفاصيل الطلب"
               : "إضافة طلب جديد مع أوامر الإنتاج والمواصفات المطلوبة"}
@@ -390,28 +390,8 @@ export default function OrdersForm({
         <Form {...orderForm}>
           <form
             onSubmit={orderForm.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="space-y-4"
           >
-            {/* Order Info Section */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  رقم الطلب
-                </label>
-                <div className="text-lg font-bold text-blue-600">
-                  {editingOrder?.order_number || "سيتم توليده تلقائياً"}
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  التاريخ
-                </label>
-                <div className="text-lg font-bold text-gray-900">
-                  {format(new Date(), "dd/MM/yyyy")}
-                </div>
-              </div>
-            </div>
-
             {/* Customer Selection with Search */}
             <FormField
               control={orderForm.control}
@@ -450,7 +430,7 @@ export default function OrdersForm({
                             key={customer.id}
                             value={customer.id.toString()}
                           >
-                            {customer.name_ar || customer.name} ({customer.id})
+                            {customer.name_ar || customer.name}{customer.name && customer.name_ar ? ` - ${customer.name}` : ''}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -461,50 +441,51 @@ export default function OrdersForm({
               )}
             />
 
-            {/* Delivery Days */}
-            <FormField
-              control={orderForm.control}
-              name="delivery_days"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>أيام التسليم</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      {...field}
-                      placeholder="عدد أيام التسليم"
-                      data-testid="input-delivery-days"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Notes */}
-            <FormField
-              control={orderForm.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ملاحظات</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="ملاحظات إضافية..."
-                      className="min-h-[80px]"
-                      data-testid="textarea-notes"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Delivery Days & Notes in one row */}
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={orderForm.control}
+                name="delivery_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>أيام التسليم</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        placeholder="عدد أيام التسليم"
+                        data-testid="input-delivery-days"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={orderForm.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>ملاحظات</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        placeholder="ملاحظات إضافية..."
+                        className="min-h-[40px] resize-none"
+                        data-testid="textarea-notes"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             {/* Production Orders Section */}
-            <div className="border-t pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">أوامر الإنتاج</h3>
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold">أوامر الإنتاج</h3>
                 <Button
                   type="button"
                   onClick={addProductionOrder}
@@ -518,20 +499,20 @@ export default function OrdersForm({
               </div>
 
               {productionOrdersInForm.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-6 text-sm text-gray-500">
                   يجب إضافة أمر إنتاج واحد على الأقل
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {productionOrdersInForm.map((prodOrder, index) => (
                   <div
                     key={index}
-                    className="p-4 border rounded-lg bg-gray-50"
+                    className="p-3 border rounded-lg bg-gray-50"
                     data-testid={`production-order-${index}`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium">أمر إنتاج #{index + 1}</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">أمر إنتاج #{index + 1}</h4>
                       <Button
                         type="button"
                         onClick={() => removeProductionOrder(index)}
@@ -543,8 +524,8 @@ export default function OrdersForm({
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="col-span-1">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2">
                         <label className="text-sm font-medium text-gray-700">
                           منتج العميل
                         </label>
@@ -561,20 +542,20 @@ export default function OrdersForm({
                           }
                         >
                           <SelectTrigger
-                            className="h-auto min-h-[60px] w-full"
+                            className="h-auto min-h-[50px] w-full"
                             data-testid={`select-product-${index}`}
                           >
                             <SelectValue placeholder="اختر المنتج" />
                           </SelectTrigger>
-                          <SelectContent className="max-w-[800px] w-[800px]">
+                          <SelectContent className="max-w-[750px] w-[750px]">
                             {filteredCustomerProducts.map((product: any) => (
                               <SelectItem
                                 key={product.id}
                                 value={product.id.toString()}
-                                className="h-auto min-h-[80px] py-3"
+                                className="h-auto min-h-[70px] py-2"
                               >
-                                <div className="w-full text-right py-2 min-w-[700px]">
-                                  <div className="font-semibold text-gray-900 mb-2 text-base leading-relaxed">
+                                <div className="w-full text-right py-1 min-w-[650px]">
+                                  <div className="font-semibold text-gray-900 mb-1 text-sm leading-relaxed">
                                     {(() => {
                                       const item = items.find(
                                         (item: any) =>
@@ -683,48 +664,41 @@ export default function OrdersForm({
                         </Select>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">
-                            الكمية الأساسية (كيلو)
-                          </label>
-                          <Input
-                            type="number"
-                            placeholder="الكمية الأساسية"
-                            value={prodOrder.quantity_kg || ""}
-                            onChange={(e) =>
-                              updateProductionOrder(
-                                index,
-                                "quantity_kg",
-                                parseFloat(e.target.value) || 0,
-                              )
-                            }
-                            className="w-full"
-                            data-testid={`input-base-quantity-${index}`}
-                          />
-                          {quantityPreviews[index] && (
-                            <div className="mt-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                              <div className="text-sm font-medium text-blue-800 mb-2">
-                                معاينة الكميات المحسوبة:
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          الكمية الأساسية (كيلو)
+                        </label>
+                        <Input
+                          type="number"
+                          placeholder="الكمية"
+                          value={prodOrder.quantity_kg || ""}
+                          onChange={(e) =>
+                            updateProductionOrder(
+                              index,
+                              "quantity_kg",
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
+                          className="w-full"
+                          data-testid={`input-base-quantity-${index}`}
+                        />
+                        {quantityPreviews[index] && (
+                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                            <div className="text-xs font-medium text-blue-800 mb-1">
+                              معاينة:
+                            </div>
+                            <div className="text-xs space-y-1">
+                              <div className="text-blue-700">
+                                <span className="font-medium">نسبة الزيادة:</span>{" "}
+                                {quantityPreviews[index].overrun_percentage}%
                               </div>
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="text-blue-700">
-                                  <span className="font-medium">
-                                    نسبة الزيادة:
-                                  </span>{" "}
-                                  {quantityPreviews[index].overrun_percentage}%
-                                </div>
-                                <div className="text-blue-700">
-                                  <span className="font-medium">
-                                    الكمية النهائية:
-                                  </span>{" "}
-                                  {quantityPreviews[index].final_quantity_kg}{" "}
-                                  كيلو
-                                </div>
+                              <div className="text-blue-700">
+                                <span className="font-medium">الكمية النهائية:</span>{" "}
+                                {quantityPreviews[index].final_quantity_kg} كيلو
                               </div>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -733,7 +707,7 @@ export default function OrdersForm({
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end space-x-2 space-x-reverse pt-4">
+            <div className="flex justify-end space-x-2 space-x-reverse pt-3 border-t">
               <Button
                 type="button"
                 variant="outline"
