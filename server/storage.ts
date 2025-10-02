@@ -6141,6 +6141,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // محسن: استعلام مع بيانات العميل لمرحلة الطباعة
+      // جلب جميع الرولات في أي مرحلة من أوامر الإنتاج التي تحتوي على رولات في مرحلة film أو printing
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6176,9 +6177,18 @@ export class DatabaseStorage implements IStorage {
           eq(production_orders.customer_product_id, customer_products.id),
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .where(eq(rolls.stage, "film"))
+        .where(
+          and(
+            or(eq(rolls.stage, "film"), eq(rolls.stage, "printing")),
+            sql`EXISTS (
+              SELECT 1 FROM rolls r2
+              WHERE r2.production_order_id = ${rolls.production_order_id}
+              AND r2.stage IN ('film', 'printing')
+            )`
+          )
+        )
         .orderBy(desc(rolls.created_at))
-        .limit(100);
+        .limit(200);
 
       // إذا لم توجد رولات، إرجاع مصفوفة فارغة
       if (rollsData.length === 0) {
@@ -6222,6 +6232,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // محسن: استخدام فهرس stage مع تحديد الأعمدة المطلوبة فقط
+      // جلب جميع الرولات من أوامر الإنتاج التي لديها رولات في مرحلة printing أو cutting
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6234,9 +6245,18 @@ export class DatabaseStorage implements IStorage {
           created_at: rolls.created_at,
         })
         .from(rolls)
-        .where(eq(rolls.stage, "printing"))
+        .where(
+          and(
+            or(eq(rolls.stage, "printing"), eq(rolls.stage, "cutting")),
+            sql`EXISTS (
+              SELECT 1 FROM rolls r2
+              WHERE r2.production_order_id = ${rolls.production_order_id}
+              AND r2.stage IN ('printing', 'cutting')
+            )`
+          )
+        )
         .orderBy(desc(rolls.printed_at))
-        .limit(100); // تقليل الحد للسرعة
+        .limit(200);
 
       // إضافة الحقول المطلوبة للنوع Roll
       const result = rollsData.map((roll) => ({
@@ -6333,7 +6353,7 @@ export class DatabaseStorage implements IStorage {
 
       const productionOrderIds = productionOrdersData.map((po) => po.id);
 
-      // جلب الرولات الجاهزة للتقطيع مع ترتيب صحيح
+      // جلب جميع الرولات (في مرحلة printing أو cutting) لأوامر الإنتاج التي لديها رولات جاهزة للتقطيع
       let rollsData: any[] = [];
       if (productionOrderIds.length > 0) {
         rollsData = await db
@@ -6353,7 +6373,7 @@ export class DatabaseStorage implements IStorage {
           .where(
             and(
               inArray(rolls.production_order_id, productionOrderIds),
-              eq(rolls.stage, "printing"),
+              or(eq(rolls.stage, "printing"), eq(rolls.stage, "cutting"))
             ),
           )
           .orderBy(rolls.roll_seq); // ترتيب حسب التسلسل
