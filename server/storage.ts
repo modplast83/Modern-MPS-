@@ -6141,7 +6141,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // محسن: استعلام مع بيانات العميل لمرحلة الطباعة
-      // جلب جميع الرولات في أي مرحلة من أوامر الإنتاج التي تحتوي على رولات في مرحلة film أو printing
+      // جلب الرولات في مرحلة film أو printing من أوامر الإنتاج النشطة
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6180,10 +6180,9 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             or(eq(rolls.stage, "film"), eq(rolls.stage, "printing")),
-            sql`EXISTS (
-              SELECT 1 FROM rolls r2
-              WHERE r2.production_order_id = ${rolls.production_order_id}
-              AND r2.stage IN ('film', 'printing')
+            sql`${rolls.production_order_id} IN (
+              SELECT DISTINCT production_order_id FROM rolls
+              WHERE stage IN ('film', 'printing')
             )`
           )
         )
@@ -6232,7 +6231,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // محسن: استخدام فهرس stage مع تحديد الأعمدة المطلوبة فقط
-      // جلب جميع الرولات من أوامر الإنتاج التي لديها رولات في مرحلة printing أو cutting
+      // جلب الرولات في مرحلة printing أو cutting من أوامر الإنتاج النشطة
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6248,10 +6247,9 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             or(eq(rolls.stage, "printing"), eq(rolls.stage, "cutting")),
-            sql`EXISTS (
-              SELECT 1 FROM rolls r2
-              WHERE r2.production_order_id = ${rolls.production_order_id}
-              AND r2.stage IN ('printing', 'cutting')
+            sql`${rolls.production_order_id} IN (
+              SELECT DISTINCT production_order_id FROM rolls
+              WHERE stage IN ('printing', 'cutting')
             )`
           )
         )
