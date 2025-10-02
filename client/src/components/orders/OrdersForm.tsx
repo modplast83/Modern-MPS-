@@ -554,16 +554,17 @@ export default function OrdersForm({
                                   const item = items.find(
                                     (item: any) => item.id === selectedProduct.item_id
                                   );
+                                  const parts = [
+                                    item?.name_ar || item?.name || "منتج غير محدد",
+                                    selectedProduct.size_caption,
+                                    selectedProduct.cutting_length_cm ? `${selectedProduct.cutting_length_cm} سم` : null,
+                                    selectedProduct.master_batch_id ? getMasterBatchArabicName(selectedProduct.master_batch_id) : null,
+                                    selectedProduct.raw_material
+                                  ].filter(Boolean);
+                                  
                                   return (
-                                    <div className="text-right">
-                                      <div className="font-medium">
-                                        {item?.name_ar || item?.name || "منتج غير محدد"}
-                                      </div>
-                                      {selectedProduct.size_caption && (
-                                        <div className="text-xs text-gray-500">
-                                          {selectedProduct.size_caption}
-                                        </div>
-                                      )}
+                                    <div className="text-right text-sm">
+                                      {parts.join(' - ')}
                                     </div>
                                   );
                                 }
