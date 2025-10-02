@@ -1619,7 +1619,7 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // معلومات أوامر الإنتاج فقط للطلبات الموجودة
+      // معلومات أوامر الإنتاج مع معلومات الصنف
       const orderIds = ordersData.map((o) => o.id);
       const productionOrdersData = await db
         .select({
@@ -1628,17 +1628,66 @@ export class DatabaseStorage implements IStorage {
           order_id: production_orders.order_id,
           customer_product_id: production_orders.customer_product_id,
           quantity_kg: production_orders.quantity_kg,
+          overrun_percentage: production_orders.overrun_percentage,
+          final_quantity_kg: production_orders.final_quantity_kg,
           status: production_orders.status,
           created_at: production_orders.created_at,
+          // معلومات المنتج
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          master_batch_id: customer_products.master_batch_id,
+          is_printed: customer_products.is_printed,
+          punching: customer_products.punching,
+          // معلومات الصنف
+          item_name: items.name,
+          item_name_ar: items.name_ar,
         })
         .from(production_orders)
+        .leftJoin(
+          customer_products,
+          eq(production_orders.customer_product_id, customer_products.id),
+        )
+        .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
           sql`${production_orders.order_id} IN (${sql.raw(orderIds.join(","))})`,
         )
         .limit(100);
 
+      // جلب الرولات لجميع أوامر الإنتاج
+      const productionOrderIds = productionOrdersData.map((po) => po.id);
+      let rollsData: any[] = [];
+      
+      if (productionOrderIds.length > 0) {
+        rollsData = await db
+          .select({
+            id: rolls.id,
+            roll_number: rolls.roll_number,
+            production_order_id: rolls.production_order_id,
+            weight_kg: rolls.weight_kg,
+            stage: rolls.stage,
+            created_at: rolls.created_at,
+          })
+          .from(rolls)
+          .where(
+            sql`${rolls.production_order_id} IN (${sql.raw(productionOrderIds.join(","))})`,
+          )
+          .orderBy(desc(rolls.created_at));
+      }
+
       // بناء الهيكل الهرمي بشكل محسن
       const orderMap = new Map();
+      const rollsMap = new Map<number, any[]>();
+
+      // تجميع الرولات حسب production_order_id
+      for (const roll of rollsData) {
+        if (!rollsMap.has(roll.production_order_id)) {
+          rollsMap.set(roll.production_order_id, []);
+        }
+        rollsMap.get(roll.production_order_id)!.push(roll);
+      }
 
       for (const order of ordersData) {
         orderMap.set(order.id, {
@@ -1650,19 +1699,10 @@ export class DatabaseStorage implements IStorage {
       for (const po of productionOrdersData) {
         const order = orderMap.get(po.order_id);
         if (order) {
+          const poRolls = rollsMap.get(po.id) || [];
           order.production_orders.push({
             ...po,
-            // إضافة الحقول المطلوبة
-            produced_quantity_kg: "0",
-            printed_quantity_kg: "0",
-            net_quantity_kg: "0",
-            waste_quantity_kg: "0",
-            film_completion_percentage: "0",
-            printing_completion_percentage: "0",
-            cutting_completion_percentage: "0",
-            overrun_percentage: "0",
-            final_quantity_kg: "0",
-            rolls: [],
+            rolls: poRolls,
           });
         }
       }
