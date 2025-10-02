@@ -646,13 +646,15 @@ export class SystemHealthMonitor extends EventEmitter {
         return;
       }
 
+      const statusTranslation = result.status === "critical" ? "حرجة" : "تحذير";
+      
       const alert: SmartAlert = {
         title: `System Health Issue: ${result.checkName}`,
-        title_ar: `مشكلة في سلامة النظام: ${result.checkName_ar}`,
+        title_ar: `مشكلة في سلامة النظام: ${result.checkName_ar || result.checkName}`,
         message:
           result.error || `${result.checkName} is in ${result.status} state`,
         message_ar:
-          result.error || `${result.checkName_ar} في حالة ${result.status}`,
+          result.error || `${result.checkName_ar || result.checkName} في حالة ${statusTranslation}`,
         type: "system",
         category: result.status === "critical" ? "critical" : "warning",
         severity: result.status === "critical" ? "critical" : "medium",

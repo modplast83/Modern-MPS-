@@ -8,7 +8,7 @@ import type {
   CorrectiveAction,
   InsertCorrectiveAction,
 } from "@shared/schema";
-import { getNotificationManager } from "./notification-manager";
+import { getNotificationManager, type SystemNotificationData } from "./notification-manager";
 
 /**
  * نظام إدارة التحذيرات الذكية
@@ -177,34 +177,28 @@ export class AlertManager extends EventEmitter {
       }
 
       const notificationManager = getNotificationManager(this.storage);
-      const notification = {
-        title: alert.title_ar || "تحذير نظام",
-        message: alert.message_ar || "تم إنشاء تحذير جديد",
-        type: alert.type,
-        priority: this.getNotificationPriority(alert.severity),
+      const notification: SystemNotificationData = {
+        title: alert.title || "System Alert",
+        title_ar: alert.title_ar || "تحذير نظام",
+        message: alert.message || "New alert created",
+        message_ar: alert.message_ar || "تم إنشاء تحذير جديد",
+        type: alert.type as SystemNotificationData["type"],
+        priority: this.getNotificationPriority(alert.severity) as SystemNotificationData["priority"],
         context_type: alert.type,
-        context_id: alert.source_id,
+        context_id: alert.source_id || undefined,
         sound: alert.severity === "critical",
         icon: this.getAlertIcon(alert.type),
       };
 
       if (alert.target_roles && alert.target_roles.length > 0) {
         for (const roleId of alert.target_roles) {
-          await notificationManager.sendToRole(roleId, {
-            ...notification,
-            recipient_type: "role",
-            recipient_id: roleId.toString(),
-          });
+          await notificationManager.sendToRole(roleId, notification);
         }
       }
 
       if (alert.target_users && alert.target_users.length > 0) {
         for (const userId of alert.target_users) {
-          await notificationManager.sendToUser(userId, {
-            ...notification,
-            recipient_type: "user",
-            recipient_id: userId.toString(),
-          });
+          await notificationManager.sendToUser(userId, notification);
         }
       }
 

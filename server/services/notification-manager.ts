@@ -26,7 +26,7 @@ export interface SystemNotificationData {
   message_ar?: string;
   type: "system" | "order" | "production" | "maintenance" | "quality" | "hr";
   priority: "low" | "normal" | "high" | "urgent";
-  recipient_type: "user" | "group" | "role" | "all";
+  recipient_type?: "user" | "group" | "role" | "all";
   recipient_id?: string;
   context_type?: string;
   context_id?: string;
@@ -189,11 +189,50 @@ export class NotificationManager extends EventEmitter {
     if (notificationData.priority === "low") return;
 
     try {
+      const notification = await this.storage.createNotification({
+        title: notificationData.title,
+        title_ar: notificationData.title_ar,
+        message: notificationData.message,
+        message_ar: notificationData.message_ar,
+        type: notificationData.type,
+        priority: notificationData.priority,
+        recipient_type: "role",
+        recipient_id: roleId.toString(),
+        context_type: notificationData.context_type,
+        context_id: notificationData.context_id,
+        status: "sent",
+      });
+
       const users = await this.storage.getSafeUsersByRole(roleId);
-      const promises = users.map((user) =>
-        this.sendToUser(user.id, notificationData),
-      );
-      await Promise.all(promises);
+      const sseData = {
+        event: "notification",
+        data: {
+          id: notification.id,
+          title: notification.title,
+          title_ar: notification.title_ar,
+          message: notification.message,
+          message_ar: notification.message_ar,
+          type: notification.type,
+          priority: notification.priority,
+          context_type: notification.context_type,
+          context_id: notification.context_id,
+          created_at: notification.created_at,
+          sound:
+            notificationData.sound ||
+            this.shouldPlaySound(notification.priority || "normal"),
+          icon:
+            notificationData.icon || this.getIconForType(notification.type),
+        },
+      };
+
+      users.forEach((user) => {
+        const userConnections = Array.from(this.connections.values()).filter(
+          (conn) => conn.userId === user.id,
+        );
+        userConnections.forEach((conn) =>
+          this.sendToConnection(conn.id, conn.response, sseData),
+        );
+      });
     } catch (error) {
       console.error(
         `[NotificationManager] Error sending notification to role ${roleId}:`,

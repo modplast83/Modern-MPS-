@@ -6921,21 +6921,37 @@ export class DatabaseStorage implements IStorage {
           throw new Error("معرف المستخدم مطلوب");
         }
 
+        const user = await this.getSafeUser(userId);
+        if (!user) {
+          throw new Error("المستخدم غير موجود");
+        }
+
         const limit = options?.limit || 50;
         const offset = options?.offset || 0;
+
+        const roleCondition = user.role_id
+          ? and(
+              eq(notifications.recipient_type, "role"),
+              eq(notifications.recipient_id, user.role_id.toString()),
+            )
+          : undefined;
+
+        const conditions = [
+          eq(notifications.recipient_id, userId.toString()),
+          and(
+            eq(notifications.recipient_type, "all"),
+            eq(notifications.type, "system"),
+          ),
+        ];
+
+        if (roleCondition) {
+          conditions.push(roleCondition);
+        }
 
         let query = db
           .select()
           .from(notifications)
-          .where(
-            or(
-              eq(notifications.recipient_id, userId.toString()),
-              and(
-                eq(notifications.recipient_type, "all"),
-                eq(notifications.type, "system"),
-              ),
-            ),
-          )
+          .where(or(...conditions))
           .orderBy(desc(notifications.created_at))
           .limit(limit)
           .offset(offset);
@@ -6947,13 +6963,7 @@ export class DatabaseStorage implements IStorage {
             .from(notifications)
             .where(
               and(
-                or(
-                  eq(notifications.recipient_id, userId.toString()),
-                  and(
-                    eq(notifications.recipient_type, "all"),
-                    eq(notifications.type, "system"),
-                  ),
-                ),
+                or(...conditions),
                 sql`${notifications.read_at} IS NULL`,
               ),
             )
