@@ -365,20 +365,21 @@ export default function HierarchicalOrdersView({
                                               </div>
                                               <Badge
                                                 variant={
-                                                  roll.status === "completed"
+                                                  roll.stage === "done"
                                                     ? "default"
                                                     : "secondary"
                                                 }
                                                 className="text-xs"
                                               >
-                                                {roll.status === "completed"
+                                                {roll.stage === "done"
                                                   ? "مكتمل"
-                                                  : roll.status ===
-                                                      "in_progress"
-                                                    ? "قيد التنفيذ"
-                                                    : roll.status === "pending"
-                                                      ? "بالإنتظار"
-                                                      : roll.status}
+                                                  : roll.stage === "film"
+                                                    ? "فيلم"
+                                                    : roll.stage === "printing"
+                                                      ? "طباعة"
+                                                      : roll.stage === "cutting"
+                                                        ? "تقطيع"
+                                                        : roll.stage}
                                               </Badge>
                                             </div>
                                           </div>
