@@ -33,6 +33,7 @@ import {
   Clock,
   Package,
 } from "lucide-react";
+import { formatWeight } from "../../lib/formatNumber";
 import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
 import { useForm } from "react-hook-form";
@@ -344,64 +345,56 @@ export default function GroupedCuttingQueue({
                       >
                         <CollapsibleContent>
                           <CardContent className="pt-0">
-                            <div className="space-y-3">
-                              {productionOrder.rolls?.map((roll: any) => (
-                                <Card key={roll.id} className="bg-white border">
-                                  <CardContent className="p-3">
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center space-x-3 space-x-reverse">
-                                        <QrCode className="h-5 w-5 text-gray-400" />
-                                        <div>
+                            <div className="mt-4 ml-6 space-y-2">
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                الرولات ({productionOrder.rolls?.length || 0})
+                              </h5>
+                              {!productionOrder.rolls || productionOrder.rolls.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                  لا توجد رولات بعد
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {productionOrder.rolls.map((roll: any) => (
+                                    <div
+                                      key={roll.id}
+                                      className="border rounded p-3 bg-gray-50"
+                                      data-testid={`roll-item-${roll.id}`}
+                                    >
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
                                           <p className="font-medium text-sm">
-                                            رول {roll.roll_seq}:{" "}
                                             {roll.roll_number}
                                           </p>
-                                          <p className="text-xs text-gray-500">
-                                            الوزن:{" "}
-                                            {parseFloat(
-                                              roll.weight_kg || 0,
-                                            ).toFixed(2)}{" "}
-                                            كجم
+                                          <p className="text-xs text-muted-foreground">
+                                            الوزن: {formatWeight(parseFloat(roll.weight_kg || 0))}
                                           </p>
                                           {roll.cut_weight_total_kg > 0 && (
                                             <div className="text-xs space-y-1 mt-1">
                                               <p className="text-green-600">
-                                                الوزن الصافي:{" "}
-                                                {parseFloat(
-                                                  roll.cut_weight_total_kg,
-                                                ).toFixed(2)}{" "}
-                                                كجم
+                                                الوزن الصافي: {formatWeight(parseFloat(roll.cut_weight_total_kg))}
                                               </p>
                                               <p className="text-red-600">
-                                                الهدر:{" "}
-                                                {parseFloat(
-                                                  roll.waste_kg,
-                                                ).toFixed(2)}{" "}
-                                                كجم
+                                                الهدر: {formatWeight(parseFloat(roll.waste_kg))}
                                               </p>
                                             </div>
                                           )}
                                         </div>
-                                      </div>
-
-                                      <div className="flex items-center space-x-2 space-x-reverse">
-                                        <Badge variant="outline">
-                                          جاهز للتقطيع
-                                        </Badge>
                                         <Button
                                           onClick={() => openCutDialog(roll)}
                                           disabled={cutMutation.isPending}
                                           size="sm"
+                                          variant="default"
                                           data-testid={`button-cut-${roll.id}`}
+                                          className="ml-2"
                                         >
-                                          <Scissors className="h-4 w-4 mr-1" />
-                                          تقطيع
+                                          <Scissors className="h-3 w-3" />
                                         </Button>
                                       </div>
                                     </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </CollapsibleContent>
