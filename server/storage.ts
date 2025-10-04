@@ -2267,7 +2267,7 @@ export class DatabaseStorage implements IStorage {
           const nextRollSeq = (poRollCount[0]?.count || 0) + 1;
 
           // STEP 5: Generate roll identifiers using production order number + sequence
-          const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, "0")}`;
+          const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}`;
 
           // إنشاء بيانات QR Code غنية
           const qrData = {
@@ -2277,7 +2277,7 @@ export class DatabaseStorage implements IStorage {
             machine_id: insertRoll.machine_id,
             created_at: new Date().toISOString(),
             stage: "film",
-            internal_ref: `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, "0")}`,
+            internal_ref: `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}`,
           };
 
           const qrCodeText = JSON.stringify(qrData);
@@ -2313,7 +2313,7 @@ export class DatabaseStorage implements IStorage {
             .returning();
 
           console.log(
-            `[Storage] Created roll ${rollNumber} (${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(3, "0")}) with invariant validation:`,
+            `[Storage] Created roll ${rollNumber} (${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}) with invariant validation:`,
             {
               rollWeight: rollWeightKg,
               newTotalWeight: newTotalWeight.toFixed(2),
