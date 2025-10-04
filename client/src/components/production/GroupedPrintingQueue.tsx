@@ -3,9 +3,10 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { QrCode, Play, ChevronDown, ChevronRight } from "lucide-react";
+import { QrCode, Play, ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
+import { formatWeight } from "../../lib/formatNumber";
 import {
   Collapsible,
   CollapsibleContent,
@@ -331,41 +332,52 @@ export default function GroupedPrintingQueue({
 
                         <CollapsibleContent>
                           <CardContent className="pt-0">
-                            <div className="space-y-2">
-                              {productionOrderGroup.rolls.map((roll) => (
-                                <div
-                                  key={`roll-${roll.id}`}
-                                  className="flex items-center justify-between p-3 bg-white rounded border"
-                                >
-                                  <div className="flex items-center space-x-3 space-x-reverse">
-                                    <QrCode className="h-4 w-4 text-gray-400" />
-                                    <div>
-                                      <p className="font-medium text-sm">
-                                        {roll.roll_number}
-                                      </p>
-                                      <p className="text-xs text-gray-500">
-                                        الوزن: {roll.weight_kg.toFixed(2)} كجم -
-                                        المكينة: {roll.machine_id}
-                                      </p>
+                            <div className="mt-4 ml-6 space-y-2">
+                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                الرولات ({productionOrderGroup.rolls_count})
+                              </h5>
+                              {productionOrderGroup.rolls.length === 0 ? (
+                                <p className="text-sm text-muted-foreground">
+                                  لا توجد رولات بعد
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {productionOrderGroup.rolls.map((roll) => (
+                                    <div
+                                      key={`roll-${roll.id}`}
+                                      className="border rounded p-3 bg-gray-50"
+                                      data-testid={`roll-item-${roll.id}`}
+                                    >
+                                      <div className="flex justify-between items-start">
+                                        <div className="flex-1">
+                                          <p className="font-medium text-sm">
+                                            {roll.roll_number}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            الوزن: {formatWeight(roll.weight_kg)}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">
+                                            المكينة: {roll.machine_id}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          size="sm"
+                                          variant="default"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handlePrint(roll.id);
+                                          }}
+                                          disabled={processingId === roll.id}
+                                          data-testid={`button-print-roll-${roll.id}`}
+                                          className="ml-2"
+                                        >
+                                          <Play className="h-3 w-3" />
+                                        </Button>
+                                      </div>
                                     </div>
-                                  </div>
-                                  <Button
-                                    size="sm"
-                                    variant="default"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePrint(roll.id);
-                                    }}
-                                    disabled={processingId === roll.id}
-                                    data-testid={`button-print-roll-${roll.id}`}
-                                  >
-                                    <Play className="h-3 w-3 ml-1" />
-                                    {processingId === roll.id
-                                      ? "جاري الطباعة..."
-                                      : "طباعة"}
-                                  </Button>
+                                  ))}
                                 </div>
-                              ))}
+                              )}
                             </div>
                           </CardContent>
                         </CollapsibleContent>
