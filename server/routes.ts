@@ -1419,6 +1419,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/production-orders/batch", requireAuth, async (req, res) => {
+    try {
+      const { orders } = req.body;
+
+      if (!Array.isArray(orders) || orders.length === 0) {
+        return res.status(400).json({
+          message: "يجب توفير قائمة من الطلبات",
+          success: false,
+        });
+      }
+
+      const customerProducts = await storage.getCustomerProducts();
+      const processedOrders = [];
+
+      for (const order of orders) {
+        const { customer_product_id, quantity_kg, overrun_percentage } = order;
+        const customerProduct = customerProducts.find(
+          (cp) => cp.id === parseInt(customer_product_id),
+        );
+
+        if (!customerProduct) {
+          processedOrders.push({
+            success: false,
+            error: `المنتج ${customer_product_id} غير موجود`,
+            order,
+          });
+          continue;
+        }
+
+        const quantityCalculation = calculateProductionQuantities(
+          parseFloat(quantity_kg),
+          customerProduct.punching,
+        );
+
+        const productionOrderData = {
+          ...order,
+          final_quantity_kg: quantityCalculation.finalQuantityKg,
+          overrun_percentage:
+            overrun_percentage || quantityCalculation.overrunPercentage,
+        };
+
+        try {
+          const validatedData =
+            insertProductionOrderSchema.parse(productionOrderData);
+          processedOrders.push({
+            success: true,
+            data: validatedData,
+          });
+        } catch (validationError) {
+          processedOrders.push({
+            success: false,
+            error: "بيانات غير صحيحة",
+            order,
+            validationError,
+          });
+        }
+      }
+
+      const validOrders = processedOrders.filter((po) => po.success);
+
+      if (validOrders.length === 0) {
+        return res.status(400).json({
+          message: "لا توجد طلبات صالحة للإنشاء",
+          errors: processedOrders,
+        });
+      }
+
+      const result = await storage.createProductionOrdersBatch(
+        validOrders.map((po) => po.data!),
+      );
+
+      res.status(201).json({
+        message: `تم إنشاء ${result.successful.length} من ${orders.length} طلب`,
+        successful: result.successful,
+        failed: result.failed,
+        validationErrors: processedOrders.filter((po) => !po.success),
+      });
+    } catch (error) {
+      console.error("Error creating batch production orders:", error);
+      res.status(500).json({ message: "خطأ في إنشاء أوامر الإنتاج" });
+    }
+  });
+
   app.put(
     "/api/production-orders/:id",
     requireAuth,

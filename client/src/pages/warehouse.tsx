@@ -1426,6 +1426,15 @@ function ProductionHallContent() {
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "خطأ",
+        description: "يجب تسجيل الدخول لتسجيل الاستلام",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const selectedOrdersList = Array.from(selectedOrders);
 
     // Create receipts for all production orders in selected main orders
@@ -1450,7 +1459,7 @@ function ProductionHallContent() {
           receiptMutation.mutate({
             production_order_id: productionOrder.production_order_id,
             received_weight_kg: weight,
-            received_by: user?.id || 1,
+            received_by: user.id,
             notes: receiptNotes,
           });
         });

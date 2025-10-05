@@ -91,6 +91,10 @@ export default function AIAssistant() {
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
+      if (!user?.id) {
+        throw new Error("يجب تسجيل الدخول لاستخدام المساعد الذكي");
+      }
+      
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: {
@@ -99,7 +103,7 @@ export default function AIAssistant() {
         body: JSON.stringify({
           message,
           context: "factory_operations",
-          userId: user?.id || 1,
+          userId: user.id,
         }),
       });
       return response.json();

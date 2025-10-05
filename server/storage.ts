@@ -411,6 +411,12 @@ export interface IStorage {
   createProductionOrder(
     productionOrder: InsertProductionOrder,
   ): Promise<ProductionOrder>;
+  createProductionOrdersBatch(
+    productionOrders: InsertProductionOrder[],
+  ): Promise<{
+    successful: ProductionOrder[];
+    failed: Array<{ order: InsertProductionOrder; error: string }>;
+  }>;
   updateProductionOrder(
     id: number,
     productionOrder: Partial<ProductionOrder>,
@@ -2008,6 +2014,137 @@ export class DatabaseStorage implements IStorage {
         return productionOrder;
       });
     }, "إنشاء أمر الإنتاج");
+  }
+
+  async createProductionOrdersBatch(
+    insertProductionOrders: InsertProductionOrder[],
+  ): Promise<{
+    successful: ProductionOrder[];
+    failed: Array<{ order: InsertProductionOrder; error: string }>;
+  }> {
+    return await withDatabaseErrorHandling(async () => {
+      const dataValidator = getDataValidator(this);
+      const successful: ProductionOrder[] = [];
+      const failed: Array<{ order: InsertProductionOrder; error: string }> = [];
+
+      return await db.transaction(async (tx) => {
+        const PRODUCTION_ORDER_BATCH_LOCK = 123456789;
+        await tx.execute(sql`SELECT pg_advisory_xact_lock(${PRODUCTION_ORDER_BATCH_LOCK})`);
+
+        const [maxOrderResult] = await tx
+          .select({
+            max_number: sql<string>`MAX(
+              CASE 
+                WHEN ${production_orders.production_order_number} ~ '^PO[0-9]+$'
+                THEN CAST(SUBSTRING(${production_orders.production_order_number} FROM 3) AS INTEGER)
+                ELSE 0
+              END
+            )`,
+          })
+          .from(production_orders);
+
+        let nextNumber = maxOrderResult?.max_number ? parseInt(maxOrderResult.max_number) + 1 : 1;
+
+        for (const insertProductionOrder of insertProductionOrders) {
+          try {
+            const validationResult = await dataValidator.validateEntity(
+              "production_orders",
+              insertProductionOrder,
+              false,
+            );
+
+            if (!validationResult.isValid) {
+              failed.push({
+                order: insertProductionOrder,
+                error: validationResult.errors.map((e) => e.message_ar).join(", "),
+              });
+              continue;
+            }
+
+            const [parentOrder] = await tx
+              .select()
+              .from(orders)
+              .where(eq(orders.id, insertProductionOrder.order_id))
+              .for("update");
+
+            if (!parentOrder) {
+              failed.push({
+                order: insertProductionOrder,
+                error: "الطلب الأصلي غير موجود",
+              });
+              continue;
+            }
+
+            if (parentOrder.status === "cancelled" || parentOrder.status === "completed") {
+              failed.push({
+                order: insertProductionOrder,
+                error: `لا يمكن إنشاء طلب إنتاج لطلب ${parentOrder.status === "cancelled" ? "ملغي" : "مكتمل"}`,
+              });
+              continue;
+            }
+
+            const productionOrderNumber = `PO${nextNumber.toString().padStart(3, "0")}`;
+            nextNumber++;
+
+            const [customerProduct] = await tx
+              .select()
+              .from(customer_products)
+              .where(
+                eq(
+                  customer_products.id,
+                  parseInt(insertProductionOrder.customer_product_id.toString()),
+                ),
+              );
+
+            if (!customerProduct) {
+              failed.push({
+                order: insertProductionOrder,
+                error: "منتج العميل غير موجود",
+              });
+              continue;
+            }
+
+            const baseQuantityKg = parseFloat(insertProductionOrder.quantity_kg || "0");
+            const punchingType = customerProduct.punching || null;
+            const quantityCalculation = calculateProductionQuantities(
+              baseQuantityKg,
+              punchingType,
+            );
+
+            const productionOrderData = {
+              ...insertProductionOrder,
+              production_order_number: productionOrderNumber,
+              quantity_kg: numberToDecimalString(baseQuantityKg),
+              final_quantity_kg: numberToDecimalString(
+                quantityCalculation.finalQuantityKg,
+              ),
+            };
+
+            const [productionOrder] = await tx
+              .insert(production_orders)
+              .values(productionOrderData)
+              .returning();
+
+            successful.push(productionOrder);
+
+            console.log(
+              `[Batch] Created production order ${productionOrderNumber}`,
+            );
+          } catch (error) {
+            failed.push({
+              order: insertProductionOrder,
+              error: error instanceof Error ? error.message : "خطأ غير معروف",
+            });
+          }
+        }
+
+        console.log(
+          `[Batch] Created ${successful.length} production orders, ${failed.length} failed`,
+        );
+
+        return { successful, failed };
+      });
+    }, "إنشاء أوامر الإنتاج دفعة واحدة");
   }
 
   async updateProductionOrder(
