@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 import { useToast } from "../../hooks/use-toast";
+import { useAuth } from "../../hooks/use-auth";
 import { apiRequest } from "../../lib/queryClient";
 import ErrorBoundary from "../ErrorBoundary";
 import {
@@ -58,6 +59,7 @@ export default function AIAssistant() {
   const [isListening, setIsListening] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
@@ -97,7 +99,7 @@ export default function AIAssistant() {
         body: JSON.stringify({
           message,
           context: "factory_operations",
-          userId: 1,
+          userId: user?.id || 1,
         }),
       });
       return response.json();
