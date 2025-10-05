@@ -357,6 +357,11 @@ function sanitizeResponseForLogging(response: any): any {
     return {};
   }
 
+  // Handle arrays at the top level
+  if (Array.isArray(response)) {
+    return { data: `[Array:${response.length}]` };
+  }
+
   // List of sensitive field patterns to exclude from logs
   const sensitiveFields = [
     "password",
