@@ -1432,11 +1432,22 @@ function ProductionHallContent() {
         (go) => go.order_number === orderNumber,
       );
       if (groupedOrder) {
-        groupedOrder.production_orders.forEach((productionOrder: any) => {
+        const totalWeight = parseFloat(receiptWeight);
+        const numOrders = groupedOrder.production_orders.length;
+        
+        // Distribute weight precisely to avoid floating-point precision issues
+        const baseWeight = Math.floor((totalWeight * 1000) / numOrders) / 1000;
+        const remainder = totalWeight - (baseWeight * numOrders);
+        
+        groupedOrder.production_orders.forEach((productionOrder: any, index: number) => {
+          // Add remainder to last order to ensure exact total
+          const weight = index === numOrders - 1 
+            ? baseWeight + remainder 
+            : baseWeight;
+            
           receiptMutation.mutate({
             production_order_id: productionOrder.production_order_id,
-            received_weight_kg:
-              parseFloat(receiptWeight) / groupedOrder.production_orders.length, // Split weight equally among production orders
+            received_weight_kg: weight,
             received_by: 1, // Assuming current user ID
             notes: receiptNotes,
           });
