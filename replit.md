@@ -30,6 +30,14 @@ This project is an advanced AI-powered order management system specifically desi
 - ✅ **Critical SelectItem Validation Fix (January 2025)**: Completely resolved data import crashes caused by empty/null values in SelectItem components
 - ✅ Comprehensive filtering system for all SelectItem components to prevent empty value props
 - ✅ Enhanced data import reliability across all definition tables (customers, categories, items, etc.)
+- ✅ **Security Hardening (October 2025)**: Removed all hardcoded user ID fallbacks preventing privilege escalation
+  - Eliminated `|| 1` fallbacks across AI assistant, warehouse receipts, and maintenance report creation
+  - Now requires authenticated user context with proper error messages when not logged in
+- ✅ **Batch Production Order Processing (October 2025)**: Optimized production order creation for high-volume operations
+  - Implemented `/api/production-orders/batch` endpoint for creating multiple orders in single transaction
+  - Uses PostgreSQL advisory locks (`pg_advisory_xact_lock`) for concurrency-safe order number generation
+  - Prevents race conditions in empty tables and concurrent batch processing scenarios
+  - Maintains per-order success/failure reporting without losing partial batches
 
 ## Critical Bug Fixes (January 2025)
 
