@@ -14,18 +14,6 @@ app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 
 // Security function to check for plaintext passwords
 async function performPasswordSecurityCheck(): Promise<void> {
-  // Check if security check should be skipped via environment variable
-  if (process.env.SKIP_SECURITY_CHECK === "true") {
-    console.warn(
-      "⚠️ SECURITY CHECK BYPASSED: SKIP_SECURITY_CHECK environment variable is set",
-    );
-    console.warn("⚠️ This should only be used temporarily during deployment");
-    console.warn(
-      "⚠️ Please remove SKIP_SECURITY_CHECK and fix any password issues immediately",
-    );
-    return;
-  }
-
   try {
     console.log("🔒 Performing startup password security check...");
 
@@ -68,55 +56,29 @@ async function performPasswordSecurityCheck(): Promise<void> {
         `🚨 All passwords should be hashed with bcrypt before storage.`,
       );
 
-      // In production, you might want to take more drastic action:
-      // - Exit the application
-      // - Send alerts to administrators
-      // - Disable affected accounts
-
       if (app.get("env") === "production") {
         console.error(
           `🚨 PRODUCTION SECURITY VIOLATION: Application startup blocked due to plaintext passwords`,
         );
         console.error(
-          `🚨 Security check failure causing crash loop in production environment`,
-        );
-        console.error(
-          `🚨 Run the password hashing script immediately after the initial deploy with SKIP_SECURITY_CHECK enabled`,
-        );
-        console.error(
           `┌─────────────────────────────────────────────────────────────────────┐`,
         );
         console.error(
-          `│                    DEPLOYMENT FIX INSTRUCTIONS                     │`,
+          `│                    SECURITY FIX REQUIRED                           │`,
         );
         console.error(
           `├─────────────────────────────────────────────────────────────────────┤`,
         );
         console.error(
-          `│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`,
+          `│ Run: node scripts/hash-passwords.js to fix plaintext passwords    │`,
         );
         console.error(
-          `│         (exact string 'true' required)                             │`,
-        );
-        console.error(
-          `│ Step 2: Deploy application (will start successfully with bypass)   │`,
-        );
-        console.error(
-          `│ Step 3: Run: node scripts/hash-passwords.js                        │`,
-        );
-        console.error(
-          `│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`,
-        );
-        console.error(
-          `│ Step 5: Redeploy application (security check will pass)            │`,
+          `│ Contact system administrator immediately                           │`,
         );
         console.error(
           `└─────────────────────────────────────────────────────────────────────┘`,
         );
-        console.error(
-          `🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`,
-        );
-        process.exit(1); // Exit in production to prevent security risk
+        process.exit(1);
       }
     } else {
       console.log(
@@ -126,43 +88,9 @@ async function performPasswordSecurityCheck(): Promise<void> {
   } catch (error) {
     console.error("❌ Password security check failed:", error);
 
-    // In production, fail-safe approach
     if (app.get("env") === "production") {
       console.error(
         "🚨 Production security check failure - shutting down for safety",
-      );
-      console.error(
-        `┌─────────────────────────────────────────────────────────────────────┐`,
-      );
-      console.error(
-        `│                    DEPLOYMENT FIX INSTRUCTIONS                     │`,
-      );
-      console.error(
-        `├─────────────────────────────────────────────────────────────────────┤`,
-      );
-      console.error(
-        `│ Step 1: Set environment variable: SKIP_SECURITY_CHECK=true        │`,
-      );
-      console.error(
-        `│         (exact string 'true' required)                             │`,
-      );
-      console.error(
-        `│ Step 2: Deploy application (will start successfully with bypass)   │`,
-      );
-      console.error(
-        `│ Step 3: Run: node scripts/hash-passwords.js                        │`,
-      );
-      console.error(
-        `│ Step 4: Remove SKIP_SECURITY_CHECK environment variable            │`,
-      );
-      console.error(
-        `│ Step 5: Redeploy application (security check will pass)            │`,
-      );
-      console.error(
-        `└─────────────────────────────────────────────────────────────────────┘`,
-      );
-      console.error(
-        `🚨 WARNING: Do NOT leave SKIP_SECURITY_CHECK enabled in production!`,
       );
       process.exit(1);
     } else {
