@@ -242,7 +242,6 @@ export default function Settings() {
       tableName: string;
       file: File;
     }) => {
-      const formData = new FormData();
       const fileText = await file.text();
       const format = file.name.endsWith(".json")
         ? "json"
