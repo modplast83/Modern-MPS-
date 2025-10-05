@@ -65,6 +65,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../hooks/use-auth";
 
 const inventoryFormSchema = z.object({
   material_group_id: z.string().min(1, "مجموعة المواد مطلوبة"),
@@ -104,6 +105,7 @@ export default function Warehouse() {
   const [activeLocationTab, setActiveLocationTab] = useState<string>("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Fetch inventory data
   const { data: inventoryItems = [], isLoading: inventoryLoading } = useQuery({
@@ -294,7 +296,7 @@ export default function Warehouse() {
       const response = await fetch("/api/inventory-movements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, created_by: 1 }), // Assuming user ID 1 for now
+        body: JSON.stringify({ ...data, created_by: user?.id || 1 }),
       });
 
       if (!response.ok) throw new Error("فشل في حفظ البيانات");
@@ -1448,7 +1450,7 @@ function ProductionHallContent() {
           receiptMutation.mutate({
             production_order_id: productionOrder.production_order_id,
             received_weight_kg: weight,
-            received_by: 1, // Assuming current user ID
+            received_by: user?.id || 1,
             notes: receiptNotes,
           });
         });

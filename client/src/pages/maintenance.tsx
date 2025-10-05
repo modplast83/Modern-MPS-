@@ -1489,7 +1489,7 @@ function MaintenanceReportsTab({
       await onCreateReport({
         ...data,
         report_number: reportNumber,
-        reported_by_user_id: 1, // Should be current user
+        reported_by_user_id: user?.id || 1,
         status: "open",
         estimated_repair_time: data.estimated_repair_time || null,
       });
@@ -1761,7 +1761,7 @@ function OperatorNegligenceTab({
       await onCreateReport({
         ...data,
         report_number: reportNumber,
-        reported_by_user_id: 1, // Should be current user
+        reported_by_user_id: user?.id || 1,
         report_date: new Date().toISOString().split("T")[0],
         status: "pending",
         follow_up_required:
