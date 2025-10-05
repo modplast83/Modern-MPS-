@@ -1467,6 +1467,8 @@ function MaintenanceReportsTab({
   onCreateReport,
 }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(maintenanceReportSchema),
@@ -1483,13 +1485,22 @@ function MaintenanceReportsTab({
   });
 
   const onSubmit = async (data: any) => {
+    if (!user?.id) {
+      toast({
+        title: "خطأ",
+        description: "يجب تسجيل الدخول لإنشاء بلاغ صيانة",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const reportNumber = generateMaintenanceReportNumber();
 
       await onCreateReport({
         ...data,
         report_number: reportNumber,
-        reported_by_user_id: user?.id || 1,
+        reported_by_user_id: user.id,
         status: "open",
         estimated_repair_time: data.estimated_repair_time || null,
       });
@@ -1739,6 +1750,8 @@ function OperatorNegligenceTab({
   onCreateReport,
 }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm({
     resolver: zodResolver(operatorNegligenceSchema),
@@ -1755,13 +1768,22 @@ function OperatorNegligenceTab({
   });
 
   const onSubmit = async (data: any) => {
+    if (!user?.id) {
+      toast({
+        title: "خطأ",
+        description: "يجب تسجيل الدخول لإنشاء بلاغ إهمال",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const reportNumber = generateOperatorReportNumber();
 
       await onCreateReport({
         ...data,
         report_number: reportNumber,
-        reported_by_user_id: user?.id || 1,
+        reported_by_user_id: user.id,
         report_date: new Date().toISOString().split("T")[0],
         status: "pending",
         follow_up_required:
