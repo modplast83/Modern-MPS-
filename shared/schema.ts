@@ -1867,6 +1867,12 @@ export const insertCustomerProductSchema = createInsertSchema(customer_products)
   .omit({
     id: true,
     created_at: true,
+    width: true,
+    left_facing: true,
+    right_facing: true,
+    thickness: true,
+    unit_weight_kg: true,
+    package_weight_kg: true,
   })
   .extend({
     // Transform decimal fields to handle both string and number inputs
