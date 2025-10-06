@@ -1870,54 +1870,54 @@ export const insertCustomerProductSchema = createInsertSchema(customer_products)
   })
   .extend({
     // Transform decimal fields to handle both string and number inputs
-    width: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+    width: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
-    left_facing: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+      },
+      z.string().optional()
+    ),
+    left_facing: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
-    right_facing: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+      },
+      z.string().optional()
+    ),
+    right_facing: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
-    thickness: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+      },
+      z.string().optional()
+    ),
+    thickness: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
-    unit_weight_kg: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+      },
+      z.string().optional()
+    ),
+    unit_weight_kg: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
-    package_weight_kg: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => {
+      },
+      z.string().optional()
+    ),
+    package_weight_kg: z.preprocess(
+      (val): string | undefined => {
         if (val === null || val === undefined || val === "") return undefined;
-        const num = typeof val === "string" ? parseFloat(val) : val;
+        const num = typeof val === "string" ? parseFloat(val) : (val as number);
         return isNaN(num) ? undefined : num.toString();
-      }),
+      },
+      z.string().optional()
+    ),
     cutting_length_cm: z
       .union([z.string(), z.number()])
       .optional()
