@@ -30,6 +30,7 @@ import {
   insertCutSchema,
   insertWarehouseReceiptSchema,
   insertProductionSettingsSchema,
+  insertCustomerProductSchema,
   customers,
   customer_products,
   locations,
@@ -88,10 +89,6 @@ const insertCustomerSchema = createInsertSchema(customers)
         }
       }),
   });
-const insertCustomerProductSchema = createInsertSchema(customer_products).omit({
-  id: true,
-  created_at: true,
-});
 const insertLocationSchema = createInsertSchema(locations).omit({ id: true });
 import { openaiService } from "./services/openai";
 import { mlService } from "./services/ml-service";
