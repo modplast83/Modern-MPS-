@@ -1313,6 +1313,7 @@ function ProductionHallContent() {
   const [receiptNotes, setReceiptNotes] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Fetch production orders ready for receipt - Optimized polling
   const { data: productionOrders = [], isLoading } = useQuery<any[]>({
