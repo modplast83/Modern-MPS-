@@ -1705,12 +1705,12 @@ export class DatabaseStorage implements IStorage {
       const userNames = new Map<number, string>();
       if (userIds.size > 0) {
         const usersData = await db
-          .select({ id: users.id, name: (users as any).name })
+          .select({ id: users.id, name: users.display_name })
           .from(users)
           .where(inArray(users.id, Array.from(userIds)));
         
         usersData.forEach(user => {
-          userNames.set(user.id, user.name);
+          userNames.set(user.id, user.name || '');
         });
       }
 
@@ -6393,12 +6393,12 @@ export class DatabaseStorage implements IStorage {
       const userNames = new Map<number, string>();
       if (userIds.size > 0) {
         const usersData = await db
-          .select({ id: users.id, name: (users as any).name })
+          .select({ id: users.id, name: users.display_name })
           .from(users)
           .where(inArray(users.id, Array.from(userIds)));
         
         usersData.forEach(user => {
-          userNames.set(user.id, user.name);
+          userNames.set(user.id, user.name || '');
         });
       }
 
@@ -6604,12 +6604,12 @@ export class DatabaseStorage implements IStorage {
       const userNames = new Map<number, string>();
       if (userIds.size > 0) {
         const usersData = await db
-          .select({ id: users.id, name: (users as any).name })
+          .select({ id: users.id, name: users.display_name })
           .from(users)
           .where(inArray(users.id, Array.from(userIds)));
         
         usersData.forEach(user => {
-          userNames.set(user.id, user.name);
+          userNames.set(user.id, user.name || '');
         });
       }
 
