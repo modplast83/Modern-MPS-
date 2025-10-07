@@ -26,7 +26,12 @@ interface OrdersTabsProps {
   setSearchTerm: (term: string) => void;
   statusFilter: string;
   setStatusFilter: (status: string) => void;
+  productionSearchTerm: string;
+  setProductionSearchTerm: (term: string) => void;
+  productionStatusFilter: string;
+  setProductionStatusFilter: (status: string) => void;
   filteredOrders: any[];
+  filteredProductionOrders: any[];
   isOrderDialogOpen: boolean;
   setIsOrderDialogOpen: (open: boolean) => void;
   editingOrder: any;
@@ -54,7 +59,12 @@ export default function OrdersTabs({
   setSearchTerm,
   statusFilter,
   setStatusFilter,
+  productionSearchTerm,
+  setProductionSearchTerm,
+  productionStatusFilter,
+  setProductionStatusFilter,
   filteredOrders,
+  filteredProductionOrders,
   isOrderDialogOpen,
   setIsOrderDialogOpen,
   editingOrder,
@@ -270,14 +280,23 @@ export default function OrdersTabs({
       <TabsContent value="production-orders" className="space-y-4">
         <Card>
           <CardHeader>
-            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <div className="flex items-center justify-between">
               <CardTitle>أوامر الإنتاج</CardTitle>
+              <OrdersSearch
+                searchTerm={productionSearchTerm}
+                setSearchTerm={setProductionSearchTerm}
+                statusFilter={productionStatusFilter}
+                setStatusFilter={setProductionStatusFilter}
+                type="production"
+              />
             </div>
           </CardHeader>
           <CardContent>
-            {productionOrders.length === 0 ? (
+            {filteredProductionOrders.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
-                لا توجد أوامر إنتاج
+                {productionOrders.length === 0 
+                  ? "لا توجد أوامر إنتاج" 
+                  : "لا توجد نتائج مطابقة للبحث"}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -305,7 +324,7 @@ export default function OrdersTabs({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {productionOrders.map((po: any) => {
+                    {filteredProductionOrders.map((po: any) => {
                       const order = orders.find((o: any) => o.id === po.order_id);
                       const customer = customers.find((c: any) => c.id === order?.customer_id);
                       const customerProduct = customerProducts.find((cp: any) => cp.id === po.customer_product_id);
