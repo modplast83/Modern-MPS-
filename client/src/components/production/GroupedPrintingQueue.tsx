@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { QrCode, Play, ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { QrCode, Play, ChevronDown, ChevronRight, Plus, Printer } from "lucide-react";
 import { Progress } from "../ui/progress";
 import { useToast } from "../../hooks/use-toast";
 import { formatWeight } from "../../lib/formatNumber";
@@ -12,6 +12,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../ui/collapsible";
+import { printRollLabel } from "./RollLabelPrint";
 
 interface GroupedPrintingQueueProps {
   items: any[];
@@ -345,33 +346,60 @@ export default function GroupedPrintingQueue({
                                   {productionOrderGroup.rolls.map((roll) => (
                                     <div
                                       key={`roll-${roll.id}`}
-                                      className="border rounded p-3 bg-gray-50"
+                                      className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
                                       data-testid={`roll-item-${roll.id}`}
                                     >
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                          <p className="font-medium text-sm">
-                                            {roll.roll_number}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground">
-                                            الوزن: {formatWeight(roll.weight_kg)}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground">
-                                            المكينة: {roll.machine_id}
-                                          </p>
+                                      <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-start">
+                                          <div className="flex-1">
+                                            <p className="font-medium text-sm">
+                                              {roll.roll_number}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              الوزن: {formatWeight(roll.weight_kg)}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              المكينة: {roll.machine_id}
+                                            </p>
+                                          </div>
+                                          <Button
+                                            size="sm"
+                                            variant="default"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handlePrint(roll.id);
+                                            }}
+                                            disabled={processingId === roll.id}
+                                            data-testid={`button-print-roll-${roll.id}`}
+                                          >
+                                            <Play className="h-3 w-3" />
+                                          </Button>
                                         </div>
                                         <Button
+                                          variant="outline"
                                           size="sm"
-                                          variant="default"
+                                          className="w-full text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            handlePrint(roll.id);
+                                            printRollLabel({
+                                              roll: roll,
+                                              productionOrder: {
+                                                production_order_number: productionOrderGroup.production_order_number,
+                                                item_name_ar: orderGroup.item_name_ar,
+                                                item_name: orderGroup.item_name,
+                                                size_caption: orderGroup.size_caption
+                                              },
+                                              order: {
+                                                order_number: orderGroup.order_number,
+                                                customer_name_ar: orderGroup.customer_name_ar,
+                                                customer_name: orderGroup.customer_name
+                                              }
+                                            });
                                           }}
-                                          disabled={processingId === roll.id}
-                                          data-testid={`button-print-roll-${roll.id}`}
-                                          className="ml-2"
+                                          data-testid={`button-print-label-${roll.id}`}
                                         >
-                                          <Play className="h-3 w-3" />
+                                          <Printer className="h-3 w-3 mr-1" />
+                                          طباعة ليبل
                                         </Button>
                                       </div>
                                     </div>

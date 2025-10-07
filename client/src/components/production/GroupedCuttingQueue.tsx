@@ -32,6 +32,7 @@ import {
   ChevronUp,
   Clock,
   Package,
+  Printer,
 } from "lucide-react";
 import { formatWeight } from "../../lib/formatNumber";
 import { Progress } from "../ui/progress";
@@ -39,6 +40,7 @@ import { useToast } from "../../hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { printRollLabel } from "./RollLabelPrint";
 
 const cutFormSchema = z.object({
   cut_weight_kg: z.coerce
@@ -358,37 +360,63 @@ export default function GroupedCuttingQueue({
                                   {productionOrder.rolls.map((roll: any) => (
                                     <div
                                       key={roll.id}
-                                      className="border rounded p-3 bg-gray-50"
+                                      className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
                                       data-testid={`roll-item-${roll.id}`}
                                     >
-                                      <div className="flex justify-between items-start">
-                                        <div className="flex-1">
-                                          <p className="font-medium text-sm">
-                                            {roll.roll_number}
-                                          </p>
-                                          <p className="text-xs text-muted-foreground">
-                                            الوزن: {formatWeight(parseFloat(roll.weight_kg || 0))}
-                                          </p>
-                                          {roll.cut_weight_total_kg > 0 && (
-                                            <div className="text-xs space-y-1 mt-1">
-                                              <p className="text-green-600">
-                                                الوزن الصافي: {formatWeight(parseFloat(roll.cut_weight_total_kg))}
-                                              </p>
-                                              <p className="text-red-600">
-                                                الهدر: {formatWeight(parseFloat(roll.waste_kg))}
-                                              </p>
-                                            </div>
-                                          )}
+                                      <div className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-start">
+                                          <div className="flex-1">
+                                            <p className="font-medium text-sm">
+                                              {roll.roll_number}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                              الوزن: {formatWeight(parseFloat(roll.weight_kg || 0))}
+                                            </p>
+                                            {roll.cut_weight_total_kg > 0 && (
+                                              <div className="text-xs space-y-1 mt-1">
+                                                <p className="text-green-600">
+                                                  الوزن الصافي: {formatWeight(parseFloat(roll.cut_weight_total_kg))}
+                                                </p>
+                                                <p className="text-red-600">
+                                                  الهدر: {formatWeight(parseFloat(roll.waste_kg))}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                          <Button
+                                            onClick={() => openCutDialog(roll)}
+                                            disabled={cutMutation.isPending}
+                                            size="sm"
+                                            variant="default"
+                                            data-testid={`button-cut-${roll.id}`}
+                                          >
+                                            <Scissors className="h-3 w-3" />
+                                          </Button>
                                         </div>
                                         <Button
-                                          onClick={() => openCutDialog(roll)}
-                                          disabled={cutMutation.isPending}
+                                          variant="outline"
                                           size="sm"
-                                          variant="default"
-                                          data-testid={`button-cut-${roll.id}`}
-                                          className="ml-2"
+                                          className="w-full text-xs"
+                                          onClick={() => {
+                                            printRollLabel({
+                                              roll: roll,
+                                              productionOrder: {
+                                                production_order_number: productionOrder.production_order_number,
+                                                item_name_ar: productionOrder.item_name_ar,
+                                                item_name: productionOrder.item_name,
+                                                size_caption: productionOrder.size_caption
+                                              },
+                                              order: {
+                                                order_number: order.order_number,
+                                                customer_name_ar: order.customer_name_ar,
+                                                customer_name: order.customer_name
+                                              }
+                                            });
+                                          }}
+                                          data-testid={`button-print-label-${roll.id}`}
                                         >
-                                          <Scissors className="h-3 w-3" />
+                                          <Printer className="h-3 w-3 mr-1" />
+                                          طباعة ليبل
                                         </Button>
                                       </div>
                                     </div>
