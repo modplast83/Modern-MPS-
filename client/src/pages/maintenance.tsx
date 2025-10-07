@@ -915,7 +915,7 @@ function MaintenanceActionsTab({
       const submitData = {
         ...data,
         action_number: actionNumber,
-        request_created_by: "1", // Should be current user
+        request_created_by: user?.id?.toString() || "",
       };
 
       console.log("Submitting action data:", submitData);
