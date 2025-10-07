@@ -246,7 +246,7 @@ export default function FieldTrainingPrograms() {
   // Mutations
   const createProgramMutation = useMutation({
     mutationFn: (data: z.infer<typeof trainingProgramSchema>) =>
-      apiRequest("/api/hr/training-programs", { method: "POST", body: data }),
+      apiRequest("/api/hr/training-programs", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["/api/hr/training-programs"],
