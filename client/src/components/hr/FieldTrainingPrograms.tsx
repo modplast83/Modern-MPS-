@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useToast } from "../../hooks/use-toast";
+import { useAuth } from "../../hooks/use-auth";
 import { apiRequest } from "../../lib/queryClient";
 import { formatNumber } from "../../lib/formatNumber";
 import {
@@ -85,7 +86,7 @@ const evaluationSchema = z.object({
   enrollment_id: z.string().min(1, "التسجيل مطلوب"),
   program_id: z.string().min(1, "البرنامج مطلوب"),
   employee_id: z.string().min(1, "الموظف مطلوب"),
-  evaluator_id: z.string().default("1"),
+  evaluator_id: z.string().min(1, "المقيّم مطلوب"),
   evaluation_date: z.string(),
   theoretical_understanding: z.string().min(1, "الفهم النظري مطلوب"),
   practical_skills: z.string().min(1, "المهارات العملية مطلوبة"),
@@ -162,6 +163,7 @@ export default function FieldTrainingPrograms() {
     useState<TrainingEnrollment | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Forms
@@ -192,7 +194,7 @@ export default function FieldTrainingPrograms() {
       enrollment_id: "",
       program_id: "",
       employee_id: "",
-      evaluator_id: "1",
+      evaluator_id: user?.id?.toString() || "",
       evaluation_date: new Date().toISOString().split("T")[0],
       theoretical_understanding: "3",
       practical_skills: "3",
