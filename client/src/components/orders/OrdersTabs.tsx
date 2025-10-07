@@ -272,13 +272,81 @@ export default function OrdersTabs({
           <CardHeader>
             <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
               <CardTitle>أوامر الإنتاج</CardTitle>
-              {/* TODO: Add production orders management here */}
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-8 text-gray-500">
-              سيتم إضافة إدارة أوامر الإنتاج هنا
-            </div>
+            {productionOrders.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                لا توجد أوامر إنتاج
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        رقم أمر الإنتاج
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        رقم الطلب
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        العميل
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        المنتج
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الكمية (كجم)
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الحالة
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {productionOrders.map((po: any) => {
+                      const order = orders.find((o: any) => o.id === po.order_id);
+                      const customer = customers.find((c: any) => c.id === order?.customer_id);
+                      const customerProduct = customerProducts.find((cp: any) => cp.id === po.customer_product_id);
+                      
+                      return (
+                        <tr key={po.id} className="hover:bg-gray-50" data-testid={`row-production-order-${po.id}`}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {po.production_order_number || po.id}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {order?.order_number || "غير محدد"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {customer?.name_ar || customer?.name || "غير محدد"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {customerProduct?.size_caption || "غير محدد"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {po.quantity_kg || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              po.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              po.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                              po.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {po.status === 'pending' ? 'معلق' :
+                               po.status === 'in_progress' ? 'قيد التنفيذ' :
+                               po.status === 'completed' ? 'مكتمل' :
+                               po.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </TabsContent>

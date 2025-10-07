@@ -11,7 +11,7 @@ import { OrdersStats, OrdersTabs } from "../components/orders";
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("waiting");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
