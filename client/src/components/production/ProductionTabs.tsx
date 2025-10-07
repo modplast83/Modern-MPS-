@@ -14,6 +14,7 @@ import ProductionQueue from "./ProductionQueue";
 import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import GroupedCuttingQueue from "./GroupedCuttingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
+import ProductionStageStats from "./ProductionStageStats";
 
 interface ProductionTabsProps {
   onCreateRoll: (productionOrderId?: number) => void;
@@ -127,6 +128,14 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     refetchOnWindowFocus: false, // Prevent unnecessary refetches
   });
 
+  const { data: hierarchicalOrders = [] } = useQuery<any[]>({
+    queryKey: ["/api/production/hierarchical-orders"],
+    refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
   // Set default active stage based on visible stages
   const defaultStage = visibleStages.length > 0 ? visibleStages[0].id : "film";
 
@@ -200,6 +209,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               <CardTitle className="text-lg mb-4">
                 طلبات الإنتاج - مرحلة الفيلم
               </CardTitle>
+              <ProductionStageStats stage="film" data={hierarchicalOrders} />
               <HierarchicalOrdersView
                 stage="film"
                 onCreateRoll={onCreateRoll}
@@ -215,6 +225,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               <CardTitle className="text-lg mb-4">
                 قائمة انتظار الطباعة
               </CardTitle>
+              <ProductionStageStats stage="printing" data={printingQueue} />
               <GroupedPrintingQueue items={printingQueue} />
             </CardContent>
           </TabsContent>
@@ -227,6 +238,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               <CardTitle className="text-lg mb-4">
                 قائمة انتظار التقطيع
               </CardTitle>
+              <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
               <GroupedCuttingQueue items={groupedCuttingQueue} />
             </CardContent>
           </TabsContent>

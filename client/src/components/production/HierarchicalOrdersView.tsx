@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { Input } from "../ui/input";
-import { ChevronDown, ChevronRight, Eye, Plus, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Eye, Plus, Search, Printer } from "lucide-react";
 import { formatNumber, formatWeight } from "../../lib/formatNumber";
+import { printRollLabel } from "./RollLabelPrint";
 
 interface HierarchicalOrdersViewProps {
   stage: string;
@@ -336,11 +337,11 @@ export default function HierarchicalOrdersView({
                                         (roll: any) => (
                                           <div
                                             key={roll.id}
-                                            className="border rounded p-3 bg-gray-50"
+                                            className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
                                             data-testid={`roll-item-${roll.id}`}
                                           >
-                                            <div className="flex justify-between items-start">
-                                              <div>
+                                            <div className="flex justify-between items-start mb-2">
+                                              <div className="flex-1">
                                                 <p className="font-medium text-sm">
                                                   {roll.roll_number}
                                                 </p>
@@ -382,6 +383,20 @@ export default function HierarchicalOrdersView({
                                                         : roll.stage}
                                               </Badge>
                                             </div>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="w-full text-xs"
+                                              onClick={() => printRollLabel({
+                                                roll: roll,
+                                                productionOrder: productionOrder,
+                                                order: order
+                                              })}
+                                              data-testid={`button-print-label-${roll.id}`}
+                                            >
+                                              <Printer className="h-3 w-3 mr-1" />
+                                              طباعة ليبل
+                                            </Button>
                                           </div>
                                         ),
                                       )}
