@@ -1668,10 +1668,6 @@ export class DatabaseStorage implements IStorage {
       let rollsData: any[] = [];
       
       if (productionOrderIds.length > 0) {
-        const creatorUsers = alias(users, 'creator');
-        const printerUsers = alias(users, 'printer');
-        const cutterUsers = alias(users, 'cutter');
-        
         rollsData = await db
           .select({
             id: rolls.id,
@@ -1681,19 +1677,16 @@ export class DatabaseStorage implements IStorage {
             weight_kg: rolls.weight_kg,
             stage: rolls.stage,
             created_at: rolls.created_at,
-            created_by_name: sql<string>`creator.name`,
+            created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
             printed_at: rolls.printed_at,
-            printed_by_name: sql<string>`printer.name`,
+            printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
             cut_at: rolls.cut_completed_at,
-            cut_by_name: sql<string>`cutter.name`,
+            cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
             cut_weight_total_kg: rolls.cut_weight_total_kg,
             machine_id: rolls.machine_id,
             qr_code_text: rolls.qr_code_text,
           })
           .from(rolls)
-          .leftJoin(creatorUsers, eq(rolls.created_by, creatorUsers.id))
-          .leftJoin(printerUsers, eq(rolls.printed_by, printerUsers.id))
-          .leftJoin(cutterUsers, eq(rolls.cut_by, cutterUsers.id))
           .where(
             sql`${rolls.production_order_id} IN (${sql.raw(productionOrderIds.join(","))})`,
           )
@@ -6301,10 +6294,6 @@ export class DatabaseStorage implements IStorage {
 
       // محسن: استعلام مع بيانات العميل لمرحلة الطباعة
       // جلب الرولات في مرحلة film أو printing من أوامر الإنتاج النشطة
-      const creatorUsers = alias(users, 'creator');
-      const printerUsers = alias(users, 'printer');
-      const cutterUsers = alias(users, 'cutter');
-      
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6318,11 +6307,11 @@ export class DatabaseStorage implements IStorage {
           machine_id: rolls.machine_id,
           stage: rolls.stage,
           created_at: rolls.created_at,
-          created_by_name: sql<string>`creator.name`,
+          created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
           printed_at: rolls.printed_at,
-          printed_by_name: sql<string>`printer.name`,
+          printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
           cut_at: rolls.cut_completed_at,
-          cut_by_name: sql<string>`cutter.name`,
+          cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
           cut_weight_total_kg: rolls.cut_weight_total_kg,
           qr_code_text: rolls.qr_code_text,
           qr_png_base64: rolls.qr_png_base64,
@@ -6335,9 +6324,6 @@ export class DatabaseStorage implements IStorage {
           size_caption: customer_products.size_caption,
         })
         .from(rolls)
-        .leftJoin(creatorUsers, eq(rolls.created_by, creatorUsers.id))
-        .leftJoin(printerUsers, eq(rolls.printed_by, printerUsers.id))
-        .leftJoin(cutterUsers, eq(rolls.cut_by, cutterUsers.id))
         .leftJoin(
           production_orders,
           eq(rolls.production_order_id, production_orders.id),
@@ -6526,10 +6512,6 @@ export class DatabaseStorage implements IStorage {
       // جلب جميع الرولات (في مرحلة printing أو cutting) لأوامر الإنتاج التي لديها رولات جاهزة للتقطيع
       let rollsData: any[] = [];
       if (productionOrderIds.length > 0) {
-        const creatorUsers = alias(users, 'creator');
-        const printerUsers = alias(users, 'printer');
-        const cutterUsers = alias(users, 'cutter');
-        
         rollsData = await db
           .select({
             id: rolls.id,
@@ -6542,17 +6524,14 @@ export class DatabaseStorage implements IStorage {
             waste_kg: rolls.waste_kg,
             printed_at: rolls.printed_at,
             created_at: rolls.created_at,
-            created_by_name: sql<string>`creator.name`,
-            printed_by_name: sql<string>`printer.name`,
-            cut_by_name: sql<string>`cutter.name`,
+            created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
+            printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
+            cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
             cut_at: rolls.cut_completed_at,
             machine_id: rolls.machine_id,
             qr_code_text: rolls.qr_code_text,
           })
           .from(rolls)
-          .leftJoin(creatorUsers, eq(rolls.created_by, creatorUsers.id))
-          .leftJoin(printerUsers, eq(rolls.printed_by, printerUsers.id))
-          .leftJoin(cutterUsers, eq(rolls.cut_by, cutterUsers.id))
           .where(
             and(
               inArray(rolls.production_order_id, productionOrderIds),
