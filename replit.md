@@ -64,6 +64,12 @@ This project is an advanced AI-powered order management system specifically desi
   - Improved `/api/me` endpoint to actively maintain and extend sessions
   - Enhanced frontend auth handling to preserve user login state on network errors
   - Added proper session touching and saving mechanisms to prevent premature timeouts
+- ✅ **Production Queue SQL Query Fix (October 2025)**: Resolved critical SQL errors in user name retrieval across production queues
+  - Fixed "column users.name does not exist" error in `getPrintingQueue`, `getHierarchicalOrdersForProduction`, and `getGroupedCuttingQueue`
+  - Replaced problematic SQL subqueries with efficient separate user name lookups using `inArray`
+  - Implemented Set/Map pattern to collect unique user IDs and fetch all names in a single query
+  - Properly associates created_by, printed_by, and cut_by user names with roll labels for complete operator attribution
+  - Improved query performance by reducing redundant database calls
 
 ## User Preferences
 
