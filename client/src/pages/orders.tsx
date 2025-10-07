@@ -127,6 +127,16 @@ export default function Orders() {
     try {
       console.log("بدء عملية حفظ الطلب...", { data, productionOrdersData });
 
+      // Check if user is authenticated
+      if (!user?.id) {
+        toast({
+          title: "خطأ",
+          description: "يجب تسجيل الدخول لإنشاء طلب",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Check if at least one production order is added
       if (productionOrdersData.length === 0) {
         toast({
@@ -172,7 +182,7 @@ export default function Orders() {
           max: 365,
         }),
         notes: data.notes || "",
-        created_by: user?.id?.toString() || "1",
+        created_by: user.id.toString(),
       };
 
       console.log("إرسال بيانات الطلب:", orderData);
