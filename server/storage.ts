@@ -1677,11 +1677,11 @@ export class DatabaseStorage implements IStorage {
             weight_kg: rolls.weight_kg,
             stage: rolls.stage,
             created_at: rolls.created_at,
-            created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
+            created_by: rolls.created_by,
             printed_at: rolls.printed_at,
-            printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
+            printed_by: rolls.printed_by,
             cut_at: rolls.cut_completed_at,
-            cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
+            cut_by: rolls.cut_by,
             cut_weight_total_kg: rolls.cut_weight_total_kg,
             machine_id: rolls.machine_id,
             qr_code_text: rolls.qr_code_text,
@@ -1693,12 +1693,41 @@ export class DatabaseStorage implements IStorage {
           .orderBy(desc(rolls.created_at));
       }
 
+      // جمع user IDs الفريدة من الرولات
+      const userIds = new Set<number>();
+      rollsData.forEach(roll => {
+        if (roll.created_by) userIds.add(roll.created_by);
+        if (roll.printed_by) userIds.add(roll.printed_by);
+        if (roll.cut_by) userIds.add(roll.cut_by);
+      });
+
+      // جلب أسماء المستخدمين
+      const userNames = new Map<number, string>();
+      if (userIds.size > 0) {
+        const usersData = await db
+          .select({ id: users.id, name: (users as any).name })
+          .from(users)
+          .where(inArray(users.id, Array.from(userIds)));
+        
+        usersData.forEach(user => {
+          userNames.set(user.id, user.name);
+        });
+      }
+
+      // إضافة أسماء المستخدمين للرولات
+      const rollsWithNames = rollsData.map(roll => ({
+        ...roll,
+        created_by_name: roll.created_by ? userNames.get(roll.created_by) || null : null,
+        printed_by_name: roll.printed_by ? userNames.get(roll.printed_by) || null : null,
+        cut_by_name: roll.cut_by ? userNames.get(roll.cut_by) || null : null,
+      }));
+
       // بناء الهيكل الهرمي بشكل محسن
       const orderMap = new Map();
       const rollsMap = new Map<number, any[]>();
 
       // تجميع الرولات حسب production_order_id
-      for (const roll of rollsData) {
+      for (const roll of rollsWithNames) {
         if (!rollsMap.has(roll.production_order_id)) {
           rollsMap.set(roll.production_order_id, []);
         }
@@ -6307,11 +6336,11 @@ export class DatabaseStorage implements IStorage {
           machine_id: rolls.machine_id,
           stage: rolls.stage,
           created_at: rolls.created_at,
-          created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
+          created_by: rolls.created_by,
           printed_at: rolls.printed_at,
-          printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
+          printed_by: rolls.printed_by,
           cut_at: rolls.cut_completed_at,
-          cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
+          cut_by: rolls.cut_by,
           cut_weight_total_kg: rolls.cut_weight_total_kg,
           qr_code_text: rolls.qr_code_text,
           qr_png_base64: rolls.qr_png_base64,
@@ -6352,14 +6381,36 @@ export class DatabaseStorage implements IStorage {
         return [];
       }
 
-      // إرجاع البيانات مع معلومات العميل والطلب
+      // جمع user IDs الفريدة
+      const userIds = new Set<number>();
+      rollsData.forEach(roll => {
+        if (roll.created_by) userIds.add(roll.created_by);
+        if (roll.printed_by) userIds.add(roll.printed_by);
+        if (roll.cut_by) userIds.add(roll.cut_by);
+      });
+
+      // جلب أسماء المستخدمين
+      const userNames = new Map<number, string>();
+      if (userIds.size > 0) {
+        const usersData = await db
+          .select({ id: users.id, name: (users as any).name })
+          .from(users)
+          .where(inArray(users.id, Array.from(userIds)));
+        
+        usersData.forEach(user => {
+          userNames.set(user.id, user.name);
+        });
+      }
+
+      // إرجاع البيانات مع معلومات العميل والطلب وأسماء المستخدمين
       const result = rollsData.map((roll) => ({
         ...roll,
+        created_by_name: roll.created_by ? userNames.get(roll.created_by) || null : null,
+        printed_by_name: roll.printed_by ? userNames.get(roll.printed_by) || null : null,
+        cut_by_name: roll.cut_by ? userNames.get(roll.cut_by) || null : null,
         // إضافة الحقول المطلوبة للنوع Roll
-        created_by: 1,
         cut_weight_total_kg: "0",
         waste_kg: "0",
-        printed_at: null,
         notes: null,
         machine_name: null,
         film_micron: null,
@@ -6524,9 +6575,9 @@ export class DatabaseStorage implements IStorage {
             waste_kg: rolls.waste_kg,
             printed_at: rolls.printed_at,
             created_at: rolls.created_at,
-            created_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.created_by})`,
-            printed_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.printed_by})`,
-            cut_by_name: sql<string>`(SELECT users.name FROM users WHERE users.id = ${rolls.cut_by})`,
+            created_by: rolls.created_by,
+            printed_by: rolls.printed_by,
+            cut_by: rolls.cut_by,
             cut_at: rolls.cut_completed_at,
             machine_id: rolls.machine_id,
             qr_code_text: rolls.qr_code_text,
@@ -6541,6 +6592,35 @@ export class DatabaseStorage implements IStorage {
           .orderBy(rolls.roll_seq); // ترتيب حسب التسلسل
       }
 
+      // جمع user IDs الفريدة من الرولات
+      const userIds = new Set<number>();
+      rollsData.forEach(roll => {
+        if (roll.created_by) userIds.add(roll.created_by);
+        if (roll.printed_by) userIds.add(roll.printed_by);
+        if (roll.cut_by) userIds.add(roll.cut_by);
+      });
+
+      // جلب أسماء المستخدمين
+      const userNames = new Map<number, string>();
+      if (userIds.size > 0) {
+        const usersData = await db
+          .select({ id: users.id, name: (users as any).name })
+          .from(users)
+          .where(inArray(users.id, Array.from(userIds)));
+        
+        usersData.forEach(user => {
+          userNames.set(user.id, user.name);
+        });
+      }
+
+      // إضافة أسماء المستخدمين للرولات
+      const rollsWithNames = rollsData.map(roll => ({
+        ...roll,
+        created_by_name: roll.created_by ? userNames.get(roll.created_by) || null : null,
+        printed_by_name: roll.printed_by ? userNames.get(roll.printed_by) || null : null,
+        cut_by_name: roll.cut_by ? userNames.get(roll.cut_by) || null : null,
+      }));
+
       // تجميع البيانات بشكل هرمي
       const hierarchicalOrders = ordersData.map((order) => ({
         ...order,
@@ -6548,7 +6628,7 @@ export class DatabaseStorage implements IStorage {
           .filter((productionOrder) => productionOrder.order_id === order.id)
           .map((productionOrder) => ({
             ...productionOrder,
-            rolls: rollsData
+            rolls: rollsWithNames
               .filter((roll) => roll.production_order_id === productionOrder.id)
               .sort((a, b) => a.roll_seq - b.roll_seq), // ترتيب إضافي للتأكيد
           })),
