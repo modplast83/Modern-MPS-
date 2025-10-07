@@ -12,6 +12,8 @@ import { OrdersStats, OrdersTabs } from "../components/orders";
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [productionSearchTerm, setProductionSearchTerm] = useState("");
+  const [productionStatusFilter, setProductionStatusFilter] = useState("all");
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
@@ -118,6 +120,38 @@ export default function Orders() {
     // Status filter
     const matchesStatus =
       statusFilter === "all" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // Filter production orders by search term and status
+  const filteredProductionOrders = productionOrders.filter((po: any) => {
+    const order = orders.find((o: any) => o.id === po.order_id);
+    const customer = customers.find((c: any) => c.id === order?.customer_id);
+    const customerProduct = customerProducts.find((cp: any) => cp.id === po.customer_product_id);
+
+    // Search filter
+    const matchesSearch =
+      productionSearchTerm === "" ||
+      (po.production_order_number || "")
+        .toLowerCase()
+        .includes(productionSearchTerm.toLowerCase()) ||
+      (order?.order_number || "")
+        .toLowerCase()
+        .includes(productionSearchTerm.toLowerCase()) ||
+      (customer?.name_ar || "")
+        .toLowerCase()
+        .includes(productionSearchTerm.toLowerCase()) ||
+      (customer?.name || "")
+        .toLowerCase()
+        .includes(productionSearchTerm.toLowerCase()) ||
+      (customerProduct?.size_caption || "")
+        .toLowerCase()
+        .includes(productionSearchTerm.toLowerCase());
+
+    // Status filter
+    const matchesStatus =
+      productionStatusFilter === "all" || po.status === productionStatusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -625,7 +659,12 @@ export default function Orders() {
               setSearchTerm={setSearchTerm}
               statusFilter={statusFilter}
               setStatusFilter={setStatusFilter}
+              productionSearchTerm={productionSearchTerm}
+              setProductionSearchTerm={setProductionSearchTerm}
+              productionStatusFilter={productionStatusFilter}
+              setProductionStatusFilter={setProductionStatusFilter}
               filteredOrders={filteredOrders}
+              filteredProductionOrders={filteredProductionOrders}
               isOrderDialogOpen={isOrderDialogOpen}
               setIsOrderDialogOpen={setIsOrderDialogOpen}
               editingOrder={editingOrder}
