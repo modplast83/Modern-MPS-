@@ -5304,6 +5304,11 @@ export class DatabaseStorage implements IStorage {
           for (const row of parsedData) {
             if (row.customer_id) {
               try {
+                // Require created_by in imported data for security
+                if (!row.created_by) {
+                  throw new Error("حقل created_by مطلوب في البيانات المستوردة");
+                }
+                
                 const [newOrder] = await db
                   .insert(orders)
                   .values({
@@ -5312,7 +5317,7 @@ export class DatabaseStorage implements IStorage {
                     delivery_days: row.delivery_days || null,
                     status: row.status || "pending",
                     notes: row.notes || null,
-                    created_by: row.created_by || "8",
+                    created_by: row.created_by,
                   })
                   .returning();
                 insertedCount++;
