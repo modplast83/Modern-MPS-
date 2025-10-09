@@ -30,6 +30,7 @@ import WhatsAppProductionSetup from "./pages/whatsapp-production-setup";
 import WhatsAppFinalSetup from "./pages/whatsapp-final-setup";
 import TwilioContentTemplate from "./pages/twilio-content-template";
 import WhatsAppTemplateTest from "./pages/whatsapp-template-test";
+import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 
 function ProtectedRoute({ component: Component, ...rest }: any) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -166,6 +167,10 @@ function AppRoutes() {
 
       <Route path="/whatsapp-template-test">
         <ProtectedRoute component={WhatsAppTemplateTest} />
+      </Route>
+
+      <Route path="/whatsapp-webhooks">
+        <ProtectedRoute component={WhatsAppWebhooks} />
       </Route>
 
       <Route>
