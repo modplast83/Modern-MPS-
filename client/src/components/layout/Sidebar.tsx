@@ -14,6 +14,7 @@ import {
   Bell,
   Monitor,
   Activity,
+  Webhook,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -102,7 +103,13 @@ const modules = [
     path: "/notifications",
     active: false,
   },
-
+  {
+    name: "Webhooks واتساب",
+    name_ar: "Webhooks واتساب",
+    icon: Webhook,
+    path: "/whatsapp-webhooks",
+    active: false,
+  },
   {
     name: "الإعدادات",
     name_ar: "الإعدادات",
