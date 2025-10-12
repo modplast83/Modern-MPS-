@@ -243,30 +243,60 @@ export default function OrdersForm({
 
   // Load editing order data when dialog opens for editing
   useEffect(() => {
-    if (isOpen && editingOrder) {
-      // Load order data
-      orderForm.reset({
-        customer_id: editingOrder.customer_id || "",
-        delivery_days: editingOrder.delivery_days || 15,
-        notes: editingOrder.notes || "",
-      });
-      setSelectedCustomerId(editingOrder.customer_id || "");
-      
-      // TODO: Load existing production orders for this order
-      // For now, we'll start with empty production orders when editing
-      // In a full implementation, you would fetch production orders for this order
-      setProductionOrdersInForm([]);
-    } else if (isOpen && !editingOrder) {
-      // Reset form for new order
-      orderForm.reset({
-        customer_id: "",
-        delivery_days: 15,
-        notes: "",
-      });
-      setSelectedCustomerId("");
-      setProductionOrdersInForm([]);
-    }
-  }, [isOpen, editingOrder, orderForm]);
+    const loadEditingOrderData = async () => {
+      if (isOpen && editingOrder) {
+        // Load order data
+        orderForm.reset({
+          customer_id: editingOrder.customer_id || "",
+          delivery_days: editingOrder.delivery_days || 15,
+          notes: editingOrder.notes || "",
+        });
+        setSelectedCustomerId(editingOrder.customer_id || "");
+        
+        // Load existing production orders for this order
+        try {
+          const response = await fetch(`/api/production-orders?order_id=${editingOrder.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            const existingProdOrders = data.data || [];
+            
+            // Convert existing production orders to form format
+            const formattedOrders = existingProdOrders.map((po: any) => ({
+              id: po.id,
+              customer_product_id: po.customer_product_id,
+              quantity_kg: parseFloat(po.quantity_kg),
+              overrun_percentage: parseFloat(po.overrun_percentage || 5),
+            }));
+            
+            setProductionOrdersInForm(formattedOrders);
+            
+            // Load previews for existing orders
+            for (let i = 0; i < formattedOrders.length; i++) {
+              const order = formattedOrders[i];
+              if (order.customer_product_id && order.quantity_kg > 0) {
+                await updateQuantityPreview(i, order.customer_product_id, order.quantity_kg);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("فشل تحميل أوامر الإنتاج:", error);
+          setProductionOrdersInForm([]);
+        }
+      } else if (isOpen && !editingOrder) {
+        // Reset form for new order
+        orderForm.reset({
+          customer_id: "",
+          delivery_days: 15,
+          notes: "",
+        });
+        setSelectedCustomerId("");
+        setProductionOrdersInForm([]);
+        setQuantityPreviews({});
+      }
+    };
+
+    loadEditingOrderData();
+  }, [isOpen, editingOrder]);
 
   // Function to preview quantity calculations
   const previewQuantityCalculation = async (
