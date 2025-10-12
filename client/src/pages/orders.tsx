@@ -182,7 +182,7 @@ export default function Orders() {
             max: 365,
           }),
           notes: data.notes || "",
-          created_by: editingOrder.created_by?.toString() || user.id.toString(), // Keep original creator
+          created_by: editingOrder.created_by || user.id, // Keep original creator as number
         };
 
         console.log("تحديث الطلب:", updateData);
