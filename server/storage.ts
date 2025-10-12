@@ -6468,7 +6468,7 @@ export class DatabaseStorage implements IStorage {
       // إضافة الحقول المطلوبة للنوع Roll
       const result = rollsData.map((roll) => ({
         ...roll,
-        created_by: 1,
+        // Note: created_by is not part of Roll schema, removing hardcoded value
         qr_code_text: "",
         qr_png_base64: null,
         cut_weight_total_kg: "0",

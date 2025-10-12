@@ -282,9 +282,23 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
     printWindow.document.close();
     printWindow.focus();
     
-    setTimeout(() => {
+    // Use onload event to ensure content is fully loaded before printing
+    // This is more reliable than setTimeout
+    printWindow.onload = () => {
       printWindow.print();
-    }, 250);
+    };
+    
+    // Fallback in case onload doesn't fire (e.g., for about:blank)
+    // Only use setTimeout as a fallback, not primary method
+    if (printWindow.document.readyState === 'complete') {
+      printWindow.print();
+    } else {
+      setTimeout(() => {
+        if (printWindow && !printWindow.closed) {
+          printWindow.print();
+        }
+      }, 500);
+    }
   }
 }
 
