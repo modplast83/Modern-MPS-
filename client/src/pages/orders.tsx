@@ -175,12 +175,14 @@ export default function Orders() {
       // If editing, update the order
       if (editingOrder) {
         const updateData = {
+          order_number: editingOrder.order_number, // Include order number as required by API
           customer_id: data.customer_id,
           delivery_days: parseIntSafe(data.delivery_days, "Delivery days", {
             min: 1,
             max: 365,
           }),
           notes: data.notes || "",
+          created_by: editingOrder.created_by?.toString() || user.id.toString(), // Keep original creator
         };
 
         console.log("تحديث الطلب:", updateData);
