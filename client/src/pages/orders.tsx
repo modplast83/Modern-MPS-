@@ -196,49 +196,47 @@ export default function Orders() {
           throw new Error(`فشل في تحديث الطلب: ${errorText}`);
         }
 
-        // Update production orders if any
-        if (productionOrdersData.length > 0) {
-          // Delete existing production orders for this order
-          const existingProdOrders = productionOrders.filter(
-            (po: any) => po.order_id === editingOrder.id
-          );
-          
-          for (const po of existingProdOrders) {
-            try {
-              await fetch(`/api/production-orders/${po.id}`, {
-                method: "DELETE",
-              });
-            } catch (error) {
-              console.error("خطأ في حذف أمر إنتاج قديم:", error);
-            }
+        // Always delete existing production orders for this order
+        // This ensures we recreate the entire set of production orders on save
+        const existingProdOrders = productionOrders.filter(
+          (po: any) => po.order_id === editingOrder.id
+        );
+        
+        for (const po of existingProdOrders) {
+          try {
+            await fetch(`/api/production-orders/${po.id}`, {
+              method: "DELETE",
+            });
+          } catch (error) {
+            console.error("خطأ في حذف أمر إنتاج قديم:", error);
           }
+        }
 
-          // Create new production orders
-          const validProductionOrders = productionOrdersData.filter(
-            (prodOrder) =>
-              prodOrder.customer_product_id &&
-              prodOrder.customer_product_id !== "" &&
-              prodOrder.quantity_kg &&
-              prodOrder.quantity_kg > 0,
-          );
+        // Create new production orders if any
+        const validProductionOrders = productionOrdersData.filter(
+          (prodOrder) =>
+            prodOrder.customer_product_id &&
+            prodOrder.customer_product_id !== "" &&
+            prodOrder.quantity_kg &&
+            prodOrder.quantity_kg > 0,
+        );
 
-          for (const prodOrder of validProductionOrders) {
-            try {
-              const productionOrderData = {
-                order_id: editingOrder.id,
-                customer_product_id: prodOrder.customer_product_id,
-                quantity_kg: prodOrder.quantity_kg,
-                overrun_percentage: prodOrder.overrun_percentage || 5.0,
-              };
+        for (const prodOrder of validProductionOrders) {
+          try {
+            const productionOrderData = {
+              order_id: editingOrder.id,
+              customer_product_id: prodOrder.customer_product_id,
+              quantity_kg: prodOrder.quantity_kg,
+              overrun_percentage: prodOrder.overrun_percentage || 5.0,
+            };
 
-              await fetch("/api/production-orders", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(productionOrderData),
-              });
-            } catch (error) {
-              console.error("خطأ في إنشاء أمر إنتاج:", error);
-            }
+            await fetch("/api/production-orders", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(productionOrderData),
+            });
+          } catch (error) {
+            console.error("خطأ في إنشاء أمر إنتاج:", error);
           }
         }
 
