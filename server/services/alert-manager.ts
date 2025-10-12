@@ -213,6 +213,17 @@ export class AlertManager extends EventEmitter {
   private async createCorrectiveActions(alert: SystemAlert): Promise<void> {
     try {
       if (!alert.suggested_actions) return;
+      
+      // Get system user ID from environment or use null for system actions
+      // In production, ensure a proper system user account exists
+      const systemUserId = process.env.SYSTEM_USER_ID ? 
+        parseInt(process.env.SYSTEM_USER_ID) : 
+        null;
+      
+      if (!systemUserId) {
+        console.warn("[AlertManager] No SYSTEM_USER_ID configured. Using null for automated actions.");
+      }
+      
       for (const suggestion of alert.suggested_actions) {
         const actionData: InsertCorrectiveAction = {
           alert_id: alert.id,
@@ -221,7 +232,7 @@ export class AlertManager extends EventEmitter {
           action_description: suggestion.description || suggestion.action,
           action_description_ar: suggestion.description || suggestion.action,
           priority: this.getPriorityFromNumber(suggestion.priority),
-          created_by: 1,
+          created_by: systemUserId as any, // System actions may not have a user
         };
         await this.storage.createCorrectiveAction(actionData);
       }

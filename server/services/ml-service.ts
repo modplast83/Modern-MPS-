@@ -1,5 +1,15 @@
 import { storage } from "../storage";
 
+// ML Service Configuration Constants
+const ML_CONFIG = {
+  MIN_DATA_POINTS: 10, // Minimum data points required for prediction
+  MIN_ANOMALY_DATA_POINTS: 20, // Minimum data points for anomaly detection
+  RECENT_DATA_WINDOW: 24, // Number of recent data points to consider
+  WASTE_THRESHOLD: 8, // Maximum acceptable waste percentage
+  QUALITY_THRESHOLD: 80, // Minimum acceptable quality score
+  PRODUCTION_RATE_THRESHOLD: 70, // Minimum acceptable production rate
+} as const;
+
 interface ProductionData {
   timestamp: Date;
   machineId: number;
@@ -57,7 +67,7 @@ class MachineLearningService {
         (d) => d.machineId === machineId,
       );
 
-      if (machineData.length < 10) {
+      if (machineData.length < ML_CONFIG.MIN_DATA_POINTS) {
         return {
           predictedRate: 0,
           qualityForecast: 0,
@@ -65,14 +75,14 @@ class MachineLearningService {
           confidence: 0,
           recommendations: [
             "⚠️ غير قادر على التنبؤ - بيانات غير كافية",
-            `يحتاج إلى ${10 - machineData.length} نقطة بيانات إضافية على الأقل`,
+            `يحتاج إلى ${ML_CONFIG.MIN_DATA_POINTS - machineData.length} نقطة بيانات إضافية على الأقل`,
             "قم بتشغيل الماكينة لفترة أطول لجمع بيانات رقابية",
           ],
         };
       }
 
       // حساب المتوسطات المتحركة
-      const recentData = machineData.slice(-24); // آخر 24 نقطة بيانات
+      const recentData = machineData.slice(-ML_CONFIG.RECENT_DATA_WINDOW); // آخر نقاط البيانات حسب نافذة البيانات المُعَرَّفة
       const avgRate =
         recentData.reduce((sum, d) => sum + (d.productionRate || 0), 0) /
         Math.max(recentData.length, 1);
@@ -103,7 +113,9 @@ class MachineLearningService {
 
       // تحديد حاجة الصيانة
       const maintenanceAlert =
-        avgWaste > 8 || avgQuality < 80 || predictedRate < 70;
+        avgWaste > ML_CONFIG.WASTE_THRESHOLD || 
+        avgQuality < ML_CONFIG.QUALITY_THRESHOLD || 
+        predictedRate < ML_CONFIG.PRODUCTION_RATE_THRESHOLD;
 
       // حساب مستوى الثقة
       const dataVariance = this.calculateVariance(
@@ -146,7 +158,7 @@ class MachineLearningService {
         (d) => d.machineId === data.machineId,
       );
 
-      if (machineData.length < 20) {
+      if (machineData.length < ML_CONFIG.MIN_ANOMALY_DATA_POINTS) {
         return {
           isAnomaly: false,
           anomalyScore: 0,

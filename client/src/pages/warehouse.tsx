@@ -293,10 +293,15 @@ export default function Warehouse() {
   // Movement mutations
   const movementMutation = useMutation({
     mutationFn: async (data: any) => {
+      // Ensure user is authenticated
+      if (!user?.id) {
+        throw new Error("يجب تسجيل الدخول أولاً");
+      }
+
       const response = await fetch("/api/inventory-movements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, created_by: user?.id || 1 }),
+        body: JSON.stringify({ ...data, created_by: user.id }),
       });
 
       if (!response.ok) throw new Error("فشل في حفظ البيانات");

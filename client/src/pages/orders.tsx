@@ -305,7 +305,7 @@ export default function Orders() {
           max: 365,
         }),
         notes: data.notes || "",
-        created_by: user.id.toString(),
+        created_by: user.id, // API expects a number, not a string
       };
 
       console.log("إرسال بيانات الطلب:", orderData);
@@ -335,39 +335,48 @@ export default function Orders() {
 
       console.log("أوامر الإنتاج الصالحة:", validProductionOrders);
 
-      // Create production orders for the new order
-      for (const prodOrder of validProductionOrders) {
-        try {
-          console.log("إنشاء أمر إنتاج:", prodOrder);
+      // Create production orders using batch endpoint for better performance
+      const batchProductionOrders = validProductionOrders.map((prodOrder: any) => ({
+        order_id: newOrder.data?.id || newOrder.id,
+        customer_product_id: prodOrder.customer_product_id,
+        quantity_kg: prodOrder.quantity_kg,
+        overrun_percentage: prodOrder.overrun_percentage || 5.0,
+        // final_quantity_kg will be calculated server-side for security
+      }));
 
-          const productionOrderData = {
-            order_id: newOrder.data?.id || newOrder.id,
-            customer_product_id: prodOrder.customer_product_id,
-            quantity_kg: prodOrder.quantity_kg,
-            overrun_percentage: prodOrder.overrun_percentage || 5.0,
-            // final_quantity_kg will be calculated server-side for security
-          };
+      console.log("بيانات أوامر الإنتاج:", batchProductionOrders);
 
-          console.log("بيانات أمر الإنتاج:", productionOrderData);
+      // Create all production orders in a single batch request
+      const prodOrderResponse = await fetch("/api/production-orders/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders: batchProductionOrders }),
+      });
 
-          const prodOrderResponse = await fetch("/api/production-orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(productionOrderData),
+      if (!prodOrderResponse.ok) {
+        const errorText = await prodOrderResponse.text();
+        console.error("خطأ في إنشاء أوامر الإنتاج:", errorText);
+        throw new Error(`فشل في إنشاء أوامر الإنتاج: ${errorText}`);
+      }
+
+      const batchResult = await prodOrderResponse.json();
+      console.log("نتيجة إنشاء أوامر الإنتاج:", batchResult);
+
+      // Check if any orders failed
+      if (batchResult.failed && batchResult.failed.length > 0) {
+        console.warn("بعض أوامر الإنتاج فشلت:", batchResult.failed);
+        // Continue with successful orders, but warn about failures
+        if (batchResult.successful && batchResult.successful.length > 0) {
+          toast({
+            title: "تنبيه",
+            description: `تم إنشاء ${batchResult.successful.length} من ${batchProductionOrders.length} أوامر إنتاج`,
+            variant: "default",
           });
-
-          if (!prodOrderResponse.ok) {
-            const errorText = await prodOrderResponse.text();
-            console.error("خطأ في إنشاء أمر الإنتاج:", errorText);
-            throw new Error(`فشل في إنشاء أمر الإنتاج: ${errorText}`);
-          }
-
-          const newProdOrder = await prodOrderResponse.json();
-          console.log("تم إنشاء أمر الإنتاج بنجاح:", newProdOrder);
-        } catch (error) {
-          console.error("خطأ في إنشاء أمر إنتاج فردي:", error);
-          throw error;
+        } else {
+          throw new Error("فشل في إنشاء جميع أوامر الإنتاج");
         }
+      } else {
+        console.log("تم إنشاء جميع أوامر الإنتاج بنجاح");
       }
 
       // Refresh data - invalidate all related queries

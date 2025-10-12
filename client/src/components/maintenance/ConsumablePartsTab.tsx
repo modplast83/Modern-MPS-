@@ -198,6 +198,11 @@ export default function ConsumablePartsTab({
 
   const transactionMutation = useMutation({
     mutationFn: (data: BarcodeTransactionFormData) => {
+      // Ensure user is authenticated
+      if (!user?.id) {
+        throw new Error("يجب تسجيل الدخول أولاً");
+      }
+
       // Find the part by barcode first
       const part = partsData.find((p: any) => p.barcode === data.barcode);
       if (!part) {
@@ -209,7 +214,7 @@ export default function ConsumablePartsTab({
         body: JSON.stringify({
           ...data,
           consumable_part_id: part.id,
-          performed_by: user?.id || 1,
+          performed_by: user.id,
         }),
       });
     },

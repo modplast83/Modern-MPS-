@@ -58,18 +58,26 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
   };
 
   const getStatusIcon = (status: string) => {
+    // Return icon component and props separately for better component lifecycle management
+    const iconProps = { className: "w-4 h-4" };
+    
     switch (status) {
       case "operational":
-        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+        return { Icon: CheckCircle2, className: "w-4 h-4 text-green-600" };
       case "maintenance":
-        return <AlertTriangle className="w-4 h-4 text-yellow-600" />;
+        return { Icon: AlertTriangle, className: "w-4 h-4 text-yellow-600" };
       case "down":
-        return <XCircle className="w-4 h-4 text-red-600" />;
+        return { Icon: XCircle, className: "w-4 h-4 text-red-600" };
       case "idle":
-        return <Clock className="w-4 h-4 text-gray-600" />;
+        return { Icon: Clock, className: "w-4 h-4 text-gray-600" };
       default:
-        return <Settings className="w-4 h-4 text-gray-600" />;
+        return { Icon: Settings, className: "w-4 h-4 text-gray-600" };
     }
+  };
+  
+  const renderStatusIcon = (status: string) => {
+    const { Icon, className } = getStatusIcon(status);
+    return <Icon className={className} />;
   };
 
   if (isLoading) {
@@ -156,7 +164,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-start gap-3">
                       <div className="mt-1">
-                        {getStatusIcon(machine.status)}
+                        {renderStatusIcon(machine.status)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
