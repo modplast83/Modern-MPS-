@@ -319,6 +319,12 @@ export default function OrdersTabs({
                         الكمية (كجم)
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        نسبة الزيادة
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الكمية النهائية (كجم)
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         الحالة
                       </th>
                     </tr>
@@ -345,6 +351,14 @@ export default function OrdersTabs({
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {po.quantity_kg || 0}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-overrun-percentage-${po.id}`}>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              {po.overrun_percentage || 5}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-testid={`text-final-quantity-${po.id}`}>
+                            {po.final_quantity_kg || po.quantity_kg || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
