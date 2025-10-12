@@ -8,6 +8,7 @@ import { parseIntSafe } from "../../../shared/validation-utils";
 import { format } from "date-fns";
 import { isUserAdmin } from "../utils/roleUtils";
 import { OrdersStats, OrdersTabs } from "../components/orders";
+import ViewOrderDialog from "../components/orders/ViewOrderDialog";
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -159,7 +160,7 @@ export default function Orders() {
   // Order submission handler
   const onOrderSubmit = async (data: any, productionOrdersData: any[]) => {
     try {
-      console.log("بدء عملية حفظ الطلب...", { data, productionOrdersData });
+      console.log("بدء عملية حفظ الطلب...", { data, productionOrdersData, editingOrder });
 
       // Check if user is authenticated
       if (!user?.id) {
@@ -171,7 +172,49 @@ export default function Orders() {
         return;
       }
 
-      // Check if at least one production order is added
+      // If editing, update the order
+      if (editingOrder) {
+        const updateData = {
+          customer_id: data.customer_id,
+          delivery_days: parseIntSafe(data.delivery_days, "Delivery days", {
+            min: 1,
+            max: 365,
+          }),
+          notes: data.notes || "",
+        };
+
+        console.log("تحديث الطلب:", updateData);
+        const updateResponse = await fetch(`/api/orders/${editingOrder.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updateData),
+        });
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text();
+          console.error("خطأ في تحديث الطلب:", errorText);
+          throw new Error(`فشل في تحديث الطلب: ${errorText}`);
+        }
+
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["/api/orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+        queryClient.invalidateQueries({
+          queryKey: ["/api/production/hierarchical-orders"],
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+
+        setIsOrderDialogOpen(false);
+        setEditingOrder(null);
+
+        toast({
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث الطلب ${editingOrder.order_number} بنجاح`,
+        });
+        return;
+      }
+
+      // Creating new order - check if at least one production order is added
       if (productionOrdersData.length === 0) {
         toast({
           title: "تحذير",
@@ -683,6 +726,20 @@ export default function Orders() {
           </div>
         </main>
       </div>
+
+      {/* View Order Dialog */}
+      <ViewOrderDialog
+        isOpen={isViewOrderDialogOpen}
+        onClose={() => {
+          setIsViewOrderDialogOpen(false);
+          setViewingOrder(null);
+        }}
+        order={viewingOrder}
+        customer={customers.find((c: any) => c.id === viewingOrder?.customer_id)}
+        productionOrders={productionOrders}
+        customerProducts={customerProducts}
+        items={items}
+      />
     </div>
   );
 }

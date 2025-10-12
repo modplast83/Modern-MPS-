@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -240,6 +240,33 @@ export default function OrdersForm({
       notes: "",
     },
   });
+
+  // Load editing order data when dialog opens for editing
+  useEffect(() => {
+    if (isOpen && editingOrder) {
+      // Load order data
+      orderForm.reset({
+        customer_id: editingOrder.customer_id || "",
+        delivery_days: editingOrder.delivery_days || 15,
+        notes: editingOrder.notes || "",
+      });
+      setSelectedCustomerId(editingOrder.customer_id || "");
+      
+      // TODO: Load existing production orders for this order
+      // For now, we'll start with empty production orders when editing
+      // In a full implementation, you would fetch production orders for this order
+      setProductionOrdersInForm([]);
+    } else if (isOpen && !editingOrder) {
+      // Reset form for new order
+      orderForm.reset({
+        customer_id: "",
+        delivery_days: 15,
+        notes: "",
+      });
+      setSelectedCustomerId("");
+      setProductionOrdersInForm([]);
+    }
+  }, [isOpen, editingOrder, orderForm]);
 
   // Function to preview quantity calculations
   const previewQuantityCalculation = async (
