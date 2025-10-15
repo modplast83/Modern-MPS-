@@ -204,7 +204,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             
             <div class="info-item">
               <div class="info-label">الوزن (كجم)</div>
-              <div class="info-value">${parseFloat(String(roll.weight_kg)).toFixed(2)}</div>
+              <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'}</div>
             </div>
             
             ${roll.machine_id ? `
@@ -256,7 +256,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
               </div>
             ` : ''}
             
-            ${roll.cut_weight_total_kg ? `
+            ${roll.cut_weight_total_kg != null ? `
               <div class="info-item">
                 <div class="info-label">الوزن بعد التقطيع</div>
                 <div class="info-value">${parseFloat(String(roll.cut_weight_total_kg)).toFixed(2)} كجم</div>

@@ -903,7 +903,7 @@ function MaintenanceActionsTab({
     if (user?.id) {
       form.setValue("performed_by", user.id.toString());
     }
-  }, [user, form]);
+  }, [user?.id, form]);
 
   const onSubmit = async (data: any) => {
     try {
