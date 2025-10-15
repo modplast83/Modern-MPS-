@@ -1,6 +1,7 @@
 import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
+import { requireAuth, requirePermission, requireAdmin, type AuthRequest } from "./middleware/auth";
 
 // Extend Express Request type to include session
 declare module "express-serve-static-core" {
@@ -116,8 +117,6 @@ import QRCode from "qrcode";
 import {
   validateRequest,
   commonSchemas,
-  requireAuth,
-  requireAdmin,
 } from "./middleware/validation";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
 
@@ -3346,7 +3345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Roles management routes
-  app.get("/api/roles", async (req, res) => {
+  app.get("/api/roles", requireAuth, requirePermission('manage_roles'), async (req: AuthRequest, res) => {
     try {
       const roles = await storage.getRoles();
       res.json(roles);
@@ -3356,7 +3355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/roles", async (req, res) => {
+  app.post("/api/roles", requireAuth, requirePermission('manage_roles'), async (req: AuthRequest, res) => {
     try {
       console.log("Received role data:", req.body);
       const role = await storage.createRole(req.body);
@@ -3371,7 +3370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/roles/:id", async (req, res) => {
+  app.put("/api/roles/:id", requireAuth, requirePermission('manage_roles'), async (req: AuthRequest, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -3402,7 +3401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/roles/:id", async (req, res) => {
+  app.delete("/api/roles/:id", requireAuth, requirePermission('manage_roles'), async (req: AuthRequest, res) => {
     try {
       // Enhanced parameter validation
       if (!req.params?.id) {
@@ -4657,7 +4656,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============ Settings API ============
 
   // System Settings
-  app.get("/api/settings/system", async (req, res) => {
+  app.get("/api/settings/system", requireAuth, requirePermission('manage_settings'), async (req: AuthRequest, res) => {
     try {
       const settings = await storage.getSystemSettings();
       res.json(settings);
@@ -4667,9 +4666,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/settings/system", async (req, res) => {
+  app.post("/api/settings/system", requireAuth, requirePermission('manage_settings'), async (req: AuthRequest, res) => {
     try {
-      const { settings, userId } = req.body;
+      const { settings } = req.body;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "المستخدم غير مصرح له" });
+      }
+      
       const results = [];
 
       for (const [key, value] of Object.entries(settings)) {
@@ -4679,7 +4683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const updated = await storage.updateSystemSetting(
               key,
               String(value),
-              userId,
+              String(userId),
             );
             results.push(updated);
           } else {
