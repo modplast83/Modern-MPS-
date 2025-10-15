@@ -7,6 +7,7 @@ import { db } from "./db";
 import { users } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
+import { populateUserFromSession } from "./middleware/session-auth";
 
 const app = express();
 app.use(express.json({ limit: "50mb" }));
@@ -202,6 +203,9 @@ app.use(
     unset: "keep", // Keep the session even if we unset properties
   }),
 );
+
+// Apply session authentication middleware - populate req.user from session
+app.use(populateUserFromSession);
 
 // Session extension middleware - extends session on any API call with enhanced reliability
 app.use((req, res, next) => {
