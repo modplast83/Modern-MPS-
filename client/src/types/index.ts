@@ -12,6 +12,9 @@ export interface User {
   display_name_ar?: string;
   role_id?: number;
   section_id?: number;
+  permissions?: string[];
+  role_name?: string;
+  role_name_ar?: string;
 }
 
 export interface AuthUser extends User {
