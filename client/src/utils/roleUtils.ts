@@ -66,6 +66,9 @@ export function canAccessRoute(
   user: AuthUser | null,
   route: string
 ): boolean {
+  // Home page is allowed for everyone
+  if (route === '/') return true;
+  
   if (!user) return false;
   
   // Admin can access everything
