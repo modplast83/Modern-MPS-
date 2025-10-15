@@ -17,6 +17,8 @@ import {
   Webhook,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { canAccessRoute } from "@/utils/roleUtils";
 
 const modules = [
   {
@@ -121,12 +123,24 @@ const modules = [
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+
+  // Filter modules based on user permissions
+  const accessibleModules = modules.filter(module => {
+    // Always show home and user dashboard
+    if (module.path === "/" || module.path === "/user-dashboard") {
+      return true;
+    }
+    
+    // Check route permissions
+    return canAccessRoute(user, module.path);
+  });
 
   return (
     <aside className="fixed right-0 top-16 bottom-0 bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block z-10 overflow-y-auto">
       <nav className="p-4">
         <div className="space-y-2">
-          {modules.map((module) => {
+          {accessibleModules.map((module) => {
             const Icon = module.icon;
             const isActive = location === module.path;
 
