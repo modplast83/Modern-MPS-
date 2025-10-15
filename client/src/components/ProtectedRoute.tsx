@@ -1,5 +1,5 @@
-import { useAuth } from "@/hooks/use-auth";
-import { canAccessRoute } from "@/utils/roleUtils";
+import { useAuth } from "../hooks/use-auth";
+import { canAccessRoute } from "../utils/roleUtils";
 import { Redirect } from "wouter";
 
 interface ProtectedRouteProps {
