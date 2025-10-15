@@ -17,8 +17,8 @@ import {
   Webhook,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { canAccessRoute } from "@/utils/roleUtils";
+import { useAuth } from "../../hooks/use-auth";
+import { canAccessRoute } from "../../utils/roleUtils";
 
 const modules = [
   {
