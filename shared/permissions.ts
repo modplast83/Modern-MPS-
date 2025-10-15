@@ -7,12 +7,15 @@
  */
 
 export type PermissionKey = 
+  | 'view_home'
   | 'view_dashboard'
+  | 'view_user_dashboard'
   | 'manage_orders'
   | 'manage_production'
   | 'manage_maintenance'
   | 'manage_quality'
   | 'manage_inventory'
+  | 'manage_warehouse'
   | 'manage_users'
   | 'manage_hr'
   | 'view_reports'
@@ -24,6 +27,14 @@ export type PermissionKey =
   | 'view_quality'
   | 'view_maintenance'
   | 'view_inventory'
+  | 'view_warehouse'
+  | 'view_notifications'
+  | 'view_alerts'
+  | 'manage_alerts'
+  | 'view_system_health'
+  | 'manage_analytics'
+  | 'view_production_monitoring'
+  | 'manage_whatsapp'
   | 'admin'; // Super admin permission
 
 export interface Permission {
@@ -36,13 +47,34 @@ export interface Permission {
 
 // Define all available permissions
 export const PERMISSIONS: Permission[] = [
-  // Dashboard
+  // General
+  { 
+    id: 'view_home', 
+    name: 'View Home Page', 
+    name_ar: 'عرض الصفحة الرئيسية', 
+    category: 'عام',
+    description: 'Access to home page'
+  },
   { 
     id: 'view_dashboard', 
     name: 'View Dashboard', 
     name_ar: 'عرض لوحة التحكم', 
     category: 'عام',
     description: 'Access to main dashboard and statistics'
+  },
+  { 
+    id: 'view_user_dashboard', 
+    name: 'View User Dashboard', 
+    name_ar: 'عرض لوحة تحكم المستخدم', 
+    category: 'عام',
+    description: 'Access to personal user dashboard'
+  },
+  { 
+    id: 'view_notifications', 
+    name: 'View Notifications', 
+    name_ar: 'عرض الإشعارات', 
+    category: 'عام',
+    description: 'View system notifications'
   },
   
   // Orders
@@ -102,7 +134,7 @@ export const PERMISSIONS: Permission[] = [
     description: 'Manage quality control and reports'
   },
   
-  // Inventory
+  // Inventory & Warehouse
   { 
     id: 'view_inventory', 
     name: 'View Inventory', 
@@ -116,6 +148,20 @@ export const PERMISSIONS: Permission[] = [
     name_ar: 'إدارة المخزون', 
     category: 'المخزون',
     description: 'Manage inventory and warehouse'
+  },
+  { 
+    id: 'view_warehouse', 
+    name: 'View Warehouse', 
+    name_ar: 'عرض المستودع', 
+    category: 'المخزون',
+    description: 'View warehouse data'
+  },
+  { 
+    id: 'manage_warehouse', 
+    name: 'Manage Warehouse', 
+    name_ar: 'إدارة المستودع', 
+    category: 'المخزون',
+    description: 'Manage warehouse operations'
   },
   
   // Users
@@ -143,13 +189,50 @@ export const PERMISSIONS: Permission[] = [
     description: 'Manage HR, attendance, and training'
   },
   
-  // Reports
+  // Reports & Analytics
   { 
     id: 'view_reports', 
     name: 'View Reports', 
     name_ar: 'عرض التقارير', 
     category: 'التقارير',
     description: 'View system reports and analytics'
+  },
+  { 
+    id: 'manage_analytics', 
+    name: 'Manage Analytics', 
+    name_ar: 'إدارة التحليلات', 
+    category: 'التقارير',
+    description: 'Manage advanced analytics and ML features'
+  },
+  { 
+    id: 'view_production_monitoring', 
+    name: 'View Production Monitoring', 
+    name_ar: 'عرض مراقبة الإنتاج', 
+    category: 'التقارير',
+    description: 'View real-time production monitoring'
+  },
+  
+  // Alerts & Monitoring
+  { 
+    id: 'view_alerts', 
+    name: 'View Alerts', 
+    name_ar: 'عرض التنبيهات', 
+    category: 'المراقبة',
+    description: 'View system alerts'
+  },
+  { 
+    id: 'manage_alerts', 
+    name: 'Manage Alerts', 
+    name_ar: 'إدارة التنبيهات', 
+    category: 'المراقبة',
+    description: 'Manage system alerts and rules'
+  },
+  { 
+    id: 'view_system_health', 
+    name: 'View System Health', 
+    name_ar: 'عرض صحة النظام', 
+    category: 'المراقبة',
+    description: 'View system health monitoring'
   },
   
   // System
@@ -175,6 +258,15 @@ export const PERMISSIONS: Permission[] = [
     description: 'Create and modify user roles'
   },
   
+  // WhatsApp Integration
+  { 
+    id: 'manage_whatsapp', 
+    name: 'Manage WhatsApp', 
+    name_ar: 'إدارة الواتساب', 
+    category: 'التكامل',
+    description: 'Manage WhatsApp integration and settings'
+  },
+  
   // Admin
   { 
     id: 'admin', 
@@ -187,18 +279,34 @@ export const PERMISSIONS: Permission[] = [
 
 // Route to permission mapping
 export const ROUTE_PERMISSIONS: Record<string, PermissionKey[]> = {
-  '/': ['view_dashboard'],
+  '/': ['view_home', 'view_dashboard'],
   '/dashboard': ['view_dashboard'],
   '/orders': ['manage_orders'],
   '/production': ['view_production', 'manage_production'],
   '/maintenance': ['view_maintenance', 'manage_maintenance'],
   '/quality': ['view_quality', 'manage_quality'],
+  '/warehouse': ['view_warehouse', 'manage_warehouse'],
   '/inventory': ['view_inventory', 'manage_inventory'],
   '/hr': ['view_hr', 'manage_hr'],
   '/reports': ['view_reports'],
   '/settings': ['manage_settings', 'admin'],
   '/definitions': ['manage_definitions'],
   '/users': ['manage_users'],
+  '/user-dashboard': ['view_user_dashboard'],
+  '/notifications': ['view_notifications'],
+  '/alerts': ['view_alerts', 'manage_alerts'],
+  '/system-health': ['view_system_health'],
+  '/ml-analytics': ['manage_analytics'],
+  '/production-monitoring': ['view_production_monitoring'],
+  '/meta-whatsapp-setup': ['manage_whatsapp'],
+  '/whatsapp-setup': ['manage_whatsapp'],
+  '/whatsapp-test': ['manage_whatsapp'],
+  '/whatsapp-troubleshoot': ['manage_whatsapp'],
+  '/whatsapp-production-setup': ['manage_whatsapp'],
+  '/whatsapp-final-setup': ['manage_whatsapp'],
+  '/twilio-content': ['manage_whatsapp'],
+  '/whatsapp-template-test': ['manage_whatsapp'],
+  '/whatsapp-webhooks': ['manage_whatsapp'],
 };
 
 // Settings tabs permissions
@@ -261,5 +369,7 @@ export const PERMISSION_CATEGORIES = [
   'المستخدمين',
   'الموارد البشرية',
   'التقارير',
+  'المراقبة',
+  'التكامل',
   'النظام'
 ];
