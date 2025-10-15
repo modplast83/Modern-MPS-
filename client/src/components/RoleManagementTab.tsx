@@ -17,6 +17,7 @@ import { Checkbox } from "./ui/checkbox";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import { type Role } from "../../../shared/schema";
+import { PERMISSIONS, PERMISSION_CATEGORIES, type Permission } from "../../../shared/permissions";
 import { Plus, Edit, Trash2, Shield, Check, X } from "lucide-react";
 
 export default function RoleManagementTab() {
@@ -31,24 +32,8 @@ export default function RoleManagementTab() {
 
   const [editingRole, setEditingRole] = useState<any | null>(null);
 
-  // Available permissions list
-  const availablePermissions = [
-    { id: "view_dashboard", name: "عرض لوحة التحكم", category: "عام" },
-    { id: "manage_orders", name: "إدارة الطلبات", category: "الطلبات" },
-    { id: "manage_production", name: "إدارة الإنتاج", category: "الإنتاج" },
-    { id: "manage_maintenance", name: "إدارة الصيانة", category: "الصيانة" },
-    { id: "manage_quality", name: "إدارة الجودة", category: "الجودة" },
-    { id: "manage_inventory", name: "إدارة المخزون", category: "المخزون" },
-    { id: "manage_users", name: "إدارة المستخدمين", category: "المستخدمين" },
-    {
-      id: "manage_hr",
-      name: "إدارة الموارد البشرية",
-      category: "الموارد البشرية",
-    },
-    { id: "view_reports", name: "عرض التقارير", category: "التقارير" },
-    { id: "manage_settings", name: "إدارة الإعدادات", category: "النظام" },
-    { id: "manage_definitions", name: "إدارة التعريفات", category: "النظام" },
-  ];
+  // Use permissions from centralized registry
+  const availablePermissions = PERMISSIONS;
 
   // Fetch roles
   const { data: roles = [], isLoading } = useQuery<any[]>({
@@ -214,28 +199,39 @@ export default function RoleManagementTab() {
 
           <div className="space-y-4">
             <Label>الصلاحيات</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availablePermissions.map((permission) => (
-                <div
-                  key={permission.id}
-                  className="flex items-center space-x-2 space-x-reverse"
-                >
-                  <Checkbox
-                    id={`new-${permission.id}`}
-                    checked={newRole.permissions.includes(permission.id)}
-                    onCheckedChange={(checked) =>
-                      handlePermissionChange(permission.id, checked as boolean)
-                    }
-                  />
-                  <label
-                    htmlFor={`new-${permission.id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {permission.name}
-                  </label>
+            {/* Group permissions by category */}
+            {PERMISSION_CATEGORIES.map((category) => {
+              const categoryPermissions = availablePermissions.filter(p => p.category === category);
+              if (categoryPermissions.length === 0) return null;
+              
+              return (
+                <div key={category} className="space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">{category}</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pl-4">
+                    {categoryPermissions.map((permission) => (
+                      <div
+                        key={permission.id}
+                        className="flex items-center space-x-2 space-x-reverse"
+                      >
+                        <Checkbox
+                          id={`new-${permission.id}`}
+                          checked={newRole.permissions.includes(permission.id)}
+                          onCheckedChange={(checked) =>
+                            handlePermissionChange(permission.id, checked as boolean)
+                          }
+                        />
+                        <label
+                          htmlFor={`new-${permission.id}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {permission.name_ar}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
           <div className="flex justify-end">
@@ -322,7 +318,7 @@ export default function RoleManagementTab() {
                           الصلاحيات المتاحة:
                         </div>
                         <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto">
-                          {availablePermissions
+                          {PERMISSIONS
                             .slice(0, 6)
                             .map((permission) => (
                               <div
@@ -347,7 +343,7 @@ export default function RoleManagementTab() {
                                   htmlFor={`table-edit-${permission.id}`}
                                   className="text-xs leading-none cursor-pointer"
                                 >
-                                  {permission.name}
+                                  {permission.name_ar}
                                 </label>
                               </div>
                             ))}
@@ -381,7 +377,7 @@ export default function RoleManagementTab() {
                                         );
                                         return perm ? (
                                           <div key={permId} className="text-xs">
-                                            • {perm.name}
+                                            • {perm.name_ar}
                                           </div>
                                         ) : null;
                                       })}
