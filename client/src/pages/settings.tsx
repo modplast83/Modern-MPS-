@@ -53,6 +53,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import RoleManagementTab from "../components/RoleManagementTab";
+import { canAccessSettingsTab } from "../utils/roleUtils";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -864,15 +865,22 @@ export default function Settings() {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-auto">
+              {/* Profile tab - visible to all users */}
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 الملف الشخصي
               </TabsTrigger>
-              <TabsTrigger value="roles" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                الأدوار والصلاحيات
-              </TabsTrigger>
+              
+              {/* Roles tab - only for users with role management permissions */}
+              {canAccessSettingsTab(user, 'roles') && (
+                <TabsTrigger value="roles" className="flex items-center gap-2">
+                  <Shield className="w-4 h-4" />
+                  الأدوار والصلاحيات
+                </TabsTrigger>
+              )}
+              
+              {/* Notifications tab - visible to all users */}
               <TabsTrigger
                 value="notifications"
                 className="flex items-center gap-2"
@@ -880,14 +888,22 @@ export default function Settings() {
                 <Bell className="w-4 h-4" />
                 التنبيهات
               </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center gap-2">
-                <SettingsIcon className="w-4 h-4" />
-                النظام
-              </TabsTrigger>
-              <TabsTrigger value="database" className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                قاعدة البيانات
-              </TabsTrigger>
+              
+              {/* System settings tab - only for system admins */}
+              {canAccessSettingsTab(user, 'system') && (
+                <TabsTrigger value="system" className="flex items-center gap-2">
+                  <SettingsIcon className="w-4 h-4" />
+                  النظام
+                </TabsTrigger>
+              )}
+              
+              {/* Database tab - only for admins */}
+              {canAccessSettingsTab(user, 'database') && (
+                <TabsTrigger value="database" className="flex items-center gap-2">
+                  <Database className="w-4 h-4" />
+                  قاعدة البيانات
+                </TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="profile" className="space-y-6">
@@ -1023,22 +1039,25 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="roles" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    إدارة الأدوار والصلاحيات
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    تحديد أدوار المستخدمين وصلاحياتهم في النظام
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <RoleManagementTab />
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* Roles tab content - only render if user has permission */}
+            {canAccessSettingsTab(user, 'roles') && (
+              <TabsContent value="roles" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      إدارة الأدوار والصلاحيات
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      تحديد أدوار المستخدمين وصلاحياتهم في النظام
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <RoleManagementTab />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
 
             <TabsContent value="notifications" className="space-y-6">
               <Card>

@@ -1,5 +1,10 @@
 import type { AuthUser } from "@/types";
-import { hasPermission, type PermissionKey } from "../../../shared/permissions";
+import { 
+  hasPermission, 
+  ROUTE_PERMISSIONS,
+  SETTINGS_TAB_PERMISSIONS,
+  type PermissionKey 
+} from "../../../shared/permissions";
 
 // Check if user has admin role
 export function isUserAdmin(user: AuthUser | null): boolean {
@@ -66,8 +71,6 @@ export function canAccessRoute(
   // Admin can access everything
   if (isUserAdmin(user)) return true;
   
-  // Import route permissions from shared module
-  const { ROUTE_PERMISSIONS } = require('../../../shared/permissions');
   
   const requiredPermissions = ROUTE_PERMISSIONS[route];
   if (!requiredPermissions || requiredPermissions.length === 0) {
@@ -88,8 +91,6 @@ export function canAccessSettingsTab(
   // Admin can access everything
   if (isUserAdmin(user)) return true;
   
-  // Import settings tab permissions from shared module
-  const { SETTINGS_TAB_PERMISSIONS } = require('../../../shared/permissions');
   
   const requiredPermissions = SETTINGS_TAB_PERMISSIONS[tabName];
   if (!requiredPermissions || requiredPermissions.length === 0) {
