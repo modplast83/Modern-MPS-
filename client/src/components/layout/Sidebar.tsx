@@ -127,12 +127,7 @@ export default function Sidebar() {
 
   // Filter modules based on user permissions
   const accessibleModules = modules.filter(module => {
-    // Always show home and user dashboard
-    if (module.path === "/" || module.path === "/user-dashboard") {
-      return true;
-    }
-    
-    // Check route permissions
+    // Check route permissions for all pages including home
     return canAccessRoute(user, module.path);
   });
 
