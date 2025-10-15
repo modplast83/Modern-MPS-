@@ -139,7 +139,8 @@ export class MetaWhatsAppService {
         success: true,
         messageId: result.messages?.[0]?.id,
       };
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "خطأ غير معروف";
       console.error("خطأ في إرسال رسالة واتس اب عبر Meta API:", error);
 
       const notificationData = {
@@ -150,7 +151,7 @@ export class MetaWhatsAppService {
         recipient_type: "user" as const,
         phone_number: to,
         status: "failed" as const,
-        error_message: error.message,
+        error_message: errorMessage,
         context_type: options?.context_type,
         context_id: options?.context_id,
       };
@@ -159,7 +160,7 @@ export class MetaWhatsAppService {
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -260,18 +261,19 @@ export class MetaWhatsAppService {
         success: true,
         messageId: result.messages?.[0]?.id,
       };
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "خطأ غير معروف";
       console.error("خطأ في إرسال رسالة واتس اب (قالب Meta):", error);
 
       const notificationData = {
         title: options?.title || "رسالة واتس اب (قالب)",
-        message: `قالب: ${templateName} - خطأ: ${error.message}`,
+        message: `قالب: ${templateName} - خطأ: ${errorMessage}`,
         type: "whatsapp" as const,
         priority: options?.priority || "normal",
         recipient_type: "user" as const,
         phone_number: to,
         status: "failed" as const,
-        error_message: error.message,
+        error_message: errorMessage,
         context_type: options?.context_type,
         context_id: options?.context_id,
       };
@@ -280,7 +282,7 @@ export class MetaWhatsAppService {
 
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -310,7 +312,7 @@ export class MetaWhatsAppService {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error) {
       console.error("خطأ في الحصول على معلومات الرقم:", error);
       throw error;
     }
@@ -346,7 +348,7 @@ export class MetaWhatsAppService {
           (template: any) => template.status === "APPROVED",
         ) || []
       );
-    } catch (error: any) {
+    } catch (error) {
       console.error("خطأ في الحصول على القوالب:", error);
       throw error;
     }
@@ -366,10 +368,11 @@ export class MetaWhatsAppService {
         success: true,
         data: phoneInfo,
       };
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "فشل اختبار الاتصال";
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -401,7 +404,7 @@ export class MetaWhatsAppService {
           }
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("خطأ في معالجة Webhook:", error);
     }
   }
@@ -433,7 +436,7 @@ export class MetaWhatsAppService {
 
         console.log(`📊 تم تحديث حالة الرسالة ${messageId}: ${status}`);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("خطأ في تحديث حالة الرسالة:", error);
     }
   }
@@ -465,7 +468,7 @@ export class MetaWhatsAppService {
       };
 
       await this.storage.createNotification(notificationData);
-    } catch (error: any) {
+    } catch (error) {
       console.error("خطأ في معالجة الرسالة الواردة:", error);
     }
   }

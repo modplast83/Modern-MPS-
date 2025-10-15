@@ -2433,7 +2433,12 @@ export class DatabaseStorage implements IStorage {
             );
           }
 
-          // STEP 4: Generate sequential roll number for this production order
+          // STEP 4: Generate sequential roll number for this production order with proper locking
+          // Use advisory lock to prevent race conditions during roll sequence generation
+          await tx.execute(
+            sql`SELECT pg_advisory_xact_lock(${insertRoll.production_order_id})`
+          );
+          
           const poRollCount = await tx
             .select({ count: sql<number>`COUNT(*)` })
             .from(rolls)

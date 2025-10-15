@@ -4683,14 +4683,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const updated = await storage.updateSystemSetting(
               key,
               String(value),
-              String(userId),
+              userId,
             );
             results.push(updated);
           } else {
             const created = await storage.createSystemSetting({
               setting_key: key,
               setting_value: String(value),
-              updated_by: userId,
+              updated_by: String(userId),
             });
             results.push(created);
           }
