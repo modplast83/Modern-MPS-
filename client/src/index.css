@@ -170,26 +170,26 @@
 
   /* Card components */
   .card-stats {
-    @apply bg-card rounded-lg shadow-sm border p-6 hover:shadow-md transition-shadow;
+    @apply bg-card rounded-lg shadow-md border-2 p-6 hover:shadow-lg transition-all;
   }
 
   /* Status indicators */
   .status-active {
     background-color: hsl(var(--success-50));
     color: hsl(var(--success-600));
-    border: 1px solid hsl(var(--success-600) / 0.2);
+    border: 2px solid hsl(var(--success-600) / 0.4);
   }
 
   .status-warning {
     background-color: hsl(var(--warning-50));
     color: hsl(var(--warning-600));
-    border: 1px solid hsl(var(--warning-600) / 0.2);
+    border: 2px solid hsl(var(--warning-600) / 0.4);
   }
 
   .status-danger {
     background-color: hsl(var(--danger-50));
     color: hsl(var(--danger-600));
-    border: 1px solid hsl(var(--danger-600) / 0.2);
+    border: 2px solid hsl(var(--danger-600) / 0.4);
   }
 
   /* Navigation items */
@@ -618,27 +618,27 @@
 
 /* Enhanced table styling */
 .table-container {
-  @apply overflow-x-auto shadow-sm border border-gray-200 rounded-lg;
+  @apply overflow-x-auto shadow-md border-2 border-gray-400 rounded-lg;
 }
 
 .table {
-  @apply min-w-full divide-y divide-gray-200;
+  @apply min-w-full divide-y-2 divide-gray-300;
 }
 
 .table thead {
-  @apply bg-gray-50;
+  @apply bg-gray-100 border-b-2 border-gray-400;
 }
 
 .table tbody {
-  @apply bg-white divide-y divide-gray-200;
+  @apply bg-white divide-y divide-gray-300;
 }
 
 .table th {
-  @apply px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider;
+  @apply px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider border-b-2 border-gray-300;
 }
 
 .table td {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200;
 }
 
 /* Status badge enhancements */
@@ -666,7 +666,7 @@
 
 /* Enhanced card styling */
 .dashboard-card {
-  @apply bg-white rounded-lg shadow-sm border border-gray-200 p-6 transition-all duration-200 hover:shadow-md;
+  @apply bg-white rounded-lg shadow-md border-2 border-gray-300 p-6 transition-all duration-200 hover:shadow-lg hover:border-gray-400;
 }
 
 .dashboard-card-icon {
@@ -729,7 +729,7 @@
 
 /* Enhanced sidebar styling */
 .sidebar {
-  @apply bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block;
+  @apply bg-white shadow-md border-l-2 border-gray-300 w-64 hidden lg:block;
 }
 
 .sidebar-nav {
@@ -786,7 +786,7 @@
 
 /* Form enhancements */
 .form-input {
-  @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors;
+  @apply w-full border-2 border-gray-400 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all hover:border-gray-500;
 }
 
 .form-input.rtl {
