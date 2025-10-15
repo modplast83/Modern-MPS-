@@ -31,27 +31,7 @@ import WhatsAppFinalSetup from "./pages/whatsapp-final-setup";
 import TwilioContentTemplate from "./pages/twilio-content-template";
 import WhatsAppTemplateTest from "./pages/whatsapp-template-test";
 import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
-
-function ProtectedRoute({ component: Component, ...rest }: any) {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">جاري التحميل...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <Redirect to="/login" />;
-  }
-
-  return <Component {...rest} />;
-}
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -74,103 +54,153 @@ function AppRoutes() {
       </Route>
 
       <Route path="/">
-        <ProtectedRoute component={Dashboard} />
+        <ProtectedRoute path="/">
+          <Dashboard />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/orders">
-        <ProtectedRoute component={Orders} />
+        <ProtectedRoute path="/orders">
+          <Orders />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/production">
-        <ProtectedRoute component={Production} />
+        <ProtectedRoute path="/production">
+          <Production />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/quality">
-        <ProtectedRoute component={Quality} />
+        <ProtectedRoute path="/quality">
+          <Quality />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/warehouse">
-        <ProtectedRoute component={Warehouse} />
+        <ProtectedRoute path="/warehouse">
+          <Warehouse />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/maintenance">
-        <ProtectedRoute component={Maintenance} />
+        <ProtectedRoute path="/maintenance">
+          <Maintenance />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/hr">
-        <ProtectedRoute component={HR} />
+        <ProtectedRoute path="/hr">
+          <HR />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/reports">
-        <ProtectedRoute component={Reports} />
+        <ProtectedRoute path="/reports">
+          <Reports />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/settings">
-        <ProtectedRoute component={Settings} />
+        <ProtectedRoute path="/settings">
+          <Settings />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/definitions">
-        <ProtectedRoute component={Definitions} />
+        <ProtectedRoute path="/definitions">
+          <Definitions />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/user-dashboard">
-        <ProtectedRoute component={UserDashboard} />
+        <ProtectedRoute path="/user-dashboard">
+          <UserDashboard />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/notifications">
-        <ProtectedRoute component={Notifications} />
+        <ProtectedRoute path="/notifications">
+          <Notifications />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/alerts">
-        <ProtectedRoute component={AlertsCenter} />
+        <ProtectedRoute path="/alerts">
+          <AlertsCenter />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/system-health">
-        <ProtectedRoute component={SystemHealth} />
+        <ProtectedRoute path="/system-health">
+          <SystemHealth />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/ml-analytics">
-        <ProtectedRoute component={MLAnalytics} />
+        <ProtectedRoute path="/ml-analytics">
+          <MLAnalytics />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/production-monitoring">
-        <ProtectedRoute component={ProductionMonitoring} />
+        <ProtectedRoute path="/production-monitoring">
+          <ProductionMonitoring />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/meta-whatsapp-setup">
-        <ProtectedRoute component={MetaWhatsAppSetup} />
+        <ProtectedRoute path="/meta-whatsapp-setup">
+          <MetaWhatsAppSetup />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-setup">
-        <ProtectedRoute component={WhatsAppSetup} />
+        <ProtectedRoute path="/whatsapp-setup">
+          <WhatsAppSetup />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-test">
-        <ProtectedRoute component={WhatsAppTest} />
+        <ProtectedRoute path="/whatsapp-test">
+          <WhatsAppTest />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-troubleshoot">
-        <ProtectedRoute component={WhatsAppTroubleshoot} />
+        <ProtectedRoute path="/whatsapp-troubleshoot">
+          <WhatsAppTroubleshoot />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-production-setup">
-        <ProtectedRoute component={WhatsAppProductionSetup} />
+        <ProtectedRoute path="/whatsapp-production-setup">
+          <WhatsAppProductionSetup />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-final-setup">
-        <ProtectedRoute component={WhatsAppFinalSetup} />
+        <ProtectedRoute path="/whatsapp-final-setup">
+          <WhatsAppFinalSetup />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/twilio-content">
-        <ProtectedRoute component={TwilioContentTemplate} />
+        <ProtectedRoute path="/twilio-content">
+          <TwilioContentTemplate />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-template-test">
-        <ProtectedRoute component={WhatsAppTemplateTest} />
+        <ProtectedRoute path="/whatsapp-template-test">
+          <WhatsAppTemplateTest />
+        </ProtectedRoute>
       </Route>
 
       <Route path="/whatsapp-webhooks">
-        <ProtectedRoute component={WhatsAppWebhooks} />
+        <ProtectedRoute path="/whatsapp-webhooks">
+          <WhatsAppWebhooks />
+        </ProtectedRoute>
       </Route>
 
       <Route>
