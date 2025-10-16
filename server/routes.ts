@@ -277,14 +277,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Don't fail the request for session issues
       }
 
-      // Return sanitized user data
+      // Get role information
+      let roleName = "user";
+      let roleNameAr = "مستخدم";
+      let permissions: string[] = [];
+      
+      if (user.role_id) {
+        const roles = await storage.getRoles();
+        const userRole = roles.find(r => r.id === user.role_id);
+        
+        if (userRole) {
+          roleName = userRole.name || "user";
+          roleNameAr = userRole.name_ar || "مستخدم";
+          
+          if (userRole.permissions) {
+            try {
+              if (Array.isArray(userRole.permissions)) {
+                permissions = userRole.permissions;
+              } else if (typeof userRole.permissions === 'string') {
+                const parsed = JSON.parse(userRole.permissions);
+                permissions = Array.isArray(parsed) ? parsed : [];
+              }
+            } catch (e) {
+              if (typeof userRole.permissions === 'string' && (userRole.permissions as string).trim()) {
+                permissions = [(userRole.permissions as string).trim()];
+              } else {
+                permissions = [];
+              }
+            }
+          }
+        }
+      }
+
+      // Return sanitized user data with role information
       const userData = {
         id: user.id || null,
         username: user.username || "",
         display_name: user.display_name || "",
         display_name_ar: user.display_name_ar || "",
         role_id: user.role_id || null,
+        role_name: roleName,
+        role_name_ar: roleNameAr,
         section_id: user.section_id || null,
+        permissions: permissions,
       };
 
       res.json({
