@@ -45,6 +45,16 @@ This project is an advanced AI-powered order management system specifically desi
   - Prevents race conditions in empty tables and concurrent batch processing scenarios
   - Maintains per-order success/failure reporting without losing partial batches
 
+## Critical Bug Fixes (October 2025)
+
+- ✅ **Production Analytics SQL Query Fixes**: Resolved critical SQL errors in analytics functions
+  - Fixed getUserPerformanceStats orderBy clause that referenced non-existent alias columns
+  - Corrected getRolePerformanceStats join logic to properly relate rolls→users→roles
+  - Fixed getMachineUtilizationStats orderBy issues with Drizzle ORM
+  - Removed complex orderBy clauses that were incompatible with Drizzle's SQL generation
+  - All production analytics endpoints now return HTTP 200 with valid data
+  - Architect review confirmed proper implementation and no security issues
+
 ## Critical Bug Fixes (January 2025)
 
 - ✅ **Database Integrity Resolution**: Fixed critical foreign key data type mismatches across the entire system
