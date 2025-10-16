@@ -3237,7 +3237,7 @@ export class DatabaseStorage implements IStorage {
             sections.name,
             sections.name_ar,
           )
-          .orderBy(sql`total_weight DESC`);
+          .orderBy(sql`COALESCE(SUM(${rolls.weight_kg}), 0) DESC`);
 
         return machineStats;
       },
