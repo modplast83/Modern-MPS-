@@ -2912,7 +2912,7 @@ export class DatabaseStorage implements IStorage {
             sections.name,
             sections.name_ar,
           )
-          .orderBy(sql`rolls_created + rolls_printed + rolls_cut DESC`);
+          .orderBy(sql`COUNT(DISTINCT CASE WHEN ${rolls.created_by} = ${users.id} THEN ${rolls.id} END) + COUNT(DISTINCT CASE WHEN ${rolls.printed_by} = ${users.id} THEN ${rolls.id} END) + COUNT(DISTINCT CASE WHEN ${rolls.cut_by} = ${users.id} THEN ${rolls.id} END) DESC`);
 
         if (userId) {
           query = query.where(eq(users.id, userId)) as any;
