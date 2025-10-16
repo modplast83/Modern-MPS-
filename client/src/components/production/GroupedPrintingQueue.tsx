@@ -175,6 +175,8 @@ export default function GroupedPrintingQueue({
   });
 
   const handlePrint = (rollId: number) => {
+    // منع الضغط المتكرر
+    if (processingId !== null) return;
     setProcessingId(rollId);
     processRollMutation.mutate(rollId);
   };
@@ -367,12 +369,18 @@ export default function GroupedPrintingQueue({
                                             variant="default"
                                             onClick={(e) => {
                                               e.stopPropagation();
+                                              // منع الضغط المتكرر إذا كان هناك معالج قيد التشغيل
+                                              if (processingId !== null) return;
                                               handlePrint(roll.id);
                                             }}
-                                            disabled={processingId === roll.id}
+                                            disabled={processingId !== null}
                                             data-testid={`button-print-roll-${roll.id}`}
                                           >
-                                            <Play className="h-3 w-3" />
+                                            {processingId === roll.id ? (
+                                              <span className="text-xs">جاري...</span>
+                                            ) : (
+                                              <Play className="h-3 w-3" />
+                                            )}
                                           </Button>
                                         </div>
                                         <Button
