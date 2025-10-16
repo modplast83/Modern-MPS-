@@ -152,8 +152,14 @@ export default function RollCreationModal({
         title: "تم إنشاء الرول بنجاح",
         description: `رقم الرول: ${data.roll_number}`,
       });
+      // تحديث جميع البيانات المرتبطة بالرولات والإنتاج
       queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/film-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/hierarchical-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/printing-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/cutting-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/grouped-cutting-queue"] });
       onClose();
       form.reset();
     },
