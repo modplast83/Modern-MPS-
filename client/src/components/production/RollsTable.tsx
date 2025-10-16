@@ -288,6 +288,14 @@ export default function RollsTable({ stage }: RollsTableProps) {
         description: `ليبل الرول ${labelData.roll_number}`,
         variant: "default",
       });
+      
+      // تحديث البيانات بعد الطباعة
+      queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/hierarchical-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/film-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/printing-queue"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/cutting-queue"] });
     } catch (error) {
       console.error("Error printing label:", error);
       toast({
