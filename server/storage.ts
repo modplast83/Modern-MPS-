@@ -6436,10 +6436,10 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
           and(
-            or(eq(rolls.stage, "film"), eq(rolls.stage, "printing")),
+            eq(rolls.stage, "film"), // فقط الرولات في مرحلة الفيلم (غير المطبوعة)
             sql`${rolls.production_order_id} IN (
               SELECT DISTINCT production_order_id FROM rolls
-              WHERE stage IN ('film', 'printing')
+              WHERE stage = 'film'
             )`
           )
         )
