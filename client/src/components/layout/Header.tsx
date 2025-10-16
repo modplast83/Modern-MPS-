@@ -42,7 +42,9 @@ export default function Header() {
               <p className="text-sm font-medium text-gray-900">
                 {user?.display_name_ar || user?.display_name || user?.username}
               </p>
-              <p className="text-xs text-gray-600">مدير الإنتاج</p>
+              <p className="text-xs text-gray-600">
+                {user?.role_name_ar || user?.role_name || "مستخدم"}
+              </p>
             </div>
             <button
               onClick={logout}
