@@ -9,6 +9,7 @@ type Notification = {
   id: number;
   title: string;
   message: string;
+  type: string;
   status: string;
   read_at: string | null;
   created_at: string;
@@ -23,8 +24,12 @@ export function NotificationBell() {
     enabled: !!user?.id,
   });
 
-  // Count unread notifications
-  const unreadCount = notifications.filter(
+  // Filter out system notifications and count unread
+  const filteredNotifications = notifications.filter(
+    (n) => n.type !== "system"
+  );
+  
+  const unreadCount = filteredNotifications.filter(
     (n) => !n.read_at && n.status !== "failed",
   ).length;
 

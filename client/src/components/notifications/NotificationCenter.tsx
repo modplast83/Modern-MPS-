@@ -121,6 +121,11 @@ export default function NotificationCenter() {
   // SSE event handlers
   const handleNewNotification = useCallback(
     (notification: SSENotification) => {
+      // Filter out system notifications
+      if (notification.type === "system") {
+        return;
+      }
+      
       // Add to realtime notifications
       setRealtimeNotifications((prev) => [notification, ...prev]);
 
@@ -147,9 +152,13 @@ export default function NotificationCenter() {
 
   const handleRecentNotifications = useCallback(
     (data: { notifications: SSENotification[]; count: number }) => {
-      setRealtimeNotifications(data.notifications);
+      // Filter out system notifications
+      const filteredNotifications = data.notifications.filter(
+        n => n.type !== "system"
+      );
+      setRealtimeNotifications(filteredNotifications);
       console.log(
-        `[NotificationCenter] Received ${data.count} recent notifications`,
+        `[NotificationCenter] Received ${filteredNotifications.length} non-system notifications`,
       );
     },
     [],
@@ -601,8 +610,10 @@ export default function NotificationCenter() {
               ) : (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {userNotificationsData?.notifications &&
-                  userNotificationsData.notifications.length > 0 ? (
-                    userNotificationsData.notifications.map((notification) => (
+                  userNotificationsData.notifications.filter(n => n.type !== "system").length > 0 ? (
+                    userNotificationsData.notifications
+                      .filter(n => n.type !== "system")
+                      .map((notification) => (
                       <div
                         key={notification.id}
                         className={`p-4 border rounded-lg transition-all ${
