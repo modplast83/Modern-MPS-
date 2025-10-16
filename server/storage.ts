@@ -2912,7 +2912,7 @@ export class DatabaseStorage implements IStorage {
             sections.name,
             sections.name_ar,
           )
-          .orderBy(sql`COUNT(DISTINCT CASE WHEN ${rolls.created_by} = ${users.id} THEN ${rolls.id} END) + COUNT(DISTINCT CASE WHEN ${rolls.printed_by} = ${users.id} THEN ${rolls.id} END) + COUNT(DISTINCT CASE WHEN ${rolls.cut_by} = ${users.id} THEN ${rolls.id} END) DESC`);
+;
 
         if (userId) {
           query = query.where(eq(users.id, userId)) as any;
@@ -2956,7 +2956,7 @@ export class DatabaseStorage implements IStorage {
           )
           .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
           .groupBy(roles.id, roles.name, roles.name_ar)
-          .orderBy(sql`COALESCE(SUM(${rolls.weight_kg}), 0) DESC`);
+;
 
         return roleStats;
       },
@@ -3240,7 +3240,7 @@ export class DatabaseStorage implements IStorage {
             sections.name,
             sections.name_ar,
           )
-          .orderBy(sql`COALESCE(SUM(${rolls.weight_kg}), 0) DESC`);
+;
 
         return machineStats;
       },
