@@ -6330,13 +6330,13 @@ export class DatabaseStorage implements IStorage {
               WHERE production_order_id = ${production_orders.id}
             ), 0)
           `,
-          // Calculate total cut weight (sum of all cuts for this production order)
+          // Calculate total cut weight (sum of cut weights from rolls table)
           total_cut_weight: sql<string>`
             COALESCE((
-              SELECT SUM(c.cut_weight_kg)::decimal(12,3)
-              FROM cuts c
-              INNER JOIN rolls r ON c.roll_id = r.id
-              WHERE r.production_order_id = ${production_orders.id}
+              SELECT SUM(cut_weight_total_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+                AND cut_weight_total_kg > 0
             ), 0)
           `,
           // Calculate total received weight (sum of all warehouse receipts for this production order)
@@ -6354,10 +6354,10 @@ export class DatabaseStorage implements IStorage {
               FROM rolls 
               WHERE production_order_id = ${production_orders.id}
             ), 0) - COALESCE((
-              SELECT SUM(c.cut_weight_kg)::decimal(12,3)
-              FROM cuts c
-              INNER JOIN rolls r ON c.roll_id = r.id
-              WHERE r.production_order_id = ${production_orders.id}
+              SELECT SUM(cut_weight_total_kg)::decimal(12,3)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+                AND cut_weight_total_kg > 0
             ), 0)
           `,
         })
@@ -6372,14 +6372,14 @@ export class DatabaseStorage implements IStorage {
         .where(
           // Only include production orders that have cuts but haven't been fully received
           sql`EXISTS (
-            SELECT 1 FROM cuts c
-            INNER JOIN rolls r ON c.roll_id = r.id
-            WHERE r.production_order_id = ${production_orders.id}
+            SELECT 1 FROM rolls
+            WHERE production_order_id = ${production_orders.id}
+              AND cut_weight_total_kg > 0
           ) AND COALESCE((
-            SELECT SUM(c.cut_weight_kg)
-            FROM cuts c
-            INNER JOIN rolls r ON c.roll_id = r.id
-            WHERE r.production_order_id = ${production_orders.id}
+            SELECT SUM(cut_weight_total_kg)
+            FROM rolls
+            WHERE production_order_id = ${production_orders.id}
+              AND cut_weight_total_kg > 0
           ), 0) > COALESCE((
             SELECT SUM(received_weight_kg)
             FROM warehouse_receipts
