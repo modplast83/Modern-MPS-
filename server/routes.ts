@@ -5996,19 +5996,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ============ نظام التحذيرات الذكية ============
 
-  // تفعيل خدمات النظام
-  const healthMonitor = getSystemHealthMonitor(storage);
-  const alertManager = getAlertManager(storage);
+  // تم تعطيل خدمات المراقبة والتحذيرات التلقائية بناء على طلب المستخدم
+  // الإشعارات من نوع system لن يتم إرسالها بعد الآن
+  // const healthMonitor = getSystemHealthMonitor(storage);
+  // const alertManager = getAlertManager(storage);
   const dataValidator = getDataValidator(storage);
 
-  // إعداد routes التحذيرات الذكية
-  app.use("/api/alerts", createAlertsRouter(storage));
-  app.use("/api/system/health", createSystemHealthRouter(storage));
-  app.use("/api/system/performance", createPerformanceRouter(storage));
-  app.use("/api/corrective-actions", createCorrectiveActionsRouter(storage));
+  // إعداد routes التحذيرات الذكية (مُعطّلة جزئياً)
+  // app.use("/api/alerts", createAlertsRouter(storage));
+  // app.use("/api/system/health", createSystemHealthRouter(storage));
+  // app.use("/api/system/performance", createPerformanceRouter(storage));
+  // app.use("/api/corrective-actions", createCorrectiveActionsRouter(storage));
   app.use("/api/data-validation", createDataValidationRouter(storage));
 
-  console.log("[SmartAlerts] نظام التحذيرات الذكية مُفعل ✅");
+  // console.log("[SmartAlerts] نظام التحذيرات الذكية مُفعل ✅");
 
   const httpServer = createServer(app);
   return httpServer;
