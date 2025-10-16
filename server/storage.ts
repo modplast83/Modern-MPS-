@@ -2953,7 +2953,7 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(production_orders, sql`${dateFilter}`)
           .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
           .groupBy(roles.id, roles.name, roles.name_ar)
-          .orderBy(sql`total_weight_kg DESC`);
+          .orderBy(sql`COALESCE(SUM(${rolls.weight_kg}), 0) DESC`);
 
         return roleStats;
       },
