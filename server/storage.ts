@@ -5992,15 +5992,20 @@ export class DatabaseStorage implements IStorage {
 
   async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {
     try {
+      // تسجيل طباعة الليبل دون تغيير المرحلة الحالية
       const [roll] = await db
         .update(rolls)
         .set({
-          stage: "printing",
+          // لا نغير المرحلة، نسجل فقط أن الليبل تم طباعته
           printed_at: new Date(),
           printed_by: operatorId,
         })
         .where(eq(rolls.id, rollId))
         .returning();
+      
+      // تحديث الكاش بعد تسجيل الطباعة
+      invalidateProductionCache("all");
+      
       return roll;
     } catch (error) {
       console.error("Error marking roll printed:", error);
