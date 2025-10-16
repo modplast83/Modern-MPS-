@@ -2933,8 +2933,8 @@ export class DatabaseStorage implements IStorage {
       async () => {
         const dateFilter =
           dateFrom && dateTo
-            ? sql`DATE(${production_orders.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
-            : sql`DATE(${production_orders.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
 
         const roleStats = await db
           .select({
@@ -2944,14 +2944,17 @@ export class DatabaseStorage implements IStorage {
             total_production_orders: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
             total_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
             total_weight_kg: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
-            avg_order_completion_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${production_orders.created_at}))/3600), 0)`,
+            avg_order_completion_time: sql<number>`COALESCE(AVG(EXTRACT(EPOCH FROM (${rolls.completed_at} - ${rolls.created_at}))/3600), 0)`,
             quality_score: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
             on_time_delivery_rate: sql<number>`COALESCE(AVG(CASE WHEN ${rolls.completed_at} IS NOT NULL THEN 100 ELSE 0 END), 80)`,
           })
           .from(roles)
           .leftJoin(users, eq(roles.id, users.role_id))
-          .leftJoin(production_orders, sql`${dateFilter}`)
-          .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+          .leftJoin(
+            rolls,
+            sql`(${rolls.created_by} = ${users.id} OR ${rolls.printed_by} = ${users.id} OR ${rolls.cut_by} = ${users.id}) AND ${dateFilter}`,
+          )
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
           .groupBy(roles.id, roles.name, roles.name_ar)
           .orderBy(sql`COALESCE(SUM(${rolls.weight_kg}), 0) DESC`);
 
