@@ -19,6 +19,7 @@ export default function Orders() {
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
+  const [isCreatingOrder, setIsCreatingOrder] = useState(false);
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -159,7 +160,15 @@ export default function Orders() {
 
   // Order submission handler
   const onOrderSubmit = async (data: any, productionOrdersData: any[]) => {
+    // منع الإرسال المتعدد بشكل إضافي
+    // إذا كان هناك طلب قيد المعالجة، لا نقبل طلباً جديداً
+    if (isCreatingOrder) {
+      console.warn("طلب قيد المعالجة بالفعل، تجاهل الطلب المكرر");
+      return;
+    }
+    
     try {
+      setIsCreatingOrder(true);
       console.log("بدء عملية حفظ الطلب...", { data, productionOrdersData, editingOrder });
 
       // Check if user is authenticated
@@ -403,6 +412,9 @@ export default function Orders() {
           error instanceof Error ? error.message : "فشل في حفظ البيانات",
         variant: "destructive",
       });
+    } finally {
+      // إعادة تعيين حالة isCreatingOrder بغض النظر عن النجاح أو الفشل
+      setIsCreatingOrder(false);
     }
   };
 
