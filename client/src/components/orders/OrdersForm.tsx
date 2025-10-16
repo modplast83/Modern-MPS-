@@ -231,6 +231,7 @@ export default function OrdersForm({
   const [quantityPreviews, setQuantityPreviews] = useState<{
     [key: number]: any;
   }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderForm = useForm({
     resolver: zodResolver(orderFormSchema),
@@ -418,16 +419,28 @@ export default function OrdersForm({
     selectedCustomerId ? product.customer_id === selectedCustomerId : true,
   );
 
-  const handleSubmit = (data: any) => {
-    onSubmit(data, productionOrdersInForm);
+  const handleSubmit = async (data: any) => {
+    // منع الإرسال المتعدد
+    if (isSubmitting) return;
+    
+    try {
+      setIsSubmitting(true);
+      await onSubmit(data, productionOrdersInForm);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
+    // عدم السماح بالإغلاق أثناء الإرسال
+    if (isSubmitting) return;
+    
     orderForm.reset();
     setProductionOrdersInForm([]);
     setQuantityPreviews({});
     setSelectedCustomerId("");
     setCustomerSearchTerm("");
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -794,12 +807,21 @@ export default function OrdersForm({
                 type="button"
                 variant="outline"
                 onClick={handleClose}
+                disabled={isSubmitting}
                 data-testid="button-cancel"
               >
                 إلغاء
               </Button>
-              <Button type="submit" data-testid="button-submit">
-                {editingOrder ? "تحديث الطلب" : "حفظ الطلب"}
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                data-testid="button-submit"
+              >
+                {isSubmitting 
+                  ? "جاري الحفظ..." 
+                  : editingOrder 
+                    ? "تحديث الطلب" 
+                    : "حفظ الطلب"}
               </Button>
             </div>
           </form>
