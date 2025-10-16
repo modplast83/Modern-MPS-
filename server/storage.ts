@@ -6113,17 +6113,69 @@ export class DatabaseStorage implements IStorage {
         const totalCutWeight = cutWeight;
         const waste = rollWeight - totalCutWeight;
 
-        // تحديث بيانات الرول مع الكمية الصافية والهدر
+        // تحديث بيانات الرول مع الكمية الصافية والهدر ونقل إلى مرحلة done
         await tx
           .update(rolls)
           .set({
             cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
             waste_kg: numberToDecimalString(waste, 3),
-            stage: "cutting", // تحديث المرحلة إلى تم التقطيع
+            stage: "done", // تحديث المرحلة إلى مكتمل
             cut_completed_at: new Date(),
             cut_by: cutData.performed_by,
+            completed_at: new Date(), // تحديد وقت الإكمال
           })
           .where(eq(rolls.id, cutData.roll_id));
+
+        // احسب مجموع الكميات لأمر الإنتاج
+        const productionOrderId = roll.production_order_id;
+
+        // احسب مجموع الكميات الصافية من جميع الرولات المقطوعة
+        const cutRollsData = await tx
+          .select({
+            totalNetWeight: sql<number>`COALESCE(SUM(${rolls.cut_weight_total_kg}::decimal), 0)`,
+            totalWaste: sql<number>`COALESCE(SUM(${rolls.waste_kg}::decimal), 0)`,
+            totalRolls: sql<number>`COUNT(*)`,
+            completedRolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'done' THEN 1 END)`,
+          })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId));
+
+        const netQuantity = Number(cutRollsData[0]?.totalNetWeight || 0);
+        const wasteQuantity = Number(cutRollsData[0]?.totalWaste || 0);
+        const totalRolls = Number(cutRollsData[0]?.totalRolls || 0);
+        const completedRolls = Number(cutRollsData[0]?.completedRolls || 0);
+
+        // احصل على معلومات أمر الإنتاج
+        const [productionOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId));
+
+        if (productionOrder) {
+          const finalQuantityKg = parseFloat(
+            productionOrder.final_quantity_kg?.toString() || "0"
+          );
+          
+          // احسب نسبة إكمال التقطيع بناءً على عدد الرولات المكتملة
+          const cuttingPercentage = totalRolls > 0 
+            ? Math.min(100, (completedRolls / totalRolls) * 100)
+            : 0;
+
+          // حدث أمر الإنتاج بالكميات الجديدة
+          await tx
+            .update(production_orders)
+            .set({
+              net_quantity_kg: numberToDecimalString(netQuantity, 2),
+              waste_quantity_kg: numberToDecimalString(wasteQuantity, 2),
+              cutting_completion_percentage: numberToDecimalString(cuttingPercentage, 2),
+              // إذا كانت جميع الرولات مكتملة، حدث الحالة إلى completed
+              status: completedRolls === totalRolls && totalRolls > 0 ? "completed" : productionOrder.status,
+            })
+            .where(eq(production_orders.id, productionOrderId));
+        }
+
+        // تحديث الكاش
+        invalidateProductionCache("all");
 
         return cut;
       });
@@ -6510,7 +6562,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       // محسن: استخدام فهرس stage مع تحديد الأعمدة المطلوبة فقط
-      // جلب الرولات في مرحلة printing أو cutting من أوامر الإنتاج النشطة
+      // جلب الرولات في مرحلة printing فقط (التي تم طباعتها ولم تقطع بعد)
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6525,10 +6577,10 @@ export class DatabaseStorage implements IStorage {
         .from(rolls)
         .where(
           and(
-            or(eq(rolls.stage, "printing"), eq(rolls.stage, "cutting")),
+            eq(rolls.stage, "printing"), // فقط الرولات في مرحلة الطباعة
             sql`${rolls.production_order_id} IN (
               SELECT DISTINCT production_order_id FROM rolls
-              WHERE stage IN ('printing', 'cutting')
+              WHERE stage = 'printing'
             )`
           )
         )
