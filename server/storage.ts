@@ -5992,21 +5992,78 @@ export class DatabaseStorage implements IStorage {
 
   async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {
     try {
-      // تسجيل طباعة الليبل دون تغيير المرحلة الحالية
-      const [roll] = await db
-        .update(rolls)
-        .set({
-          // لا نغير المرحلة، نسجل فقط أن الليبل تم طباعته
-          printed_at: new Date(),
-          printed_by: operatorId,
-        })
-        .where(eq(rolls.id, rollId))
-        .returning();
-      
-      // تحديث الكاش بعد تسجيل الطباعة
-      invalidateProductionCache("all");
-      
-      return roll;
+      return await db.transaction(async (tx) => {
+        // احصل على معلومات الرول الحالية
+        const [currentRoll] = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.id, rollId));
+        
+        if (!currentRoll) {
+          throw new Error("الرول غير موجود");
+        }
+
+        // نقل الرول إلى مرحلة الطباعة وتسجيل البيانات
+        const [updatedRoll] = await tx
+          .update(rolls)
+          .set({
+            stage: "printing", // نقل إلى مرحلة الطباعة
+            printed_at: new Date(),
+            printed_by: operatorId,
+          })
+          .where(eq(rolls.id, rollId))
+          .returning();
+
+        // احسب مجموع أوزان الرولات في مرحلة الطباعة أو ما بعدها لهذا الأمر
+        const printedRollsWeight = await tx
+          .select({
+            total: sql<number>`COALESCE(SUM(${rolls.weight_kg}::decimal), 0)`,
+          })
+          .from(rolls)
+          .where(
+            and(
+              eq(rolls.production_order_id, currentRoll.production_order_id),
+              or(
+                eq(rolls.stage, "printing"),
+                eq(rolls.stage, "cutting"),
+                eq(rolls.stage, "done")
+              )
+            )
+          );
+
+        const printedQuantity = Number(printedRollsWeight[0]?.total || 0);
+
+        // احصل على معلومات أمر الإنتاج
+        const [productionOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, currentRoll.production_order_id));
+
+        if (productionOrder) {
+          const finalQuantityKg = parseFloat(
+            productionOrder.final_quantity_kg?.toString() || "0"
+          );
+          
+          // احسب نسبة إكمال الطباعة
+          const printingPercentage = finalQuantityKg > 0 
+            ? Math.min(100, (printedQuantity / finalQuantityKg) * 100)
+            : 0;
+
+          // حدث أمر الإنتاج بالكمية المطبوعة ونسبة الإكمال
+          await tx
+            .update(production_orders)
+            .set({
+              printed_quantity_kg: numberToDecimalString(printedQuantity, 2),
+              printing_completion_percentage: numberToDecimalString(printingPercentage, 2),
+            })
+            .where(eq(production_orders.id, currentRoll.production_order_id));
+        }
+
+        // تحديث الكاش بعد تسجيل الطباعة
+        invalidateProductionCache("all");
+
+        return updatedRoll;
+      });
     } catch (error) {
       console.error("Error marking roll printed:", error);
       throw new Error("فشل في تسجيل طباعة الرول");
