@@ -1,5 +1,4 @@
-// src/components/RollCreationModal.tsx
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -32,7 +31,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ProductionOrder, Machine } from "../../../../shared/schema";
-import ErrorBoundary from "../ErrorBoundary";
 
 interface RollCreationModalProps {
   isOpen: boolean;
@@ -40,16 +38,20 @@ interface RollCreationModalProps {
   selectedProductionOrderId?: number;
 }
 
+// المخطط للتحقق من صحة الإدخال
 const rollFormSchema = z.object({
   production_order_id: z.number().min(1, "يرجى اختيار أمر الإنتاج"),
   weight_kg: z
     .string()
     .min(1, "يرجى إدخال الوزن")
     .refine((val) => {
-      const num = Number.parseFloat(val);
-      return !isNaN(num) && num > 0;
+      const num = Number.parseFloat(val.replace(",", "."));
+      return !Number.isNaN(num) && num > 0;
     }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
-  machine_id: z.string().min(1, "يرجى اختيار المكينة"),
+  machine_id: z.preprocess(
+    (v) => (typeof v === "string" ? Number.parseInt(v, 10) : v),
+    z.number().int().positive("يرجى اختيار المكينة"),
+  ),
 });
 
 type RollFormData = z.infer<typeof rollFormSchema>;
@@ -65,72 +67,87 @@ export default function RollCreationModal({
   const form = useForm<RollFormData>({
     resolver: zodResolver(rollFormSchema),
     defaultValues: {
-      production_order_id: selectedProductionOrderId || 1, // Default to 1 instead of 0
+      production_order_id:
+        selectedProductionOrderId && selectedProductionOrderId > 0
+          ? selectedProductionOrderId
+          : undefined,
       weight_kg: "",
-      machine_id: "",
+      machine_id: undefined as unknown as number,
     },
+    mode: "onChange",
   });
 
+  // الجلب عند فتح المودال فقط لتحسين الأداء
   const { data: productionOrders = [], isLoading: productionOrdersLoading } =
     useQuery<ProductionOrder[]>({
       queryKey: ["/api/production-orders"],
+      enabled: isOpen,
     });
 
   const { data: machines = [], isLoading: machinesLoading } = useQuery<
     Machine[]
   >({
     queryKey: ["/api/machines"],
+    enabled: isOpen,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: sections = [] } = useQuery<any[]>({
     queryKey: ["/api/sections"],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    enabled: isOpen,
+    staleTime: 10 * 60 * 1000,
   });
 
   const { data: rolls = [] } = useQuery<any[]>({
     queryKey: ["/api/rolls"],
-    staleTime: 1 * 60 * 1000, // 1 minute
+    enabled: isOpen,
+    staleTime: 60 * 1000,
   });
 
   const selectedOrder = useMemo(
     () =>
-      productionOrders.find((o) => o.id === selectedProductionOrderId) || null,
+      productionOrders.find(
+        (o) =>
+          o.id ===
+          (selectedProductionOrderId ?? form.getValues("production_order_id")),
+      ) || null,
     [productionOrders, selectedProductionOrderId],
   );
 
-  // مزامنة قيمة أمر الإنتاج المختار من الـprop عند تغييره/فتح المودال
-  useEffect(() => {
-    if (isOpen) {
-      // Only set production_order_id if a valid one is provided
-      if (selectedProductionOrderId && selectedProductionOrderId > 0) {
-        form.setValue("production_order_id", selectedProductionOrderId);
-      } else if (productionOrders.length > 0) {
-        // If no valid ID provided, default to the first available production order
-        form.setValue("production_order_id", productionOrders[0].id);
-      }
+  const remainingQuantity = useMemo(() => {
+    if (!selectedOrder || !selectedOrder.quantity_kg) return 0;
+    const required = Number.parseFloat(String(selectedOrder.quantity_kg)) || 0;
+    const orderRolls = rolls.filter(
+      (r: any) => r.production_order_id === selectedOrder.id,
+    );
+    const produced = orderRolls.reduce(
+      (sum: number, r: any) =>
+        sum + (Number.parseFloat(String(r.weight_kg)) || 0),
+      0,
+    );
+    return Math.max(0, required - produced);
+  }, [selectedOrder, rolls]);
 
-      // Set default weight to remaining quantity if a production order is selected
-      if (selectedProductionOrderId && selectedOrder) {
-        const remainingQuantity = calculateRemainingQuantity(selectedOrder);
-        form.setValue(
-          "weight_kg",
-          remainingQuantity > 0 ? remainingQuantity.toString() : "",
-        );
-      }
+  useEffect(() => {
+    if (!isOpen) return;
+    if (selectedProductionOrderId && selectedProductionOrderId > 0) {
+      form.setValue("production_order_id", selectedProductionOrderId, {
+        shouldValidate: true,
+      });
+    } else if (!form.getValues("production_order_id") && productionOrders.length > 0) {
+      form.setValue("production_order_id", productionOrders[0].id, {
+        shouldValidate: true,
+      });
     }
-  }, [
-    isOpen,
-    selectedProductionOrderId,
-    selectedOrder,
-    rolls,
-    form,
-    productionOrders,
-  ]);
+
+    if (!form.getValues("weight_kg") && remainingQuantity > 0) {
+      form.setValue("weight_kg", String(remainingQuantity));
+    }
+  }, [isOpen, selectedProductionOrderId, productionOrders.length, remainingQuantity]);
 
   const createRollMutation = useMutation({
     mutationFn: async (data: RollFormData) => {
-      const weightParsed = Number.parseFloat(data.weight_kg);
-
+      const weightParsed = Number.parseFloat(data.weight_kg.replace(",", "."));
       const response = await apiRequest("/api/rolls", {
         method: "POST",
         body: JSON.stringify({
@@ -139,12 +156,10 @@ export default function RollCreationModal({
           machine_id: data.machine_id,
         }),
       });
-
       if (!response.ok) {
         const errText = await response.text();
         throw new Error(errText || "فشل الطلب");
       }
-
       return response.json();
     },
     onSuccess: (data) => {
@@ -152,55 +167,46 @@ export default function RollCreationModal({
         title: "تم إنشاء الرول بنجاح",
         description: `رقم الرول: ${data.roll_number}`,
       });
-      // تحديث جميع البيانات المرتبطة بالرولات والإنتاج
-      queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production/film-queue"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production/hierarchical-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production/printing-queue"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production/cutting-queue"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/production/grouped-cutting-queue"] });
+      [
+        "/api/rolls",
+        "/api/production-orders",
+        "/api/production/film-queue",
+        "/api/production/hierarchical-orders",
+        "/api/production/printing-queue",
+        "/api/production/cutting-queue",
+        "/api/production/grouped-cutting-queue",
+      ].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
       onClose();
       form.reset();
     },
-    onError: (error) => {
-      console.error("Roll creation error:", error);
-
-      let errorMessage = "فشل في إنشاء الرول";
-
+    onError: (error: any) => {
+      let msg = "فشل في إنشاء الرول";
       if (error instanceof Error) {
-        errorMessage = error.message;
-
-        // Handle specific error types with better user messages
-        if (
-          errorMessage.includes("Network error") ||
-          errorMessage.includes("Failed to fetch")
-        ) {
-          errorMessage =
-            "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.";
-        } else if (
-          errorMessage.includes("Validation") ||
-          errorMessage.includes("Invalid")
-        ) {
-          errorMessage =
-            "البيانات المدخلة غير صحيحة. يرجى مراجعة الحقول والمحاولة مرة أخرى.";
-        } else if (
-          errorMessage.includes("Conflict") ||
-          errorMessage.includes("already exists")
-        ) {
-          errorMessage = "الرول موجود مسبقاً أو يوجد تضارب في البيانات.";
-        }
+        const e = error.message || "";
+        if (/Network error|Failed to fetch/i.test(e))
+          msg = "تعذر الاتصال بالخادم. تحقق من الإنترنت.";
+        else if (/Validation|Invalid/i.test(e))
+          msg = "البيانات غير صحيحة. تحقق من الحقول.";
+        else if (/Conflict|exists/i.test(e))
+          msg = "الرول موجود مسبقاً أو يوجد تضارب.";
+        else if (/REMAINING_QUANTITY_EXCEEDED/.test(e))
+          msg = "الوزن المطلوب يتجاوز الكمية المتبقية (تحقق الخادم).";
+        else msg = e;
       }
-
-      toast({
-        title: "خطأ في إنشاء الرول",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast({ title: "خطأ في إنشاء الرول", description: msg, variant: "destructive" });
     },
   });
 
   const onSubmit = (data: RollFormData) => {
+    const weightParsed = Number.parseFloat(data.weight_kg.replace(",", "."));
+    if (remainingQuantity > 0 && weightParsed > remainingQuantity + 0.0001) {
+      toast({
+        title: "قيمة الوزن تتجاوز المتبقي",
+        description: `المتبقي من الكمية: ${remainingQuantity.toFixed(2)} كجم`,
+        variant: "destructive",
+      });
+      return;
+    }
     createRollMutation.mutate(data);
   };
 
@@ -211,60 +217,23 @@ export default function RollCreationModal({
     }
   };
 
-  // Calculate remaining quantity for a production order
-  const calculateRemainingQuantity = (order: any) => {
-    if (!order || !order.quantity_kg) return 0;
-
-    const required = parseFloat(order.quantity_kg) || 0;
-    const orderRolls = rolls.filter(
-      (roll: any) => roll.production_order_id === order.id,
-    );
-    const produced = orderRolls.reduce(
-      (sum: number, roll: any) => sum + (parseFloat(roll.weight_kg) || 0),
-      0,
-    );
-
-    return Math.max(0, required - produced);
-  };
-
-  // Filter machines to show only film section machines
   const filmSectionMachines = useMemo(() => {
     if (!sections.length || !machines.length) return machines;
-
-    // Find film section
-    const filmSection = sections.find(
-      (section: any) =>
-        section.name?.toLowerCase().includes("film") ||
-        section.name?.toLowerCase().includes("فيلم") ||
-        section.name_ar?.toLowerCase().includes("فيلم") ||
-        section.name_ar?.toLowerCase().includes("film"),
+    const filmSection = sections.find((s: any) =>
+      [s.name, s.name_ar]
+        .filter(Boolean)
+        .map((x: string) => x.toLowerCase())
+        .some((n: string) => n.includes("film") || n.includes("فيلم")),
     );
-
     if (!filmSection) return machines;
-
-    // Filter machines that belong to film section
     return machines.filter(
-      (machine: any) => machine.section_id === filmSection.id,
+      (m: any) => m.section_id === filmSection.id && m.status === "active" && m.id,
     );
   }, [machines, sections]);
 
-  // قيمة Select لأمر الإنتاج عند عدم تمرير selectedProductionOrderId
-  const productionOrderValue =
-    form.watch("production_order_id") && !selectedProductionOrderId
-      ? String(form.watch("production_order_id"))
-      : undefined;
-
   return (
-    <Dialog
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) handleClose(); // لماذا: لا نغلق إلا عند محاولة الإغلاق
-      }}
-    >
-      <DialogContent
-        className="max-w-md"
-        aria-describedby="roll-creation-description"
-      >
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="max-w-md" aria-describedby="roll-creation-description">
         <DialogHeader>
           <DialogTitle>إنشاء رول جديد</DialogTitle>
           <DialogDescription id="roll-creation-description">
@@ -282,12 +251,8 @@ export default function RollCreationModal({
                   <FormItem>
                     <FormLabel>أمر الإنتاج *</FormLabel>
                     <Select
-                      value={
-                        field.value != null ? String(field.value) : undefined
-                      }
-                      onValueChange={(value) =>
-                        field.onChange(Number.parseInt(value, 10))
-                      }
+                      value={field.value ? String(field.value) : undefined}
+                      onValueChange={(v) => field.onChange(Number.parseInt(v, 10))}
                       disabled={productionOrdersLoading}
                     >
                       <FormControl>
@@ -297,32 +262,23 @@ export default function RollCreationModal({
                       </FormControl>
                       <SelectContent>
                         {productionOrdersLoading ? (
-                          <SelectItem value="loading" disabled>
-                            جارِ التحميل...
-                          </SelectItem>
+                          <SelectItem value="loading" disabled>جارِ التحميل...</SelectItem>
                         ) : productionOrders.length ? (
-                          productionOrders
-                            .filter((order) => order.id)
-                            .map((order) => (
-                              <SelectItem
-                                key={order.id}
-                                value={String(order.id)}
-                              >
-                                {order.production_order_number} -{" "}
-                                {(order as any).customer_name_ar ||
-                                  (order as any).customer_name ||
-                                  "غير محدد"}{" "}
-                                -{" "}
-                                {(order as any).item_name_ar ||
-                                  (order as any).item_name ||
-                                  (order as any).size_caption ||
-                                  "غير محدد"}
-                              </SelectItem>
-                            ))
+                          productionOrders.map((order) => (
+                            <SelectItem key={order.id} value={String(order.id)}>
+                              {order.production_order_number} -{" "}
+                              {(order as any).customer_name_ar ||
+                                (order as any).customer_name ||
+                                "غير محدد"}{" "}
+                              -{" "}
+                              {(order as any).item_name_ar ||
+                                (order as any).item_name ||
+                                (order as any).size_caption ||
+                                "غير محدد"}
+                            </SelectItem>
+                          ))
                         ) : (
-                          <SelectItem value="empty" disabled>
-                            لا توجد أوامر إنتاج متاحة
-                          </SelectItem>
+                          <SelectItem value="empty" disabled>لا توجد أوامر إنتاج</SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -337,20 +293,15 @@ export default function RollCreationModal({
                 <Label>أمر الإنتاج المحدد</Label>
                 <div className="p-3 bg-gray-50 rounded-md border">
                   <p className="font-medium text-sm">
-                    {selectedOrder?.production_order_number ||
-                      `PO-${selectedProductionOrderId}`}
+                    {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
                   <p className="text-xs text-gray-600">
-                    {`${
-                      (selectedOrder as any)?.customer_name_ar ||
+                    {`${(selectedOrder as any)?.customer_name_ar ||
                       (selectedOrder as any)?.customer_name ||
-                      "غير محدد"
-                    } - ${
-                      (selectedOrder as any)?.item_name_ar ||
+                      "غير محدد"} - ${(selectedOrder as any)?.item_name_ar ||
                       (selectedOrder as any)?.item_name ||
                       (selectedOrder as any)?.size_caption ||
-                      "غير محدد"
-                    }`}
+                      "غير محدد"}`}
                   </p>
                 </div>
               </div>
@@ -370,10 +321,15 @@ export default function RollCreationModal({
                       inputMode="decimal"
                       placeholder="45.2"
                       className="text-right"
-                      data-testid="input-weight_kg"
                       {...field}
                     />
                   </FormControl>
+                  {selectedOrder && (
+                    <p className="text-xs text-gray-600">
+                      المتبقي من الكمية:{" "}
+                      <span className="font-medium">{remainingQuantity.toFixed(2)} كجم</span>
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -386,39 +342,26 @@ export default function RollCreationModal({
                 <FormItem>
                   <FormLabel>المكينة *</FormLabel>
                   <Select
-                    value={field.value ?? undefined}
-                    onValueChange={field.onChange}
+                    value={field.value ? String(field.value) : undefined}
+                    onValueChange={(v) => field.onChange(Number.parseInt(v, 10))}
                     disabled={machinesLoading}
                   >
                     <FormControl>
-                      <SelectTrigger data-testid="select-machine">
+                      <SelectTrigger>
                         <SelectValue placeholder="اختر المكينة" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {machinesLoading ? (
-                        <SelectItem value="loading" disabled>
-                          جارِ التحميل...
-                        </SelectItem>
+                        <SelectItem value="loading" disabled>جارِ التحميل...</SelectItem>
                       ) : filmSectionMachines.length ? (
-                        filmSectionMachines
-                          .filter(
-                            (m) =>
-                              (m as any).status === "active" && (m as any).id,
-                          )
-                          .map((machine) => (
-                            <SelectItem
-                              key={String((machine as any).id)}
-                              value={String((machine as any).id)}
-                            >
-                              {(machine as any).name_ar ||
-                                (machine as any).name}
-                            </SelectItem>
-                          ))
+                        filmSectionMachines.map((machine: any) => (
+                          <SelectItem key={String(machine.id)} value={String(machine.id)}>
+                            {machine.name_ar || machine.name}
+                          </SelectItem>
+                        ))
                       ) : (
-                        <SelectItem value="empty" disabled>
-                          لا توجد مكائن متاحة في قسم الفيلم
-                        </SelectItem>
+                        <SelectItem value="empty" disabled>لا توجد مكائن متاحة في قسم الفيلم</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -427,21 +370,16 @@ export default function RollCreationModal({
               )}
             />
 
-            <div className="flex justify-end space-x-3 space-x-reverse pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleClose}
-                disabled={createRollMutation.isPending}
-              >
+            <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={createRollMutation.isPending}>
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                className="btn-primary"
-                disabled={createRollMutation.isPending}
-              >
-                {createRollMutation.isPending ? "جاري الإنشاء..." : "إنشاء رول"}
+              <Button type="submit" className="btn-primary" disabled={createRollMutation.isPending || remainingQuantity === 0}>
+                {createRollMutation.isPending
+                  ? "جاري الإنشاء..."
+                  : remainingQuantity === 0
+                  ? "اكتملت الكمية"
+                  : "إنشاء رول"}
               </Button>
             </div>
           </form>
