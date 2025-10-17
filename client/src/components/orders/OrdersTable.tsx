@@ -191,7 +191,8 @@ export default function OrdersTable({
           <TableHead className="text-right">التسليم</TableHead>
           <TableHead className="text-right">ملاحظات</TableHead>
           <TableHead className="text-center">الحالة</TableHead>
-          <TableHead className="text-right">الإجراءات</TableHead>
+          <TableHead className="text-center w-20 md:w-28">الإجراءات</TableHead>
+          
         </TableRow>
       </TableHeader>
       <TableBody>
