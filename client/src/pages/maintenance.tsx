@@ -1325,12 +1325,21 @@ function MaintenanceActionsTab({
                       )
                     ) {
                       try {
-                        await fetch(`/api/maintenance-actions/${action.id}`, {
+                        const response = await fetch(`/api/maintenance-actions/${action.id}`, {
                           method: "DELETE",
                         });
+                        
+                        if (!response.ok) {
+                          const errorData = await response.json().catch(() => null);
+                          const errorMessage = errorData?.message || "حدث خطأ في حذف الإجراء";
+                          alert(errorMessage);
+                          return;
+                        }
+                        
                         window.location.reload();
                       } catch (error) {
-                        alert("حدث خطأ في حذف الإجراء");
+                        console.error("Error deleting maintenance action:", error);
+                        alert("حدث خطأ في الاتصال بالخادم");
                       }
                     }
                   };

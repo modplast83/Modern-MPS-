@@ -98,7 +98,11 @@ export function createAlertsRouter(storage: IStorage) {
     try {
       const alertId = parseInt(req.params.id);
       const { notes } = req.body;
-      const userId = (req as any).user?.id || 1; // مؤقت
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول - يرجى تسجيل الدخول أولاً" });
+      }
 
       const alert = await alertManager.resolveAlert(alertId, userId, notes);
       res.json(alert);
@@ -112,7 +116,11 @@ export function createAlertsRouter(storage: IStorage) {
   router.post("/:id/dismiss", async (req, res) => {
     try {
       const alertId = parseInt(req.params.id);
-      const userId = (req as any).user?.id || 1; // مؤقت
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول - يرجى تسجيل الدخول أولاً" });
+      }
 
       const alert = await alertManager.dismissAlert(alertId, userId);
       res.json(alert);
@@ -148,7 +156,12 @@ export function createAlertsRouter(storage: IStorage) {
   // جلب التحذيرات للمستخدم الحالي
   router.get("/user/me", async (req, res) => {
     try {
-      const userId = (req as any).user?.id || 1; // مؤقت
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول - يرجى تسجيل الدخول أولاً" });
+      }
+      
       const alerts = await storage.getAlertsByUser(userId);
       res.json(alerts);
     } catch (error: any) {
@@ -161,7 +174,11 @@ export function createAlertsRouter(storage: IStorage) {
   router.post("/rules", async (req, res) => {
     try {
       const ruleData = req.body;
-      const userId = (req as any).user?.id || 1;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مسجل الدخول - يرجى تسجيل الدخول أولاً" });
+      }
 
       const rule = await alertManager.createAlertRule({
         ...ruleData,
