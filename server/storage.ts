@@ -8052,8 +8052,8 @@ export class DatabaseStorage implements IStorage {
         escalation_level: 0,
         notification_sent: false,
         acknowledgment_required: false,
-        acknowledged_by: dismissedBy,
-        acknowledged_at: new Date(),
+        acknowledged_by: null, // Dismissal is not acknowledgment
+        acknowledged_at: null, // Dismissal is not acknowledgment
         auto_resolve: false,
         correlation_id: null,
         parent_alert_id: null,
@@ -8074,7 +8074,7 @@ export class DatabaseStorage implements IStorage {
         target_users: null,
         threshold_values: null,
         measurement_unit: null,
-        target_roles: [1],
+        target_roles: null, // Should not force to admin role
         occurrences: 1,
       } as SystemAlert;
     } catch (error) {
