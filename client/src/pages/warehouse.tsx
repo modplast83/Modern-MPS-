@@ -1327,46 +1327,19 @@ function ProductionHallContent() {
     staleTime: 90000, // Cache for 1.5 minutes to reduce server load
   });
 
-  // Group production orders by main order number
-  const groupedOrders = React.useMemo(() => {
-    const groups: { [key: string]: any } = {};
-
-    productionOrders.forEach((order: any) => {
-      const orderNumber = order.order_number;
-
-      if (!groups[orderNumber]) {
-        groups[orderNumber] = {
-          order_number: orderNumber,
-          customer_name: order.customer_name,
-          customer_name_ar: order.customer_name_ar,
-          production_orders: [],
-          totals: {
-            quantity_required: 0,
-            total_film_weight: 0,
-            total_cut_weight: 0,
-            total_received_weight: 0,
-            waste_weight: 0,
-          },
-        };
-      }
-
-      // Add production order to group
-      groups[orderNumber].production_orders.push(order);
-
-      // Calculate totals
-      groups[orderNumber].totals.quantity_required +=
-        parseFloat(order.quantity_required) || 0;
-      groups[orderNumber].totals.total_film_weight +=
-        parseFloat(order.total_film_weight) || 0;
-      groups[orderNumber].totals.total_cut_weight +=
-        parseFloat(order.total_cut_weight) || 0;
-      groups[orderNumber].totals.total_received_weight +=
-        parseFloat(order.total_received_weight) || 0;
-      groups[orderNumber].totals.waste_weight +=
-        parseFloat(order.waste_weight) || 0;
-    });
-
-    return Object.values(groups);
+  // Show each production order separately - no grouping
+  const individualOrders = React.useMemo(() => {
+    return productionOrders.map((order: any) => ({
+      ...order,
+      quantity_required: parseFloat(order.quantity_required) || 0,
+      total_film_weight: parseFloat(order.total_film_weight) || 0,
+      total_cut_weight: parseFloat(order.total_cut_weight) || 0,
+      total_received_weight: parseFloat(order.total_received_weight) || 0,
+      waste_weight: parseFloat(order.waste_weight) || 0,
+      remaining_to_receive: 
+        (parseFloat(order.total_cut_weight) || 0) - 
+        (parseFloat(order.total_received_weight) || 0),
+    }));
   }, [productionOrders]);
 
   // Receipt mutation
@@ -1403,12 +1376,12 @@ function ProductionHallContent() {
     },
   });
 
-  const handleSelectOrder = (orderNumber: string) => {
+  const handleSelectOrder = (productionOrderId: string) => {
     const newSelection = new Set(selectedOrders);
-    if (newSelection.has(orderNumber)) {
-      newSelection.delete(orderNumber);
+    if (newSelection.has(productionOrderId)) {
+      newSelection.delete(productionOrderId);
     } else {
-      newSelection.add(orderNumber);
+      newSelection.add(productionOrderId);
     }
     setSelectedOrders(newSelection);
   };
@@ -1442,32 +1415,29 @@ function ProductionHallContent() {
     }
 
     const selectedOrdersList = Array.from(selectedOrders);
+    const totalWeight = parseFloat(receiptWeight);
+    const numOrders = selectedOrdersList.length;
+    
+    // Distribute weight equally among selected production orders
+    const baseWeight = Math.floor((totalWeight * 1000) / numOrders) / 1000;
+    const remainder = totalWeight - (baseWeight * numOrders);
 
-    // Create receipts for all production orders in selected main orders
-    selectedOrdersList.forEach((orderNumber) => {
-      const groupedOrder = groupedOrders.find(
-        (go) => go.order_number === orderNumber,
+    // Create receipts for each selected production order
+    selectedOrdersList.forEach((productionOrderId, index) => {
+      const order = individualOrders.find(
+        (o) => o.production_order_id.toString() === productionOrderId,
       );
-      if (groupedOrder) {
-        const totalWeight = parseFloat(receiptWeight);
-        const numOrders = groupedOrder.production_orders.length;
-        
-        // Distribute weight precisely to avoid floating-point precision issues
-        const baseWeight = Math.floor((totalWeight * 1000) / numOrders) / 1000;
-        const remainder = totalWeight - (baseWeight * numOrders);
-        
-        groupedOrder.production_orders.forEach((productionOrder: any, index: number) => {
-          // Add remainder to last order to ensure exact total
-          const weight = index === numOrders - 1 
-            ? baseWeight + remainder 
-            : baseWeight;
-            
-          receiptMutation.mutate({
-            production_order_id: productionOrder.production_order_id,
-            received_weight_kg: weight,
-            received_by: user.id,
-            notes: receiptNotes,
-          });
+      if (order) {
+        // Add remainder to last order to ensure exact total
+        const weight = index === numOrders - 1 
+          ? baseWeight + remainder 
+          : baseWeight;
+          
+        receiptMutation.mutate({
+          production_order_id: parseInt(productionOrderId),
+          received_weight_kg: weight,
+          received_by: user.id,
+          notes: receiptNotes,
         });
       }
     });
@@ -1556,7 +1526,7 @@ function ProductionHallContent() {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">جاري التحميل...</div>
-        ) : groupedOrders.length === 0 ? (
+        ) : individualOrders.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <Factory className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p>لا توجد مواد جاهزة للاستلام حالياً</p>
@@ -1571,14 +1541,14 @@ function ProductionHallContent() {
                     <input
                       type="checkbox"
                       checked={
-                        selectedOrders.size === groupedOrders.length &&
-                        groupedOrders.length > 0
+                        selectedOrders.size === individualOrders.length &&
+                        individualOrders.length > 0
                       }
                       onChange={(e) => {
                         if (e.target.checked) {
                           setSelectedOrders(
                             new Set(
-                              groupedOrders.map((go: any) => go.order_number),
+                              individualOrders.map((o: any) => o.production_order_id.toString()),
                             ),
                           );
                         } else {
@@ -1591,9 +1561,12 @@ function ProductionHallContent() {
                   <th className="text-right py-3 px-4 font-medium">
                     رقم الطلب
                   </th>
+                  <th className="text-right py-3 px-4 font-medium">
+                    رقم أمر الإنتاج
+                  </th>
                   <th className="text-right py-3 px-4 font-medium">العميل</th>
                   <th className="text-right py-3 px-4 font-medium">
-                    عدد أوامر الإنتاج
+                    الصنف
                   </th>
                   <th className="text-right py-3 px-4 font-medium">
                     الكمية المطلوبة
@@ -1615,84 +1588,90 @@ function ProductionHallContent() {
                 </tr>
               </thead>
               <tbody>
-                {groupedOrders.map((groupedOrder: any) => {
-                  const totals = groupedOrder.totals;
-                  const remainingWeight =
-                    totals.total_cut_weight - totals.total_received_weight;
+                {individualOrders.map((order: any) => {
+                  const remainingWeight = order.remaining_to_receive;
 
                   return (
                     <tr
-                      key={groupedOrder.order_number}
-                      className={`border-b hover:bg-gray-50 ${selectedOrders.has(groupedOrder.order_number) ? "bg-blue-50" : ""}`}
+                      key={order.production_order_id}
+                      className={`border-b hover:bg-gray-50 ${selectedOrders.has(order.production_order_id.toString()) ? "bg-blue-50" : ""}`}
                     >
                       <td className="py-3 px-4">
                         <input
                           type="checkbox"
                           checked={selectedOrders.has(
-                            groupedOrder.order_number,
+                            order.production_order_id.toString(),
                           )}
                           onChange={() =>
-                            handleSelectOrder(groupedOrder.order_number)
+                            handleSelectOrder(order.production_order_id.toString())
                           }
-                          data-testid={`checkbox-select-${groupedOrder.order_number}`}
+                          data-testid={`checkbox-select-${order.production_order_id}`}
                         />
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-order-number-${groupedOrder.order_number}`}
+                        data-testid={`text-order-number-${order.production_order_id}`}
                       >
                         <div className="font-medium">
-                          {groupedOrder.order_number}
+                          {order.order_number}
                         </div>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-customer-${groupedOrder.order_number}`}
-                      >
-                        {groupedOrder.customer_name_ar ||
-                          groupedOrder.customer_name}
-                      </td>
-                      <td
-                        className="py-3 px-4"
-                        data-testid={`text-production-count-${groupedOrder.order_number}`}
+                        data-testid={`text-production-order-${order.production_order_id}`}
                       >
                         <Badge variant="outline" className="text-blue-600">
-                          {groupedOrder.production_orders.length} أوامر
+                          {order.production_order_number}
                         </Badge>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-required-${groupedOrder.order_number}`}
+                        data-testid={`text-customer-${order.production_order_id}`}
                       >
-                        {totals.quantity_required.toFixed(2)} كيلو
+                        {order.customer_name_ar || order.customer_name}
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-film-${groupedOrder.order_number}`}
+                        data-testid={`text-item-${order.production_order_id}`}
+                      >
+                        <div>
+                          <div className="font-medium">{order.item_name_ar || order.item_name}</div>
+                          <div className="text-xs text-gray-500">{order.size_caption}</div>
+                        </div>
+                      </td>
+                      <td
+                        className="py-3 px-4"
+                        data-testid={`text-required-${order.production_order_id}`}
+                      >
+                        {order.quantity_required.toFixed(2)} كيلو
+                      </td>
+                      <td
+                        className="py-3 px-4"
+                        data-testid={`text-film-${order.production_order_id}`}
                       >
                         <span className="text-blue-600 font-medium">
-                          {totals.total_film_weight.toFixed(2)} كيلو
+                          {order.total_film_weight.toFixed(2)} كيلو
                         </span>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-cut-${groupedOrder.order_number}`}
+                        data-testid={`text-cut-${order.production_order_id}`}
                       >
                         <span className="text-green-600 font-medium">
-                          {totals.total_cut_weight.toFixed(2)} كيلو
+                          {order.total_cut_weight.toFixed(2)} كيلو
                         </span>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-received-${groupedOrder.order_number}`}
+                        data-testid={`text-received-${order.production_order_id}`}
                       >
                         <span className="text-orange-600 font-medium">
-                          {totals.total_received_weight.toFixed(2)} كيلو
+                          {order.total_received_weight.toFixed(2)} كيلو
                         </span>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-remaining-${groupedOrder.order_number}`}
+                        data-testid={`text-remaining-${order.production_order_id}`}
                       >
                         <span className="text-purple-600 font-bold">
                           {remainingWeight.toFixed(2)} كيلو
@@ -1700,15 +1679,15 @@ function ProductionHallContent() {
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`text-waste-${groupedOrder.order_number}`}
+                        data-testid={`text-waste-${order.production_order_id}`}
                       >
                         <span className="text-red-600">
-                          {totals.waste_weight.toFixed(2)} كيلو
+                          {order.waste_weight.toFixed(2)} كيلو
                         </span>
                       </td>
                       <td
                         className="py-3 px-4"
-                        data-testid={`status-${groupedOrder.order_number}`}
+                        data-testid={`status-${order.production_order_id}`}
                       >
                         {remainingWeight > 0 ? (
                           <Badge
