@@ -32,6 +32,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import type { ProductionOrder, Machine } from "../../../../shared/schema";
+import { safeParseFloat, formatNumberAr } from "../../../../shared/number-utils";
 
 interface RollCreationModalProps {
   isOpen: boolean;
@@ -57,8 +58,8 @@ const rollFormSchema = z.object({
     .string()
     .min(1, "يرجى إدخال الوزن")
     .refine((val) => {
-      const num = Number.parseFloat(val.replace(",", "."));
-      return !Number.isNaN(num) && num > 0;
+      const num = safeParseFloat(val.replace(",", "."), -1);
+      return num > 0;
     }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
   // Align with typical Machine.id being a number. We coerce the Select value to number.
   machine_id: z.string().min(1, "يرجى اختيار المكينة"),
@@ -192,11 +193,11 @@ export default function RollCreationModal({
   });
 
   const onSubmit = (data: RollFormData) => {
-    const weightParsed = Number.parseFloat(data.weight_kg.replace(",", "."));
+    const weightParsed = safeParseFloat(data.weight_kg.replace(",", "."), 0);
     if (remainingQuantity > 0 && weightParsed > remainingQuantity + 0.0001) {
       toast({
         title: "قيمة الوزن تتجاوز المتبقي",
-        description: `المتبقي من الكمية: ${remainingQuantity.toFixed(2)} كجم` ,
+        description: `المتبقي من الكمية: ${formatNumberAr(remainingQuantity, 2)} كجم` ,
         variant: "destructive",
       });
       return;
