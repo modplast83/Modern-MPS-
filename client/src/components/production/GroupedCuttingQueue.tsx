@@ -41,6 +41,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { printRollLabel } from "./RollLabelPrint";
+import { safeParseFloat, formatNumberAr } from "../../../../shared/number-utils";
 
 const cutFormSchema = z.object({
   cut_weight_kg: z.coerce
@@ -136,7 +137,7 @@ export default function GroupedCuttingQueue({
 
   const openCutDialog = (roll: any) => {
     setSelectedRoll(roll);
-    form.setValue("cut_weight_kg", parseFloat(roll.weight_kg) || 0);
+    form.setValue("cut_weight_kg", safeParseFloat(roll.weight_kg, 0));
     setDialogOpen(true);
   };
 
@@ -370,15 +371,15 @@ export default function GroupedCuttingQueue({
                                               {roll.roll_number}
                                             </p>
                                             <p className="text-xs text-muted-foreground">
-                                              الوزن: {formatWeight(parseFloat(roll.weight_kg || 0))}
+                                              الوزن: {formatWeight(safeParseFloat(roll.weight_kg, 0))}
                                             </p>
                                             {roll.cut_weight_total_kg > 0 && (
                                               <div className="text-xs space-y-1 mt-1">
                                                 <p className="text-green-600">
-                                                  الوزن الصافي: {formatWeight(parseFloat(roll.cut_weight_total_kg))}
+                                                  الوزن الصافي: {formatWeight(safeParseFloat(roll.cut_weight_total_kg, 0))}
                                                 </p>
                                                 <p className="text-red-600">
-                                                  الهدر: {formatWeight(parseFloat(roll.waste_kg))}
+                                                  الهدر: {formatWeight(safeParseFloat(roll.waste_kg, 0))}
                                                 </p>
                                               </div>
                                             )}
@@ -452,7 +453,7 @@ export default function GroupedCuttingQueue({
                 <p className="font-medium">{selectedRoll.roll_number}</p>
                 <p className="text-sm text-gray-500">
                   الوزن الأصلي:{" "}
-                  {parseFloat(selectedRoll.weight_kg || 0).toFixed(2)} كجم
+                  {formatNumberAr(safeParseFloat(selectedRoll.weight_kg, 0), 2)} كجم
                 </p>
               </div>
 
@@ -507,17 +508,17 @@ export default function GroupedCuttingQueue({
                         <span
                           className={
                             calculateWaste(
-                              parseFloat(selectedRoll.weight_kg),
+                              safeParseFloat(selectedRoll.weight_kg, 0),
                               form.watch("cut_weight_kg"),
                             ) > 0
                               ? "text-red-600"
                               : "text-green-600"
                           }
                         >
-                          {calculateWaste(
-                            parseFloat(selectedRoll.weight_kg),
+                          {formatNumberAr(calculateWaste(
+                            safeParseFloat(selectedRoll.weight_kg, 0),
                             form.watch("cut_weight_kg"),
-                          ).toFixed(2)}{" "}
+                          ), 2)}{" "}
                           كجم
                         </span>
                       </p>
