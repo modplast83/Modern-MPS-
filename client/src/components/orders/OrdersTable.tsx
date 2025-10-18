@@ -24,11 +24,13 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { format } from "date-fns";
+import ProductionProgress from "./ProductionProgress";
 
 interface OrdersTableProps {
   orders: any[];
   customers: any[];
   users: any[];
+  productionOrders?: any[];
   onViewOrder: (order: any) => void;
   onPrintOrder: (order: any) => void;
   onEditOrder?: (order: any) => void;
@@ -45,6 +47,7 @@ export default function OrdersTable({
   orders,
   customers,
   users,
+  productionOrders = [],
   onViewOrder,
   onPrintOrder,
   onEditOrder,
@@ -189,6 +192,7 @@ export default function OrdersTable({
           <TableHead className="text-right">تاريخ الإنشاء</TableHead>
           <TableHead className="text-right">المنشئ</TableHead>
           <TableHead className="text-right">التسليم</TableHead>
+          <TableHead className="text-right">نسبة الإكمال</TableHead>
           <TableHead className="text-right">ملاحظات</TableHead>
           <TableHead className="text-center">الحالة</TableHead>
           <TableHead className="text-center w-20 md:w-28">الإجراءات</TableHead>
@@ -204,6 +208,35 @@ export default function OrdersTable({
             (u: any) => u.id === parseInt(order.created_by),
           );
           const { deliveryDate, daysRemaining } = calculateDeliveryInfo(order);
+          
+          // حساب نسب الإكمال من أوامر الإنتاج المرتبطة بهذا الطلب
+          const orderProductionOrders = productionOrders.filter(
+            (po: any) => po.order_id === order.id
+          );
+          
+          // حساب متوسط نسبة الإكمال لكل مرحلة عبر جميع أوامر الإنتاج
+          let avgFilmPercentage = 0;
+          let avgPrintingPercentage = 0;
+          let avgCuttingPercentage = 0;
+          
+          if (orderProductionOrders.length > 0) {
+            const totalFilm = orderProductionOrders.reduce(
+              (sum: number, po: any) => sum + parseFloat(po.film_completion_percentage || 0),
+              0
+            );
+            const totalPrinting = orderProductionOrders.reduce(
+              (sum: number, po: any) => sum + parseFloat(po.printing_completion_percentage || 0),
+              0
+            );
+            const totalCutting = orderProductionOrders.reduce(
+              (sum: number, po: any) => sum + parseFloat(po.cutting_completion_percentage || 0),
+              0
+            );
+            
+            avgFilmPercentage = totalFilm / orderProductionOrders.length;
+            avgPrintingPercentage = totalPrinting / orderProductionOrders.length;
+            avgCuttingPercentage = totalCutting / orderProductionOrders.length;
+          }
 
           return (
             <TableRow
@@ -274,6 +307,17 @@ export default function OrdersTable({
                     "-"
                   )}
                 </div>
+              </TableCell>
+              <TableCell data-testid={`production-progress-${order.id}`}>
+                {orderProductionOrders.length > 0 ? (
+                  <ProductionProgress
+                    filmPercentage={avgFilmPercentage}
+                    printingPercentage={avgPrintingPercentage}
+                    cuttingPercentage={avgCuttingPercentage}
+                  />
+                ) : (
+                  <div className="text-gray-400 text-center">-</div>
+                )}
               </TableCell>
               <TableCell data-testid={`notes-${order.id}`}>
                 {order.notes || "-"}
