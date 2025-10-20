@@ -11,10 +11,8 @@ import {
   Link2,
   FileText,
   LayoutDashboard,
-  Bell,
   Monitor,
   Activity,
-  Webhook,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
@@ -96,20 +94,6 @@ const modules = [
     name_ar: "التقارير",
     icon: BarChart3,
     path: "/reports",
-    active: false,
-  },
-  {
-    name: "الإشعارات",
-    name_ar: "الإشعارات",
-    icon: Bell,
-    path: "/notifications",
-    active: false,
-  },
-  {
-    name: "Webhooks واتساب",
-    name_ar: "Webhooks واتساب",
-    icon: Webhook,
-    path: "/whatsapp-webhooks",
     active: false,
   },
   {
