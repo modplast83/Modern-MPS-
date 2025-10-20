@@ -326,11 +326,11 @@ export default function OrdersTable({
                 {getStatusBadge(order.status || "pending")}
               </TableCell>
               <TableCell>
-                <div className="flex space-x-2 space-x-reverse">
+                <div className="grid grid-cols-3 gap-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1"
                     onClick={() => onViewOrder(order)}
                     title="عرض"
                     data-testid={`button-view-${order.id}`}
@@ -340,7 +340,7 @@ export default function OrdersTable({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-green-600 border-green-600 hover:bg-green-50"
+                    className="text-green-600 border-green-600 hover:bg-green-50 p-1"
                     onClick={() => onPrintOrder(order)}
                     title="طباعة"
                     data-testid={`button-print-${order.id}`}
@@ -351,7 +351,7 @@ export default function OrdersTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-purple-600 border-purple-600 hover:bg-purple-50"
+                      className="text-purple-600 border-purple-600 hover:bg-purple-50 p-1"
                       onClick={() => onEditOrder(order)}
                       title="تعديل"
                       data-testid={`button-edit-${order.id}`}
@@ -364,12 +364,11 @@ export default function OrdersTable({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50 p-1"
                         title="تغيير الحالة"
                         data-testid={`button-status-${order.id}`}
                       >
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        <ChevronDown className="h-3 w-3" />
+                        <RefreshCw className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
@@ -411,7 +410,7 @@ export default function OrdersTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-red-600 border-red-600 hover:bg-red-50"
+                      className="text-red-600 border-red-600 hover:bg-red-50 p-1"
                       onClick={() => onDeleteOrder(order)}
                       title="حذف"
                       data-testid={`button-delete-${order.id}`}
