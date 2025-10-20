@@ -195,7 +195,7 @@ export default function OrdersTable({
           <TableHead className="text-right">نسبة الإكمال</TableHead>
           <TableHead className="text-right">ملاحظات</TableHead>
           <TableHead className="text-center">الحالة</TableHead>
-          <TableHead className="text-center w-20 md:w-28">الإجراءات</TableHead>
+          <TableHead className="text-center w-10 md:w-14">الإجراءات</TableHead>
           
         </TableRow>
       </TableHeader>
