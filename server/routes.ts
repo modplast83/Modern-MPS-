@@ -2475,13 +2475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process the data to convert string values to appropriate types
       const processedData = { ...req.body };
       
-      // Convert machine_id from MAC{number} to number
-      if (processedData.machine_id && typeof processedData.machine_id === 'string') {
-        const machineMatch = processedData.machine_id.match(/^MAC(\d+)$/);
-        if (machineMatch) {
-          processedData.machine_id = parseInt(machineMatch[1], 10);
-        }
-      }
+      // machine_id stays as string (e.g., 'MAC12')
+      // No conversion needed
       
       // Convert reported_by from string to number
       if (processedData.reported_by && typeof processedData.reported_by === 'string') {
