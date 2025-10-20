@@ -51,9 +51,13 @@ import {
   Monitor,
   Save,
   RefreshCw,
+  MessageSquare,
+  Webhook,
 } from "lucide-react";
 import RoleManagementTab from "../components/RoleManagementTab";
 import { canAccessSettingsTab } from "../utils/roleUtils";
+import NotificationCenter from "../components/notifications/NotificationCenter";
+import WhatsAppWebhooksTab from "../components/settings/WhatsAppWebhooksTab";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -865,7 +869,7 @@ export default function Settings() {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 الملف الشخصي
@@ -885,6 +889,14 @@ export default function Settings() {
               <TabsTrigger value="database" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 قاعدة البيانات
+              </TabsTrigger>
+              <TabsTrigger value="notification-center" className="flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                الإشعارات
+              </TabsTrigger>
+              <TabsTrigger value="whatsapp-webhooks" className="flex items-center gap-2">
+                <Webhook className="w-4 h-4" />
+                Webhooks واتساب
               </TabsTrigger>
             </TabsList>
 
@@ -2182,6 +2194,14 @@ export default function Settings() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="notification-center" className="space-y-6">
+              <NotificationCenter />
+            </TabsContent>
+
+            <TabsContent value="whatsapp-webhooks" className="space-y-6">
+              <WhatsAppWebhooksTab />
             </TabsContent>
           </Tabs>
         </main>
