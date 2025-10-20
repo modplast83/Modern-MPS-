@@ -2471,7 +2471,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/maintenance-requests", async (req, res) => {
     try {
       console.log("Creating maintenance request with data:", req.body);
-      const validatedData = insertMaintenanceRequestSchema.parse(req.body);
+      
+      // Process the data to convert string values to appropriate types
+      const processedData = { ...req.body };
+      
+      // Convert machine_id from MAC{number} to number
+      if (processedData.machine_id && typeof processedData.machine_id === 'string') {
+        const machineMatch = processedData.machine_id.match(/^MAC(\d+)$/);
+        if (machineMatch) {
+          processedData.machine_id = parseInt(machineMatch[1], 10);
+        }
+      }
+      
+      // Convert reported_by from string to number
+      if (processedData.reported_by && typeof processedData.reported_by === 'string') {
+        processedData.reported_by = parseInt(processedData.reported_by, 10);
+      }
+      
+      // Convert assigned_to from empty string to null, or from string to number
+      if (processedData.assigned_to === '' || processedData.assigned_to === 'none') {
+        processedData.assigned_to = null;
+      } else if (processedData.assigned_to && typeof processedData.assigned_to === 'string') {
+        processedData.assigned_to = parseInt(processedData.assigned_to, 10);
+      }
+      
+      const validatedData = insertMaintenanceRequestSchema.parse(processedData);
       const request = await storage.createMaintenanceRequest(validatedData);
       console.log("Created maintenance request:", request);
       res.json(request);
