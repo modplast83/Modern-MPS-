@@ -99,6 +99,18 @@ export default function Orders() {
     },
   });
 
+  // Fetch categories
+  const { data: categories = [] } = useQuery({
+    queryKey: ["/api/categories"],
+    queryFn: async () => {
+      const response = await fetch("/api/categories");
+      if (!response.ok) throw new Error("فشل في جلب الفئات");
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
   // Filter orders by search term and status
   const filteredOrders = orders.filter((order: any) => {
     // Search filter
@@ -896,6 +908,7 @@ export default function Orders() {
               customerProducts={customerProducts}
               users={users}
               items={items}
+              categories={categories}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               statusFilter={statusFilter}
