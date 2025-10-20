@@ -22,6 +22,7 @@ interface OrdersTabsProps {
   customerProducts: any[];
   users: any[];
   items: any[];
+  categories: any[];
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   statusFilter: string;
@@ -55,6 +56,7 @@ export default function OrdersTabs({
   customerProducts,
   users,
   items,
+  categories,
   searchTerm,
   setSearchTerm,
   statusFilter,
@@ -314,6 +316,9 @@ export default function OrdersTabs({
                         العميل
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الفئة / المنتج
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         المنتج
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -335,6 +340,8 @@ export default function OrdersTabs({
                       const order = orders.find((o: any) => o.id === po.order_id);
                       const customer = customers.find((c: any) => c.id === order?.customer_id);
                       const customerProduct = customerProducts.find((cp: any) => cp.id === po.customer_product_id);
+                      const category = categories.find((cat: any) => cat.id === customerProduct?.category_id);
+                      const item = items.find((itm: any) => itm.id === customerProduct?.item_id);
                       
                       return (
                         <tr key={po.id} className="hover:bg-gray-50" data-testid={`row-production-order-${po.id}`}>
@@ -346,6 +353,16 @@ export default function OrdersTabs({
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {customer?.name_ar || customer?.name || "غير محدد"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900">
+                            <div className="text-right">
+                              <div className="font-medium text-gray-900">
+                                {category?.name_ar || category?.name || "غير محدد"}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {item?.name_ar || item?.name || "غير محدد"}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {customerProduct?.size_caption || "غير محدد"}
