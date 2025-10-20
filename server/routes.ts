@@ -3318,17 +3318,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.role_id !== "" &&
         req.body.role_id !== "none"
       ) {
-        const roleMapping = {
-          ROLE01: 1,
-          ROLE02: 2,
-          ROLE03: 3,
-          ROLE04: 4,
-          ROLE05: 5,
-          ROLE06: 6,
-          ROLE07: 7,
-        };
-        roleId =
-          roleMapping[req.body.role_id as keyof typeof roleMapping] ?? null;
+        // Extract numeric ID from ROLE{number} format (e.g., ROLE08 -> 8)
+        const roleMatch = req.body.role_id.match(/^ROLE(\d+)$/);
+        if (roleMatch) {
+          roleId = parseInt(roleMatch[1], 10);
+        }
       }
 
       let sectionId = null;
@@ -3337,18 +3331,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.section_id !== "" &&
         req.body.section_id !== "none"
       ) {
-        const sectionMapping = {
-          SEC01: 1,
-          SEC02: 2,
-          SEC03: 3,
-          SEC04: 4,
-          SEC05: 5,
-          SEC06: 6,
-          SEC07: 7,
-        };
-        sectionId =
-          sectionMapping[req.body.section_id as keyof typeof sectionMapping] ??
-          null;
+        // Extract numeric ID from SEC{number} format (e.g., SEC02 -> 2)
+        const sectionMatch = req.body.section_id.match(/^SEC(\d+)$/);
+        if (sectionMatch) {
+          sectionId = parseInt(sectionMatch[1], 10);
+        }
       }
 
       const processedData = {
