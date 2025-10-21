@@ -6443,8 +6443,8 @@ export class DatabaseStorage implements IStorage {
         return cached;
       }
 
-      // محسن: استعلام مع بيانات العميل لمرحلة الطباعة
-      // جلب الرولات في مرحلة film أو printing من أوامر الإنتاج النشطة
+      // جلب الرولات في مرحلة film من الطلبات التي لديها رولات لم تكتمل بعد
+      // الطلب يبقى معروضاً حتى تكتمل جميع الرولات في جميع أوامر الإنتاج
       const rollsData = await db
         .select({
           id: rolls.id,
@@ -6488,10 +6488,16 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
           and(
-            eq(rolls.stage, "film"), // فقط الرولات في مرحلة الفيلم (غير المطبوعة)
-            sql`${rolls.production_order_id} IN (
-              SELECT DISTINCT production_order_id FROM rolls
-              WHERE stage = 'film'
+            eq(rolls.stage, "film"), // فقط الرولات في مرحلة الفيلم للعرض
+            // الطلب يبقى معروضاً إذا كان لديه أي رول لم يكتمل بعد
+            sql`${production_orders.order_id} IN (
+              SELECT DISTINCT po.order_id 
+              FROM production_orders po
+              WHERE EXISTS (
+                SELECT 1 FROM rolls r 
+                WHERE r.production_order_id = po.id 
+                AND r.stage != 'done'
+              )
             )`
           )
         )
@@ -6615,7 +6621,8 @@ export class DatabaseStorage implements IStorage {
 
   async getGroupedCuttingQueue(): Promise<any[]> {
     try {
-      // جلب جميع الطلبات التي بها رولات جاهزة للتقطيع
+      // جلب جميع الطلبات التي بها رولات في مرحلة التقطيع
+      // الطلب يبقى معروضاً حتى تكتمل جميع الرولات في جميع أوامر الإنتاج
       const ordersData = await db
         .select({
           id: orders.id,
@@ -6631,8 +6638,19 @@ export class DatabaseStorage implements IStorage {
         .where(
           sql`EXISTS (
             SELECT 1 FROM production_orders po
-            LEFT JOIN rolls r ON po.id = r.production_order_id
-            WHERE po.order_id = orders.id AND r.stage = 'printing'
+            WHERE po.order_id = orders.id 
+            AND EXISTS (
+              SELECT 1 FROM rolls r 
+              WHERE r.production_order_id = po.id 
+              AND r.stage = 'printing'
+            )
+            AND EXISTS (
+              SELECT 1 FROM rolls r2 
+              WHERE r2.production_order_id IN (
+                SELECT id FROM production_orders WHERE order_id = orders.id
+              )
+              AND r2.stage != 'done'
+            )
           )`,
         )
         .orderBy(desc(orders.created_at));
@@ -6672,9 +6690,11 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             inArray(production_orders.order_id, orderIds),
+            // فقط أوامر الإنتاج التي لديها رولات في مرحلة printing أو لديها رولات لم تكتمل
             sql`EXISTS (
               SELECT 1 FROM rolls
-              WHERE production_order_id = production_orders.id AND stage = 'printing'
+              WHERE production_order_id = production_orders.id 
+              AND (stage = 'printing' OR stage != 'done')
             )`,
           ),
         )
