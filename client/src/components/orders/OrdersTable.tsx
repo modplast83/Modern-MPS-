@@ -276,7 +276,7 @@ export default function OrdersTable({
               </TableCell>
               <TableCell data-testid={`created-by-${order.id}`}>
                 <div className="text-right">
-                  <div className="font-medium">{user?.username}</div>
+                  <div className="font-medium">{user?.display_name_ar || user?.display_name || user?.username || '-'}</div>
                   <div className="text-sm text-gray-500">#{user?.id}</div>
                 </div>
               </TableCell>
