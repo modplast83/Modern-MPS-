@@ -4382,6 +4382,7 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: inventory.id,
         item_id: inventory.item_id,
+        location_id: inventory.location_id,
         item_name: items.name,
         item_name_ar: items.name_ar,
         item_code: items.code,
