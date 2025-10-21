@@ -1626,10 +1626,55 @@ export const insertWarehouseTransactionSchema = createInsertSchema(
   date: true,
 });
 
-export const insertInventorySchema = createInsertSchema(inventory).omit({
-  id: true,
-  last_updated: true,
-});
+export const insertInventorySchema = createInsertSchema(inventory)
+  .omit({
+    id: true,
+    last_updated: true,
+  })
+  .extend({
+    // location_id can be string or number from frontend
+    location_id: z
+      .union([z.string(), z.number(), z.null()])
+      .optional()
+      .transform((val) => {
+        if (val === null || val === undefined || val === "") return null;
+        return typeof val === "number" ? val.toString() : val;
+      }),
+    // current_stock can be string or number from frontend
+    current_stock: z
+      .union([z.string(), z.number()])
+      .transform((val) => {
+        if (val === null || val === undefined || val === "") return "0";
+        return typeof val === "number" ? val.toString() : val;
+      })
+      .refine((val) => parseFloat(val) >= 0, "المخزون الحالي يجب أن يكون صفر أو أكثر"),
+    // min_stock validation
+    min_stock: z
+      .union([z.string(), z.number()])
+      .optional()
+      .transform((val) => {
+        if (val === null || val === undefined || val === "") return "0";
+        return typeof val === "number" ? val.toString() : val;
+      })
+      .refine((val) => parseFloat(val) >= 0, "الحد الأدنى للمخزون يجب أن يكون صفر أو أكثر"),
+    // max_stock validation
+    max_stock: z
+      .union([z.string(), z.number()])
+      .optional()
+      .transform((val) => {
+        if (val === null || val === undefined || val === "") return "0";
+        return typeof val === "number" ? val.toString() : val;
+      })
+      .refine((val) => parseFloat(val) >= 0, "الحد الأقصى للمخزون يجب أن يكون صفر أو أكثر"),
+    // cost_per_unit validation
+    cost_per_unit: z
+      .union([z.string(), z.number(), z.null()])
+      .optional()
+      .transform((val) => {
+        if (val === null || val === undefined || val === "") return null;
+        return typeof val === "number" ? val.toString() : val;
+      }),
+  });
 
 export const insertInventoryMovementSchema = createInsertSchema(
   inventory_movements,
