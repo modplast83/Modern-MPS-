@@ -5946,9 +5946,35 @@ export class DatabaseStorage implements IStorage {
           })
           .returning();
 
+        // إعادة حساب الوزن الإجمالي بعد الإدراج للتأكد من الدقة
+        const updatedTotalWeightResult = await tx
+          .select({ total: sql<number>`COALESCE(SUM(weight_kg::decimal), 0)` })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, rollData.production_order_id));
+
+        const actualTotal = Number(updatedTotalWeightResult[0]?.total || 0);
+
+        // احسب نسبة إكمال الفيلم بناءً على الكمية المنتجة
+        const finalQuantityKg = parseFloat(
+          productionOrder.final_quantity_kg?.toString() || "0"
+        );
+        
+        const filmPercentage = finalQuantityKg > 0 
+          ? Math.min(100, (actualTotal / finalQuantityKg) * 100)
+          : 0;
+
+        // حدث أمر الإنتاج بالكمية المنتجة ونسبة الإكمال
+        await tx
+          .update(production_orders)
+          .set({
+            produced_quantity_kg: numberToDecimalString(actualTotal, 2),
+            film_completion_percentage: numberToDecimalString(filmPercentage, 2),
+          })
+          .where(eq(production_orders.id, rollData.production_order_id));
+
         // Check if production order quantity is now completed
         if (
-          newTotal >= quantityRequired &&
+          actualTotal >= quantityRequired &&
           productionOrder.status !== "completed"
         ) {
           // Update production order status to completed
@@ -5958,7 +5984,7 @@ export class DatabaseStorage implements IStorage {
             .where(eq(production_orders.id, rollData.production_order_id));
 
           console.log(
-            `Production order ${productionOrder.production_order_number} automatically completed - required quantity reached (${newTotal}/${quantityRequired} kg)`,
+            `Production order ${productionOrder.production_order_number} automatically completed - required quantity reached (${actualTotal}/${quantityRequired} kg)`,
           );
 
           // Check if all production orders for the parent order are now completed
@@ -6169,6 +6195,8 @@ export class DatabaseStorage implements IStorage {
             ? Math.min(100, (completedRolls / totalRolls) * 100)
             : 0;
 
+          const isProductionOrderCompleted = completedRolls === totalRolls && totalRolls > 0;
+
           // حدث أمر الإنتاج بالكميات الجديدة
           await tx
             .update(production_orders)
@@ -6177,9 +6205,43 @@ export class DatabaseStorage implements IStorage {
               waste_quantity_kg: numberToDecimalString(wasteQuantity, 2),
               cutting_completion_percentage: numberToDecimalString(cuttingPercentage, 2),
               // إذا كانت جميع الرولات مكتملة، حدث الحالة إلى completed
-              status: completedRolls === totalRolls && totalRolls > 0 ? "completed" : productionOrder.status,
+              status: isProductionOrderCompleted ? "completed" : productionOrder.status,
             })
             .where(eq(production_orders.id, productionOrderId));
+
+          // إذا اكتمل أمر الإنتاج، تحقق من اكتمال الطلب الرئيسي
+          if (isProductionOrderCompleted && productionOrder.status !== "completed") {
+            const orderId = productionOrder.order_id;
+
+            console.log(
+              `Production order ${productionOrder.production_order_number} automatically completed - all rolls finished`,
+            );
+
+            // Get all production orders for this order
+            const allProductionOrders = await tx
+              .select()
+              .from(production_orders)
+              .where(eq(production_orders.order_id, orderId));
+
+            // Check if all production orders are completed
+            const allCompleted = allProductionOrders.every((po) =>
+              po.id === productionOrderId
+                ? true
+                : po.status === "completed",
+            );
+
+            // If all production orders are completed, automatically mark the order as completed
+            if (allCompleted) {
+              await tx
+                .update(orders)
+                .set({ status: "completed" })
+                .where(eq(orders.id, orderId));
+
+              console.log(
+                `Order ${orderId} automatically completed - all production orders finished`,
+              );
+            }
+          }
         }
 
         // تحديث الكاش
