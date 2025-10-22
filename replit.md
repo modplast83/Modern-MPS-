@@ -80,6 +80,11 @@ This project is an advanced AI-powered order management system specifically desi
   - Now displays actual stored percentage values including legitimate 0% values
   - Only null/undefined values default to 0% instead of masking all falsy values with 5%
   - Ensures accurate representation of production order overrun calculations
+- ✅ **Production Orders Table Column Organization Fix (October 22, 2025)**: Reorganized category and product columns for clearer data presentation
+  - Separated "الفئة / المنتج" column into distinct "الفئة" and "المنتج" columns
+  - Category column now displays only the category name (category?.name_ar || category?.name)
+  - Product column now shows item name with size_caption beneath it for complete product context
+  - Maintains consistent table structure and RTL layout without rendering regressions
 
 ## Critical Bug Fixes (January 2025)
 
