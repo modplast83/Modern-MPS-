@@ -68,6 +68,13 @@ This project is an advanced AI-powered order management system specifically desi
   - **Orders Table Progress Calculation**: Fixed completion percentage display to use weighted average based on production order quantities
   - Previous calculation used simple averaging which misrepresented completion when order sizes differed significantly
   - Now multiplies each stage percentage by order quantity and divides by total quantity for accurate representation
+- ✅ **Stage Completion Percentage Formula Update (October 22, 2025)**: Revised calculation formulas for printing and cutting stages
+  - **Printing Stage**: Changed formula from `printed_quantity / final_quantity_kg` to `printed_quantity / produced_quantity_kg`
+  - Now accurately reflects printing progress relative to actual film production output, not final target
+  - **Cutting Stage**: Changed formula from `completedRolls / totalRolls` to `(net_quantity + waste_quantity) / produced_quantity_kg`
+  - Now measures actual material throughput (cut + waste) relative to film production output
+  - Both stages now properly reference film production as the baseline for sequential stage progression
+  - Maintains existing safeguards: ratios capped at 100%, zero-division protection in place
 
 ## Critical Bug Fixes (January 2025)
 
