@@ -65,6 +65,9 @@ This project is an advanced AI-powered order management system specifically desi
   - Checks all sibling production orders and promotes both production order and sales order to completed status
   - Added comprehensive logging for order completion transitions for better observability
   - Completion percentages now update in real-time across all production stages (film, printing, cutting)
+  - **Orders Table Progress Calculation**: Fixed completion percentage display to use weighted average based on production order quantities
+  - Previous calculation used simple averaging which misrepresented completion when order sizes differed significantly
+  - Now multiplies each stage percentage by order quantity and divides by total quantity for accurate representation
 
 ## Critical Bug Fixes (January 2025)
 
