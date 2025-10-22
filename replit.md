@@ -75,6 +75,11 @@ This project is an advanced AI-powered order management system specifically desi
   - Now measures actual material throughput (cut + waste) relative to film production output
   - Both stages now properly reference film production as the baseline for sequential stage progression
   - Maintains existing safeguards: ratios capped at 100%, zero-division protection in place
+- ✅ **Production Order Overrun Percentage Display Fix (October 22, 2025)**: Fixed incorrect default display of 5% for all overrun percentages
+  - Changed logical OR (`||`) to nullish coalescing (`??`) in ViewOrderDialog.tsx and OrdersTabs.tsx
+  - Now displays actual stored percentage values including legitimate 0% values
+  - Only null/undefined values default to 0% instead of masking all falsy values with 5%
+  - Ensures accurate representation of production order overrun calculations
 
 ## Critical Bug Fixes (January 2025)
 
