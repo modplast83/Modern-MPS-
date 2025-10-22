@@ -165,7 +165,7 @@ export default function ViewOrderDialog({
                         </div>
                         <div>
                           <span className="text-gray-500">نسبة الزيادة:</span>
-                          <p className="font-medium">{po.overrun_percentage || 5}%</p>
+                          <p className="font-medium">{po.overrun_percentage ?? 0}%</p>
                         </div>
                         <div>
                           <span className="text-gray-500">الكمية النهائية:</span>
