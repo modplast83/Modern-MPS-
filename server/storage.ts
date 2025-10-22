@@ -6074,13 +6074,13 @@ export class DatabaseStorage implements IStorage {
           .where(eq(production_orders.id, currentRoll.production_order_id));
 
         if (productionOrder) {
-          const finalQuantityKg = parseFloat(
-            productionOrder.final_quantity_kg?.toString() || "0"
+          const producedQuantityKg = parseFloat(
+            productionOrder.produced_quantity_kg?.toString() || "0"
           );
           
-          // احسب نسبة إكمال الطباعة
-          const printingPercentage = finalQuantityKg > 0 
-            ? Math.min(100, (printedQuantity / finalQuantityKg) * 100)
+          // احسب نسبة إكمال الطباعة بناءً على الكمية المطبوعة من الكمية المنتجة في مرحلة الفيلم
+          const printingPercentage = producedQuantityKg > 0 
+            ? Math.min(100, (printedQuantity / producedQuantityKg) * 100)
             : 0;
 
           // حدث أمر الإنتاج بالكمية المطبوعة ونسبة الإكمال
@@ -6186,13 +6186,14 @@ export class DatabaseStorage implements IStorage {
           .where(eq(production_orders.id, productionOrderId));
 
         if (productionOrder) {
-          const finalQuantityKg = parseFloat(
-            productionOrder.final_quantity_kg?.toString() || "0"
+          const producedQuantityKg = parseFloat(
+            productionOrder.produced_quantity_kg?.toString() || "0"
           );
           
-          // احسب نسبة إكمال التقطيع بناءً على عدد الرولات المكتملة
-          const cuttingPercentage = totalRolls > 0 
-            ? Math.min(100, (completedRolls / totalRolls) * 100)
+          // احسب نسبة إكمال التقطيع بناءً على (الكمية المقطعة + الهدر) من الكمية المنتجة في مرحلة الفيلم
+          const totalCutAndWaste = netQuantity + wasteQuantity;
+          const cuttingPercentage = producedQuantityKg > 0 
+            ? Math.min(100, (totalCutAndWaste / producedQuantityKg) * 100)
             : 0;
 
           const isProductionOrderCompleted = completedRolls === totalRolls && totalRolls > 0;
