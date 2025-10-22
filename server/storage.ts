@@ -1659,7 +1659,7 @@ export class DatabaseStorage implements IStorage {
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
-          sql`${production_orders.order_id} IN (${sql.raw(orderIds.join(","))})`,
+          inArray(production_orders.order_id, orderIds)
         )
         .limit(100);
 
@@ -1688,7 +1688,7 @@ export class DatabaseStorage implements IStorage {
           })
           .from(rolls)
           .where(
-            sql`${rolls.production_order_id} IN (${sql.raw(productionOrderIds.join(","))})`,
+            inArray(rolls.production_order_id, productionOrderIds)
           )
           .orderBy(desc(rolls.created_at));
       }

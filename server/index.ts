@@ -462,6 +462,7 @@ function sanitizeResponseForLogging(response: any): any {
               );
 
               // Check for required columns and add if missing
+              const ALLOWED_COLUMN_TYPES = new Set(["VARCHAR(100)", "VARCHAR(20)"]);
               const requiredColumns = [
                 { name: "title_ar", type: "VARCHAR(100)" },
                 { name: "issued_by", type: "VARCHAR(20)" },
@@ -469,6 +470,9 @@ function sanitizeResponseForLogging(response: any): any {
 
               for (const col of requiredColumns) {
                 try {
+                  if (!ALLOWED_COLUMN_TYPES.has(col.type)) {
+                    throw new Error(`Invalid column type: ${col.type}`);
+                  }
                   const columnExists = await db.execute(sql`
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name = 'admin_decisions' 

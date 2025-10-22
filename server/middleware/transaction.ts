@@ -61,8 +61,13 @@ export async function lockResourceForUpdate(
   lockTimeout: number = 5000
 ): Promise<void> {
   try {
+    const timeoutMs = parseInt(String(lockTimeout), 10);
+    if (isNaN(timeoutMs) || timeoutMs < 0) {
+      throw new Error('Invalid lock timeout value');
+    }
+    const timeoutValue = `${timeoutMs}ms`;
     await tx.execute(
-      sql`SET LOCAL lock_timeout = ${sql.raw(`'${lockTimeout}ms'`)}`
+      sql`SET LOCAL lock_timeout = ${timeoutValue}`
     );
     await tx.execute(
       sql`SELECT * FROM ${sql.identifier(table)} WHERE id = ${id} FOR UPDATE NOWAIT`
