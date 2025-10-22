@@ -54,6 +54,17 @@ This project is an advanced AI-powered order management system specifically desi
   - Removed complex orderBy clauses that were incompatible with Drizzle's SQL generation
   - All production analytics endpoints now return HTTP 200 with valid data
   - Architect review confirmed proper implementation and no security issues
+- ✅ **HR Reports Database Query Fixes (October 22, 2025)**: Resolved critical SQL errors in HR reports
+  - Fixed missing FROM-clause error for attendance table in performance stats query
+  - Corrected timestamp comparison logic for late arrival calculation
+  - Separated date filters for attendance and production data to prevent table reference errors
+- ✅ **Production Order Completion & Progress Tracking (October 22, 2025)**: Fixed automatic order completion and progress indicators
+  - **createRollWithQR**: Now correctly calculates and updates `film_completion_percentage` and `produced_quantity_kg` after each roll creation
+  - Re-queries total weight after roll insertion to ensure accurate completion percentages
+  - **createCut**: Automatically completes parent order when all production orders finish cutting
+  - Checks all sibling production orders and promotes both production order and sales order to completed status
+  - Added comprehensive logging for order completion transitions for better observability
+  - Completion percentages now update in real-time across all production stages (film, printing, cutting)
 
 ## Critical Bug Fixes (January 2025)
 
