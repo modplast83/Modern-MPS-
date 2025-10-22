@@ -25,6 +25,7 @@ interface GroupedRoll {
   weight_kg: number;
   machine_id: string;
   qr_code_text?: string;
+  qr_png_base64?: string;
 }
 
 interface ProductionOrderGroup {
@@ -127,6 +128,7 @@ export default function GroupedPrintingQueue({
       weight_kg: parseFloat(item.weight_kg) || 0,
       machine_id: item.machine_id,
       qr_code_text: item.qr_code_text,
+      qr_png_base64: item.qr_png_base64,
     };
 
     productionOrderGroup.rolls.push(roll);

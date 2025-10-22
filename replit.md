@@ -6,6 +6,15 @@ This project is an advanced AI-powered order management system specifically desi
 
 ## Recent Completed Features (January 2025)
 
+- ✅ **Roll Label Printing Enhancement (October 22, 2025)**: Upgraded label printing to professional 4"×6" format
+  - Updated label size from 10cm×7cm to standard 4"×6" (101.6mm × 152.4mm) for thermal label printers
+  - Enhanced layout with clear header showing company name and roll number
+  - Professional QR code display section with base64 image support
+  - Optimized information layout with color-coded sections (highlighted weight display)
+  - Improved data presentation showing essential information: customer, production order, product, size, weight, machine, creation date
+  - Added comprehensive footer with print timestamp
+  - Fixed missing `qr_png_base64` field in GroupedPrintingQueue component for proper QR code display
+  - Ready for industrial thermal label printers
 - ✅ Complete roles and permissions management with direct editing from roles table
 - ✅ Comprehensive work hours calculation system with detailed display (8-hour workday including 1-hour break, overtime calculation, Friday special handling)
 - ✅ Enhanced user dashboard with comprehensive daily work summary and time calculations
