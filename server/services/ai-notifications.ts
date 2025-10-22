@@ -28,6 +28,7 @@ interface NotificationAction {
 
 export class AINotifications {
   private static notifications: SmartNotification[] = [];
+  private static monitoringInterval: NodeJS.Timeout | null = null;
 
   // إرسال إشعار ذكي
   static async sendIntelligentNotification(
@@ -406,13 +407,35 @@ export class AINotifications {
 
     return notificationActions.includes(action);
   }
+
+  // تشغيل المراقبة الدورية
+  static startMonitoring(): void {
+    if (this.monitoringInterval) {
+      return;
+    }
+    this.monitoringInterval = setInterval(
+      async () => {
+        await this.performIntelligentMonitoring();
+        this.cleanupExpiredNotifications();
+      },
+      15 * 60 * 1000,
+    );
+    console.log("[AINotifications] تم تشغيل المراقبة الذكية للإشعارات");
+  }
+
+  // إيقاف المراقبة الدورية
+  static shutdown(): void {
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+      console.log("[AINotifications] تم إيقاف المراقبة الذكية");
+    }
+  }
 }
 
-// تشغيل الفحص الدوري كل 15 دقيقة
-setInterval(
-  async () => {
-    await AINotifications.performIntelligentMonitoring();
-    AINotifications.cleanupExpiredNotifications();
-  },
-  15 * 60 * 1000,
-);
+// تشغيل المراقبة الذكية عند بدء التشغيل
+AINotifications.startMonitoring();
+
+// إيقاف المراقبة عند إيقاف الخادم
+process.on("SIGTERM", () => AINotifications.shutdown());
+process.on("SIGINT", () => AINotifications.shutdown());

@@ -1131,8 +1131,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(customers).where(eq(customers.id, id));
   }
 
-  async getAllOrders(): Promise<NewOrder[]> {
-    return await db.select().from(orders).orderBy(desc(orders.created_at));
+  async getAllOrders(limit: number = 1000): Promise<NewOrder[]> {
+    return await db.select().from(orders).orderBy(desc(orders.created_at)).limit(limit);
   }
 
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
@@ -1766,7 +1766,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Production Orders Implementation
-  async getAllProductionOrders(): Promise<ProductionOrder[]> {
+  async getAllProductionOrders(limit: number = 1000): Promise<ProductionOrder[]> {
     return await withDatabaseErrorHandling(async () => {
       const results = await db
         .select({
@@ -1826,7 +1826,8 @@ export class DatabaseStorage implements IStorage {
           eq(production_orders.customer_product_id, customer_products.id),
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .orderBy(desc(production_orders.created_at));
+        .orderBy(desc(production_orders.created_at))
+        .limit(limit);
 
       // Return results with proper type mapping - keep decimal fields as strings for consistency
       return results;
@@ -3602,7 +3603,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getCustomerProducts(): Promise<CustomerProduct[]> {
+  async getCustomerProducts(limit: number = 1000): Promise<CustomerProduct[]> {
     return await db
       .select({
         id: customer_products.id,
@@ -3636,6 +3637,7 @@ export class DatabaseStorage implements IStorage {
       .from(customer_products)
       .leftJoin(customers, eq(customer_products.customer_id, customers.id))
       .orderBy(desc(customer_products.created_at))
+      .limit(limit)
       .then((results) =>
         results.map((row) => ({
           ...row,

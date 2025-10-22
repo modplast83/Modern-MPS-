@@ -36,6 +36,7 @@ export class AILearning {
   private static learningData: LearningData[] = [];
   private static insights: LearningInsight[] = [];
   private static userPatterns: Map<number, UserPattern> = new Map();
+  private static cleanupInterval: NodeJS.Timeout | null = null;
 
   // تسجيل بيانات التعلم
   static async recordLearningData(
@@ -363,16 +364,40 @@ export class AILearning {
     );
     const afterCount = this.learningData.length;
 
-    console.log(
-      `🧹 تم تنظيف ${beforeCount - afterCount} إدخال قديم من بيانات التعلم`,
+    if (beforeCount - afterCount > 0) {
+      console.log(
+        `🧹 تم تنظيف ${beforeCount - afterCount} إدخال قديم من بيانات التعلم`,
+      );
+    }
+  }
+
+  // تشغيل التنظيف التلقائي
+  static startCleanup(): void {
+    if (this.cleanupInterval) {
+      return;
+    }
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupOldData();
+      },
+      24 * 60 * 60 * 1000,
     );
+    console.log("[AILearning] تم تشغيل التنظيف التلقائي للبيانات القديمة");
+  }
+
+  // إيقاف التنظيف التلقائي
+  static shutdown(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+      this.cleanupInterval = null;
+      console.log("[AILearning] تم إيقاف التنظيف التلقائي");
+    }
   }
 }
 
-// تنظيف دوري للبيانات القديمة (كل 24 ساعة)
-setInterval(
-  () => {
-    AILearning.cleanupOldData();
-  },
-  24 * 60 * 60 * 1000,
-);
+// تشغيل التنظيف التلقائي عند بدء التشغيل
+AILearning.startCleanup();
+
+// إيقاف التنظيف عند إيقاف الخادم
+process.on("SIGTERM", () => AILearning.shutdown());
+process.on("SIGINT", () => AILearning.shutdown());
