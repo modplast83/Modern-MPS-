@@ -3422,10 +3422,15 @@ export class DatabaseStorage implements IStorage {
   async getHRReports(dateFrom?: string, dateTo?: string): Promise<any> {
     return await withDatabaseErrorHandling(
       async () => {
-        const dateFilter =
+        const attendanceDateFilter =
           dateFrom && dateTo
             ? sql`DATE(${attendance.date}) BETWEEN ${dateFrom} AND ${dateTo}`
             : sql`DATE(${attendance.date}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+        const rollsDateFilter =
+          dateFrom && dateTo
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
 
         const [attendanceStats, performanceStats, trainingStats] =
           await Promise.all([
@@ -3438,14 +3443,14 @@ export class DatabaseStorage implements IStorage {
                 role_name: sql<string>`COALESCE(${roles.name_ar}, ${roles.name})`,
                 present_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)`,
                 absent_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'غائب' THEN 1 END)`,
-                late_days: sql<number>`COUNT(CASE WHEN ${attendance.check_in_time} > TIME '08:30:00' THEN 1 END)`,
+                late_days: sql<number>`COUNT(CASE WHEN EXTRACT(HOUR FROM ${attendance.check_in_time}) * 60 + EXTRACT(MINUTE FROM ${attendance.check_in_time}) > 510 THEN 1 END)`,
                 attendance_rate: sql<number>`COALESCE((COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100), 0)`,
               })
               .from(users)
               .leftJoin(roles, eq(users.role_id, roles.id))
               .leftJoin(
                 attendance,
-                and(eq(users.id, attendance.user_id), dateFilter),
+                and(eq(users.id, attendance.user_id), attendanceDateFilter),
               )
               .groupBy(
                 users.id,
@@ -3467,7 +3472,7 @@ export class DatabaseStorage implements IStorage {
                 improvement_trend: sql<number>`COALESCE(CASE WHEN AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)) > 90 THEN 1 ELSE -1 END, 0)`,
               })
               .from(users)
-              .leftJoin(rolls, and(eq(users.id, rolls.created_by), dateFilter))
+              .leftJoin(rolls, and(eq(users.id, rolls.created_by), rollsDateFilter))
               .groupBy(users.id, users.username, users.display_name_ar),
 
             // إحصائيات التدريب
