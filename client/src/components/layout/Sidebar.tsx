@@ -97,6 +97,13 @@ const modules = [
     active: false,
   },
   {
+      name: "الأدوات",
+      name_ar: "الأدوات",
+      icon: Wrench,
+      path: "/tools",
+      active: false,
+    },
+  {
     name: "الإعدادات",
     name_ar: "الإعدادات",
     icon: Settings,

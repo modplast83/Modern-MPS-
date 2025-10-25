@@ -32,6 +32,7 @@ import TwilioContentTemplate from "./pages/twilio-content-template";
 import WhatsAppTemplateTest from "./pages/whatsapp-template-test";
 import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ToolsPage from "./pages/tools_page";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -51,8 +52,14 @@ function AppRoutes() {
     <Switch>
       <Route path="/login">
         {isAuthenticated ? <Redirect to="/" /> : <Login />}
+      
       </Route>
-
+<Route path="/tools">
+  <ProtectedRoute path="/tools">
+    <ToolsPage />
+  </ProtectedRoute>
+</Route>
+     
       <Route path="/">
         <ProtectedRoute path="/">
           <Dashboard />
