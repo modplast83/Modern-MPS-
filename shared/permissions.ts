@@ -307,6 +307,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey[]> = {
   '/twilio-content': ['manage_whatsapp'],
   '/whatsapp-template-test': ['manage_whatsapp'],
   '/whatsapp-webhooks': ['manage_whatsapp'],
+   '/tools': ['view_production', 'manage_production'],
 };
 
 // Settings tabs permissions
