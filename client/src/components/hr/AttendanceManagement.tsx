@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
@@ -43,52 +43,92 @@ import { useToast } from "../../hooks/use-toast";
 import { format } from "date-fns";
 
 const attendanceSchema = z.object({
-  user_id: z.number(),
+  user_id: z.number().min(1, "الموظف مطلوب"),
   status: z.string().min(1, "الحالة مطلوبة"),
   notes: z.string().optional(),
 });
 
+interface User {
+  id: number;
+  username: string;
+  display_name?: string;
+  display_name_ar?: string;
+}
+
+interface AttendanceRecord {
+  id: number;
+  user_id: number;
+  status: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  date?: string;
+}
+
 export default function AttendanceManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingAttendance, setEditingAttendance] = useState<any>(null);
+  const [editingAttendance, setEditingAttendance] = useState<
+    AttendanceRecord | null
+  >(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof attendanceSchema>>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
-      user_id: undefined as any,
+      user_id: 0,
       status: "غائب",
       notes: "",
     },
   });
 
   // Fetch attendance data
-  const { data: attendanceData = [], isLoading } = useQuery({
+  const {
+    data: attendanceData = [],
+    isLoading: attendanceLoading,
+    isError: attendanceError,
+  } = useQuery<AttendanceRecord[]>({
     queryKey: ["/api/attendance"],
     queryFn: async () => {
       const response = await fetch("/api/attendance");
       if (!response.ok) throw new Error("فشل في جلب بيانات الحضور");
       return response.json();
     },
+    onError: (err: any) => {
+      toast({
+        title: "خطأ",
+        description:
+          err instanceof Error ? err.message : "فشل في جلب بيانات الحضور",
+        variant: "destructive",
+      });
+    },
   });
 
   // Fetch users data
-  const { data: users = [] } = useQuery({
-    queryKey: ["/api/users"],
-    queryFn: async () => {
-      const response = await fetch("/api/users");
-      if (!response.ok) throw new Error("فشل في جلب بيانات المستخدمين");
-      return response.json();
-    },
-  });
+  const { data: users = [], isLoading: usersLoading, isError: usersError } =
+    useQuery<User[]>({
+      queryKey: ["/api/users"],
+      queryFn: async () => {
+        const response = await fetch("/api/users");
+        if (!response.ok) throw new Error("فشل في جلب بيانات المستخدمين");
+        return response.json();
+      },
+      onError: (err: any) => {
+        toast({
+          title: "خطأ",
+          description:
+            err instanceof Error ? err.message : "فشل في جلب بيانات المستخدمين",
+          variant: "destructive",
+        });
+      },
+    });
 
   // Attendance mutation
   const attendanceMutation = useMutation({
     mutationFn: async (data: z.infer<typeof attendanceSchema>) => {
       const url = editingAttendance
         ? `/api/attendance/${editingAttendance.id}`
-        : "/api/attendance";
+        : `/api/attendance`;
       const method = editingAttendance ? "PUT" : "POST";
 
       const response = await fetch(url, {
@@ -104,7 +144,11 @@ export default function AttendanceManagement() {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
       setIsDialogOpen(false);
       setEditingAttendance(null);
-      form.reset();
+      form.reset({
+        user_id: 0,
+        status: "غائب",
+        notes: "",
+      });
       toast({
         title: "تم الحفظ بنجاح",
         description: editingAttendance
@@ -112,7 +156,7 @@ export default function AttendanceManagement() {
           : "تم تسجيل حالة الحضور",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
         title: "خطأ",
         description:
@@ -126,7 +170,7 @@ export default function AttendanceManagement() {
     attendanceMutation.mutate(data);
   };
 
-  const handleEdit = (attendance: any) => {
+  const handleEdit = (attendance: AttendanceRecord) => {
     setEditingAttendance(attendance);
     form.setValue("user_id", attendance.user_id);
     form.setValue("status", attendance.status);
@@ -136,7 +180,11 @@ export default function AttendanceManagement() {
 
   const handleAdd = () => {
     setEditingAttendance(null);
-    form.reset();
+    form.reset({
+      user_id: 0,
+      status: "غائب",
+      notes: "",
+    });
     setIsDialogOpen(true);
   };
 
@@ -169,7 +217,7 @@ export default function AttendanceManagement() {
     };
 
     const statusInfo =
-      statusMap[status as keyof typeof statusMap] || statusMap["غائب"];
+      (statusMap as any)[status as keyof typeof statusMap] || statusMap["غائب"];
     const IconComponent = statusInfo.icon;
 
     return (
@@ -182,13 +230,15 @@ export default function AttendanceManagement() {
     );
   };
 
-  // Group attendance by today's data
-  const todayAttendance = attendanceData.filter((record: any) => {
+  // Group attendance by today's data (useMemo to avoid recompute)
+  const todayAttendance = useMemo(() => {
     const today = new Date().toISOString().split("T")[0];
-    const recordDate =
-      record.date || new Date(record.created_at).toISOString().split("T")[0];
-    return recordDate === today;
-  });
+    return (attendanceData || []).filter((record) => {
+      const recordDate =
+        record.date || new Date(record.created_at || "").toISOString().split("T")[0];
+      return recordDate === today;
+    });
+  }, [attendanceData]);
 
   // Create attendance summary for all users with proper typing
   interface AttendanceSummaryItem {
@@ -205,15 +255,21 @@ export default function AttendanceManagement() {
     };
   }
 
-  const attendanceSummary: AttendanceSummaryItem[] = users.map((user: any) => {
-    const userAttendance = todayAttendance.find(
-      (record: any) => record.user_id === user.id,
-    );
-    return {
-      ...user,
-      attendance: userAttendance || { status: "غائب", user_id: user.id },
-    };
-  });
+  const attendanceSummary: AttendanceSummaryItem[] = useMemo(() => {
+    return (users || []).map((user: User) => {
+      const userAttendance = todayAttendance.find(
+        (record) => record.user_id === user.id
+      );
+      return {
+        ...user,
+        attendance: userAttendance || { status: "غائب", user_id: user.id },
+      };
+    });
+  }, [users, todayAttendance]);
+
+  const userIdWatched = form.watch("user_id");
+  const isSubmitDisabled =
+    attendanceMutation.isPending || Number(userIdWatched) <= 0;
 
   return (
     <div className="space-y-6">
@@ -243,10 +299,7 @@ export default function AttendanceManagement() {
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="user_id"
@@ -254,14 +307,8 @@ export default function AttendanceManagement() {
                     <FormItem>
                       <FormLabel>الموظف</FormLabel>
                       <Select
-                        onValueChange={(value) =>
-                          field.onChange(parseInt(value))
-                        }
-                        value={
-                          field.value !== undefined
-                            ? field.value.toString()
-                            : ""
-                        }
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                        value={field.value !== undefined ? String(field.value) : "0"}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -269,11 +316,11 @@ export default function AttendanceManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {users.map((user: any) => (
-                            <SelectItem
-                              key={user.id}
-                              value={user.id.toString()}
-                            >
+                          <SelectItem value="0" key="placeholder" disabled>
+                            اختر الموظف
+                          </SelectItem>
+                          {users.map((user: User) => (
+                            <SelectItem key={user.id} value={String(user.id)}>
                               {user.display_name_ar || user.username}
                             </SelectItem>
                           ))}
@@ -290,10 +337,7 @@ export default function AttendanceManagement() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>حالة الحضور</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="اختر الحالة" />
@@ -334,7 +378,7 @@ export default function AttendanceManagement() {
                   <Button
                     type="submit"
                     className="flex-1"
-                    disabled={attendanceMutation.isPending}
+                    disabled={isSubmitDisabled}
                   >
                     {attendanceMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                   </Button>
@@ -364,8 +408,7 @@ export default function AttendanceManagement() {
                 <p className="text-2xl font-bold text-green-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) =>
-                        u.attendance.status === "حاضر",
+                      (u: AttendanceSummaryItem) => u.attendance.status === "حاضر"
                     ).length
                   }
                 </p>
@@ -383,8 +426,7 @@ export default function AttendanceManagement() {
                 <p className="text-2xl font-bold text-red-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) =>
-                        u.attendance.status === "غائب",
+                      (u: AttendanceSummaryItem) => u.attendance.status === "غائب"
                     ).length
                   }
                 </p>
@@ -398,14 +440,12 @@ export default function AttendanceManagement() {
             <div className="flex items-center">
               <Coffee className="h-8 w-8 text-orange-600" />
               <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">
-                  استراحة الغداء
-                </p>
+                <p className="text-sm font-medium text-gray-600">استراحة الغداء</p>
                 <p className="text-2xl font-bold text-orange-600">
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) =>
-                        u.attendance.status === "استراحة غداء",
+                        u.attendance.status === "استراحة غداء"
                     ).length
                   }
                 </p>
@@ -423,8 +463,7 @@ export default function AttendanceManagement() {
                 <p className="text-2xl font-bold text-gray-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) =>
-                        u.attendance.status === "مغادر",
+                      (u: AttendanceSummaryItem) => u.attendance.status === "مغادر"
                     ).length
                   }
                 </p>
@@ -452,7 +491,7 @@ export default function AttendanceManagement() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {attendanceLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
                     جاري تحميل البيانات...
@@ -465,12 +504,10 @@ export default function AttendanceManagement() {
                   </TableCell>
                 </TableRow>
               ) : (
-                attendanceSummary.map((user: any) => (
+                attendanceSummary.map((user: AttendanceSummaryItem) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium text-center">
-                      {user.display_name_ar ||
-                        user.display_name ||
-                        user.username}
+                      {user.display_name_ar || user.display_name || user.username}
                     </TableCell>
                     <TableCell className="text-center text-gray-500">
                       {user.username}
@@ -490,7 +527,17 @@ export default function AttendanceManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleEdit(user.attendance)}
+                        onClick={() =>
+                          handleEdit(
+                            (todayAttendance.find(
+                              (r) => r.user_id === user.id
+                            ) as AttendanceRecord) || {
+                              id: 0,
+                              user_id: user.id,
+                              status: "غائب",
+                            }
+                          )
+                        }
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
