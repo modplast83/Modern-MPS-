@@ -7,12 +7,14 @@ type ToastOptions = {
   description?: string;
   variant?: ToastVariant;
   duration?: number; // ms
+  action?: React.ReactNode;
 };
 
 type ToastItem = ToastOptions & { id: string };
 
 type ToastContextShape = {
   toast: (opts: ToastOptions) => void;
+  toasts: ToastItem[];
 };
 
 const ToastContext = createContext<ToastContextShape | undefined>(undefined);
@@ -35,7 +37,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <ToastContext.Provider value={{ toast }}>
+    <ToastContext.Provider value={{ toast, toasts }}>
       {children}
 
       {/* عرض التنبيهات (RTL) */}
