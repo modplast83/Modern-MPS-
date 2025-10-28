@@ -5602,7 +5602,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session.userId) {
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
-      const roll = await storage.markRollPrinted(id, req.session.userId);
+      
+      const { printing_machine_id } = req.body;
+      
+      // Validate printing machine if provided
+      if (printing_machine_id) {
+        const machine = await storage.getMachineById(printing_machine_id);
+        if (!machine) {
+          return res.status(400).json({ message: "ماكينة الطباعة غير موجودة" });
+        }
+        if (machine.status !== "active") {
+          return res.status(400).json({ message: "ماكينة الطباعة غير نشطة" });
+        }
+      }
+      
+      const roll = await storage.markRollPrinted(id, req.session.userId, printing_machine_id);
       res.json(roll);
     } catch (error) {
       console.error("Error marking roll printed:", error);

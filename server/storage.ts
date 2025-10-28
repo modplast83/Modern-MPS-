@@ -779,7 +779,7 @@ export interface IStorage {
     weight_kg: number;
     created_by: number;
   }): Promise<Roll>;
-  markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
+  markRollPrinted(rollId: number, operatorId: number, printingMachineId?: string): Promise<Roll>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(
     receiptData: InsertWarehouseReceipt,
@@ -5929,7 +5929,7 @@ export class DatabaseStorage implements IStorage {
     return this.createRoll(insertData as any);
   }
 
-  async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {
+  async markRollPrinted(rollId: number, operatorId: number, printingMachineId?: string): Promise<Roll> {
     try {
       return await db.transaction(async (tx) => {
         // احصل على معلومات الرول الحالية
@@ -5942,14 +5942,37 @@ export class DatabaseStorage implements IStorage {
           throw new Error("الرول غير موجود");
         }
 
+        // Validate printing machine if provided
+        if (printingMachineId) {
+          const [printingMachine] = await tx
+            .select()
+            .from(machines)
+            .where(eq(machines.id, printingMachineId));
+          
+          if (!printingMachine) {
+            throw new Error("ماكينة الطباعة غير موجودة");
+          }
+          
+          if (printingMachine.status !== "active") {
+            throw new Error("ماكينة الطباعة غير نشطة");
+          }
+        }
+
         // نقل الرول إلى مرحلة الطباعة وتسجيل البيانات
+        const updateData: any = {
+          stage: "printing", // نقل إلى مرحلة الطباعة
+          printed_at: new Date(),
+          printed_by: operatorId,
+        };
+        
+        // Add printing_machine_id if provided
+        if (printingMachineId) {
+          updateData.printing_machine_id = printingMachineId;
+        }
+        
         const [updatedRoll] = await tx
           .update(rolls)
-          .set({
-            stage: "printing", // نقل إلى مرحلة الطباعة
-            printed_at: new Date(),
-            printed_by: operatorId,
-          })
+          .set(updateData)
           .where(eq(rolls.id, rollId))
           .returning();
 
