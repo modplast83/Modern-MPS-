@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
@@ -12,10 +13,28 @@ import ViewOrderDialog from "../components/orders/ViewOrderDialog";
 
 export default function Orders() {
   const [searchTerm, setSearchTerm] = useState("");
+  
   const [statusFilter, setStatusFilter] = useState("all");
   const [productionSearchTerm, setProductionSearchTerm] = useState("");
   const [productionStatusFilter, setProductionStatusFilter] = useState("all");
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+  // فتح مودال الإنشاء تلقائياً إذا كان url يحتوي على ?create=1
+    useEffect(() => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const create = params.get("create");
+        if (create === "1" || create === "true") {
+          setIsOrderDialogOpen(true);
+          params.delete("create");
+          const newSearch = params.toString();
+          const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
+          window.history.replaceState({}, "", newUrl);
+        }
+      } catch (err) {
+        // لا نفشل التطبيق بسبب هذا فقط
+        console.warn("error parsing query params", err);
+      }
+    }, []);
   const [isViewOrderDialogOpen, setIsViewOrderDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
