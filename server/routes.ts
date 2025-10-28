@@ -5544,20 +5544,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // INVARIANT E: Validate machine is active
-        const machine = await storage.getMachineById(
-          validatedRollData.machine_id,
+        // INVARIANT E: Validate all three machines are active
+        const filmMachine = await storage.getMachineById(
+          validatedRollData.film_machine_id,
         );
-        if (!machine) {
+        if (!filmMachine) {
           return res.status(400).json({
-            message: "المكينة غير موجودة",
-            field: "machine_id",
+            message: "ماكينة الفيلم غير موجودة",
+            field: "film_machine_id",
           });
         }
-        if (machine.status !== "active") {
+        if (filmMachine.status !== "active") {
           return res.status(400).json({
-            message: "المكينة غير نشطة - لا يمكن إنشاء رولات عليها",
-            field: "machine_id",
+            message: "ماكينة الفيلم غير نشطة - لا يمكن إنشاء رولات عليها",
+            field: "film_machine_id",
+          });
+        }
+
+        const printingMachine = await storage.getMachineById(
+          validatedRollData.printing_machine_id,
+        );
+        if (!printingMachine) {
+          return res.status(400).json({
+            message: "ماكينة الطباعة غير موجودة",
+            field: "printing_machine_id",
+          });
+        }
+        if (printingMachine.status !== "active") {
+          return res.status(400).json({
+            message: "ماكينة الطباعة غير نشطة - لا يمكن إنشاء رولات عليها",
+            field: "printing_machine_id",
+          });
+        }
+
+        const cuttingMachine = await storage.getMachineById(
+          validatedRollData.cutting_machine_id,
+        );
+        if (!cuttingMachine) {
+          return res.status(400).json({
+            message: "ماكينة التقطيع غير موجودة",
+            field: "cutting_machine_id",
+          });
+        }
+        if (cuttingMachine.status !== "active") {
+          return res.status(400).json({
+            message: "ماكينة التقطيع غير نشطة - لا يمكن إنشاء رولات عليها",
+            field: "cutting_machine_id",
           });
         }
 
@@ -5573,7 +5605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Generate QR code and roll number with validation passed
-        const roll = await storage.createRollWithQR(validatedRollData);
+        const roll = await storage.createRoll(validatedRollData);
         res.status(201).json(roll);
       } catch (error) {
         console.error("Error creating roll:", error);
