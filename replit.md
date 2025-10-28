@@ -6,6 +6,15 @@ This project is an advanced AI-powered order management system specifically desi
 
 ## Recent Completed Features (January 2025)
 
+- ✅ **Machine Production Capacity Tracking (October 28, 2025)**: Added production capacity fields to machines table
+  - Implemented three new decimal columns (precision 8, scale 2) for capacity tracking by bag size:
+    - `capacity_small_kg_per_hour`: Production capacity for small bags (kg/hour)
+    - `capacity_medium_kg_per_hour`: Production capacity for medium bags (kg/hour)
+    - `capacity_large_kg_per_hour`: Production capacity for large bags (kg/hour)
+  - Enhanced machine management UI in `/definitions` page with new capacity input fields in machine creation/editing dialog
+  - Updated machines table display to show all three capacity columns with proper number formatting
+  - Enables better production planning and efficiency analysis based on machine capabilities
+  - All fields are optional to accommodate different machine types and configurations
 - ✅ **Roll Label Printing Enhancement (October 22, 2025)**: Upgraded label printing to professional 4"×6" format
   - Updated label size from 10cm×7cm to standard 4"×6" (101.6mm × 152.4mm) for thermal label printers
   - Enhanced layout with clear header showing company name and roll number
