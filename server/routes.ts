@@ -5544,7 +5544,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // INVARIANT E: Validate all three machines are active
+        // INVARIANT E: Validate film machine is active (printing and cutting machines assigned in later stages)
         const filmMachine = await storage.getMachineById(
           validatedRollData.film_machine_id,
         );
@@ -5558,38 +5558,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({
             message: "ماكينة الفيلم غير نشطة - لا يمكن إنشاء رولات عليها",
             field: "film_machine_id",
-          });
-        }
-
-        const printingMachine = await storage.getMachineById(
-          validatedRollData.printing_machine_id,
-        );
-        if (!printingMachine) {
-          return res.status(400).json({
-            message: "ماكينة الطباعة غير موجودة",
-            field: "printing_machine_id",
-          });
-        }
-        if (printingMachine.status !== "active") {
-          return res.status(400).json({
-            message: "ماكينة الطباعة غير نشطة - لا يمكن إنشاء رولات عليها",
-            field: "printing_machine_id",
-          });
-        }
-
-        const cuttingMachine = await storage.getMachineById(
-          validatedRollData.cutting_machine_id,
-        );
-        if (!cuttingMachine) {
-          return res.status(400).json({
-            message: "ماكينة التقطيع غير موجودة",
-            field: "cutting_machine_id",
-          });
-        }
-        if (cuttingMachine.status !== "active") {
-          return res.status(400).json({
-            message: "ماكينة التقطيع غير نشطة - لا يمكن إنشاء رولات عليها",
-            field: "cutting_machine_id",
           });
         }
 
