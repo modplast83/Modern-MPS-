@@ -467,11 +467,9 @@ export const rolls = pgTable(
       .notNull()
       .references(() => machines.id, { onDelete: "restrict" }), // Machine used for film production
     printing_machine_id: varchar("printing_machine_id", { length: 20 })
-      .notNull()
-      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for printing
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for printing (assigned in printing stage)
     cutting_machine_id: varchar("cutting_machine_id", { length: 20 })
-      .notNull()
-      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for cutting
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for cutting (assigned in cutting stage)
     machine_id: varchar("machine_id", { length: 20 }).references(
       () => machines.id,
       { onDelete: "restrict" },
@@ -1598,8 +1596,9 @@ export const insertRollSchema = createInsertSchema(rolls)
     production_order_id: z.number().int().positive("معرف أمر الإنتاج مطلوب"),
     // INVARIANT E: Machines must be valid and active
     film_machine_id: z.string().min(1, "معرف ماكينة الفيلم مطلوب"),
-    printing_machine_id: z.string().min(1, "معرف ماكينة الطباعة مطلوب"),
-    cutting_machine_id: z.string().min(1, "معرف ماكينة التقطيع مطلوب"),
+    // Printing and cutting machines are optional at creation, assigned in later stages
+    printing_machine_id: z.string().optional(),
+    cutting_machine_id: z.string().optional(),
     // Weight validation with business rules
     weight_kg: z
       .union([z.string(), z.number()])
