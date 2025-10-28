@@ -24,6 +24,8 @@ The system is built with a modern stack emphasizing efficiency and scalability.
     -   Real-time order tracking and management.
     -   Voice recognition and synthesis.
     -   Advanced production order management, including detailed product specifications and production notes.
+    -   **Three-Machine Roll Tracking**: Each roll is now tracked with three separate machines (film/extruder, printing, cutting) throughout its production lifecycle, replacing the single-machine tracking system.
+    -   **Enhanced Roll Labels**: 4x6 inch roll labels now display comprehensive information including machine assignments, raw materials, color, punching type, and operator names for all three production stages.
     -   Quality control systems.
     -   Maintenance tracking, including spare parts management.
     -   HR management with attendance tracking and training programs.
@@ -36,3 +38,15 @@ The system is built with a modern stack emphasizing efficiency and scalability.
 -   **Database**: PostgreSQL (Neon Serverless)
 -   **AI/ML**: OpenAI
 -   **Messaging**: Twilio (for WhatsApp notifications)
+
+## Recent Changes
+
+### Roll Production Workflow Enhancement (October 28, 2025)
+- **Database Schema**: Updated `rolls` table to track three separate machines (`film_machine_id`, `printing_machine_id`, `cutting_machine_id`) instead of single `machine_id`
+- **Backend**: Enhanced roll creation validation to ensure all three machines are active before allowing roll creation
+- **Frontend**: Updated roll creation modal with three separate machine selection dropdowns, filtered by machine section type
+- **Labels**: Enhanced 4x6 inch roll labels to display:
+  - All three machine assignments
+  - Product specifications (color, raw material, punching type)
+  - Operator names for all three production stages (film operator, printing operator, cutting operator)
+- **Migration**: Successfully migrated 6 existing rolls to new three-machine system with backward compatibility maintained
