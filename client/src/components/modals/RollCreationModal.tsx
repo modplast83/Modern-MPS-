@@ -62,8 +62,6 @@ const rollFormSchema = z.object({
       return num > 0;
     }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
   film_machine_id: z.string().min(1, "يرجى اختيار ماكينة الفيلم"),
-  printing_machine_id: z.string().min(1, "يرجى اختيار ماكينة الطباعة"),
-  cutting_machine_id: z.string().min(1, "يرجى اختيار ماكينة التقطيع"),
 });
 
 export type RollFormData = z.infer<typeof rollFormSchema>;
@@ -82,8 +80,6 @@ export default function RollCreationModal({
       production_order_id: selectedProductionOrderId && selectedProductionOrderId > 0 ? selectedProductionOrderId : undefined,
       weight_kg: "",
       film_machine_id: "",
-      printing_machine_id: "",
-      cutting_machine_id: "",
     },
     mode: "onChange",
   });
@@ -152,8 +148,6 @@ export default function RollCreationModal({
           production_order_id: data.production_order_id,
           weight_kg: weightParsed,
           film_machine_id: data.film_machine_id,
-          printing_machine_id: data.printing_machine_id,
-          cutting_machine_id: data.cutting_machine_id,
         }),
       });
       if (!response.ok) {
@@ -230,29 +224,6 @@ export default function RollCreationModal({
     return (machines as any[]).filter((m: any) => m.section_id === filmSection.id && m.status === "active" && m.id);
   }, [machines, sections]);
 
-  const printingSectionMachines = useMemo(() => {
-    if (!sections.length || !machines.length) return [];
-    const printingSection = sections.find((s: any) =>
-      [s.name, s.name_ar]
-        .filter(Boolean)
-        .map((x: string) => x.toLowerCase())
-        .some((n: string) => n.includes("print") || n.includes("طباعة"))
-    );
-    if (!printingSection) return [];
-    return (machines as any[]).filter((m: any) => m.section_id === printingSection.id && m.status === "active" && m.id);
-  }, [machines, sections]);
-
-  const cuttingSectionMachines = useMemo(() => {
-    if (!sections.length || !machines.length) return [];
-    const cuttingSection = sections.find((s: any) =>
-      [s.name, s.name_ar]
-        .filter(Boolean)
-        .map((x: string) => x.toLowerCase())
-        .some((n: string) => n.includes("cut") || n.includes("تقطيع"))
-    );
-    if (!cuttingSection) return [];
-    return (machines as any[]).filter((m: any) => m.section_id === cuttingSection.id && m.status === "active" && m.id);
-  }, [machines, sections]);
 
   return (
     <Dialog
@@ -386,84 +357,6 @@ export default function RollCreationModal({
                       ) : (
                         <SelectItem value="empty" disabled>
                           لا توجد مكائن متاحة في قسم الفيلم
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="printing_machine_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ماكينة الطباعة *</FormLabel>
-                  <Select
-                    value={field.value != null ? String(field.value) : undefined}
-                    onValueChange={(value) => field.onChange(value)}
-                    disabled={machinesLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger data-testid="select-printing-machine">
-                        <SelectValue placeholder="اختر ماكينة الطباعة" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {machinesLoading ? (
-                        <SelectItem value="loading" disabled>
-                          جارِ التحميل...
-                        </SelectItem>
-                      ) : printingSectionMachines.length ? (
-                        printingSectionMachines.map((machine: any) => (
-                          <SelectItem key={String(machine.id)} value={String(machine.id)}>
-                            {machine.name_ar || machine.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="empty" disabled>
-                          لا توجد مكائن متاحة في قسم الطباعة
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="cutting_machine_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>ماكينة التقطيع *</FormLabel>
-                  <Select
-                    value={field.value != null ? String(field.value) : undefined}
-                    onValueChange={(value) => field.onChange(value)}
-                    disabled={machinesLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger data-testid="select-cutting-machine">
-                        <SelectValue placeholder="اختر ماكينة التقطيع" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {machinesLoading ? (
-                        <SelectItem value="loading" disabled>
-                          جارِ التحميل...
-                        </SelectItem>
-                      ) : cuttingSectionMachines.length ? (
-                        cuttingSectionMachines.map((machine: any) => (
-                          <SelectItem key={String(machine.id)} value={String(machine.id)}>
-                            {machine.name_ar || machine.name}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="empty" disabled>
-                          لا توجد مكائن متاحة في قسم التقطيع
                         </SelectItem>
                       )}
                     </SelectContent>
