@@ -176,6 +176,9 @@ export default function Definitions() {
     type: "extruder",
     section_id: "none",
     status: "active",
+    capacity_small_kg_per_hour: "",
+    capacity_medium_kg_per_hour: "",
+    capacity_large_kg_per_hour: "",
   });
   const [userForm, setUserForm] = useState({
     username: "",
@@ -1494,6 +1497,9 @@ export default function Definitions() {
       type: "extruder",
       section_id: "none",
       status: "active",
+      capacity_small_kg_per_hour: "",
+      capacity_medium_kg_per_hour: "",
+      capacity_large_kg_per_hour: "",
     });
     setUserForm({
       username: "",
@@ -2748,6 +2754,21 @@ export default function Definitions() {
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   النوع
                                 </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة صغير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة وسط
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة كبير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   العمليات
                                 </th>
@@ -2778,6 +2799,15 @@ export default function Definitions() {
                                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.type || "-"}
                                       </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-small-${machine.id}`}>
+                                        {machine.capacity_small_kg_per_hour ? formatNumber(parseFloat(machine.capacity_small_kg_per_hour)) : "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-medium-${machine.id}`}>
+                                        {machine.capacity_medium_kg_per_hour ? formatNumber(parseFloat(machine.capacity_medium_kg_per_hour)) : "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-large-${machine.id}`}>
+                                        {machine.capacity_large_kg_per_hour ? formatNumber(parseFloat(machine.capacity_large_kg_per_hour)) : "-"}
+                                      </td>
                                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                         <div className="flex items-center justify-center gap-2">
                                           <Button
@@ -2794,6 +2824,9 @@ export default function Definitions() {
                                                   machine.section_id || "",
                                                 status:
                                                   machine.status || "active",
+                                                capacity_small_kg_per_hour: machine.capacity_small_kg_per_hour || "",
+                                                capacity_medium_kg_per_hour: machine.capacity_medium_kg_per_hour || "",
+                                                capacity_large_kg_per_hour: machine.capacity_large_kg_per_hour || "",
                                               });
                                               setSelectedTab("machines");
                                               setIsDialogOpen(true);
@@ -2808,7 +2841,7 @@ export default function Definitions() {
                                 ) : (
                                   <tr>
                                     <td
-                                      colSpan={5}
+                                      colSpan={8}
                                       className="px-6 py-8 text-center text-gray-500"
                                     >
                                       لا توجد ماكينات مطابقة للبحث
@@ -4751,6 +4784,67 @@ export default function Definitions() {
                                 ))}
                           </SelectContent>
                         </Select>
+                      </div>
+                    </div>
+                    
+                    {/* قدرة الإنتاج حسب الحجم */}
+                    <div className="border-t pt-4 mt-4">
+                      <h3 className="text-sm font-medium mb-3">قدرة الإنتاج (كجم/ساعة)</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="capacity_small">حجم صغير</Label>
+                          <Input
+                            id="capacity_small"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_small_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_small_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-small"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="capacity_medium">حجم وسط</Label>
+                          <Input
+                            id="capacity_medium"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_medium_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_medium_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-medium"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="capacity_large">حجم كبير</Label>
+                          <Input
+                            id="capacity_large"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_large_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_large_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-large"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
