@@ -233,6 +233,20 @@ export const machines = pgTable(
       { onDelete: "restrict" },
     ), // ON DELETE RESTRICT
     status: varchar("status", { length: 20 }).notNull().default("active"), // ENUM: active / maintenance / down
+    
+    // قدرة الإنتاج بالكيلوجرام في الساعة حسب الحجم
+    capacity_small_kg_per_hour: decimal("capacity_small_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الصغير
+    capacity_medium_kg_per_hour: decimal("capacity_medium_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الوسط
+    capacity_large_kg_per_hour: decimal("capacity_large_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الكبير
   },
   (table) => ({
     // Check constraints for machine integrity
