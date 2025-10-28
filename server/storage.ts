@@ -2380,19 +2380,51 @@ export class DatabaseStorage implements IStorage {
             throw new DatabaseError("طلب الإنتاج غير موجود", { code: "23503" });
           }
 
-          // STEP 2: INVARIANT E - Verify machine exists and is active
-          const [machine] = await tx
+          // STEP 2: INVARIANT E - Verify all three machines exist and are active
+          const [filmMachine] = await tx
             .select()
             .from(machines)
-            .where(eq(machines.id, insertRoll.machine_id));
+            .where(eq(machines.id, insertRoll.film_machine_id));
 
-          if (!machine) {
-            throw new DatabaseError("الماكينة غير موجودة", { code: "23503" });
+          if (!filmMachine) {
+            throw new DatabaseError("ماكينة الفيلم غير موجودة", { code: "23503" });
           }
 
-          if (machine.status !== "active") {
+          if (filmMachine.status !== "active") {
             throw new DatabaseError(
-              `لا يمكن إنشاء رول على ماكينة غير نشطة - حالة الماكينة: ${machine.status}`,
+              `لا يمكن إنشاء رول على ماكينة فيلم غير نشطة - حالة الماكينة: ${filmMachine.status}`,
+              { code: "INVARIANT_E_VIOLATION" },
+            );
+          }
+
+          const [printingMachine] = await tx
+            .select()
+            .from(machines)
+            .where(eq(machines.id, insertRoll.printing_machine_id));
+
+          if (!printingMachine) {
+            throw new DatabaseError("ماكينة الطباعة غير موجودة", { code: "23503" });
+          }
+
+          if (printingMachine.status !== "active") {
+            throw new DatabaseError(
+              `لا يمكن إنشاء رول على ماكينة طباعة غير نشطة - حالة الماكينة: ${printingMachine.status}`,
+              { code: "INVARIANT_E_VIOLATION" },
+            );
+          }
+
+          const [cuttingMachine] = await tx
+            .select()
+            .from(machines)
+            .where(eq(machines.id, insertRoll.cutting_machine_id));
+
+          if (!cuttingMachine) {
+            throw new DatabaseError("ماكينة التقطيع غير موجودة", { code: "23503" });
+          }
+
+          if (cuttingMachine.status !== "active") {
+            throw new DatabaseError(
+              `لا يمكن إنشاء رول على ماكينة تقطيع غير نشطة - حالة الماكينة: ${cuttingMachine.status}`,
               { code: "INVARIANT_E_VIOLATION" },
             );
           }
@@ -2456,7 +2488,9 @@ export class DatabaseStorage implements IStorage {
             roll_number: rollNumber,
             production_order: productionOrder.production_order_number,
             weight_kg: insertRoll.weight_kg,
-            machine_id: insertRoll.machine_id,
+            film_machine_id: insertRoll.film_machine_id,
+            printing_machine_id: insertRoll.printing_machine_id,
+            cutting_machine_id: insertRoll.cutting_machine_id,
             created_at: new Date().toISOString(),
             stage: "film",
             internal_ref: `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}`,
@@ -2500,7 +2534,9 @@ export class DatabaseStorage implements IStorage {
               rollWeight: rollWeightKg,
               newTotalWeight: newTotalWeight.toFixed(2),
               maxAllowed: maxAllowedWeight.toFixed(2),
-              machineStatus: machine.status,
+              filmMachine: filmMachine.status,
+              printingMachine: printingMachine.status,
+              cuttingMachine: cuttingMachine.status,
             },
           );
 
@@ -5860,168 +5896,30 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Deprecated: Use createRoll instead which supports three separate machines
+  // Keeping for backward compatibility during migration period
   async createRollWithQR(rollData: {
     production_order_id: number;
-    machine_id: string;
+    film_machine_id?: string;
+    printing_machine_id?: string;
+    cutting_machine_id?: string;
+    machine_id?: string; // Legacy field
     weight_kg: number;
     created_by: number;
   }): Promise<Roll> {
-    try {
-      return await db.transaction(async (tx) => {
-        // Lock the production order to prevent race conditions
-        const [productionOrder] = await tx
-          .select()
-          .from(production_orders)
-          .where(eq(production_orders.id, rollData.production_order_id))
-          .for("update");
-
-        if (!productionOrder) {
-          throw new Error("طلب الإنتاج غير موجود");
-        }
-
-        // Get current total weight
-        const totalWeightResult = await tx
-          .select({ total: sql<number>`COALESCE(SUM(weight_kg), 0)` })
-          .from(rolls)
-          .where(eq(rolls.production_order_id, rollData.production_order_id));
-
-        const totalWeight = Number(totalWeightResult[0]?.total || 0);
-        const newTotal = totalWeight + Number(rollData.weight_kg);
-
-        // Check quantity limits - allow final roll to exceed required quantity
-        const quantityRequired = parseFloat(
-          productionOrder.quantity_kg?.toString() || "0",
-        );
-
-        // السماح بتجاوز الكمية في آخر رول فقط
-        // المنطق: إذا كان الوزن الحالي أقل من المطلوب، يُسمح بإنشاء رول قد يتجاوز الكمية المطلوبة
-        // ولكن إذا كان الوزن الحالي يتجاوز المطلوب بالفعل، لا نسمح برولات إضافية
-        if (totalWeight > quantityRequired) {
-          throw new Error(
-            `تم تجاوز الكمية المطلوبة بالفعل (${totalWeight.toFixed(2)}/${quantityRequired.toFixed(2)} كيلو). لا يمكن إنشاء رولات إضافية`,
-          );
-        }
-
-        // إذا كان الوزن الحالي أقل من أو يساوي المطلوب، يُسمح بإنشاء الرول حتى لو تجاوز الكمية المطلوبة
-
-        // Generate roll sequence number (sequential: 1, 2, 3, 4...)
-        const rollCount = await tx
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(rolls)
-          .where(eq(rolls.production_order_id, rollData.production_order_id));
-
-        const rollSeq = (rollCount[0]?.count || 0) + 1;
-
-        // Generate QR code content
-        const qrCodeText = JSON.stringify({
-          roll_seq: rollSeq,
-          production_order_id: rollData.production_order_id,
-          production_order_number: productionOrder.production_order_number,
-          weight_kg: rollData.weight_kg,
-          machine_id: rollData.machine_id,
-          created_at: new Date().toISOString(),
-        });
-
-        // Generate QR code image
-        const { default: QRCode } = await import("qrcode");
-        const qrPngBase64 = await QRCode.toDataURL(qrCodeText, {
-          width: 256,
-          margin: 2,
-          color: { dark: "#000000", light: "#FFFFFF" },
-        });
-
-        // Create the roll
-        const [roll] = await tx
-          .insert(rolls)
-          .values({
-            roll_number: `${productionOrder.production_order_number}-${rollSeq}`,
-            production_order_id: rollData.production_order_id,
-            machine_id: rollData.machine_id,
-            created_by: rollData.created_by,
-            weight_kg: rollData.weight_kg.toString(),
-            stage: "film",
-            roll_seq: rollSeq,
-            qr_code_text: qrCodeText,
-            qr_png_base64: qrPngBase64,
-          })
-          .returning();
-
-        // إعادة حساب الوزن الإجمالي بعد الإدراج للتأكد من الدقة
-        const updatedTotalWeightResult = await tx
-          .select({ total: sql<number>`COALESCE(SUM(weight_kg::decimal), 0)` })
-          .from(rolls)
-          .where(eq(rolls.production_order_id, rollData.production_order_id));
-
-        const actualTotal = Number(updatedTotalWeightResult[0]?.total || 0);
-
-        // احسب نسبة إكمال الفيلم بناءً على الكمية المنتجة
-        const finalQuantityKg = parseFloat(
-          productionOrder.final_quantity_kg?.toString() || "0"
-        );
-        
-        const filmPercentage = finalQuantityKg > 0 
-          ? Math.min(100, (actualTotal / finalQuantityKg) * 100)
-          : 0;
-
-        // حدث أمر الإنتاج بالكمية المنتجة ونسبة الإكمال
-        await tx
-          .update(production_orders)
-          .set({
-            produced_quantity_kg: numberToDecimalString(actualTotal, 2),
-            film_completion_percentage: numberToDecimalString(filmPercentage, 2),
-          })
-          .where(eq(production_orders.id, rollData.production_order_id));
-
-        // Check if production order quantity is now completed
-        if (
-          actualTotal >= quantityRequired &&
-          productionOrder.status !== "completed"
-        ) {
-          // Update production order status to completed
-          await tx
-            .update(production_orders)
-            .set({ status: "completed" })
-            .where(eq(production_orders.id, rollData.production_order_id));
-
-          console.log(
-            `Production order ${productionOrder.production_order_number} automatically completed - required quantity reached (${actualTotal}/${quantityRequired} kg)`,
-          );
-
-          // Check if all production orders for the parent order are now completed
-          const orderId = productionOrder.order_id;
-
-          // Get all production orders for this order
-          const allProductionOrders = await tx
-            .select()
-            .from(production_orders)
-            .where(eq(production_orders.order_id, orderId));
-
-          // Check if all production orders are completed
-          const allCompleted = allProductionOrders.every((po) =>
-            po.id === rollData.production_order_id
-              ? true
-              : po.status === "completed",
-          );
-
-          // If all production orders are completed, automatically mark the order as completed
-          if (allCompleted) {
-            await tx
-              .update(orders)
-              .set({ status: "completed" })
-              .where(eq(orders.id, orderId));
-
-            console.log(
-              `Order ${orderId} automatically completed - all production orders finished`,
-            );
-          }
-        }
-
-        return roll;
-      });
-    } catch (error) {
-      console.error("Error creating roll with QR:", error);
-      throw error;
-    }
+    // Map old machine_id to new fields if not provided
+    const insertData = {
+      production_order_id: rollData.production_order_id,
+      film_machine_id: rollData.film_machine_id || rollData.machine_id || "",
+      printing_machine_id: rollData.printing_machine_id || rollData.machine_id || "",
+      cutting_machine_id: rollData.cutting_machine_id || rollData.machine_id || "",
+      weight_kg: rollData.weight_kg,
+      created_by: rollData.created_by,
+      stage: "film" as const,
+    };
+    
+    // Use the updated createRoll method
+    return this.createRoll(insertData as any);
   }
 
   async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {

@@ -7,6 +7,12 @@ interface RollLabelPrintProps {
     roll_seq: number;
     weight_kg: number;
     machine_id?: string;
+    film_machine_id?: string;
+    printing_machine_id?: string;
+    cutting_machine_id?: string;
+    film_machine_name?: string;
+    printing_machine_name?: string;
+    cutting_machine_name?: string;
     qr_code_text?: string;
     qr_png_base64?: string;
     created_at?: string;
@@ -23,6 +29,9 @@ interface RollLabelPrintProps {
     item_name?: string;
     item_name_ar?: string;
     size_caption?: string;
+    color?: string;
+    raw_material?: string;
+    punching?: string;
   };
   order?: {
     order_number: string;
@@ -226,45 +235,108 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
               </div>
             ` : ''}
             
-            <!-- Size -->
-            ${productionOrder && productionOrder.size_caption ? `
-              <div class="info-box full">
-                <div class="info-label">المقاس</div>
-                <div class="info-value">${productionOrder.size_caption}</div>
-              </div>
-            ` : ''}
-            
-            <!-- Weight & Machine -->
+            <!-- Size & Color -->
             <div class="info-row">
-              <div class="info-box highlight">
-                <div class="info-label">الوزن</div>
-                <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'} كجم</div>
-              </div>
-              
-              ${roll.machine_id ? `
+              ${productionOrder && productionOrder.size_caption ? `
                 <div class="info-box">
-                  <div class="info-label">الماكينة</div>
-                  <div class="info-value">${roll.machine_id}</div>
+                  <div class="info-label">المقاس</div>
+                  <div class="info-value">${productionOrder.size_caption}</div>
+                </div>
+              ` : ''}
+              
+              ${productionOrder && productionOrder.color ? `
+                <div class="info-box">
+                  <div class="info-label">اللون</div>
+                  <div class="info-value">${productionOrder.color}</div>
                 </div>
               ` : ''}
             </div>
             
-            <!-- Creation Date & Created By -->
+            <!-- Raw Material & Punching -->
             <div class="info-row">
-              ${roll.created_at ? `
+              ${productionOrder && productionOrder.raw_material ? `
                 <div class="info-box">
-                  <div class="info-label">التاريخ</div>
-                  <div class="info-value">${format(new Date(roll.created_at), 'dd/MM/yyyy')}</div>
+                  <div class="info-label">المادة الخام</div>
+                  <div class="info-value">${productionOrder.raw_material}</div>
                 </div>
               ` : ''}
               
+              ${productionOrder && productionOrder.punching ? `
+                <div class="info-box">
+                  <div class="info-label">التخريم</div>
+                  <div class="info-value">${productionOrder.punching}</div>
+                </div>
+              ` : ''}
+            </div>
+            
+            <!-- Weight -->
+            <div class="info-box highlight full">
+              <div class="info-label">الوزن الكلي</div>
+              <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'} كجم</div>
+            </div>
+            
+            <!-- Operators Section -->
+            <div class="info-row">
               ${roll.created_by_name ? `
                 <div class="info-box">
-                  <div class="info-label">المنشئ</div>
+                  <div class="info-label">مشغل الفيلم</div>
                   <div class="info-value">${roll.created_by_name}</div>
                 </div>
               ` : ''}
+              
+              ${roll.printed_by_name ? `
+                <div class="info-box">
+                  <div class="info-label">مشغل الطباعة</div>
+                  <div class="info-value">${roll.printed_by_name}</div>
+                </div>
+              ` : ''}
             </div>
+            
+            ${roll.cut_by_name ? `
+              <div class="info-box full">
+                <div class="info-label">مشغل التقطيع</div>
+                <div class="info-value">${roll.cut_by_name}</div>
+              </div>
+            ` : ''}
+            
+            <!-- Machine Information -->
+            ${roll.film_machine_name || roll.printing_machine_name || roll.cutting_machine_name || roll.machine_id ? `
+              <div class="info-row">
+                ${roll.film_machine_name ? `
+                  <div class="info-box">
+                    <div class="info-label">ماكينة الفيلم</div>
+                    <div class="info-value">${roll.film_machine_name}</div>
+                  </div>
+                ` : roll.machine_id ? `
+                  <div class="info-box">
+                    <div class="info-label">الماكينة</div>
+                    <div class="info-value">${roll.machine_id}</div>
+                  </div>
+                ` : ''}
+                
+                ${roll.printing_machine_name ? `
+                  <div class="info-box">
+                    <div class="info-label">ماكينة الطباعة</div>
+                    <div class="info-value">${roll.printing_machine_name}</div>
+                  </div>
+                ` : ''}
+              </div>
+              
+              ${roll.cutting_machine_name ? `
+                <div class="info-box full">
+                  <div class="info-label">ماكينة التقطيع</div>
+                  <div class="info-value">${roll.cutting_machine_name}</div>
+                </div>
+              ` : ''}
+            ` : ''}
+            
+            <!-- Creation Date -->
+            ${roll.created_at ? `
+              <div class="info-box full">
+                <div class="info-label">تاريخ الإنتاج</div>
+                <div class="info-value">${format(new Date(roll.created_at), 'dd/MM/yyyy - HH:mm')}</div>
+              </div>
+            ` : ''}
           </div>
           
           <!-- Footer -->

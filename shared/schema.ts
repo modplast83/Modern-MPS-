@@ -463,9 +463,19 @@ export const rolls = pgTable(
     performed_by: integer("performed_by").references(() => users.id, {
       onDelete: "set null",
     }), // Legacy field, ON DELETE SET NULL
-    machine_id: varchar("machine_id", { length: 20 })
+    film_machine_id: varchar("film_machine_id", { length: 20 })
       .notNull()
-      .references(() => machines.id, { onDelete: "restrict" }), // ON DELETE RESTRICT, machine must be 'active'
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for film production
+    printing_machine_id: varchar("printing_machine_id", { length: 20 })
+      .notNull()
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for printing
+    cutting_machine_id: varchar("cutting_machine_id", { length: 20 })
+      .notNull()
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for cutting
+    machine_id: varchar("machine_id", { length: 20 }).references(
+      () => machines.id,
+      { onDelete: "restrict" },
+    ), // Legacy field for backward compatibility
     employee_id: integer("employee_id").references(() => users.id, {
       onDelete: "set null",
     }), // Legacy field, ON DELETE SET NULL
@@ -1374,6 +1384,21 @@ export const rollsRelations = relations(rolls, ({ one, many }) => ({
     fields: [rolls.production_order_id],
     references: [production_orders.id],
   }),
+  filmMachine: one(machines, {
+    fields: [rolls.film_machine_id],
+    references: [machines.id],
+    relationName: "film_machine",
+  }),
+  printingMachine: one(machines, {
+    fields: [rolls.printing_machine_id],
+    references: [machines.id],
+    relationName: "printing_machine",
+  }),
+  cuttingMachine: one(machines, {
+    fields: [rolls.cutting_machine_id],
+    references: [machines.id],
+    relationName: "cutting_machine",
+  }),
   machine: one(machines, {
     fields: [rolls.machine_id],
     references: [machines.id],
@@ -1382,6 +1407,21 @@ export const rollsRelations = relations(rolls, ({ one, many }) => ({
   performedBy: one(users, {
     fields: [rolls.performed_by],
     references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [rolls.created_by],
+    references: [users.id],
+    relationName: "created_by_user",
+  }),
+  printedBy: one(users, {
+    fields: [rolls.printed_by],
+    references: [users.id],
+    relationName: "printed_by_user",
+  }),
+  cutBy: one(users, {
+    fields: [rolls.cut_by],
+    references: [users.id],
+    relationName: "cut_by_user",
   }),
   waste: many(waste),
   qualityChecks: many(quality_checks),
@@ -1556,8 +1596,10 @@ export const insertRollSchema = createInsertSchema(rolls)
   .extend({
     // INVARIANT B: Enforce production order constraints
     production_order_id: z.number().int().positive("معرف أمر الإنتاج مطلوب"),
-    // INVARIANT E: Machine must be valid and active
-    machine_id: z.string().min(1, "معرف المكينة مطلوب"),
+    // INVARIANT E: Machines must be valid and active
+    film_machine_id: z.string().min(1, "معرف ماكينة الفيلم مطلوب"),
+    printing_machine_id: z.string().min(1, "معرف ماكينة الطباعة مطلوب"),
+    cutting_machine_id: z.string().min(1, "معرف ماكينة التقطيع مطلوب"),
     // Weight validation with business rules
     weight_kg: z
       .union([z.string(), z.number()])
