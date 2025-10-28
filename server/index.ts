@@ -229,7 +229,11 @@ app.use((req, res, next) => {
           `🔄 Session extended for user ${req.session.userId} on ${req.path}`,
         );
       }
-    } else if (req.path !== "/api/login" && req.path !== "/api/health") {
+    } else if (
+      req.path !== "/api/login" &&
+      req.path !== "/api/health" &&
+      !req.path.startsWith("/api/notifications/webhook/")
+    ) {
       // Log unauthenticated API requests for debugging (only in development)
       if (!isProduction) {
         console.log(`⚠️ Unauthenticated API request: ${req.path}`);
