@@ -2542,8 +2542,8 @@ export class DatabaseStorage implements IStorage {
               newTotalWeight: newTotalWeight.toFixed(2),
               maxAllowed: maxAllowedWeight.toFixed(2),
               filmMachine: filmMachine.status,
-              printingMachine: printingMachine.status,
-              cuttingMachine: cuttingMachine.status,
+              printingMachine: insertRoll.printing_machine_id ? "will be assigned in printing stage" : "not assigned",
+              cuttingMachine: insertRoll.cutting_machine_id ? "will be assigned in cutting stage" : "not assigned",
             },
           );
 
