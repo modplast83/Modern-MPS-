@@ -265,9 +265,10 @@ export default function ProductionQueue({
               <Select
                 value={selectedPrintingMachine}
                 onValueChange={setSelectedPrintingMachine}
+                disabled={printingMachines.length === 0}
               >
                 <SelectTrigger id="printing-machine" data-testid="select-printing-machine">
-                  <SelectValue placeholder="اختر ماكينة الطباعة" />
+                  <SelectValue placeholder={printingMachines.length === 0 ? "لا توجد مكائن طباعة متاحة" : "اختر ماكينة الطباعة"} />
                 </SelectTrigger>
                 <SelectContent>
                   {printingMachines.length > 0 ? (
@@ -283,6 +284,11 @@ export default function ProductionQueue({
                   )}
                 </SelectContent>
               </Select>
+              {printingMachines.length === 0 && (
+                <p className="text-sm text-amber-600">
+                  تنبيه: لا توجد مكائن طباعة نشطة حالياً. يرجى تفعيل ماكينة طباعة أولاً.
+                </p>
+              )}
             </div>
           </div>
 
