@@ -2380,7 +2380,8 @@ export class DatabaseStorage implements IStorage {
             throw new DatabaseError("طلب الإنتاج غير موجود", { code: "23503" });
           }
 
-          // STEP 2: INVARIANT E - Verify all three machines exist and are active
+          // STEP 2: INVARIANT E - Verify film machine exists and is active
+          // Printing and cutting machines are assigned later in their respective stages
           const [filmMachine] = await tx
             .select()
             .from(machines)
@@ -2397,36 +2398,42 @@ export class DatabaseStorage implements IStorage {
             );
           }
 
-          const [printingMachine] = await tx
-            .select()
-            .from(machines)
-            .where(eq(machines.id, insertRoll.printing_machine_id));
+          // Optionally validate printing machine if provided
+          if (insertRoll.printing_machine_id) {
+            const [printingMachine] = await tx
+              .select()
+              .from(machines)
+              .where(eq(machines.id, insertRoll.printing_machine_id));
 
-          if (!printingMachine) {
-            throw new DatabaseError("ماكينة الطباعة غير موجودة", { code: "23503" });
+            if (!printingMachine) {
+              throw new DatabaseError("ماكينة الطباعة غير موجودة", { code: "23503" });
+            }
+
+            if (printingMachine.status !== "active") {
+              throw new DatabaseError(
+                `لا يمكن إنشاء رول على ماكينة طباعة غير نشطة - حالة الماكينة: ${printingMachine.status}`,
+                { code: "INVARIANT_E_VIOLATION" },
+              );
+            }
           }
 
-          if (printingMachine.status !== "active") {
-            throw new DatabaseError(
-              `لا يمكن إنشاء رول على ماكينة طباعة غير نشطة - حالة الماكينة: ${printingMachine.status}`,
-              { code: "INVARIANT_E_VIOLATION" },
-            );
-          }
+          // Optionally validate cutting machine if provided
+          if (insertRoll.cutting_machine_id) {
+            const [cuttingMachine] = await tx
+              .select()
+              .from(machines)
+              .where(eq(machines.id, insertRoll.cutting_machine_id));
 
-          const [cuttingMachine] = await tx
-            .select()
-            .from(machines)
-            .where(eq(machines.id, insertRoll.cutting_machine_id));
+            if (!cuttingMachine) {
+              throw new DatabaseError("ماكينة التقطيع غير موجودة", { code: "23503" });
+            }
 
-          if (!cuttingMachine) {
-            throw new DatabaseError("ماكينة التقطيع غير موجودة", { code: "23503" });
-          }
-
-          if (cuttingMachine.status !== "active") {
-            throw new DatabaseError(
-              `لا يمكن إنشاء رول على ماكينة تقطيع غير نشطة - حالة الماكينة: ${cuttingMachine.status}`,
-              { code: "INVARIANT_E_VIOLATION" },
-            );
+            if (cuttingMachine.status !== "active") {
+              throw new DatabaseError(
+                `لا يمكن إنشاء رول على ماكينة تقطيع غير نشطة - حالة الماكينة: ${cuttingMachine.status}`,
+                { code: "INVARIANT_E_VIOLATION" },
+              );
+            }
           }
 
           // STEP 3: INVARIANT B - Check roll weight constraints
