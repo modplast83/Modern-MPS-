@@ -33,55 +33,62 @@ export default function AIAssistant() {
     {
       id: "1",
       type: "assistant",
-      content: `🤖 مرحباً! أنا مساعدك الذكي المتطور في نظام MPBF Next.
+      content: `👋 مرحباً! أنا مساعدك الذكي المطور في نظام MPBF Next
 
-**قدراتي المتقدمة:**
-🗄️ **إدارة قاعدة البيانات الكاملة** - إضافة، تعديل، حذف جميع السجلات
-📊 **التقارير الذكية** - تحليل البيانات وإنشاء تقارير تفاعلية  
-🔔 **النظام الذكي للإشعارات** - تنبيهات تلقائية حسب الحاجة
-🧠 **التعلم المستمر** - تحسين الأداء من خلال تحليل أنماط العمل
-⚙️ **التطوير الذاتي** - تحسين وتطوير وظائف النظام
+أنا هنا لمساعدتك في إدارة المصنع بذكاء. إليك ما يمكنني فعله:
 
-**أمثلة على ما يمكنني فعله:**
-• "ما هي حالة الإنتاج اليوم؟"
-• "اعرض لي إحصائيات المكائن"  
-• "أعطني تقرير الجودة لهذا الأسبوع"
-• "ما عدد الطلبات النشطة؟"
-• "كيف أداء المصنع هذا الشهر؟"
+📊 **تحليل البيانات والإحصائيات**
+• معرفة حالة الإنتاج الحالية
+• مراجعة أداء المكائن
+• تحليل الجودة والهدر
+• متابعة الطلبات والرولات
 
-كيف يمكنني مساعدتك اليوم؟`,
+📈 **التقارير الذكية**
+• تقارير الإنتاج مع التحليل
+• تقارير الجودة والصيانة
+• مقارنات الأداء
+• توصيات للتحسين
+
+💡 **أمثلة على الأسئلة:**
+• "ما حالة الإنتاج اليوم؟"
+• "كم عدد العملاء لدينا؟"
+• "أعطني تحليل لأداء المكائن"
+• "ما هي المكائن التي تحتاج صيانة؟"
+
+جرب الأزرار السريعة أدناه أو اكتب سؤالك مباشرة! 👇`,
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
     {
-      label: "تقرير الإنتاج",
+      label: "حالة الإنتاج",
       icon: TrendingUp,
-      command: "اعرض لي تقرير الإنتاج الذكي",
-      description: "تحليل شامل للإنتاج مع توصيات",
+      command: "ما حالة الإنتاج اليوم؟",
+      description: "إحصائيات الإنتاج الحالية",
     },
     {
-      label: "إضافة عميل",
+      label: "عدد العملاء",
       icon: User,
-      command: "أضف عميل جديد",
-      description: "إضافة عميل جديد بالذكاء الاصطناعي",
-    },
-    {
-      label: "فحص الإشعارات",
-      icon: Bell,
-      command: "اعرض الإشعارات والتنبيهات النشطة",
-      description: "مراجعة التنبيهات الذكية",
+      command: "كم عدد العملاء لدينا؟",
+      description: "إحصائيات العملاء",
     },
     {
       label: "حالة المكائن",
       icon: Settings,
-      command: "ما هي حالة المكائن حالياً؟",
-      description: "مراجعة حالة جميع المكائن",
+      command: "أعطني تحليل لحالة المكائن",
+      description: "تقرير حالة جميع المكائن",
+    },
+    {
+      label: "الطلبات النشطة",
+      icon: Bell,
+      command: "ما عدد الطلبات النشطة؟",
+      description: "عرض الطلبات النشطة",
     },
   ];
 
@@ -90,6 +97,8 @@ export default function AIAssistant() {
       if (!user?.id) {
         throw new Error("يجب تسجيل الدخول لاستخدام المساعد الذكي");
       }
+      
+      setIsTyping(true);
       
       const response = await fetch("/api/ai/chat", {
         method: "POST",
@@ -105,6 +114,7 @@ export default function AIAssistant() {
       return response.json();
     },
     onSuccess: (response: any) => {
+      setIsTyping(false);
       const assistantMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
@@ -115,6 +125,7 @@ export default function AIAssistant() {
       setMessages((prev) => [...prev, assistantMessage]);
     },
     onError: () => {
+      setIsTyping(false);
       const errorMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
@@ -227,23 +238,24 @@ export default function AIAssistant() {
                 </div>
               </div>
             ))}
-            {sendMessageMutation.isPending && (
+            {isTyping && (
               <div className="flex justify-start">
                 <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center animate-pulse">
                     <Bot className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="bg-gray-100 rounded-lg p-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="flex gap-1 items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.15s" }}
                       ></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.3s" }}
                       ></div>
+                      <span className="text-xs text-gray-500 mr-2">جاري التفكير...</span>
                     </div>
                   </div>
                 </div>
