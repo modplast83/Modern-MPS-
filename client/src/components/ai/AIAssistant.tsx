@@ -14,9 +14,7 @@ import {
   User,
   Send,
   Mic,
-  MicOff,
   Volume2,
-  FileText,
   Bell,
   TrendingUp,
   Settings,
@@ -45,19 +43,17 @@ export default function AIAssistant() {
 ⚙️ **التطوير الذاتي** - تحسين وتطوير وظائف النظام
 
 **أمثلة على ما يمكنني فعله:**
-• "أضف عميل جديد اسمه أحمد محمد من الرياض"
-• "اعرض لي تقرير الإنتاج لهذا الأسبوع"  
-• "حدث حالة الطلب رقم ORD-123 إلى مكتمل"
-• "احذف المكينة رقم 5"
-• "أرسل تنبيه صيانة للمكائن المتوقفة"
+• "ما هي حالة الإنتاج اليوم؟"
+• "اعرض لي إحصائيات المكائن"  
+• "أعطني تقرير الجودة لهذا الأسبوع"
+• "ما عدد الطلبات النشطة؟"
+• "كيف أداء المصنع هذا الشهر؟"
 
 كيف يمكنني مساعدتك اليوم؟`,
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [showQuickActions, setShowQuickActions] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -148,14 +144,13 @@ export default function AIAssistant() {
     setMessages((prev) => [...prev, userMessage]);
     sendMessageMutation.mutate(messageToSend);
     setInputValue("");
-    setShowQuickActions(false);
   };
 
   const handleQuickAction = (command: string) => {
     handleSendMessage(command);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -163,30 +158,10 @@ export default function AIAssistant() {
   };
 
   const toggleVoiceInput = () => {
-    if (!isListening) {
-      // Start voice recognition
-      setIsListening(true);
-      toast({
-        title: "الاستماع نشط",
-        description: "تحدث الآن...",
-      });
-
-      // Simulate voice recognition (replace with actual implementation)
-      const timeoutId = setTimeout(() => {
-        setIsListening(false);
-        setInputValue("ما هو حالة الإنتاج اليوم؟");
-      }, 3000);
-
-      // Store timeout ID for cleanup
-      (window as any).__voiceTimeout = timeoutId;
-    } else {
-      setIsListening(false);
-      // Clear any pending timeout
-      if ((window as any).__voiceTimeout) {
-        clearTimeout((window as any).__voiceTimeout);
-        (window as any).__voiceTimeout = null;
-      }
-    }
+    toast({
+      title: "الإدخال الصوتي",
+      description: "استخدم المساعد الصوتي في الصفحة الرئيسية للإدخال الصوتي المتقدم",
+    });
   };
 
   const speakMessage = (content: string) => {
@@ -282,26 +257,26 @@ export default function AIAssistant() {
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="اكتب رسالتك هنا..."
               className="flex-1"
               disabled={sendMessageMutation.isPending}
+              data-testid="input-ai-message"
             />
             <Button
               variant="outline"
               size="sm"
               onClick={toggleVoiceInput}
-              className={isListening ? "bg-red-100 text-red-600" : ""}
+              data-testid="button-ai-voice"
+              title="الإدخال الصوتي"
             >
-              {isListening ? (
-                <MicOff className="w-4 h-4" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
+              <Mic className="w-4 h-4" />
             </Button>
             <Button
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
+              data-testid="button-ai-send"
+              title="إرسال"
             >
               <Send className="w-4 h-4" />
             </Button>
