@@ -847,25 +847,95 @@ Respond in JSON format containing:
     intent: any,
   ): Promise<DatabaseOperation> {
     try {
-      // استخدام AI لتحليل الاستعلام وتوليد SQL
-      const sqlQuery = await this.generateSQLFromNaturalLanguage(message);
+      // جمع البيانات ذات الصلة بناءً على السؤال
+      const relevantData: any = {};
 
-      // تنفيذ الاستعلام (مع حماية من SQL injection)
-      const result = await this.executeSafeQuery(sqlQuery);
+      // تحديد نوع البيانات المطلوبة من السؤال
+      const messageLower = message.toLowerCase();
+      
+      if (
+        messageLower.includes("عميل") ||
+        messageLower.includes("customer") ||
+        messageLower.includes("زبون")
+      ) {
+        const customers = await storage.getCustomers();
+        relevantData.customers = customers;
+      }
+
+      if (
+        messageLower.includes("طلب") ||
+        messageLower.includes("order") ||
+        messageLower.includes("أمر")
+      ) {
+        const orders = await storage.getAllOrders();
+        relevantData.orders = orders;
+      }
+
+      if (
+        messageLower.includes("مكينة") ||
+        messageLower.includes("ماكينة") ||
+        messageLower.includes("machine")
+      ) {
+        const machines = await storage.getMachines();
+        relevantData.machines = machines;
+      }
+
+      if (
+        messageLower.includes("رول") ||
+        messageLower.includes("roll") ||
+        messageLower.includes("لفة")
+      ) {
+        const rolls = await storage.getRolls();
+        relevantData.rolls = rolls;
+      }
+
+      if (
+        messageLower.includes("إنتاج") ||
+        messageLower.includes("production") ||
+        messageLower.includes("تشغيل")
+      ) {
+        const stats = await storage.getDashboardStats();
+        relevantData.productionStats = stats;
+      }
+
+      // إذا لم يتم جمع أي بيانات، جمع إحصائيات عامة
+      if (Object.keys(relevantData).length === 0) {
+        const stats = await storage.getDashboardStats();
+        relevantData.generalStats = stats;
+      }
+
+      // استخدام AI لتحليل البيانات والإجابة على السؤال
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `أنت مساعد ذكي لنظام إدارة مصنع أكياس بلاستيك. قدم إجابة واضحة ومفيدة بناءً على البيانات المتاحة. استخدم الأرقام والإحصائيات عند الإمكان. كن موجزاً ومفيداً.`,
+          },
+          {
+            role: "user",
+            content: `السؤال: ${message}\n\nالبيانات المتاحة:\n${JSON.stringify(relevantData, null, 2)}`,
+          },
+        ],
+        temperature: 0.3,
+      });
+
+      const answer = response.choices[0].message.content || "لم أتمكن من الإجابة على السؤال.";
 
       return {
         operation: "read",
         table: "custom",
         success: true,
-        message: `تم تنفيذ الاستعلام بنجاح. النتائج: ${JSON.stringify(result, null, 2)}`,
-        result,
+        message: answer,
+        result: relevantData,
       };
     } catch (error: any) {
+      console.error("Custom query error:", error);
       return {
         operation: "read",
         table: "custom",
         success: false,
-        message: `فشل في تنفيذ الاستعلام المخصص: ${error.message}`,
+        message: `عذراً، لم أتمكن من معالجة سؤالك. يرجى المحاولة بصيغة أخرى أو استخدام الإجراءات السريعة المتاحة.`,
       };
     }
   }
