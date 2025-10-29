@@ -3223,7 +3223,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = req.params.id; // Now using string ID
       console.log("Updating machine:", id, req.body);
-      const machine = await storage.updateMachine(id, req.body);
+      
+      // Clean up empty capacity fields - convert empty strings to null
+      const cleanedData = {
+        ...req.body,
+        capacity_small_kg_per_hour: req.body.capacity_small_kg_per_hour === "" || req.body.capacity_small_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_small_kg_per_hour,
+        capacity_medium_kg_per_hour: req.body.capacity_medium_kg_per_hour === "" || req.body.capacity_medium_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_medium_kg_per_hour,
+        capacity_large_kg_per_hour: req.body.capacity_large_kg_per_hour === "" || req.body.capacity_large_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_large_kg_per_hour,
+      };
+      
+      const machine = await storage.updateMachine(id, cleanedData);
       res.json(machine);
     } catch (error) {
       console.error("Machine update error:", error);
