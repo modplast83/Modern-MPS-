@@ -30,8 +30,11 @@ class AdvancedOpenAIService {
   async processMessage(message: string, userId?: number): Promise<string> {
     const startTime = Date.now();
     try {
-      // تحليل نية المستخدم أولاً
-      const intent = await this.analyzeUserIntent(message);
+      // جمع سياق النظام الحالي
+      const systemContext = await this.getSystemContext();
+
+      // تحليل نية المستخدم أولاً مع السياق
+      const intent = await this.analyzeUserIntent(message, systemContext);
 
       // تحديد إذا كانت الرسالة تتطلب عمليات قاعدة بيانات
       if (intent.requiresDatabase) {
@@ -46,53 +49,45 @@ class AdvancedOpenAIService {
         );
       }
 
-      // معالجة الرسائل العامة
+      // معالجة الرسائل العامة مع سياق محسّن
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         response_format: { type: "text" },
         messages: [
           {
             role: "system",
-            content: `أنت مساعد ذكي متطور لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next). استجب بتنسيق JSON عند الحاجة. 
+            content: `أنت مساعد ذكي متطور لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next).
 
-قدراتك المتقدمة:
-🗄️ **إدارة قاعدة البيانات الكاملة**: إضافة، تعديل، حذف جميع السجلات والجداول
-📊 **التقارير الذكية**: تحليل البيانات وإنشاء تقارير تفاعلية
-🔔 **النظام الذكي للإشعارات**: إرسال تنبيهات حسب الحاجة والأولوية  
-🧠 **التعلم المستمر**: تحسين الأداء من خلال تحليل أنماط العمل
-⚙️ **التطوير الذاتي**: تحسين وتطوير وظائف النظام
+📊 **سياق النظام الحالي:**
+${systemContext}
 
-الجداول المتاحة:
-- العملاء (customers)
-- الطلبات (orders) 
-- أوامر الإنتاج (production_orders)
-- الرولات (rolls)
-- المكائن (machines)
-- المستخدمين (users)
-- الأصناف (items)
-- المجموعات (categories)
-- الجرد (inventory)
-- حركات المخزون (inventory_movements)
-- فحص الجودة (quality_checks)
-- الصيانة (maintenance_records)
-- الموارد البشرية (attendance, training_records, performance_reviews)
+🎯 **قدراتك المتقدمة:**
+• **التحليل الذكي**: تحليل بيانات الإنتاج والجودة والأداء
+• **الاستعلامات الذكية**: الإجابة على أسئلة معقدة عن حالة المصنع
+• **التوصيات**: تقديم توصيات بناءً على البيانات الحالية
+• **المقارنات**: مقارنة الأداء عبر فترات زمنية
 
-أمثلة على الأوامر:
-- "أضف عميل جديد اسمه أحمد محمد"
-- "اعرض لي تقرير الإنتاج لهذا الأسبوع"
-- "حدث حالة الطلب رقم ORD-123 إلى مكتمل"
-- "احذف المكينة رقم 5"
-- "أرسل تنبيه صيانة للمكائن التي تحتاج صيانة"
+📋 **مجالات الخبرة:**
+• إدارة الإنتاج والطلبات
+• مراقبة الجودة
+• صيانة المكائن
+• تحليل الأداء
+• إدارة المخزون
 
-استجب بطريقة مهنية ومفصلة، وأعط خطوات واضحة للإجراءات المطلوبة.`,
+💡 **أسلوب الرد:**
+- إجابات واضحة ومباشرة
+- استخدام البيانات الفعلية من النظام
+- تقديم رؤى وتوصيات عملية
+- استخدام الأرقام والنسب المئوية
+- تنسيق احترافي مع رموز تعبيرية مناسبة`,
           },
           {
             role: "user",
             content: message,
           },
         ],
-        max_tokens: 800,
-        temperature: 0.3,
+        max_tokens: 1000,
+        temperature: 0.4,
       });
 
       // تسجيل بيانات التعلم
@@ -380,8 +375,30 @@ Respond in JSON format containing:
     }
   }
 
+  // جمع سياق النظام الحالي
+  private async getSystemContext(): Promise<string> {
+    try {
+      const stats = await storage.getDashboardStats();
+      const machines = await storage.getMachines();
+      const activeMachines = machines.filter((m) => m.status === "active").length;
+      const inMaintenanceMachines = machines.filter((m) => m.status === "maintenance").length;
+
+      return `
+الطلبات النشطة: ${stats.activeOrders}
+معدل الإنتاج: ${stats.productionRate}%
+نسبة الجودة: ${stats.qualityScore}%
+نسبة الهدر: ${stats.wastePercentage}%
+المكائن النشطة: ${activeMachines}/${machines.length}
+المكائن في الصيانة: ${inMaintenanceMachines}
+      `.trim();
+    } catch (error) {
+      console.error("Error getting system context:", error);
+      return "لا تتوفر بيانات السياق حالياً";
+    }
+  }
+
   // تحليل نية المستخدم المتقدم
-  private async analyzeUserIntent(message: string): Promise<{
+  private async analyzeUserIntent(message: string, context?: string): Promise<{
     intent: string;
     action: string;
     requiresDatabase: boolean;
@@ -397,7 +414,7 @@ Respond in JSON format containing:
           {
             role: "system",
             content: `حلل نية المستخدم من الرسالة واستخرج المعلومات التالية بتنسيق JSON:
-
+${context ? `\nسياق النظام الحالي:\n${context}\n` : ""}
 {
   "intent": "نوع النية - query/create/update/delete/report/navigate",
   "action": "الإجراء المحدد",
@@ -413,9 +430,9 @@ Respond in JSON format containing:
 }
 
 أمثلة:
-- "أضف عميل جديد" → intent: "create", action: "add_customer", requiresDatabase: true
+- "كم عدد العملاء؟" → intent: "query", action: "count_customers", requiresDatabase: true
 - "اعرض تقرير الإنتاج" → intent: "report", requestsReport: true, reportType: "production"
-- "حدث الطلب رقم 123" → intent: "update", action: "update_order", requiresDatabase: true`,
+- "ما حالة الإنتاج؟" → intent: "query", action: "get_production_stats", requiresDatabase: true`,
           },
           {
             role: "user",
