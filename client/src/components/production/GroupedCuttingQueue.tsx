@@ -81,13 +81,25 @@ export default function GroupedCuttingQueue({
   const [selectedRoll, setSelectedRoll] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Fetch cutting machines
+  // Fetch machines and sections
   const { data: machines = [] } = useQuery<any[]>({
     queryKey: ["/api/machines"],
+    staleTime: 5 * 60 * 1000,
   });
 
-  const cuttingMachines = machines.filter(
-    (m) => m.section === "cutting" && m.status === "active"
+  const { data: sections = [] } = useQuery<any[]>({
+    queryKey: ["/api/sections"],
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Find cutting section
+  const cuttingSection = sections.find(
+    s => s.name_ar?.includes("تقطيع") || s.name?.toLowerCase().includes("cutting")
+  );
+  
+  const cuttingMachines = machines.filter(m => 
+    m.status === "active" && 
+    (m.type === "cutting" || m.section_id === cuttingSection?.id)
   );
 
   const form = useForm<CutFormData>({
