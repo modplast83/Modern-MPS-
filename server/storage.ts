@@ -6076,16 +6076,23 @@ export class DatabaseStorage implements IStorage {
         const waste = rollWeight - totalCutWeight;
 
         // تحديث بيانات الرول مع الكمية الصافية والهدر ونقل إلى مرحلة done
+        const rollUpdateData: any = {
+          cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
+          waste_kg: numberToDecimalString(waste, 3),
+          stage: "done", // تحديث المرحلة إلى مكتمل
+          cut_completed_at: new Date(),
+          cut_by: cutData.performed_by,
+          completed_at: new Date(), // تحديد وقت الإكمال
+        };
+        
+        // Add cutting_machine_id if provided
+        if ((cutData as any).cutting_machine_id) {
+          rollUpdateData.cutting_machine_id = (cutData as any).cutting_machine_id;
+        }
+        
         await tx
           .update(rolls)
-          .set({
-            cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
-            waste_kg: numberToDecimalString(waste, 3),
-            stage: "done", // تحديث المرحلة إلى مكتمل
-            cut_completed_at: new Date(),
-            cut_by: cutData.performed_by,
-            completed_at: new Date(), // تحديد وقت الإكمال
-          })
+          .set(rollUpdateData)
           .where(eq(rolls.id, cutData.roll_id));
 
         // احسب مجموع الكميات لأمر الإنتاج
