@@ -6404,6 +6404,7 @@ export class DatabaseStorage implements IStorage {
   async getFilmQueue(): Promise<ProductionOrder[]> {
     try {
       // Optimized: Reduce JOINs and simplify query for better performance
+      // الطلبات تبقى في قائمة الفيلم حتى يتم إنتاج الكمية الكاملة
       const results = await db
         .select({
           id: production_orders.id,
@@ -6411,6 +6412,7 @@ export class DatabaseStorage implements IStorage {
           order_id: production_orders.order_id,
           customer_product_id: production_orders.customer_product_id,
           quantity_kg: production_orders.quantity_kg,
+          final_quantity_kg: production_orders.final_quantity_kg,
           status: production_orders.status,
           created_at: production_orders.created_at,
           // حساب الكمية المنتجة من مجموع وزن الرولات
@@ -6430,7 +6432,17 @@ export class DatabaseStorage implements IStorage {
           eq(production_orders.customer_product_id, customer_products.id),
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .where(eq(production_orders.status, "in_production"))
+        .where(
+          and(
+            eq(production_orders.status, "in_production"),
+            // الطلب يبقى ظاهراً حتى يتم إنتاج الكمية كاملة
+            sql`COALESCE((
+              SELECT SUM(weight_kg)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0) < ${production_orders.final_quantity_kg}`
+          )
+        )
         .orderBy(production_orders.created_at)
         .limit(100); // Add limit for performance
 
