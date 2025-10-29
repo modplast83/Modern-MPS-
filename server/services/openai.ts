@@ -508,7 +508,7 @@ Respond in JSON format containing:
       }
 
       // إرسال إشعار إذا كان مطلوباً
-      if (result.success && this.shouldSendNotification(intent.action)) {
+      if (result.success && (await this.shouldSendNotification(intent.action))) {
         await this.sendIntelligentNotification(intent.action, result.result);
       }
 
@@ -990,8 +990,20 @@ Respond in JSON format containing:
 
   // ترجمة الحالات إلى العربية
   private translateStatus(status: string): string {
-    const { AIHelpers } = require("./ai-helpers");
-    return AIHelpers.translateStatus(status);
+    const statusMap: Record<string, string> = {
+      pending: "في الانتظار",
+      for_production: "للإنتاج",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتمل",
+      delivered: "مُسلم",
+      active: "نشط",
+      maintenance: "صيانة",
+      down: "متوقف",
+      for_printing: "للطباعة",
+      for_cutting: "للقطع",
+      done: "منجز",
+    };
+    return statusMap[status] || status;
   }
 
   // تحليل بيانات الإنتاج (محلي)
@@ -1035,9 +1047,14 @@ Respond in JSON format containing:
   }
 
   // تحديد ما إذا كان يجب إرسال إشعار
-  private shouldSendNotification(action: string): boolean {
-    const { AINotifications } = require("./ai-notifications");
-    return AINotifications.shouldSendNotification(action);
+  private async shouldSendNotification(action: string): Promise<boolean> {
+    try {
+      const { AINotifications } = await import("./ai-notifications");
+      return AINotifications.shouldSendNotification(action);
+    } catch (error) {
+      console.error("Error loading AI notifications module:", error);
+      return false;
+    }
   }
 
   // تسجيل بيانات التعلم
