@@ -4798,6 +4798,29 @@ export default function Definitions() {
                       </div>
                     </div>
                     
+                    {/* حالة الماكينة */}
+                    <div>
+                      <Label htmlFor="status">حالة الماكينة</Label>
+                      <Select
+                        value={machineForm.status}
+                        onValueChange={(value) =>
+                          setMachineForm({
+                            ...machineForm,
+                            status: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="mt-1" data-testid="select-machine-status">
+                          <SelectValue placeholder="اختر الحالة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">نشطة</SelectItem>
+                          <SelectItem value="maintenance">صيانة</SelectItem>
+                          <SelectItem value="down">متوقفة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
                     {/* قدرة الإنتاج حسب الحجم */}
                     <div className="border-t pt-4 mt-4">
                       <h3 className="text-sm font-medium mb-3">قدرة الإنتاج (كجم/ساعة)</h3>
