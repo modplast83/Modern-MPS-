@@ -873,43 +873,53 @@ ${context ? `\nسياق النظام الحالي:\n${context}\n` : ""}
       if (
         messageLower.includes("عميل") ||
         messageLower.includes("customer") ||
-        messageLower.includes("زبون")
+        messageLower.includes("زبون") ||
+        messageLower.includes("عملاء")
       ) {
         const customers = await storage.getCustomers();
         relevantData.customers = customers;
+        relevantData.customersCount = customers.length;
       }
 
       if (
         messageLower.includes("طلب") ||
         messageLower.includes("order") ||
-        messageLower.includes("أمر")
+        messageLower.includes("أمر") ||
+        messageLower.includes("طلبات")
       ) {
         const orders = await storage.getAllOrders();
         relevantData.orders = orders;
+        relevantData.ordersCount = orders.length;
       }
 
       if (
         messageLower.includes("مكينة") ||
         messageLower.includes("ماكينة") ||
-        messageLower.includes("machine")
+        messageLower.includes("machine") ||
+        messageLower.includes("مكائن")
       ) {
         const machines = await storage.getMachines();
         relevantData.machines = machines;
+        relevantData.machinesCount = machines.length;
+        relevantData.activeMachines = machines.filter(m => m.status === 'active').length;
       }
 
       if (
         messageLower.includes("رول") ||
         messageLower.includes("roll") ||
-        messageLower.includes("لفة")
+        messageLower.includes("لفة") ||
+        messageLower.includes("رولات")
       ) {
         const rolls = await storage.getRolls();
         relevantData.rolls = rolls;
+        relevantData.rollsCount = rolls.length;
       }
 
       if (
         messageLower.includes("إنتاج") ||
         messageLower.includes("production") ||
-        messageLower.includes("تشغيل")
+        messageLower.includes("تشغيل") ||
+        messageLower.includes("حالة")
       ) {
         const stats = await storage.getDashboardStats();
         relevantData.productionStats = stats;
@@ -927,14 +937,31 @@ ${context ? `\nسياق النظام الحالي:\n${context}\n` : ""}
         messages: [
           {
             role: "system",
-            content: `أنت مساعد ذكي لنظام إدارة مصنع أكياس بلاستيك. قدم إجابة واضحة ومفيدة بناءً على البيانات المتاحة. استخدم الأرقام والإحصائيات عند الإمكان. كن موجزاً ومفيداً.`,
+            content: `أنت مساعد ذكي لنظام إدارة مصنع أكياس بلاستيك MPBF Next.
+
+📋 **مهمتك:**
+تحليل البيانات المتوفرة والإجابة على سؤال المستخدم بدقة.
+
+✅ **قواعد الإجابة:**
+1. استخدم البيانات المتوفرة في JSON للإجابة
+2. إذا كانت البيانات تحتوي على مصفوفة (array)، استخدم طول المصفوفة (.length) للعد
+3. قدم الأرقام والإحصائيات بوضوح
+4. اجعل الإجابة مختصرة ومباشرة
+5. استخدم رموز تعبيرية مناسبة
+
+📊 **مثال:**
+السؤال: "كم عدد العملاء؟"
+البيانات: {"customers": [عميل1, عميل2, عميل3]}
+الإجابة: "📊 لديك **3 عملاء** مسجلين في النظام."
+
+**مهم:** البيانات متوفرة في JSON. استخدمها مباشرة ولا تقل أنها غير متاحة!`,
           },
           {
             role: "user",
             content: `السؤال: ${message}\n\nالبيانات المتاحة:\n${JSON.stringify(relevantData, null, 2)}`,
           },
         ],
-        temperature: 0.3,
+        temperature: 0.2,
       });
 
       const answer = response.choices[0].message.content || "لم أتمكن من الإجابة على السؤال.";
