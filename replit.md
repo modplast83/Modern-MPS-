@@ -79,3 +79,19 @@ The system is built with a modern stack emphasizing efficiency and scalability.
   - Better error messages in Arabic for users
   - Improved response formatting and readability
 - **Smart Query Handling**: AI now intelligently gathers relevant data (customers, orders, machines, rolls, production stats) based on question context before responding
+- **Enhanced Data Processing**: 
+  - Added direct counters (customersCount, ordersCount, machinesCount, etc.) for faster responses
+  - Improved prompt engineering for more accurate AI interpretations
+  - Better handling of plural forms in Arabic queries
+
+### Film Stage Production Queue Enhancement (October 29, 2025)
+
+#### Production Order Visibility Improvement
+- **Film Queue Logic**: Modified `getFilmQueue()` to keep production orders visible until full quantity is produced
+  - Orders now remain in film stage queue while `produced_quantity_kg < final_quantity_kg`
+  - Previously, orders could disappear before reaching target quantity
+  - Ensures operators can continue creating rolls until production is complete
+- **Database Query**: Enhanced query to compare actual roll weights against `final_quantity_kg` threshold
+  - Added `final_quantity_kg` to SELECT fields for visibility
+  - Implemented WHERE condition checking remaining production capacity
+  - Maintains performance with indexed queries
