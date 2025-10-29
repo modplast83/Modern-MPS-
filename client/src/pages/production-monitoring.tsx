@@ -355,8 +355,11 @@ export default function ProductionMonitoring() {
     orders: role.total_production_orders,
   }));
 
-  // WebSocket realtime (use env or default)
-  const wsUrl = import.meta.env.VITE_PROD_WS_URL || "ws://localhost:4000/ws";
+  // WebSocket realtime (optional feature for real-time production updates)
+  // To enable: Set VITE_PROD_WS_URL environment variable to your WebSocket server URL
+  // Example: VITE_PROD_WS_URL=ws://localhost:4000/ws
+  // The app works fine without WebSocket - it uses regular HTTP polling instead
+  const wsUrl = import.meta.env.VITE_PROD_WS_URL;
   useRealtime(wsUrl);
 
   return (
