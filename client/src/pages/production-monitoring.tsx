@@ -356,7 +356,7 @@ export default function ProductionMonitoring() {
   }));
 
   // WebSocket realtime (use env or default)
-  const wsUrl = process.env.REACT_APP_PROD_WS_URL || "ws://localhost:4000/ws";
+  const wsUrl = import.meta.env.VITE_PROD_WS_URL || "ws://localhost:4000/ws";
   useRealtime(wsUrl);
 
   return (
