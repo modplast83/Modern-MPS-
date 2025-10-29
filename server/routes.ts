@@ -5634,12 +5634,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .max(50000, "الوزن يتجاوز 50 طن")
           .transform((v) => Number(v.toFixed(3))),
         pieces_count: z.coerce.number().positive().optional(),
+        cutting_machine_id: z.string().min(1, "يجب اختيار ماكينة القطع"),
       });
 
       const validated = validationSchema.parse(req.body);
       if (!req.session.userId) {
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
+      
+      // Validate cutting machine
+      const { cutting_machine_id } = validated;
+      if (cutting_machine_id) {
+        const machine = await storage.getMachineById(cutting_machine_id);
+        if (!machine) {
+          return res.status(400).json({ message: "ماكينة القطع غير موجودة" });
+        }
+        if (machine.status !== "active") {
+          return res.status(400).json({ message: "ماكينة القطع غير نشطة" });
+        }
+      }
+      
       const cut = await storage.createCut({
         ...validated,
         performed_by: req.session.userId,
