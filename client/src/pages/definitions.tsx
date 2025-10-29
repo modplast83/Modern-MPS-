@@ -2754,6 +2754,9 @@ export default function Definitions() {
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   النوع
                                 </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  نشطة
+                                </th>
                                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   قدرة صغير
                                   <br />
@@ -2799,6 +2802,14 @@ export default function Definitions() {
                                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.type || "-"}
                                       </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-center" data-testid={`text-status-${machine.id}`}>
+                                        <Badge 
+                                          variant={machine.status === "active" ? "default" : "secondary"}
+                                          className={machine.status === "active" ? "bg-green-500 hover:bg-green-600" : "bg-gray-500 hover:bg-gray-600"}
+                                        >
+                                          {machine.status === "active" ? "نشطة" : machine.status === "maintenance" ? "صيانة" : "متوقفة"}
+                                        </Badge>
+                                      </td>
                                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-small-${machine.id}`}>
                                         {machine.capacity_small_kg_per_hour ? formatNumber(parseFloat(machine.capacity_small_kg_per_hour)) : "-"}
                                       </td>
@@ -2841,7 +2852,7 @@ export default function Definitions() {
                                 ) : (
                                   <tr>
                                     <td
-                                      colSpan={8}
+                                      colSpan={9}
                                       className="px-6 py-8 text-center text-gray-500"
                                     >
                                       لا توجد ماكينات مطابقة للبحث
