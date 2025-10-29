@@ -387,7 +387,7 @@ export class AIHelpers {
 3. أضف LIMIT للحد من النتائج
 4. تجنب استعلامات معقدة
 
-أرجع فقط SQL بدون شرح.`,
+أرجع فقط SQL بدون شرح أو markdown.`,
           },
           {
             role: "user",
@@ -397,11 +397,51 @@ export class AIHelpers {
         temperature: 0.1,
       });
 
-      const sql = response.choices[0].message.content?.trim();
+      let sql = response.choices[0].message.content?.trim() || "";
+
+      // إزالة markdown code blocks إذا وجدت
+      sql = sql.replace(/```sql\n?/gi, "").replace(/```\n?/g, "").trim();
+
+      // إزالة أي نصوص توضيحية في البداية أو النهاية
+      const lines = sql.split("\n");
+      const sqlLines = lines.filter(
+        (line) =>
+          line.trim().toLowerCase().startsWith("select") ||
+          line.trim().toLowerCase().startsWith("from") ||
+          line.trim().toLowerCase().startsWith("where") ||
+          line.trim().toLowerCase().startsWith("order") ||
+          line.trim().toLowerCase().startsWith("limit") ||
+          line.trim().toLowerCase().startsWith("join") ||
+          line.trim().toLowerCase().startsWith("and") ||
+          line.trim().toLowerCase().startsWith("or") ||
+          line.trim().toLowerCase().startsWith("group") ||
+          line.trim().toLowerCase().startsWith("having"),
+      );
+
+      sql = sqlLines.join("\n").trim();
 
       // فحص أمان أساسي
       if (!sql || !sql.toLowerCase().startsWith("select")) {
+        console.error("Invalid SQL generated:", sql);
         throw new Error("استعلام غير آمن");
+      }
+
+      // فحص إضافي - التأكد من عدم وجود عمليات خطرة
+      const dangerousKeywords = [
+        "drop",
+        "delete",
+        "insert",
+        "update",
+        "alter",
+        "truncate",
+        "create",
+      ];
+      const sqlLower = sql.toLowerCase();
+      for (const keyword of dangerousKeywords) {
+        if (sqlLower.includes(keyword)) {
+          console.error("Dangerous SQL detected:", sql);
+          throw new Error("استعلام غير آمن");
+        }
       }
 
       return sql;
