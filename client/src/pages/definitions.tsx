@@ -54,6 +54,8 @@ import {
   Copy,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { formatNumber } from "../lib/formatNumber";
 
@@ -184,10 +186,12 @@ export default function Definitions() {
     username: "",
     display_name: "",
     display_name_ar: "",
+    password: "",
     role_id: "none",
     section_id: "none",
     status: "active",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   // Master Batch Colors (24 من الكتالوج)
   const masterBatchColors = [
@@ -1505,6 +1509,7 @@ export default function Definitions() {
       username: "",
       display_name: "",
       display_name_ar: "",
+      password: "",
       role_id: "none",
       section_id: "none",
       status: "active",
@@ -3017,6 +3022,7 @@ export default function Definitions() {
                                                   user.display_name || "",
                                                 display_name_ar:
                                                   user.display_name_ar || "",
+                                                password: "",
                                                 role_id: user.role_id
                                                   ? `ROLE0${user.role_id < 10 ? "0" + user.role_id : user.role_id}`
                                                   : "none",
@@ -3043,6 +3049,7 @@ export default function Definitions() {
                                                 status: user.status || "active",
                                               });
                                               setSelectedTab("users");
+                                              setShowPassword(false);
                                               setIsDialogOpen(true);
                                             }}
                                           >
@@ -4985,8 +4992,44 @@ export default function Definitions() {
                           }
                           placeholder="username"
                           className="mt-1"
+                          data-testid="input-username"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="password">
+                          كلمة المرور {editingItem ? "(اتركها فارغة إذا لم ترد تغييرها)" : "*"}
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={userForm.password}
+                            onChange={(e) =>
+                              setUserForm({
+                                ...userForm,
+                                password: e.target.value,
+                              })
+                            }
+                            placeholder={editingItem ? "أدخل كلمة مرور جديدة" : "أدخل كلمة المرور"}
+                            className="mt-1 pr-10"
+                            data-testid="input-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            data-testid="button-toggle-password"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="role_id">الدور</Label>
                         <Select
@@ -5020,8 +5063,6 @@ export default function Definitions() {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="section_id">القسم</Label>
                         <Select
@@ -5085,11 +5126,25 @@ export default function Definitions() {
                     <Button
                       onClick={() => {
                         if (editingItem) {
+                          // When updating, only send password if it's not empty
+                          const { password, ...restData } = userForm;
+                          const updateData = password && password.trim() !== "" 
+                            ? userForm 
+                            : restData;
                           updateUserMutation.mutate({
                             id: editingItem.id,
-                            data: userForm,
+                            data: updateData,
                           });
                         } else {
+                          // When creating, password is required
+                          if (!userForm.password || userForm.password.trim() === "") {
+                            toast({
+                              title: "خطأ",
+                              description: "كلمة المرور مطلوبة عند إنشاء مستخدم جديد",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
                           createUserMutation.mutate(userForm);
                         }
                       }}
@@ -5097,6 +5152,7 @@ export default function Definitions() {
                         createUserMutation.isPending ||
                         updateUserMutation.isPending
                       }
+                      data-testid="button-save-user"
                     >
                       {createUserMutation.isPending ||
                       updateUserMutation.isPending ? (
