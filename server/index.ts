@@ -3,7 +3,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -170,7 +170,7 @@ if (isProduction && !process.env.SESSION_SECRET) {
 // Configure PostgreSQL session store for all environments to prevent session loss during restarts
 const PgSession = connectPgSimple(session);
 const sessionStore = new PgSession({
-  conString: process.env.DATABASE_URL,
+  pool: pool,
   tableName: "user_sessions",
   createTableIfMissing: true,
   pruneSessionInterval: 60 * 15, // Clean expired sessions every 15 minutes
