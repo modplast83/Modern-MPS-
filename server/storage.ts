@@ -54,6 +54,15 @@ import {
   system_performance_metrics,
   corrective_actions,
   system_analytics,
+  
+  // الملاحظات السريعة
+  quick_notes,
+  note_attachments,
+  type QuickNote,
+  type InsertQuickNote,
+  type NoteAttachment,
+  type InsertNoteAttachment,
+  
   type User,
   type SafeUser,
   type InsertUser,
@@ -941,6 +950,19 @@ export interface IStorage {
   // Alert Rate Limiting - Persistent Storage
   getLastAlertTime(checkKey: string): Promise<Date | null>;
   setLastAlertTime(checkKey: string, timestamp: Date): Promise<void>;
+
+  // Quick Notes
+  getQuickNotes(userId?: number): Promise<any[]>;
+  getQuickNoteById(id: number): Promise<any | undefined>;
+  createQuickNote(note: any): Promise<any>;
+  updateQuickNote(id: number, updates: any): Promise<any>;
+  deleteQuickNote(id: number): Promise<void>;
+  markNoteAsRead(id: number): Promise<any>;
+  
+  // Note Attachments
+  createNoteAttachment(attachment: any): Promise<any>;
+  getNoteAttachments(noteId: number): Promise<any[]>;
+  deleteNoteAttachment(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -8780,6 +8802,203 @@ export class DatabaseStorage implements IStorage {
       console.error("[DatabaseStorage] خطأ في حفظ وقت التحذير:", error);
       throw error;
     }
+  }
+
+  // Quick Notes Implementation
+  async getQuickNotes(userId?: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const assignee = alias(users, "assignee");
+        
+        let queryBuilder = db
+          .select({
+            id: quick_notes.id,
+            content: quick_notes.content,
+            note_type: quick_notes.note_type,
+            priority: quick_notes.priority,
+            created_by: quick_notes.created_by,
+            assigned_to: quick_notes.assigned_to,
+            is_read: quick_notes.is_read,
+            created_at: quick_notes.created_at,
+            updated_at: quick_notes.updated_at,
+            creator_name: users.display_name,
+            assignee_name: assignee.display_name,
+          })
+          .from(quick_notes)
+          .leftJoin(users, eq(quick_notes.created_by, users.id))
+          .leftJoin(assignee, eq(quick_notes.assigned_to, assignee.id));
+
+        if (userId) {
+          queryBuilder = queryBuilder.where(
+            or(
+              eq(quick_notes.created_by, userId),
+              eq(quick_notes.assigned_to, userId),
+            ),
+          );
+        }
+
+        const notes = await queryBuilder.orderBy(desc(quick_notes.created_at));
+        
+        // Get attachments for each note
+        const noteIds = notes.map((n) => n.id);
+        const attachments = noteIds.length > 0
+          ? await db
+              .select()
+              .from(note_attachments)
+              .where(inArray(note_attachments.note_id, noteIds))
+          : [];
+
+        // Group attachments by note_id
+        const attachmentsByNote = new Map<number, any[]>();
+        attachments.forEach((att) => {
+          if (!attachmentsByNote.has(att.note_id)) {
+            attachmentsByNote.set(att.note_id, []);
+          }
+          attachmentsByNote.get(att.note_id)!.push(att);
+        });
+
+        // Add attachments to notes
+        return notes.map((note) => ({
+          ...note,
+          attachments: attachmentsByNote.get(note.id) || [],
+        }));
+      },
+      "جلب الملاحظات السريعة",
+      userId ? `للمستخدم: ${userId}` : "جميع الملاحظات",
+    );
+  }
+
+  async getQuickNoteById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const assignee = alias(users, "assignee");
+        
+        const [note] = await db
+          .select({
+            id: quick_notes.id,
+            content: quick_notes.content,
+            note_type: quick_notes.note_type,
+            priority: quick_notes.priority,
+            created_by: quick_notes.created_by,
+            assigned_to: quick_notes.assigned_to,
+            is_read: quick_notes.is_read,
+            created_at: quick_notes.created_at,
+            updated_at: quick_notes.updated_at,
+            creator_name: users.display_name,
+            assignee_name: assignee.display_name,
+          })
+          .from(quick_notes)
+          .leftJoin(users, eq(quick_notes.created_by, users.id))
+          .leftJoin(assignee, eq(quick_notes.assigned_to, assignee.id))
+          .where(eq(quick_notes.id, id));
+
+        if (!note) return undefined;
+
+        // Get attachments
+        const attachments = await db
+          .select()
+          .from(note_attachments)
+          .where(eq(note_attachments.note_id, id));
+
+        return {
+          ...note,
+          attachments,
+        };
+      },
+      "جلب ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async createQuickNote(note: InsertQuickNote): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [newNote] = await db
+          .insert(quick_notes)
+          .values(note)
+          .returning();
+        return newNote;
+      },
+      "إنشاء ملاحظة سريعة",
+      "",
+    );
+  }
+
+  async updateQuickNote(id: number, updates: Partial<QuickNote>): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedNote] = await db
+          .update(quick_notes)
+          .set({ ...updates, updated_at: new Date() })
+          .where(eq(quick_notes.id, id))
+          .returning();
+        return updatedNote;
+      },
+      "تحديث ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async deleteQuickNote(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.delete(quick_notes).where(eq(quick_notes.id, id));
+      },
+      "حذف ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async markNoteAsRead(id: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedNote] = await db
+          .update(quick_notes)
+          .set({ is_read: true, updated_at: new Date() })
+          .where(eq(quick_notes.id, id))
+          .returning();
+        return updatedNote;
+      },
+      "تحديث حالة القراءة",
+      `رقم ${id}`,
+    );
+  }
+
+  async createNoteAttachment(attachment: InsertNoteAttachment): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [newAttachment] = await db
+          .insert(note_attachments)
+          .values(attachment)
+          .returning();
+        return newAttachment;
+      },
+      "إضافة مرفق",
+      "",
+    );
+  }
+
+  async getNoteAttachments(noteId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db
+          .select()
+          .from(note_attachments)
+          .where(eq(note_attachments.note_id, noteId));
+      },
+      "جلب المرفقات",
+      `للملاحظة رقم ${noteId}`,
+    );
+  }
+
+  async deleteNoteAttachment(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.delete(note_attachments).where(eq(note_attachments.id, id));
+      },
+      "حذف مرفق",
+      `رقم ${id}`,
+    );
   }
 }
 

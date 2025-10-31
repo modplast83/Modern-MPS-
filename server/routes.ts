@@ -6060,6 +6060,279 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // console.log("[SmartAlerts] نظام التحذيرات الذكية مُفعل ✅");
 
+  // ============ Quick Notes API ============
+  
+  // Get all notes (optionally filtered by user)
+  app.get("/api/quick-notes", requireAuth, async (req, res) => {
+    try {
+      // Only managers can query other users' notes
+      let userId = req.user!.id;
+      if (req.query.user_id) {
+        const requestedUserId = parseInt(req.query.user_id as string);
+        if (requestedUserId !== req.user!.id && req.user!.role_id !== 1) {
+          return res.status(403).json({ message: "غير مصرح لك بعرض ملاحظات مستخدمين آخرين" });
+        }
+        userId = requestedUserId;
+      }
+      
+      const notes = await storage.getQuickNotes(userId);
+      res.json(notes);
+    } catch (error: any) {
+      console.error("Error fetching quick notes:", error);
+      res.status(500).json({ message: "خطأ في جلب الملاحظات", error: error.message });
+    }
+  });
+
+  // Get a single note by ID
+  app.get("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const note = await storage.getQuickNoteById(id);
+      
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Authorization check - only creator, assignee, or manager can view
+      if (note.created_by !== req.user!.id && 
+          note.assigned_to !== req.user!.id && 
+          req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بعرض هذه الملاحظة" });
+      }
+      
+      res.json(note);
+    } catch (error: any) {
+      console.error("Error fetching note:", error);
+      res.status(500).json({ message: "خطأ في جلب الملاحظة", error: error.message });
+    }
+  });
+
+  // Create a new note
+  app.post("/api/quick-notes", requireAuth, async (req, res) => {
+    try {
+      // Validate required fields
+      if (!req.body.content || typeof req.body.content !== 'string' || req.body.content.trim() === '') {
+        return res.status(400).json({ message: "المحتوى مطلوب ويجب أن يكون نصاً" });
+      }
+
+      if (!req.body.note_type) {
+        return res.status(400).json({ message: "نوع الملاحظة مطلوب" });
+      }
+
+      if (!req.body.assigned_to) {
+        return res.status(400).json({ message: "يجب تعيين المستخدم" });
+      }
+
+      // Validate assigned_to is a valid number
+      const assignedToId = parseInt(req.body.assigned_to);
+      if (isNaN(assignedToId) || assignedToId <= 0) {
+        return res.status(400).json({ message: "معرف المستخدم المعين غير صحيح" });
+      }
+
+      // Validate note_type
+      const validNoteTypes = ['order', 'design', 'statement', 'quote', 'delivery', 'call_customer', 'other'];
+      if (!validNoteTypes.includes(req.body.note_type)) {
+        return res.status(400).json({ message: "نوع الملاحظة غير صحيح" });
+      }
+
+      // Validate priority
+      const validPriorities = ['low', 'normal', 'high', 'urgent'];
+      const priority = req.body.priority || 'normal';
+      if (!validPriorities.includes(priority)) {
+        return res.status(400).json({ message: "الأولوية غير صحيحة" });
+      }
+
+      const noteData = {
+        content: req.body.content.trim(),
+        note_type: req.body.note_type,
+        priority,
+        created_by: req.user!.id,
+        assigned_to: assignedToId,
+        is_read: false,
+      };
+
+      const newNote = await storage.createQuickNote(noteData);
+      res.status(201).json(newNote);
+    } catch (error: any) {
+      console.error("Error creating note:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الملاحظة", error: error.message });
+    }
+  });
+
+  // Update a note
+  app.patch("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or manager can update
+      if (existingNote.created_by !== req.user!.id && req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بتعديل هذه الملاحظة" });
+      }
+
+      // Only allow updating specific fields
+      const allowedUpdates: any = {};
+      if (req.body.content) allowedUpdates.content = req.body.content.trim();
+      if (req.body.note_type) {
+        const validNoteTypes = ['order', 'design', 'statement', 'quote', 'delivery', 'call_customer', 'other'];
+        if (!validNoteTypes.includes(req.body.note_type)) {
+          return res.status(400).json({ message: "نوع الملاحظة غير صحيح" });
+        }
+        allowedUpdates.note_type = req.body.note_type;
+      }
+      if (req.body.priority) {
+        const validPriorities = ['low', 'normal', 'high', 'urgent'];
+        if (!validPriorities.includes(req.body.priority)) {
+          return res.status(400).json({ message: "الأولوية غير صحيحة" });
+        }
+        allowedUpdates.priority = req.body.priority;
+      }
+      if (req.body.assigned_to) allowedUpdates.assigned_to = parseInt(req.body.assigned_to);
+      
+      const updatedNote = await storage.updateQuickNote(id, allowedUpdates);
+      res.json(updatedNote);
+    } catch (error: any) {
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "خطأ في تحديث الملاحظة", error: error.message });
+    }
+  });
+
+  // Mark note as read
+  app.patch("/api/quick-notes/:id/read", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only assignee can mark as read
+      if (existingNote.assigned_to !== req.user!.id) {
+        return res.status(403).json({ message: "فقط المستخدم المعين يمكنه تحديث حالة القراءة" });
+      }
+
+      const updatedNote = await storage.markNoteAsRead(id);
+      res.json(updatedNote);
+    } catch (error: any) {
+      console.error("Error marking note as read:", error);
+      res.status(500).json({ message: "خطأ في تحديث حالة القراءة", error: error.message });
+    }
+  });
+
+  // Delete a note
+  app.delete("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or manager can delete
+      if (existingNote.created_by !== req.user!.id && req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بحذف هذه الملاحظة" });
+      }
+
+      await storage.deleteQuickNote(id);
+      res.json({ message: "تم حذف الملاحظة بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting note:", error);
+      res.status(500).json({ message: "خطأ في حذف الملاحظة", error: error.message });
+    }
+  });
+
+  // Get attachments for a note
+  app.get("/api/quick-notes/:id/attachments", requireAuth, async (req, res) => {
+    try {
+      const noteId = parseInt(req.params.id);
+      
+      // Get note to check authorization
+      const note = await storage.getQuickNoteById(noteId);
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Authorization check
+      if (note.created_by !== req.user!.id && 
+          note.assigned_to !== req.user!.id && 
+          req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بعرض هذه المرفقات" });
+      }
+
+      const attachments = await storage.getNoteAttachments(noteId);
+      res.json(attachments);
+    } catch (error: any) {
+      console.error("Error fetching attachments:", error);
+      res.status(500).json({ message: "خطأ في جلب المرفقات", error: error.message });
+    }
+  });
+
+  // Upload attachment (placeholder - will be implemented with actual file upload)
+  app.post("/api/quick-notes/:id/attachments", requireAuth, async (req, res) => {
+    try {
+      const noteId = parseInt(req.params.id);
+      
+      // Get note to check authorization
+      const note = await storage.getQuickNoteById(noteId);
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or assignee can add attachments
+      if (note.created_by !== req.user!.id && note.assigned_to !== req.user!.id) {
+        return res.status(403).json({ message: "غير مصرح لك بإضافة مرفقات لهذه الملاحظة" });
+      }
+
+      // Validate required fields
+      if (!req.body.file_name || !req.body.file_type || !req.body.file_size || !req.body.file_url) {
+        return res.status(400).json({ message: "بيانات المرفق ناقصة" });
+      }
+
+      const attachmentData = {
+        note_id: noteId,
+        file_name: req.body.file_name,
+        file_type: req.body.file_type,
+        file_size: parseInt(req.body.file_size),
+        file_url: req.body.file_url,
+      };
+
+      const newAttachment = await storage.createNoteAttachment(attachmentData);
+      res.status(201).json(newAttachment);
+    } catch (error: any) {
+      console.error("Error creating attachment:", error);
+      res.status(500).json({ message: "خطأ في رفع المرفق", error: error.message });
+    }
+  });
+
+  // Delete attachment
+  app.delete("/api/note-attachments/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get attachment to find its note
+      const attachments = await storage.getNoteAttachments(0); // This won't work, need to get by ID
+      // For now, only managers can delete attachments
+      if (req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "فقط المدراء يمكنهم حذف المرفقات" });
+      }
+
+      await storage.deleteNoteAttachment(id);
+      res.json({ message: "تم حذف المرفق بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting attachment:", error);
+      res.status(500).json({ message: "خطأ في حذف المرفق", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

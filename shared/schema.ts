@@ -2623,5 +2623,74 @@ export const insertCorrectiveActionSchema =
   createInsertSchema(corrective_actions);
 export const insertSystemAnalyticsSchema = createInsertSchema(system_analytics);
 
+// 📝 جدول الملاحظات السريعة
+export const quick_notes = pgTable("quick_notes", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  note_type: varchar("note_type", { length: 50 }).notNull(), // order, design, statement, quote, delivery, call_customer, other
+  priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high, urgent
+  created_by: integer("created_by")
+    .notNull()
+    .references(() => users.id),
+  assigned_to: integer("assigned_to")
+    .notNull()
+    .references(() => users.id),
+  is_read: boolean("is_read").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// 📎 جدول مرفقات الملاحظات
+export const note_attachments = pgTable("note_attachments", {
+  id: serial("id").primaryKey(),
+  note_id: integer("note_id")
+    .notNull()
+    .references(() => quick_notes.id, { onDelete: "cascade" }),
+  file_name: varchar("file_name", { length: 255 }).notNull(),
+  file_type: varchar("file_type", { length: 100 }).notNull(),
+  file_size: integer("file_size").notNull(),
+  file_url: text("file_url").notNull(),
+  uploaded_at: timestamp("uploaded_at").defaultNow(),
+});
+
+// علاقات الملاحظات
+export const quickNotesRelations = relations(quick_notes, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [quick_notes.created_by],
+    references: [users.id],
+    relationName: "note_creator",
+  }),
+  assignee: one(users, {
+    fields: [quick_notes.assigned_to],
+    references: [users.id],
+    relationName: "note_assignee",
+  }),
+  attachments: many(note_attachments),
+}));
+
+export const noteAttachmentsRelations = relations(note_attachments, ({ one }) => ({
+  note: one(quick_notes, {
+    fields: [note_attachments.note_id],
+    references: [quick_notes.id],
+  }),
+}));
+
+// أنواع البيانات للملاحظات
+export type QuickNote = typeof quick_notes.$inferSelect;
+export type InsertQuickNote = typeof quick_notes.$inferInsert;
+export type NoteAttachment = typeof note_attachments.$inferSelect;
+export type InsertNoteAttachment = typeof note_attachments.$inferInsert;
+
+// مخططات التحقق من البيانات للملاحظات
+export const insertQuickNoteSchema = createInsertSchema(quick_notes).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+export const insertNoteAttachmentSchema = createInsertSchema(note_attachments).omit({
+  id: true,
+  uploaded_at: true,
+});
+
 // Sanitized user type that excludes sensitive fields like password
 export type SafeUser = Omit<User, "password">;
