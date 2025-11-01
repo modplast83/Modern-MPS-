@@ -650,6 +650,9 @@ export default function CuttingOperatorDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

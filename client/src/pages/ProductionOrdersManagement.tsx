@@ -311,7 +311,7 @@ export default function ProductionOrdersManagement() {
           <ProductionOrderFilters
             filters={filters}
             onFiltersChange={setFilters}
-            customers={[...new Map(filteredOrders.map((o: any) => [o.customer_id, { id: o.customer_id, name_ar: o.customer_name_ar, name: o.customer_name }])).values()]}
+            customers={Array.from(new Map(filteredOrders.map((o: any) => [o.customer_id, { id: o.customer_id, name_ar: o.customer_name_ar, name: o.customer_name }])).values())}
           />
 
           {/* جدول أوامر الإنتاج */}
