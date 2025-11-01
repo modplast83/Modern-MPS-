@@ -128,6 +128,14 @@ const modules = [
     active: false,
   },
   {
+    name: "تقارير الإنتاج",
+    name_ar: "تقارير الإنتاج",
+    icon: BarChart3,
+    path: "/production-reports",
+    active: false,
+    requiredRoles: ["admin", "production_manager"],
+  },
+  {
       name: "الأدوات",
       name_ar: "الأدوات",
       icon: Wrench,

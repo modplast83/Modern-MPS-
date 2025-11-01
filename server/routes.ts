@@ -2222,6 +2222,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ PRODUCTION REPORTS API ROUTES ============
+  
+  // Production Summary Report
+  app.get("/api/reports/production-summary", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+        productId: req.query.product_id ? JSON.parse(req.query.product_id as string) : undefined,
+        status: req.query.status ? JSON.parse(req.query.status as string) : undefined,
+        sectionId: req.query.section_id as string,
+        machineId: req.query.machine_id as string,
+        operatorId: req.query.operator_id ? parseInt(req.query.operator_id as string) : undefined,
+      };
+      
+      const summary = await storage.getProductionSummary(filters);
+      res.json({ success: true, data: summary });
+    } catch (error) {
+      console.error("Production summary error:", error);
+      res.status(500).json({ message: "خطأ في جلب ملخص الإنتاج", success: false });
+    }
+  });
+
+  // Production by Date
+  app.get("/api/reports/production-by-date", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+        productId: req.query.product_id ? JSON.parse(req.query.product_id as string) : undefined,
+      };
+      
+      const data = await storage.getProductionByDate(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Production by date error:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات الإنتاج اليومية", success: false });
+    }
+  });
+
+  // Production by Product
+  app.get("/api/reports/production-by-product", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+      };
+      
+      const data = await storage.getProductionByProduct(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Production by product error:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات الإنتاج حسب المنتج", success: false });
+    }
+  });
+
+  // Waste Analysis
+  app.get("/api/reports/waste-analysis", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        sectionId: req.query.section_id as string,
+      };
+      
+      const data = await storage.getWasteAnalysis(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Waste analysis error:", error);
+      res.status(500).json({ message: "خطأ في جلب تحليل الهدر", success: false });
+    }
+  });
+
+  // Machine Performance
+  app.get("/api/reports/machine-performance", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+      };
+      
+      const data = await storage.getMachinePerformance(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Machine performance error:", error);
+      res.status(500).json({ message: "خطأ في جلب أداء المكائن", success: false });
+    }
+  });
+
+  // Operator Performance
+  app.get("/api/reports/operator-performance", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        sectionId: req.query.section_id as string,
+      };
+      
+      const data = await storage.getOperatorPerformance(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Operator performance error:", error);
+      res.status(500).json({ message: "خطأ في جلب أداء العمال", success: false });
+    }
+  });
+
   // Export Report (Placeholder for PDF/Excel export)
   app.post("/api/reports/export", requireAuth, async (req, res) => {
     try {

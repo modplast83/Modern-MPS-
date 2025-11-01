@@ -37,6 +37,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
+import ProductionReports from "./pages/ProductionReports";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -133,6 +134,12 @@ function AppRoutes() {
       <Route path="/reports">
         <ProtectedRoute path="/reports">
           <Reports />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/production-reports">
+        <ProtectedRoute path="/production-reports">
+          <ProductionReports />
         </ProtectedRoute>
       </Route>
 
