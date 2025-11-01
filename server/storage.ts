@@ -11238,7 +11238,7 @@ export class DatabaseStorage implements IStorage {
       async () => {
         // Get user to check section
         const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-        if (!user.length || user[0].section_id !== 1) { // Film section is 1
+        if (!user.length || String(user[0].section_id) !== '3') { // Film section is 3 (SEC03 - Production-Extruder)
           return [];
         }
 
