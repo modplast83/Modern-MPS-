@@ -293,10 +293,10 @@ export default function ProductionQueues() {
         queues[machineId].sort((a, b) => a.queue_position - b.queue_position);
       });
       
-      // Find unassigned active production orders
+      // Find unassigned production orders (active or in_production without queue assignment)
       const assignedOrderIds = new Set(queuesData.data.map(q => q.production_order_id));
       const unassignedOrders = productionOrders.filter(
-        po => po.status === "active" && !assignedOrderIds.has(po.id)
+        po => (po.status === "active" || po.status === "in_production" || po.status === "pending") && !assignedOrderIds.has(po.id)
       );
       
       queues["unassigned"] = unassignedOrders;
