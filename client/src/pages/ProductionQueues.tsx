@@ -50,6 +50,13 @@ interface ProductionOrder {
   final_quantity_kg: string;
   status: string;
   customer_product_id: number;
+  customer_name?: string;
+  customer_name_ar?: string;
+  item_name?: string;
+  item_name_ar?: string;
+  size_caption?: string;
+  raw_material?: string;
+  color?: string;
 }
 
 interface QueueItem {
@@ -64,6 +71,12 @@ interface QueueItem {
   queue_position: number;
   assigned_at: string;
   assigned_by_name?: string;
+  customer_name?: string;
+  customer_name_ar?: string;
+  item_name?: string;
+  item_name_ar?: string;
+  size_caption?: string;
+  raw_material?: string;
 }
 
 interface Machine {
