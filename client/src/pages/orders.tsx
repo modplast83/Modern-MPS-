@@ -8,7 +8,7 @@ import { useToast } from "../hooks/use-toast";
 import { parseIntSafe } from "../../../shared/validation-utils";
 import { format } from "date-fns";
 import { isUserAdmin } from "../utils/roleUtils";
-import { OrdersStats, OrdersTabs } from "../components/orders";
+import { OrdersStats, OrdersTabs, OrderPrintTemplate } from "../components/orders";
 import ViewOrderDialog from "../components/orders/ViewOrderDialog";
 
 export default function Orders() {
@@ -39,6 +39,7 @@ export default function Orders() {
   const [editingOrder, setEditingOrder] = useState<any>(null);
   const [viewingOrder, setViewingOrder] = useState<any>(null);
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
+  const [printingOrder, setPrintingOrder] = useState<any>(null);
 
   const { user } = useAuth();
   const { toast } = useToast();
@@ -670,214 +671,8 @@ export default function Orders() {
   };
 
   const handlePrintOrder = (order: any) => {
-  try {
-    // بيانات مساعدة آمنة
-    const fmtDate = (d?: string | Date, withTime = false) => {
-      if (!d) return "غير محدد";
-      const date = d instanceof Date ? d : new Date(d);
-      const pad = (n: number) => String(n).padStart(2, "0");
-      const Y = date.getFullYear();
-      const M = pad(date.getMonth() + 1);
-      const D = pad(date.getDate());
-      if (!withTime) return `${D}/${M}/${Y}`;
-      const h = pad(date.getHours());
-      const m = pad(date.getMinutes());
-      return `${D}/${M}/${Y} ${h}:${m}`;
-    };
-
-    // اجلب الكيانات بهدوء وفلاتر آمنة
-    const customer = (customers || []).find((c: any) => c.id === order?.customer_id);
-    const creator =
-      (users || []).find((u: any) => u.id === Number(order?.created_by))?.name ||
-      (users || []).find((u: any) => u.id === Number(order?.created_by))?.username ||
-      "غير محدد";
-
-    const orderProductionOrders = (productionOrders || [])
-      .filter((po: any) => po?.order_id === order?.id)
-      .sort((a: any, b: any) =>
-        String(a?.production_order_number || "").localeCompare(
-          String(b?.production_order_number || "")
-        )
-      );
-
-    const buildProductCaption = (po: any) => {
-      const cp = (customerProducts || []).find((x: any) => x.id === po?.customer_product_id);
-      if (!cp) return "—";
-      const item = (items || []).find((it: any) => it.id === cp.item_id);
-      const parts = [
-        item?.name_ar || item?.name || null,
-        cp.size_caption || null,
-        cp.cutting_length_cm ? `طول: ${cp.cutting_length_cm} سم` : null,
-        cp.thickness ? `سماكة: ${cp.thickness}µ` : null,
-        cp.width ? `عرض: ${cp.width} سم` : null,
-        cp.raw_material || null,
-      ].filter(Boolean);
-      return parts.length ? parts.join(" - ") : "—";
-    };
-
-    const totalQty = orderProductionOrders.reduce(
-      (s: number, po: any) => s + (Number(po?.quantity_kg) || 0),
-      0
-    );
-
-    // HTML النهائي (بدون سكربتات inline)
-    const html = `<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="utf-8" />
-<title>طلب رقم ${order?.order_number ?? "—"}</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-  @page { size: A4; margin: 14mm; }
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Arial, "Helvetica Neue", "Noto Naskh Arabic", "Amiri", sans-serif;
-    color: #000; font-size: 13px; line-height: 1.6; margin: 0;
-  }
-  .header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-    border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 14px; }
-  .brand { font-size: 18px; font-weight: 800; }
-  .doc-title { text-align: center; font-size: 18px; font-weight: 800; }
-  .meta { text-align: left; font-size: 11px; }
-  .meta p { margin: 0; }
-
-  .section { margin-bottom: 12px; }
-  .box { border: 1px solid #000; border-radius: 6px; padding: 10px; background: #fff; }
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-  .subhead { font-weight: 700; border-bottom: 1px solid #000; padding-bottom: 6px; margin-bottom: 8px; }
-
-  table { width: 100%; border-collapse: collapse; }
-  thead th { position: sticky; top: 0; background: #f6f6f6; z-index: 1;
-    border: 1px solid #000; padding: 6px; font-weight: 700; text-align: center; }
-  tbody td { border: 1px solid #000; padding: 6px; vertical-align: top; }
-  tfoot td { border: 1px solid #000; padding: 6px; font-weight: 800; background: #fafafa; }
-  .num { text-align: center; white-space: nowrap; }
-  .muted { color: #222; }
-
-  .signs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 14px; }
-  .sign-box { border: 1px dashed #000; border-radius: 6px; padding: 10px; height: 70px; }
-  .sign-box .label { font-size: 12px; color: #333; margin-bottom: 6px; }
-
-  .footer { margin-top: 14px; font-size: 11px; color: #111; display: flex; justify-content: space-between; }
-  .qr { width: 74px; height: 74px; border: 1px solid #000; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 700; }
-  .actions { margin-top: 12px; text-align: center; }
-  @media print { .no-print { display: none !important; } }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div class="brand">نظام إدارة الطلبات والإنتاج</div>
-    <div class="doc-title">أمر طلب / أمر بيع</div>
-    <div class="meta">
-      <p>تاريخ الطباعة: ${fmtDate(new Date(), true)}</p>
-      <p>رقم المستند: ${order?.order_number ?? "—"}</p>
-    </div>
-  </div>
-
-  <div class="section grid-2">
-    <div class="box">
-      <div class="subhead">معلومات الطلب</div>
-      <p><strong>رقم الطلب:</strong> ${order?.order_number ?? "—"}</p>
-      <p><strong>تاريخ الإنشاء:</strong> ${fmtDate(order?.created_at)}</p>
-      <p><strong>أيام التسليم:</strong> ${order?.delivery_days ?? "غير محدد"} يوم</p>
-      <p><strong>أنشأه:</strong> ${creator}</p>
-      <p><strong>ملاحظات:</strong> ${order?.notes || "—"}</p>
-    </div>
-    <div class="box">
-      <div class="subhead">بيانات العميل</div>
-      <p><strong>الاسم:</strong> ${customer?.name_ar || customer?.name || "غير محدد"}</p>
-      <p><strong>رقم العميل:</strong> ${customer?.id ?? "غير محدد"}</p>
-      <p><strong>المدينة:</strong> ${customer?.city || "غير محدد"}</p>
-      <p><strong>الهاتف:</strong> ${customer?.phone || "غير محدد"}</p>
-    </div>
-  </div>
-
-  <div class="section box">
-    <div class="subhead">أوامر الإنتاج المرتبطة</div>
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 120px;">رقم أمر الإنتاج</th>
-          <th>المنتج / المواصفات</th>
-          <th style="width: 120px;">الكمية (كجم)</th>
-          <th style="width: 130px;">الحالة</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${
-          orderProductionOrders.length
-            ? orderProductionOrders.map((po: any) => {
-                const caption = buildProductCaption(po);
-                const qty = Number(po?.quantity_kg) || 0;
-                const status = po?.status || "—";
-                const poNum = po?.production_order_number || "—";
-                return `
-                  <tr>
-                    <td class="num">${poNum}</td>
-                    <td>${caption}</td>
-                    <td class="num">${qty.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                    <td class="num">${status}</td>
-                  </tr>`;
-              }).join("")
-            : `<tr><td colspan="4" class="num muted">لا توجد أوامر إنتاج</td></tr>`
-        }
-      </tbody>
-      <tfoot>
-        <tr>
-          <td class="num" colspan="2">الإجمالي</td>
-          <td class="num">${totalQty.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-          <td></td>
-        </tr>
-      </tfoot>
-    </table>
-
-    <div class="signs">
-      <div class="sign-box"><div class="label">إعداد الطلب</div></div>
-      <div class="sign-box"><div class="label">مراجعة</div></div>
-      <div class="sign-box"><div class="label">اعتماد</div></div>
-    </div>
-  </div>
-
-  <div class="footer">
-    <div>مخرجات النظام • لا تحتاج توقيع إذا ظهرت إلكترونيًا</div>
-    <div class="qr">QR ${order?.order_number ?? "—"}</div>
-  </div>
-
-  <div class="actions no-print">
-    <button onclick="window.print()">طباعة</button>
-  </div>
-</body>
-</html>`;
-
-    // استخدم Blob URL بدل document.write (أكثر ثباتًا)
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const w = window.open(url, "_blank", "noopener,noreferrer");
-    if (!w) {
-      // لو البوب-أب محظور
-      alert("المتصفح منع فتح نافذة الطباعة. فضلاً عطّل حظر النوافذ المنبثقة لهذه الصفحة.");
-      URL.revokeObjectURL(url);
-      return;
-    }
-    // اطبع تلقائيًا بعد التحميل
-    const onLoad = () => {
-      try { w.focus(); w.print(); } catch {}
-      w.removeEventListener("load", onLoad);
-      // URL.revokeObjectURL(url); // لا تفرّغ مباشرة حتى لا تكسر الطباعة ببطء
-      setTimeout(() => URL.revokeObjectURL(url), 30000); // أمان لاحق
-    };
-    w.addEventListener("load", onLoad);
-  } catch (err) {
-    console.error("print error:", err);
-    toast({
-      title: "خطأ في الطباعة",
-      description: err instanceof Error ? err.message : "تعذر إنشاء مستند الطباعة",
-      variant: "destructive",
-    });
-  }
-};
+    setPrintingOrder(order);
+  };
 
 
 
@@ -969,7 +764,20 @@ export default function Orders() {
         productionOrders={productionOrders}
         customerProducts={customerProducts}
         items={items}
+        onPrint={handlePrintOrder}
       />
+
+      {/* Print Order Template */}
+      {printingOrder && (
+        <OrderPrintTemplate
+          order={printingOrder}
+          customer={customers.find((c: any) => c.id === printingOrder?.customer_id)}
+          productionOrders={productionOrders.filter((po: any) => po.order_id === printingOrder?.id)}
+          customerProducts={customerProducts}
+          items={items}
+          onClose={() => setPrintingOrder(null)}
+        />
+      )}
     </div>
   );
 }

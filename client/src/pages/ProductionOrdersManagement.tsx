@@ -25,10 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { Loader2, Play, Settings, BarChart3 } from "lucide-react";
+import { Loader2, Play, Settings, BarChart3, Printer } from "lucide-react";
 import ProductionOrderActivationModal from "../components/production/ProductionOrderActivationModal";
 import ProductionOrderStatsCard from "../components/production/ProductionOrderStatsCard";
 import ProductionOrderFilters from "../components/production/ProductionOrderFilters";
+import ProductionOrderPrintTemplate from "../components/production/ProductionOrderPrintTemplate";
 
 export default function ProductionOrdersManagement() {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ export default function ProductionOrdersManagement() {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
   const [showStats, setShowStats] = useState<number | null>(null);
+  const [printingProductionOrder, setPrintingProductionOrder] = useState<any>(null);
   const [filters, setFilters] = useState({
     status: "all",
     customerId: "",
@@ -130,6 +132,11 @@ export default function ProductionOrdersManagement() {
       });
     },
   });
+
+  // معالج الطباعة
+  const handlePrintProductionOrder = (order: any) => {
+    setPrintingProductionOrder(order);
+  };
 
   const handleActivate = (order: any) => {
     setSelectedOrder(order);
@@ -394,6 +401,15 @@ export default function ProductionOrdersManagement() {
                             >
                               <BarChart3 className="h-4 w-4" />
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePrintProductionOrder(order)}
+                              data-testid={`button-print-${order.id}`}
+                              title="طباعة"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -428,6 +444,114 @@ export default function ProductionOrdersManagement() {
         )}
         isUpdating={selectedOrder?.status === "active"}
       />
+
+      {/* قالب طباعة أمر الإنتاج */}
+      {printingProductionOrder && (
+        <PrintProductionOrderWrapper
+          productionOrder={printingProductionOrder}
+          onClose={() => setPrintingProductionOrder(null)}
+        />
+      )}
     </div>
+  );
+}
+
+// مكون مساعد لجلب البيانات وعرض قالب الطباعة
+function PrintProductionOrderWrapper({ productionOrder, onClose }: { productionOrder: any, onClose: () => void }) {
+  const { data: ordersData } = useQuery({
+    queryKey: ["/api/orders", productionOrder.order_id],
+    queryFn: async () => {
+      const response = await fetch(`/api/orders`);
+      if (!response.ok) throw new Error("فشل في جلب الطلبات");
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const { data: customersData } = useQuery({
+    queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const response = await fetch("/api/customers");
+      if (!response.ok) throw new Error("فشل في جلب العملاء");
+      const result = await response.json();
+      return result.data || result;
+    },
+  });
+
+  const { data: customerProductsData } = useQuery({
+    queryKey: ["/api/customer-products"],
+    queryFn: async () => {
+      const response = await fetch("/api/customer-products");
+      if (!response.ok) throw new Error("فشل في جلب منتجات العملاء");
+      const result = await response.json();
+      return result.data || result;
+    },
+  });
+
+  const { data: itemsData } = useQuery({
+    queryKey: ["/api/items"],
+    queryFn: async () => {
+      const response = await fetch("/api/items");
+      if (!response.ok) throw new Error("فشل في جلب العناصر");
+      const result = await response.json();
+      return result.data || result;
+    },
+  });
+
+  const { data: machinesData } = useQuery({
+    queryKey: ["/api/machines"],
+    queryFn: async () => {
+      const response = await fetch("/api/machines");
+      if (!response.ok) throw new Error("فشل في جلب المكائن");
+      return response.json();
+    },
+  });
+
+  const { data: usersData } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: async () => {
+      const response = await fetch("/api/users");
+      if (!response.ok) throw new Error("فشل في جلب المستخدمين");
+      const result = await response.json();
+      return result.data || result;
+    },
+  });
+
+  const { data: rollsData } = useQuery({
+    queryKey: ["/api/rolls", productionOrder.id],
+    queryFn: async () => {
+      const response = await fetch("/api/rolls");
+      if (!response.ok) throw new Error("فشل في جلب الرولات");
+      const result = await response.json();
+      const data = result.data || result;
+      return Array.isArray(data) ? data.filter((r: any) => r.production_order_id === productionOrder.id) : [];
+    },
+  });
+
+  // Wait for all data to load
+  if (!ordersData || !customersData || !customerProductsData || !itemsData || !machinesData || !usersData || !rollsData) {
+    return null;
+  }
+
+  const order = ordersData.find((o: any) => o.id === productionOrder.order_id);
+  const customer = customersData.find((c: any) => c.id === order?.customer_id);
+  const customerProduct = customerProductsData.find((cp: any) => cp.id === productionOrder.customer_product_id);
+  const item = itemsData.find((i: any) => i.id === customerProduct?.item_id);
+  const machine = machinesData.find((m: any) => m.id === productionOrder.assigned_machine_id);
+  const operator = usersData.find((u: any) => u.id === productionOrder.assigned_operator_id);
+
+  return (
+    <ProductionOrderPrintTemplate
+      productionOrder={productionOrder}
+      order={order}
+      customer={customer}
+      customerProduct={customerProduct}
+      item={item}
+      machine={machine}
+      operator={operator}
+      rolls={rollsData}
+      onClose={onClose}
+    />
   );
 }
