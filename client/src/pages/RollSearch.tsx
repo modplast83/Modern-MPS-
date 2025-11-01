@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
@@ -272,46 +275,24 @@ export default function RollSearch() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold flex items-center gap-2">
-                <Search className="h-8 w-8" />
-                البحث عن الرولات
-              </h1>
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          {/* Header */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <Search className="h-6 w-6" />
+              البحث عن الرولات
+            </h1>
               <p className="text-muted-foreground mt-1">
                 ابحث عن الرولات بالرقم، الباركود، أمر الإنتاج أو الطلب
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/rolls/search"] })}
-              >
-                <RefreshCw className="h-4 w-4 ml-2" />
-                تحديث
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportToExcel}
-                disabled={!searchResults || searchResults.length === 0}
-                data-testid="button-export-excel"
-              >
-                <Download className="h-4 w-4 ml-2" />
-                تصدير Excel
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Search Panel */}
           <div className="lg:col-span-2">
             <Card className="p-6">
@@ -707,6 +688,7 @@ export default function RollSearch() {
             )}
           </div>
         </div>
+        </main>
       </div>
     </div>
   );
