@@ -11,6 +11,7 @@ interface IconWithTooltipProps {
   side?: "top" | "right" | "bottom" | "left";
   className?: string;
   onClick?: () => void;
+  "data-testid"?: string;
 }
 
 export function IconWithTooltip({
@@ -19,12 +20,17 @@ export function IconWithTooltip({
   side = "top",
   className = "",
   onClick,
+  "data-testid": dataTestId,
 }: IconWithTooltipProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`cursor-pointer ${className}`} onClick={onClick}>
+          <span 
+            className={`cursor-pointer ${className}`} 
+            onClick={onClick}
+            data-testid={dataTestId}
+          >
             {icon}
           </span>
         </TooltipTrigger>

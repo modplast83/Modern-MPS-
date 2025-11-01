@@ -289,21 +289,21 @@ export default function ProductionOrdersManagement() {
 
           {/* الإحصائيات الإجمالية */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-total-orders">
               <div className="text-sm text-gray-600">إجمالي الأوامر</div>
-              <div className="text-2xl font-bold">{totalStats.total}</div>
+              <div className="text-2xl font-bold" data-testid="stat-total-orders">{totalStats.total}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-pending-orders">
               <div className="text-sm text-gray-600">في الانتظار</div>
-              <div className="text-2xl font-bold text-yellow-600">{totalStats.pending}</div>
+              <div className="text-2xl font-bold text-yellow-600" data-testid="stat-pending-orders">{totalStats.pending}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-active-orders">
               <div className="text-sm text-gray-600">نشطة</div>
-              <div className="text-2xl font-bold text-green-600">{totalStats.active}</div>
+              <div className="text-2xl font-bold text-green-600" data-testid="stat-active-orders">{totalStats.active}</div>
             </Card>
-            <Card className="p-4">
+            <Card className="p-4" data-testid="card-completed-orders">
               <div className="text-sm text-gray-600">مكتملة</div>
-              <div className="text-2xl font-bold text-gray-600">{totalStats.completed}</div>
+              <div className="text-2xl font-bold text-gray-600" data-testid="stat-completed-orders">{totalStats.completed}</div>
             </Card>
           </div>
 
@@ -315,51 +315,51 @@ export default function ProductionOrdersManagement() {
           />
 
           {/* جدول أوامر الإنتاج */}
-          <Card>
+          <Card data-testid="card-production-orders-table">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>رقم الطلب</TableHead>
-                    <TableHead>رقم أمر الإنتاج</TableHead>
-                    <TableHead>العميل</TableHead>
-                    <TableHead>المنتج</TableHead>
-                    <TableHead className="text-center">الكمية (كجم)</TableHead>
-                    <TableHead className="text-center">الحالة</TableHead>
-                    <TableHead>التخصيص</TableHead>
-                    <TableHead className="text-center">الإجراءات</TableHead>
+                    <TableHead data-testid="header-order-number">رقم الطلب</TableHead>
+                    <TableHead data-testid="header-production-order">رقم أمر الإنتاج</TableHead>
+                    <TableHead data-testid="header-customer">العميل</TableHead>
+                    <TableHead data-testid="header-product">المنتج</TableHead>
+                    <TableHead className="text-center" data-testid="header-quantity">الكمية (كجم)</TableHead>
+                    <TableHead className="text-center" data-testid="header-status">الحالة</TableHead>
+                    <TableHead data-testid="header-assignment">التخصيص</TableHead>
+                    <TableHead className="text-center" data-testid="header-actions">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center text-gray-500 py-8">
+                      <TableCell colSpan={8} className="text-center text-gray-500 py-8" data-testid="text-no-orders">
                         لا توجد أوامر إنتاج
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredOrders.map((order: any) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">
+                      <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
+                        <TableCell className="font-medium" data-testid={`cell-order-number-${order.id}`}>
                           {order.order_number}
                         </TableCell>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium" data-testid={`cell-production-order-${order.id}`}>
                           {order.production_order_number}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-testid={`cell-customer-${order.id}`}>
                           {order.customer_name_ar || order.customer_name}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-testid={`cell-product-${order.id}`}>
                           <div className="text-sm">
                             {order.size_caption}
                             {order.is_printed && (
-                              <Badge variant="outline" className="mr-1 text-xs">
+                              <Badge variant="outline" className="mr-1 text-xs" data-testid={`badge-printed-${order.id}`}>
                                 🎨 مطبوع
                               </Badge>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center" data-testid={`cell-quantity-${order.id}`}>
                           <div>
                             <div className="font-medium">{order.quantity_kg}</div>
                             <div className="text-xs text-gray-500">
@@ -367,10 +367,10 @@ export default function ProductionOrdersManagement() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-center">
+                        <TableCell className="text-center" data-testid={`cell-status-${order.id}`}>
                           {getStatusBadge(order.status)}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-testid={`cell-assignment-${order.id}`}>
                           <div className="flex flex-wrap gap-1">
                             {getAssignmentBadges(order)}
                           </div>

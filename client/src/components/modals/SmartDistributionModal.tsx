@@ -258,9 +258,9 @@ export default function SmartDistributionModal({
 
         <Tabs defaultValue="algorithm" className="flex-1 overflow-hidden">
           <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="algorithm">اختيار الخوارزمية</TabsTrigger>
-            <TabsTrigger value="preview">معاينة التوزيع</TabsTrigger>
-            <TabsTrigger value="stats">إحصائيات السعة</TabsTrigger>
+            <TabsTrigger value="algorithm" data-testid="tab-algorithm">اختيار الخوارزمية</TabsTrigger>
+            <TabsTrigger value="preview" data-testid="tab-preview">معاينة التوزيع</TabsTrigger>
+            <TabsTrigger value="stats" data-testid="tab-stats">إحصائيات السعة</TabsTrigger>
           </TabsList>
 
           <ScrollArea className="flex-1 h-[500px] mt-4">
@@ -278,10 +278,11 @@ export default function SmartDistributionModal({
                         : "hover:shadow-md"
                     }`}
                     onClick={() => setSelectedAlgorithm(algo.id)}
+                    data-testid={`card-algorithm-${algo.id}`}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <RadioGroupItem value={algo.id} id={algo.id} />
+                        <RadioGroupItem value={algo.id} id={algo.id} data-testid={`radio-algorithm-${algo.id}`} />
                         <div className="flex-1">
                           <Label
                             htmlFor={algo.id}
@@ -569,12 +570,14 @@ export default function SmartDistributionModal({
             variant="outline"
             onClick={onClose}
             disabled={distributeMutation.isPending}
+            data-testid="button-cancel-distribution"
           >
             إلغاء
           </Button>
           <Button
             onClick={handleApply}
             disabled={distributeMutation.isPending || !preview?.data?.preview?.length}
+            data-testid="button-apply-distribution"
           >
             {distributeMutation.isPending ? (
               <>

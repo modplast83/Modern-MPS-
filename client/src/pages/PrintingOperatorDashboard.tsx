@@ -183,7 +183,7 @@ export default function PrintingOperatorDashboard() {
     <div className="p-6 space-y-6">
       {/* رأس الصفحة مع الإحصائيات */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card data-testid="card-pending-rolls">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               رولات بانتظار الطباعة
@@ -192,12 +192,12 @@ export default function PrintingOperatorDashboard() {
           <CardContent>
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-orange-500" />
-              <span className="text-2xl font-bold">{totalPendingRolls}</span>
+              <span className="text-2xl font-bold" data-testid="stat-pending-rolls">{totalPendingRolls}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-printed-today">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               مطبوع اليوم
@@ -206,12 +206,12 @@ export default function PrintingOperatorDashboard() {
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold">{stats.todayPrintedCount || 0}</span>
+              <span className="text-2xl font-bold" data-testid="stat-printed-today">{stats.todayPrintedCount || 0}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-hourly-rate">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               معدل الإنتاج (رول/ساعة)
@@ -220,12 +220,12 @@ export default function PrintingOperatorDashboard() {
           <CardContent>
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-blue-500" />
-              <span className="text-2xl font-bold">{stats.hourlyRate?.toFixed(1) || 0}</span>
+              <span className="text-2xl font-bold" data-testid="stat-hourly-rate">{stats.hourlyRate?.toFixed(1) || 0}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card data-testid="card-completed-orders">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">
               أوامر مكتملة اليوم
@@ -234,7 +234,7 @@ export default function PrintingOperatorDashboard() {
           <CardContent>
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-purple-500" />
-              <span className="text-2xl font-bold">{stats.completedOrders || 0}</span>
+              <span className="text-2xl font-bold" data-testid="stat-completed-orders">{stats.completedOrders || 0}</span>
             </div>
           </CardContent>
         </Card>
@@ -253,12 +253,12 @@ export default function PrintingOperatorDashboard() {
             </div>
           ) : (
             printingQueue.map((order) => (
-              <Card key={order.id} className="border-l-4 border-l-primary">
+              <Card key={order.id} className="border-l-4 border-l-primary" data-testid={`card-order-${order.id}`}>
                 <Collapsible
                   open={expandedOrders.has(order.id)}
                   onOpenChange={() => toggleOrderExpanded(order.id)}
                 >
-                  <CollapsibleTrigger className="w-full">
+                  <CollapsibleTrigger className="w-full" data-testid={`trigger-expand-${order.id}`}>
                     <div className="p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">

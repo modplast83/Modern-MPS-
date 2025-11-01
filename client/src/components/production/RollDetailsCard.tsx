@@ -290,7 +290,7 @@ export default function RollDetailsCard({ rollId, onClose }: RollDetailsCardProp
               {getStageNameAr(rollDetails.stage)}
             </Badge>
             {onClose && (
-              <Button variant="ghost" size="icon" onClick={onClose}>
+              <Button variant="ghost" size="icon" onClick={onClose} data-testid="button-close-details">
                 <X className="h-4 w-4" />
               </Button>
             )}
@@ -301,9 +301,9 @@ export default function RollDetailsCard({ rollId, onClose }: RollDetailsCardProp
       <CardContent>
         <Tabs defaultValue="details" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">التفاصيل</TabsTrigger>
-            <TabsTrigger value="history">السجل</TabsTrigger>
-            <TabsTrigger value="cuts">القطع</TabsTrigger>
+            <TabsTrigger value="details" data-testid="tab-details">التفاصيل</TabsTrigger>
+            <TabsTrigger value="history" data-testid="tab-history">السجل</TabsTrigger>
+            <TabsTrigger value="cuts" data-testid="tab-cuts">القطع</TabsTrigger>
           </TabsList>
 
           {/* Details Tab */}
