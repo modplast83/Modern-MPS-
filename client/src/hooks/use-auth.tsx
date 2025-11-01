@@ -18,7 +18,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Make context available globally for debugging
 if (typeof window !== "undefined") {
   (window as any).__AuthContext = AuthContext;
 }
@@ -28,30 +27,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for current user session via API - secure server-side validation only
     const checkAuth = async () => {
       try {
-        // Security improvement: Only validate against server, no localStorage usage
         const response = await fetch("/api/me", {
-          credentials: "include", // Include cookies for session validation
+          credentials: "include",
         });
 
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.user) {
-            setUser(data.user);
+            const normalizedUser = normalizeUserRole(data.user);
+            setUser(normalizedUser);
           } else {
-            // Invalid response format
             setUser(null);
           }
         } else {
-          // No active session on server or authentication failed
           setUser(null);
         }
       } catch (error) {
         console.warn("Error checking auth session:", error);
-        // Security improvement: Don't preserve auth state on network errors
-        // This ensures users must re-authenticate if server is unreachable
         setUser(null);
       }
       setIsLoading(false);
@@ -65,10 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const response = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Ensure cookies are included in requests
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
@@ -78,8 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       const data = await response.json();
-      // Security improvement: Only store user data in memory, not localStorage
-      setUser(data.user);
+      const normalizedUser = normalizeUserRole(data.user);
+      setUser(normalizedUser);
     } catch (error) {
       throw error;
     } finally {
@@ -91,14 +83,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await fetch("/api/logout", {
         method: "POST",
-        credentials: "include", // Ensure cookies are included
+        credentials: "include",
       });
     } catch (error) {
       console.warn("Error during logout:", error);
     }
-    // Security improvement: Only clear in-memory user state
     setUser(null);
-    // Clear any cached queries related to user data
     if (typeof window !== "undefined") {
       window.location.reload();
     }
@@ -113,15 +103,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * 🔧 تحويل أسماء الأدوار من الـ API إلى رموز موحدة
+ */
+function normalizeUserRole(user: any): AuthUser {
+  let normalizedRole: AuthUser["role"] = "employee";
+
+  const roleName = user.role_name?.toLowerCase() || "";
+  const roleNameAr = user.role_name_ar || "";
+
+  if (roleName.includes("admin") || roleNameAr.includes("مدير")) {
+    normalizedRole = "admin";
+  } else if (roleName.includes("manager") || roleNameAr.includes("مشرف")) {
+    normalizedRole = "manager";
+  } else if (roleName.includes("supervisor") || roleNameAr.includes("مشرف")) {
+    normalizedRole = "supervisor";
+  }
+
+  return {
+    ...user,
+    role: normalizedRole,
+  };
+}
+
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    console.error(
-      "useAuth called outside AuthProvider. Current context:",
-      context,
-    );
-    console.error("AuthContext:", AuthContext);
-    // In development, provide a fallback to prevent complete app crash during HMR
+    console.error("useAuth called outside AuthProvider.");
     if (import.meta.env.DEV) {
       console.warn("Development fallback: returning empty auth state");
       return {
@@ -129,9 +137,7 @@ export function useAuth() {
         login: async () => {
           throw new Error("Auth not available - please refresh page");
         },
-        logout: () => {
-          window.location.reload();
-        },
+        logout: () => window.location.reload(),
         isLoading: false,
         isAuthenticated: false,
       };
