@@ -375,6 +375,22 @@ export const production_orders = pgTable(
       .notNull()
       .default("0"), // نسبة إكمال التقطيع
 
+    // NEW: حقول تخصيص الماكينة والعامل
+    assigned_machine_id: varchar("assigned_machine_id", { length: 20 })
+      .references(() => machines.id, { onDelete: "set null" }), // تخصيص ماكينة الفيلم
+    assigned_operator_id: integer("assigned_operator_id")
+      .references(() => users.id, { onDelete: "set null" }), // تخصيص العامل المسؤول
+    
+    // NEW: حقول أوقات الإنتاج
+    production_start_time: timestamp("production_start_time"), // وقت بداية الإنتاج
+    production_end_time: timestamp("production_end_time"), // وقت نهاية الإنتاج
+    production_time_minutes: integer("production_time_minutes"), // المدة الإجمالية بالدقائق
+    
+    // NEW: علامات اكتمال المراحل
+    film_completed: boolean("film_completed").default(false), // علامة اكتمال مرحلة الفيلم
+    printing_completed: boolean("printing_completed").default(false), // علامة اكتمال الطباعة
+    is_final_roll_created: boolean("is_final_roll_created").default(false), // علامة إنشاء آخر رول
+
     status: varchar("status", { length: 30 }).notNull().default("pending"),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
@@ -486,6 +502,12 @@ export const rolls = pgTable(
     cut_by: integer("cut_by").references(() => users.id, {
       onDelete: "set null",
     }), // ON DELETE SET NULL - user who cut the roll
+    
+    // NEW: حقول إضافية لتتبع الإنتاج
+    is_last_roll: boolean("is_last_roll").default(false), // لتحديد آخر رول في أمر الإنتاج
+    production_time_minutes: integer("production_time_minutes"), // وقت إنتاج الرول بالدقائق
+    roll_created_at: timestamp("roll_created_at").defaultNow(), // وقت إنشاء الرول بدقة
+    
     qr_code: varchar("qr_code", { length: 255 }), // Legacy field
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"), // Set when stage = 'done'
@@ -555,6 +577,23 @@ export const warehouse_receipts = pgTable("warehouse_receipts", {
     scale: 3,
   }).notNull(),
   received_by: integer("received_by").references(() => users.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// 🏭 جدول طوابير الماكينات - Machine Queues for Production Scheduling
+export const machine_queues = pgTable("machine_queues", {
+  id: serial("id").primaryKey(),
+  machine_id: varchar("machine_id", { length: 20 })
+    .notNull()
+    .references(() => machines.id, { onDelete: "cascade" }), // مرجع للماكينة
+  production_order_id: integer("production_order_id")
+    .notNull()
+    .references(() => production_orders.id, { onDelete: "cascade" }), // مرجع لأمر الإنتاج
+  queue_position: integer("queue_position").notNull(), // الترتيب في الطابور
+  estimated_start_time: timestamp("estimated_start_time"), // الوقت التقديري للبدء
+  assigned_at: timestamp("assigned_at").defaultNow(), // وقت التخصيص
+  assigned_by: integer("assigned_by")
+    .references(() => users.id, { onDelete: "set null" }), // المستخدم الذي خصص
   created_at: timestamp("created_at").defaultNow(),
 });
 
