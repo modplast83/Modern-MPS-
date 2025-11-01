@@ -35,6 +35,7 @@ import WhatsAppTemplateTest from "./pages/whatsapp-template-test";
 import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToolsPage from "./pages/tools_page";
+import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -89,6 +90,12 @@ function AppRoutes() {
       <Route path="/production-queues">
         <ProtectedRoute path="/production-queues">
           <ProductionQueues />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/film-operator">
+        <ProtectedRoute path="/film-operator">
+          <FilmOperatorDashboard />
         </ProtectedRoute>
       </Route>
 

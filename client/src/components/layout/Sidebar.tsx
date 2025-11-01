@@ -64,6 +64,14 @@ const modules = [
     requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
   },
   {
+    name: "لوحة عامل الفيلم",
+    name_ar: "لوحة عامل الفيلم",
+    icon: Cog,
+    path: "/film-operator",
+    active: false,
+    requiredSections: [1], // مخصص لعاملي قسم الفيلم
+  },
+  {
     name: "مراقبة الإنتاج",
     name_ar: "مراقبة الإنتاج",
     icon: Monitor,
@@ -132,8 +140,17 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  // Filter modules based on user permissions
+  // Filter modules based on user permissions and sections
   const accessibleModules = modules.filter(module => {
+    // Check if module has section requirements
+    if (module.requiredSections) {
+      // Check if user's section matches any of the required sections
+      const userSectionId = user?.section_id;
+      if (!userSectionId || !module.requiredSections.includes(userSectionId)) {
+        return false;
+      }
+    }
+    
     // Check route permissions for all pages including home
     return canAccessRoute(user, module.path);
   });
