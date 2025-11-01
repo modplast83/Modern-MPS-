@@ -31,7 +31,7 @@ import {
   AlertTriangle,
   MapPin,
   Phone,
-  History,
+  History as HistoryIcon,
 } from "lucide-react";
 import { printRollLabel } from "./RollLabelPrint";
 
@@ -713,7 +713,7 @@ export default function RollDetailsCard({ rollId, onClose }: RollDetailsCardProp
               </ScrollArea>
             ) : (
               <div className="text-center py-8">
-                <History className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                <HistoryIcon className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                 <p className="text-muted-foreground">لا يوجد سجل تحركات</p>
               </div>
             )}

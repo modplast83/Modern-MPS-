@@ -22,7 +22,7 @@ import { apiRequest, queryClient } from "../../lib/queryClient";
 import { useToast } from "../../hooks/use-toast";
 import {
   Sparkles,
-  BalanceScale,
+  Scale,
   Package,
   AlertTriangle,
   Layers,
@@ -53,13 +53,57 @@ interface DistributionAlgorithm {
   color: string;
 }
 
+interface MachinePreview {
+  machineId: number;
+  machineName: string;
+  machineNameAr: string;
+  currentLoad: number;
+  proposedLoad: number;
+  proposedUtilization: number;
+  newCapacityStatus: string;
+  proposedOrders: any[];
+  productionRate: number;
+}
+
+interface DistributionPreviewData {
+  totalOrders: number;
+  machineCount: number;
+  efficiency: number;
+  preview: MachinePreview[];
+}
+
+interface DistributionPreviewResponse {
+  data: DistributionPreviewData;
+}
+
+interface MachineCapacityStat {
+  machineId: number;
+  machineName: string;
+  machineNameAr: string;
+  currentLoad: number;
+  maxCapacity: number;
+  utilizationPercentage: number;
+  capacityStatus: string;
+  orderCount: number;
+  productionRate: number;
+}
+
+interface CapacityStatsResponse {
+  data: MachineCapacityStat[];
+}
+
+interface DistributionResult {
+  success: boolean;
+  message: string;
+}
+
 const algorithms: DistributionAlgorithm[] = [
   {
     id: "balanced",
     name: "Balanced Distribution",
     nameAr: "التوزيع المتوازن",
     description: "توزيع متساوٍ حسب عدد الأوامر على جميع المكائن",
-    icon: <BalanceScale className="h-5 w-5" />,
+    icon: <Scale className="h-5 w-5" />,
     color: "bg-blue-100 border-blue-300",
   },
   {
@@ -111,12 +155,19 @@ export default function SmartDistributionModal({
   });
 
   // Fetch distribution preview
-  const { data: preview, isLoading: isPreviewLoading } = useQuery({
+  const { data: preview, isLoading: isPreviewLoading } = useQuery<DistributionPreviewResponse>({
     queryKey: ["/api/machine-queues/distribution-preview", selectedAlgorithm, hybridParams],
     queryFn: async () => {
       const params = new URLSearchParams({
         algorithm: selectedAlgorithm,
-        ...(selectedAlgorithm === "hybrid" ? hybridParams : {}),
+        ...(selectedAlgorithm === "hybrid" 
+          ? {
+              loadWeight: String(hybridParams.loadWeight),
+              capacityWeight: String(hybridParams.capacityWeight),
+              priorityWeight: String(hybridParams.priorityWeight),
+              typeWeight: String(hybridParams.typeWeight),
+            }
+          : {}),
       });
       const response = await fetch(`/api/machine-queues/distribution-preview?${params}`, {
         credentials: "include",
@@ -128,21 +179,22 @@ export default function SmartDistributionModal({
   });
 
   // Fetch machine capacity stats
-  const { data: capacityStats } = useQuery({
+  const { data: capacityStats } = useQuery<CapacityStatsResponse>({
     queryKey: ["/api/machines/capacity-stats"],
     enabled: isOpen,
   });
 
   // Apply distribution mutation
   const distributeMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("/api/machine-queues/smart-distribute", {
+    mutationFn: async (): Promise<DistributionResult> => {
+      const response = await apiRequest("/api/machine-queues/smart-distribute", {
         method: "POST",
         body: JSON.stringify({
           algorithm: selectedAlgorithm,
           params: selectedAlgorithm === "hybrid" ? hybridParams : {},
         }),
       });
+      return response.json();
     },
     onSuccess: (result) => {
       if (result.success) {
