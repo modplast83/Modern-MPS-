@@ -21,14 +21,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { ScrollArea } from "../components/ui/scroll-area";
+import { Alert, AlertDescription } from "../components/ui/alert";
+import { Progress } from "../components/ui/progress";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest, queryClient } from "../lib/queryClient";
+import SmartDistributionModal from "../components/modals/SmartDistributionModal";
 import {
   GripVertical,
   Factory,
   Package,
   AlertCircle,
   Sparkles,
+  RefreshCw,
+  TrendingUp,
+  Info,
+  BarChart3,
 } from "lucide-react";
 
 interface ProductionOrder {
@@ -217,6 +224,7 @@ export default function ProductionQueues() {
   const { toast } = useToast();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localQueues, setLocalQueues] = useState<{ [key: string]: any[] }>({});
+  const [isDistributionModalOpen, setIsDistributionModalOpen] = useState(false);
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -244,6 +252,11 @@ export default function ProductionQueues() {
   // Fetch distribution suggestions
   const { data: suggestions } = useQuery<{ data: any[] }>({
     queryKey: ["/api/machine-queues/suggest"],
+  });
+
+  // Fetch machine capacity stats  
+  const { data: capacityStats } = useQuery<{ data: any[] }>({
+    queryKey: ["/api/machines/capacity-stats"],
   });
 
   // Organize data into queues
@@ -487,31 +500,112 @@ export default function ProductionQueues() {
   }
 
   const activeMachines = machines.filter(m => m.status === "active");
+  const unassignedCount = localQueues["unassigned"]?.length || 0;
+
+  // Calculate total capacity statistics
+  const totalCapacityStats = capacityStats?.data?.reduce((acc, stat) => {
+    acc.totalLoad += stat.currentLoad || 0;
+    acc.totalCapacity += stat.maxCapacity || 0;
+    acc.totalOrders += stat.orderCount || 0;
+    return acc;
+  }, { totalLoad: 0, totalCapacity: 0, totalOrders: 0 });
+
+  const overallUtilization = totalCapacityStats 
+    ? (totalCapacityStats.totalLoad / totalCapacityStats.totalCapacity) * 100
+    : 0;
 
   return (
     <div className="container mx-auto p-6">
+      {/* Smart Distribution Modal */}
+      <SmartDistributionModal
+        isOpen={isDistributionModalOpen}
+        onClose={() => setIsDistributionModalOpen(false)}
+        onDistribute={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+        }}
+      />
+
       <div className="mb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold">طوابير الإنتاج</h1>
             <p className="text-muted-foreground mt-1">
               قم بسحب وإفلات أوامر الإنتاج لتنظيم العمل على المكائن
             </p>
           </div>
-          <Button
-            onClick={applySuggestions}
-            disabled={!suggestions?.data || suggestions.data.length === 0}
-            className="gap-2"
-          >
-            <Sparkles className="h-4 w-4" />
-            توزيع تلقائي ذكي
-            {suggestions?.data && suggestions.data.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {suggestions.data.length}
-              </Badge>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
+                queryClient.invalidateQueries({ queryKey: ["/api/machines/capacity-stats"] });
+                toast({
+                  title: "تم التحديث",
+                  description: "تم تحديث البيانات بنجاح",
+                });
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => setIsDistributionModalOpen(true)}
+              disabled={unassignedCount === 0}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              توزيع ذكي متقدم
+              {unassignedCount > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {unassignedCount} أمر
+                </Badge>
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Capacity Statistics Bar */}
+        {totalCapacityStats && totalCapacityStats.totalCapacity > 0 && (
+          <Card className="mb-4">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">إحصائيات السعة الإجمالية</span>
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">الحمولة:</span>
+                    <span className="font-medium">
+                      {totalCapacityStats.totalLoad.toFixed(0)} / {totalCapacityStats.totalCapacity.toFixed(0)} كجم
+                    </span>
+                  </div>
+                  <Badge variant="outline">
+                    {totalCapacityStats.totalOrders} أمر نشط
+                  </Badge>
+                </div>
+              </div>
+              <Progress
+                value={overallUtilization}
+                className="h-2"
+              />
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+                <span>نسبة الاستخدام: {overallUtilization.toFixed(1)}%</span>
+                <span className={
+                  overallUtilization > 90 ? "text-red-600" :
+                  overallUtilization > 70 ? "text-yellow-600" :
+                  overallUtilization > 40 ? "text-blue-600" :
+                  "text-green-600"
+                }>
+                  {overallUtilization > 90 ? "حمولة زائدة" :
+                   overallUtilization > 70 ? "حمولة عالية" :
+                   overallUtilization > 40 ? "حمولة متوسطة" :
+                   "حمولة منخفضة"}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {activeMachines.length === 0 ? (

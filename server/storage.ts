@@ -462,6 +462,13 @@ export interface IStorage {
   updateQueuePosition(queueId: number, newPosition: number): Promise<MachineQueue>;
   removeFromQueue(queueId: number): Promise<void>;
   suggestOptimalDistribution(): Promise<any[]>;
+  
+  // Smart Distribution Functions
+  smartDistributeOrders(algorithm: string, params?: any): Promise<any>;
+  calculateMachineCapacity(machineId: string): Promise<any>;
+  getDistributionPreview(algorithm: string, params?: any): Promise<any>;
+  optimizeQueueOrder(machineId: string): Promise<void>;
+  getMachineCapacityStats(): Promise<any[]>;
 
   // Customers
   getCustomers(): Promise<Customer[]>;
@@ -3135,6 +3142,675 @@ export class DatabaseStorage implements IStorage {
     }
 
     return suggestions;
+  }
+
+  // Smart Distribution Functions Implementation
+  async smartDistributeOrders(algorithm: string, params: any = {}): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get all active machines
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+        
+        if (activeMachines.length === 0) {
+          throw new DatabaseError("لا توجد مكائن نشطة للتوزيع");
+        }
+
+        // Get unassigned active production orders
+        const unassignedOrders = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+            priority: production_orders.priority,
+            created_at: production_orders.created_at,
+          })
+          .from(production_orders)
+          .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              sql`${machine_queues.id} IS NULL`
+            )
+          );
+
+        if (unassignedOrders.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد أوامر إنتاج غير مخصصة",
+            distributed: 0,
+          };
+        }
+
+        // Get current machine loads
+        const machineLoads = new Map<string, number>();
+        const machineCapacities = new Map<string, number>();
+        
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          machineCapacities.set(machine.id, capacity.availableCapacity);
+          machineLoads.set(machine.id, capacity.currentLoad);
+        }
+
+        let distributionPlan: Array<{ orderId: number; machineId: string; position: number }> = [];
+
+        switch (algorithm) {
+          case "balanced":
+            // التوزيع المتوازن - توزيع متساوٍ حسب عدد الأوامر
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "load-based":
+            // التوزيع حسب الحمولة - توزيع حسب الكمية الإجمالية
+            distributionPlan = this.distributeByLoad(unassignedOrders, activeMachines, machineCapacities);
+            break;
+
+          case "priority":
+            // التوزيع حسب الأولوية - أوامر عاجلة أولاً
+            distributionPlan = this.distributeByPriority(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "product-type":
+            // التوزيع حسب نوع المنتج - تجميع منتجات مشابهة
+            distributionPlan = await this.distributeByProductType(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "hybrid":
+            // التوزيع الهجين - مزج المعايير المختلفة
+            distributionPlan = await this.distributeHybrid(unassignedOrders, activeMachines, machineCapacities, params);
+            break;
+
+          default:
+            throw new DatabaseError(`خوارزمية التوزيع غير معروفة: ${algorithm}`);
+        }
+
+        // Apply the distribution plan
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const plan of distributionPlan) {
+          try {
+            await this.assignToMachineQueue(
+              plan.orderId,
+              plan.machineId,
+              plan.position,
+              params.userId || 1
+            );
+            successCount++;
+            results.push({
+              orderId: plan.orderId,
+              machineId: plan.machineId,
+              status: "success",
+            });
+          } catch (error: any) {
+            failCount++;
+            results.push({
+              orderId: plan.orderId,
+              machineId: plan.machineId,
+              status: "failed",
+              error: error.message,
+            });
+          }
+        }
+
+        // Invalidate cache
+        cache.delete("machine_queues");
+        invalidateProductionCache("all");
+
+        return {
+          success: true,
+          message: `تم توزيع ${successCount} أمر بنجاح`,
+          distributed: successCount,
+          failed: failCount,
+          results,
+          algorithm,
+        };
+      },
+      "smartDistributeOrders",
+      "توزيع أوامر الإنتاج بذكاء"
+    );
+  }
+
+  // Helper function for balanced distribution
+  private distributeBalanced(orders: any[], machines: Machine[], loads: Map<string, number>): any[] {
+    const plan = [];
+    let machineIndex = 0;
+
+    // Sort machines by current load (ascending)
+    const sortedMachines = machines.sort((a, b) => {
+      const loadA = loads.get(a.id) || 0;
+      const loadB = loads.get(b.id) || 0;
+      return loadA - loadB;
+    });
+
+    for (const order of orders) {
+      const machine = sortedMachines[machineIndex % sortedMachines.length];
+      const currentLoad = loads.get(machine.id) || 0;
+      
+      plan.push({
+        orderId: order.id,
+        machineId: machine.id,
+        position: currentLoad,
+      });
+
+      loads.set(machine.id, currentLoad + 1);
+      machineIndex++;
+    }
+
+    return plan;
+  }
+
+  // Helper function for load-based distribution
+  private distributeByLoad(orders: any[], machines: Machine[], capacities: Map<string, number>): any[] {
+    const plan = [];
+    const machineWeights = new Map<string, number>();
+    
+    // Initialize weights
+    machines.forEach(m => machineWeights.set(m.id, 0));
+
+    // Sort orders by weight (descending) - largest first
+    const sortedOrders = orders.sort((a, b) => {
+      const weightA = parseFloat(a.final_quantity_kg || a.quantity_kg || "0");
+      const weightB = parseFloat(b.final_quantity_kg || b.quantity_kg || "0");
+      return weightB - weightA;
+    });
+
+    for (const order of sortedOrders) {
+      // Find machine with most available capacity
+      let bestMachine = machines[0];
+      let maxCapacity = -1;
+
+      for (const machine of machines) {
+        const currentWeight = machineWeights.get(machine.id) || 0;
+        const capacity = capacities.get(machine.id) || 0;
+        const availableCapacity = capacity - currentWeight;
+
+        if (availableCapacity > maxCapacity) {
+          maxCapacity = availableCapacity;
+          bestMachine = machine;
+        }
+      }
+
+      const orderWeight = parseFloat(order.final_quantity_kg || order.quantity_kg || "0");
+      machineWeights.set(bestMachine.id, (machineWeights.get(bestMachine.id) || 0) + orderWeight);
+
+      plan.push({
+        orderId: order.id,
+        machineId: bestMachine.id,
+        position: plan.filter(p => p.machineId === bestMachine.id).length,
+      });
+    }
+
+    return plan;
+  }
+
+  // Helper function for priority-based distribution
+  private distributeByPriority(orders: any[], machines: Machine[], loads: Map<string, number>): any[] {
+    const plan = [];
+
+    // Sort orders by priority (high priority first)
+    const sortedOrders = orders.sort((a, b) => {
+      const priorityOrder = { "urgent": 0, "high": 1, "normal": 2, "low": 3 };
+      const priorityA = priorityOrder[a.priority || "normal"] || 2;
+      const priorityB = priorityOrder[b.priority || "normal"] || 2;
+      
+      if (priorityA !== priorityB) return priorityA - priorityB;
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+
+    for (const order of sortedOrders) {
+      // Find machine with least load
+      let bestMachine = machines[0];
+      let minLoad = Infinity;
+
+      for (const machine of machines) {
+        const load = loads.get(machine.id) || 0;
+        if (load < minLoad) {
+          minLoad = load;
+          bestMachine = machine;
+        }
+      }
+
+      plan.push({
+        orderId: order.id,
+        machineId: bestMachine.id,
+        position: minLoad,
+      });
+
+      loads.set(bestMachine.id, minLoad + 1);
+    }
+
+    return plan;
+  }
+
+  // Helper function for product-type-based distribution
+  private async distributeByProductType(orders: any[], machines: Machine[], loads: Map<string, number>): Promise<any[]> {
+    const plan = [];
+    
+    // Group orders by customer_product_id
+    const productGroups = new Map<number, any[]>();
+    
+    for (const order of orders) {
+      const productId = order.customer_product_id;
+      if (!productGroups.has(productId)) {
+        productGroups.set(productId, []);
+      }
+      productGroups.get(productId)!.push(order);
+    }
+
+    // Assign each product group to machines
+    let machineIndex = 0;
+    
+    for (const [productId, productOrders] of productGroups) {
+      const machine = machines[machineIndex % machines.length];
+      let position = loads.get(machine.id) || 0;
+
+      for (const order of productOrders) {
+        plan.push({
+          orderId: order.id,
+          machineId: machine.id,
+          position: position++,
+        });
+      }
+
+      loads.set(machine.id, position);
+      machineIndex++;
+    }
+
+    return plan;
+  }
+
+  // Helper function for hybrid distribution
+  private async distributeHybrid(
+    orders: any[], 
+    machines: Machine[], 
+    capacities: Map<string, number>,
+    params: any
+  ): Promise<any[]> {
+    const plan = [];
+    const machineScores = new Map<string, Map<number, number>>();
+
+    // Initialize scores
+    machines.forEach(m => machineScores.set(m.id, new Map()));
+
+    // Calculate scores for each order-machine combination
+    for (const order of orders) {
+      for (const machine of machines) {
+        let score = 0;
+
+        // Factor 1: Current load (lower is better)
+        const currentLoad = await this.getMachineQueueCount(machine.id);
+        score += (10 - Math.min(currentLoad, 10)) * (params.loadWeight || 0.3);
+
+        // Factor 2: Capacity (higher available capacity is better)
+        const capacity = capacities.get(machine.id) || 0;
+        score += (capacity / 1000) * (params.capacityWeight || 0.3);
+
+        // Factor 3: Priority matching
+        if (order.priority === "urgent" || order.priority === "high") {
+          score += 5 * (params.priorityWeight || 0.2);
+        }
+
+        // Factor 4: Machine type preference (if specified)
+        if (params.machineTypePreference && machine.type === params.machineTypePreference) {
+          score += 10 * (params.typeWeight || 0.2);
+        }
+
+        machineScores.get(machine.id)!.set(order.id, score);
+      }
+    }
+
+    // Assign orders to machines based on highest scores
+    const assignedOrders = new Set<number>();
+    const machinePositions = new Map<string, number>();
+
+    while (assignedOrders.size < orders.length) {
+      let bestScore = -1;
+      let bestOrder: any = null;
+      let bestMachine: Machine | null = null;
+
+      for (const order of orders) {
+        if (assignedOrders.has(order.id)) continue;
+
+        for (const machine of machines) {
+          const score = machineScores.get(machine.id)!.get(order.id) || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestOrder = order;
+            bestMachine = machine;
+          }
+        }
+      }
+
+      if (!bestOrder || !bestMachine) break;
+
+      const position = machinePositions.get(bestMachine.id) || 0;
+      plan.push({
+        orderId: bestOrder.id,
+        machineId: bestMachine.id,
+        position,
+      });
+
+      machinePositions.set(bestMachine.id, position + 1);
+      assignedOrders.add(bestOrder.id);
+
+      // Reduce scores for this machine to balance distribution
+      for (const order of orders) {
+        const currentScore = machineScores.get(bestMachine.id)!.get(order.id) || 0;
+        machineScores.get(bestMachine.id)!.set(order.id, currentScore * 0.9);
+      }
+    }
+
+    return plan;
+  }
+
+  // Helper to get machine queue count
+  private async getMachineQueueCount(machineId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(machine_queues)
+      .where(eq(machine_queues.machine_id, machineId));
+    
+    return result?.count || 0;
+  }
+
+  async calculateMachineCapacity(machineId: string): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get machine details
+        const machine = await this.getMachineById(machineId);
+        if (!machine) {
+          throw new DatabaseError("الماكينة غير موجودة");
+        }
+
+        // Get current queue for this machine
+        const queueItems = await db
+          .select({
+            quantity_kg: production_orders.final_quantity_kg,
+          })
+          .from(machine_queues)
+          .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+          .where(eq(machine_queues.machine_id, machineId));
+
+        // Calculate current load
+        let currentLoad = 0;
+        let orderCount = 0;
+
+        for (const item of queueItems) {
+          if (item.quantity_kg) {
+            currentLoad += parseFloat(item.quantity_kg.toString());
+          }
+          orderCount++;
+        }
+
+        // Default capacities based on machine type (in kg)
+        const defaultCapacities = {
+          "extruder": 5000,   // 5 tons
+          "printer": 3000,    // 3 tons
+          "cutter": 4000,     // 4 tons
+        };
+
+        const maxCapacity = defaultCapacities[machine.type as keyof typeof defaultCapacities] || 4000;
+        const availableCapacity = maxCapacity - currentLoad;
+        const utilizationPercentage = (currentLoad / maxCapacity) * 100;
+
+        // Estimate production rate (kg/hour) based on machine type
+        const productionRates = {
+          "extruder": 200,
+          "printer": 150,
+          "cutter": 250,
+        };
+
+        const productionRate = productionRates[machine.type as keyof typeof productionRates] || 200;
+        const estimatedTimeHours = currentLoad / productionRate;
+
+        return {
+          machineId,
+          machineName: machine.name,
+          machineNameAr: machine.name_ar,
+          machineType: machine.type,
+          machineStatus: machine.status,
+          currentLoad,
+          maxCapacity,
+          availableCapacity,
+          utilizationPercentage,
+          orderCount,
+          productionRate,
+          estimatedTimeHours,
+          capacityStatus: utilizationPercentage > 90 ? "overloaded" : 
+                         utilizationPercentage > 70 ? "high" :
+                         utilizationPercentage > 40 ? "moderate" : "low",
+        };
+      },
+      "calculateMachineCapacity",
+      "حساب سعة الماكينة"
+    );
+  }
+
+  async getDistributionPreview(algorithm: string, params: any = {}): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get all active machines
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+
+        if (activeMachines.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد مكائن نشطة للتوزيع",
+            preview: [],
+          };
+        }
+
+        // Get unassigned active production orders
+        const unassignedOrders = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+            priority: production_orders.priority,
+            created_at: production_orders.created_at,
+          })
+          .from(production_orders)
+          .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              sql`${machine_queues.id} IS NULL`
+            )
+          );
+
+        if (unassignedOrders.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد أوامر إنتاج غير مخصصة",
+            preview: [],
+          };
+        }
+
+        // Get current machine states
+        const machineStates = [];
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          machineStates.push({
+            ...capacity,
+            proposedOrders: [],
+            proposedLoad: 0,
+            proposedUtilization: 0,
+          });
+        }
+
+        // Simulate distribution without applying
+        const machineLoads = new Map<string, number>();
+        const machineCapacities = new Map<string, number>();
+        
+        for (const state of machineStates) {
+          machineCapacities.set(state.machineId, state.availableCapacity);
+          machineLoads.set(state.machineId, state.orderCount);
+        }
+
+        let distributionPlan;
+        
+        switch (algorithm) {
+          case "balanced":
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "load-based":
+            distributionPlan = this.distributeByLoad(unassignedOrders, activeMachines, machineCapacities);
+            break;
+          case "priority":
+            distributionPlan = this.distributeByPriority(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "product-type":
+            distributionPlan = await this.distributeByProductType(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "hybrid":
+            distributionPlan = await this.distributeHybrid(unassignedOrders, activeMachines, machineCapacities, params);
+            break;
+          default:
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+        }
+
+        // Apply plan to preview
+        for (const plan of distributionPlan) {
+          const order = unassignedOrders.find(o => o.id === plan.orderId);
+          const machineState = machineStates.find(s => s.machineId === plan.machineId);
+          
+          if (order && machineState) {
+            const orderWeight = parseFloat(order.final_quantity_kg || order.quantity_kg || "0");
+            machineState.proposedOrders.push({
+              orderId: order.id,
+              orderNumber: order.production_order_number,
+              weight: orderWeight,
+              priority: order.priority,
+            });
+            machineState.proposedLoad += orderWeight;
+          }
+        }
+
+        // Calculate new utilization
+        for (const state of machineStates) {
+          const newTotalLoad = state.currentLoad + state.proposedLoad;
+          state.proposedUtilization = (newTotalLoad / state.maxCapacity) * 100;
+          state.newCapacityStatus = state.proposedUtilization > 90 ? "overloaded" :
+                                    state.proposedUtilization > 70 ? "high" :
+                                    state.proposedUtilization > 40 ? "moderate" : "low";
+        }
+
+        // Calculate distribution efficiency
+        const loadVariance = this.calculateLoadVariance(machineStates);
+        const efficiency = Math.max(0, 100 - loadVariance);
+
+        return {
+          success: true,
+          algorithm,
+          totalOrders: unassignedOrders.length,
+          machineCount: activeMachines.length,
+          efficiency: efficiency.toFixed(2),
+          preview: machineStates,
+        };
+      },
+      "getDistributionPreview",
+      "معاينة توزيع الأوامر"
+    );
+  }
+
+  private calculateLoadVariance(machineStates: any[]): number {
+    if (machineStates.length === 0) return 0;
+    
+    const loads = machineStates.map(s => s.proposedUtilization);
+    const mean = loads.reduce((a, b) => a + b, 0) / loads.length;
+    const variance = loads.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / loads.length;
+    
+    return Math.sqrt(variance);
+  }
+
+  async optimizeQueueOrder(machineId: string): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get current queue for the machine
+        const queue = await db
+          .select({
+            id: machine_queues.id,
+            production_order_id: machine_queues.production_order_id,
+            queue_position: machine_queues.queue_position,
+            priority: production_orders.priority,
+            quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+          })
+          .from(machine_queues)
+          .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+          .where(eq(machine_queues.machine_id, machineId))
+          .orderBy(machine_queues.queue_position);
+
+        if (queue.length === 0) return;
+
+        // Sort queue by optimization criteria
+        const priorityOrder = { "urgent": 0, "high": 1, "normal": 2, "low": 3 };
+        
+        const optimizedQueue = queue.sort((a, b) => {
+          // First by priority
+          const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 2;
+          const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 2;
+          
+          if (priorityA !== priorityB) return priorityA - priorityB;
+          
+          // Then by product type to group similar products
+          if (a.customer_product_id !== b.customer_product_id) {
+            return (a.customer_product_id || 0) - (b.customer_product_id || 0);
+          }
+          
+          // Finally by current position to maintain some stability
+          return a.queue_position - b.queue_position;
+        });
+
+        // Update positions
+        await db.transaction(async (tx) => {
+          for (let i = 0; i < optimizedQueue.length; i++) {
+            if (optimizedQueue[i].queue_position !== i) {
+              await tx
+                .update(machine_queues)
+                .set({ queue_position: i })
+                .where(eq(machine_queues.id, optimizedQueue[i].id));
+            }
+          }
+        });
+
+        // Invalidate cache
+        cache.delete("machine_queues");
+        invalidateProductionCache("all");
+      },
+      "optimizeQueueOrder",
+      "تحسين ترتيب طابور الماكينة"
+    );
+  }
+
+  async getMachineCapacityStats(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+        
+        const stats = [];
+        
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          stats.push(capacity);
+        }
+
+        // Sort by utilization percentage (descending)
+        stats.sort((a, b) => b.utilizationPercentage - a.utilizationPercentage);
+        
+        return stats;
+      },
+      "getMachineCapacityStats",
+      "إحصائيات سعة المكائن"
+    );
   }
 
   async getCustomers(): Promise<Customer[]> {
