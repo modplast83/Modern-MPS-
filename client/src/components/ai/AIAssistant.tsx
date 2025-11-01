@@ -14,9 +14,7 @@ import {
   User,
   Send,
   Mic,
-  MicOff,
   Volume2,
-  FileText,
   Bell,
   TrendingUp,
   Settings,
@@ -35,57 +33,55 @@ export default function AIAssistant() {
     {
       id: "1",
       type: "assistant",
-      content: `🤖 مرحباً! أنا مساعدك الذكي المتطور في نظام MPBF Next.
+      content: `👋 **مرحباً! أنا مساعدك الذكي المطور**
 
-**قدراتي المتقدمة:**
-🗄️ **إدارة قاعدة البيانات الكاملة** - إضافة، تعديل، حذف جميع السجلات
-📊 **التقارير الذكية** - تحليل البيانات وإنشاء تقارير تفاعلية  
-🔔 **النظام الذكي للإشعارات** - تنبيهات تلقائية حسب الحاجة
-🧠 **التعلم المستمر** - تحسين الأداء من خلال تحليل أنماط العمل
-⚙️ **التطوير الذاتي** - تحسين وتطوير وظائف النظام
+🎯 **يمكنني مساعدتك في:**
 
-**أمثلة على ما يمكنني فعله:**
-• "أضف عميل جديد اسمه أحمد محمد من الرياض"
-• "اعرض لي تقرير الإنتاج لهذا الأسبوع"  
-• "حدث حالة الطلب رقم ORD-123 إلى مكتمل"
-• "احذف المكينة رقم 5"
-• "أرسل تنبيه صيانة للمكائن المتوقفة"
+**📝 التسجيل والإضافة:**
+• "سجل عميل اسمه شركة النور، رقم 0501234567"
+• "أضف منتج للعميل CID-001 كيس 30x40"
+• "اعمل طلب للعميل CID-001"
+• "سجل أمر تشغيل"
 
-كيف يمكنني مساعدتك اليوم؟`,
+**📊 الاستعلامات:**
+• "كم عدد العملاء؟"
+• "ما حالة الإنتاج؟"
+• "قائمة الطلبات"
+
+💡 اكتب **"مساعدة"** لمزيد من الأمثلة!`,
       timestamp: new Date(),
     },
   ]);
   const [inputValue, setInputValue] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [showQuickActions, setShowQuickActions] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
     {
-      label: "تقرير الإنتاج",
-      icon: TrendingUp,
-      command: "اعرض لي تقرير الإنتاج الذكي",
-      description: "تحليل شامل للإنتاج مع توصيات",
-    },
-    {
-      label: "إضافة عميل",
+      label: "سجل عميل",
       icon: User,
-      command: "أضف عميل جديد",
-      description: "إضافة عميل جديد بالذكاء الاصطناعي",
+      command: "سجل عميل جديد",
+      description: "إضافة عميل جديد",
     },
     {
-      label: "فحص الإشعارات",
-      icon: Bell,
-      command: "اعرض الإشعارات والتنبيهات النشطة",
-      description: "مراجعة التنبيهات الذكية",
+      label: "أضف منتج",
+      icon: TrendingUp,
+      command: "أضف منتج جديد",
+      description: "إضافة منتج للعميل",
     },
     {
-      label: "حالة المكائن",
+      label: "حالة الإنتاج",
       icon: Settings,
-      command: "ما هي حالة المكائن حالياً؟",
-      description: "مراجعة حالة جميع المكائن",
+      command: "ما حالة الإنتاج؟",
+      description: "إحصائيات الإنتاج",
+    },
+    {
+      label: "مساعدة",
+      icon: Bell,
+      command: "مساعدة",
+      description: "دليل الاستخدام",
     },
   ];
 
@@ -94,6 +90,8 @@ export default function AIAssistant() {
       if (!user?.id) {
         throw new Error("يجب تسجيل الدخول لاستخدام المساعد الذكي");
       }
+      
+      setIsTyping(true);
       
       const response = await fetch("/api/ai/chat", {
         method: "POST",
@@ -109,6 +107,7 @@ export default function AIAssistant() {
       return response.json();
     },
     onSuccess: (response: any) => {
+      setIsTyping(false);
       const assistantMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
@@ -119,6 +118,7 @@ export default function AIAssistant() {
       setMessages((prev) => [...prev, assistantMessage]);
     },
     onError: () => {
+      setIsTyping(false);
       const errorMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
@@ -148,14 +148,13 @@ export default function AIAssistant() {
     setMessages((prev) => [...prev, userMessage]);
     sendMessageMutation.mutate(messageToSend);
     setInputValue("");
-    setShowQuickActions(false);
   };
 
   const handleQuickAction = (command: string) => {
     handleSendMessage(command);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -163,30 +162,10 @@ export default function AIAssistant() {
   };
 
   const toggleVoiceInput = () => {
-    if (!isListening) {
-      // Start voice recognition
-      setIsListening(true);
-      toast({
-        title: "الاستماع نشط",
-        description: "تحدث الآن...",
-      });
-
-      // Simulate voice recognition (replace with actual implementation)
-      const timeoutId = setTimeout(() => {
-        setIsListening(false);
-        setInputValue("ما هو حالة الإنتاج اليوم؟");
-      }, 3000);
-
-      // Store timeout ID for cleanup
-      (window as any).__voiceTimeout = timeoutId;
-    } else {
-      setIsListening(false);
-      // Clear any pending timeout
-      if ((window as any).__voiceTimeout) {
-        clearTimeout((window as any).__voiceTimeout);
-        (window as any).__voiceTimeout = null;
-      }
-    }
+    toast({
+      title: "الإدخال الصوتي",
+      description: "استخدم المساعد الصوتي في الصفحة الرئيسية للإدخال الصوتي المتقدم",
+    });
   };
 
   const speakMessage = (content: string) => {
@@ -252,23 +231,24 @@ export default function AIAssistant() {
                 </div>
               </div>
             ))}
-            {sendMessageMutation.isPending && (
+            {isTyping && (
               <div className="flex justify-start">
                 <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center animate-pulse">
                     <Bot className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="bg-gray-100 rounded-lg p-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="flex gap-1 items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.15s" }}
                       ></div>
                       <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "0.3s" }}
                       ></div>
+                      <span className="text-xs text-gray-500 mr-2">جاري التفكير...</span>
                     </div>
                   </div>
                 </div>
@@ -282,26 +262,26 @@ export default function AIAssistant() {
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="اكتب رسالتك هنا..."
               className="flex-1"
               disabled={sendMessageMutation.isPending}
+              data-testid="input-ai-message"
             />
             <Button
               variant="outline"
               size="sm"
               onClick={toggleVoiceInput}
-              className={isListening ? "bg-red-100 text-red-600" : ""}
+              data-testid="button-ai-voice"
+              title="الإدخال الصوتي"
             >
-              {isListening ? (
-                <MicOff className="w-4 h-4" />
-              ) : (
-                <Mic className="w-4 h-4" />
-              )}
+              <Mic className="w-4 h-4" />
             </Button>
             <Button
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
+              data-testid="button-ai-send"
+              title="إرسال"
             >
               <Send className="w-4 h-4" />
             </Button>

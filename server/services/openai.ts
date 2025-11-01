@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { storage } from "../storage";
 // Note: Imports removed as they are not used in this service
+import { aiFactoryBrain } from "./ai-schema";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({
@@ -30,8 +31,11 @@ class AdvancedOpenAIService {
   async processMessage(message: string, userId?: number): Promise<string> {
     const startTime = Date.now();
     try {
-      // تحليل نية المستخدم أولاً
-      const intent = await this.analyzeUserIntent(message);
+      // جمع سياق النظام الحالي
+      const systemContext = await this.getSystemContext();
+
+      // تحليل نية المستخدم أولاً مع السياق
+      const intent = await this.analyzeUserIntent(message, systemContext);
 
       // تحديد إذا كانت الرسالة تتطلب عمليات قاعدة بيانات
       if (intent.requiresDatabase) {
@@ -46,53 +50,45 @@ class AdvancedOpenAIService {
         );
       }
 
-      // معالجة الرسائل العامة
+      // معالجة الرسائل العامة مع سياق محسّن
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         response_format: { type: "text" },
         messages: [
           {
             role: "system",
-            content: `أنت مساعد ذكي متطور لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next). استجب بتنسيق JSON عند الحاجة. 
+            content: `أنت مساعد ذكي متطور لنظام إدارة مصنع الأكياس البلاستيكية (MPBF Next).
 
-قدراتك المتقدمة:
-🗄️ **إدارة قاعدة البيانات الكاملة**: إضافة، تعديل، حذف جميع السجلات والجداول
-📊 **التقارير الذكية**: تحليل البيانات وإنشاء تقارير تفاعلية
-🔔 **النظام الذكي للإشعارات**: إرسال تنبيهات حسب الحاجة والأولوية  
-🧠 **التعلم المستمر**: تحسين الأداء من خلال تحليل أنماط العمل
-⚙️ **التطوير الذاتي**: تحسين وتطوير وظائف النظام
+📊 **سياق النظام الحالي:**
+${systemContext}
 
-الجداول المتاحة:
-- العملاء (customers)
-- الطلبات (orders) 
-- أوامر الإنتاج (production_orders)
-- الرولات (rolls)
-- المكائن (machines)
-- المستخدمين (users)
-- الأصناف (items)
-- المجموعات (categories)
-- الجرد (inventory)
-- حركات المخزون (inventory_movements)
-- فحص الجودة (quality_checks)
-- الصيانة (maintenance_records)
-- الموارد البشرية (attendance, training_records, performance_reviews)
+🎯 **قدراتك المتقدمة:**
+• **التحليل الذكي**: تحليل بيانات الإنتاج والجودة والأداء
+• **الاستعلامات الذكية**: الإجابة على أسئلة معقدة عن حالة المصنع
+• **التوصيات**: تقديم توصيات بناءً على البيانات الحالية
+• **المقارنات**: مقارنة الأداء عبر فترات زمنية
 
-أمثلة على الأوامر:
-- "أضف عميل جديد اسمه أحمد محمد"
-- "اعرض لي تقرير الإنتاج لهذا الأسبوع"
-- "حدث حالة الطلب رقم ORD-123 إلى مكتمل"
-- "احذف المكينة رقم 5"
-- "أرسل تنبيه صيانة للمكائن التي تحتاج صيانة"
+📋 **مجالات الخبرة:**
+• إدارة الإنتاج والطلبات
+• مراقبة الجودة
+• صيانة المكائن
+• تحليل الأداء
+• إدارة المخزون
 
-استجب بطريقة مهنية ومفصلة، وأعط خطوات واضحة للإجراءات المطلوبة.`,
+💡 **أسلوب الرد:**
+- إجابات واضحة ومباشرة
+- استخدام البيانات الفعلية من النظام
+- تقديم رؤى وتوصيات عملية
+- استخدام الأرقام والنسب المئوية
+- تنسيق احترافي مع رموز تعبيرية مناسبة`,
           },
           {
             role: "user",
             content: message,
           },
         ],
-        max_tokens: 800,
-        temperature: 0.3,
+        max_tokens: 1000,
+        temperature: 0.4,
       });
 
       // تسجيل بيانات التعلم
@@ -380,8 +376,30 @@ Respond in JSON format containing:
     }
   }
 
+  // جمع سياق النظام الحالي
+  private async getSystemContext(): Promise<string> {
+    try {
+      const stats = await storage.getDashboardStats();
+      const machines = await storage.getMachines();
+      const activeMachines = machines.filter((m) => m.status === "active").length;
+      const inMaintenanceMachines = machines.filter((m) => m.status === "maintenance").length;
+
+      return `
+الطلبات النشطة: ${stats.activeOrders}
+معدل الإنتاج: ${stats.productionRate}%
+نسبة الجودة: ${stats.qualityScore}%
+نسبة الهدر: ${stats.wastePercentage}%
+المكائن النشطة: ${activeMachines}/${machines.length}
+المكائن في الصيانة: ${inMaintenanceMachines}
+      `.trim();
+    } catch (error) {
+      console.error("Error getting system context:", error);
+      return "لا تتوفر بيانات السياق حالياً";
+    }
+  }
+
   // تحليل نية المستخدم المتقدم
-  private async analyzeUserIntent(message: string): Promise<{
+  private async analyzeUserIntent(message: string, context?: string): Promise<{
     intent: string;
     action: string;
     requiresDatabase: boolean;
@@ -389,6 +407,7 @@ Respond in JSON format containing:
     reportType?: string;
     parameters: Record<string, any>;
     confidence: number;
+    missingInfo?: string[];
   }> {
     try {
       const response = await openai.chat.completions.create({
@@ -396,26 +415,47 @@ Respond in JSON format containing:
         messages: [
           {
             role: "system",
-            content: `حلل نية المستخدم من الرسالة واستخرج المعلومات التالية بتنسيق JSON:
+            content: `أنت محلل ذكي لأوامر نظام إدارة مصنع الأكياس البلاستيكية. حلل نية المستخدم بدقة.
+${context ? `\nسياق النظام:\n${context}\n` : ""}
 
+**أنواع النوايا المدعومة:**
+1. query: استعلام عن البيانات
+2. create: إنشاء جديد (عميل، طلب، منتج، أمر عمل)
+3. update: تحديث بيانات
+4. delete: حذف بيانات
+5. report: طلب تقرير
+6. help: طلب مساعدة
+
+**الإجراءات المدعومة للإنشاء:**
+- add_customer: إضافة عميل جديد
+- add_product: إضافة منتج للعميل (customer_product)
+- add_order: إنشاء طلب جديد
+- add_production_order: إنشاء أمر تشغيل
+- add_machine: إضافة مكينة
+
+**أمثلة على الأوامر:**
+- "سجل عميل جديد" → create, add_customer
+- "أضف منتج للعميل" → create, add_product
+- "اعمل طلب جديد" → create, add_order
+- "سجل أمر تشغيل" → create, add_production_order
+- "كم عدد العملاء؟" → query, count_customers
+- "أعطني قائمة الطلبات" → query, get_orders
+
+استخرج البيانات المطلوبة من الرسالة إن وجدت، وحدد المعلومات الناقصة.
+
+أرجع JSON:
 {
-  "intent": "نوع النية - query/create/update/delete/report/navigate",
-  "action": "الإجراء المحدد",
+  "intent": "نوع النية",
+  "action": "الإجراء المحدد", 
   "requiresDatabase": true/false,
   "requestsReport": true/false,
-  "reportType": "نوع التقرير إن وجد",
+  "reportType": "نوع التقرير",
   "parameters": {
-    "table": "اسم الجدول",
-    "data": "البيانات المطلوبة",
-    "conditions": "الشروط"
+    "data": "البيانات المستخرجة من النص"
   },
-  "confidence": 0.0-1.0
-}
-
-أمثلة:
-- "أضف عميل جديد" → intent: "create", action: "add_customer", requiresDatabase: true
-- "اعرض تقرير الإنتاج" → intent: "report", requestsReport: true, reportType: "production"
-- "حدث الطلب رقم 123" → intent: "update", action: "update_order", requiresDatabase: true`,
+  "confidence": 0.0-1.0,
+  "missingInfo": ["قائمة المعلومات الناقصة"]
+}`,
           },
           {
             role: "user",
@@ -426,10 +466,15 @@ Respond in JSON format containing:
         temperature: 0.1,
       });
 
-      return JSON.parse(
+      const result = JSON.parse(
         response.choices[0].message.content ||
           '{"intent":"unknown","action":"none","requiresDatabase":false,"requestsReport":false,"parameters":{},"confidence":0}',
       );
+      
+      return {
+        ...result,
+        missingInfo: result.missingInfo || []
+      };
     } catch (error: any) {
       console.error("Intent analysis error:", {
         message: error?.message,
@@ -444,6 +489,7 @@ Respond in JSON format containing:
         requestsReport: false,
         parameters: {},
         confidence: 0,
+        missingInfo: [],
       };
     }
   }
@@ -460,13 +506,16 @@ Respond in JSON format containing:
 
       switch (intent.action) {
         case "add_customer":
-          result = await this.createCustomer(intent.parameters);
+          result = await this.createCustomer(intent.parameters, message);
+          break;
+        case "add_product":
+          result = await this.createCustomerProduct(intent.parameters, message);
           break;
         case "add_order":
-          result = await this.createOrder(intent.parameters);
+          result = await this.createOrder(intent.parameters, message);
           break;
         case "add_production_order":
-          result = await this.createJobOrder(intent.parameters);
+          result = await this.createJobOrder(intent.parameters, message);
           break;
         case "add_machine":
           result = await this.createMachine(intent.parameters);
@@ -492,6 +541,12 @@ Respond in JSON format containing:
         case "get_production_stats":
           result = await this.getProductionStats(intent.parameters);
           break;
+        case "count_customers":
+          result = await this.countCustomers();
+          break;
+        case "help":
+          result = await this.provideHelp();
+          break;
         default:
           result = await this.handleCustomQuery(message, intent);
       }
@@ -508,7 +563,7 @@ Respond in JSON format containing:
       }
 
       // إرسال إشعار إذا كان مطلوباً
-      if (result.success && this.shouldSendNotification(intent.action)) {
+      if (result.success && (await this.shouldSendNotification(intent.action))) {
         await this.sendIntelligentNotification(intent.action, result.result);
       }
 
@@ -540,12 +595,26 @@ Respond in JSON format containing:
   }
 
   // إنشاء عميل جديد
-  private async createCustomer(params: any): Promise<DatabaseOperation> {
+  private async createCustomer(params: any, originalMessage: string): Promise<DatabaseOperation> {
     try {
       // استخراج البيانات من النص باستخدام AI
       const customerData = await this.extractCustomerData(
-        params.text || params.data,
+        originalMessage || params.text || params.data,
       );
+
+      // التحقق من البيانات المطلوبة
+      const missingFields = [];
+      if (!customerData.name) missingFields.push("اسم العميل");
+      if (!customerData.phone) missingFields.push("رقم الهاتف");
+      
+      if (missingFields.length > 0) {
+        return {
+          operation: "create",
+          table: "customers",
+          success: false,
+          message: `⚠️ **معلومات ناقصة!**\n\nلإنشاء العميل، أحتاج المعلومات التالية:\n${missingFields.map(f => `• ${f}`).join('\n')}\n\n📝 **مثال:** "سجل عميل اسمه شركة النور، رقم الهاتف 0501234567، المدينة الرياض"`,
+        };
+      }
 
       const customer = await storage.createCustomer(customerData);
 
@@ -554,23 +623,43 @@ Respond in JSON format containing:
         table: "customers",
         data: customerData,
         success: true,
-        message: `تم إنشاء العميل بنجاح! رقم العميل: ${customer.id}، الاسم: ${customer.name}`,
+        message: `✅ **تم إنشاء العميل بنجاح!**\n\n📋 **معلومات العميل:**\n• رقم العميل: ${customer.id}\n• الاسم: ${customer.name}\n• الهاتف: ${customer.phone || '-'}\n• المدينة: ${customer.city || '-'}`,
         result: customer,
       };
     } catch (error: any) {
+      console.error("خطأ في إنشاء العميل:", error);
       return {
         operation: "create",
         table: "customers",
         success: false,
-        message: `فشل في إنشاء العميل: ${error.message}`,
+        message: `❌ **فشل في إنشاء العميل**\n\nالسبب: ${error.message}\n\n💡 **تأكد من:**\n• صحة المعلومات المدخلة\n• عدم تكرار رقم العميل`,
       };
     }
   }
 
   // إنشاء طلب جديد
-  private async createOrder(params: any): Promise<DatabaseOperation> {
+  private async createOrder(params: any, originalMessage: string): Promise<DatabaseOperation> {
     try {
-      const orderData = await this.extractOrderData(params.text || params.data);
+      const orderData = await this.extractOrderData(originalMessage || params.text || params.data);
+      
+      // التحقق من البيانات المطلوبة
+      const missingFields = [];
+      if (!orderData.customer_id) missingFields.push("معرف العميل أو اسمه");
+      if (!orderData.delivery_date) missingFields.push("تاريخ التسليم");
+      
+      if (missingFields.length > 0) {
+        // عرض قائمة العملاء المتاحين
+        const customers = await storage.getCustomers();
+        const customerList = customers.slice(0, 5).map(c => `• ${c.id} - ${c.name}`).join('\n');
+        
+        return {
+          operation: "create",
+          table: "orders",
+          success: false,
+          message: `⚠️ **معلومات ناقصة!**\n\nلإنشاء الطلب، أحتاج:\n${missingFields.map(f => `• ${f}`).join('\n')}\n\n👥 **العملاء المتاحون:**\n${customerList}\n${customers.length > 5 ? `\n... و ${customers.length - 5} عميل آخر` : ''}\n\n📝 **مثال:** "اعمل طلب للعميل ${customers[0]?.id || 'CID-001'} تاريخ التسليم 2025-12-01"`,
+        };
+      }
+
       const order = await storage.createOrder(orderData);
 
       return {
@@ -578,25 +667,88 @@ Respond in JSON format containing:
         table: "orders",
         data: orderData,
         success: true,
-        message: `تم إنشاء الطلب بنجاح! رقم الطلب: ${order.order_number}`,
+        message: `✅ **تم إنشاء الطلب بنجاح!**\n\n📋 **معلومات الطلب:**\n• رقم الطلب: ${order.order_number}\n• تاريخ التسليم: ${order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('ar') : '-'}\n• الحالة: ${this.translateStatus(order.status)}`,
         result: order,
       };
     } catch (error: any) {
+      console.error("خطأ في إنشاء الطلب:", error);
       return {
         operation: "create",
         table: "orders",
         success: false,
-        message: `فشل في إنشاء الطلب: ${error.message}`,
+        message: `❌ **فشل في إنشاء الطلب**\n\nالسبب: ${error.message}\n\n💡 **تأكد من:**\n• صحة معرف العميل\n• صيغة التاريخ (YYYY-MM-DD)`,
+      };
+    }
+  }
+
+  // إنشاء منتج للعميل
+  private async createCustomerProduct(params: any, originalMessage: string): Promise<DatabaseOperation> {
+    try {
+      const productData = await this.extractCustomerProductData(originalMessage || params.text || params.data);
+      
+      // التحقق من البيانات المطلوبة
+      const missingFields = [];
+      if (!productData.customer_id) missingFields.push("معرف العميل");
+      if (!productData.category_id) missingFields.push("تصنيف المنتج");
+      if (!productData.size_caption) missingFields.push("اسم المنتج/المقاس");
+      
+      if (missingFields.length > 0) {
+        const customers = await storage.getCustomers();
+        const categories = await storage.getCategories();
+        
+        return {
+          operation: "create",
+          table: "customer_products",
+          success: false,
+          message: `⚠️ **معلومات ناقصة!**\n\nلإنشاء المنتج، أحتاج:\n${missingFields.map(f => `• ${f}`).join('\n')}\n\n👥 **عملاء:**${customers.slice(0, 3).map(c => `\n• ${c.id} - ${c.name}`).join('')}\n\n📦 **تصنيفات:**${categories.slice(0, 3).map(c => `\n• ${c.id} - ${c.name_ar}`).join('')}\n\n📝 **مثال:** "أضف منتج للعميل ${customers[0]?.id || 'CID-001'} تصنيف ${categories[0]?.id || 'CAT-001'} اسم المنتج: كيس 30x40"`,
+        };
+      }
+
+      const product = await storage.createCustomerProduct(productData);
+
+      return {
+        operation: "create",
+        table: "customer_products",
+        data: productData,
+        success: true,
+        message: `✅ **تم إنشاء المنتج بنجاح!**\n\n📦 **معلومات المنتج:**\n• رقم المنتج: ${product.id}\n• الاسم: ${product.size_caption}\n• العميل: ${productData.customer_id}\n• التصنيف: ${productData.category_id}`,
+        result: product,
+      };
+    } catch (error: any) {
+      console.error("خطأ في إنشاء المنتج:", error);
+      return {
+        operation: "create",
+        table: "customer_products",
+        success: false,
+        message: `❌ **فشل في إنشاء المنتج**\n\nالسبب: ${error.message}\n\n💡 **تأكد من:**\n• صحة معرف العميل والتصنيف\n• اكتمال المعلومات الأساسية`,
       };
     }
   }
 
   // إنشاء أمر تشغيل جديد
-  private async createJobOrder(params: any): Promise<DatabaseOperation> {
+  private async createJobOrder(params: any, originalMessage: string): Promise<DatabaseOperation> {
     try {
       const jobOrderData = await this.extractJobOrderData(
-        params.text || params.data,
+        originalMessage || params.text || params.data,
       );
+      
+      const missingFields = [];
+      if (!jobOrderData.order_id) missingFields.push("معرف الطلب");
+      if (!jobOrderData.customer_product_id) missingFields.push("معرف المنتج");
+      if (!jobOrderData.quantity_kg) missingFields.push("الكمية بالكيلو");
+      
+      if (missingFields.length > 0) {
+        const orders = await storage.getAllOrders();
+        const recentOrders = orders.slice(0, 3);
+        
+        return {
+          operation: "create",
+          table: "production_orders",
+          success: false,
+          message: `⚠️ **معلومات ناقصة!**\n\nلإنشاء أمر التشغيل، أحتاج:\n${missingFields.map(f => `• ${f}`).join('\n')}\n\n📋 **طلبات حديثة:**${recentOrders.map(o => `\n• ${o.order_number}`).join('')}\n\n📝 **مثال:** "اعمل أمر تشغيل للطلب ${recentOrders[0]?.order_number || 'ORD-001'} المنتج 1 الكمية 500 كيلو"`,
+        };
+      }
+
       const jobOrder = await storage.createProductionOrder(jobOrderData);
 
       return {
@@ -604,17 +756,70 @@ Respond in JSON format containing:
         table: "production_orders",
         data: jobOrderData,
         success: true,
-        message: `تم إنشاء أمر التشغيل بنجاح! رقم أمر التشغيل: ${jobOrder.production_order_number}`,
+        message: `✅ **تم إنشاء أمر التشغيل بنجاح!**\n\n🏭 **معلومات أمر التشغيل:**\n• رقم الأمر: ${jobOrder.production_order_number}\n• الكمية: ${jobOrderData.quantity_kg} كجم\n• الحالة: ${this.translateStatus(jobOrder.status)}`,
         result: jobOrder,
       };
     } catch (error: any) {
+      console.error("خطأ في إنشاء أمر التشغيل:", error);
       return {
         operation: "create",
         table: "production_orders",
         success: false,
-        message: `فشل في إنشاء أمر التشغيل: ${error.message}`,
+        message: `❌ **فشل في إنشاء أمر التشغيل**\n\nالسبب: ${error.message}\n\n💡 **تأكد من:**\n• صحة معرف الطلب والمنتج\n• الكمية المطلوبة`,
       };
     }
+  }
+
+  // عد العملاء
+  private async countCustomers(): Promise<DatabaseOperation> {
+    try {
+      const customers = await storage.getCustomers();
+      return {
+        operation: "read",
+        table: "customers",
+        success: true,
+        message: `📊 **عدد العملاء المسجلين:** ${customers.length} عميل`,
+        result: { count: customers.length },
+      };
+    } catch (error: any) {
+      return {
+        operation: "read",
+        table: "customers",
+        success: false,
+        message: `❌ فشل في عد العملاء: ${error.message}`,
+      };
+    }
+  }
+
+  // تقديم مساعدة
+  private async provideHelp(): Promise<DatabaseOperation> {
+    return {
+      operation: "read",
+      table: "help",
+      success: true,
+      message: `🤖 **المساعد الذكي - دليل الاستخدام**
+
+📝 **ما يمكنني فعله:**
+
+1️⃣ **إضافة عميل جديد:**
+   "سجل عميل اسمه شركة النور، رقم 0501234567، الرياض"
+
+2️⃣ **إضافة منتج للعميل:**
+   "أضف منتج للعميل CID-001 تصنيف CAT-001 اسم: كيس 30x40"
+
+3️⃣ **إنشاء طلب:**
+   "اعمل طلب للعميل CID-001 تاريخ التسليم 2025-12-01"
+
+4️⃣ **إنشاء أمر تشغيل:**
+   "اعمل أمر تشغيل للطلب ORD-001 المنتج 1 الكمية 500 كيلو"
+
+5️⃣ **الاستعلامات:**
+   • "كم عدد العملاء؟"
+   • "ما حالة الإنتاج؟"
+   • "أعطني قائمة الطلبات"
+
+💡 **نصيحة:** كلما أعطيتني معلومات أكثر، كانت النتائج أدق!`,
+    };
   }
 
   // إنشاء مكينة جديدة
@@ -847,25 +1052,122 @@ Respond in JSON format containing:
     intent: any,
   ): Promise<DatabaseOperation> {
     try {
-      // استخدام AI لتحليل الاستعلام وتوليد SQL
-      const sqlQuery = await this.generateSQLFromNaturalLanguage(message);
+      // جمع البيانات ذات الصلة بناءً على السؤال
+      const relevantData: any = {};
 
-      // تنفيذ الاستعلام (مع حماية من SQL injection)
-      const result = await this.executeSafeQuery(sqlQuery);
+      // تحديد نوع البيانات المطلوبة من السؤال
+      const messageLower = message.toLowerCase();
+      
+      if (
+        messageLower.includes("عميل") ||
+        messageLower.includes("customer") ||
+        messageLower.includes("زبون") ||
+        messageLower.includes("عملاء")
+      ) {
+        const customers = await storage.getCustomers();
+        relevantData.customers = customers;
+        relevantData.customersCount = customers.length;
+      }
+
+      if (
+        messageLower.includes("طلب") ||
+        messageLower.includes("order") ||
+        messageLower.includes("أمر") ||
+        messageLower.includes("طلبات")
+      ) {
+        const orders = await storage.getAllOrders();
+        relevantData.orders = orders;
+        relevantData.ordersCount = orders.length;
+      }
+
+      if (
+        messageLower.includes("مكينة") ||
+        messageLower.includes("ماكينة") ||
+        messageLower.includes("machine") ||
+        messageLower.includes("مكائن")
+      ) {
+        const machines = await storage.getMachines();
+        relevantData.machines = machines;
+        relevantData.machinesCount = machines.length;
+        relevantData.activeMachines = machines.filter(m => m.status === 'active').length;
+      }
+
+      if (
+        messageLower.includes("رول") ||
+        messageLower.includes("roll") ||
+        messageLower.includes("لفة") ||
+        messageLower.includes("رولات")
+      ) {
+        const rolls = await storage.getRolls();
+        relevantData.rolls = rolls;
+        relevantData.rollsCount = rolls.length;
+      }
+
+      if (
+        messageLower.includes("إنتاج") ||
+        messageLower.includes("production") ||
+        messageLower.includes("تشغيل") ||
+        messageLower.includes("حالة")
+      ) {
+        const stats = await storage.getDashboardStats();
+        relevantData.productionStats = stats;
+      }
+
+      // إذا لم يتم جمع أي بيانات، جمع إحصائيات عامة
+      if (Object.keys(relevantData).length === 0) {
+        const stats = await storage.getDashboardStats();
+        relevantData.generalStats = stats;
+      }
+
+      // استخدام AI لتحليل البيانات والإجابة على السؤال
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `أنت مساعد ذكي لنظام إدارة مصنع أكياس بلاستيك MPBF Next.
+
+📋 **مهمتك:**
+تحليل البيانات المتوفرة والإجابة على سؤال المستخدم بدقة.
+
+✅ **قواعد الإجابة:**
+1. استخدم البيانات المتوفرة في JSON للإجابة
+2. إذا كانت البيانات تحتوي على مصفوفة (array)، استخدم طول المصفوفة (.length) للعد
+3. قدم الأرقام والإحصائيات بوضوح
+4. اجعل الإجابة مختصرة ومباشرة
+5. استخدم رموز تعبيرية مناسبة
+
+📊 **مثال:**
+السؤال: "كم عدد العملاء؟"
+البيانات: {"customers": [عميل1, عميل2, عميل3]}
+الإجابة: "📊 لديك **3 عملاء** مسجلين في النظام."
+
+**مهم:** البيانات متوفرة في JSON. استخدمها مباشرة ولا تقل أنها غير متاحة!`,
+          },
+          {
+            role: "user",
+            content: `السؤال: ${message}\n\nالبيانات المتاحة:\n${JSON.stringify(relevantData, null, 2)}`,
+          },
+        ],
+        temperature: 0.2,
+      });
+
+      const answer = response.choices[0].message.content || "لم أتمكن من الإجابة على السؤال.";
 
       return {
         operation: "read",
         table: "custom",
         success: true,
-        message: `تم تنفيذ الاستعلام بنجاح. النتائج: ${JSON.stringify(result, null, 2)}`,
-        result,
+        message: answer,
+        result: relevantData,
       };
     } catch (error: any) {
+      console.error("Custom query error:", error);
       return {
         operation: "read",
         table: "custom",
         success: false,
-        message: `فشل في تنفيذ الاستعلام المخصص: ${error.message}`,
+        message: `عذراً، لم أتمكن من معالجة سؤالك. يرجى المحاولة بصيغة أخرى أو استخدام الإجراءات السريعة المتاحة.`,
       };
     }
   }
@@ -894,6 +1196,49 @@ Respond in JSON format containing:
     return AIHelpers.extractMachineData(text);
   }
 
+  // استخراج بيانات منتج العميل من النص
+  private async extractCustomerProductData(text: string): Promise<any> {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `استخرج بيانات منتج العميل من النص التالي وأرجعها بتنسيق JSON:
+{
+  "customer_id": "معرف العميل (مثل: CID-001)",
+  "category_id": "معرف التصنيف (مثل: CAT-001)",
+  "item_id": "معرف الصنف (اختياري)",
+  "size_caption": "اسم المنتج أو المقاس",
+  "width": "العرض (رقم)",
+  "left_facing": "الواجهة اليسرى (رقم)",
+  "right_facing": "الواجهة اليمنى (رقم)",
+  "thickness": "السماكة (رقم)",
+  "cutting_length_cm": "طول القطع بالسنتيمتر (رقم)",
+  "raw_material": "المادة الخام (HDPE/LDPE/Regrind)",
+  "is_printed": "هل مطبوع (true/false)",
+  "cutting_unit": "وحدة القطع (KG/ROLL/PKT)",
+  "punching": "نوع الثقب (NON/T-Shirt/Banana)"
+}
+
+استخرج المعلومات المتوفرة فقط، اترك الحقول الأخرى فارغة أو null.`,
+          },
+          {
+            role: "user",
+            content: text,
+          },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.1,
+      });
+
+      return JSON.parse(response.choices[0].message.content || "{}");
+    } catch (error) {
+      console.error("Customer product data extraction error:", error);
+      throw new Error("فشل في استخراج بيانات منتج العميل من النص");
+    }
+  }
+
   // استخراج بيانات التحديث من النص
   private async extractUpdateData(
     text: string,
@@ -920,8 +1265,20 @@ Respond in JSON format containing:
 
   // ترجمة الحالات إلى العربية
   private translateStatus(status: string): string {
-    const { AIHelpers } = require("./ai-helpers");
-    return AIHelpers.translateStatus(status);
+    const statusMap: Record<string, string> = {
+      pending: "في الانتظار",
+      for_production: "للإنتاج",
+      in_progress: "قيد التنفيذ",
+      completed: "مكتمل",
+      delivered: "مُسلم",
+      active: "نشط",
+      maintenance: "صيانة",
+      down: "متوقف",
+      for_printing: "للطباعة",
+      for_cutting: "للقطع",
+      done: "منجز",
+    };
+    return statusMap[status] || status;
   }
 
   // تحليل بيانات الإنتاج (محلي)
@@ -965,9 +1322,14 @@ Respond in JSON format containing:
   }
 
   // تحديد ما إذا كان يجب إرسال إشعار
-  private shouldSendNotification(action: string): boolean {
-    const { AINotifications } = require("./ai-notifications");
-    return AINotifications.shouldSendNotification(action);
+  private async shouldSendNotification(action: string): Promise<boolean> {
+    try {
+      const { AINotifications } = await import("./ai-notifications");
+      return AINotifications.shouldSendNotification(action);
+    } catch (error) {
+      console.error("Error loading AI notifications module:", error);
+      return false;
+    }
   }
 
   // تسجيل بيانات التعلم

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -26,6 +26,13 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import {
   QrCode,
   Scissors,
   ChevronDown,
@@ -51,6 +58,7 @@ const cutFormSchema = z.object({
     .number()
     .positive("عدد القطع يجب أن يكون أكبر من صفر")
     .optional(),
+  cutting_machine_id: z.string().min(1, "يجب اختيار ماكينة القطع"),
 });
 
 type CutFormData = z.infer<typeof cutFormSchema>;
@@ -73,11 +81,33 @@ export default function GroupedCuttingQueue({
   const [selectedRoll, setSelectedRoll] = useState<any>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  // Fetch machines and sections
+  const { data: machines = [] } = useQuery<any[]>({
+    queryKey: ["/api/machines"],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: sections = [] } = useQuery<any[]>({
+    queryKey: ["/api/sections"],
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // Find cutting section
+  const cuttingSection = sections.find(
+    s => s.name_ar?.includes("تقطيع") || s.name?.toLowerCase().includes("cutting")
+  );
+  
+  const cuttingMachines = machines.filter(m => 
+    m.status === "active" && 
+    (m.type === "cutting" || m.section_id === cuttingSection?.id)
+  );
+
   const form = useForm<CutFormData>({
     resolver: zodResolver(cutFormSchema),
     defaultValues: {
       cut_weight_kg: 0,
       pieces_count: 1,
+      cutting_machine_id: "",
     },
   });
 
@@ -86,6 +116,7 @@ export default function GroupedCuttingQueue({
       roll_id: number;
       cut_weight_kg: number;
       pieces_count?: number;
+      cutting_machine_id: string;
     }) => {
       const response = await fetch("/api/cuts", {
         method: "POST",
@@ -132,6 +163,7 @@ export default function GroupedCuttingQueue({
       roll_id: selectedRoll.id,
       cut_weight_kg: data.cut_weight_kg,
       pieces_count: data.pieces_count,
+      cutting_machine_id: data.cutting_machine_id,
     });
   };
 
@@ -462,6 +494,44 @@ export default function GroupedCuttingQueue({
                   onSubmit={form.handleSubmit(handleCutSubmit)}
                   className="space-y-4"
                 >
+                  <FormField
+                    control={form.control}
+                    name="cutting_machine_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>ماكينة القطع *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-cutting-machine">
+                              <SelectValue placeholder="اختر ماكينة القطع" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {cuttingMachines.length === 0 ? (
+                              <div className="p-2 text-sm text-muted-foreground text-center">
+                                لا توجد ماكينات قطع نشطة
+                              </div>
+                            ) : (
+                              cuttingMachines.map((machine) => (
+                                <SelectItem
+                                  key={machine.id}
+                                  value={machine.id}
+                                  data-testid={`machine-option-${machine.id}`}
+                                >
+                                  {machine.name}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
                   <FormField
                     control={form.control}
                     name="cut_weight_kg"

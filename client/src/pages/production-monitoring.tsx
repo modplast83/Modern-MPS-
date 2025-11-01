@@ -1,3 +1,4 @@
+// src/pages/production-monitoring.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
@@ -72,6 +73,9 @@ import {
   PieChart as PieChartIcon,
 } from "lucide-react";
 
+import { useRealtime } from "../hooks/useRealtime";
+import MachineCard from "../components/MachineCard";
+
 interface RealTimeStats {
   currentStats: {
     daily_rolls: number;
@@ -86,6 +90,14 @@ interface RealTimeStats {
     machine_name: string;
     status: string;
     current_rolls: number;
+    utilization?: number;
+    lastDowntime?: string | null;
+    last24hUtilization?: number[];
+    operatingTimeSec?: number;
+    plannedProductionSec?: number;
+    producedUnits?: number;
+    goodUnits?: number;
+    idealCycleTimeSec?: number;
   }>;
   queueStats: {
     film_queue: number;
@@ -142,9 +154,6 @@ export default function ProductionMonitoring() {
   const [dateTo, setDateTo] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
 
-  // Auto-refresh is handled by React Query's refetchInterval - no manual setInterval needed
-
-  // Set date range based on filter
   useEffect(() => {
     const now = new Date();
     const days = parseInt(dateFilter);
@@ -163,7 +172,8 @@ export default function ProductionMonitoring() {
     isLoading: realTimeLoading,
   } = useQuery({
     queryKey: ["/api/production/real-time-stats"],
-    refetchInterval: isAutoRefreshEnabled ? 30000 : false,
+    // تعتمد الآن على WebSocket للتحديث الفعلي
+    refetchInterval: false,
   });
 
   const {
@@ -178,7 +188,7 @@ export default function ProductionMonitoring() {
       dateTo,
     ],
     enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 60000 : false, // Refresh every minute
+    refetchInterval: isAutoRefreshEnabled ? 60000 : false, // تحديث اختياري للأداء
   });
 
   const {
@@ -188,7 +198,7 @@ export default function ProductionMonitoring() {
   } = useQuery({
     queryKey: ["/api/production/role-performance", dateFrom, dateTo],
     enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 60000 : false, // Refresh every minute
+    refetchInterval: isAutoRefreshEnabled ? 60000 : false,
   });
 
   const {
@@ -197,20 +207,22 @@ export default function ProductionMonitoring() {
     isLoading: alertsLoading,
   } = useQuery({
     queryKey: ["/api/production/alerts"],
-    refetchInterval: isAutoRefreshEnabled ? 60000 : false, // Refresh alerts every minute
+    // تعتمد التنبيهات على WebSocket أيضاً
+    refetchInterval: false,
   });
 
   const { data: efficiencyData, isLoading: efficiencyLoading } = useQuery({
     queryKey: ["/api/production/efficiency-metrics", dateFrom, dateTo],
     enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 120000 : false, // Refresh every 2 minutes (less frequent for metrics)
+    refetchInterval: isAutoRefreshEnabled ? 120000 : false,
   });
 
   const { data: machineUtilizationData, isLoading: machineUtilizationLoading } =
     useQuery({
       queryKey: ["/api/production/machine-utilization", dateFrom, dateTo],
       enabled: !!dateFrom && !!dateTo,
-      refetchInterval: isAutoRefreshEnabled ? 120000 : false, // Refresh every 2 minutes (less frequent for metrics)
+      // نعتمد على WebSocket لتحديثات الماكينات
+      refetchInterval: false,
     });
 
   const defaultStats: RealTimeStats = {
@@ -255,7 +267,6 @@ export default function ProductionMonitoring() {
   const alerts: ProductionAlert[] = (alertsData as any)?.alerts || [];
 
   const handleExport = async () => {
-    // Export functionality - could export to Excel or PDF
     try {
       const exportData = {
         realTimeStats: stats,
@@ -343,6 +354,13 @@ export default function ProductionMonitoring() {
     efficiency: role.quality_score,
     orders: role.total_production_orders,
   }));
+
+  // WebSocket realtime (optional feature for real-time production updates)
+  // To enable: Set VITE_PROD_WS_URL environment variable to your WebSocket server URL
+  // Example: VITE_PROD_WS_URL=ws://localhost:4000/ws
+  // The app works fine without WebSocket - it uses regular HTTP polling instead
+  const wsUrl = import.meta.env.VITE_PROD_WS_URL;
+  useRealtime(wsUrl);
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -654,35 +672,13 @@ export default function ProductionMonitoring() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.machineStatus.map((machine) => (
-                  <div
-                    key={machine.machine_id}
-                    className={`p-3 rounded-lg border-2 ${getStatusColor(machine.status)}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">
-                        {machine.machine_name}
-                      </span>
-                      {getStatusIcon(machine.status)}
-                    </div>
-                    <div className="text-sm">
-                      <div className="flex justify-between">
-                        <span>الحالة:</span>
-                        <span>
-                          {machine.status === "active"
-                            ? "نشطة"
-                            : machine.status === "maintenance"
-                              ? "صيانة"
-                              : "معطلة"}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>الرولات الحالية:</span>
-                        <span>{machine.current_rolls}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {stats.machineStatus.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 col-span-full">لا توجد بيانات للمكائن</div>
+                ) : (
+                  stats.machineStatus.map((machine) => (
+                    <MachineCard key={machine.machine_id} machine={machine} />
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
