@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -33,6 +36,7 @@ import {
   Hash,
   Calendar,
   Weight,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -170,18 +174,33 @@ export default function PrintingOperatorDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">
-          <div className="h-32 bg-gray-200 rounded mb-4"></div>
-          <div className="h-64 bg-gray-200 rounded"></div>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <MobileNav />
+          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-gray-600">جاري تحميل طابور الطباعة...</p>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* رأس الصفحة مع الإحصائيات */}
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="space-y-6">
+            {/* رأس الصفحة مع الإحصائيات */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card data-testid="card-pending-rolls">
           <CardHeader className="pb-2">
@@ -432,6 +451,9 @@ export default function PrintingOperatorDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

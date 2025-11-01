@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
 import { useToast } from "../hooks/use-toast";
@@ -34,6 +37,7 @@ import {
   User,
   ChevronRight,
   BarChart3,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -254,16 +258,33 @@ export default function CuttingOperatorDashboard() {
 
   if (isLoading) {
     return (
-      <div className="p-6 space-y-4">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex">
+          <Sidebar />
+          <MobileNav />
+          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-gray-600">جاري تحميل طابور التقطيع...</p>
+              </div>
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      {/* رأس الصفحة */}
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="space-y-6">
+            {/* رأس الصفحة */}
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
