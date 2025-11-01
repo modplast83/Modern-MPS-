@@ -48,6 +48,13 @@ const modules = [
     active: false,
   },
   {
+    name: "البحث عن الرولات",
+    name_ar: "البحث عن الرولات",
+    icon: FileText,
+    path: "/roll-search",
+    active: false,
+  },
+  {
     name: "إدارة أوامر الإنتاج",
     name_ar: "إدارة أوامر الإنتاج",
     icon: ClipboardCheck,

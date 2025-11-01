@@ -36,6 +36,7 @@ import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
+import RollSearch from "./pages/RollSearch";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -96,6 +97,12 @@ function AppRoutes() {
       <Route path="/film-operator">
         <ProtectedRoute path="/film-operator">
           <FilmOperatorDashboard />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/roll-search">
+        <ProtectedRoute path="/roll-search">
+          <RollSearch />
         </ProtectedRoute>
       </Route>
 
