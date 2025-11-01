@@ -249,14 +249,14 @@ export default function ProductionReports() {
             <div className="space-y-2">
               <Label htmlFor="section">القسم</Label>
               <Select
-                value={filters.sectionId}
-                onValueChange={(value) => setFilters({ ...filters, sectionId: value })}
+                value={filters.sectionId || "all"}
+                onValueChange={(value) => setFilters({ ...filters, sectionId: value === "all" ? "" : value })}
               >
                 <SelectTrigger data-testid="select-section">
                   <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">جميع الأقسام</SelectItem>
+                  <SelectItem value="all">جميع الأقسام</SelectItem>
                   {sections?.map((section: any) => (
                     <SelectItem key={section.id} value={section.id}>
                       {section.name_ar || section.name}
@@ -269,14 +269,14 @@ export default function ProductionReports() {
             <div className="space-y-2">
               <Label htmlFor="machine">الماكينة</Label>
               <Select
-                value={filters.machineId}
-                onValueChange={(value) => setFilters({ ...filters, machineId: value })}
+                value={filters.machineId || "all"}
+                onValueChange={(value) => setFilters({ ...filters, machineId: value === "all" ? "" : value })}
               >
                 <SelectTrigger data-testid="select-machine">
                   <SelectValue placeholder="اختر الماكينة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">جميع المكائن</SelectItem>
+                  <SelectItem value="all">جميع المكائن</SelectItem>
                   {machines?.map((machine: any) => (
                     <SelectItem key={machine.id} value={machine.id}>
                       {machine.name_ar || machine.name}

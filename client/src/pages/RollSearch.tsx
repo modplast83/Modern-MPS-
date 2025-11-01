@@ -409,14 +409,14 @@ export default function RollSearch() {
                         <div className="space-y-2">
                           <Label>المرحلة</Label>
                           <Select
-                            value={filters.stage || ""}
-                            onValueChange={(value) => setFilters({ ...filters, stage: value || undefined })}
+                            value={filters.stage || "all"}
+                            onValueChange={(value) => setFilters({ ...filters, stage: value === "all" ? undefined : value })}
                           >
                             <SelectTrigger data-testid="select-stage-filter">
                               <SelectValue placeholder="جميع المراحل" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">جميع المراحل</SelectItem>
+                              <SelectItem value="all">جميع المراحل</SelectItem>
                               <SelectItem value="film">فيلم</SelectItem>
                               <SelectItem value="printing">طباعة</SelectItem>
                               <SelectItem value="cutting">تقطيع</SelectItem>
