@@ -2311,6 +2311,238 @@ export class DatabaseStorage implements IStorage {
     invalidateProductionCache("all");
   }
 
+  // Production Orders Management Functions
+  async getProductionOrdersWithDetails(): Promise<any[]> {
+    return await withDatabaseErrorHandling(async () => {
+      const results = await db
+        .select({
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          overrun_percentage: production_orders.overrun_percentage,
+          final_quantity_kg: production_orders.final_quantity_kg,
+          produced_quantity_kg: production_orders.produced_quantity_kg,
+          printed_quantity_kg: production_orders.printed_quantity_kg,
+          net_quantity_kg: production_orders.net_quantity_kg,
+          waste_quantity_kg: production_orders.waste_quantity_kg,
+          film_completion_percentage: production_orders.film_completion_percentage,
+          printing_completion_percentage: production_orders.printing_completion_percentage,
+          cutting_completion_percentage: production_orders.cutting_completion_percentage,
+          status: production_orders.status,
+          created_at: production_orders.created_at,
+          
+          // حقول التخصيص والأوقات
+          assigned_machine_id: production_orders.assigned_machine_id,
+          assigned_operator_id: production_orders.assigned_operator_id,
+          production_start_time: production_orders.production_start_time,
+          production_end_time: production_orders.production_end_time,
+          production_time_minutes: production_orders.production_time_minutes,
+          
+          // معلومات الطلب
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          
+          // معلومات المنتج
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          is_printed: customer_products.is_printed,
+          
+          // معلومات الماكينة المخصصة
+          machine_name: machines.name,
+          machine_name_ar: machines.name_ar,
+          machine_status: machines.status,
+          
+          // معلومات العامل المخصص
+          operator_name: users.display_name,
+          operator_name_ar: users.display_name_ar,
+        })
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(
+          customer_products,
+          eq(production_orders.customer_product_id, customer_products.id)
+        )
+        .leftJoin(machines, eq(production_orders.assigned_machine_id, machines.id))
+        .leftJoin(users, eq(production_orders.assigned_operator_id, users.id))
+        .orderBy(desc(production_orders.created_at));
+
+      return results;
+    }, "تحميل أوامر الإنتاج مع التفاصيل");
+  }
+
+  async activateProductionOrder(
+    id: number,
+    machineId?: string,
+    operatorId?: number
+  ): Promise<ProductionOrder> {
+    return await withDatabaseErrorHandling(async () => {
+      return await db.transaction(async (tx) => {
+        // جلب أمر الإنتاج الحالي
+        const [currentOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, id));
+
+        if (!currentOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (currentOrder.status !== "pending") {
+          throw new Error(`لا يمكن تفعيل أمر إنتاج بحالة ${currentOrder.status}`);
+        }
+
+        // تحديث أمر الإنتاج
+        const updateData: any = {
+          status: "active",
+          production_start_time: new Date(),
+        };
+
+        if (machineId) {
+          updateData.assigned_machine_id = machineId;
+        }
+
+        if (operatorId) {
+          updateData.assigned_operator_id = operatorId;
+        }
+
+        const [updatedOrder] = await tx
+          .update(production_orders)
+          .set(updateData)
+          .where(eq(production_orders.id, id))
+          .returning();
+
+        // تحديث حالة الطلب الأساسي إلى in_production إذا كان في حالة waiting
+        const [parentOrder] = await tx
+          .select()
+          .from(orders)
+          .where(eq(orders.id, updatedOrder.order_id));
+
+        if (parentOrder && parentOrder.status === "waiting") {
+          await tx
+            .update(orders)
+            .set({ status: "in_production" })
+            .where(eq(orders.id, updatedOrder.order_id));
+        }
+
+        // إبطال الكاش
+        invalidateProductionCache("all");
+
+        return updatedOrder;
+      });
+    }, "تفعيل أمر الإنتاج");
+  }
+
+  async getProductionOrderStats(id: number): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      // جلب إحصائيات الرولات لأمر الإنتاج
+      const rollStats = await db
+        .select({
+          total_rolls: sql<number>`COUNT(*)`,
+          total_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          film_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'film' THEN 1 END)`,
+          printing_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'printing' THEN 1 END)`,
+          cutting_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'cutting' THEN 1 END)`,
+          done_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'done' THEN 1 END)`,
+          total_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+        })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, id));
+
+      // جلب معلومات أمر الإنتاج
+      const [productionOrder] = await db
+        .select()
+        .from(production_orders)
+        .where(eq(production_orders.id, id));
+
+      if (!productionOrder) {
+        throw new Error("أمر الإنتاج غير موجود");
+      }
+
+      // حساب نسب الإكمال
+      const stats = rollStats[0] || {
+        total_rolls: 0,
+        total_weight: 0,
+        film_rolls: 0,
+        printing_rolls: 0,
+        cutting_rolls: 0,
+        done_rolls: 0,
+        total_waste: 0,
+      };
+
+      // حساب نسبة الإكمال الكلية
+      const completionPercentage = 
+        parseFloat(productionOrder.final_quantity_kg) > 0
+          ? (parseFloat(stats.total_weight.toString()) / parseFloat(productionOrder.final_quantity_kg)) * 100
+          : 0;
+
+      // حساب الوقت المستغرق إذا بدأ الإنتاج
+      let productionTimeHours = 0;
+      if (productionOrder.production_start_time) {
+        const startTime = new Date(productionOrder.production_start_time);
+        const endTime = productionOrder.production_end_time 
+          ? new Date(productionOrder.production_end_time)
+          : new Date();
+        productionTimeHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      }
+
+      return {
+        ...stats,
+        production_order: productionOrder,
+        completion_percentage: Math.min(completionPercentage, 100).toFixed(2),
+        production_time_hours: productionTimeHours.toFixed(2),
+        remaining_quantity: Math.max(
+          parseFloat(productionOrder.final_quantity_kg) - parseFloat(stats.total_weight.toString()),
+          0
+        ).toFixed(2),
+      };
+    }, "إحصائيات أمر الإنتاج");
+  }
+
+  async updateProductionOrderAssignment(
+    id: number,
+    machineId?: string,
+    operatorId?: number
+  ): Promise<ProductionOrder> {
+    return await withDatabaseErrorHandling(async () => {
+      const updateData: any = {};
+      
+      if (machineId !== undefined) {
+        updateData.assigned_machine_id = machineId || null;
+      }
+      
+      if (operatorId !== undefined) {
+        updateData.assigned_operator_id = operatorId || null;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("لا توجد بيانات للتحديث");
+      }
+
+      const [updated] = await db
+        .update(production_orders)
+        .set(updateData)
+        .where(eq(production_orders.id, id))
+        .returning();
+
+      if (!updated) {
+        throw new Error("فشل تحديث التخصيص");
+      }
+
+      // إبطال الكاش
+      invalidateProductionCache("all");
+
+      return updated;
+    }, "تحديث تخصيص أمر الإنتاج");
+  }
+
   async getRolls(options?: {
     limit?: number;
     offset?: number;

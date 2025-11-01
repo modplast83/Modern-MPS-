@@ -48,6 +48,14 @@ const modules = [
     active: false,
   },
   {
+    name: "إدارة أوامر الإنتاج",
+    name_ar: "إدارة أوامر الإنتاج",
+    icon: ClipboardCheck,
+    path: "/production-orders-management",
+    active: false,
+    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
+  },
+  {
     name: "مراقبة الإنتاج",
     name_ar: "مراقبة الإنتاج",
     icon: Monitor,
