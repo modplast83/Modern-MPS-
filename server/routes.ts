@@ -4887,6 +4887,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Smart Distribution API ============
+  
+  // Apply smart distribution
+  app.post("/api/machine-queues/smart-distribute", requireAuth, async (req, res) => {
+    try {
+      const { algorithm, params } = req.body;
+      
+      if (!algorithm) {
+        return res.status(400).json({
+          message: "خوارزمية التوزيع مطلوبة"
+        });
+      }
+      
+      const validAlgorithms = ["balanced", "load-based", "priority", "product-type", "hybrid"];
+      if (!validAlgorithms.includes(algorithm)) {
+        return res.status(400).json({
+          message: `خوارزمية غير صحيحة. الخيارات المتاحة: ${validAlgorithms.join(", ")}`
+        });
+      }
+      
+      const userId = req.session?.userId || 1;
+      const result = await storage.smartDistributeOrders(algorithm, {
+        ...params,
+        userId
+      });
+      
+      res.json({
+        success: result.success,
+        message: result.message,
+        data: result
+      });
+    } catch (error: any) {
+      console.error("Error applying smart distribution:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في تطبيق التوزيع الذكي"
+      });
+    }
+  });
+  
+  // Get distribution preview
+  app.get("/api/machine-queues/distribution-preview", requireAuth, async (req, res) => {
+    try {
+      const { algorithm, ...params } = req.query;
+      
+      if (!algorithm) {
+        return res.status(400).json({
+          message: "خوارزمية التوزيع مطلوبة"
+        });
+      }
+      
+      const preview = await storage.getDistributionPreview(algorithm as string, params);
+      
+      res.json({
+        success: true,
+        data: preview
+      });
+    } catch (error: any) {
+      console.error("Error getting distribution preview:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في معاينة التوزيع"
+      });
+    }
+  });
+  
+  // Get machine capacity statistics
+  app.get("/api/machines/capacity-stats", requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getMachineCapacityStats();
+      
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error: any) {
+      console.error("Error getting machine capacity stats:", error);
+      res.status(500).json({
+        message: error.message || "خطأ في جلب إحصائيات السعة"
+      });
+    }
+  });
+  
+  // Optimize machine queue order
+  app.post("/api/machine-queues/optimize/:machineId", requireAuth, async (req, res) => {
+    try {
+      const { machineId } = req.params;
+      
+      if (!machineId) {
+        return res.status(400).json({
+          message: "معرف الماكينة مطلوب"
+        });
+      }
+      
+      await storage.optimizeQueueOrder(machineId);
+      
+      res.json({
+        success: true,
+        message: "تم تحسين ترتيب طابور الماكينة بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error optimizing queue order:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في تحسين ترتيب الطابور"
+      });
+    }
+  });
+
   // ============ Inventory Movements Management API ============
 
   app.get("/api/inventory-movements", async (req, res) => {
