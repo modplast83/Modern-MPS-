@@ -4,6 +4,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { Printer } from "lucide-react";
 import { format } from "date-fns";
 
 interface ViewOrderDialogProps {
@@ -14,6 +16,7 @@ interface ViewOrderDialogProps {
   productionOrders: any[];
   customerProducts: any[];
   items: any[];
+  onPrint?: (order: any) => void;
 }
 
 export default function ViewOrderDialog({
@@ -24,6 +27,7 @@ export default function ViewOrderDialog({
   productionOrders,
   customerProducts,
   items,
+  onPrint,
 }: ViewOrderDialogProps) {
   if (!order) return null;
 
@@ -61,9 +65,23 @@ export default function ViewOrderDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">
-            تفاصيل الطلب {order.order_number}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">
+              تفاصيل الطلب {order.order_number}
+            </DialogTitle>
+            {onPrint && (
+              <Button
+                onClick={() => onPrint(order)}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                data-testid="button-print-order-dialog"
+              >
+                <Printer className="h-4 w-4" />
+                طباعة
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-6">

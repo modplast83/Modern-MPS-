@@ -4,3 +4,4 @@ export { default as OrdersTable } from "./OrdersTable";
 export { default as OrdersForm } from "./OrdersForm";
 export { default as OrdersTabs } from "./OrdersTabs";
 export { default as ProductionProgress } from "./ProductionProgress";
+export { default as OrderPrintTemplate } from "./OrderPrintTemplate";
