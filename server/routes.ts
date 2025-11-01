@@ -1632,6 +1632,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Production Orders Management Routes
+  app.get(
+    "/api/production-orders/management",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "هذه الصفحة متاحة فقط للمدير ومدير الإنتاج" 
+          });
+        }
+
+        const productionOrders = await storage.getProductionOrdersWithDetails();
+        res.json({
+          success: true,
+          data: productionOrders
+        });
+      } catch (error) {
+        console.error("Error fetching production orders with details:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "خطأ في جلب أوامر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.patch(
+    "/api/production-orders/:id/activate", 
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "غير مصرح لك بتفعيل أوامر الإنتاج" 
+          });
+        }
+
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const { machineId, operatorId } = req.body;
+
+        const activatedOrder = await storage.activateProductionOrder(
+          id,
+          machineId,
+          operatorId
+        );
+
+        res.json({
+          success: true,
+          data: activatedOrder,
+          message: "تم تفعيل أمر الإنتاج بنجاح"
+        });
+      } catch (error: any) {
+        console.error("Error activating production order:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في تفعيل أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.patch(
+    "/api/production-orders/:id/assign",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "غير مصرح لك بتخصيص أوامر الإنتاج" 
+          });
+        }
+
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const { machineId, operatorId } = req.body;
+
+        const updatedOrder = await storage.updateProductionOrderAssignment(
+          id,
+          machineId,
+          operatorId
+        );
+
+        res.json({
+          success: true,
+          data: updatedOrder,
+          message: "تم تحديث التخصيص بنجاح"
+        });
+      } catch (error: any) {
+        console.error("Error assigning production order:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في تخصيص أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/api/production-orders/:id/stats",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const stats = await storage.getProductionOrderStats(id);
+        
+        res.json({
+          success: true,
+          data: stats
+        });
+      } catch (error: any) {
+        console.error("Error fetching production order stats:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في جلب إحصائيات أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
   // Get all orders with enhanced search and filtering
   app.get("/api/orders/enhanced", requireAuth, async (req, res) => {
     try {

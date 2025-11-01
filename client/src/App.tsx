@@ -8,6 +8,7 @@ import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import Orders from "./pages/orders";
 import Production from "./pages/production";
+import ProductionOrdersManagement from "./pages/ProductionOrdersManagement";
 import Quality from "./pages/quality";
 import Warehouse from "./pages/warehouse";
 import Maintenance from "./pages/maintenance";
@@ -75,6 +76,12 @@ function AppRoutes() {
       <Route path="/production">
         <ProtectedRoute path="/production">
           <Production />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/production-orders-management">
+        <ProtectedRoute path="/production-orders-management">
+          <ProductionOrdersManagement />
         </ProtectedRoute>
       </Route>
 
