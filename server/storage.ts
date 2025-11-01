@@ -809,6 +809,43 @@ export interface IStorage {
   getCuttingQueue(): Promise<Roll[]>;
   getGroupedCuttingQueue(): Promise<any[]>;
   getOrderProgress(productionOrderId: number): Promise<any>;
+  
+  // Enhanced Cutting Operations
+  getRollsForCuttingBySection(sectionId?: number): Promise<{
+    rolls: Roll[];
+    stats: {
+      totalRolls: number;
+      totalWeight: number;
+      todayWaste: number;
+      todayWastePercentage: number;
+      averageWastePercentage: number;
+    };
+  }>;
+  completeCutting(rollId: number, netWeight: number, operatorId: number): Promise<{
+    roll: Roll;
+    production_order: ProductionOrder;
+    waste_percentage: number;
+    is_order_completed: boolean;
+  }>;
+  calculateWasteStatistics(productionOrderId: number): Promise<{
+    totalWaste: number;
+    wastePercentage: number;
+    operatorStats: Array<{
+      operatorId: number;
+      operatorName: string;
+      rollsCut: number;
+      totalWaste: number;
+      averageWastePercentage: number;
+    }>;
+    dailyStats: Array<{
+      date: string;
+      totalWaste: number;
+      wastePercentage: number;
+      rollsCount: number;
+    }>;
+  }>;
+  checkCuttingCompletion(productionOrderId: number): Promise<boolean>;
+  
   getRollQR(
     rollId: number,
   ): Promise<{ qr_code_text: string; qr_png_base64: string }>;
@@ -7444,6 +7481,397 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching roll QR:", error);
       throw new Error("فشل في جلب رمز QR للرول");
+    }
+  }
+
+  // Enhanced Cutting Operations
+  async getRollsForCuttingBySection(sectionId?: number): Promise<{
+    rolls: Roll[];
+    stats: {
+      totalRolls: number;
+      totalWeight: number;
+      todayWaste: number;
+      todayWastePercentage: number;
+      averageWastePercentage: number;
+    };
+  }> {
+    try {
+      // جلب الرولات في مرحلة الطباعة (الجاهزة للتقطيع)
+      const rollsQuery = db
+        .select({
+          roll: rolls,
+          production_order: production_orders,
+          customer_product: customer_products,
+          customer: customers,
+        })
+        .from(rolls)
+        .innerJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(customers, eq(customer_products.customer_id, customers.id))
+        .where(eq(rolls.stage, "printing"))
+        .orderBy(desc(rolls.printed_at));
+
+      const rollsData = await rollsQuery;
+
+      // حساب الإحصائيات
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // إحصائيات اليوم
+      const todayRolls = await db
+        .select({
+          waste_kg: rolls.waste_kg,
+          weight_kg: rolls.weight_kg,
+          cut_weight_total_kg: rolls.cut_weight_total_kg,
+        })
+        .from(rolls)
+        .where(
+          and(
+            eq(rolls.stage, "done"),
+            sql`DATE(${rolls.cut_completed_at}) = DATE(NOW())`
+          )
+        );
+
+      const todayWaste = todayRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.waste_kg?.toString() || "0"), 0);
+      
+      const todayTotalWeight = todayRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg?.toString() || "0"), 0);
+      
+      const todayWastePercentage = todayTotalWeight > 0 
+        ? (todayWaste / todayTotalWeight) * 100 : 0;
+
+      // متوسط نسبة الهدر للأسبوع الماضي
+      const weekRolls = await db
+        .select({
+          waste_kg: rolls.waste_kg,
+          weight_kg: rolls.weight_kg,
+        })
+        .from(rolls)
+        .where(
+          and(
+            eq(rolls.stage, "done"),
+            sql`${rolls.cut_completed_at} >= NOW() - INTERVAL '7 days'`
+          )
+        );
+
+      const weekTotalWaste = weekRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.waste_kg?.toString() || "0"), 0);
+      
+      const weekTotalWeight = weekRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg?.toString() || "0"), 0);
+      
+      const averageWastePercentage = weekTotalWeight > 0 
+        ? (weekTotalWaste / weekTotalWeight) * 100 : 0;
+
+      // تجهيز البيانات
+      const rollsFormatted: Roll[] = rollsData.map(item => ({
+        ...item.roll,
+        production_order: {
+          ...item.production_order,
+          customer_product: item.customer_product ? {
+            ...item.customer_product,
+            customer: item.customer || undefined,
+          } : undefined,
+        },
+      })) as Roll[];
+
+      return {
+        rolls: rollsFormatted,
+        stats: {
+          totalRolls: rollsFormatted.length,
+          totalWeight: rollsFormatted.reduce((sum, roll) => 
+            sum + parseFloat(roll.weight_kg?.toString() || "0"), 0),
+          todayWaste,
+          todayWastePercentage,
+          averageWastePercentage,
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching cutting queue by section:", error);
+      throw new Error("فشل في جلب قائمة التقطيع");
+    }
+  }
+
+  async completeCutting(rollId: number, netWeight: number, operatorId: number): Promise<{
+    roll: Roll;
+    production_order: ProductionOrder;
+    waste_percentage: number;
+    is_order_completed: boolean;
+  }> {
+    try {
+      // بدء المعاملة
+      const result = await db.transaction(async (tx) => {
+        // جلب بيانات الرول
+        const [roll] = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.id, rollId));
+
+        if (!roll) {
+          throw new Error("الرول غير موجود");
+        }
+
+        if (roll.stage !== "printing") {
+          throw new Error("الرول غير جاهز للتقطيع");
+        }
+
+        const grossWeight = parseFloat(roll.weight_kg?.toString() || "0");
+        
+        if (netWeight >= grossWeight) {
+          throw new Error("الوزن الصافي يجب أن يكون أقل من الوزن الخام");
+        }
+
+        // حساب الهدر
+        const wasteWeight = grossWeight - netWeight;
+        const wastePercentage = (wasteWeight / grossWeight) * 100;
+
+        // تحديث الرول
+        const [updatedRoll] = await tx
+          .update(rolls)
+          .set({
+            stage: "done",
+            cut_weight_total_kg: numberToDecimalString(netWeight),
+            waste_kg: numberToDecimalString(wasteWeight),
+            cut_completed_at: new Date(),
+            cut_by: operatorId,
+          })
+          .where(eq(rolls.id, rollId))
+          .returning();
+
+        // جلب أمر الإنتاج
+        const [productionOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, roll.production_order_id));
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        // جلب جميع رولات أمر الإنتاج لحساب الإحصائيات
+        const allRolls = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, roll.production_order_id));
+
+        // حساب الكميات الإجمالية
+        const totalNetWeight = allRolls.reduce((sum, r) => 
+          sum + parseFloat(r.cut_weight_total_kg?.toString() || "0"), 0);
+        
+        const totalWaste = allRolls.reduce((sum, r) => 
+          sum + parseFloat(r.waste_kg?.toString() || "0"), 0);
+
+        // التحقق من اكتمال جميع الرولات
+        const allCompleted = allRolls.every(r => r.stage === "done");
+        
+        // حساب نسبة إكمال التقطيع
+        const completedCount = allRolls.filter(r => r.stage === "done").length;
+        const cuttingPercentage = (completedCount / allRolls.length) * 100;
+
+        // تحديث أمر الإنتاج
+        const [updatedProductionOrder] = await tx
+          .update(production_orders)
+          .set({
+            net_quantity_kg: numberToDecimalString(totalNetWeight),
+            waste_quantity_kg: numberToDecimalString(totalWaste),
+            cutting_completion_percentage: numberToDecimalString(cuttingPercentage),
+            status: allCompleted ? "completed" : productionOrder.status,
+          })
+          .where(eq(production_orders.id, roll.production_order_id))
+          .returning();
+
+        // إذا اكتملت جميع أوامر الإنتاج للطلب، حدث حالة الطلب
+        if (allCompleted) {
+          const [order] = await tx
+            .select()
+            .from(orders)
+            .where(eq(orders.id, productionOrder.order_id));
+
+          if (order) {
+            // التحقق من اكتمال جميع أوامر الإنتاج للطلب
+            const allProductionOrders = await tx
+              .select()
+              .from(production_orders)
+              .where(eq(production_orders.order_id, order.id));
+
+            const allOrdersCompleted = allProductionOrders.every(po => 
+              po.status === "completed" || po.id === productionOrder.id);
+
+            if (allOrdersCompleted) {
+              await tx
+                .update(orders)
+                .set({ status: "completed" })
+                .where(eq(orders.id, order.id));
+            }
+          }
+        }
+
+        // إبطال الكاش
+        invalidateProductionCache("cutting");
+
+        return {
+          roll: updatedRoll,
+          production_order: updatedProductionOrder,
+          waste_percentage: wastePercentage,
+          is_order_completed: allCompleted,
+        };
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Error completing cutting:", error);
+      throw error;
+    }
+  }
+
+  async calculateWasteStatistics(productionOrderId: number): Promise<{
+    totalWaste: number;
+    wastePercentage: number;
+    operatorStats: Array<{
+      operatorId: number;
+      operatorName: string;
+      rollsCut: number;
+      totalWaste: number;
+      averageWastePercentage: number;
+    }>;
+    dailyStats: Array<{
+      date: string;
+      totalWaste: number;
+      wastePercentage: number;
+      rollsCount: number;
+    }>;
+  }> {
+    try {
+      // جلب جميع الرولات المقطوعة لأمر الإنتاج
+      const rollsData = await db
+        .select({
+          roll: rolls,
+          operator: users,
+        })
+        .from(rolls)
+        .leftJoin(users, eq(rolls.cut_by, users.id))
+        .where(
+          and(
+            eq(rolls.production_order_id, productionOrderId),
+            eq(rolls.stage, "done")
+          )
+        );
+
+      if (rollsData.length === 0) {
+        return {
+          totalWaste: 0,
+          wastePercentage: 0,
+          operatorStats: [],
+          dailyStats: [],
+        };
+      }
+
+      // حساب الإحصائيات الإجمالية
+      const totalWaste = rollsData.reduce((sum, item) => 
+        sum + parseFloat(item.roll.waste_kg?.toString() || "0"), 0);
+      
+      const totalWeight = rollsData.reduce((sum, item) => 
+        sum + parseFloat(item.roll.weight_kg?.toString() || "0"), 0);
+      
+      const wastePercentage = totalWeight > 0 
+        ? (totalWaste / totalWeight) * 100 : 0;
+
+      // إحصائيات العاملين
+      const operatorMap = new Map<number, {
+        name: string;
+        rollsCut: number;
+        totalWaste: number;
+        totalWeight: number;
+      }>();
+
+      rollsData.forEach(item => {
+        if (item.roll.cut_by) {
+          const existing = operatorMap.get(item.roll.cut_by) || {
+            name: item.operator?.display_name_ar || item.operator?.display_name || "غير معروف",
+            rollsCut: 0,
+            totalWaste: 0,
+            totalWeight: 0,
+          };
+
+          existing.rollsCut++;
+          existing.totalWaste += parseFloat(item.roll.waste_kg?.toString() || "0");
+          existing.totalWeight += parseFloat(item.roll.weight_kg?.toString() || "0");
+
+          operatorMap.set(item.roll.cut_by, existing);
+        }
+      });
+
+      const operatorStats = Array.from(operatorMap.entries()).map(([id, stats]) => ({
+        operatorId: id,
+        operatorName: stats.name,
+        rollsCut: stats.rollsCut,
+        totalWaste: stats.totalWaste,
+        averageWastePercentage: stats.totalWeight > 0 
+          ? (stats.totalWaste / stats.totalWeight) * 100 : 0,
+      }));
+
+      // إحصائيات يومية
+      const dailyMap = new Map<string, {
+        totalWaste: number;
+        totalWeight: number;
+        rollsCount: number;
+      }>();
+
+      rollsData.forEach(item => {
+        if (item.roll.cut_completed_at) {
+          const date = new Date(item.roll.cut_completed_at).toISOString().split('T')[0];
+          const existing = dailyMap.get(date) || {
+            totalWaste: 0,
+            totalWeight: 0,
+            rollsCount: 0,
+          };
+
+          existing.rollsCount++;
+          existing.totalWaste += parseFloat(item.roll.waste_kg?.toString() || "0");
+          existing.totalWeight += parseFloat(item.roll.weight_kg?.toString() || "0");
+
+          dailyMap.set(date, existing);
+        }
+      });
+
+      const dailyStats = Array.from(dailyMap.entries())
+        .map(([date, stats]) => ({
+          date,
+          totalWaste: stats.totalWaste,
+          wastePercentage: stats.totalWeight > 0 
+            ? (stats.totalWaste / stats.totalWeight) * 100 : 0,
+          rollsCount: stats.rollsCount,
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      return {
+        totalWaste,
+        wastePercentage,
+        operatorStats,
+        dailyStats,
+      };
+    } catch (error) {
+      console.error("Error calculating waste statistics:", error);
+      throw new Error("فشل في حساب إحصائيات الهدر");
+    }
+  }
+
+  async checkCuttingCompletion(productionOrderId: number): Promise<boolean> {
+    try {
+      const rollsData = await db
+        .select({ stage: rolls.stage })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, productionOrderId));
+
+      if (rollsData.length === 0) {
+        return false;
+      }
+
+      return rollsData.every(roll => roll.stage === "done");
+    } catch (error) {
+      console.error("Error checking cutting completion:", error);
+      throw new Error("فشل في التحقق من اكتمال التقطيع");
     }
   }
 

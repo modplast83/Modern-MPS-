@@ -16,6 +16,7 @@ import GroupedCuttingQueue from "./GroupedCuttingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
 import ProductionStageStats from "./ProductionStageStats";
 import PrintingOperatorDashboard from "../../pages/PrintingOperatorDashboard";
+import CuttingOperatorDashboard from "../../pages/CuttingOperatorDashboard";
 
 interface ProductionTabsProps {
   onCreateRoll: (productionOrderId?: number) => void;
@@ -253,13 +254,31 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         {/* Cutting Stage - Printed Rolls Ready for Cutting */}
         {visibleStages.some((stage) => stage.key === "cutting") && (
           <TabsContent value="cutting" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
-                قائمة انتظار التقطيع
-              </CardTitle>
-              <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
-              <GroupedCuttingQueue items={groupedCuttingQueue} />
-            </CardContent>
+            {/* Check if user is specifically in cutting section */}
+            {(() => {
+              const userSection = sections.find(
+                (section) => section.id === String(currentUser?.section_id)
+              );
+              const isCuttingOperator = 
+                userSection?.name?.toLowerCase().includes("cut") || 
+                userSection?.name?.toLowerCase().includes("تقطيع");
+              
+              // Show dedicated dashboard for cutting operators
+              if (isCuttingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
+                return <CuttingOperatorDashboard />;
+              }
+              
+              // Show standard view for managers
+              return (
+                <CardContent className="p-6">
+                  <CardTitle className="text-lg mb-4">
+                    قائمة انتظار التقطيع
+                  </CardTitle>
+                  <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
+                  <GroupedCuttingQueue items={groupedCuttingQueue} />
+                </CardContent>
+              );
+            })()}
           </TabsContent>
         )}
       </Tabs>

@@ -6230,6 +6230,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Enhanced Cutting Operations API Routes ============
+
+  // جلب رولات التقطيع مع الإحصائيات
+  app.get("/api/rolls/cutting-queue-by-section", requireAuth, async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const sectionId = authReq.user?.section_id;
+      
+      const result = await storage.getRollsForCuttingBySection(sectionId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching cutting queue by section:", error);
+      res.status(500).json({ message: "خطأ في جلب قائمة التقطيع" });
+    }
+  });
+
+  // إكمال عملية التقطيع
+  app.post("/api/rolls/:id/complete-cutting", requireAuth, async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const rollId = parseInt(req.params.id);
+      const { net_weight } = req.body;
+      
+      if (!net_weight || net_weight <= 0) {
+        return res.status(400).json({ 
+          message: "الوزن الصافي مطلوب ويجب أن يكون أكبر من صفر" 
+        });
+      }
+
+      const operatorId = authReq.user?.id!;
+      const result = await storage.completeCutting(rollId, net_weight, operatorId);
+      
+      res.json({
+        ...result,
+        message: result.is_order_completed 
+          ? "تم إكمال جميع رولات أمر الإنتاج" 
+          : "تم تقطيع الرول بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error completing cutting:", error);
+      res.status(500).json({ 
+        message: error.message || "خطأ في إكمال عملية التقطيع" 
+      });
+    }
+  });
+
+  // إحصائيات الهدر لأمر إنتاج
+  app.get("/api/production-orders/:id/waste-stats", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      if (isNaN(productionOrderId)) {
+        return res.status(400).json({ 
+          message: "معرف أمر الإنتاج غير صحيح" 
+        });
+      }
+
+      const stats = await storage.calculateWasteStatistics(productionOrderId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching waste statistics:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب إحصائيات الهدر" 
+      });
+    }
+  });
+
+  // التحقق من اكتمال التقطيع
+  app.get("/api/production-orders/:id/cutting-status", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      if (isNaN(productionOrderId)) {
+        return res.status(400).json({ 
+          message: "معرف أمر الإنتاج غير صحيح" 
+        });
+      }
+
+      const isCompleted = await storage.checkCuttingCompletion(productionOrderId);
+      res.json({
+        productionOrderId,
+        cuttingCompleted: isCompleted,
+        status: isCompleted ? "completed" : "in_progress"
+      });
+    } catch (error) {
+      console.error("Error checking cutting completion:", error);
+      res.status(500).json({ 
+        message: "خطأ في التحقق من حالة التقطيع" 
+      });
+    }
+  });
+
   // ============ Production Monitoring Analytics API Routes ============
 
   // Get user performance statistics
