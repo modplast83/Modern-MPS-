@@ -15,6 +15,7 @@ import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import GroupedCuttingQueue from "./GroupedCuttingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
 import ProductionStageStats from "./ProductionStageStats";
+import PrintingOperatorDashboard from "../../pages/PrintingOperatorDashboard";
 
 interface ProductionTabsProps {
   onCreateRoll: (productionOrderId?: number) => void;
@@ -221,13 +222,31 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         {/* Printing Stage - Rolls Ready for Printing */}
         {visibleStages.some((stage) => stage.key === "printing") && (
           <TabsContent value="printing" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
-                قائمة انتظار الطباعة
-              </CardTitle>
-              <ProductionStageStats stage="printing" data={printingQueue} />
-              <GroupedPrintingQueue items={printingQueue} />
-            </CardContent>
+            {/* Check if user is specifically in printing section */}
+            {(() => {
+              const userSection = sections.find(
+                (section) => section.id === String(currentUser?.section_id)
+              );
+              const isPrintingOperator = 
+                userSection?.name?.toLowerCase().includes("print") || 
+                userSection?.name?.toLowerCase().includes("طباعة");
+              
+              // Show dedicated dashboard for printing operators
+              if (isPrintingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
+                return <PrintingOperatorDashboard />;
+              }
+              
+              // Show standard view for managers
+              return (
+                <CardContent className="p-6">
+                  <CardTitle className="text-lg mb-4">
+                    قائمة انتظار الطباعة
+                  </CardTitle>
+                  <ProductionStageStats stage="printing" data={printingQueue} />
+                  <GroupedPrintingQueue items={printingQueue} />
+                </CardContent>
+              );
+            })()}
           </TabsContent>
         )}
 

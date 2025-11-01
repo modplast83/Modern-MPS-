@@ -1874,6 +1874,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================ PRINTING OPERATOR API ROUTES ================
+  
+  // Get rolls ready for printing by section
+  app.get("/api/rolls/printing-queue-by-section", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      // Get rolls ready for printing (in film stage)
+      const printingQueue = await storage.getRollsForPrintingBySection(user.section_id);
+      
+      res.json(printingQueue);
+    } catch (error) {
+      console.error("Error fetching printing queue by section:", error);
+      res.status(500).json({ message: "خطأ في جلب قائمة انتظار الطباعة" });
+    }
+  });
+
+  // Mark roll as printed
+  app.post("/api/rolls/:id/mark-printed", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const rollId = parseInt(req.params.id);
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      // Mark the roll as printed
+      const updatedRoll = await storage.markRollAsPrinted(rollId, user.id);
+      
+      res.json({
+        success: true,
+        data: updatedRoll,
+        message: "تم تسجيل طباعة الرول بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error marking roll as printed:", error);
+      res.status(400).json({ 
+        success: false,
+        message: error.message || "خطأ في تسجيل طباعة الرول" 
+      });
+    }
+  });
+
+  // Get printing progress for a production order
+  app.get("/api/production-orders/:id/printing-progress", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      // Get production order stats
+      const stats = await storage.getProductionOrderStats(productionOrderId);
+      
+      // Check if printing is completed
+      const isCompleted = await storage.checkPrintingCompletion(productionOrderId);
+      
+      res.json({
+        success: true,
+        data: {
+          ...stats,
+          printing_completed: isCompleted
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching printing progress:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "خطأ في جلب تقدم الطباعة" 
+      });
+    }
+  });
+
+  // Get printing statistics
+  app.get("/api/printing/stats", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user;
+      const stats = await storage.getPrintingStats(user?.id);
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching printing stats:", error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات الطباعة" });
+    }
+  });
+
   // Machines routes
   app.get("/api/machines", requireAuth, async (req, res) => {
     try {
