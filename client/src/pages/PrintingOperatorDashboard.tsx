@@ -8,6 +8,7 @@ import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/use-auth";
 import { formatWeight } from "../lib/formatNumber";
 import { queryClient, apiRequest } from "../lib/queryClient";
+import { toastMessages } from "../lib/toastMessages";
 import {
   Collapsible,
   CollapsibleContent,
@@ -103,22 +104,25 @@ export default function PrintingOperatorDashboard() {
       });
     },
     onSuccess: (data, rollId) => {
+      const rollNumber = confirmPrintDialog.roll?.roll_number || `#${rollId}`;
+      const message = toastMessages.rolls.printed(rollNumber);
       toast({
-        title: "تم بنجاح",
-        description: `تم تأكيد طباعة الرول رقم ${confirmPrintDialog.roll?.roll_number}`,
+        title: message.title,
+        description: message.description,
       });
       
       // تحديث البيانات
       queryClient.invalidateQueries({ queryKey: ["/api/rolls/printing-queue-by-section"] });
       queryClient.invalidateQueries({ queryKey: ["/api/printing/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
       
       // إغلاق النافذة
       setConfirmPrintDialog({ isOpen: false });
     },
     onError: (error: Error) => {
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في تأكيد الطباعة",
+        title: "❌ خطأ في الطباعة",
+        description: error.message || toastMessages.rolls.errors.printing,
         variant: "destructive",
       });
     },

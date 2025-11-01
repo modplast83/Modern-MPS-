@@ -26,6 +26,7 @@ import { Progress } from "../components/ui/progress";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import SmartDistributionModal from "../components/modals/SmartDistributionModal";
+import { toastMessages } from "../lib/toastMessages";
 import {
   GripVertical,
   Factory,
@@ -471,18 +472,20 @@ export default function ProductionQueues() {
         });
       }
 
+      const message = toastMessages.queue.smartDistribution(suggestions.data.length);
       toast({
-        title: "تم التوزيع",
-        description: `تم توزيع ${suggestions.data.length} أمر إنتاج على المكائن`,
+        title: message.title,
+        description: message.description,
       });
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
       queryClient.invalidateQueries({ queryKey: ["/api/machine-queues/suggest"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
     } catch (error) {
       toast({
-        title: "خطأ",
-        description: "فشل تطبيق التوزيع التلقائي",
+        title: "❌ خطأ في التوزيع",
+        description: toastMessages.queue.errors.distribution,
         variant: "destructive",
       });
     }
@@ -541,8 +544,8 @@ export default function ProductionQueues() {
                 queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
                 queryClient.invalidateQueries({ queryKey: ["/api/machines/capacity-stats"] });
                 toast({
-                  title: "تم التحديث",
-                  description: "تم تحديث البيانات بنجاح",
+                  title: "✅ تم التحديث",
+                  description: "تم تحديث بيانات الطوابير بنجاح",
                 });
               }}
             >

@@ -30,6 +30,8 @@ import ProductionOrderActivationModal from "../components/production/ProductionO
 import ProductionOrderStatsCard from "../components/production/ProductionOrderStatsCard";
 import ProductionOrderFilters from "../components/production/ProductionOrderFilters";
 import ProductionOrderPrintTemplate from "../components/production/ProductionOrderPrintTemplate";
+import { toastMessages } from "../lib/toastMessages";
+import { IconWithTooltip } from "../components/ui/icon-with-tooltip";
 
 export default function ProductionOrdersManagement() {
   const { user } = useAuth();
@@ -90,19 +92,22 @@ export default function ProductionOrdersManagement() {
       });
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      const orderNumber = selectedOrder?.production_order_number || `#${variables.id}`;
+      const message = toastMessages.productionOrders.activated(orderNumber);
       toast({
-        title: "نجح",
-        description: data.message || "تم تفعيل أمر الإنتاج بنجاح",
+        title: message.title,
+        description: message.description,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders/management"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-queues"] });
       setIsActivationModalOpen(false);
       setSelectedOrder(null);
     },
     onError: (error: any) => {
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في تفعيل أمر الإنتاج",
+        title: "❌ خطأ في التفعيل",
+        description: error.message || toastMessages.productionOrders.errors.activation,
         variant: "destructive",
       });
     },
@@ -117,17 +122,20 @@ export default function ProductionOrdersManagement() {
       });
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      const orderNumber = selectedOrder?.production_order_number || `#${variables.id}`;
+      const message = toastMessages.productionOrders.assigned(orderNumber);
       toast({
-        title: "نجح",
-        description: data.message || "تم تحديث التخصيص بنجاح",
+        title: message.title,
+        description: message.description,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders/management"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-queues"] });
     },
     onError: (error: any) => {
       toast({
-        title: "خطأ",
-        description: error.message || "فشل في تحديث التخصيص",
+        title: "❌ خطأ في التخصيص",
+        description: error.message || toastMessages.productionOrders.errors.assignment,
         variant: "destructive",
       });
     },
@@ -393,23 +401,32 @@ export default function ProductionOrdersManagement() {
                                 تخصيص
                               </Button>
                             )}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setShowStats(showStats === order.id ? null : order.id)}
-                              data-testid={`button-stats-${order.id}`}
-                            >
-                              <BarChart3 className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handlePrintProductionOrder(order)}
-                              data-testid={`button-print-${order.id}`}
-                              title="طباعة"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
+                            <IconWithTooltip
+                              icon={
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setShowStats(showStats === order.id ? null : order.id)}
+                                  data-testid={`button-stats-${order.id}`}
+                                >
+                                  <BarChart3 className="h-4 w-4" />
+                                </Button>
+                              }
+                              tooltip="عرض الإحصائيات التفصيلية"
+                            />
+                            <IconWithTooltip
+                              icon={
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handlePrintProductionOrder(order)}
+                                  data-testid={`button-print-${order.id}`}
+                                >
+                                  <Printer className="h-4 w-4" />
+                                </Button>
+                              }
+                              tooltip="طباعة أمر الإنتاج"
+                            />
                           </div>
                         </TableCell>
                       </TableRow>
