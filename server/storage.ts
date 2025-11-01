@@ -2881,6 +2881,437 @@ export class DatabaseStorage implements IStorage {
     return roll;
   }
 
+  // ============ Roll Search Functions ============
+
+  // البحث الشامل عن الرولات
+  async searchRolls(query: string, filters?: {
+    stage?: string;
+    startDate?: string;
+    endDate?: string;
+    machineId?: string;
+    operatorId?: number;
+    minWeight?: number;
+    maxWeight?: number;
+    productionOrderId?: number;
+    orderId?: number;
+  }): Promise<any[]> {
+    const cacheKey = `roll_search:${query}:${JSON.stringify(filters)}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    let queryBuilder = db
+      .select({
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        film_machine_id: rolls.film_machine_id,
+        film_machine_name: sql<string>`film_machine.name`,
+        printing_machine_id: rolls.printing_machine_id,
+        printing_machine_name: sql<string>`printing_machine.name`,
+        cutting_machine_id: rolls.cutting_machine_id,
+        cutting_machine_name: sql<string>`cutting_machine.name`,
+        created_by: rolls.created_by,
+        created_by_name: sql<string>`created_user.display_name`,
+        printed_by: rolls.printed_by,
+        printed_by_name: sql<string>`printed_user.display_name`,
+        cut_by: rolls.cut_by,
+        cut_by_name: sql<string>`cut_user.display_name`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(alias(machines, 'film_machine'), eq(rolls.film_machine_id, sql`film_machine.id`))
+      .leftJoin(alias(machines, 'printing_machine'), eq(rolls.printing_machine_id, sql`printing_machine.id`))
+      .leftJoin(alias(machines, 'cutting_machine'), eq(rolls.cutting_machine_id, sql`cutting_machine.id`))
+      .leftJoin(alias(users, 'created_user'), eq(rolls.created_by, sql`created_user.id`))
+      .leftJoin(alias(users, 'printed_user'), eq(rolls.printed_by, sql`printed_user.id`))
+      .leftJoin(alias(users, 'cut_user'), eq(rolls.cut_by, sql`cut_user.id`));
+
+    // Build conditions array
+    const conditions = [];
+
+    // Search query
+    if (query && query.trim()) {
+      const searchPattern = `%${query.trim()}%`;
+      conditions.push(
+        or(
+          sql`${rolls.roll_number} ILIKE ${searchPattern}`,
+          sql`${rolls.qr_code_text} ILIKE ${searchPattern}`,
+          sql`${production_orders.production_order_number} ILIKE ${searchPattern}`,
+          sql`${orders.order_number} ILIKE ${searchPattern}`,
+          sql`${customers.name} ILIKE ${searchPattern}`,
+          sql`${customers.name_ar} ILIKE ${searchPattern}`
+        )
+      );
+    }
+
+    // Stage filter
+    if (filters?.stage) {
+      conditions.push(eq(rolls.stage, filters.stage));
+    }
+
+    // Date range filter
+    if (filters?.startDate) {
+      conditions.push(sql`${rolls.created_at} >= ${filters.startDate}`);
+    }
+    if (filters?.endDate) {
+      conditions.push(sql`${rolls.created_at} <= ${filters.endDate}`);
+    }
+
+    // Machine filter
+    if (filters?.machineId) {
+      conditions.push(
+        or(
+          eq(rolls.film_machine_id, filters.machineId),
+          eq(rolls.printing_machine_id, filters.machineId),
+          eq(rolls.cutting_machine_id, filters.machineId)
+        )
+      );
+    }
+
+    // Operator filter
+    if (filters?.operatorId) {
+      conditions.push(
+        or(
+          eq(rolls.created_by, filters.operatorId),
+          eq(rolls.printed_by, filters.operatorId),
+          eq(rolls.cut_by, filters.operatorId)
+        )
+      );
+    }
+
+    // Weight range filter
+    if (filters?.minWeight !== undefined) {
+      conditions.push(sql`${rolls.weight_kg} >= ${filters.minWeight}`);
+    }
+    if (filters?.maxWeight !== undefined) {
+      conditions.push(sql`${rolls.weight_kg} <= ${filters.maxWeight}`);
+    }
+
+    // Production order filter
+    if (filters?.productionOrderId) {
+      conditions.push(eq(rolls.production_order_id, filters.productionOrderId));
+    }
+
+    // Order filter
+    if (filters?.orderId) {
+      conditions.push(eq(production_orders.order_id, filters.orderId));
+    }
+
+    // Apply conditions if any
+    if (conditions.length > 0) {
+      queryBuilder = queryBuilder.where(and(...conditions));
+    }
+
+    // Order by created_at desc and limit to 100
+    queryBuilder = queryBuilder
+      .orderBy(desc(rolls.created_at))
+      .limit(100);
+
+    const results = await queryBuilder;
+
+    // Parse and add product info from qr_code_text
+    const resultsWithProductInfo = results.map(roll => {
+      try {
+        const qrData = JSON.parse(roll.qr_code_text);
+        return {
+          ...roll,
+          item_name: qrData.item_name || qrData.product_name,
+          item_name_ar: qrData.item_name_ar || qrData.product_name_ar,
+          size_caption: qrData.size_caption,
+          raw_material: qrData.raw_material,
+          color: qrData.color,
+          punching: qrData.punching,
+        };
+      } catch {
+        return roll;
+      }
+    });
+
+    setCachedData(cacheKey, resultsWithProductInfo, CACHE_TTL.SHORT);
+    return resultsWithProductInfo;
+  }
+
+  // البحث بالباركود
+  async getRollByBarcode(barcode: string): Promise<any | null> {
+    const cacheKey = `roll_barcode:${barcode}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    // Search by QR code text
+    const result = await db
+      .select({
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .where(sql`${rolls.qr_code_text} ILIKE ${'%' + barcode + '%'}`)
+      .limit(1);
+
+    if (result.length === 0) return null;
+
+    const roll = result[0];
+    setCachedData(cacheKey, roll, CACHE_TTL.MEDIUM);
+    return roll;
+  }
+
+  // جلب التفاصيل الكاملة للرول
+  async getRollFullDetails(rollId: number): Promise<any | null> {
+    const cacheKey = `roll_full_details:${rollId}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        // Roll info
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        // Production order info
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        production_quantity_kg: production_orders.quantity_kg,
+        production_final_quantity_kg: production_orders.final_quantity_kg,
+        production_status: production_orders.status,
+        production_overrun_percentage: production_orders.overrun_percentage,
+        // Order info
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        order_status: orders.status,
+        order_total_quantity: orders.total_quantity,
+        order_delivery_date: orders.delivery_date,
+        // Customer info
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        customer_phone: customers.phone,
+        customer_city: customers.city,
+        // Machine info
+        film_machine_id: rolls.film_machine_id,
+        film_machine_name: sql<string>`film_machine.name`,
+        film_machine_name_ar: sql<string>`film_machine.name_ar`,
+        printing_machine_id: rolls.printing_machine_id,
+        printing_machine_name: sql<string>`printing_machine.name`,
+        printing_machine_name_ar: sql<string>`printing_machine.name_ar`,
+        cutting_machine_id: rolls.cutting_machine_id,
+        cutting_machine_name: sql<string>`cutting_machine.name`,
+        cutting_machine_name_ar: sql<string>`cutting_machine.name_ar`,
+        // Operator info
+        created_by: rolls.created_by,
+        created_by_name: sql<string>`created_user.display_name`,
+        created_by_name_ar: sql<string>`created_user.display_name_ar`,
+        printed_by: rolls.printed_by,
+        printed_by_name: sql<string>`printed_user.display_name`,
+        printed_by_name_ar: sql<string>`printed_user.display_name_ar`,
+        cut_by: rolls.cut_by,
+        cut_by_name: sql<string>`cut_user.display_name`,
+        cut_by_name_ar: sql<string>`cut_user.display_name_ar`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(alias(machines, 'film_machine'), eq(rolls.film_machine_id, sql`film_machine.id`))
+      .leftJoin(alias(machines, 'printing_machine'), eq(rolls.printing_machine_id, sql`printing_machine.id`))
+      .leftJoin(alias(machines, 'cutting_machine'), eq(rolls.cutting_machine_id, sql`cutting_machine.id`))
+      .leftJoin(alias(users, 'created_user'), eq(rolls.created_by, sql`created_user.id`))
+      .leftJoin(alias(users, 'printed_user'), eq(rolls.printed_by, sql`printed_user.id`))
+      .leftJoin(alias(users, 'cut_user'), eq(rolls.cut_by, sql`cut_user.id`))
+      .where(eq(rolls.id, rollId))
+      .limit(1);
+
+    if (result.length === 0) return null;
+
+    const roll = result[0];
+
+    // Parse product info from QR code
+    try {
+      const qrData = JSON.parse(roll.qr_code_text);
+      roll.item_name = qrData.item_name || qrData.product_name;
+      roll.item_name_ar = qrData.item_name_ar || qrData.product_name_ar;
+      roll.size_caption = qrData.size_caption;
+      roll.raw_material = qrData.raw_material;
+      roll.color = qrData.color;
+      roll.punching = qrData.punching;
+      roll.thickness = qrData.thickness;
+    } catch {
+      // Ignore parse error
+    }
+
+    // Get related cuts
+    const cutsData = await db
+      .select({
+        cut_id: cuts.id,
+        cut_number: cuts.cut_number,
+        weight_kg: cuts.weight_kg,
+        pkt_count: cuts.pkt_count,
+        quality_rating: cuts.quality_rating,
+        created_at: cuts.created_at,
+        created_by_name: users.display_name,
+      })
+      .from(cuts)
+      .leftJoin(users, eq(cuts.created_by, users.id))
+      .where(eq(cuts.roll_id, rollId))
+      .orderBy(desc(cuts.created_at));
+
+    roll.cuts = cutsData;
+    roll.cuts_count = cutsData.length;
+    roll.total_cuts_weight = cutsData.reduce((sum, cut) => sum + parseFloat(cut.weight_kg || 0), 0);
+
+    setCachedData(cacheKey, roll, CACHE_TTL.MEDIUM);
+    return roll;
+  }
+
+  // جلب سجل تحركات الرول
+  async getRollHistory(rollId: number): Promise<any[]> {
+    const cacheKey = `roll_history:${rollId}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    // Get roll basic info
+    const [roll] = await db
+      .select()
+      .from(rolls)
+      .where(eq(rolls.id, rollId));
+
+    if (!roll) return [];
+
+    const history = [];
+
+    // Film stage
+    history.push({
+      stage: 'film',
+      stage_ar: 'مرحلة الفيلم',
+      timestamp: roll.created_at,
+      machine_id: roll.film_machine_id,
+      operator_id: roll.created_by,
+      operator_name: await this.getUserDisplayName(roll.created_by),
+      weight_kg: roll.weight_kg,
+      status: 'completed',
+      icon: 'Film',
+    });
+
+    // Printing stage
+    if (roll.printed_at) {
+      history.push({
+        stage: 'printing',
+        stage_ar: 'مرحلة الطباعة',
+        timestamp: roll.printed_at,
+        machine_id: roll.printing_machine_id,
+        operator_id: roll.printed_by,
+        operator_name: await this.getUserDisplayName(roll.printed_by),
+        status: 'completed',
+        icon: 'Printer',
+      });
+    }
+
+    // Cutting stage
+    if (roll.cut_completed_at) {
+      history.push({
+        stage: 'cutting',
+        stage_ar: 'مرحلة التقطيع',
+        timestamp: roll.cut_completed_at,
+        machine_id: roll.cutting_machine_id,
+        operator_id: roll.cut_by,
+        operator_name: await this.getUserDisplayName(roll.cut_by),
+        cut_weight_total_kg: roll.cut_weight_total_kg,
+        waste_kg: roll.waste_kg,
+        status: 'completed',
+        icon: 'Scissors',
+      });
+    }
+
+    // Get cuts
+    const cuts = await db
+      .select({
+        cut_number: cuts.cut_number,
+        weight_kg: cuts.weight_kg,
+        pkt_count: cuts.pkt_count,
+        created_at: cuts.created_at,
+        created_by: cuts.created_by,
+        created_by_name: users.display_name,
+      })
+      .from(cuts)
+      .leftJoin(users, eq(cuts.created_by, users.id))
+      .where(eq(cuts.roll_id, rollId))
+      .orderBy(cuts.created_at);
+
+    // Add each cut to history
+    cuts.forEach(cut => {
+      history.push({
+        stage: 'cut',
+        stage_ar: 'قطع',
+        timestamp: cut.created_at,
+        cut_number: cut.cut_number,
+        weight_kg: cut.weight_kg,
+        pkt_count: cut.pkt_count,
+        operator_id: cut.created_by,
+        operator_name: cut.created_by_name,
+        status: 'completed',
+        icon: 'Package',
+      });
+    });
+
+    // Sort by timestamp
+    history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    setCachedData(cacheKey, history, CACHE_TTL.MEDIUM);
+    return history;
+  }
+
+  // Helper function to get user display name
+  async getUserDisplayName(userId: number | null): Promise<string | null> {
+    if (!userId) return null;
+    const user = await this.getUserById(userId);
+    return user?.display_name || user?.username || null;
+  }
+
   async getMachines(): Promise<Machine[]> {
     return await db.select().from(machines);
   }

@@ -6336,6 +6336,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Roll Search API Routes ============
+
+  // البحث الشامل عن الرولات
+  app.get("/api/rolls/search", requireAuth, async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      const filters = {
+        stage: req.query.stage as string,
+        startDate: req.query.start_date as string,
+        endDate: req.query.end_date as string,
+        machineId: req.query.machine_id as string,
+        operatorId: req.query.operator_id ? parseIntSafe(req.query.operator_id as string, "Operator ID", { min: 1 }) : undefined,
+        minWeight: req.query.min_weight ? parseFloatSafe(req.query.min_weight as string, "Min Weight", { min: 0 }) : undefined,
+        maxWeight: req.query.max_weight ? parseFloatSafe(req.query.max_weight as string, "Max Weight", { min: 0 }) : undefined,
+        productionOrderId: req.query.production_order_id ? parseIntSafe(req.query.production_order_id as string, "Production Order ID", { min: 1 }) : undefined,
+        orderId: req.query.order_id ? parseIntSafe(req.query.order_id as string, "Order ID", { min: 1 }) : undefined,
+      };
+
+      const results = await storage.searchRolls(query, filters);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching rolls:", error);
+      res.status(500).json({ message: "خطأ في البحث عن الرولات" });
+    }
+  });
+
+  // البحث بالباركود
+  app.get("/api/rolls/search-by-barcode/:barcode", requireAuth, async (req, res) => {
+    try {
+      const barcode = req.params.barcode;
+      
+      if (!barcode || barcode.length < 3) {
+        return res.status(400).json({ message: "الباركود غير صحيح" });
+      }
+
+      const roll = await storage.getRollByBarcode(barcode);
+      
+      if (!roll) {
+        return res.status(404).json({ message: "الرول غير موجود" });
+      }
+
+      res.json(roll);
+    } catch (error) {
+      console.error("Error searching roll by barcode:", error);
+      res.status(500).json({ message: "خطأ في البحث بالباركود" });
+    }
+  });
+
+  // جلب التفاصيل الكاملة للرول
+  app.get("/api/rolls/:id/full-details", requireAuth, async (req, res) => {
+    try {
+      const id = parseIntSafe(req.params.id, "Roll ID", { min: 1 });
+      const rollDetails = await storage.getRollFullDetails(id);
+      
+      if (!rollDetails) {
+        return res.status(404).json({ message: "الرول غير موجود" });
+      }
+
+      res.json(rollDetails);
+    } catch (error) {
+      console.error("Error fetching roll full details:", error);
+      res.status(500).json({ message: "خطأ في جلب تفاصيل الرول" });
+    }
+  });
+
+  // جلب سجل تحركات الرول
+  app.get("/api/rolls/:id/history", requireAuth, async (req, res) => {
+    try {
+      const id = parseIntSafe(req.params.id, "Roll ID", { min: 1 });
+      const history = await storage.getRollHistory(id);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching roll history:", error);
+      res.status(500).json({ message: "خطأ في جلب سجل تحركات الرول" });
+    }
+  });
+
   // ============ Enhanced Cutting Operations API Routes ============
 
   // جلب رولات التقطيع مع الإحصائيات
