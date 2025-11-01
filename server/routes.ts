@@ -1926,6 +1926,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Film Operator Endpoints ============
+  
+  // Get active production orders for film operator
+  app.get("/api/production-orders/active-for-operator", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const orders = await storage.getActiveProductionOrdersForOperator(userId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching operator production orders:", error);
+      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج" });
+    }
+  });
+
+  // Create roll with timing calculation
+  app.post("/api/rolls/create-with-timing", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertRollSchema.parse(req.body);
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rollData = {
+        ...validatedData,
+        created_by: userId,
+        is_last_roll: req.body.is_last_roll || false,
+      };
+
+      const newRoll = await storage.createRollWithTiming(rollData);
+      res.status(201).json({
+        success: true,
+        message: "تم إنشاء الرول بنجاح",
+        roll: newRoll,
+        roll_number: newRoll.roll_number,
+      });
+    } catch (error) {
+      console.error("Error creating roll with timing:", error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "خطأ في إنشاء الرول" 
+      });
+    }
+  });
+
+  // Create final roll and complete film production
+  app.post("/api/rolls/create-final", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertRollSchema.parse(req.body);
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rollData = {
+        ...validatedData,
+        created_by: userId,
+      };
+
+      const newRoll = await storage.createFinalRoll(rollData);
+      res.status(201).json({
+        success: true,
+        message: "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح",
+        roll: newRoll,
+        roll_number: newRoll.roll_number,
+      });
+    } catch (error) {
+      console.error("Error creating final roll:", error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "خطأ في إنشاء آخر رول" 
+      });
+    }
+  });
+
   // Advanced Metrics (OEE, Cycle Time, Quality)
   app.get("/api/reports/advanced-metrics", requireAuth, async (req, res) => {
     try {

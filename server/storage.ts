@@ -973,6 +973,12 @@ export interface IStorage {
   createNoteAttachment(attachment: any): Promise<any>;
   getNoteAttachments(noteId: number): Promise<any[]>;
   deleteNoteAttachment(id: number): Promise<void>;
+  
+  // Film Operator Functions
+  getActiveProductionOrdersForOperator(userId: number): Promise<any[]>;
+  createRollWithTiming(rollData: InsertRoll & { is_last_roll?: boolean }): Promise<Roll>;
+  createFinalRoll(rollData: InsertRoll): Promise<Roll>;
+  calculateProductionTime(productionOrderId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -9491,6 +9497,277 @@ export class DatabaseStorage implements IStorage {
       },
       "حذف مرفق",
       `رقم ${id}`,
+    );
+  }
+
+  // ============ Film Operator Functions ============
+  
+  async getActiveProductionOrdersForOperator(userId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get user to check section
+        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user.length || user[0].section_id !== 1) { // Film section is 1
+          return [];
+        }
+
+        // Get active production orders for film section
+        const ordersData = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            order_id: production_orders.order_id,
+            customer_product_id: production_orders.customer_product_id,
+            quantity_kg: production_orders.quantity_kg,
+            produced_quantity_kg: production_orders.produced_quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            status: production_orders.status,
+            is_final_roll_created: production_orders.is_final_roll_created,
+            film_completed: production_orders.film_completed,
+            production_start_time: production_orders.production_start_time,
+            production_end_time: production_orders.production_end_time,
+            production_time_minutes: production_orders.production_time_minutes,
+            order_number: orders.order_number,
+            customer_id: orders.customer_id,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+          })
+          .from(production_orders)
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              eq(production_orders.film_completed, false)
+            )
+          )
+          .orderBy(desc(production_orders.created_at));
+
+        // Get rolls count for each production order
+        const rollsCounts = await db
+          .select({
+            production_order_id: rolls.production_order_id,
+            rolls_count: count(rolls.id),
+            total_weight: sum(rolls.weight_kg),
+          })
+          .from(rolls)
+          .where(
+            inArray(
+              rolls.production_order_id,
+              ordersData.map(o => o.id)
+            )
+          )
+          .groupBy(rolls.production_order_id);
+
+        // Merge data
+        return ordersData.map(order => {
+          const rollData = rollsCounts.find(r => r.production_order_id === order.id);
+          return {
+            ...order,
+            rolls_count: rollData?.rolls_count || 0,
+            total_weight_produced: rollData?.total_weight || 0,
+            can_create_roll: !order.is_final_roll_created,
+            remaining_quantity: Number(order.final_quantity_kg) - (Number(rollData?.total_weight) || 0),
+          };
+        });
+      },
+      "getActiveProductionOrdersForOperator",
+      "جلب أوامر الإنتاج النشطة للعامل",
+    );
+  }
+
+  async createRollWithTiming(rollData: InsertRoll & { is_last_roll?: boolean }): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const productionOrderId = rollData.production_order_id;
+        
+        // Get production order details
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (productionOrder.is_final_roll_created) {
+          throw new Error("لا يمكن إنشاء رولات جديدة بعد آخر رول");
+        }
+
+        // Calculate production time if this is not the first roll
+        let productionTimeMinutes: number | null = null;
+        const previousRolls = await db
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId))
+          .orderBy(desc(rolls.roll_created_at));
+
+        if (previousRolls.length > 0) {
+          const lastRoll = previousRolls[0];
+          const timeDiff = Date.now() - new Date(lastRoll.roll_created_at || lastRoll.created_at).getTime();
+          productionTimeMinutes = Math.floor(timeDiff / (1000 * 60)); // Convert to minutes
+        }
+
+        // Start production if this is the first roll
+        if (!productionOrder.production_start_time) {
+          await db
+            .update(production_orders)
+            .set({ production_start_time: new Date() })
+            .where(eq(production_orders.id, productionOrderId));
+        }
+
+        // Create the roll
+        const [newRoll] = await db
+          .insert(rolls)
+          .values({
+            ...rollData,
+            is_last_roll: rollData.is_last_roll || false,
+            production_time_minutes: productionTimeMinutes,
+            roll_created_at: new Date(),
+          })
+          .returning();
+
+        // Update produced quantity
+        const allRolls = await db
+          .select({ weight_kg: rolls.weight_kg })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId));
+
+        const totalProduced = allRolls.reduce(
+          (sum, r) => sum + Number(r.weight_kg), 
+          0
+        );
+
+        await db
+          .update(production_orders)
+          .set({ 
+            produced_quantity_kg: numberToDecimalString(totalProduced),
+            film_completion_percentage: numberToDecimalString(
+              Math.min(100, (totalProduced / Number(productionOrder.final_quantity_kg)) * 100)
+            ),
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        return newRoll;
+      },
+      "createRollWithTiming",
+      "إنشاء رول مع حساب الوقت",
+    );
+  }
+
+  async createFinalRoll(rollData: InsertRoll): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const productionOrderId = rollData.production_order_id;
+        
+        // Get production order details
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (productionOrder.is_final_roll_created) {
+          throw new Error("آخر رول تم إنشاؤه بالفعل");
+        }
+
+        // Calculate production time from first roll
+        const firstRoll = await db
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId))
+          .orderBy(rolls.roll_created_at)
+          .limit(1);
+
+        let totalProductionMinutes = 0;
+        if (firstRoll.length > 0) {
+          const startTime = productionOrder.production_start_time || firstRoll[0].roll_created_at || firstRoll[0].created_at;
+          const timeDiff = Date.now() - new Date(startTime).getTime();
+          totalProductionMinutes = Math.floor(timeDiff / (1000 * 60));
+        }
+
+        // Create the final roll
+        const [newRoll] = await db
+          .insert(rolls)
+          .values({
+            ...rollData,
+            is_last_roll: true,
+            roll_created_at: new Date(),
+          })
+          .returning();
+
+        // Update production order to mark film as completed
+        const endTime = new Date();
+        await db
+          .update(production_orders)
+          .set({
+            is_final_roll_created: true,
+            film_completed: true,
+            production_end_time: endTime,
+            production_time_minutes: totalProductionMinutes,
+            film_completion_percentage: "100",
+            status: "completed", // Mark order as completed in film stage
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        // Calculate final produced quantity
+        const allRolls = await db
+          .select({ weight_kg: rolls.weight_kg })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId));
+
+        const totalProduced = allRolls.reduce(
+          (sum, r) => sum + Number(r.weight_kg), 
+          0
+        );
+
+        await db
+          .update(production_orders)
+          .set({ 
+            produced_quantity_kg: numberToDecimalString(totalProduced),
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        return newRoll;
+      },
+      "createFinalRoll",
+      "إنشاء آخر رول وإغلاق مرحلة الفيلم",
+    );
+  }
+
+  async calculateProductionTime(productionOrderId: number): Promise<number> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (!productionOrder.production_start_time) {
+          return 0;
+        }
+
+        const endTime = productionOrder.production_end_time || new Date();
+        const startTime = new Date(productionOrder.production_start_time);
+        const diffMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+        
+        return diffMinutes;
+      },
+      "calculateProductionTime",
+      "حساب وقت الإنتاج",
     );
   }
 }
