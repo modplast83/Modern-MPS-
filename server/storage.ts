@@ -407,6 +407,9 @@ export interface IStorage {
   getSafeUser(id: number): Promise<SafeUser | undefined>;
   getSafeUsers(): Promise<SafeUser[]>;
   getSafeUsersByRole(roleId: number): Promise<SafeUser[]>;
+  
+  // Roles
+  getRoleById(id: number): Promise<Role | undefined>;
 
   // Orders
   getAllOrders(): Promise<NewOrder[]>;
@@ -1070,6 +1073,21 @@ export class DatabaseStorage implements IStorage {
       },
       "البحث عن المستخدم",
       `اسم المستخدم: ${username}`,
+    );
+  }
+
+  async getRoleById(id: number): Promise<Role | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== "number" || id <= 0) {
+          throw new Error("معرف الدور غير صحيح");
+        }
+
+        const [role] = await db.select().from(roles).where(eq(roles.id, id));
+        return role || undefined;
+      },
+      "جلب بيانات الدور",
+      `الدور رقم ${id}`,
     );
   }
 
