@@ -145,13 +145,36 @@ function SortableItem({
                 </span>
                 {!isQueueItem && (
                   <Badge variant={item.status === "active" ? "default" : "secondary"} data-testid={`badge-status-${itemId}`}>
-                    {item.status === "active" ? "نشط" : "معلق"}
+                    {item.status === "active" ? "نشط" : item.status === "in_production" ? "قيد الإنتاج" : "معلق"}
                   </Badge>
                 )}
               </div>
+              
+              {/* معلومات العميل */}
+              {(isQueueItem ? item.customer_name_ar || item.customer_name : (item as ProductionOrder).customer_name_ar || (item as ProductionOrder).customer_name) && (
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-customer-${itemId}`}>
+                  العميل: {isQueueItem ? item.customer_name_ar || item.customer_name : (item as ProductionOrder).customer_name_ar || (item as ProductionOrder).customer_name}
+                </div>
+              )}
+              
+              {/* معلومات المنتج */}
+              {(isQueueItem ? item.size_caption : (item as ProductionOrder).size_caption) && (
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-product-${itemId}`}>
+                  المنتج: {isQueueItem ? item.size_caption : (item as ProductionOrder).size_caption}
+                </div>
+              )}
+              
+              {/* المادة الخام */}
+              {(isQueueItem ? item.raw_material : (item as ProductionOrder).raw_material) && (
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-material-${itemId}`}>
+                  المادة: {isQueueItem ? item.raw_material : (item as ProductionOrder).raw_material}
+                </div>
+              )}
+              
               <div className="text-xs text-muted-foreground" data-testid={`text-quantity-${itemId}`}>
                 الكمية: {isQueueItem ? item.quantity_kg : item.final_quantity_kg} كجم
               </div>
+              
               {isQueueItem && item.assigned_by_name && (
                 <div className="text-xs text-muted-foreground mt-1" data-testid={`text-assigned-by-${itemId}`}>
                   بواسطة: {item.assigned_by_name}
