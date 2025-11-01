@@ -9770,6 +9770,261 @@ export class DatabaseStorage implements IStorage {
       "حساب وقت الإنتاج",
     );
   }
+
+  // ============ Printing Operator Functions ============
+  
+  async getRollsForPrintingBySection(sectionId?: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get rolls in film stage ready for printing
+        const rollsData = await db
+          .select({
+            id: rolls.id,
+            roll_number: rolls.roll_number,
+            roll_seq: rolls.roll_seq,
+            weight_kg: rolls.weight_kg,
+            stage: rolls.stage,
+            production_order_id: rolls.production_order_id,
+            created_at: rolls.created_at,
+            qr_code_text: rolls.qr_code_text,
+            production_order_number: production_orders.production_order_number,
+            order_id: production_orders.order_id,
+            customer_product_id: production_orders.customer_product_id,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            produced_quantity_kg: production_orders.produced_quantity_kg,
+            printed_quantity_kg: production_orders.printed_quantity_kg,
+            printing_completion_percentage: production_orders.printing_completion_percentage,
+            order_number: orders.order_number,
+            customer_id: orders.customer_id,
+            customer_name: customers.name,
+            customer_name_ar: customers.name_ar,
+            item_id: items.id,
+            item_name: items.name,
+            item_name_ar: items.name_ar,
+            size_caption: customer_products.size_caption,
+          })
+          .from(rolls)
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(
+            eq(rolls.stage, "film") // Only rolls in film stage ready for printing
+          )
+          .orderBy(desc(orders.created_at), production_orders.production_order_number, rolls.roll_seq);
+
+        // Group rolls by production order
+        const groupedOrders: Map<number, any> = new Map();
+
+        rollsData.forEach(roll => {
+          const orderId = roll.production_order_id;
+          if (!groupedOrders.has(orderId)) {
+            groupedOrders.set(orderId, {
+              id: orderId,
+              production_order_number: roll.production_order_number,
+              quantity_kg: roll.quantity_kg,
+              final_quantity_kg: roll.final_quantity_kg,
+              produced_quantity_kg: roll.produced_quantity_kg,
+              printed_quantity_kg: roll.printed_quantity_kg,
+              printing_completion_percentage: roll.printing_completion_percentage,
+              order_number: roll.order_number,
+              customer_name: roll.customer_name,
+              customer_name_ar: roll.customer_name_ar,
+              item_name: roll.item_name,
+              item_name_ar: roll.item_name_ar,
+              size_caption: roll.size_caption,
+              rolls: []
+            });
+          }
+
+          groupedOrders.get(orderId).rolls.push({
+            id: roll.id,
+            roll_number: roll.roll_number,
+            roll_seq: roll.roll_seq,
+            weight_kg: roll.weight_kg,
+            stage: roll.stage,
+            production_order_id: roll.production_order_id,
+            created_at: roll.created_at,
+            qr_code_text: roll.qr_code_text,
+          });
+        });
+
+        return Array.from(groupedOrders.values());
+      },
+      "getRollsForPrintingBySection",
+      "جلب الرولات الجاهزة للطباعة حسب القسم",
+    );
+  }
+
+  async markRollAsPrinted(rollId: number, operatorId: number): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Get current roll details
+          const [currentRoll] = await tx
+            .select()
+            .from(rolls)
+            .where(eq(rolls.id, rollId));
+          
+          if (!currentRoll) {
+            throw new Error("الرول غير موجود");
+          }
+
+          if (currentRoll.stage !== "film") {
+            throw new Error("الرول غير جاهز للطباعة");
+          }
+
+          // Update roll to cutting stage (skipping printing stage as it goes directly to cutting)
+          const [updatedRoll] = await tx
+            .update(rolls)
+            .set({
+              stage: "cutting", // Move directly to cutting as per requirements
+              printed_at: new Date(),
+              printed_by: operatorId,
+            })
+            .where(eq(rolls.id, rollId))
+            .returning();
+
+          // Calculate printed quantity for the production order
+          const printedRollsWeight = await tx
+            .select({
+              total: sql<number>`COALESCE(SUM(${rolls.weight_kg}::decimal), 0)`,
+            })
+            .from(rolls)
+            .where(
+              and(
+                eq(rolls.production_order_id, currentRoll.production_order_id),
+                or(
+                  eq(rolls.stage, "cutting"),
+                  eq(rolls.stage, "done")
+                )
+              )
+            );
+
+          const printedQuantity = Number(printedRollsWeight[0]?.total || 0);
+
+          // Get production order details
+          const [productionOrder] = await tx
+            .select()
+            .from(production_orders)
+            .where(eq(production_orders.id, currentRoll.production_order_id));
+
+          if (productionOrder) {
+            const producedQuantityKg = parseFloat(
+              productionOrder.produced_quantity_kg?.toString() || "0"
+            );
+            
+            // Calculate printing completion percentage
+            const printingPercentage = producedQuantityKg > 0 
+              ? Math.min(100, (printedQuantity / producedQuantityKg) * 100)
+              : 0;
+
+            // Check if all rolls are printed
+            const [remainingRolls] = await tx
+              .select({ count: count() })
+              .from(rolls)
+              .where(
+                and(
+                  eq(rolls.production_order_id, currentRoll.production_order_id),
+                  eq(rolls.stage, "film")
+                )
+              );
+
+            const allRollsPrinted = remainingRolls.count === 0;
+
+            // Update production order
+            await tx
+              .update(production_orders)
+              .set({
+                printed_quantity_kg: numberToDecimalString(printedQuantity, 2),
+                printing_completion_percentage: numberToDecimalString(printingPercentage, 2),
+                printing_completed: allRollsPrinted,
+              })
+              .where(eq(production_orders.id, currentRoll.production_order_id));
+          }
+
+          // Invalidate cache
+          invalidateProductionCache("all");
+
+          return updatedRoll;
+        });
+      },
+      "markRollAsPrinted",
+      "تسجيل طباعة الرول",
+    );
+  }
+
+  async getPrintingStats(userId?: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get today's printed rolls count
+        const [todayPrinted] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(
+            and(
+              sql`${rolls.printed_at}::date >= ${today}`,
+              sql`${rolls.printed_at} IS NOT NULL`
+            )
+          );
+
+        // Get hourly rate for today
+        const hoursElapsed = (Date.now() - today.getTime()) / (1000 * 60 * 60);
+        const hourlyRate = hoursElapsed > 0 ? todayPrinted.count / hoursElapsed : 0;
+
+        // Get pending rolls (in film stage)
+        const [pendingRolls] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(eq(rolls.stage, "film"));
+
+        // Get completed orders today
+        const [completedOrders] = await db
+          .select({ count: count() })
+          .from(production_orders)
+          .where(
+            and(
+              eq(production_orders.printing_completed, true),
+              sql`DATE(${production_orders.updated_at}) = CURRENT_DATE`
+            )
+          );
+
+        return {
+          todayPrintedCount: todayPrinted.count,
+          hourlyRate: Math.round(hourlyRate * 10) / 10,
+          pendingRolls: pendingRolls.count,
+          completedOrders: completedOrders.count,
+        };
+      },
+      "getPrintingStats",
+      "جلب إحصائيات الطباعة",
+    );
+  }
+
+  async checkPrintingCompletion(productionOrderId: number): Promise<boolean> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [remainingRolls] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(
+            and(
+              eq(rolls.production_order_id, productionOrderId),
+              eq(rolls.stage, "film")
+            )
+          );
+
+        return remainingRolls.count === 0;
+      },
+      "checkPrintingCompletion",
+      "التحقق من اكتمال الطباعة",
+    );
+  }
 }
 
 export const storage = new DatabaseStorage();
