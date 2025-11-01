@@ -18,19 +18,8 @@ export interface User {
 }
 
 export interface AuthUser extends User {
-  /**
-   * 🔐 الرمز المميز للجلسة (JWT أو Session Token)
-   */
   token?: string;
-
-  /**
-   * 🎭 الدور المنطقي للمستخدم داخل النظام
-   * يتم اشتقاقه تلقائيًا من role_name أو role_name_ar
-   * عند تسجيل الدخول أو تحميل الجلسة.
-   */
-  role?: "admin" | "manager" | "supervisor" | "employee" | "viewer";
 }
-
 
 export interface ProductionOrderWithDetails {
   id: number;
