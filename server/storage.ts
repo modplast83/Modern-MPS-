@@ -701,6 +701,14 @@ export interface IStorage {
     wastePercentage: number;
   }>;
 
+  // Production Reports
+  getProductionSummary(filters?: any): Promise<any>;
+  getProductionByDate(filters?: any): Promise<any>;
+  getProductionByProduct(filters?: any): Promise<any>;
+  getWasteAnalysis(filters?: any): Promise<any>;
+  getMachinePerformance(filters?: any): Promise<any>;
+  getOperatorPerformance(filters?: any): Promise<any>;
+
   // Settings
   getSystemSettings(): Promise<SystemSetting[]>;
   getUserSettings(userId: number): Promise<UserSetting[]>;
@@ -1912,7 +1920,7 @@ export class DatabaseStorage implements IStorage {
         .limit(limit);
 
       // Return results with proper type mapping - keep decimal fields as strings for consistency
-      return results;
+      return results as any;
     }, "تحميل أوامر الإنتاج");
   }
 
@@ -1974,7 +1982,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(production_orders.id, id))
         .limit(1);
 
-      return results.length > 0 ? results[0] : undefined;
+      return results.length > 0 ? (results[0] as any) : undefined;
     }, "تحميل أمر الإنتاج");
   }
 
@@ -3015,17 +3023,13 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(production_orders.order_id, filters.orderId));
     }
 
-    // Apply conditions if any
-    if (conditions.length > 0) {
-      queryBuilder = queryBuilder.where(and(...conditions));
-    }
-
-    // Order by created_at desc and limit to 100
-    queryBuilder = queryBuilder
+    // Apply conditions and ordering
+    const results = await (conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder
+    )
       .orderBy(desc(rolls.created_at))
       .limit(100);
-
-    const results = await queryBuilder;
 
     // Parse and add product info from qr_code_text
     const resultsWithProductInfo = results.map(roll => {
@@ -3124,7 +3128,6 @@ export class DatabaseStorage implements IStorage {
         order_id: production_orders.order_id,
         order_number: orders.order_number,
         order_status: orders.status,
-        order_total_quantity: orders.total_quantity,
         order_delivery_date: orders.delivery_date,
         // Customer info
         customer_id: orders.customer_id,
@@ -3168,18 +3171,21 @@ export class DatabaseStorage implements IStorage {
 
     if (result.length === 0) return null;
 
-    const roll = result[0];
+    let rollData: any = result[0];
 
     // Parse product info from QR code
     try {
-      const qrData = JSON.parse(roll.qr_code_text);
-      roll.item_name = qrData.item_name || qrData.product_name;
-      roll.item_name_ar = qrData.item_name_ar || qrData.product_name_ar;
-      roll.size_caption = qrData.size_caption;
-      roll.raw_material = qrData.raw_material;
-      roll.color = qrData.color;
-      roll.punching = qrData.punching;
-      roll.thickness = qrData.thickness;
+      const qrData = JSON.parse(rollData.qr_code_text);
+      rollData = {
+        ...rollData,
+        item_name: qrData.item_name || qrData.product_name,
+        item_name_ar: qrData.item_name_ar || qrData.product_name_ar,
+        size_caption: qrData.size_caption,
+        raw_material: qrData.raw_material,
+        color: qrData.color,
+        punching: qrData.punching,
+        thickness: qrData.thickness,
+      };
     } catch {
       // Ignore parse error
     }
@@ -3188,21 +3194,22 @@ export class DatabaseStorage implements IStorage {
     const cutsData = await db
       .select({
         cut_id: cuts.id,
-        cut_number: cuts.cut_number,
-        weight_kg: cuts.weight_kg,
-        pkt_count: cuts.pkt_count,
-        quality_rating: cuts.quality_rating,
+        weight_kg: cuts.cut_weight_kg,
+        pieces_count: cuts.pieces_count,
         created_at: cuts.created_at,
         created_by_name: users.display_name,
       })
       .from(cuts)
-      .leftJoin(users, eq(cuts.created_by, users.id))
+      .leftJoin(users, eq(cuts.performed_by, users.id))
       .where(eq(cuts.roll_id, rollId))
       .orderBy(desc(cuts.created_at));
 
-    roll.cuts = cutsData;
-    roll.cuts_count = cutsData.length;
-    roll.total_cuts_weight = cutsData.reduce((sum, cut) => sum + parseFloat(cut.weight_kg || 0), 0);
+    const roll = {
+      ...rollData,
+      cuts: cutsData,
+      cuts_count: cutsData.length,
+      total_cuts_weight: cutsData.reduce((sum, cut) => sum + parseFloat(cut.weight_kg || "0"), 0),
+    };
 
     setCachedData(cacheKey, roll, CACHE_TTL.MEDIUM);
     return roll;
@@ -3268,30 +3275,28 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Get cuts
-    const cuts = await db
+    const cutsHistory = await db
       .select({
-        cut_number: cuts.cut_number,
-        weight_kg: cuts.weight_kg,
-        pkt_count: cuts.pkt_count,
+        weight_kg: cuts.cut_weight_kg,
+        pieces_count: cuts.pieces_count,
         created_at: cuts.created_at,
-        created_by: cuts.created_by,
+        performed_by: cuts.performed_by,
         created_by_name: users.display_name,
       })
       .from(cuts)
-      .leftJoin(users, eq(cuts.created_by, users.id))
+      .leftJoin(users, eq(cuts.performed_by, users.id))
       .where(eq(cuts.roll_id, rollId))
       .orderBy(cuts.created_at);
 
     // Add each cut to history
-    cuts.forEach(cut => {
+    cutsHistory.forEach(cut => {
       history.push({
         stage: 'cut',
         stage_ar: 'قطع',
         timestamp: cut.created_at,
-        cut_number: cut.cut_number,
         weight_kg: cut.weight_kg,
-        pkt_count: cut.pkt_count,
-        operator_id: cut.created_by,
+        pieces_count: cut.pieces_count,
+        operator_id: cut.performed_by,
         operator_name: cut.created_by_name,
         status: 'completed',
         icon: 'Package',
@@ -3595,7 +3600,6 @@ export class DatabaseStorage implements IStorage {
             quantity_kg: production_orders.quantity_kg,
             final_quantity_kg: production_orders.final_quantity_kg,
             customer_product_id: production_orders.customer_product_id,
-            priority: production_orders.priority,
             created_at: production_orders.created_at,
           })
           .from(production_orders)
@@ -3736,7 +3740,7 @@ export class DatabaseStorage implements IStorage {
 
   // Helper function for load-based distribution
   private distributeByLoad(orders: any[], machines: Machine[], capacities: Map<string, number>): any[] {
-    const plan = [];
+    const plan: Array<{ orderId: number; machineId: string; position: number }> = [];
     const machineWeights = new Map<string, number>();
     
     // Initialize weights
@@ -3782,13 +3786,8 @@ export class DatabaseStorage implements IStorage {
   private distributeByPriority(orders: any[], machines: Machine[], loads: Map<string, number>): any[] {
     const plan = [];
 
-    // Sort orders by priority (high priority first)
+    // Sort orders by creation date (oldest first) since priority field doesn't exist
     const sortedOrders = orders.sort((a, b) => {
-      const priorityOrder = { "urgent": 0, "high": 1, "normal": 2, "low": 3 };
-      const priorityA = priorityOrder[a.priority || "normal"] || 2;
-      const priorityB = priorityOrder[b.priority || "normal"] || 2;
-      
-      if (priorityA !== priorityB) return priorityA - priorityB;
       return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     });
 
@@ -3835,7 +3834,7 @@ export class DatabaseStorage implements IStorage {
     // Assign each product group to machines
     let machineIndex = 0;
     
-    for (const [productId, productOrders] of productGroups) {
+    for (const [productId, productOrders] of Array.from(productGroups.entries())) {
       const machine = machines[machineIndex % machines.length];
       let position = loads.get(machine.id) || 0;
 
@@ -4044,7 +4043,6 @@ export class DatabaseStorage implements IStorage {
             quantity_kg: production_orders.quantity_kg,
             final_quantity_kg: production_orders.final_quantity_kg,
             customer_product_id: production_orders.customer_product_id,
-            priority: production_orders.priority,
             created_at: production_orders.created_at,
           })
           .from(production_orders)
@@ -4118,7 +4116,6 @@ export class DatabaseStorage implements IStorage {
               orderId: order.id,
               orderNumber: order.production_order_number,
               weight: orderWeight,
-              priority: order.priority,
             });
             machineState.proposedLoad += orderWeight;
           }
@@ -4170,7 +4167,6 @@ export class DatabaseStorage implements IStorage {
             id: machine_queues.id,
             production_order_id: machine_queues.production_order_id,
             queue_position: machine_queues.queue_position,
-            priority: production_orders.priority,
             quantity_kg: production_orders.final_quantity_kg,
             customer_product_id: production_orders.customer_product_id,
           })
@@ -4182,21 +4178,13 @@ export class DatabaseStorage implements IStorage {
         if (queue.length === 0) return;
 
         // Sort queue by optimization criteria
-        const priorityOrder = { "urgent": 0, "high": 1, "normal": 2, "low": 3 };
-        
         const optimizedQueue = queue.sort((a, b) => {
-          // First by priority
-          const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 2;
-          const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 2;
-          
-          if (priorityA !== priorityB) return priorityA - priorityB;
-          
-          // Then by product type to group similar products
+          // First by product type to group similar products
           if (a.customer_product_id !== b.customer_product_id) {
             return (a.customer_product_id || 0) - (b.customer_product_id || 0);
           }
           
-          // Finally by current position to maintain some stability
+          // Then by current position to maintain some stability
           return a.queue_position - b.queue_position;
         });
 
@@ -5481,6 +5469,215 @@ export class DatabaseStorage implements IStorage {
     };
 
     return result;
+  }
+
+  // Production Reports
+  async getProductionSummary(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId, productId, status, machineId, operatorId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${production_orders.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${production_orders.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+    if (productId && productId.length > 0) conditions.push(inArray(production_orders.customer_product_id, productId));
+    if (status && status.length > 0) conditions.push(inArray(production_orders.status, status));
+    if (machineId) conditions.push(eq(rolls.film_machine_id, machineId));
+    if (operatorId) conditions.push(eq(rolls.created_by, operatorId));
+
+    const [summaryResult] = await db
+      .select({
+        totalOrders: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
+        activeOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'active' THEN ${production_orders.id} END)`,
+        completedOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'completed' THEN ${production_orders.id} END)`,
+        totalRolls: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgProductionTime: sql<number>`AVG(EXTRACT(EPOCH FROM (${rolls.cut_completed_at} - ${rolls.created_at})) / 3600)`,
+      })
+      .from(production_orders)
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const [wasteResult] = await db
+      .select({
+        totalWaste: sql<number>`COALESCE(SUM(${waste.quantity_wasted}), 0)`,
+      })
+      .from(waste)
+      .where(
+        dateFrom && dateTo
+          ? and(
+              sql`${waste.created_at} >= ${dateFrom}`,
+              sql`${waste.created_at} <= ${dateTo}`
+            )
+          : undefined
+      );
+
+    const totalProduction = Number(summaryResult?.totalWeight || 0);
+    const totalWaste = Number(wasteResult?.totalWaste || 0);
+    const wastePercentage = totalProduction > 0 ? (totalWaste / totalProduction) * 100 : 0;
+    const completionRate = Number(summaryResult?.totalOrders || 0) > 0
+      ? (Number(summaryResult?.completedOrders || 0) / Number(summaryResult?.totalOrders)) * 100
+      : 0;
+
+    return {
+      totalOrders: Number(summaryResult?.totalOrders || 0),
+      activeOrders: Number(summaryResult?.activeOrders || 0),
+      completedOrders: Number(summaryResult?.completedOrders || 0),
+      totalRolls: Number(summaryResult?.totalRolls || 0),
+      totalWeight: totalProduction,
+      avgProductionTime: Number(summaryResult?.avgProductionTime || 0),
+      wastePercentage,
+      completionRate,
+    };
+  }
+
+  async getProductionByDate(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId, productId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+    if (productId && productId.length > 0) conditions.push(inArray(production_orders.customer_product_id, productId));
+
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${rolls.created_at})`,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(sql`DATE(${rolls.created_at})`)
+      .orderBy(sql`DATE(${rolls.created_at})`);
+
+    return result.map(row => ({
+      date: row.date,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+    }));
+  }
+
+  async getProductionByProduct(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${production_orders.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${production_orders.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+
+    const result = await db
+      .select({
+        productId: customer_products.id,
+        productName: customer_products.size_caption,
+        ordersCount: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+      })
+      .from(production_orders)
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(customer_products.id, customer_products.size_caption)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      productId: row.productId,
+      productName: row.productName,
+      ordersCount: Number(row.ordersCount),
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+    }));
+  }
+
+  async getWasteAnalysis(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${waste.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${waste.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${waste.created_at})`,
+        totalWaste: sql<number>`COALESCE(SUM(${waste.quantity_wasted}), 0)`,
+        reason: waste.reason,
+      })
+      .from(waste)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(sql`DATE(${waste.created_at})`, waste.reason)
+      .orderBy(sql`DATE(${waste.created_at})`);
+
+    return result.map(row => ({
+      date: row.date,
+      totalWaste: Number(row.totalWaste),
+      reason: row.reason,
+    }));
+  }
+
+  async getMachinePerformance(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        machineId: machines.id,
+        machineName: machines.name_ar,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgProductionTime: sql<number>`AVG(EXTRACT(EPOCH FROM (${rolls.cut_completed_at} - ${rolls.created_at})) / 3600)`,
+      })
+      .from(machines)
+      .leftJoin(rolls, eq(machines.id, rolls.film_machine_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(machines.id, machines.name_ar)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      machineId: row.machineId,
+      machineName: row.machineName,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+      avgProductionTime: Number(row.avgProductionTime || 0),
+      efficiency: Number(row.rollsCount) > 0 ? Number(row.totalWeight) / Number(row.rollsCount) : 0,
+    }));
+  }
+
+  async getOperatorPerformance(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        operatorId: users.id,
+        operatorName: users.display_name_ar,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgRollWeight: sql<number>`AVG(${rolls.weight_kg})`,
+      })
+      .from(users)
+      .leftJoin(rolls, eq(users.id, rolls.created_by))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(users.id, users.display_name_ar)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      operatorId: row.operatorId,
+      operatorName: row.operatorName,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+      avgRollWeight: Number(row.avgRollWeight || 0),
+      productivity: Number(row.rollsCount) > 0 ? Number(row.totalWeight) / Number(row.rollsCount) : 0,
+    }));
   }
 
   // Training Records
@@ -10844,7 +11041,7 @@ export class DatabaseStorage implements IStorage {
       async () => {
         const assignee = alias(users, "assignee");
         
-        let queryBuilder = db
+        const baseQuery = db
           .select({
             id: quick_notes.id,
             content: quick_notes.content,
@@ -10862,16 +11059,15 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(users, eq(quick_notes.created_by, users.id))
           .leftJoin(assignee, eq(quick_notes.assigned_to, assignee.id));
 
-        if (userId) {
-          queryBuilder = queryBuilder.where(
-            or(
-              eq(quick_notes.created_by, userId),
-              eq(quick_notes.assigned_to, userId),
-            ),
-          );
-        }
-
-        const notes = await queryBuilder.orderBy(desc(quick_notes.created_at));
+        const notes = await (userId
+          ? baseQuery.where(
+              or(
+                eq(quick_notes.created_by, userId),
+                eq(quick_notes.assigned_to, userId),
+              ),
+            )
+          : baseQuery
+        ).orderBy(desc(quick_notes.created_at));
         
         // Get attachments for each note
         const noteIds = notes.map((n) => n.id);
@@ -11160,9 +11356,6 @@ export class DatabaseStorage implements IStorage {
           .insert(rolls)
           .values({
             ...rollData,
-            is_last_roll: rollData.is_last_roll || false,
-            production_time_minutes: productionTimeMinutes,
-            roll_created_at: new Date(),
           })
           .returning();
 
@@ -11234,8 +11427,6 @@ export class DatabaseStorage implements IStorage {
           .insert(rolls)
           .values({
             ...rollData,
-            is_last_roll: true,
-            roll_created_at: new Date(),
           })
           .returning();
 
@@ -11525,7 +11716,7 @@ export class DatabaseStorage implements IStorage {
           .where(
             and(
               eq(production_orders.printing_completed, true),
-              sql`DATE(${production_orders.updated_at}) = CURRENT_DATE`
+              sql`DATE(${production_orders.created_at}) = CURRENT_DATE`
             )
           );
 
