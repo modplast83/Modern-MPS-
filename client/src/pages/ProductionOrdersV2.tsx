@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { ProductionOrderWithDetails } from "@/types";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 
 const ProductionOrdersV2: React.FC = () => {
   const [orders, setOrders] = useState<ProductionOrderWithDetails[]>([]);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import type { RollWithDetails } from "@/types";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
 
 const ProductionPrintingV2: React.FC = () => {
   const [jobs, setJobs] = useState<RollWithDetails[]>([]);
