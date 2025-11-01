@@ -1991,6 +1991,13 @@ export const insertUserSettingSchema = createInsertSchema(user_settings).omit({
   updated_at: true,
 });
 
+// Insert schema for machine_queues
+export const insertMachineQueueSchema = createInsertSchema(machine_queues).omit({
+  id: true,
+  created_at: true,
+  assigned_at: true,
+});
+
 export type CustomerProduct = typeof customer_products.$inferSelect & {
   customer_name?: string;
   customer_name_ar?: string;
@@ -2001,6 +2008,10 @@ export type SystemSetting = typeof system_settings.$inferSelect;
 export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
 export type UserSetting = typeof user_settings.$inferSelect;
 export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
+
+// Machine Queue types
+export type MachineQueue = typeof machine_queues.$inferSelect;
+export type InsertMachineQueue = z.infer<typeof insertMachineQueueSchema>;
 
 export const insertCustomerProductSchema = createInsertSchema(customer_products)
   .omit({

@@ -46,6 +46,7 @@ import {
   notifications,
   notification_templates,
   user_requests,
+  machine_queues,
 
   // نظام التحذيرات الذكية
   system_alerts,
@@ -62,6 +63,8 @@ import {
   type InsertQuickNote,
   type NoteAttachment,
   type InsertNoteAttachment,
+  type MachineQueue,
+  type InsertMachineQueue,
   
   type User,
   type SafeUser,
@@ -452,6 +455,13 @@ export interface IStorage {
   // Machines
   getMachines(): Promise<Machine[]>;
   getMachineById(id: string): Promise<Machine | undefined>;
+
+  // Machine Queues
+  getMachineQueues(): Promise<any[]>;
+  assignToMachineQueue(productionOrderId: number, machineId: string, position: number, userId: number): Promise<MachineQueue>;
+  updateQueuePosition(queueId: number, newPosition: number): Promise<MachineQueue>;
+  removeFromQueue(queueId: number): Promise<void>;
+  suggestOptimalDistribution(): Promise<any[]>;
 
   // Customers
   getCustomers(): Promise<Customer[]>;
@@ -2831,6 +2841,257 @@ export class DatabaseStorage implements IStorage {
       .from(machines)
       .where(eq(machines.id, id));
     return machine || undefined;
+  }
+
+  // Machine Queue functions for production scheduling
+  async getMachineQueues(): Promise<any[]> {
+    const cacheKey = "machine_queues";
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        queue_id: machine_queues.id,
+        machine_id: machine_queues.machine_id,
+        machine_name: machines.name,
+        machine_name_ar: machines.name_ar,
+        machine_status: machines.status,
+        production_order_id: machine_queues.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        customer_product_id: production_orders.customer_product_id,
+        quantity_kg: production_orders.quantity_kg,
+        final_quantity_kg: production_orders.final_quantity_kg,
+        status: production_orders.status,
+        queue_position: machine_queues.queue_position,
+        estimated_start_time: machine_queues.estimated_start_time,
+        assigned_at: machine_queues.assigned_at,
+        assigned_by: machine_queues.assigned_by,
+        assigned_by_name: users.display_name,
+      })
+      .from(machine_queues)
+      .leftJoin(machines, eq(machine_queues.machine_id, machines.id))
+      .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+      .leftJoin(users, eq(machine_queues.assigned_by, users.id))
+      .orderBy(machine_queues.machine_id, machine_queues.queue_position);
+
+    setCachedData(cacheKey, result, CACHE_TTL.REALTIME);
+    return result;
+  }
+
+  async assignToMachineQueue(
+    productionOrderId: number,
+    machineId: string,
+    position: number,
+    userId: number
+  ): Promise<MachineQueue> {
+    return await db.transaction(async (tx) => {
+      // Check if production order exists and is active
+      const [po] = await tx
+        .select()
+        .from(production_orders)
+        .where(eq(production_orders.id, productionOrderId));
+      
+      if (!po) {
+        throw new DatabaseError("أمر الإنتاج غير موجود");
+      }
+
+      if (po.status !== "active") {
+        throw new DatabaseError("أمر الإنتاج غير نشط");
+      }
+
+      // Check if machine exists and is active
+      const [machine] = await tx
+        .select()
+        .from(machines)
+        .where(eq(machines.id, machineId));
+      
+      if (!machine) {
+        throw new DatabaseError("الماكينة غير موجودة");
+      }
+
+      if (machine.status !== "active") {
+        throw new DatabaseError("الماكينة غير نشطة");
+      }
+
+      // Check if already assigned
+      const existing = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.production_order_id, productionOrderId));
+      
+      if (existing.length > 0) {
+        throw new DatabaseError("أمر الإنتاج مخصص بالفعل لماكينة");
+      }
+
+      // Shift positions for other items in the queue
+      await tx.execute(
+        sql`UPDATE machine_queues 
+            SET queue_position = queue_position + 1 
+            WHERE machine_id = ${machineId} 
+            AND queue_position >= ${position}`
+      );
+
+      // Insert new queue entry
+      const [queueEntry] = await tx
+        .insert(machine_queues)
+        .values({
+          machine_id: machineId,
+          production_order_id: productionOrderId,
+          queue_position: position,
+          assigned_by: userId,
+        })
+        .returning();
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+
+      return queueEntry;
+    });
+  }
+
+  async updateQueuePosition(queueId: number, newPosition: number): Promise<MachineQueue> {
+    return await db.transaction(async (tx) => {
+      // Get current queue entry
+      const [currentEntry] = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.id, queueId));
+      
+      if (!currentEntry) {
+        throw new DatabaseError("إدخال الطابور غير موجود");
+      }
+
+      const oldPosition = currentEntry.queue_position;
+      const machineId = currentEntry.machine_id;
+
+      if (oldPosition === newPosition) {
+        return currentEntry; // No change needed
+      }
+
+      // Update positions for other items
+      if (newPosition < oldPosition) {
+        // Moving up - shift items down
+        await tx.execute(
+          sql`UPDATE machine_queues 
+              SET queue_position = queue_position + 1 
+              WHERE machine_id = ${machineId} 
+              AND queue_position >= ${newPosition} 
+              AND queue_position < ${oldPosition}
+              AND id != ${queueId}`
+        );
+      } else {
+        // Moving down - shift items up
+        await tx.execute(
+          sql`UPDATE machine_queues 
+              SET queue_position = queue_position - 1 
+              WHERE machine_id = ${machineId} 
+              AND queue_position > ${oldPosition} 
+              AND queue_position <= ${newPosition}
+              AND id != ${queueId}`
+        );
+      }
+
+      // Update the target entry position
+      const [updated] = await tx
+        .update(machine_queues)
+        .set({ queue_position: newPosition })
+        .where(eq(machine_queues.id, queueId))
+        .returning();
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+
+      return updated;
+    });
+  }
+
+  async removeFromQueue(queueId: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get the entry to be removed
+      const [entry] = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.id, queueId));
+      
+      if (!entry) {
+        throw new DatabaseError("إدخال الطابور غير موجود");
+      }
+
+      // Delete the entry
+      await tx.delete(machine_queues).where(eq(machine_queues.id, queueId));
+
+      // Shift positions for remaining items
+      await tx.execute(
+        sql`UPDATE machine_queues 
+            SET queue_position = queue_position - 1 
+            WHERE machine_id = ${entry.machine_id} 
+            AND queue_position > ${entry.queue_position}`
+      );
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+    });
+  }
+
+  async suggestOptimalDistribution(): Promise<any[]> {
+    // Get all active machines and their current queue sizes
+    const machineLoads = await db
+      .select({
+        machine_id: machines.id,
+        machine_name: machines.name,
+        machine_name_ar: machines.name_ar,
+        machine_type: machines.type,
+        queue_count: sql<number>`COUNT(${machine_queues.id})`,
+      })
+      .from(machines)
+      .leftJoin(machine_queues, eq(machines.id, machine_queues.machine_id))
+      .where(eq(machines.status, "active"))
+      .groupBy(machines.id, machines.name, machines.name_ar, machines.type);
+
+    // Get unassigned active production orders
+    const unassignedOrders = await db
+      .select({
+        id: production_orders.id,
+        production_order_number: production_orders.production_order_number,
+        quantity_kg: production_orders.quantity_kg,
+        customer_product_id: production_orders.customer_product_id,
+      })
+      .from(production_orders)
+      .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+      .where(
+        and(
+          eq(production_orders.status, "active"),
+          sql`${machine_queues.id} IS NULL`
+        )
+      );
+
+    // Sort machines by load (ascending)
+    machineLoads.sort((a, b) => (a.queue_count || 0) - (b.queue_count || 0));
+
+    // Distribute orders optimally
+    const suggestions = [];
+    let machineIndex = 0;
+
+    for (const order of unassignedOrders) {
+      const targetMachine = machineLoads[machineIndex % machineLoads.length];
+      suggestions.push({
+        production_order_id: order.id,
+        production_order_number: order.production_order_number,
+        suggested_machine_id: targetMachine.machine_id,
+        suggested_machine_name: targetMachine.machine_name,
+        suggested_machine_name_ar: targetMachine.machine_name_ar,
+        current_queue_size: targetMachine.queue_count || 0,
+      });
+      
+      // Update the count for round-robin distribution
+      targetMachine.queue_count = (targetMachine.queue_count || 0) + 1;
+      machineIndex++;
+    }
+
+    return suggestions;
   }
 
   async getCustomers(): Promise<Customer[]> {
