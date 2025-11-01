@@ -4619,6 +4619,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Machine Queues Management API ============
+  
+  app.get("/api/machine-queues", requireAuth, async (req, res) => {
+    try {
+      const queues = await storage.getMachineQueues();
+      res.json({ data: queues });
+    } catch (error) {
+      console.error("Error fetching machine queues:", error);
+      res.status(500).json({ message: "خطأ في جلب طوابير الماكينات" });
+    }
+  });
+
+  app.post("/api/machine-queues/assign", requireAuth, async (req, res) => {
+    try {
+      const { productionOrderId, machineId, position } = req.body;
+      
+      if (!productionOrderId || !machineId || position === undefined) {
+        return res.status(400).json({ 
+          message: "بيانات غير كاملة - مطلوب معرف أمر الإنتاج والماكينة والموضع" 
+        });
+      }
+
+      const userId = req.session?.userId || 1;
+      const queueEntry = await storage.assignToMachineQueue(
+        productionOrderId, 
+        machineId, 
+        position,
+        userId
+      );
+      
+      res.json({ 
+        data: queueEntry,
+        message: "تم تخصيص أمر الإنتاج للماكينة بنجاح" 
+      });
+    } catch (error: any) {
+      console.error("Error assigning to machine queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في تخصيص أمر الإنتاج للماكينة" 
+      });
+    }
+  });
+
+  app.put("/api/machine-queues/reorder", requireAuth, async (req, res) => {
+    try {
+      const { queueId, newPosition } = req.body;
+      
+      if (!queueId || newPosition === undefined) {
+        return res.status(400).json({ 
+          message: "بيانات غير كاملة - مطلوب معرف الطابور والموضع الجديد" 
+        });
+      }
+
+      const updated = await storage.updateQueuePosition(queueId, newPosition);
+      
+      res.json({ 
+        data: updated,
+        message: "تم تحديث ترتيب الطابور بنجاح" 
+      });
+    } catch (error: any) {
+      console.error("Error reordering queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في تحديث ترتيب الطابور" 
+      });
+    }
+  });
+
+  app.delete("/api/machine-queues/:id", requireAuth, async (req, res) => {
+    try {
+      const queueId = parseInt(req.params.id);
+      
+      if (isNaN(queueId)) {
+        return res.status(400).json({ 
+          message: "معرف طابور غير صحيح" 
+        });
+      }
+
+      await storage.removeFromQueue(queueId);
+      
+      res.json({ 
+        message: "تم إزالة أمر الإنتاج من الطابور بنجاح",
+        success: true
+      });
+    } catch (error: any) {
+      console.error("Error removing from queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في إزالة أمر الإنتاج من الطابور" 
+      });
+    }
+  });
+
+  app.get("/api/machine-queues/suggest", requireAuth, async (req, res) => {
+    try {
+      const suggestions = await storage.suggestOptimalDistribution();
+      res.json({ data: suggestions });
+    } catch (error) {
+      console.error("Error getting distribution suggestions:", error);
+      res.status(500).json({ message: "خطأ في الحصول على اقتراحات التوزيع" });
+    }
+  });
+
   // ============ Inventory Movements Management API ============
 
   app.get("/api/inventory-movements", async (req, res) => {

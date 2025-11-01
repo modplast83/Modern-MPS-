@@ -56,6 +56,14 @@ const modules = [
     requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
   },
   {
+    name: "طوابير الإنتاج",
+    name_ar: "طوابير الإنتاج",
+    icon: Link2,
+    path: "/production-queues",
+    active: false,
+    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
+  },
+  {
     name: "مراقبة الإنتاج",
     name_ar: "مراقبة الإنتاج",
     icon: Monitor,
