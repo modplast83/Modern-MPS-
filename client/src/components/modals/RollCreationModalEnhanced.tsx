@@ -34,6 +34,7 @@ import { z } from "zod";
 import type { Machine } from "../../../../shared/schema";
 import { safeParseFloat, formatNumberAr } from "../../../../shared/number-utils";
 import { AlertTriangle, Clock, Package } from "lucide-react";
+import { toastMessages } from "../../lib/toastMessages";
 
 interface RollCreationModalEnhancedProps {
   isOpen: boolean;
@@ -154,20 +155,21 @@ export default function RollCreationModalEnhanced({
       return response.json();
     },
     onSuccess: (data) => {
+      const rollNumber = data.roll_number || "";
       const message = data.is_last_roll 
-        ? "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح"
-        : "تم إنشاء الرول بنجاح";
+        ? toastMessages.rolls.finalRollCreated(rollNumber)
+        : toastMessages.rolls.created(rollNumber);
         
       toast({ 
-        title: message, 
-        description: `رقم الرول: ${data.roll_number}`,
-        variant: data.is_last_roll ? "default" : "default",
+        title: message.title, 
+        description: message.description,
       });
       
       // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders/active-for-operator"] });
       queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production-queues"] });
       
       onClose();
       form.reset();

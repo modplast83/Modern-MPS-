@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
 import { useToast } from "../hooks/use-toast";
+import { toastMessages } from "../lib/toastMessages";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -95,6 +96,10 @@ interface WasteStats {
   }[];
 }
 
+interface CompleteCuttingResponse {
+  waste_percentage: number;
+}
+
 export default function CuttingOperatorDashboard() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -112,25 +117,30 @@ export default function CuttingOperatorDashboard() {
 
   // جلب إحصائيات الهدر لأمر إنتاج محدد
   const { data: wasteStats, isLoading: loadingStats } = useQuery<WasteStats>({
-    queryKey: selectedOrderId 
-      ? [`/api/production-orders/${selectedOrderId}/waste-stats`]
-      : null,
+    queryKey: [`/api/production-orders/${selectedOrderId}/waste-stats`],
     enabled: !!selectedOrderId,
   });
 
   // إكمال التقطيع
   const completeCuttingMutation = useMutation({
     mutationFn: async (data: { rollId: number; netWeight: number }) => {
-      return apiRequest(`/api/rolls/${data.rollId}/complete-cutting`, {
+      const response = await apiRequest(`/api/rolls/${data.rollId}/complete-cutting`, {
         method: "POST",
         body: JSON.stringify({ net_weight: data.netWeight }),
       });
+      return response.json() as Promise<CompleteCuttingResponse>;
     },
     onSuccess: (data, variables) => {
+      const rollNumber = selectedRoll?.roll_number || `#${variables.rollId}`;
+      const netWeightDisplay = variables.netWeight.toFixed(2);
+      const message = toastMessages.rolls.cut(rollNumber, netWeightDisplay);
+      
+      const isHighWaste = data.waste_percentage > 15;
       toast({
-        title: "تم إكمال التقطيع",
-        description: `تم تقطيع الرول بنجاح. الهدر: ${data.waste_percentage.toFixed(2)}%`,
-        className: data.waste_percentage > 15 ? "bg-orange-50" : "",
+        title: isHighWaste ? "⚠️ تم التقطيع مع هدر عالي" : message.title,
+        description: isHighWaste 
+          ? `${message.description} - نسبة الهدر: ${data.waste_percentage.toFixed(2)}% (عالية!)`
+          : `${message.description} - نسبة الهدر: ${data.waste_percentage.toFixed(2)}%`,
       });
 
       // تحديث البيانات
@@ -139,6 +149,9 @@ export default function CuttingOperatorDashboard() {
       });
       queryClient.invalidateQueries({ 
         queryKey: ["/api/production/cutting-queue"] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/production-orders"] 
       });
       if (selectedOrderId) {
         queryClient.invalidateQueries({ 
@@ -153,8 +166,8 @@ export default function CuttingOperatorDashboard() {
     },
     onError: (error: any) => {
       toast({
-        title: "خطأ",
-        description: error.message || "حدث خطأ أثناء إكمال التقطيع",
+        title: "❌ خطأ في التقطيع",
+        description: error.message || toastMessages.rolls.errors.cutting,
         variant: "destructive",
       });
     },
@@ -187,7 +200,7 @@ export default function CuttingOperatorDashboard() {
 
     if (netWeightNum <= 0) {
       toast({
-        title: "خطأ",
+        title: "❌ خطأ في الوزن",
         description: "الوزن الصافي يجب أن يكون أكبر من صفر",
         variant: "destructive",
       });
@@ -196,8 +209,8 @@ export default function CuttingOperatorDashboard() {
 
     if (netWeightNum >= grossWeight) {
       toast({
-        title: "خطأ",
-        description: "الوزن الصافي يجب أن يكون أقل من الوزن الخام",
+        title: "❌ خطأ في الوزن",
+        description: `الوزن الصافي (${netWeightNum} كجم) يجب أن يكون أقل من الوزن الخام (${grossWeight} كجم)`,
         variant: "destructive",
       });
       return;
@@ -547,7 +560,7 @@ export default function CuttingOperatorDashboard() {
                 <div>
                   <h3 className="font-semibold mb-3">أداء العاملين</h3>
                   <div className="space-y-2">
-                    {wasteStats.operatorStats.map((stat) => (
+                    {wasteStats.operatorStats.map((stat: WasteStats['operatorStats'][0]) => (
                       <div
                         key={stat.operatorId}
                         className="flex justify-between items-center p-3 bg-gray-50 rounded"
@@ -577,7 +590,7 @@ export default function CuttingOperatorDashboard() {
                 <div>
                   <h3 className="font-semibold mb-3">الهدر اليومي</h3>
                   <div className="space-y-2">
-                    {wasteStats.dailyStats.slice(0, 7).map((stat) => (
+                    {wasteStats.dailyStats.slice(0, 7).map((stat: WasteStats['dailyStats'][0]) => (
                       <div
                         key={stat.date}
                         className="flex justify-between items-center p-3 bg-gray-50 rounded"
