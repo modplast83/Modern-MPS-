@@ -134,14 +134,14 @@ export default function ProductionOrderFilters({
         <div>
           <Label htmlFor="customer">العميل</Label>
           <Select
-            value={filters.customerId}
-            onValueChange={(value) => handleFilterChange("customerId", value)}
+            value={filters.customerId || "all"}
+            onValueChange={(value) => handleFilterChange("customerId", value === "all" ? "" : value)}
           >
             <SelectTrigger id="customer" data-testid="select-customer">
               <SelectValue placeholder="جميع العملاء" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="" data-testid="option-customer-all">
+              <SelectItem value="all" data-testid="option-customer-all">
                 جميع العملاء
               </SelectItem>
               {customers.map((customer) => (
