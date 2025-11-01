@@ -3,6 +3,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "./components/ui/toaster";
+import ProductionOrdersV2 from "./pages/ProductionOrdersV2";
+import ProductionFilmV2 from "./pages/ProductionFilmV2";
+import ProductionPrintingV2 from "./pages/ProductionPrintingV2";
+import ProductionCuttingV2 from "./pages/ProductionCuttingV2";
+import ProductionDashboardV2 from "./pages/ProductionDashboardV2";
 
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
@@ -209,6 +214,42 @@ function AppRoutes() {
           <WhatsAppWebhooks />
         </ProtectedRoute>
       </Route>
+  
+      <Route path="/tools">
+        <ProtectedRoute path="/tools">
+          <ToolsPage />
+        </ProtectedRoute>
+      </Route>
+      
+<Route path="/production-orders-v2">
+  <ProtectedRoute path="/production-orders-v2">
+    <ProductionOrdersV2 />
+  </ProtectedRoute>
+</Route>
+
+<Route path="/production-film-v2">
+  <ProtectedRoute path="/production-film-v2">
+    <ProductionFilmV2 />
+  </ProtectedRoute>
+</Route>
+
+<Route path="/production-printing-v2">
+  <ProtectedRoute path="/production-printing-v2">
+    <ProductionPrintingV2 />
+  </ProtectedRoute>
+</Route>
+
+<Route path="/production-cutting-v2">
+  <ProtectedRoute path="/production-cutting-v2">
+    <ProductionCuttingV2 />
+  </ProtectedRoute>
+</Route>
+
+<Route path="/production-dashboard-v2">
+  <ProtectedRoute path="/production-dashboard-v2">
+    <ProductionDashboardV2 />
+  </ProtectedRoute>
+</Route>
 
       <Route>
         <NotFound />
