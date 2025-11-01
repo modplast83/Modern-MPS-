@@ -284,58 +284,58 @@ export default function CuttingOperatorDashboard() {
       {/* إحصائيات سريعة */}
       {cuttingData?.stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
+          <Card data-testid="card-waiting-rolls">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-600">
                 الرولات المنتظرة
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{cuttingData.stats.totalRolls}</div>
+              <div className="text-2xl font-bold" data-testid="stat-waiting-rolls">{cuttingData.stats.totalRolls}</div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-total-weight">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-600">
                 إجمالي الوزن
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold" data-testid="stat-total-weight">
                 {cuttingData.stats.totalWeight.toFixed(2)} كجم
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-today-waste">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-600">
                 هدر اليوم
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-orange-600">
+              <div className="text-2xl font-bold text-orange-600" data-testid="stat-today-waste">
                 {cuttingData.stats.todayWaste.toFixed(2)} كجم
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500" data-testid="stat-today-waste-percent">
                 {cuttingData.stats.todayWastePercentage.toFixed(2)}%
               </p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-testid="card-average-waste">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-gray-600">
                 متوسط الهدر
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-2xl font-bold" data-testid="stat-average-waste">
                 {cuttingData.stats.averageWastePercentage.toFixed(2)}%
               </div>
               {cuttingData.stats.averageWastePercentage > 10 && (
-                <Badge variant="destructive" className="mt-1">
+                <Badge variant="destructive" className="mt-1" data-testid="badge-high-waste">
                   <AlertCircle className="h-3 w-3 ml-1" />
                   فوق المعدل
                 </Badge>

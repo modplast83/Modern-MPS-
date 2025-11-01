@@ -121,42 +121,42 @@ export default function FilmOperatorDashboard() {
 
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
+            <Card data-testid="card-active-orders">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">الأوامر النشطة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalOrders}</div>
+                <div className="text-2xl font-bold" data-testid="stat-active-orders">{stats.totalOrders}</div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card data-testid="card-total-required">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">الكمية المطلوبة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatNumberAr(stats.totalRequired)}</div>
+                <div className="text-2xl font-bold" data-testid="stat-total-required">{formatNumberAr(stats.totalRequired)}</div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card data-testid="card-total-produced">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">الكمية المنتجة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatNumberAr(stats.totalProduced)}</div>
+                <div className="text-2xl font-bold" data-testid="stat-total-produced">{formatNumberAr(stats.totalProduced)}</div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card data-testid="card-near-completion">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">قريبة من الإكمال</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="stat-near-completion">
                   {stats.ordersNearCompletion}
                 </div>
                 <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
@@ -166,13 +166,13 @@ export default function FilmOperatorDashboard() {
 
           {/* Production Orders List */}
           {productionOrders.length === 0 ? (
-            <Card className="p-8">
+            <Card className="p-8" data-testid="card-no-orders">
               <div className="text-center">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   لا توجد أوامر إنتاج نشطة
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600 dark:text-gray-400" data-testid="text-no-orders">
                   لا توجد أوامر إنتاج نشطة في قسم الفيلم حالياً
                 </p>
               </div>
@@ -188,26 +188,27 @@ export default function FilmOperatorDashboard() {
                   <Card 
                     key={order.id} 
                     className={`${isComplete ? 'opacity-60' : ''} transition-all hover:shadow-lg`}
+                    data-testid={`card-production-order-${order.id}`}
                   >
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-lg" data-testid={`text-order-number-${order.id}`}>
                             {order.production_order_number}
                           </CardTitle>
-                          <CardDescription>
+                          <CardDescription data-testid={`text-order-ref-${order.id}`}>
                             الطلب: {order.order_number}
                           </CardDescription>
                         </div>
                         <div className="flex gap-2">
                           {isComplete && (
-                            <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            <Badge variant="secondary" className="bg-green-100 text-green-800" data-testid={`badge-complete-${order.id}`}>
                               <CheckCircle2 className="h-3 w-3 ml-1" />
                               مكتمل
                             </Badge>
                           )}
                           {isNearCompletion && !isComplete && (
-                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800" data-testid={`badge-near-completion-${order.id}`}>
                               <AlertTriangle className="h-3 w-3 ml-1" />
                               قريب من الإكمال
                             </Badge>
@@ -221,11 +222,11 @@ export default function FilmOperatorDashboard() {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">العميل</p>
-                          <p className="font-medium">{order.customer_name}</p>
+                          <p className="font-medium" data-testid={`text-customer-${order.id}`}>{order.customer_name}</p>
                         </div>
                         <div>
                           <p className="text-gray-500 dark:text-gray-400">المنتج</p>
-                          <p className="font-medium">{order.product_name}</p>
+                          <p className="font-medium" data-testid={`text-product-${order.id}`}>{order.product_name}</p>
                         </div>
                       </div>
 
@@ -233,15 +234,15 @@ export default function FilmOperatorDashboard() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">الكمية المطلوبة</span>
-                          <span className="font-medium">{formatNumberAr(Number(order.final_quantity_kg))} كجم</span>
+                          <span className="font-medium" data-testid={`text-required-qty-${order.id}`}>{formatNumberAr(Number(order.final_quantity_kg))} كجم</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">الكمية المنتجة</span>
-                          <span className="font-medium">{formatNumberAr(Number(order.total_weight_produced))} كجم</span>
+                          <span className="font-medium" data-testid={`text-produced-qty-${order.id}`}>{formatNumberAr(Number(order.total_weight_produced))} كجم</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">الكمية المتبقية</span>
-                          <span className="font-medium text-orange-600">
+                          <span className="font-medium text-orange-600" data-testid={`text-remaining-qty-${order.id}`}>
                             {formatNumberAr(Number(order.remaining_quantity))} كجم
                           </span>
                         </div>
@@ -251,9 +252,9 @@ export default function FilmOperatorDashboard() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">التقدم</span>
-                          <span className="font-medium">{Math.round(progress)}%</span>
+                          <span className="font-medium" data-testid={`text-progress-${order.id}`}>{Math.round(progress)}%</span>
                         </div>
-                        <Progress value={progress} className="h-2" />
+                        <Progress value={progress} className="h-2" data-testid={`progress-bar-${order.id}`} />
                       </div>
 
                       {/* Rolls Info */}
@@ -261,7 +262,7 @@ export default function FilmOperatorDashboard() {
                         <div className="flex items-center gap-2">
                           <Package className="h-4 w-4 text-gray-400" />
                           <span className="text-gray-600 dark:text-gray-400">عدد الرولات:</span>
-                          <span className="font-medium">{order.rolls_count}</span>
+                          <span className="font-medium" data-testid={`text-rolls-count-${order.id}`}>{order.rolls_count}</span>
                         </div>
                         {order.production_start_time && (
                           <div className="flex items-center gap-2">

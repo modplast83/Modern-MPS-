@@ -300,6 +300,7 @@ export default function RollSearch() {
                 size="sm"
                 onClick={exportToExcel}
                 disabled={!searchResults || searchResults.length === 0}
+                data-testid="button-export-excel"
               >
                 <Download className="h-4 w-4 ml-2" />
                 تصدير Excel
@@ -316,11 +317,11 @@ export default function RollSearch() {
             <Card className="p-6">
               <Tabs defaultValue="text" className="space-y-4">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="text">
+                  <TabsTrigger value="text" data-testid="tab-text-search">
                     <Search className="h-4 w-4 ml-2" />
                     بحث نصي
                   </TabsTrigger>
-                  <TabsTrigger value="barcode">
+                  <TabsTrigger value="barcode" data-testid="tab-barcode-search">
                     <ScanLine className="h-4 w-4 ml-2" />
                     بحث بالباركود
                   </TabsTrigger>
@@ -377,6 +378,7 @@ export default function RollSearch() {
                       variant="outline"
                       size="sm"
                       onClick={() => setShowFilters(!showFilters)}
+                      data-testid="button-toggle-filters"
                     >
                       <Filter className="h-4 w-4 ml-2" />
                       فلاتر متقدمة
@@ -392,6 +394,7 @@ export default function RollSearch() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setFilters({})}
+                        data-testid="button-clear-filters"
                       >
                         مسح الفلاتر
                       </Button>

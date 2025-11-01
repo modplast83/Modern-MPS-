@@ -102,38 +102,41 @@ function SortableItem({
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const itemId = isQueueItem ? item.production_order_id : item.id;
+  
   return (
     <div
       ref={setNodeRef}
       style={style}
       className="mb-2"
     >
-      <Card className="hover:shadow-md transition-shadow cursor-move">
+      <Card className="hover:shadow-md transition-shadow cursor-move" data-testid={`card-queue-item-${itemId}`}>
         <CardContent className="p-3">
           <div className="flex items-start gap-2">
             <div
               {...attributes}
               {...listeners}
               className="mt-1 cursor-grab hover:cursor-grabbing text-muted-foreground"
+              data-testid={`drag-handle-${itemId}`}
             >
               <GripVertical className="h-4 w-4" />
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-sm">
+                <span className="font-medium text-sm" data-testid={`text-order-number-${itemId}`}>
                   {isQueueItem ? item.production_order_number : item.production_order_number}
                 </span>
                 {!isQueueItem && (
-                  <Badge variant={item.status === "active" ? "default" : "secondary"}>
+                  <Badge variant={item.status === "active" ? "default" : "secondary"} data-testid={`badge-status-${itemId}`}>
                     {item.status === "active" ? "نشط" : "معلق"}
                   </Badge>
                 )}
               </div>
-              <div className="text-xs text-muted-foreground">
+              <div className="text-xs text-muted-foreground" data-testid={`text-quantity-${itemId}`}>
                 الكمية: {isQueueItem ? item.quantity_kg : item.final_quantity_kg} كجم
               </div>
               {isQueueItem && item.assigned_by_name && (
-                <div className="text-xs text-muted-foreground mt-1">
+                <div className="text-xs text-muted-foreground mt-1" data-testid={`text-assigned-by-${itemId}`}>
                   بواسطة: {item.assigned_by_name}
                 </div>
               )}
@@ -175,19 +178,22 @@ function MachineColumn({
   };
 
   return (
-    <Card className={`min-h-[600px] ${machine ? getMachineColor(machine.type) : "bg-gray-50"}`}>
+    <Card 
+      className={`min-h-[600px] ${machine ? getMachineColor(machine.type) : "bg-gray-50"}`}
+      data-testid={`column-machine-${machineId}`}
+    >
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Factory className="h-5 w-5" />
-            <span>
+            <span data-testid={`text-machine-name-${machineId}`}>
               {machine ? machine.name_ar || machine.name : "أوامر غير مخصصة"}
             </span>
           </div>
           {machine && (
             <div className="flex items-center gap-2 text-sm">
-              <span>{getMachineIcon(machine.status)}</span>
-              <Badge variant="outline">{items.length} أمر</Badge>
+              <span data-testid={`icon-machine-status-${machineId}`}>{getMachineIcon(machine.status)}</span>
+              <Badge variant="outline" data-testid={`badge-order-count-${machineId}`}>{items.length} أمر</Badge>
             </div>
           )}
         </CardTitle>
@@ -198,9 +204,9 @@ function MachineColumn({
             items={sortableItems}
             strategy={verticalListSortingStrategy}
           >
-            <div className="min-h-[50px]">
+            <div className="min-h-[50px]" data-testid={`dropzone-${machineId}`}>
               {items.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
+                <div className="text-center text-muted-foreground py-8" data-testid={`text-no-orders-${machineId}`}>
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-30" />
                   <p className="text-sm">لا توجد أوامر إنتاج</p>
                 </div>
@@ -548,6 +554,7 @@ export default function ProductionQueues() {
                   description: "تم تحديث بيانات الطوابير بنجاح",
                 });
               }}
+              data-testid="button-refresh-queues"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -555,11 +562,12 @@ export default function ProductionQueues() {
               onClick={() => setIsDistributionModalOpen(true)}
               disabled={unassignedCount === 0}
               className="gap-2"
+              data-testid="button-smart-distribution"
             >
               <Sparkles className="h-4 w-4" />
               توزيع ذكي متقدم
               {unassignedCount > 0 && (
-                <Badge variant="secondary" className="ml-2">
+                <Badge variant="secondary" className="ml-2" data-testid="badge-unassigned-count">
                   {unassignedCount} أمر
                 </Badge>
               )}
@@ -569,7 +577,7 @@ export default function ProductionQueues() {
 
         {/* Capacity Statistics Bar */}
         {totalCapacityStats && totalCapacityStats.totalCapacity > 0 && (
-          <Card className="mb-4">
+          <Card className="mb-4" data-testid="card-capacity-stats">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
@@ -579,11 +587,11 @@ export default function ProductionQueues() {
                 <div className="flex items-center gap-4 text-sm">
                   <div className="flex items-center gap-1">
                     <span className="text-muted-foreground">الحمولة:</span>
-                    <span className="font-medium">
+                    <span className="font-medium" data-testid="text-total-load">
                       {totalCapacityStats.totalLoad.toFixed(0)} / {totalCapacityStats.totalCapacity.toFixed(0)} كجم
                     </span>
                   </div>
-                  <Badge variant="outline">
+                  <Badge variant="outline" data-testid="badge-active-orders">
                     {totalCapacityStats.totalOrders} أمر نشط
                   </Badge>
                 </div>
@@ -591,15 +599,19 @@ export default function ProductionQueues() {
               <Progress
                 value={overallUtilization}
                 className="h-2"
+                data-testid="progress-utilization"
               />
               <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
-                <span>نسبة الاستخدام: {overallUtilization.toFixed(1)}%</span>
-                <span className={
-                  overallUtilization > 90 ? "text-red-600" :
-                  overallUtilization > 70 ? "text-yellow-600" :
-                  overallUtilization > 40 ? "text-blue-600" :
-                  "text-green-600"
-                }>
+                <span data-testid="text-utilization-percentage">نسبة الاستخدام: {overallUtilization.toFixed(1)}%</span>
+                <span 
+                  className={
+                    overallUtilization > 90 ? "text-red-600" :
+                    overallUtilization > 70 ? "text-yellow-600" :
+                    overallUtilization > 40 ? "text-blue-600" :
+                    "text-green-600"
+                  }
+                  data-testid="text-load-status"
+                >
                   {overallUtilization > 90 ? "حمولة زائدة" :
                    overallUtilization > 70 ? "حمولة عالية" :
                    overallUtilization > 40 ? "حمولة متوسطة" :
