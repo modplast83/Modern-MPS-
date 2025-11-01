@@ -12,6 +12,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -204,6 +205,13 @@ function MachineColumn({
     return isQueueItem ? `queue-${item.queue_id}` : `order-${item.id}`;
   });
 
+  const { setNodeRef } = useDroppable({
+    id: machineId,
+    data: {
+      machineId: machineId,
+    }
+  });
+
   const getMachineColor = (type: string) => {
     switch (type) {
       case "extruder": return "bg-blue-50 border-blue-200";
@@ -244,7 +252,7 @@ function MachineColumn({
             items={sortableItems}
             strategy={verticalListSortingStrategy}
           >
-            <div className="min-h-[50px]" data-testid={`dropzone-${machineId}`}>
+            <div ref={setNodeRef} className="min-h-[50px]" data-testid={`dropzone-${machineId}`}>
               {items.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8" data-testid={`text-no-orders-${machineId}`}>
                   <Package className="h-12 w-12 mx-auto mb-2 opacity-30" />
