@@ -7125,6 +7125,245 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Mixing Formulas & Batches Routes ============
+
+  // Get all mixing formulas
+  app.get("/api/mixing-formulas", requireAuth, async (req, res) => {
+    try {
+      const formulas = await storage.getAllMixingFormulas();
+      res.json({ data: formulas });
+    } catch (error: any) {
+      console.error("Error getting mixing formulas:", error);
+      res.status(500).json({ message: "خطأ في جلب وصفات الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing formula by ID
+  app.get("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const formula = await storage.getMixingFormulaById(id);
+      
+      if (!formula) {
+        return res.status(404).json({ message: "الوصفة غير موجودة" });
+      }
+      
+      res.json(formula);
+    } catch (error: any) {
+      console.error("Error getting mixing formula:", error);
+      res.status(500).json({ message: "خطأ في جلب الوصفة", error: error.message });
+    }
+  });
+
+  // Create mixing formula (Admin + Production Manager only)
+  app.post("/api/mixing-formulas", requireAuth, async (req, res) => {
+    try {
+      // Check authorization - only admin (1) and production manager (2) can create formulas
+      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
+        return res.status(403).json({ message: "غير مصرح لك بإنشاء وصفات الخلط" });
+      }
+
+      const { formula, ingredients } = req.body;
+      
+      if (!formula || !ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "بيانات الوصفة أو المكونات ناقصة" });
+      }
+
+      const formulaData = {
+        ...formula,
+        created_by: req.user!.id,
+      };
+
+      const newFormula = await storage.createMixingFormula(formulaData, ingredients);
+      res.status(201).json(newFormula);
+    } catch (error: any) {
+      console.error("Error creating mixing formula:", error);
+      res.status(500).json({ message: "خطأ في إنشاء وصفة الخلط", error: error.message });
+    }
+  });
+
+  // Update mixing formula
+  app.put("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      // Check authorization
+      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
+        return res.status(403).json({ message: "غير مصرح لك بتعديل وصفات الخلط" });
+      }
+
+      const id = parseInt(req.params.id);
+      const { formula, ingredients } = req.body;
+      
+      const updatedFormula = await storage.updateMixingFormula(id, formula, ingredients);
+      res.json(updatedFormula);
+    } catch (error: any) {
+      console.error("Error updating mixing formula:", error);
+      res.status(500).json({ message: "خطأ في تحديث وصفة الخلط", error: error.message });
+    }
+  });
+
+  // Delete mixing formula
+  app.delete("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      // Check authorization - only admin can delete formulas
+      if (req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "فقط المدير يمكنه حذف وصفات الخلط" });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.deleteMixingFormula(id);
+      res.json({ message: "تم حذف الوصفة بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting mixing formula:", error);
+      res.status(500).json({ message: error.message || "خطأ في حذف الوصفة", error: error.message });
+    }
+  });
+
+  // Find matching formulas for production order
+  app.post("/api/mixing-formulas/find-matching", requireAuth, async (req, res) => {
+    try {
+      const { machineId, rawMaterial, thickness, width } = req.body;
+      
+      if (!machineId || !rawMaterial || thickness === undefined) {
+        return res.status(400).json({ message: "بيانات البحث ناقصة" });
+      }
+
+      const formulas = await storage.findMatchingFormulas({
+        machineId,
+        rawMaterial,
+        thickness: parseFloat(thickness),
+        width: width ? parseFloat(width) : undefined,
+      });
+
+      res.json({ data: formulas });
+    } catch (error: any) {
+      console.error("Error finding matching formulas:", error);
+      res.status(500).json({ message: "خطأ في البحث عن وصفات مطابقة", error: error.message });
+    }
+  });
+
+  // ===== Mixing Batches =====
+
+  // Get all mixing batches
+  app.get("/api/mixing-batches", requireAuth, async (req, res) => {
+    try {
+      const batches = await storage.getAllMixingBatches();
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting mixing batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing batch by ID
+  app.get("/api/mixing-batches/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getMixingBatchById(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "عملية الخلط غير موجودة" });
+      }
+      
+      res.json(batch);
+    } catch (error: any) {
+      console.error("Error getting mixing batch:", error);
+      res.status(500).json({ message: "خطأ في جلب عملية الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing batches by operator
+  app.get("/api/mixing-batches/operator/:operatorId", requireAuth, async (req, res) => {
+    try {
+      const operatorId = parseInt(req.params.operatorId);
+      const batches = await storage.getMixingBatchesByOperator(operatorId);
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting operator batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط للعامل", error: error.message });
+    }
+  });
+
+  // Get mixing batches by production order
+  app.get("/api/mixing-batches/production-order/:productionOrderId", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.productionOrderId);
+      const batches = await storage.getMixingBatchesByProductionOrder(productionOrderId);
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting production order batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط لأمر الإنتاج", error: error.message });
+    }
+  });
+
+  // Create mixing batch
+  app.post("/api/mixing-batches", requireAuth, async (req, res) => {
+    try {
+      const { batch, ingredients } = req.body;
+      
+      if (!batch || !ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "بيانات عملية الخلط أو المكونات ناقصة" });
+      }
+
+      const batchData = {
+        ...batch,
+        operator_id: req.user!.id,
+        status: "in_progress",
+        started_at: new Date(),
+      };
+
+      const newBatch = await storage.createMixingBatch(batchData, ingredients);
+      res.status(201).json(newBatch);
+    } catch (error: any) {
+      console.error("Error creating mixing batch:", error);
+      res.status(500).json({ message: "خطأ في إنشاء عملية الخلط", error: error.message });
+    }
+  });
+
+  // Update mixing batch
+  app.put("/api/mixing-batches/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedBatch = await storage.updateMixingBatch(id, updates);
+      res.json(updatedBatch);
+    } catch (error: any) {
+      console.error("Error updating mixing batch:", error);
+      res.status(500).json({ message: "خطأ في تحديث عملية الخلط", error: error.message });
+    }
+  });
+
+  // Update batch ingredient actuals
+  app.put("/api/mixing-batches/:id/ingredients", requireAuth, async (req, res) => {
+    try {
+      const batchId = parseInt(req.params.id);
+      const { ingredientUpdates } = req.body;
+      
+      if (!ingredientUpdates || !Array.isArray(ingredientUpdates)) {
+        return res.status(400).json({ message: "بيانات المكونات ناقصة" });
+      }
+
+      await storage.updateBatchIngredientActuals(batchId, ingredientUpdates);
+      const updatedBatch = await storage.getMixingBatchById(batchId);
+      res.json(updatedBatch);
+    } catch (error: any) {
+      console.error("Error updating batch ingredients:", error);
+      res.status(500).json({ message: "خطأ في تحديث الكميات الفعلية", error: error.message });
+    }
+  });
+
+  // Complete mixing batch
+  app.post("/api/mixing-batches/:id/complete", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const completedBatch = await storage.completeMixingBatch(id);
+      res.json(completedBatch);
+    } catch (error: any) {
+      console.error("Error completing mixing batch:", error);
+      res.status(500).json({ message: "خطأ في إتمام عملية الخلط", error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
