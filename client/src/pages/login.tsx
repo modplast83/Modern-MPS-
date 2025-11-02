@@ -145,6 +145,37 @@ export default function Login() {
             </form>
           </Form>
 
+          <div className="mt-4 relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                أو
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                window.location.href = "/api/login-replit";
+              }}
+              data-testid="button-login-replit"
+            >
+              <svg 
+                className="w-5 h-5 mr-2" 
+                viewBox="0 0 24 24" 
+                fill="currentColor"
+              >
+                <path d="M2 2v20h20V2H2zm18 18H4V4h16v16z"/>
+              </svg>
+              تسجيل الدخول باستخدام Replit
+            </Button>
+          </div>
+
           <div className="mt-6 pt-6 border-t">
             <p className="text-xs text-muted-foreground text-center">
               جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ

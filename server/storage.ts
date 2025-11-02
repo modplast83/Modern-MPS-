@@ -83,6 +83,7 @@ import {
   type User,
   type SafeUser,
   type InsertUser,
+  type UpsertUser,
   type NewOrder,
   type InsertNewOrder,
   type ProductionOrder,
@@ -416,6 +417,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Replit Auth user operations
+  getUserByReplitId(replitUserId: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Safe users (without sensitive data like passwords)
   getSafeUser(id: number): Promise<SafeUser | undefined>;
@@ -1162,6 +1167,56 @@ export class DatabaseStorage implements IStorage {
       },
       "إنشاء مستخدم جديد",
       `اسم المستخدم: ${insertUser.username}`,
+    );
+  }
+
+  // Replit Auth user operations
+  async getUserByReplitId(replitUserId: string): Promise<User | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!replitUserId || typeof replitUserId !== "string") {
+          throw new Error("معرف مستخدم Replit غير صحيح");
+        }
+
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.replit_user_id, replitUserId));
+        return user || undefined;
+      },
+      "البحث عن مستخدم Replit",
+      `معرف Replit: ${replitUserId}`,
+    );
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [user] = await db
+          .insert(users)
+          .values({
+            replit_user_id: userData.id,
+            email: userData.email,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            profile_image_url: userData.profileImageUrl,
+            status: "active",
+          })
+          .onConflictDoUpdate({
+            target: users.replit_user_id,
+            set: {
+              email: userData.email,
+              first_name: userData.firstName,
+              last_name: userData.lastName,
+              profile_image_url: userData.profileImageUrl,
+              updated_at: new Date(),
+            },
+          })
+          .returning();
+        return user;
+      },
+      "إنشاء/تحديث مستخدم Replit",
+      `معرف Replit: ${userData.id}`,
     );
   }
 

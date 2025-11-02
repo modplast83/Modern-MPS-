@@ -8,9 +8,11 @@ import {
   date,
   timestamp,
   json,
+  jsonb,
   text,
   decimal,
   check,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -104,11 +106,22 @@ export const sections = pgTable("sections", {
   description: text("description"),
 });
 
-// 🧑‍💼 جدول المستخدمين
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// 🧑‍💼 جدول المستخدمين (supports both username/password and Replit Auth)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: varchar("username", { length: 50 }).notNull().unique(),
-  password: varchar("password", { length: 100 }).notNull(),
+  username: varchar("username", { length: 50 }).unique(),
+  password: varchar("password", { length: 100 }),
   display_name: varchar("display_name", { length: 100 }),
   display_name_ar: varchar("display_name_ar", { length: 100 }),
   full_name: varchar("full_name", { length: 200 }),
@@ -118,6 +131,13 @@ export const users = pgTable("users", {
   section_id: integer("section_id"),
   status: varchar("status", { length: 20 }).default("active"), // active / suspended / deleted
   created_at: timestamp("created_at").defaultNow(),
+  
+  // Replit Auth fields (from integration blueprint)
+  replit_user_id: varchar("replit_user_id", { length: 255 }).unique(), // Replit user ID from OpenID Connect
+  first_name: varchar("first_name", { length: 100 }),
+  last_name: varchar("last_name", { length: 100 }),
+  profile_image_url: varchar("profile_image_url", { length: 500 }),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // 📋 جدول طلبات المستخدمين
@@ -1909,6 +1929,13 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+};
 export type SparePart = typeof spare_parts.$inferSelect;
 export type InsertSparePart = typeof spare_parts.$inferInsert;
 // Legacy order types - will be phased out
