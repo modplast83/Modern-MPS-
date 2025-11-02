@@ -1885,7 +1885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get rolls ready for printing (in film stage)
-      const printingQueue = await storage.getRollsForPrintingBySection(user.section_id);
+      const printingQueue = await storage.getRollsForPrintingBySection((user as any).section_id);
       
       res.json(printingQueue);
     } catch (error) {
@@ -6528,7 +6528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/rolls/cutting-queue-by-section", requireAuth, async (req, res) => {
     try {
       const authReq = req as AuthRequest;
-      const sectionId = authReq.user?.section_id;
+      const sectionId = (authReq.user as any)?.section_id;
       
       const result = await storage.getRollsForCuttingBySection(sectionId);
       res.json(result);
