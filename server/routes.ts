@@ -119,6 +119,7 @@ import {
   commonSchemas,
 } from "./middleware/validation";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
+import { setupAuth, isAuthenticated as isAuthenticatedReplit } from "./replitAuth";
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -128,6 +129,24 @@ let notificationManager: ReturnType<typeof getNotificationManager> | null =
   null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth (OpenID Connect)
+  await setupAuth(app);
+  
+  // Replit Auth user endpoint
+  app.get('/api/auth/user', isAuthenticatedReplit, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserByReplitId(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching Replit auth user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  
   // Authentication routes
   app.post(
     "/api/login",
