@@ -22,9 +22,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Factory } from "lucide-react";
 
-// Note: Using require for asset import as fallback
-const FactoryLogoHPNGWg = "/attached_assets/FactoryLogoHPNGWg.png";
-
 const loginSchema = z.object({
   username: z
     .string()
@@ -86,7 +83,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src={FactoryLogoHPNGWg} alt="Logo" className="w-34 h-34" />
+            <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
           </div>
           <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">
