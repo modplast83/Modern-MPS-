@@ -3399,7 +3399,7 @@ export class DatabaseStorage implements IStorage {
         throw new DatabaseError("أمر الإنتاج غير موجود");
       }
 
-      if (po.status !== "active") {
+      if (!["pending", "active", "in_production"].includes(po.status)) {
         throw new DatabaseError("أمر الإنتاج غير نشط");
       }
 
