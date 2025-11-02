@@ -1034,6 +1034,32 @@ export interface IStorage {
   createRollWithTiming(rollData: InsertRoll & { is_last_roll?: boolean }): Promise<Roll>;
   createFinalRoll(rollData: InsertRoll): Promise<Roll>;
   calculateProductionTime(productionOrderId: number): Promise<number>;
+
+  // Mixing Formulas Management
+  getAllMixingFormulas(): Promise<any[]>;
+  getMixingFormulaById(id: number): Promise<any | undefined>;
+  createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any>;
+  updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any>;
+  deleteMixingFormula(id: number): Promise<void>;
+  findMatchingFormulas(criteria: {
+    machineId: string;
+    rawMaterial: string;
+    thickness: number;
+    width?: number;
+  }): Promise<any[]>;
+
+  // Mixing Batches
+  getAllMixingBatches(): Promise<any[]>;
+  getMixingBatchById(id: number): Promise<any | undefined>;
+  createMixingBatch(batch: InsertMixingBatch, ingredients: InsertBatchIngredient[]): Promise<any>;
+  updateMixingBatch(id: number, updates: Partial<MixingBatch>): Promise<any>;
+  updateBatchIngredientActuals(batchId: number, ingredientUpdates: Array<{
+    id: number;
+    actual_weight_kg: string;
+  }>): Promise<void>;
+  completeMixingBatch(id: number): Promise<any>;
+  getMixingBatchesByOperator(operatorId: number): Promise<any[]>;
+  getMixingBatchesByProductionOrder(productionOrderId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -11512,6 +11538,530 @@ export class DatabaseStorage implements IStorage {
       },
       "calculateProductionTime",
       "حساب وقت الإنتاج",
+    );
+  }
+
+  // ============ Mixing Formulas Management ============
+
+  async getAllMixingFormulas(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const formulas = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            machine_name: machines.name,
+            machine_name_ar: machines.name_ar,
+            raw_material: mixing_formulas.raw_material,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            is_active: mixing_formulas.is_active,
+            notes: mixing_formulas.notes,
+            created_by: mixing_formulas.created_by,
+            creator_name: users.display_name,
+            created_at: mixing_formulas.created_at,
+            updated_at: mixing_formulas.updated_at,
+          })
+          .from(mixing_formulas)
+          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
+          .orderBy(desc(mixing_formulas.created_at));
+
+        // Get ingredients for each formula
+        for (const formula of formulas) {
+          const ingredients = await db
+            .select()
+            .from(formula_ingredients)
+            .where(eq(formula_ingredients.formula_id, formula.id));
+          (formula as any).ingredients = ingredients;
+        }
+
+        return formulas;
+      },
+      "getAllMixingFormulas",
+      "جلب جميع وصفات الخلط",
+    );
+  }
+
+  async getMixingFormulaById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [formula] = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            machine_name: machines.name,
+            machine_name_ar: machines.name_ar,
+            raw_material: mixing_formulas.raw_material,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            is_active: mixing_formulas.is_active,
+            notes: mixing_formulas.notes,
+            created_by: mixing_formulas.created_by,
+            creator_name: users.display_name,
+            created_at: mixing_formulas.created_at,
+            updated_at: mixing_formulas.updated_at,
+          })
+          .from(mixing_formulas)
+          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
+          .where(eq(mixing_formulas.id, id));
+
+        if (!formula) return undefined;
+
+        const ingredients = await db
+          .select()
+          .from(formula_ingredients)
+          .where(eq(formula_ingredients.formula_id, id));
+
+        return { ...formula, ingredients };
+      },
+      "getMixingFormulaById",
+      `جلب وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Validate ingredients total percentage
+          const totalPercentage = ingredients.reduce(
+            (sum, ing) => sum + parseFloat(ing.percentage.toString()),
+            0
+          );
+          
+          if (Math.abs(totalPercentage - 100) > 0.01) {
+            throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
+          }
+
+          // Create formula
+          const [newFormula] = await tx
+            .insert(mixing_formulas)
+            .values(formula)
+            .returning();
+
+          // Create ingredients
+          const ingredientsWithFormulaId = ingredients.map(ing => ({
+            ...ing,
+            formula_id: newFormula.id,
+          }));
+
+          const newIngredients = await tx
+            .insert(formula_ingredients)
+            .values(ingredientsWithFormulaId)
+            .returning();
+
+          return { ...newFormula, ingredients: newIngredients };
+        });
+      },
+      "createMixingFormula",
+      "إنشاء وصفة خلط جديدة",
+    );
+  }
+
+  async updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Update formula
+          const [updatedFormula] = await tx
+            .update(mixing_formulas)
+            .set({ ...formula, updated_at: new Date() })
+            .where(eq(mixing_formulas.id, id))
+            .returning();
+
+          if (!updatedFormula) {
+            throw new Error("الوصفة غير موجودة");
+          }
+
+          // Update ingredients if provided
+          if (ingredients) {
+            // Validate total percentage
+            const totalPercentage = ingredients.reduce(
+              (sum, ing) => sum + parseFloat(ing.percentage.toString()),
+              0
+            );
+            
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+              throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
+            }
+
+            // Delete old ingredients
+            await tx.delete(formula_ingredients).where(eq(formula_ingredients.formula_id, id));
+
+            // Insert new ingredients
+            const ingredientsWithFormulaId = ingredients.map(ing => ({
+              ...ing,
+              formula_id: id,
+            }));
+
+            await tx.insert(formula_ingredients).values(ingredientsWithFormulaId);
+          }
+
+          // Get updated formula with ingredients
+          const newIngredients = await tx
+            .select()
+            .from(formula_ingredients)
+            .where(eq(formula_ingredients.formula_id, id));
+
+          return { ...updatedFormula, ingredients: newIngredients };
+        });
+      },
+      "updateMixingFormula",
+      `تحديث وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async deleteMixingFormula(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Check if formula is used in any batches
+        const [batch] = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.formula_id, id))
+          .limit(1);
+
+        if (batch) {
+          throw new Error("لا يمكن حذف وصفة مستخدمة في عمليات خلط موجودة");
+        }
+
+        await db.delete(mixing_formulas).where(eq(mixing_formulas.id, id));
+      },
+      "deleteMixingFormula",
+      `حذف وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async findMatchingFormulas(criteria: {
+    machineId: string;
+    rawMaterial: string;
+    thickness: number;
+    width?: number;
+  }): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const conditions = [
+          eq(mixing_formulas.machine_id, criteria.machineId),
+          eq(mixing_formulas.raw_material, criteria.rawMaterial),
+          eq(mixing_formulas.is_active, true),
+          sql`${mixing_formulas.thickness_min} <= ${criteria.thickness}`,
+          sql`${mixing_formulas.thickness_max} >= ${criteria.thickness}`,
+        ];
+
+        if (criteria.width !== undefined) {
+          conditions.push(
+            or(
+              sql`${mixing_formulas.width_min} IS NULL`,
+              sql`${mixing_formulas.width_min} <= ${criteria.width}`
+            )!
+          );
+          conditions.push(
+            or(
+              sql`${mixing_formulas.width_max} IS NULL`,
+              sql`${mixing_formulas.width_max} >= ${criteria.width}`
+            )!
+          );
+        }
+
+        const formulas = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            raw_material: mixing_formulas.raw_material,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            notes: mixing_formulas.notes,
+          })
+          .from(mixing_formulas)
+          .where(and(...conditions))
+          .orderBy(mixing_formulas.created_at);
+
+        // Get ingredients for each matching formula
+        for (const formula of formulas) {
+          const ingredients = await db
+            .select()
+            .from(formula_ingredients)
+            .where(eq(formula_ingredients.formula_id, formula.id));
+          (formula as any).ingredients = ingredients;
+        }
+
+        return formulas;
+      },
+      "findMatchingFormulas",
+      "البحث عن وصفات خلط مطابقة",
+    );
+  }
+
+  // ============ Mixing Batches ============
+
+  async getAllMixingBatches(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select({
+            id: mixing_batches.id,
+            batch_number: mixing_batches.batch_number,
+            formula_id: mixing_batches.formula_id,
+            formula_name: mixing_formulas.formula_name,
+            production_order_id: mixing_batches.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            roll_id: mixing_batches.roll_id,
+            roll_number: rolls.roll_number,
+            machine_id: mixing_batches.machine_id,
+            machine_name: machines.name_ar,
+            operator_id: mixing_batches.operator_id,
+            operator_name: users.display_name,
+            total_weight_kg: mixing_batches.total_weight_kg,
+            status: mixing_batches.status,
+            started_at: mixing_batches.started_at,
+            completed_at: mixing_batches.completed_at,
+            notes: mixing_batches.notes,
+            created_at: mixing_batches.created_at,
+          })
+          .from(mixing_batches)
+          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
+          .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
+          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
+          .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_batches.operator_id, users.id))
+          .orderBy(desc(mixing_batches.created_at));
+
+        // Get ingredients for each batch
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getAllMixingBatches",
+      "جلب جميع عمليات الخلط",
+    );
+  }
+
+  async getMixingBatchById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [batch] = await db
+          .select({
+            id: mixing_batches.id,
+            batch_number: mixing_batches.batch_number,
+            formula_id: mixing_batches.formula_id,
+            formula_name: mixing_formulas.formula_name,
+            production_order_id: mixing_batches.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            roll_id: mixing_batches.roll_id,
+            roll_number: rolls.roll_number,
+            machine_id: mixing_batches.machine_id,
+            machine_name: machines.name_ar,
+            operator_id: mixing_batches.operator_id,
+            operator_name: users.display_name,
+            total_weight_kg: mixing_batches.total_weight_kg,
+            status: mixing_batches.status,
+            started_at: mixing_batches.started_at,
+            completed_at: mixing_batches.completed_at,
+            notes: mixing_batches.notes,
+            created_at: mixing_batches.created_at,
+          })
+          .from(mixing_batches)
+          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
+          .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
+          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
+          .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_batches.operator_id, users.id))
+          .where(eq(mixing_batches.id, id));
+
+        if (!batch) return undefined;
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...batch, ingredients };
+      },
+      "getMixingBatchById",
+      `جلب عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async createMixingBatch(batch: InsertMixingBatch, ingredients: InsertBatchIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Create batch
+          const [newBatch] = await tx
+            .insert(mixing_batches)
+            .values(batch)
+            .returning();
+
+          // Create ingredients
+          const ingredientsWithBatchId = ingredients.map(ing => ({
+            ...ing,
+            batch_id: newBatch.id,
+          }));
+
+          const newIngredients = await tx
+            .insert(batch_ingredients)
+            .values(ingredientsWithBatchId)
+            .returning();
+
+          return { ...newBatch, ingredients: newIngredients };
+        });
+      },
+      "createMixingBatch",
+      "إنشاء عملية خلط جديدة",
+    );
+  }
+
+  async updateMixingBatch(id: number, updates: Partial<MixingBatch>): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedBatch] = await db
+          .update(mixing_batches)
+          .set(updates)
+          .where(eq(mixing_batches.id, id))
+          .returning();
+
+        if (!updatedBatch) {
+          throw new Error("عملية الخلط غير موجودة");
+        }
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...updatedBatch, ingredients };
+      },
+      "updateMixingBatch",
+      `تحديث عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async updateBatchIngredientActuals(batchId: number, ingredientUpdates: Array<{
+    id: number;
+    actual_weight_kg: string;
+  }>): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.transaction(async (tx) => {
+          for (const update of ingredientUpdates) {
+            const [ingredient] = await tx
+              .select()
+              .from(batch_ingredients)
+              .where(eq(batch_ingredients.id, update.id));
+
+            if (!ingredient) {
+              throw new Error(`المكون رقم ${update.id} غير موجود`);
+            }
+
+            const plannedWeight = parseFloat(ingredient.planned_weight_kg.toString());
+            const actualWeight = parseFloat(update.actual_weight_kg);
+            const variance = actualWeight - plannedWeight;
+
+            await tx
+              .update(batch_ingredients)
+              .set({
+                actual_weight_kg: update.actual_weight_kg,
+                variance_kg: numberToDecimalString(variance, 2),
+              })
+              .where(eq(batch_ingredients.id, update.id));
+          }
+        });
+      },
+      "updateBatchIngredientActuals",
+      `تحديث الكميات الفعلية لخلطة رقم ${batchId}`,
+    );
+  }
+
+  async completeMixingBatch(id: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedBatch] = await db
+          .update(mixing_batches)
+          .set({
+            status: "completed",
+            completed_at: new Date(),
+          })
+          .where(eq(mixing_batches.id, id))
+          .returning();
+
+        if (!updatedBatch) {
+          throw new Error("عملية الخلط غير موجودة");
+        }
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...updatedBatch, ingredients };
+      },
+      "completeMixingBatch",
+      `إتمام عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async getMixingBatchesByOperator(operatorId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.operator_id, operatorId))
+          .orderBy(desc(mixing_batches.created_at));
+
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getMixingBatchesByOperator",
+      `جلب عمليات الخلط للعامل رقم ${operatorId}`,
+    );
+  }
+
+  async getMixingBatchesByProductionOrder(productionOrderId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.production_order_id, productionOrderId))
+          .orderBy(mixing_batches.created_at);
+
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getMixingBatchesByProductionOrder",
+      `جلب عمليات الخلط لأمر الإنتاج رقم ${productionOrderId}`,
     );
   }
 
