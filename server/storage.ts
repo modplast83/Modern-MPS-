@@ -66,6 +66,20 @@ import {
   type MachineQueue,
   type InsertMachineQueue,
   
+  // نظام الخلط
+  mixing_formulas,
+  formula_ingredients,
+  mixing_batches,
+  batch_ingredients,
+  type MixingFormula,
+  type InsertMixingFormula,
+  type FormulaIngredient,
+  type InsertFormulaIngredient,
+  type MixingBatch,
+  type InsertMixingBatch,
+  type BatchIngredient,
+  type InsertBatchIngredient,
+  
   type User,
   type SafeUser,
   type InsertUser,
@@ -11398,9 +11412,7 @@ export class DatabaseStorage implements IStorage {
         // Create the roll
         const [newRoll] = await db
           .insert(rolls)
-          .values({
-            ...rollData,
-          })
+          .values(rollData as any)
           .returning();
 
         // Update produced quantity
@@ -11469,9 +11481,7 @@ export class DatabaseStorage implements IStorage {
         // Create the final roll
         const [newRoll] = await db
           .insert(rolls)
-          .values({
-            ...rollData,
-          })
+          .values(rollData as any)
           .returning();
 
         // Update production order to mark film as completed
