@@ -32,6 +32,8 @@ import { useToast } from "../hooks/use-toast";
 import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
 
 type MixingFormula = {
   id: number;
@@ -110,30 +112,34 @@ export default function MaterialMixing() {
   });
 
   return (
-    <div className="container mx-auto p-4 rtl" dir="rtl">
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-3 rounded-lg">
-              <Beaker className="h-8 w-8 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">نظام خلط المواد</h1>
-              <p className="text-muted-foreground">
-                إدارة وصفات الخلط وعمليات الخلط الفعلية
-              </p>
+    <div className="flex h-screen overflow-hidden bg-gray-50" dir="rtl">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6">
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-primary/10 p-3 rounded-lg">
+                  <Beaker className="h-8 w-8 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold">نظام خلط المواد</h1>
+                  <p className="text-muted-foreground">
+                    إدارة وصفات الخلط وعمليات الخلط الفعلية
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="formulas" className="gap-2">
+          <TabsTrigger value="formulas" className="gap-2" data-testid="tab-formulas">
             <Beaker className="h-4 w-4" />
             وصفات الخلط
           </TabsTrigger>
-          <TabsTrigger value="batches" className="gap-2">
+          <TabsTrigger value="batches" className="gap-2" data-testid="tab-batches">
             <Package className="h-4 w-4" />
             دفعات الخلط
           </TabsTrigger>
@@ -344,6 +350,8 @@ export default function MaterialMixing() {
           </Card>
         </TabsContent>
       </Tabs>
+        </main>
+      </div>
     </div>
   );
 }
