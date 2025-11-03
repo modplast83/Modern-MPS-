@@ -53,7 +53,7 @@ export default function OrdersSearch({
             <>
               <SelectItem value="all">جميع الطلبات</SelectItem>
               <SelectItem value="waiting">انتظار</SelectItem>
-              <SelectItem value="قيد الانتاج">قيد الإنتاج</SelectItem>
+              <SelectItem value="in_production">قيد الإنتاج</SelectItem>
               <SelectItem value="paused">معلق</SelectItem>
               <SelectItem value="completed">مكتمل</SelectItem>
               <SelectItem value="received">مستلم</SelectItem>

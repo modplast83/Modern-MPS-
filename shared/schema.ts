@@ -48,7 +48,7 @@ import { parseIntSafe, parseFloatSafe } from "./validation-utils";
  *    - Prevents overselling or over-allocation of materials
  *
  * D) VALID STATE TRANSITIONS:
- *    - Orders: waiting → قيد الانتاج → completed/cancelled
+ *    - Orders: waiting → in_production → completed/cancelled
  *    - Production Orders: pending → active → completed/cancelled
  *    - Rolls: film → printing → cutting → done
  *    - Machines: active ↔ maintenance ↔ down (bidirectional)
@@ -295,7 +295,7 @@ export const machines = pgTable(
 
 // 🧾 جدول الطلبات - Order Management with Quantity Constraints
 // INVARIANT A: ∑(ProductionOrder.quantity_kg) ≤ Order.total_quantity + tolerance
-// STATUS TRANSITIONS: waiting → قيد الانتاج → completed/cancelled
+// STATUS TRANSITIONS: waiting → in_production → completed/cancelled
 // CONSTRAINT: delivery_date must be future date when status = 'waiting'
 export const orders = pgTable(
   "orders",
@@ -306,7 +306,7 @@ export const orders = pgTable(
       .notNull()
       .references(() => customers.id, { onDelete: "restrict" }), // ON DELETE RESTRICT
     delivery_days: integer("delivery_days"), // Must be > 0 if specified
-    status: varchar("status", { length: 30 }).notNull().default("waiting"), // ENUM: waiting / قيد الانتاج / paused / cancelled / completed
+    status: varchar("status", { length: 30 }).notNull().default("waiting"), // ENUM: waiting / in_production / paused / cancelled / completed
     notes: text("notes"),
     created_by: integer("created_by").references(() => users.id, {
       onDelete: "set null",
@@ -322,7 +322,7 @@ export const orders = pgTable(
     ),
     statusValid: check(
       "status_valid",
-      sql`${table.status} IN ('waiting', 'قيد الانتاج', 'paused', 'cancelled', 'completed')`,
+      sql`${table.status} IN ('waiting', 'in_production', 'paused', 'cancelled', 'completed')`,
     ),
     // Temporal constraint: delivery_date must be in future when order is active
     deliveryDateValid: check(
@@ -1870,7 +1870,7 @@ export const insertNewOrderSchema = createInsertSchema(orders)
       ),
     // Status validation
     status: z
-      .enum(["waiting", "قيد الانتاج", "paused", "cancelled", "completed"])
+      .enum(["waiting", "in_production", "paused", "cancelled", "completed"])
       .default("waiting"),
     // User reference
     created_by: z.number().int().positive("معرف المستخدم مطلوب").optional(),
