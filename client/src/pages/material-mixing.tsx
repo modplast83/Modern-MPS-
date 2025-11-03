@@ -43,7 +43,7 @@ type MixingFormula = {
   machine_id: string;
   machine_name?: string;
   machine_name_ar?: string;
-  screw_count?: number;
+  screw_type?: string;
   width_min: string;
   width_max: string;
   thickness_min: string;
@@ -99,8 +99,9 @@ type Item = {
   id: number;
   name: string;
   name_ar: string;
-  category: string;
-  unit?: string;
+  category_id: string;
+  status?: string;
+  code?: string;
 };
 
 export default function MaterialMixing() {
@@ -134,8 +135,8 @@ export default function MaterialMixing() {
     queryKey: ["/api/items"],
   });
 
-  // تصفية الأصناف للحصول على المواد الخام فقط
-  const rawMaterialItems = items.filter((item) => item.category === "raw_material");
+  // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
+  const rawMaterialItems = items.filter((item) => item.category_id === "CAT10");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -442,7 +443,7 @@ function FormulaForm({
   const [ingredients, setIngredients] = useState<{ item_id: number; percentage: string }[]>([]);
 
   const selectedMachine = machines.find((m) => m.id === formData.machine_id);
-  const isTwoScrewMachine = selectedMachine?.screw_count === 2;
+  const isABAMachine = selectedMachine?.screw_type === "ABA";
 
   const createFormula = useMutation({
     mutationFn: async (data: any) => {
@@ -508,7 +509,7 @@ function FormulaForm({
     const payload = {
       ...formData,
       master_batch_colors: selectedColors,
-      screw_assignment: isTwoScrewMachine ? formData.screw_assignment : null,
+      screw_assignment: isABAMachine ? formData.screw_assignment : null,
       ingredients: ingredients.map((ing) => ({
         item_id: Number(ing.item_id),
         percentage: ing.percentage,
@@ -554,14 +555,14 @@ function FormulaForm({
                   .map((machine: any) => (
                     <SelectItem key={machine.id} value={machine.id}>
                       {machine.name_ar || machine.name || machine.id}
-                      {machine.screw_count === 2 && " (سكروين)"}
+                      {machine.screw_type === "ABA" && " (ABA - سكروين)"}
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
           </div>
 
-          {isTwoScrewMachine && (
+          {isABAMachine && (
             <div className="space-y-2">
               <Label htmlFor="screw_assignment">السكرو المخصص *</Label>
               <Select
