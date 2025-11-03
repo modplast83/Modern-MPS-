@@ -93,7 +93,7 @@ export default function OrdersTable({
         color: "bg-yellow-100 text-yellow-800",
       },
       in_production: {
-        label: "انتاج",
+        label: "قيد الإنتاج",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
