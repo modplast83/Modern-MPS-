@@ -256,7 +256,7 @@ export const commonSchemas = {
       [
         "pending",
         "waiting",
-        "in_production",
+        "قيد الانتاج",
         "for_production",
         "paused",
         "on_hold",

@@ -6,13 +6,13 @@ Keep Arabic labels (RTL). Extend schema/routes minimally without breaking existi
 ## 0) Assumptions
 - Existing: production_orders, rolls, machines.
 - Rolls already linked to production_orders.
-- Orders become visible when moved to "in_production".
+- Orders become visible when moved to "قيد الانتاج".
 ====================================================
 
 ## 1) Schema changes (Drizzle migrations)
 ### production_orders
 - requires_printing boolean NOT NULL DEFAULT false
-- in_production_at timestamp NULL
+- قيد الانتاج_at timestamp NULL
 
 ### rolls (extend existing)
 - roll_seq int NOT NULL
@@ -63,7 +63,7 @@ Keep Arabic labels (RTL). Extend schema/routes minimally without breaking existi
 
 ### 2.2 Start production
 PATCH `/api/job-orders/:id/start-production`
-- Sets status='in_production', in_production_at=now().
+- Sets status='قيد الانتاج', قيد الانتاج_at=now().
 
 ### 2.3 Film: create roll with lock + tolerance
 POST `/api/rolls`

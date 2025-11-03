@@ -35,7 +35,7 @@ export default function ViewOrderDialog({
     const statusMap: Record<string, string> = {
       waiting: "قيد الانتظار",
       for_production: "جاهز للإنتاج",
-      in_production: "قيد الإنتاج",
+      قيد الانتاج: "قيد الإنتاج",
       completed: "مكتمل",
       cancelled: "ملغي",
       on_hold: "معلق",
@@ -48,7 +48,7 @@ export default function ViewOrderDialog({
     const colorMap: Record<string, string> = {
       waiting: "bg-yellow-100 text-yellow-800",
       for_production: "bg-blue-100 text-blue-800",
-      in_production: "bg-purple-100 text-purple-800",
+      قيد الانتاج: "bg-purple-100 text-purple-800",
       completed: "bg-green-100 text-green-800",
       cancelled: "bg-red-100 text-red-800",
       on_hold: "bg-orange-100 text-orange-800",
