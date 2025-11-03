@@ -11829,7 +11829,6 @@ export class DatabaseStorage implements IStorage {
 
   async findMatchingFormulas(criteria: {
     machineId: string;
-    rawMaterial: string;
     thickness: number;
     width?: number;
   }): Promise<any[]> {
@@ -11837,7 +11836,6 @@ export class DatabaseStorage implements IStorage {
       async () => {
         const conditions = [
           eq(mixing_formulas.machine_id, criteria.machineId),
-          eq(mixing_formulas.raw_material, criteria.rawMaterial),
           eq(mixing_formulas.is_active, true),
           sql`${mixing_formulas.thickness_min} <= ${criteria.thickness}`,
           sql`${mixing_formulas.thickness_max} >= ${criteria.thickness}`,
@@ -11845,16 +11843,10 @@ export class DatabaseStorage implements IStorage {
 
         if (criteria.width !== undefined) {
           conditions.push(
-            or(
-              sql`${mixing_formulas.width_min} IS NULL`,
-              sql`${mixing_formulas.width_min} <= ${criteria.width}`
-            )!
+            sql`${mixing_formulas.width_min} <= ${criteria.width}`
           );
           conditions.push(
-            or(
-              sql`${mixing_formulas.width_max} IS NULL`,
-              sql`${mixing_formulas.width_max} >= ${criteria.width}`
-            )!
+            sql`${mixing_formulas.width_max} >= ${criteria.width}`
           );
         }
 
@@ -11863,22 +11855,32 @@ export class DatabaseStorage implements IStorage {
             id: mixing_formulas.id,
             formula_name: mixing_formulas.formula_name,
             machine_id: mixing_formulas.machine_id,
-            raw_material: mixing_formulas.raw_material,
+            screw_assignment: mixing_formulas.screw_assignment,
             thickness_min: mixing_formulas.thickness_min,
             thickness_max: mixing_formulas.thickness_max,
             width_min: mixing_formulas.width_min,
             width_max: mixing_formulas.width_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
             notes: mixing_formulas.notes,
           })
           .from(mixing_formulas)
           .where(and(...conditions))
           .orderBy(mixing_formulas.created_at);
 
-        // Get ingredients for each matching formula
+        // Get ingredients with item details for each matching formula
         for (const formula of formulas) {
           const ingredients = await db
-            .select()
+            .select({
+              id: formula_ingredients.id,
+              formula_id: formula_ingredients.formula_id,
+              item_id: formula_ingredients.item_id,
+              item_name: items.name,
+              item_name_ar: items.name_ar,
+              percentage: formula_ingredients.percentage,
+              notes: formula_ingredients.notes,
+            })
             .from(formula_ingredients)
+            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
             .where(eq(formula_ingredients.formula_id, formula.id));
           (formula as any).ingredients = ingredients;
         }
