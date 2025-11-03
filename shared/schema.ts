@@ -267,6 +267,9 @@ export const machines = pgTable(
       precision: 8,
       scale: 2,
     }), // قدرة الإنتاج للحجم الكبير
+    
+    // عدد السكرو لمكائن الفيلم
+    screw_count: integer("screw_count").default(1), // 1 للسكرو الواحد (A)، 2 لسكروين (A & B)
   },
   (table) => ({
     // Check constraints for machine integrity
@@ -283,6 +286,10 @@ export const machines = pgTable(
       sql`${table.status} IN ('active', 'maintenance', 'down')`,
     ),
     nameNotEmpty: check("name_not_empty", sql`LENGTH(TRIM(${table.name})) > 0`),
+    screwCountValid: check(
+      "screw_count_valid",
+      sql`${table.screw_count} IS NULL OR ${table.screw_count} IN (1, 2)`,
+    ), // عدد السكرو يكون 1 أو 2 فقط
   }),
 );
 
@@ -2779,12 +2786,22 @@ export const mixing_formulas = pgTable("mixing_formulas", {
   formula_name: varchar("formula_name", { length: 255 }).notNull(), // اسم الوصفة
   machine_id: varchar("machine_id", { length: 20 })
     .notNull()
-    .references(() => machines.id), // ماكينة الفيلم
-  raw_material: varchar("raw_material", { length: 100 }).notNull(), // المادة الخام الأساسية
+    .references(() => machines.id), // ماكينة الفيلم فقط (type='extruder')
+  
+  // نطاق المقاس (بالسم)
+  width_min: decimal("width_min", { precision: 6, scale: 2 }).notNull(), // الحد الأدنى للعرض (سم)
+  width_max: decimal("width_max", { precision: 6, scale: 2 }).notNull(), // الحد الأقصى للعرض (سم)
+  
+  // نطاق السماكة للطبقة الواحدة (بالمايكرون)
   thickness_min: decimal("thickness_min", { precision: 5, scale: 2 }).notNull(), // الحد الأدنى للسماكة (ميكرون)
   thickness_max: decimal("thickness_max", { precision: 5, scale: 2 }).notNull(), // الحد الأقصى للسماكة (ميكرون)
-  width_min: decimal("width_min", { precision: 6, scale: 2 }), // الحد الأدنى للعرض (سم) - اختياري
-  width_max: decimal("width_max", { precision: 6, scale: 2 }), // الحد الأقصى للعرض (سم) - اختياري
+  
+  // ألوان الماستر باتش (قائمة متعددة الاختيار من items)
+  master_batch_colors: varchar("master_batch_colors", { length: 20 }).array(), // مثال: ['CLEAR', 'WHITE', 'BLACK']
+  
+  // تحديد السكرو للماكينات ذات السكروين
+  screw_assignment: varchar("screw_assignment", { length: 10 }).default("A"), // A أو B (للماكينات ذات السكروين)
+  
   is_active: boolean("is_active").default(true).notNull(), // هل الوصفة نشطة؟
   notes: text("notes"), // ملاحظات
   created_by: integer("created_by")
@@ -2799,17 +2816,23 @@ export const mixing_formulas = pgTable("mixing_formulas", {
   ),
   widthRangeValid: check(
     "width_range_valid",
-    sql`${table.width_min} IS NULL OR ${table.width_max} IS NULL OR ${table.width_min} <= ${table.width_max}`
+    sql`${table.width_min} <= ${table.width_max}`
+  ),
+  screwAssignmentValid: check(
+    "screw_assignment_valid",
+    sql`${table.screw_assignment} IN ('A', 'B')`
   ),
 }));
 
-// 🧪 جدول مكونات الوصفة
+// 🧪 جدول مكونات الوصفة (مواد خام فقط من جدول items)
 export const formula_ingredients = pgTable("formula_ingredients", {
   id: serial("id").primaryKey(),
   formula_id: integer("formula_id")
     .notNull()
     .references(() => mixing_formulas.id, { onDelete: "cascade" }),
-  raw_material_name: varchar("raw_material_name", { length: 100 }).notNull(), // اسم المادة الخام
+  item_id: varchar("item_id", { length: 20 })
+    .notNull()
+    .references(() => items.id), // المادة الخام من جدول الأصناف
   percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(), // النسبة المئوية
   notes: text("notes"), // ملاحظات
 }, (table) => ({
@@ -2855,7 +2878,9 @@ export const batch_ingredients = pgTable("batch_ingredients", {
   batch_id: integer("batch_id")
     .notNull()
     .references(() => mixing_batches.id, { onDelete: "cascade" }),
-  raw_material_name: varchar("raw_material_name", { length: 100 }).notNull(),
+  item_id: varchar("item_id", { length: 20 })
+    .notNull()
+    .references(() => items.id), // المادة الخام من جدول الأصناف
   planned_weight_kg: decimal("planned_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن المخطط
   actual_weight_kg: decimal("actual_weight_kg", { precision: 10, scale: 2 }), // الوزن الفعلي
   variance_kg: decimal("variance_kg", { precision: 10, scale: 2 }), // الفرق (فعلي - مخطط)
@@ -2890,6 +2915,10 @@ export const formulaIngredientsRelations = relations(formula_ingredients, ({ one
     fields: [formula_ingredients.formula_id],
     references: [mixing_formulas.id],
   }),
+  item: one(items, {
+    fields: [formula_ingredients.item_id],
+    references: [items.id],
+  }),
 }));
 
 export const mixingBatchesRelations = relations(mixing_batches, ({ one, many }) => ({
@@ -2921,6 +2950,10 @@ export const batchIngredientsRelations = relations(batch_ingredients, ({ one }) 
     fields: [batch_ingredients.batch_id],
     references: [mixing_batches.id],
   }),
+  item: one(items, {
+    fields: [batch_ingredients.item_id],
+    references: [items.id],
+  }),
 }));
 
 // أنواع البيانات
@@ -2939,10 +2972,12 @@ export const insertMixingFormulaSchema = createInsertSchema(mixing_formulas).omi
   created_at: true,
   updated_at: true,
 }).extend({
+  width_min: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأدنى يجب أن يكون أكبر من صفر"),
+  width_max: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأقصى يجب أن يكون أكبر من صفر"),
   thickness_min: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة الدنيا يجب أن تكون أكبر من صفر"),
   thickness_max: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة القصوى يجب أن تكون أكبر من صفر"),
-  width_min: z.string().optional(),
-  width_max: z.string().optional(),
+  master_batch_colors: z.array(z.string()).optional(), // قائمة ألوان الماستر باتش
+  screw_assignment: z.enum(["A", "B"]).default("A"),
 });
 
 export const insertFormulaIngredientSchema = createInsertSchema(formula_ingredients).omit({
