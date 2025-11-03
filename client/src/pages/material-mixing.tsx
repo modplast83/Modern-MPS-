@@ -34,6 +34,7 @@ import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
+import MobileNav from "../components/layout/MobileNav";
 
 type MixingFormula = {
   id: number;
@@ -112,23 +113,24 @@ export default function MaterialMixing() {
   });
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50" dir="rtl">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4" dir="rtl">
           <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 p-3 rounded-lg">
-                  <Beaker className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold">نظام خلط المواد</h1>
-                  <p className="text-muted-foreground">
-                    إدارة وصفات الخلط وعمليات الخلط الفعلية
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <Beaker className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">نظام خلط المواد</h1>
+                <p className="text-gray-600">
+                  إدارة وصفات الخلط وعمليات الخلط الفعلية
+                </p>
               </div>
             </div>
           </div>
