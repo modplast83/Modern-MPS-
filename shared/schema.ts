@@ -268,8 +268,8 @@ export const machines = pgTable(
       scale: 2,
     }), // قدرة الإنتاج للحجم الكبير
     
-    // عدد السكرو لمكائن الفيلم
-    screw_count: integer("screw_count").default(1), // 1 للسكرو الواحد (A)، 2 لسكروين (A & B)
+    // نوع السكرو لمكائن الفيلم (A أو ABA فقط)
+    screw_type: varchar("screw_type", { length: 10 }).default("A"), // 'A' للسكرو الواحد، 'ABA' لنظام السكروين
   },
   (table) => ({
     // Check constraints for machine integrity
@@ -286,10 +286,10 @@ export const machines = pgTable(
       sql`${table.status} IN ('active', 'maintenance', 'down')`,
     ),
     nameNotEmpty: check("name_not_empty", sql`LENGTH(TRIM(${table.name})) > 0`),
-    screwCountValid: check(
-      "screw_count_valid",
-      sql`${table.screw_count} IS NULL OR ${table.screw_count} IN (1, 2)`,
-    ), // عدد السكرو يكون 1 أو 2 فقط
+    screwTypeValid: check(
+      "screw_type_valid",
+      sql`${table.screw_type} IS NULL OR ${table.screw_type} IN ('A', 'ABA')`,
+    ), // نوع السكرو يكون 'A' أو 'ABA' فقط
   }),
 );
 

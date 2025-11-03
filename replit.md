@@ -26,11 +26,13 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
     -   Voice recognition and synthesis.
     -   Advanced production order management, including detailed product specifications and notes.
     -   **Three-Machine Roll Tracking**: Tracks each roll through film/extruder, printing, and cutting stages, replacing a single-machine system. Roll labels display comprehensive information for all three stages.
+    -   **Material Mixing System** (Film Section Only): Formula-based mixing system using size ranges (width in cm), thickness ranges (micron per layer), and master batch colors. Film machines categorized by screw type ('A' or 'ABA'), with ABA-type machines requiring separate A/B mixing recipes. All mixing ingredients sourced from items table (category CAT10 - raw materials only).
     -   Quality control systems.
     -   Maintenance tracking, including spare parts management.
     -   HR management with attendance tracking and training programs.
     -   Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
     -   AI Assistant with context-aware intelligence, improved intent analysis, enhanced UI, and performance optimizations for smart query handling and data processing.
+    -   **Replit Auth Integration**: Dual authentication support - traditional username/password and Replit Auth for seamless integration with Replit platform.
 -   **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
 -   **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios like weight validation, printing, cutting, and queue management.
 
