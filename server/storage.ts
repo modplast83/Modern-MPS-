@@ -11618,11 +11618,13 @@ export class DatabaseStorage implements IStorage {
             machine_id: mixing_formulas.machine_id,
             machine_name: machines.name,
             machine_name_ar: machines.name_ar,
-            raw_material: mixing_formulas.raw_material,
-            thickness_min: mixing_formulas.thickness_min,
-            thickness_max: mixing_formulas.thickness_max,
+            screw_count: machines.screw_count,
             width_min: mixing_formulas.width_min,
             width_max: mixing_formulas.width_max,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
+            screw_assignment: mixing_formulas.screw_assignment,
             is_active: mixing_formulas.is_active,
             notes: mixing_formulas.notes,
             created_by: mixing_formulas.created_by,
@@ -11635,11 +11637,20 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(users, eq(mixing_formulas.created_by, users.id))
           .orderBy(desc(mixing_formulas.created_at));
 
-        // Get ingredients for each formula
+        // Get ingredients with item details for each formula
         for (const formula of formulas) {
           const ingredients = await db
-            .select()
+            .select({
+              id: formula_ingredients.id,
+              formula_id: formula_ingredients.formula_id,
+              item_id: formula_ingredients.item_id,
+              item_name: items.name,
+              item_name_ar: items.name_ar,
+              percentage: formula_ingredients.percentage,
+              notes: formula_ingredients.notes,
+            })
             .from(formula_ingredients)
+            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
             .where(eq(formula_ingredients.formula_id, formula.id));
           (formula as any).ingredients = ingredients;
         }
@@ -11661,11 +11672,13 @@ export class DatabaseStorage implements IStorage {
             machine_id: mixing_formulas.machine_id,
             machine_name: machines.name,
             machine_name_ar: machines.name_ar,
-            raw_material: mixing_formulas.raw_material,
-            thickness_min: mixing_formulas.thickness_min,
-            thickness_max: mixing_formulas.thickness_max,
+            screw_count: machines.screw_count,
             width_min: mixing_formulas.width_min,
             width_max: mixing_formulas.width_max,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
+            screw_assignment: mixing_formulas.screw_assignment,
             is_active: mixing_formulas.is_active,
             notes: mixing_formulas.notes,
             created_by: mixing_formulas.created_by,
@@ -11681,8 +11694,17 @@ export class DatabaseStorage implements IStorage {
         if (!formula) return undefined;
 
         const ingredients = await db
-          .select()
+          .select({
+            id: formula_ingredients.id,
+            formula_id: formula_ingredients.formula_id,
+            item_id: formula_ingredients.item_id,
+            item_name: items.name,
+            item_name_ar: items.name_ar,
+            percentage: formula_ingredients.percentage,
+            notes: formula_ingredients.notes,
+          })
           .from(formula_ingredients)
+          .leftJoin(items, eq(formula_ingredients.item_id, items.id))
           .where(eq(formula_ingredients.formula_id, id));
 
         return { ...formula, ingredients };
