@@ -363,7 +363,7 @@ export default function MaterialMixing() {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {new Date(batch.start_time).toLocaleDateString("ar-EG")}
+                            {new Date(batch.started_at).toLocaleDateString("ar-EG")}
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
