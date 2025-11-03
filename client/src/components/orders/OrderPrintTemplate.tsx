@@ -58,7 +58,7 @@ export default function OrderPrintTemplate({
     const statusMap: Record<string, string> = {
       waiting: "قيد الانتظار",
       for_production: "جاهز للإنتاج",
-      in_production: "قيد الإنتاج",
+      قيد الانتاج: "قيد الإنتاج",
       completed: "مكتمل",
       cancelled: "ملغي",
       on_hold: "معلق",

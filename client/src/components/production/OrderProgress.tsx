@@ -170,7 +170,7 @@ export default function OrderProgress() {
             </SelectTrigger>
             <SelectContent>
               {productionOrders
-                .filter((order: any) => order.status === "in_production")
+                .filter((order: any) => order.status === "قيد الانتاج")
                 .map((order: any) => (
                   <SelectItem key={order.id} value={order.id.toString()}>
                     {order.production_order_number} - {order.quantity_required}{" "}

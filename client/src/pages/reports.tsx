@@ -1301,7 +1301,7 @@ export default function Reports() {
                               status:
                                 status.status === "completed"
                                   ? "مكتمل"
-                                  : status.status === "in_production"
+                                  : status.status === "قيد الانتاج"
                                     ? "قيد الإنتاج"
                                     : status.status === "pending"
                                       ? "في الانتظار"

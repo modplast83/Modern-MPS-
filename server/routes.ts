@@ -5227,7 +5227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Enhanced status validation with state transition rules (INVARIANT D)
         const validStatuses = [
           "waiting",
-          "in_production",
+          "قيد الانتاج",
           "paused",
           "completed",
           "cancelled",
@@ -5258,11 +5258,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Define valid state transitions based on business logic
         const validTransitions: Record<string, string[]> = {
           pending: ["waiting", "for_production", "cancelled"],
-          waiting: ["in_production", "for_production", "on_hold", "cancelled"],
-          for_production: ["in_production", "waiting", "on_hold", "cancelled"],
-          in_production: ["paused", "completed", "on_hold", "in_progress"],
+          waiting: ["قيد الانتاج", "for_production", "on_hold", "cancelled"],
+          for_production: ["قيد الانتاج", "waiting", "on_hold", "cancelled"],
+          قيد الانتاج: ["paused", "completed", "on_hold", "in_progress"],
           in_progress: ["paused", "completed", "on_hold"],
-          paused: ["in_production", "in_progress", "cancelled"],
+          paused: ["قيد الانتاج", "in_progress", "cancelled"],
           on_hold: ["waiting", "for_production", "cancelled"],
           completed: ["delivered"], // Only allow delivery from completed
           delivered: [], // Terminal state - no further transitions
@@ -5311,7 +5311,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             (po: any) => po.order_id === orderId,
           );
           const activeProdOrders = productionOrders.filter((po: any) =>
-            ["in_progress", "in_production"].includes(po.status),
+            ["in_progress", "قيد الانتاج"].includes(po.status),
           );
 
           if (activeProdOrders.length > 0) {

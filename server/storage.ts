@@ -1484,7 +1484,7 @@ export class DatabaseStorage implements IStorage {
         const validStatuses = [
           "pending",
           "waiting",
-          "in_production",
+          "قيد الانتاج",
           "for_production",
           "paused",
           "on_hold",
@@ -1520,8 +1520,8 @@ export class DatabaseStorage implements IStorage {
 
             // Map order status to production order status
             let productionStatus = status;
-            if (status === "in_production" || status === "for_production") {
-              productionStatus = "in_production";
+            if (status === "قيد الانتاج" || status === "for_production") {
+              productionStatus = "قيد الانتاج";
             } else if (status === "waiting" || status === "pending") {
               productionStatus = "pending";
             } else if (status === "paused" || status === "on_hold") {
@@ -1657,7 +1657,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(customers, eq(orders.customer_id, customers.id))
       .where(
         or(
-          eq(orders.status, "in_production"),
+          eq(orders.status, "قيد الانتاج"),
           eq(orders.status, "waiting"),
           eq(orders.status, "pending"),
         ),
@@ -1816,7 +1816,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(customers, eq(orders.customer_id, customers.id))
         .where(
           or(
-            eq(orders.status, "in_production"),
+            eq(orders.status, "قيد الانتاج"),
             eq(orders.status, "waiting"),
             eq(orders.status, "pending"),
             eq(orders.status, "for_production"),
@@ -2600,7 +2600,7 @@ export class DatabaseStorage implements IStorage {
           .where(eq(production_orders.id, id))
           .returning();
 
-        // تحديث حالة الطلب الأساسي إلى in_production إذا كان في حالة waiting
+        // تحديث حالة الطلب الأساسي إلى قيد الانتاج إذا كان في حالة waiting
         const [parentOrder] = await tx
           .select()
           .from(orders)
@@ -2609,7 +2609,7 @@ export class DatabaseStorage implements IStorage {
         if (parentOrder && parentOrder.status === "waiting") {
           await tx
             .update(orders)
-            .set({ status: "in_production" })
+            .set({ status: "قيد الانتاج" })
             .where(eq(orders.id, updatedOrder.order_id));
         }
 
@@ -3494,7 +3494,7 @@ export class DatabaseStorage implements IStorage {
         throw new DatabaseError("أمر الإنتاج غير موجود");
       }
 
-      if (!["pending", "active", "in_production"].includes(po.status)) {
+      if (!["pending", "active", "قيد الانتاج"].includes(po.status)) {
         throw new DatabaseError("أمر الإنتاج غير نشط");
       }
 
@@ -4791,7 +4791,7 @@ export class DatabaseStorage implements IStorage {
             .select({
               daily_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
               daily_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
-              active_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.status} IN ('in_production', 'waiting') THEN ${orders.id} END)`,
+              active_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${orders.status} IN ('قيد الانتاج', 'waiting') THEN ${orders.id} END)`,
               completed_today: sql<number>`COUNT(DISTINCT CASE WHEN DATE(${rolls.completed_at}) = CURRENT_DATE THEN ${rolls.id} END)`,
               current_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
               avg_efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 90)`,
@@ -5512,7 +5512,7 @@ export class DatabaseStorage implements IStorage {
           .from(orders)
           .where(
             or(
-              eq(orders.status, "in_production"),
+              eq(orders.status, "قيد الانتاج"),
               eq(orders.status, "waiting"),
               eq(orders.status, "pending"),
             ),
@@ -7867,7 +7867,7 @@ export class DatabaseStorage implements IStorage {
       const [productionOrder] = await db
         .update(production_orders)
         .set({
-          status: "in_production",
+          status: "قيد الانتاج",
         })
         .where(eq(production_orders.id, productionOrderId))
         .returning();
@@ -8409,7 +8409,7 @@ export class DatabaseStorage implements IStorage {
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
           and(
-            eq(production_orders.status, "in_production"),
+            eq(production_orders.status, "قيد الانتاج"),
             // الطلب يبقى ظاهراً حتى يتم إنتاج الكمية كاملة
             sql`COALESCE((
               SELECT SUM(weight_kg)
