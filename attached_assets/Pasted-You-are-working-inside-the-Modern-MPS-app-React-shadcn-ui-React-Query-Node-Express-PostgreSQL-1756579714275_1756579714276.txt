@@ -7,7 +7,7 @@ Keep Arabic labels + RTL. Do NOT break existing APIs; extend minimally.
 
 ## 0) Config & assumptions
 - Existing tables: production_orders, rolls, machines.
-- An order is visible in production when moved to "قيد الانتاج".
+- An order is visible in production when moved to "in_production".
 - Add a small settings table to control tolerance and QR prefix.
 
 ## 1) Minimal schema additions (Drizzle + safe migrations)
@@ -18,7 +18,7 @@ Keep Arabic labels + RTL. Do NOT break existing APIs; extend minimally.
   - qr_prefix varchar(32) NOT NULL DEFAULT 'ROLL'
 - production_orders (if missing):
   - requires_printing boolean NOT NULL DEFAULT false
-  - قيد الانتاج_at timestamp NULL
+  - in_production_at timestamp NULL
 - rolls (extend if missing):
   - roll_seq int NOT NULL                                     -- sequential per job order (1,2,3…)
   - roll_number varchar(64) NOT NULL                          -- e.g., {qr_prefix}-{jobOrderId}-{roll_seq}
@@ -51,7 +51,7 @@ Update TypeScript schema/types and drizzle relations.
 ## 2) Backend – routes & logic (Express + zod)
 ### 2.1 Start production visibility
 PATCH `/api/job-orders/:id/start-production`
-- Sets status to 'قيد الانتاج' (or current equivalent) and قيد الانتاج_at=now().
+- Sets status to 'in_production' (or current equivalent) and in_production_at=now().
 - Return header with planned quantity and requires_printing.
 
 ### 2.2 Roll creation with LOCK + tolerance (FILM)
@@ -108,7 +108,7 @@ Logic:
 
 ### 2.6 Queues & progress APIs (for UI)
 GET `/api/production/film-queue`
-- Orders with status قيد الانتاج + summary (planned, rolled so far, remaining; recent rolls).
+- Orders with status in_production + summary (planned, rolled so far, remaining; recent rolls).
 
 GET `/api/production/printing-queue`
 - Rolls where stage='printing'.

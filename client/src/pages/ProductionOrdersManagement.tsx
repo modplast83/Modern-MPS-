@@ -218,7 +218,7 @@ export default function ProductionOrdersManagement() {
             ▶️ نشط
           </Badge>
         );
-      case "قيد الانتاج":
+      case "in_production":
         return (
           <Badge className="bg-blue-100 text-blue-800">
             🔄 قيد الإنتاج

@@ -890,11 +890,11 @@ export class DataValidator {
       const validTransitions: Record<string, Record<string, string[]>> = {
         orders: {
           pending: ["waiting", "for_production", "cancelled"],
-          waiting: ["قيد الانتاج", "for_production", "on_hold", "cancelled"],
-          for_production: ["قيد الانتاج", "waiting", "on_hold", "cancelled"],
-          قيد الانتاج: ["paused", "completed", "on_hold", "in_progress"],
+          waiting: ["in_production", "for_production", "on_hold", "cancelled"],
+          for_production: ["in_production", "waiting", "on_hold", "cancelled"],
+          in_production: ["paused", "completed", "on_hold", "in_progress"],
           in_progress: ["paused", "completed", "on_hold"],
-          paused: ["قيد الانتاج", "in_progress", "cancelled"],
+          paused: ["in_production", "in_progress", "cancelled"],
           on_hold: ["waiting", "for_production", "cancelled"],
           completed: ["delivered"], // Only allow delivery from completed
           delivered: [], // Terminal state - no further transitions

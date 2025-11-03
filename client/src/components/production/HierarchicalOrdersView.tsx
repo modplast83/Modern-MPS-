@@ -179,7 +179,7 @@ export default function HierarchicalOrdersView({
                       ? "للإنتاج"
                       : order.status === "pending"
                         ? "بالإنتظار"
-                        : order.status === "قيد الانتاج"
+                        : order.status === "in_production"
                           ? "قيد الإنتاج"
                           : order.status === "completed"
                             ? "مكتمل"

@@ -4,7 +4,7 @@
 -- Add new columns to production_orders table
 ALTER TABLE production_orders 
 ADD COLUMN IF NOT EXISTS requires_printing boolean NOT NULL DEFAULT false,
-ADD COLUMN IF NOT EXISTS قيد الانتاج_at timestamp;
+ADD COLUMN IF NOT EXISTS in_production_at timestamp;
 
 -- Add new columns to rolls table
 ALTER TABLE rolls 

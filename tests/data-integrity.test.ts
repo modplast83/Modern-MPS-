@@ -208,7 +208,7 @@ describe("🔒 Data Integrity - Concurrent Operations Safety", () => {
       const validResult = await dataValidator.validateStatusTransition(
         "orders",
         "waiting",
-        "قيد الانتاج",
+        "in_production",
       );
       expect(validResult.isValid).toBe(true);
 
