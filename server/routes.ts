@@ -7142,7 +7142,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const formulas = await storage.getAllMixingFormulas();
       res.json({ data: formulas });
     } catch (error: any) {
-      console.error("Error getting mixing formulas:", error);
+      logger.error("Error getting mixing formulas:", error);
       res.status(500).json({ message: "خطأ في جلب وصفات الخلط", error: error.message });
     }
   });
@@ -7159,7 +7159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(formula);
     } catch (error: any) {
-      console.error("Error getting mixing formula:", error);
+      logger.error("Error getting mixing formula:", error);
       res.status(500).json({ message: "خطأ في جلب الوصفة", error: error.message });
     }
   });
@@ -7178,6 +7178,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات المكونات ناقصة أو غير صحيحة" });
       }
 
+      // Validate all ingredients have valid item_id
+      const invalidIngredients = ingredients.filter(
+        (ing: any) => !ing.item_id || Number(ing.item_id) <= 0
+      );
+      if (invalidIngredients.length > 0) {
+        return res.status(400).json({ 
+          message: "جميع المكونات يجب أن يكون لها صنف صحيح (item_id > 0)" 
+        });
+      }
+
+      // Validate all ingredients have valid percentage
+      const missingPercentage = ingredients.filter(
+        (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
+      );
+      if (missingPercentage.length > 0) {
+        return res.status(400).json({ 
+          message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
+        });
+      }
+
+      // Validate total percentage equals 100%
+      const totalPercentage = ingredients.reduce(
+        (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
+        0
+      );
+      if (Math.abs(totalPercentage - 100) > 0.01) {
+        return res.status(400).json({ 
+          message: "مجموع نسب المكونات يجب أن يساوي 100%" 
+        });
+      }
+
       if (!formulaData.formula_name || !formulaData.machine_id || 
           !formulaData.width_min || !formulaData.width_max ||
           !formulaData.thickness_min || !formulaData.thickness_max) {
@@ -7192,7 +7223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const newFormula = await storage.createMixingFormula(completeFormulaData, ingredients);
       res.status(201).json(newFormula);
     } catch (error: any) {
-      console.error("Error creating mixing formula:", error);
+      logger.error("Error creating mixing formula:", error);
       res.status(500).json({ message: "خطأ في إنشاء وصفة الخلط", error: error.message });
     }
   });
@@ -7208,10 +7239,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const { formula, ingredients } = req.body;
       
+      // Validate ingredients if provided
+      if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
+        // Validate all ingredients have valid item_id
+        const invalidIngredients = ingredients.filter(
+          (ing: any) => !ing.item_id || Number(ing.item_id) <= 0
+        );
+        if (invalidIngredients.length > 0) {
+          return res.status(400).json({ 
+            message: "جميع المكونات يجب أن يكون لها صنف صحيح (item_id > 0)" 
+          });
+        }
+
+        // Validate all ingredients have valid percentage
+        const missingPercentage = ingredients.filter(
+          (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
+        );
+        if (missingPercentage.length > 0) {
+          return res.status(400).json({ 
+            message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
+          });
+        }
+
+        // Validate total percentage equals 100%
+        const totalPercentage = ingredients.reduce(
+          (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
+          0
+        );
+        if (Math.abs(totalPercentage - 100) > 0.01) {
+          return res.status(400).json({ 
+            message: "مجموع نسب المكونات يجب أن يساوي 100%" 
+          });
+        }
+      }
+      
       const updatedFormula = await storage.updateMixingFormula(id, formula, ingredients);
       res.json(updatedFormula);
     } catch (error: any) {
-      console.error("Error updating mixing formula:", error);
+      logger.error("Error updating mixing formula:", error);
       res.status(500).json({ message: "خطأ في تحديث وصفة الخلط", error: error.message });
     }
   });
@@ -7228,7 +7293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.deleteMixingFormula(id);
       res.json({ message: "تم حذف الوصفة بنجاح" });
     } catch (error: any) {
-      console.error("Error deleting mixing formula:", error);
+      logger.error("Error deleting mixing formula:", error);
       res.status(500).json({ message: error.message || "خطأ في حذف الوصفة", error: error.message });
     }
   });
@@ -7250,7 +7315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ data: formulas });
     } catch (error: any) {
-      console.error("Error finding matching formulas:", error);
+      logger.error("Error finding matching formulas:", error);
       res.status(500).json({ message: "خطأ في البحث عن وصفات مطابقة", error: error.message });
     }
   });
