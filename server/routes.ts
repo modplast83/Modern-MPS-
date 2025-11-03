@@ -7182,18 +7182,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "غير مصرح لك بإنشاء وصفات الخلط" });
       }
 
-      const { formula, ingredients } = req.body;
+      const { ingredients, ...formulaData } = req.body;
       
-      if (!formula || !ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-        return res.status(400).json({ message: "بيانات الوصفة أو المكونات ناقصة" });
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "بيانات المكونات ناقصة أو غير صحيحة" });
       }
 
-      const formulaData = {
-        ...formula,
+      if (!formulaData.formula_name || !formulaData.machine_id || 
+          !formulaData.width_min || !formulaData.width_max ||
+          !formulaData.thickness_min || !formulaData.thickness_max) {
+        return res.status(400).json({ message: "بيانات الوصفة ناقصة" });
+      }
+
+      const completeFormulaData = {
+        ...formulaData,
         created_by: req.user!.id,
       };
 
-      const newFormula = await storage.createMixingFormula(formulaData, ingredients);
+      const newFormula = await storage.createMixingFormula(completeFormulaData, ingredients);
       res.status(201).json(newFormula);
     } catch (error: any) {
       console.error("Error creating mixing formula:", error);
@@ -7240,15 +7246,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Find matching formulas for production order
   app.post("/api/mixing-formulas/find-matching", requireAuth, async (req, res) => {
     try {
-      const { machineId, rawMaterial, thickness, width } = req.body;
+      const { machineId, thickness, width } = req.body;
       
-      if (!machineId || !rawMaterial || thickness === undefined) {
+      if (!machineId || thickness === undefined) {
         return res.status(400).json({ message: "بيانات البحث ناقصة" });
       }
 
       const formulas = await storage.findMatchingFormulas({
         machineId,
-        rawMaterial,
         thickness: parseFloat(thickness),
         width: width ? parseFloat(width) : undefined,
       });
