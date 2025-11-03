@@ -25,15 +25,9 @@ function handle401Error() {
   // Prevent rapid successive logouts (race condition protection)
   if (now - recentLogoutTime < LOGOUT_COOLDOWN) {
     logoutCount++;
-    console.warn(
-      `Skipping logout due to recent logout attempt #${logoutCount} (race condition protection)`,
-    );
 
     // If we're getting too many rapid logouts, something is wrong - back off
     if (logoutCount >= MAX_RAPID_LOGOUTS) {
-      console.error(
-        "Too many rapid logout attempts detected - possible session issue",
-      );
       return;
     }
     return;
@@ -55,7 +49,6 @@ async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     // Handle 401 errors globally - automatically logout user
     if (res.status === 401) {
-      console.warn("Session expired - logging out user");
       handle401Error();
       // Still throw the error for proper error handling
       const error = new Error("انتهت صلاحية جلستك. جاري إعادة التوجيه...");

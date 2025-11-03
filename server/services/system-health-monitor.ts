@@ -13,6 +13,7 @@ import type {
   InsertAlertRule,
 } from "@shared/schema";
 import { getNotificationManager } from "./notification-manager";
+import { logger } from "../lib/logger";
 
 // أنواع المراقبة والتحذيرات
 export interface HealthCheckResult {
@@ -93,8 +94,8 @@ export class SystemHealthMonitor extends EventEmitter {
 
     // Enforce singleton pattern to prevent duplicate intervals on hot reloads
     if (SystemHealthMonitor.instance) {
-      console.log(
-        "[SystemHealthMonitor] تم العثور على مثيل موجود، إيقاف المثيل القديم",
+      logger.debug(
+        "[SystemHealthMonitor] تم العثور على مثيل موجود، إيقاف المثيل القديم"
       );
       SystemHealthMonitor.instance.stopMonitoring();
     }
@@ -102,7 +103,7 @@ export class SystemHealthMonitor extends EventEmitter {
     this.storage = storage;
     SystemHealthMonitor.instance = this;
 
-    console.log("[SystemHealthMonitor] نظام مراقبة السلامة مُفعل");
+    logger.info("[SystemHealthMonitor] نظام مراقبة السلامة مُفعل");
     this.initialize();
   }
 
@@ -133,9 +134,9 @@ export class SystemHealthMonitor extends EventEmitter {
       // بدء المراقبة الدورية
       this.startMonitoring();
 
-      console.log("[SystemHealthMonitor] تم تشغيل نظام المراقبة بنجاح ✅");
+      logger.info("[SystemHealthMonitor] تم تشغيل نظام المراقبة بنجاح ✅");
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في تشغيل نظام المراقبة:", error);
+      logger.error("[SystemHealthMonitor] خطأ في تشغيل نظام المراقبة", error);
     }
   }
 
@@ -153,7 +154,7 @@ export class SystemHealthMonitor extends EventEmitter {
       await this.performMonitoring();
     }, this.MONITORING_INTERVAL);
 
-    console.log("[SystemHealthMonitor] بدأت المراقبة الدورية");
+    logger.info("[SystemHealthMonitor] بدأت المراقبة الدورية");
   }
 
   /**
@@ -173,7 +174,7 @@ export class SystemHealthMonitor extends EventEmitter {
     // Clear singleton instance
     SystemHealthMonitor.instance = null;
 
-    console.log("[SystemHealthMonitor] تم إيقاف المراقبة");
+    logger.info("[SystemHealthMonitor] تم إيقاف المراقبة");
   }
 
   /**
@@ -182,11 +183,11 @@ export class SystemHealthMonitor extends EventEmitter {
   private async loadAlertRules(): Promise<void> {
     try {
       // سنحتاج لإضافة هذه العملية في storage.ts لاحقاً
-      console.log("[SystemHealthMonitor] تم تحميل قواعد التحذيرات");
+      logger.info("[SystemHealthMonitor] تم تحميل قواعد التحذيرات");
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في تحميل قواعد التحذيرات:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في تحميل قواعد التحذيرات",
+        error
       );
     }
   }
@@ -211,19 +212,19 @@ export class SystemHealthMonitor extends EventEmitter {
 
         if (lastAlertTime) {
           this.lastAlertTimes.set(normalizedKey, lastAlertTime);
-          console.log(
-            `[SystemHealthMonitor] تم تحميل وقت التحذير الأخير للفحص: ${checkName} في ${lastAlertTime.toISOString()}`,
+          logger.debug(
+            `[SystemHealthMonitor] تم تحميل وقت التحذير الأخير للفحص ${checkName} في ${lastAlertTime.toISOString()}`
           );
         }
       }
 
-      console.log(
-        `[SystemHealthMonitor] تم تحميل ${this.lastAlertTimes.size} من أوقات التحذير من قاعدة البيانات`,
+      logger.info(
+        `[SystemHealthMonitor] تم تحميل ${this.lastAlertTimes.size} من أوقات التحذير من قاعدة البيانات`
       );
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في تحميل أوقات التحذير من قاعدة البيانات:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في تحميل أوقات التحذير من قاعدة البيانات",
+        error
       );
       // Continue initialization even if hydration fails
     }
@@ -266,11 +267,11 @@ export class SystemHealthMonitor extends EventEmitter {
       ];
 
       // سنحتاج لإضافة هذه العملية في storage.ts لاحقاً
-      console.log("[SystemHealthMonitor] تم إنشاء فحوصات السلامة الافتراضية");
+      logger.info("[SystemHealthMonitor] تم إنشاء فحوصات السلامة الافتراضية");
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في إنشاء فحوصات السلامة:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في إنشاء فحوصات السلامة",
+        error
       );
     }
   }
@@ -293,16 +294,16 @@ export class SystemHealthMonitor extends EventEmitter {
         if (result.status === "fulfilled") {
           await this.processHealthCheckResult(result.value);
         } else {
-          console.error(
-            "[SystemHealthMonitor] فشل في فحص السلامة:",
-            result.reason,
+          logger.error(
+            "[SystemHealthMonitor] فشل في فحص السلامة",
+            result.reason
           );
         }
       }
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في تنفيذ فحوصات السلامة:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في تنفيذ فحوصات السلامة",
+        error
       );
     }
   }
@@ -579,8 +580,8 @@ export class SystemHealthMonitor extends EventEmitter {
         this.hasStatusImproved(previousResult.status, result.status)
       ) {
         this.clearAlertState(result.checkName);
-        console.log(
-          `[SystemHealthMonitor] تم تحسن حالة ${result.checkName_ar} من ${previousResult.status} إلى ${result.status}`,
+        logger.info(
+          `[SystemHealthMonitor] تم تحسن حالة ${result.checkName_ar} من ${previousResult.status} إلى ${result.status}`
         );
       }
 
@@ -592,7 +593,7 @@ export class SystemHealthMonitor extends EventEmitter {
       // تخزين النتيجة محلياً للمقارنة
       this.lastHealthStatus.set(result.checkName, result);
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في معالجة نتيجة الفحص:", error);
+      logger.error("[SystemHealthMonitor] خطأ في معالجة نتيجة الفحص", error);
     }
   }
 
@@ -640,8 +641,8 @@ export class SystemHealthMonitor extends EventEmitter {
       const shouldSend = await this.shouldSendAlert(alertKey, result.checkName);
 
       if (!shouldSend) {
-        console.log(
-          `[SystemHealthMonitor] تم تجاهل التحذير بسبب Rate Limiting: ${result.checkName_ar} - ${result.status}`,
+        logger.debug(
+          `[SystemHealthMonitor] تم تجاهل التحذير بسبب Rate Limiting ${result.checkName_ar} - ${result.status}`
         );
         return;
       }
@@ -671,7 +672,7 @@ export class SystemHealthMonitor extends EventEmitter {
 
       await this.createSystemAlert(alert);
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في إنشاء تحذير السلامة:", error);
+      logger.error("[SystemHealthMonitor] خطأ في إنشاء تحذير السلامة", error);
     }
   }
 
@@ -712,7 +713,7 @@ export class SystemHealthMonitor extends EventEmitter {
 
       return timeSinceLastAlert >= cooldownPeriod;
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في فحص Rate Limiting:", error);
+      logger.error("[SystemHealthMonitor] خطأ في فحص Rate Limiting", error);
       return false; // في حالة الخطأ، نمنع التحذير لتجنب السبام
     }
   }
@@ -734,11 +735,11 @@ export class SystemHealthMonitor extends EventEmitter {
       // Save to persistent storage using storage interface
       await this.storage.setLastAlertTime(normalizedKey, now);
 
-      console.log(
-        `[SystemHealthMonitor] تم تسجيل إرسال التحذير: ${normalizedKey} في ${now.toISOString()}`,
+      logger.debug(
+        `[SystemHealthMonitor] تم تسجيل إرسال التحذير ${normalizedKey} في ${now.toISOString()}`
       );
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في تسجيل إرسال التحذير:", error);
+      logger.error("[SystemHealthMonitor] خطأ في تسجيل إرسال التحذير", error);
       // Even if persistent storage fails, keep the in-memory record for this session
     }
   }
@@ -840,7 +841,7 @@ export class SystemHealthMonitor extends EventEmitter {
       // تنظيف البيانات القديمة
       await this.cleanupOldData();
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في المراقبة العامة:", error);
+      logger.error("[SystemHealthMonitor] خطأ في المراقبة العامة", error);
     }
   }
 
@@ -871,9 +872,9 @@ export class SystemHealthMonitor extends EventEmitter {
       ];
 
       // سنحتاج لإضافة هذه العملية في storage.ts لاحقاً
-      console.log("[SystemHealthMonitor] تم رصد مؤشرات الأداء");
+      logger.debug("[SystemHealthMonitor] تم رصد مؤشرات الأداء");
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في مراقبة الأداء:", error);
+      logger.error("[SystemHealthMonitor] خطأ في مراقبة الأداء", error);
     }
   }
 
@@ -896,7 +897,7 @@ export class SystemHealthMonitor extends EventEmitter {
         });
       }
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في مراقبة الإنتاج:", error);
+      logger.error("[SystemHealthMonitor] خطأ في مراقبة الإنتاج", error);
     }
   }
 
@@ -906,12 +907,12 @@ export class SystemHealthMonitor extends EventEmitter {
   private async checkOverdueOrders(): Promise<number> {
     try {
       // سنحتاج لإضافة هذا الاستعلام في storage.ts
-      console.log("[SystemHealthMonitor] فحص الطلبات المتأخرة");
+      logger.debug("[SystemHealthMonitor] فحص الطلبات المتأخرة");
       return 0; // مؤقت
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في فحص الطلبات المتأخرة:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في فحص الطلبات المتأخرة",
+        error
       );
       return 0;
     }
@@ -923,10 +924,10 @@ export class SystemHealthMonitor extends EventEmitter {
   private async checkMachineStatus(): Promise<number> {
     try {
       // سنحتاج لإضافة هذا الاستعلام في storage.ts
-      console.log("[SystemHealthMonitor] فحص حالة المكائن");
+      logger.debug("[SystemHealthMonitor] فحص حالة المكائن");
       return 0; // مؤقت
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في فحص حالة المكائن:", error);
+      logger.error("[SystemHealthMonitor] خطأ في فحص حالة المكائن", error);
       return 0;
     }
   }
@@ -946,7 +947,7 @@ export class SystemHealthMonitor extends EventEmitter {
         });
       }
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في مراقبة المخزون:", error);
+      logger.error("[SystemHealthMonitor] خطأ في مراقبة المخزون", error);
     }
   }
 
@@ -956,12 +957,12 @@ export class SystemHealthMonitor extends EventEmitter {
   private async checkLowStockItems(): Promise<number> {
     try {
       // سنحتاج لإضافة هذا الاستعلام في storage.ts
-      console.log("[SystemHealthMonitor] فحص المواد قليلة المخزون");
+      logger.debug("[SystemHealthMonitor] فحص المواد قليلة المخزون");
       return 0; // مؤقت
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في فحص المواد قليلة المخزون:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في فحص المواد قليلة المخزون",
+        error
       );
       return 0;
     }
@@ -1035,15 +1036,15 @@ export class SystemHealthMonitor extends EventEmitter {
       };
 
       // سنحتاج لإضافة هذه العملية في storage.ts لاحقاً
-      console.log(
-        "[SystemHealthMonitor] تم إنشاء تحذير النظام:",
-        alert.title_ar,
+      logger.info(
+        "[SystemHealthMonitor] تم إنشاء تحذير النظام",
+        alert.title_ar
       );
 
       // إرسال إشعار فوري
       await this.sendAlertNotification(alert);
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في إنشاء تحذير النظام:", error);
+      logger.error("[SystemHealthMonitor] خطأ في إنشاء تحذير النظام", error);
     }
   }
 
@@ -1098,7 +1099,7 @@ export class SystemHealthMonitor extends EventEmitter {
         }
       }
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في إرسال إشعار التحذير:", error);
+      logger.error("[SystemHealthMonitor] خطأ في إرسال إشعار التحذير", error);
     }
   }
 
@@ -1162,19 +1163,19 @@ export class SystemHealthMonitor extends EventEmitter {
       keysToRemove.forEach((key: string) => this.lastAlertTimes.delete(key));
 
       if (keysToRemove.length > 0) {
-        console.log(
-          `[SystemHealthMonitor] تم تنظيف ${keysToRemove.length} حالة تحذير قديمة`,
+        logger.info(
+          `[SystemHealthMonitor] تم تنظيف ${keysToRemove.length} حالة تحذير قديمة`
         );
       }
 
       // حذف البيانات القديمة من جدول الأداء
       // سنحتاج لإضافة هذه العملية في storage.ts لاحقاً
 
-      console.log("[SystemHealthMonitor] تم تنظيف البيانات القديمة");
+      logger.info("[SystemHealthMonitor] تم تنظيف البيانات القديمة");
     } catch (error) {
-      console.error(
-        "[SystemHealthMonitor] خطأ في تنظيف البيانات القديمة:",
-        error,
+      logger.error(
+        "[SystemHealthMonitor] خطأ في تنظيف البيانات القديمة",
+        error
       );
     }
   }
@@ -1185,9 +1186,9 @@ export class SystemHealthMonitor extends EventEmitter {
   public async shutdown(): Promise<void> {
     try {
       this.stopMonitoring();
-      console.log("[SystemHealthMonitor] تم إيقاف نظام المراقبة بأمان");
+      logger.info("[SystemHealthMonitor] تم إيقاف نظام المراقبة بأمان");
     } catch (error) {
-      console.error("[SystemHealthMonitor] خطأ في إيقاف نظام المراقبة:", error);
+      logger.error("[SystemHealthMonitor] خطأ في إيقاف نظام المراقبة", error);
     }
   }
 

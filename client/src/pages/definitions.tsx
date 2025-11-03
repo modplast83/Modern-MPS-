@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
@@ -721,7 +721,11 @@ export default function Definitions() {
     printWindow.document.close();
   };
 
-  // Auto-set printing status based on cylinder selection
+  // Debounce timers for auto-calculations
+  const sizeCaptionTimer = useRef<NodeJS.Timeout | null>(null);
+  const packageWeightTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-set printing status based on cylinder selection (immediate, no debounce needed)
   React.useEffect(() => {
     const isPrinted = customerProductForm.printing_cylinder !== "بدون طباعة";
     setCustomerProductForm((prev) => ({
@@ -730,24 +734,36 @@ export default function Definitions() {
     }));
   }, [customerProductForm.printing_cylinder]);
 
-  // Auto-generate size caption
+  // Auto-generate size caption with debouncing
   React.useEffect(() => {
-    const { width, right_facing, left_facing, cutting_length_cm } =
-      customerProductForm;
-    if (width && right_facing && left_facing && cutting_length_cm) {
-      const w = parseFloat(width);
-      const rf = parseFloat(right_facing);
-      const lf = parseFloat(left_facing);
-      const cl = parseFloat(cutting_length_cm);
-
-      if (w && rf && lf && cl) {
-        const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
-        setCustomerProductForm((prev) => ({
-          ...prev,
-          size_caption: sizeCaption,
-        }));
-      }
+    if (sizeCaptionTimer.current) {
+      clearTimeout(sizeCaptionTimer.current);
     }
+
+    sizeCaptionTimer.current = setTimeout(() => {
+      const { width, right_facing, left_facing, cutting_length_cm } =
+        customerProductForm;
+      if (width && right_facing && left_facing && cutting_length_cm) {
+        const w = parseFloat(width);
+        const rf = parseFloat(right_facing);
+        const lf = parseFloat(left_facing);
+        const cl = parseFloat(cutting_length_cm);
+
+        if (w && rf && lf && cl) {
+          const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
+          setCustomerProductForm((prev) => ({
+            ...prev,
+            size_caption: sizeCaption,
+          }));
+        }
+      }
+    }, 300);
+
+    return () => {
+      if (sizeCaptionTimer.current) {
+        clearTimeout(sizeCaptionTimer.current);
+      }
+    };
   }, [
     customerProductForm.width,
     customerProductForm.right_facing,
@@ -755,21 +771,33 @@ export default function Definitions() {
     customerProductForm.cutting_length_cm,
   ]);
 
-  // Auto-calculate package weight
+  // Auto-calculate package weight with debouncing
   React.useEffect(() => {
-    const { unit_weight_kg, unit_quantity } = customerProductForm;
-    if (unit_weight_kg && unit_quantity) {
-      const unitWeight = parseFloat(unit_weight_kg);
-      const quantity = parseInt(unit_quantity);
-
-      if (unitWeight && quantity) {
-        const packageWeight = unitWeight * quantity;
-        setCustomerProductForm((prev) => ({
-          ...prev,
-          package_weight_kg: packageWeight.toFixed(3),
-        }));
-      }
+    if (packageWeightTimer.current) {
+      clearTimeout(packageWeightTimer.current);
     }
+
+    packageWeightTimer.current = setTimeout(() => {
+      const { unit_weight_kg, unit_quantity } = customerProductForm;
+      if (unit_weight_kg && unit_quantity) {
+        const unitWeight = parseFloat(unit_weight_kg);
+        const quantity = parseInt(unit_quantity);
+
+        if (unitWeight && quantity) {
+          const packageWeight = unitWeight * quantity;
+          setCustomerProductForm((prev) => ({
+            ...prev,
+            package_weight_kg: packageWeight.toFixed(3),
+          }));
+        }
+      }
+    }, 300);
+
+    return () => {
+      if (packageWeightTimer.current) {
+        clearTimeout(packageWeightTimer.current);
+      }
+    };
   }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
 
   // Data queries
