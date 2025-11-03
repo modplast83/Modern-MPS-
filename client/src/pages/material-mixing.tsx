@@ -492,7 +492,33 @@ function FormulaForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation
+    // Validation - check all ingredients have valid item_id
+    const invalidIngredients = ingredients.filter(
+      (ing) => !ing.item_id || Number(ing.item_id) === 0
+    );
+    if (invalidIngredients.length > 0) {
+      toast({
+        title: "خطأ في التحقق",
+        description: "يجب اختيار صنف لجميع المكونات",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation - check all ingredients have percentage
+    const missingPercentage = ingredients.filter(
+      (ing) => !ing.percentage || parseFloat(ing.percentage) <= 0
+    );
+    if (missingPercentage.length > 0) {
+      toast({
+        title: "خطأ في التحقق",
+        description: "يجب إدخال نسبة صحيحة لجميع المكونات",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation - check total percentage equals 100%
     const totalPercentage = ingredients.reduce(
       (sum, ing) => sum + (parseFloat(ing.percentage) || 0),
       0
