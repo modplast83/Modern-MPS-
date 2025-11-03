@@ -218,6 +218,12 @@ export default function ProductionOrdersManagement() {
             ▶️ نشط
           </Badge>
         );
+      case "in_production":
+        return (
+          <Badge className="bg-blue-100 text-blue-800">
+            🔄 قيد الإنتاج
+          </Badge>
+        );
       case "completed":
         return (
           <Badge className="bg-gray-100 text-gray-800">
