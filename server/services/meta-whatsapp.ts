@@ -1,4 +1,5 @@
 import type { IStorage } from "../storage";
+import { logger } from "../lib/logger";
 
 export interface MetaWhatsAppConfig {
   accessToken: string;
@@ -53,11 +54,11 @@ export class MetaWhatsAppService {
     this.baseUrl = `https://graph.facebook.com/${this.config.apiVersion}`;
 
     if (!this.config.accessToken || !this.config.phoneNumberId) {
-      console.warn(
-        "⚠️ Meta WhatsApp API credentials not configured. Set META_ACCESS_TOKEN and META_PHONE_NUMBER_ID environment variables.",
+      logger.warn(
+        "⚠️ Meta WhatsApp API credentials not configured. Set META_ACCESS_TOKEN and META_PHONE_NUMBER_ID environment variables."
       );
     } else {
-      console.log("✅ Meta WhatsApp API service initialized successfully");
+      logger.info("✅ Meta WhatsApp API service initialized successfully");
     }
   }
 
@@ -131,8 +132,8 @@ export class MetaWhatsAppService {
 
       await this.storage.createNotification(notificationData);
 
-      console.log(
-        `📱 تم إرسال رسالة واتس اب مباشرة إلى ${to} - ID: ${result.messages?.[0]?.id}`,
+      logger.info(
+        `📱 تم إرسال رسالة واتس اب مباشرة إلى ${to} - ID ${result.messages?.[0]?.id}`
       );
 
       return {
@@ -141,7 +142,7 @@ export class MetaWhatsAppService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "خطأ غير معروف";
-      console.error("خطأ في إرسال رسالة واتس اب عبر Meta API:", error);
+      logger.error("خطأ في إرسال رسالة واتس اب عبر Meta API", error);
 
       const notificationData = {
         title: options?.title || "رسالة واتس اب",
@@ -253,8 +254,8 @@ export class MetaWhatsAppService {
 
       await this.storage.createNotification(notificationData);
 
-      console.log(
-        `📱 تم إرسال رسالة واتس اب (قالب Meta) إلى ${to} - ID: ${result.messages?.[0]?.id}`,
+      logger.info(
+        `📱 تم إرسال رسالة واتس اب (قالب Meta) إلى ${to} - ID ${result.messages?.[0]?.id}`
       );
 
       return {
@@ -263,7 +264,7 @@ export class MetaWhatsAppService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "خطأ غير معروف";
-      console.error("خطأ في إرسال رسالة واتس اب (قالب Meta):", error);
+      logger.error("خطأ في إرسال رسالة واتس اب (قالب Meta)", error);
 
       const notificationData = {
         title: options?.title || "رسالة واتس اب (قالب)",
@@ -313,7 +314,7 @@ export class MetaWhatsAppService {
 
       return result;
     } catch (error) {
-      console.error("خطأ في الحصول على معلومات الرقم:", error);
+      logger.error("خطأ في الحصول على معلومات الرقم", error);
       throw error;
     }
   }
@@ -349,7 +350,7 @@ export class MetaWhatsAppService {
         ) || []
       );
     } catch (error) {
-      console.error("خطأ في الحصول على القوالب:", error);
+      logger.error("خطأ في الحصول على القوالب", error);
       throw error;
     }
   }
@@ -405,7 +406,7 @@ export class MetaWhatsAppService {
         }
       }
     } catch (error) {
-      console.error("خطأ في معالجة Webhook:", error);
+      logger.error("خطأ في معالجة Webhook", error);
     }
   }
 
@@ -434,10 +435,10 @@ export class MetaWhatsAppService {
           read_at: status === "read" ? new Date() : notification.read_at,
         };
 
-        console.log(`📊 تم تحديث حالة الرسالة ${messageId}: ${status}`);
+        logger.info(`📊 تم تحديث حالة الرسالة ${messageId} ${status}`);
       }
     } catch (error) {
-      console.error("خطأ في تحديث حالة الرسالة:", error);
+      logger.error("خطأ في تحديث حالة الرسالة", error);
     }
   }
 
@@ -446,7 +447,7 @@ export class MetaWhatsAppService {
    */
   private async handleIncomingMessage(message: any): Promise<void> {
     try {
-      console.log("📨 رسالة واردة:", {
+      logger.info("📨 رسالة واردة", {
         from: message.from,
         type: message.type,
         text: message.text?.body || "غير نصية",
@@ -469,7 +470,7 @@ export class MetaWhatsAppService {
 
       await this.storage.createNotification(notificationData);
     } catch (error) {
-      console.error("خطأ في معالجة الرسالة الواردة:", error);
+      logger.error("خطأ في معالجة الرسالة الواردة", error);
     }
   }
 }

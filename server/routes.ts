@@ -2,6 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { requireAuth, requirePermission, requireAdmin, type AuthRequest } from "./middleware/auth";
+import { logger } from "./lib/logger";
 
 // Extend Express Request type to include session
 declare module "express-serve-static-core" {
@@ -142,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(user);
     } catch (error) {
-      console.error("Error fetching Replit auth user:", error);
+      logger.error("Error fetching Replit auth user", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -171,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Enhanced null checks for user properties
         if (!user.password) {
-          console.error("User found but password is null/undefined:", user.id);
+          logger.error("User found but password is null or undefined");
           return res
             .status(401)
             .json({ message: "بيانات تسجيل الدخول غير صحيحة" });
@@ -197,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Ensure session is saved before responding with additional reliability measures
         req.session.save((err: any) => {
           if (err) {
-            console.error("Session save error:", err);
+            logger.error("Session save error", err);
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
 
@@ -206,10 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             req.session.touch();
           }
 
-          // Log successful session creation in development
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`✅ Session created and saved for user ${user.id}`);
-          }
+          logger.session("created and saved", user.id);
 
           // Session saved successfully - safe property access
           res.json({
@@ -224,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         });
       } catch (error) {
-        console.error("Login error:", error);
+        logger.error("Login error", error);
         res.status(500).json({ message: "خطأ في الخادم" });
       }
     },
@@ -235,15 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Double-check session (redundant with requireAuth but safer)
       if (!req.session?.userId || typeof req.session.userId !== "number") {
-        // Debug session state in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("🔍 /api/me session debug:", {
-            sessionExists: !!req.session,
-            userId: req.session?.userId,
-            userIdType: typeof req.session?.userId,
-            sessionId: req.session?.id || "no-session-id",
-          });
-        }
+        logger.debug("Invalid session on /api/me");
         return res.status(401).json({
           message: "جلسة غير صحيحة",
           success: false,
@@ -256,11 +246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           if (req.session?.destroy) {
             req.session.destroy((err: any) => {
-              if (err) console.error("Error destroying invalid session:", err);
+              if (err) logger.error("Error destroying invalid session", err);
             });
           }
         } catch (destroyError) {
-          console.error("Failed to destroy invalid session:", destroyError);
+          logger.error("Failed to destroy invalid session", destroyError);
         }
         return res.status(404).json({
           message: "المستخدم غير موجود",
@@ -286,13 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.session?.save) {
           req.session.save((err: any) => {
             if (err) {
-              console.error("Error saving session on /api/me:", err);
+              logger.error("Error saving session on /api/me", err);
               // Continue anyway, don't break the response
             }
           });
         }
       } catch (sessionError) {
-        console.error("Session management error:", sessionError);
+        logger.error("Session management error", sessionError);
         // Don't fail the request for session issues
       }
 
@@ -346,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
       });
     } catch (error) {
-      console.error("Get current user error:", error);
+      logger.error("Get current user error", error);
       res.status(500).json({
         message: "خطأ في الخادم",
         success: false,
@@ -360,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session?.destroy) {
         req.session.destroy((err) => {
           if (err) {
-            console.error("Session destroy error:", err);
+            logger.error("Session destroy error", err);
             return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
           }
           // Clear all possible session cookies
@@ -376,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "تم تسجيل الخروج بنجاح" });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error", error);
       res.status(500).json({ message: "خطأ في تسجيل الخروج" });
     }
   });
@@ -387,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getDashboardStats();
       res.json(stats);
     } catch (error) {
-      console.error("Dashboard stats error:", error);
+      logger.error("Dashboard stats error", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
     }
   });
@@ -428,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           );
         } catch (serviceError: any) {
-          console.error("Notification service error:", serviceError);
+          logger.error("Notification service error", serviceError);
           return res.status(503).json({
             message: "خدمة الإشعارات غير متوفرة مؤقتاً",
             success: false,
@@ -478,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } catch (error: any) {
-        console.error("Error sending WhatsApp message:", error);
+        logger.error("Error sending WhatsApp message", error);
 
         // Handle different types of errors gracefully
         if (error.name === "ValidationError") {
@@ -526,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     } catch (error: any) {
-      console.error("Error sending test message:", error);
+      logger.error("Error sending test message", error);
       res.status(500).json({ message: "خطأ في إرسال رسالة الاختبار" });
     }
   });
@@ -583,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(notifications);
     } catch (error: any) {
-      console.error("Error fetching notifications:", error);
+      logger.error("Error fetching notifications", error);
       res.status(500).json({ message: "خطأ في جلب الإشعارات" });
     }
   });
@@ -598,18 +588,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const challenge = req.query["hub.challenge"];
 
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("✅ Meta Webhook verified successfully");
+      logger.info("✅ Meta Webhook verified successfully");
       res.status(200).send(challenge);
     } else {
-      console.log("❌ Meta Webhook verification failed");
+      logger.info("❌ Meta Webhook verification failed");
       res.sendStatus(403);
     }
   });
 
   app.post("/api/notifications/webhook/meta", async (req, res) => {
     try {
-      console.log(
-        "📨 Meta Webhook received:",
+      logger.debug(
+        "📨 Meta Webhook received",
         JSON.stringify(req.body, null, 2),
       );
 
@@ -620,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error processing Meta webhook:", error);
+      logger.error("Error processing Meta webhook", error);
       res.status(500).json({ message: "خطأ في معالجة Meta webhook" });
     }
   });
@@ -636,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error handling Twilio webhook:", error);
+      logger.error("Error handling Twilio webhook", error);
       res.status(500).send("Error");
     }
   });
@@ -653,12 +643,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setNotificationManager(notificationManager);
 
         // Apply database optimizations on first initialization
-        console.log("[System] Applying database optimizations...");
+        logger.info("[System] Applying database optimizations...");
         createPerformanceIndexes().catch((err) =>
-          console.error("[System] Database optimization failed:", err),
+          logger.error("[System] Database optimization failed", err),
         );
         createTextSearchIndexes().catch((err) =>
-          console.error("[System] Text search optimization failed:", err),
+          logger.error("[System] Text search optimization failed", err),
         );
       }
 
@@ -673,11 +663,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add SSE connection
       notificationManager.addConnection(connectionId, userId, res);
 
-      console.log(
+      logger.info(
         `[SSE] New connection established for user ${userId}, connectionId: ${connectionId}`,
       );
     } catch (error) {
-      console.error("Error establishing SSE connection:", error);
+      logger.error("Error establishing SSE connection", error);
       res.status(500).json({ message: "خطأ في إنشاء الاتصال" });
     }
   });
@@ -720,12 +710,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           setNotificationManager(notificationManager);
 
           // Apply database optimizations on first initialization
-          console.log("[System] Applying database optimizations...");
+          logger.info("[System] Applying database optimizations...");
           createPerformanceIndexes().catch((err) =>
-            console.error("[System] Database optimization failed:", err),
+            logger.error("[System] Database optimization failed", err),
           );
           createTextSearchIndexes().catch((err) =>
-            console.error("[System] Text search optimization failed:", err),
+            logger.error("[System] Text search optimization failed", err),
           );
         }
 
