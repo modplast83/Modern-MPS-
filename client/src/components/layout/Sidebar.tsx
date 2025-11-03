@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Monitor,
   Activity,
+  Beaker,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
@@ -111,6 +112,13 @@ const modules = [
     name_ar: "المستودع",
     icon: Warehouse,
     path: "/warehouse",
+    active: false,
+  },
+  {
+    name: "خلط المواد",
+    name_ar: "خلط المواد",
+    icon: Beaker,
+    path: "/material-mixing",
     active: false,
   },
   {

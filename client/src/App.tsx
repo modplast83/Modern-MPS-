@@ -38,6 +38,7 @@ import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
+import MaterialMixing from "./pages/material-mixing";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -116,6 +117,12 @@ function AppRoutes() {
       <Route path="/warehouse">
         <ProtectedRoute path="/warehouse">
           <Warehouse />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/material-mixing">
+        <ProtectedRoute path="/material-mixing">
+          <MaterialMixing />
         </ProtectedRoute>
       </Route>
 
