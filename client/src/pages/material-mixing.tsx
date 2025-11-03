@@ -28,8 +28,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
+import { Checkbox } from "../components/ui/checkbox";
 import { useToast } from "../hooks/use-toast";
-import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package } from "lucide-react";
+import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package, X } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import Header from "../components/layout/Header";
@@ -40,21 +41,28 @@ type MixingFormula = {
   id: number;
   formula_name: string;
   machine_id: string;
-  raw_material: string;
+  machine_name?: string;
+  machine_name_ar?: string;
+  screw_count?: number;
+  width_min: string;
+  width_max: string;
   thickness_min: string;
   thickness_max: string;
-  width_min?: string;
-  width_max?: string;
+  master_batch_colors: string[];
+  screw_assignment?: string;
   is_active: boolean;
-  created_by: number;
-  created_at: string;
+  created_by?: number;
+  created_at?: string;
+  notes?: string;
   ingredients?: FormulaIngredient[];
 };
 
 type FormulaIngredient = {
   id: number;
   formula_id: number;
-  raw_material_name: string;
+  item_id: number;
+  item_name?: string;
+  item_name_ar?: string;
   percentage: string;
   notes?: string;
 };
@@ -69,8 +77,8 @@ type MixingBatch = {
   operator_id: number;
   status: string;
   total_weight_kg: string;
-  start_time: string;
-  end_time?: string;
+  started_at: string;
+  completed_at?: string;
   notes?: string;
   ingredients?: BatchIngredient[];
 };
@@ -78,11 +86,21 @@ type MixingBatch = {
 type BatchIngredient = {
   id: number;
   batch_id: number;
-  raw_material_name: string;
+  item_id: number;
+  item_name?: string;
+  item_name_ar?: string;
   planned_weight_kg: string;
   actual_weight_kg?: string;
   variance_kg?: string;
   notes?: string;
+};
+
+type Item = {
+  id: number;
+  name: string;
+  name_ar: string;
+  category: string;
+  unit?: string;
 };
 
 export default function MaterialMixing() {
@@ -111,6 +129,13 @@ export default function MaterialMixing() {
   const { data: productionOrders = [] } = useQuery<any[]>({
     queryKey: ["/api/production-orders"],
   });
+
+  const { data: items = [] } = useQuery<Item[]>({
+    queryKey: ["/api/items"],
+  });
+
+  // تصفية الأصناف للحصول على المواد الخام فقط
+  const rawMaterialItems = items.filter((item) => item.category === "raw_material");
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -158,12 +183,13 @@ export default function MaterialMixing() {
                     إضافة وصفة جديدة
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
                   <FormulaForm
                     machines={machines || []}
+                    items={rawMaterialItems}
                     onSuccess={() => {
                       setIsFormulaDialogOpen(false);
                       queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
@@ -186,8 +212,10 @@ export default function MaterialMixing() {
                       <TableRow>
                         <TableHead className="text-right">اسم الوصفة</TableHead>
                         <TableHead className="text-right">الماكينة</TableHead>
-                        <TableHead className="text-right">المادة الخام</TableHead>
+                        <TableHead className="text-right">المقاس (سم)</TableHead>
                         <TableHead className="text-right">السماكة (ميكرون)</TableHead>
+                        <TableHead className="text-right">الألوان</TableHead>
+                        <TableHead className="text-right">السكرو</TableHead>
                         <TableHead className="text-right">الحالة</TableHead>
                         <TableHead className="text-right">الإجراءات</TableHead>
                       </TableRow>
@@ -198,10 +226,28 @@ export default function MaterialMixing() {
                           <TableCell className="font-medium">
                             {formula.formula_name}
                           </TableCell>
-                          <TableCell>{formula.machine_id}</TableCell>
-                          <TableCell>{formula.raw_material}</TableCell>
+                          <TableCell>{formula.machine_name_ar || formula.machine_id}</TableCell>
+                          <TableCell>
+                            {formula.width_min} - {formula.width_max}
+                          </TableCell>
                           <TableCell>
                             {formula.thickness_min} - {formula.thickness_max}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {formula.master_batch_colors?.map((color, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {color}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {formula.screw_assignment ? (
+                              <Badge variant="secondary">{formula.screw_assignment}</Badge>
+                            ) : (
+                              "-"
+                            )}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -358,23 +404,45 @@ export default function MaterialMixing() {
   );
 }
 
+// قائمة ألوان الماستر باتش الشائعة
+const MASTER_BATCH_COLORS = [
+  "أبيض",
+  "أسود",
+  "أحمر",
+  "أزرق",
+  "أخضر",
+  "أصفر",
+  "برتقالي",
+  "بني",
+  "رمادي",
+  "شفاف",
+];
+
 function FormulaForm({
   machines,
+  items,
   onSuccess,
 }: {
   machines: any[];
+  items: Item[];
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     formula_name: "",
     machine_id: "",
-    raw_material: "",
     thickness_min: "",
     thickness_max: "",
     width_min: "",
     width_max: "",
+    screw_assignment: "",
+    notes: "",
   });
+  const [selectedColors, setSelectedColors] = useState<string[]>([]);
+  const [ingredients, setIngredients] = useState<{ item_id: number; percentage: string }[]>([]);
+
+  const selectedMachine = machines.find((m) => m.id === formData.machine_id);
+  const isTwoScrewMachine = selectedMachine?.screw_count === 2;
 
   const createFormula = useMutation({
     mutationFn: async (data: any) => {
@@ -400,124 +468,314 @@ function FormulaForm({
     },
   });
 
+  const handleColorToggle = (color: string) => {
+    setSelectedColors((prev) =>
+      prev.includes(color) ? prev.filter((c) => c !== color) : [...prev, color]
+    );
+  };
+
+  const addIngredient = () => {
+    setIngredients([...ingredients, { item_id: 0, percentage: "" }]);
+  };
+
+  const removeIngredient = (index: number) => {
+    setIngredients(ingredients.filter((_, i) => i !== index));
+  };
+
+  const updateIngredient = (index: number, field: string, value: any) => {
+    const updated = [...ingredients];
+    updated[index] = { ...updated[index], [field]: value };
+    setIngredients(updated);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createFormula.mutate(formData);
+
+    // Validation
+    const totalPercentage = ingredients.reduce(
+      (sum, ing) => sum + (parseFloat(ing.percentage) || 0),
+      0
+    );
+    if (Math.abs(totalPercentage - 100) > 0.01) {
+      toast({
+        title: "خطأ في التحقق",
+        description: "يجب أن يكون مجموع نسب المكونات 100%",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      master_batch_colors: selectedColors,
+      screw_assignment: isTwoScrewMachine ? formData.screw_assignment : null,
+      ingredients: ingredients.map((ing) => ({
+        item_id: Number(ing.item_id),
+        percentage: ing.percentage,
+      })),
+    };
+
+    createFormula.mutate(payload);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="formula_name">اسم الوصفة *</Label>
-          <Input
-            id="formula_name"
-            value={formData.formula_name}
-            onChange={(e) =>
-              setFormData({ ...formData, formula_name: e.target.value })
-            }
-            required
-            data-testid="input-formula-name"
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
+      {/* المعلومات الأساسية */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg border-b pb-2">المعلومات الأساسية</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="formula_name">اسم الوصفة *</Label>
+            <Input
+              id="formula_name"
+              value={formData.formula_name}
+              onChange={(e) =>
+                setFormData({ ...formData, formula_name: e.target.value })
+              }
+              required
+              data-testid="input-formula-name"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="machine_id">الماكينة *</Label>
-          <Select
-            value={formData.machine_id}
-            onValueChange={(value) =>
-              setFormData({ ...formData, machine_id: value })
-            }
-          >
-            <SelectTrigger data-testid="select-machine">
-              <SelectValue placeholder="اختر الماكينة" />
-            </SelectTrigger>
-            <SelectContent>
-              {machines?.map((machine: any) => (
-                <SelectItem key={machine.id} value={machine.id}>
-                  {machine.name || machine.id}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="machine_id">ماكينة الفيلم *</Label>
+            <Select
+              value={formData.machine_id}
+              onValueChange={(value) =>
+                setFormData({ ...formData, machine_id: value, screw_assignment: "" })
+              }
+            >
+              <SelectTrigger data-testid="select-machine">
+                <SelectValue placeholder="اختر الماكينة" />
+              </SelectTrigger>
+              <SelectContent>
+                {machines
+                  ?.filter((m) => m.section_id === "extruder" || m.type === "extruder")
+                  .map((machine: any) => (
+                    <SelectItem key={machine.id} value={machine.id}>
+                      {machine.name_ar || machine.name || machine.id}
+                      {machine.screw_count === 2 && " (سكروين)"}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="space-y-2 col-span-2">
-          <Label htmlFor="raw_material">المادة الخام الأساسية *</Label>
-          <Input
-            id="raw_material"
-            value={formData.raw_material}
-            onChange={(e) =>
-              setFormData({ ...formData, raw_material: e.target.value })
-            }
-            required
-            data-testid="input-raw-material"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="thickness_min">الحد الأدنى للسماكة (ميكرون) *</Label>
-          <Input
-            id="thickness_min"
-            type="number"
-            step="0.01"
-            value={formData.thickness_min}
-            onChange={(e) =>
-              setFormData({ ...formData, thickness_min: e.target.value })
-            }
-            required
-            data-testid="input-thickness-min"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="thickness_max">الحد الأقصى للسماكة (ميكرون) *</Label>
-          <Input
-            id="thickness_max"
-            type="number"
-            step="0.01"
-            value={formData.thickness_max}
-            onChange={(e) =>
-              setFormData({ ...formData, thickness_max: e.target.value })
-            }
-            required
-            data-testid="input-thickness-max"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="width_min">الحد الأدنى للعرض (سم)</Label>
-          <Input
-            id="width_min"
-            type="number"
-            step="0.01"
-            value={formData.width_min}
-            onChange={(e) =>
-              setFormData({ ...formData, width_min: e.target.value })
-            }
-            data-testid="input-width-min"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="width_max">الحد الأقصى للعرض (سم)</Label>
-          <Input
-            id="width_max"
-            type="number"
-            step="0.01"
-            value={formData.width_max}
-            onChange={(e) =>
-              setFormData({ ...formData, width_max: e.target.value })
-            }
-            data-testid="input-width-max"
-          />
+          {isTwoScrewMachine && (
+            <div className="space-y-2">
+              <Label htmlFor="screw_assignment">السكرو المخصص *</Label>
+              <Select
+                value={formData.screw_assignment}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, screw_assignment: value })
+                }
+              >
+                <SelectTrigger data-testid="select-screw">
+                  <SelectValue placeholder="اختر السكرو" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="A">سكرو A</SelectItem>
+                  <SelectItem value="B">سكرو B</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      {/* نطاق المقاس والسماكة */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg border-b pb-2">المواصفات الفنية</h3>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="width_min">الحد الأدنى للمقاس (سم) *</Label>
+            <Input
+              id="width_min"
+              type="number"
+              step="0.01"
+              value={formData.width_min}
+              onChange={(e) =>
+                setFormData({ ...formData, width_min: e.target.value })
+              }
+              required
+              data-testid="input-width-min"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="width_max">الحد الأقصى للمقاس (سم) *</Label>
+            <Input
+              id="width_max"
+              type="number"
+              step="0.01"
+              value={formData.width_max}
+              onChange={(e) =>
+                setFormData({ ...formData, width_max: e.target.value })
+              }
+              required
+              data-testid="input-width-max"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="thickness_min">الحد الأدنى للسماكة (ميكرون) *</Label>
+            <Input
+              id="thickness_min"
+              type="number"
+              step="0.01"
+              value={formData.thickness_min}
+              onChange={(e) =>
+                setFormData({ ...formData, thickness_min: e.target.value })
+              }
+              required
+              data-testid="input-thickness-min"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="thickness_max">الحد الأقصى للسماكة (ميكرون) *</Label>
+            <Input
+              id="thickness_max"
+              type="number"
+              step="0.01"
+              value={formData.thickness_max}
+              onChange={(e) =>
+                setFormData({ ...formData, thickness_max: e.target.value })
+              }
+              required
+              data-testid="input-thickness-max"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ألوان الماستر باتش */}
+      <div className="space-y-4">
+        <h3 className="font-medium text-lg border-b pb-2">ألوان الماستر باتش</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {MASTER_BATCH_COLORS.map((color) => (
+            <div
+              key={color}
+              className="flex items-center space-x-2 space-x-reverse"
+            >
+              <Checkbox
+                id={`color-${color}`}
+                checked={selectedColors.includes(color)}
+                onCheckedChange={() => handleColorToggle(color)}
+                data-testid={`checkbox-color-${color}`}
+              />
+              <Label
+                htmlFor={`color-${color}`}
+                className="text-sm font-normal cursor-pointer"
+              >
+                {color}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* المكونات */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between border-b pb-2">
+          <h3 className="font-medium text-lg">المكونات (مجموع النسب = 100%)</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addIngredient}
+            data-testid="button-add-ingredient"
+          >
+            <Plus className="h-4 w-4 ml-2" />
+            إضافة مكون
+          </Button>
+        </div>
+
+        {ingredients.length === 0 ? (
+          <div className="text-center text-sm text-muted-foreground py-4 border rounded-lg bg-muted/30">
+            لم يتم إضافة مكونات بعد. انقر على "إضافة مكون" للبدء
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {ingredients.map((ingredient, index) => (
+              <div key={index} className="flex gap-3 items-end">
+                <div className="flex-1 space-y-2">
+                  <Label>المادة الخام *</Label>
+                  <Select
+                    value={ingredient.item_id.toString()}
+                    onValueChange={(value) =>
+                      updateIngredient(index, "item_id", Number(value))
+                    }
+                  >
+                    <SelectTrigger data-testid={`select-ingredient-item-${index}`}>
+                      <SelectValue placeholder="اختر المادة الخام" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {items.map((item) => (
+                        <SelectItem key={item.id} value={item.id.toString()}>
+                          {item.name_ar || item.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="w-32 space-y-2">
+                  <Label>النسبة (%) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={ingredient.percentage}
+                    onChange={(e) =>
+                      updateIngredient(index, "percentage", e.target.value)
+                    }
+                    required
+                    data-testid={`input-ingredient-percentage-${index}`}
+                  />
+                </div>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeIngredient(index)}
+                  data-testid={`button-remove-ingredient-${index}`}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            <div className="text-sm text-muted-foreground bg-muted/30 p-3 rounded-lg">
+              المجموع الحالي:{" "}
+              <span className="font-medium">
+                {ingredients
+                  .reduce((sum, ing) => sum + (parseFloat(ing.percentage) || 0), 0)
+                  .toFixed(2)}
+                %
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ملاحظات */}
+      <div className="space-y-2">
+        <Label htmlFor="notes">ملاحظات</Label>
+        <Input
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          data-testid="input-notes"
+        />
+      </div>
+
+      <div className="flex justify-end gap-2 pt-4 border-t">
         <Button
           type="submit"
-          disabled={createFormula.isPending}
+          disabled={createFormula.isPending || ingredients.length === 0}
           data-testid="button-save-formula"
         >
           {createFormula.isPending ? "جاري الحفظ..." : "حفظ الوصفة"}
