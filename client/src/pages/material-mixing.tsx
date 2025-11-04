@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "../lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -31,7 +32,7 @@ import {
 } from "../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
 import { useToast } from "../hooks/use-toast";
-import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package, X, Copy, Eye, Search, Filter, Calculator } from "lucide-react";
+import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package, X, Copy, Eye, Search, Filter, Calculator, AlertTriangle, TrendingUp, TrendingDown, BarChart3, Target, Activity, PieChart, LineChart, Users, Calendar, DollarSign, Warehouse, ShoppingCart, Clock, AlertCircle } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import Header from "../components/layout/Header";
@@ -116,6 +117,29 @@ type Item = {
   code?: string;
 };
 
+type InventoryConsumption = {
+  id: number;
+  batch_id: number;
+  item_id: number;
+  quantity_consumed: number;
+  cost_at_consumption: number;
+  consumed_at: string;
+  created_by: number;
+};
+
+type InventoryTransaction = {
+  id: number;
+  item_id: number;
+  transaction_type: "in" | "out" | "adjustment";
+  quantity: number;
+  cost_per_unit?: number;
+  reference_type: string;
+  reference_id: number;
+  notes?: string;
+  created_at: string;
+  created_by: number;
+};
+
 export default function MaterialMixing() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("formulas");
@@ -128,6 +152,10 @@ export default function MaterialMixing() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [copyDialogOpen, setCopyDialogOpen] = useState(false);
   const [copyingFormula, setCopyingFormula] = useState<MixingFormula | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<MixingBatch | null>(null);
+  const [isBatchDetailDialogOpen, setIsBatchDetailDialogOpen] = useState(false);
+  const [isInventoryDialogOpen, setIsInventoryDialogOpen] = useState(false);
+  const [selectedBatchForInventory, setSelectedBatchForInventory] = useState<MixingBatch | null>(null);
   
   // البحث والفلترة
   const [searchTerm, setSearchTerm] = useState("");
@@ -164,8 +192,35 @@ export default function MaterialMixing() {
     queryKey: ["/api/inventory"],
   });
 
+  // جلب معاملات المخزون
+  const { data: inventoryTransactions = [] } = useQuery<InventoryTransaction[]>({
+    queryKey: ["/api/inventory-transactions"],
+  });
+
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
   const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
+
+  // فلترة الدفعات
+  const filteredBatches = batches?.filter(batch => {
+    const variance = analyzeBatchVariance(batch);
+    const formula = formulas?.find(f => f.id === batch.formula_id);
+    
+    // فلترة البحث
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const batchMatch = batch.batch_number.toLowerCase().includes(searchLower);
+      const formulaMatch = formula?.formula_name.toLowerCase().includes(searchLower);
+      if (!batchMatch && !formulaMatch) return false;
+    }
+    
+    // فلترة الحالة
+    if (statusFilter && batch.status !== statusFilter) return false;
+    
+    // فلترة الماكينة
+    if (machineFilter && batch.machine_id !== machineFilter) return false;
+    
+    return true;
+  }) || [];
 
   // دالة حساب التكلفة التقديرية للوصفة
   const calculateFormulaCost = (formula: MixingFormula, weightKg: number = 1) => {
@@ -233,6 +288,65 @@ export default function MaterialMixing() {
     setIsEditDialogOpen(true);
   };
 
+  // دالة للتحقق من توفر المخزون للدفعة
+  const checkInventoryAvailability = (batch: MixingBatch) => {
+    const formula = formulas?.find(f => f.id === batch.formula_id);
+    if (!formula?.ingredients) return { available: false, shortages: [] };
+
+    const shortages: any[] = [];
+    let allAvailable = true;
+
+    formula.ingredients.forEach(ingredient => {
+      const requiredWeight = (parseFloat(batch.total_weight_kg) * parseFloat(ingredient.percentage)) / 100;
+      const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+      const availableQuantity = inventoryItem?.quantity || 0;
+
+      if (availableQuantity < requiredWeight) {
+        allAvailable = false;
+        shortages.push({
+          item_id: ingredient.item_id,
+          item_name: ingredient.item_name_ar || ingredient.item_name,
+          required: requiredWeight,
+          available: availableQuantity,
+          shortage: requiredWeight - availableQuantity
+        });
+      }
+    });
+
+    return { available: allAvailable, shortages };
+  };
+
+  // دالة تسجيل استهلاك المواد
+  const recordMaterialConsumption = useMutation({
+    mutationFn: async (data: { batchId: number; consumptions: any[] }) => {
+      return apiRequest("/api/inventory/consumption", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم تسجيل الاستهلاك",
+        description: "تم تحديث المخزون بنجاح",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory-transactions"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في تسجيل الاستهلاك",
+        description: error.message || "حدث خطأ أثناء تحديث المخزون",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // دالة لعرض تفاصيل استهلاك المخزون للدفعة
+  const handleViewInventoryConsumption = (batch: MixingBatch) => {
+    setSelectedBatchForInventory(batch);
+    setIsInventoryDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
@@ -257,7 +371,7 @@ export default function MaterialMixing() {
           </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="formulas" className="gap-2" data-testid="tab-formulas">
             <Beaker className="h-4 w-4" />
             وصفات الخلط
@@ -265,6 +379,14 @@ export default function MaterialMixing() {
           <TabsTrigger value="batches" className="gap-2" data-testid="tab-batches">
             <Package className="h-4 w-4" />
             دفعات الخلط
+          </TabsTrigger>
+          <TabsTrigger value="inventory" className="gap-2" data-testid="tab-inventory">
+            <Warehouse className="h-4 w-4" />
+            مراقبة المخزون
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-2" data-testid="tab-analytics">
+            <BarChart3 className="h-4 w-4" />
+            التحليلات والتقارير
           </TabsTrigger>
         </TabsList>
 
@@ -693,34 +815,192 @@ export default function MaterialMixing() {
               </Dialog>
             </CardHeader>
             <CardContent>
+              {/* شريط البحث والفلترة للدفعات */}
+              <div className="mb-4 space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="batch-search">البحث في الدفعات</Label>
+                    <div className="relative">
+                      <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="batch-search"
+                        placeholder="رقم الدفعة أو الوصفة..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pr-10"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="batch-status-filter">فلترة حسب الحالة</Label>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="جميع الحالات" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">جميع الحالات</SelectItem>
+                        <SelectItem value="pending">معلق</SelectItem>
+                        <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+                        <SelectItem value="completed">مكتمل</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="variance-filter">فلترة حسب الانحراف</Label>
+                    <Select value={machineFilter} onValueChange={setMachineFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="جميع المستويات" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">جميع المستويات</SelectItem>
+                        <SelectItem value="excellent">ممتاز (أقل من 1%)</SelectItem>
+                        <SelectItem value="good">جيد (1-3%)</SelectItem>
+                        <SelectItem value="warning">تحذير (3-5%)</SelectItem>
+                        <SelectItem value="critical">حرج (أكثر من 5%)</SelectItem>
+                        <SelectItem value="no_data">لا توجد بيانات</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="machine-filter">فلترة حسب الماكينة</Label>
+                    <Select value={machineFilter} onValueChange={setMachineFilter}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="جميع الماكينات" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">جميع الماكينات</SelectItem>
+                        {machines && machines.map((machine) => (
+                          <SelectItem key={machine.id} value={machine.id}>
+                            {machine.name_ar || machine.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* إحصائيات سريعة */}
+                {batches && batches.length > 0 && (
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4 pt-4 border-t">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{batches.length}</div>
+                      <div className="text-sm text-gray-500">إجمالي الدفعات</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {batches.filter(b => b.status === "completed").length}
+                      </div>
+                      <div className="text-sm text-gray-500">مكتملة</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {batches.filter(b => b.status === "in_progress").length}
+                      </div>
+                      <div className="text-sm text-gray-500">قيد التنفيذ</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-red-600">
+                        {batches.filter(b => {
+                          const variance = analyzeBatchVariance(b);
+                          return variance.warningLevel === "high";
+                        }).length}
+                      </div>
+                      <div className="text-sm text-gray-500">انحراف حرج</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {batches.filter(b => {
+                          const variance = analyzeBatchVariance(b);
+                          return variance.warningLevel === "none";
+                        }).length}
+                      </div>
+                      <div className="text-sm text-gray-500">دقة ممتازة</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {batchesLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} className="h-16 w-full" />
                   ))}
                 </div>
-              ) : batches && batches.length > 0 ? (
+              ) : filteredBatches && filteredBatches.length > 0 ? (
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
                         <TableHead className="text-right">رقم الدفعة</TableHead>
+                        <TableHead className="text-right">الوصفة</TableHead>
                         <TableHead className="text-right">الماكينة</TableHead>
                         <TableHead className="text-right">الوزن الكلي (كجم)</TableHead>
+                        <TableHead className="text-right">تحليل الانحراف</TableHead>
                         <TableHead className="text-right">الحالة</TableHead>
                         <TableHead className="text-right">تاريخ البدء</TableHead>
                         <TableHead className="text-right">الإجراءات</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {batches.map((batch) => (
+                      {filteredBatches.map((batch) => {
+                        const variance = analyzeBatchVariance(batch);
+                        const formula = formulas?.find(f => f.id === batch.formula_id);
+                        
+                        return (
                         <TableRow key={batch.id} data-testid={`row-batch-${batch.id}`}>
                           <TableCell className="font-medium">
                             {batch.batch_number}
                           </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <div className="font-medium">{formula?.formula_name || `وصفة #${batch.formula_id}`}</div>
+                              <div className="text-gray-500">{formula?.machine_name_ar || formula?.machine_name}</div>
+                            </div>
+                          </TableCell>
                           <TableCell>{batch.machine_id}</TableCell>
                           <TableCell>
                             {parseFloat(batch.total_weight_kg).toFixed(2)}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              {variance.status === "no_data" || variance.status === "pending" ? (
+                                <div className="flex items-center gap-1 text-gray-500">
+                                  <Activity className="h-3 w-3" />
+                                  <span className="text-xs">لا توجد بيانات</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  {variance.warningLevel === "none" && (
+                                    <Target className="h-3 w-3 text-green-600" />
+                                  )}
+                                  {variance.warningLevel === "low" && (
+                                    <TrendingUp className="h-3 w-3 text-yellow-600" />
+                                  )}
+                                  {variance.warningLevel === "medium" && (
+                                    <AlertTriangle className="h-3 w-3 text-orange-600" />
+                                  )}
+                                  {variance.warningLevel === "high" && (
+                                    <TrendingDown className="h-3 w-3 text-red-600" />
+                                  )}
+                                  <div className="text-xs">
+                                    <div className={`font-medium ${
+                                      variance.warningLevel === "none" ? "text-green-600" :
+                                      variance.warningLevel === "low" ? "text-yellow-600" :
+                                      variance.warningLevel === "medium" ? "text-orange-600" :
+                                      "text-red-600"
+                                    }`}>
+                                      {variance.variancePercentage > 0 ? "+" : ""}{variance.variancePercentage.toFixed(1)}%
+                                    </div>
+                                    <div className="text-gray-500">
+                                      دقة {variance.accuracy.toFixed(0)}%
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -744,6 +1024,26 @@ export default function MaterialMixing() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedBatch(batch);
+                                  setIsBatchDetailDialogOpen(true);
+                                }}
+                                data-testid={`button-view-batch-${batch.id}`}
+                              >
+                                <BarChart3 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewInventoryConsumption(batch)}
+                                className="gap-1"
+                                data-testid={`button-inventory-batch-${batch.id}`}
+                              >
+                                <Warehouse className="h-4 w-4" />
+                              </Button>
                               {batch.status !== "completed" && (
                                 <Button
                                   variant="outline"
@@ -756,7 +1056,8 @@ export default function MaterialMixing() {
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -773,6 +1074,66 @@ export default function MaterialMixing() {
               )}
             </CardContent>
           </Card>
+
+          {/* نافذة تفاصيل الدفعة */}
+          <Dialog open={isBatchDetailDialogOpen} onOpenChange={setIsBatchDetailDialogOpen}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  تحليل تفصيلي للدفعة {selectedBatch?.batch_number}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedBatch && (
+                <BatchDetailAnalysis 
+                  batch={selectedBatch} 
+                  formula={formulas?.find(f => f.id === selectedBatch.formula_id)}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* نافذة تفاصيل استهلاك المخزون */}
+          <Dialog open={isInventoryDialogOpen} onOpenChange={setIsInventoryDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Warehouse className="h-5 w-5" />
+                  تفاصيل استهلاك المخزون - الدفعة {selectedBatchForInventory?.batch_number}
+                </DialogTitle>
+              </DialogHeader>
+              {selectedBatchForInventory && (
+                <BatchInventoryDetails 
+                  batch={selectedBatchForInventory}
+                  formula={formulas?.find(f => f.id === selectedBatchForInventory.formula_id)}
+                  inventory={inventory}
+                  inventoryTransactions={inventoryTransactions}
+                  onRecordConsumption={recordMaterialConsumption}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
+        </TabsContent>
+
+        <TabsContent value="inventory" className="space-y-4">
+          <InventoryMonitoring 
+            formulas={formulas || []}
+            batches={batches || []}
+            inventory={inventory || []}
+            inventoryTransactions={inventoryTransactions || []}
+            items={rawMaterialItems}
+            onRecordConsumption={recordMaterialConsumption}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <MixingAnalytics 
+            formulas={formulas || []}
+            batches={batches || []}
+            inventory={inventory || []}
+            machines={machines || []}
+          />
         </TabsContent>
       </Tabs>
         </main>
@@ -851,6 +1212,1106 @@ const calculateCostForIngredients = (ingredients: any[], inventory: any[], weigh
     isComplete: missingPrices === 0
   };
 };
+
+// دالة حساب التكلفة للوصفة
+const calculateFormulaCostExternal = (formula: MixingFormula, inventory: any[], weightKg: number = 1) => {
+  return calculateCostForIngredients(formula.ingredients || [], inventory, weightKg);
+};
+
+// مكون التحليلات والتقارير الشامل
+function MixingAnalytics({ 
+  formulas, 
+  batches, 
+  inventory, 
+  machines 
+}: { 
+  formulas: MixingFormula[];
+  batches: MixingBatch[];
+  inventory: any[];
+  machines: any[];
+}) {
+  const [selectedTimeRange, setSelectedTimeRange] = useState("30");
+  const [selectedReport, setSelectedReport] = useState("overview");
+
+  // حساب الإحصائيات العامة
+  const totalFormulas = formulas.length;
+  const activeFormulas = formulas.filter(f => f.is_active).length;
+  const totalBatches = batches.length;
+  const completedBatches = batches.filter(b => b.status === "completed").length;
+  const inProgressBatches = batches.filter(b => b.status === "in_progress").length;
+
+  // حساب إجمالي الإنتاج
+  const totalProduction = batches.reduce((sum, batch) => {
+    return sum + parseFloat(batch.total_weight_kg || "0");
+  }, 0);
+
+  // حساب معدل الدقة
+  const batchesWithVariance = batches.filter(b => b.ingredients && b.ingredients.length > 0);
+  const accuracyRates = batchesWithVariance.map(batch => {
+    const variance = analyzeBatchVariance(batch);
+    return variance.accuracy;
+  });
+  const averageAccuracy = accuracyRates.length > 0 ? 
+    accuracyRates.reduce((sum, acc) => sum + acc, 0) / accuracyRates.length : 0;
+
+  // تحليل استخدام المواد
+  const materialUsage = batches.reduce((usage: any, batch) => {
+    if (batch.ingredients) {
+      batch.ingredients.forEach(ingredient => {
+        const materialId = ingredient.item_id;
+        const actualWeight = parseFloat(ingredient.actual_weight_kg || "0");
+        
+        if (actualWeight > 0) {
+          if (!usage[materialId]) {
+            usage[materialId] = {
+              item_name: ingredient.item_name_ar || ingredient.item_name,
+              total_used: 0,
+              batch_count: 0
+            };
+          }
+          usage[materialId].total_used += actualWeight;
+          usage[materialId].batch_count += 1;
+        }
+      });
+    }
+    return usage;
+  }, {});
+
+  const topMaterials = Object.entries(materialUsage)
+    .map(([id, data]: [string, any]) => ({ id, ...data }))
+    .sort((a, b) => b.total_used - a.total_used)
+    .slice(0, 10);
+
+  // تحليل كفاءة الوصفات
+  const formulaEfficiency = formulas.map(formula => {
+    const formulaBatches = batches.filter(b => b.formula_id === formula.id);
+    const completedFormulaBatches = formulaBatches.filter(b => b.status === "completed");
+    
+    const averageVariance = formulaBatches.length > 0 ? 
+      formulaBatches.reduce((sum, batch) => {
+        const variance = analyzeBatchVariance(batch);
+        return sum + Math.abs(variance.variancePercentage);
+      }, 0) / formulaBatches.length : 0;
+
+    const costData = calculateFormulaCostExternal(formula, inventory, 1);
+    
+    return {
+      ...formula,
+      batch_count: formulaBatches.length,
+      completed_batches: completedFormulaBatches.length,
+      average_variance: averageVariance,
+      cost_per_kg: costData?.costPerKg || 0,
+      efficiency_score: Math.max(0, 100 - averageVariance)
+    };
+  }).sort((a, b) => b.efficiency_score - a.efficiency_score);
+
+  // حساب التكاليف
+  const totalCosts = batches.reduce((sum, batch) => {
+    const formula = formulas.find(f => f.id === batch.formula_id);
+    if (formula) {
+      const costData = calculateFormulaCostExternal(formula, inventory, parseFloat(batch.total_weight_kg || "0"));
+      return sum + (costData?.totalCost || 0);
+    }
+    return sum;
+  }, 0);
+
+  return (
+    <div className="space-y-6">
+      {/* شريط اختيار التقرير والفترة الزمنية */}
+      <div className="flex flex-wrap gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="space-y-2">
+          <Label>نوع التقرير</Label>
+          <Select value={selectedReport} onValueChange={setSelectedReport}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="overview">نظرة عامة</SelectItem>
+              <SelectItem value="materials">تحليل المواد</SelectItem>
+              <SelectItem value="formulas">كفاءة الوصفات</SelectItem>
+              <SelectItem value="costs">تحليل التكاليف</SelectItem>
+              <SelectItem value="quality">تقرير الجودة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>الفترة الزمنية</Label>
+          <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">آخر 7 أيام</SelectItem>
+              <SelectItem value="30">آخر 30 يوم</SelectItem>
+              <SelectItem value="90">آخر 3 أشهر</SelectItem>
+              <SelectItem value="365">آخر سنة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* التقرير العام */}
+      {selectedReport === "overview" && (
+        <div className="space-y-6">
+          {/* بطاقات الإحصائيات الرئيسية */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Beaker className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">الوصفات النشطة</p>
+                    <p className="text-2xl font-bold">{activeFormulas}</p>
+                    <p className="text-xs text-gray-400">من أصل {totalFormulas}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Package className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">الدفعات المكتملة</p>
+                    <p className="text-2xl font-bold">{completedBatches}</p>
+                    <p className="text-xs text-gray-400">من أصل {totalBatches}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">إجمالي الإنتاج</p>
+                    <p className="text-2xl font-bold">{totalProduction.toFixed(0)}</p>
+                    <p className="text-xs text-gray-400">كيلوجرام</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Target className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">معدل الدقة</p>
+                    <p className="text-2xl font-bold">{averageAccuracy.toFixed(1)}%</p>
+                    <p className="text-xs text-gray-400">متوسط عام</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* حالة الدفعات والتكاليف */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <PieChart className="h-5 w-5" />
+                  توزيع حالة الدفعات
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">مكتملة</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-600 h-2 rounded-full" 
+                          style={{ width: `${totalBatches > 0 ? (completedBatches / totalBatches) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">{completedBatches}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">قيد التنفيذ</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-yellow-600 h-2 rounded-full" 
+                          style={{ width: `${totalBatches > 0 ? (inProgressBatches / totalBatches) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">{inProgressBatches}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">معلقة</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gray-600 h-2 rounded-full" 
+                          style={{ width: `${totalBatches > 0 ? ((totalBatches - completedBatches - inProgressBatches) / totalBatches) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium">{totalBatches - completedBatches - inProgressBatches}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5" />
+                  ملخص التكاليف
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">إجمالي التكاليف التقديرية</span>
+                    <span className="font-bold text-lg">{totalCosts.toFixed(2)} ر.س</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">متوسط التكلفة/كجم</span>
+                    <span className="font-medium">{totalProduction > 0 ? (totalCosts / totalProduction).toFixed(2) : "0.00"} ر.س</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">متوسط التكلفة/دفعة</span>
+                    <span className="font-medium">{totalBatches > 0 ? (totalCosts / totalBatches).toFixed(2) : "0.00"} ر.س</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* تحليل المواد */}
+      {selectedReport === "materials" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              أكثر المواد استخداماً
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">المادة</TableHead>
+                  <TableHead className="text-right">إجمالي الاستخدام (كجم)</TableHead>
+                  <TableHead className="text-right">عدد الدفعات</TableHead>
+                  <TableHead className="text-right">متوسط الاستخدام/دفعة</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {topMaterials.map((material, index) => (
+                  <TableRow key={material.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">#{index + 1}</Badge>
+                        {material.item_name}
+                      </div>
+                    </TableCell>
+                    <TableCell>{material.total_used.toFixed(2)}</TableCell>
+                    <TableCell>{material.batch_count}</TableCell>
+                    <TableCell>{(material.total_used / material.batch_count).toFixed(2)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* كفاءة الوصفات */}
+      {selectedReport === "formulas" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              ترتيب الوصفات حسب الكفاءة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">الوصفة</TableHead>
+                  <TableHead className="text-right">عدد الدفعات</TableHead>
+                  <TableHead className="text-right">متوسط الانحراف (%)</TableHead>
+                  <TableHead className="text-right">نقاط الكفاءة</TableHead>
+                  <TableHead className="text-right">التكلفة/كجم</TableHead>
+                  <TableHead className="text-right">التقييم</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {formulaEfficiency.slice(0, 10).map((formula, index) => (
+                  <TableRow key={formula.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">#{index + 1}</Badge>
+                        {formula.formula_name}
+                      </div>
+                    </TableCell>
+                    <TableCell>{formula.batch_count}</TableCell>
+                    <TableCell>
+                      <span className={`font-medium ${
+                        formula.average_variance <= 1 ? "text-green-600" :
+                        formula.average_variance <= 3 ? "text-yellow-600" :
+                        formula.average_variance <= 5 ? "text-orange-600" :
+                        "text-red-600"
+                      }`}>
+                        {formula.average_variance.toFixed(2)}%
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              formula.efficiency_score >= 95 ? "bg-green-600" :
+                              formula.efficiency_score >= 90 ? "bg-yellow-600" :
+                              formula.efficiency_score >= 80 ? "bg-orange-600" :
+                              "bg-red-600"
+                            }`}
+                            style={{ width: `${Math.min(100, formula.efficiency_score)}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-sm font-medium">{formula.efficiency_score.toFixed(0)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{formula.cost_per_kg.toFixed(2)} ر.س</TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        formula.efficiency_score >= 95 ? "default" :
+                        formula.efficiency_score >= 90 ? "secondary" :
+                        formula.efficiency_score >= 80 ? "outline" :
+                        "destructive"
+                      }>
+                        {formula.efficiency_score >= 95 ? "ممتاز" :
+                         formula.efficiency_score >= 90 ? "جيد جداً" :
+                         formula.efficiency_score >= 80 ? "جيد" :
+                         "يحتاج تحسين"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* تحليل التكاليف */}
+      {selectedReport === "costs" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <DollarSign className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">إجمالي التكاليف</p>
+                    <p className="text-2xl font-bold">{totalCosts.toFixed(2)} ر.س</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">متوسط التكلفة/كجم</p>
+                    <p className="text-2xl font-bold">
+                      {totalProduction > 0 ? (totalCosts / totalProduction).toFixed(2) : "0.00"} ر.س
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">الوصفة الأغلى</p>
+                    <p className="text-lg font-bold">
+                      {formulaEfficiency.length > 0 ? 
+                        Math.max(...formulaEfficiency.map(f => f.cost_per_kg)).toFixed(2) : "0.00"} ر.س
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>تفصيل التكاليف حسب الوصفة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">الوصفة</TableHead>
+                    <TableHead className="text-right">التكلفة/كجم</TableHead>
+                    <TableHead className="text-right">إجمالي الإنتاج (كجم)</TableHead>
+                    <TableHead className="text-right">إجمالي التكلفة</TableHead>
+                    <TableHead className="text-right">النسبة من الإجمالي</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {formulaEfficiency.map((formula) => {
+                    const formulaTotalWeight = batches
+                      .filter(b => b.formula_id === formula.id)
+                      .reduce((sum, b) => sum + parseFloat(b.total_weight_kg || "0"), 0);
+                    const formulaTotalCost = formulaTotalWeight * formula.cost_per_kg;
+                    const costPercentage = totalCosts > 0 ? (formulaTotalCost / totalCosts) * 100 : 0;
+
+                    return (
+                      <TableRow key={formula.id}>
+                        <TableCell className="font-medium">{formula.formula_name}</TableCell>
+                        <TableCell>{formula.cost_per_kg.toFixed(2)} ر.س</TableCell>
+                        <TableCell>{formulaTotalWeight.toFixed(2)}</TableCell>
+                        <TableCell>{formulaTotalCost.toFixed(2)} ر.س</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className="bg-blue-600 h-2 rounded-full" 
+                                style={{ width: `${Math.min(100, costPercentage)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm">{costPercentage.toFixed(1)}%</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* تقرير الجودة */}
+      {selectedReport === "quality" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <Target className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">دقة ممتازة</p>
+                    <p className="text-2xl font-bold">
+                      {batches.filter(b => {
+                        const variance = analyzeBatchVariance(b);
+                        return variance.warningLevel === "none";
+                      }).length}
+                    </p>
+                    <p className="text-xs text-gray-400">دفعة</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">تحتاج مراجعة</p>
+                    <p className="text-2xl font-bold">
+                      {batches.filter(b => {
+                        const variance = analyzeBatchVariance(b);
+                        return variance.warningLevel === "low" || variance.warningLevel === "medium";
+                      }).length}
+                    </p>
+                    <p className="text-xs text-gray-400">دفعة</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <TrendingDown className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">انحراف حرج</p>
+                    <p className="text-2xl font-bold">
+                      {batches.filter(b => {
+                        const variance = analyzeBatchVariance(b);
+                        return variance.warningLevel === "high";
+                      }).length}
+                    </p>
+                    <p className="text-xs text-gray-400">دفعة</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">متوسط الدقة</p>
+                    <p className="text-2xl font-bold">{averageAccuracy.toFixed(1)}%</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>تفصيل الجودة حسب الوصفة</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">الوصفة</TableHead>
+                    <TableHead className="text-right">عدد الدفعات</TableHead>
+                    <TableHead className="text-right">دفعات ممتازة</TableHead>
+                    <TableHead className="text-right">دفعات جيدة</TableHead>
+                    <TableHead className="text-right">دفعات تحتاج مراجعة</TableHead>
+                    <TableHead className="text-right">معدل النجاح</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {formulas.map((formula) => {
+                    const formulaBatches = batches.filter(b => b.formula_id === formula.id);
+                    const excellentBatches = formulaBatches.filter(b => {
+                      const variance = analyzeBatchVariance(b);
+                      return variance.warningLevel === "none";
+                    }).length;
+                    const goodBatches = formulaBatches.filter(b => {
+                      const variance = analyzeBatchVariance(b);
+                      return variance.warningLevel === "low";
+                    }).length;
+                    const needsReview = formulaBatches.filter(b => {
+                      const variance = analyzeBatchVariance(b);
+                      return variance.warningLevel === "medium" || variance.warningLevel === "high";
+                    }).length;
+                    const successRate = formulaBatches.length > 0 ? 
+                      ((excellentBatches + goodBatches) / formulaBatches.length) * 100 : 0;
+
+                    return (
+                      <TableRow key={formula.id}>
+                        <TableCell className="font-medium">{formula.formula_name}</TableCell>
+                        <TableCell>{formulaBatches.length}</TableCell>
+                        <TableCell>
+                          <span className="text-green-600 font-medium">{excellentBatches}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-yellow-600 font-medium">{goodBatches}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-red-600 font-medium">{needsReview}</span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${
+                                  successRate >= 90 ? "bg-green-600" :
+                                  successRate >= 70 ? "bg-yellow-600" :
+                                  "bg-red-600"
+                                }`}
+                                style={{ width: `${Math.min(100, successRate)}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium">{successRate.toFixed(0)}%</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// دالة تحليل انحرافات الدفعة
+const analyzeBatchVariance = (batch: MixingBatch) => {
+  if (!batch.ingredients || batch.ingredients.length === 0) {
+    return {
+      totalVariance: 0,
+      variancePercentage: 0,
+      status: "no_data" as const,
+      accuracy: 0,
+      warningLevel: "none" as const
+    };
+  }
+
+  let totalPlanned = 0;
+  let totalActual = 0;
+  let ingredientsWithData = 0;
+
+  batch.ingredients.forEach(ingredient => {
+    const planned = parseFloat(ingredient.planned_weight_kg || "0");
+    const actual = parseFloat(ingredient.actual_weight_kg || "0");
+    
+    if (planned > 0) {
+      totalPlanned += planned;
+      if (actual > 0) {
+        totalActual += actual;
+        ingredientsWithData++;
+      }
+    }
+  });
+
+  if (ingredientsWithData === 0) {
+    return {
+      totalVariance: 0,
+      variancePercentage: 0,
+      status: "pending" as const,
+      accuracy: 0,
+      warningLevel: "none" as const
+    };
+  }
+
+  const totalVariance = totalActual - totalPlanned;
+  const variancePercentage = totalPlanned > 0 ? (totalVariance / totalPlanned) * 100 : 0;
+  const accuracy = totalPlanned > 0 ? 100 - Math.abs(variancePercentage) : 0;
+
+  let warningLevel: "none" | "low" | "medium" | "high" = "none";
+  let status: "excellent" | "good" | "warning" | "critical" | "pending" | "no_data" = "excellent";
+
+  const absVariancePercentage = Math.abs(variancePercentage);
+
+  if (absVariancePercentage <= 1) {
+    status = "excellent";
+    warningLevel = "none";
+  } else if (absVariancePercentage <= 3) {
+    status = "good";
+    warningLevel = "low";
+  } else if (absVariancePercentage <= 5) {
+    status = "warning";
+    warningLevel = "medium";
+  } else {
+    status = "critical";
+    warningLevel = "high";
+  }
+
+  return {
+    totalVariance,
+    variancePercentage,
+    status,
+    accuracy,
+    warningLevel,
+    ingredientsWithData,
+    totalIngredients: batch.ingredients.length
+  };
+};
+
+// مكون تحليل تفاصيل الدفعة
+function BatchDetailAnalysis({ 
+  batch, 
+  formula 
+}: { 
+  batch: MixingBatch; 
+  formula?: MixingFormula 
+}) {
+  const variance = analyzeBatchVariance(batch);
+  
+  return (
+    <div className="space-y-6">
+      {/* ملخص الدفعة */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-blue-600" />
+              <div>
+                <p className="text-sm text-gray-500">الوزن الكلي</p>
+                <p className="text-xl font-bold">{parseFloat(batch.total_weight_kg).toFixed(2)} كجم</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              <Target className="h-4 w-4 text-green-600" />
+              <div>
+                <p className="text-sm text-gray-500">دقة الخلط</p>
+                <p className="text-xl font-bold text-green-600">{variance.accuracy.toFixed(1)}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              {variance.variancePercentage >= 0 ? (
+                <TrendingUp className="h-4 w-4 text-orange-600" />
+              ) : (
+                <TrendingDown className="h-4 w-4 text-blue-600" />
+              )}
+              <div>
+                <p className="text-sm text-gray-500">الانحراف الكلي</p>
+                <p className={`text-xl font-bold ${
+                  variance.variancePercentage >= 0 ? "text-orange-600" : "text-blue-600"
+                }`}>
+                  {variance.variancePercentage > 0 ? "+" : ""}{variance.variancePercentage.toFixed(2)}%
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2">
+              {variance.warningLevel === "none" && <Target className="h-4 w-4 text-green-600" />}
+              {variance.warningLevel === "low" && <AlertTriangle className="h-4 w-4 text-yellow-600" />}
+              {variance.warningLevel === "medium" && <AlertTriangle className="h-4 w-4 text-orange-600" />}
+              {variance.warningLevel === "high" && <AlertTriangle className="h-4 w-4 text-red-600" />}
+              <div>
+                <p className="text-sm text-gray-500">حالة الجودة</p>
+                <p className={`text-sm font-bold ${
+                  variance.warningLevel === "none" ? "text-green-600" :
+                  variance.warningLevel === "low" ? "text-yellow-600" :
+                  variance.warningLevel === "medium" ? "text-orange-600" :
+                  "text-red-600"
+                }`}>
+                  {variance.status === "excellent" ? "ممتاز" :
+                   variance.status === "good" ? "جيد" :
+                   variance.status === "warning" ? "تحذير" :
+                   variance.status === "critical" ? "حرج" : "لا توجد بيانات"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* تفاصيل المكونات */}
+      {batch.ingredients && batch.ingredients.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              تفاصيل المكونات والانحرافات
+              {batch.status !== "completed" && (
+                <Button 
+                  size="sm" 
+                  className="mr-auto"
+                  onClick={() => {
+                    // TODO: فتح نافذة تحديث الأوزان الفعلية
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  تحديث الأوزان الفعلية
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* إنذارات الانحراف */}
+            {variance.warningLevel !== "none" && (variance.status === "warning" || variance.status === "critical") && (
+              <div className={`mb-4 p-3 rounded-lg border ${
+                variance.warningLevel === "low" ? "bg-yellow-50 border-yellow-200" :
+                variance.warningLevel === "medium" ? "bg-orange-50 border-orange-200" :
+                "bg-red-50 border-red-200"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className={`h-4 w-4 ${
+                    variance.warningLevel === "low" ? "text-yellow-600" :
+                    variance.warningLevel === "medium" ? "text-orange-600" :
+                    "text-red-600"
+                  }`} />
+                  <span className={`font-medium ${
+                    variance.warningLevel === "low" ? "text-yellow-800" :
+                    variance.warningLevel === "medium" ? "text-orange-800" :
+                    "text-red-800"
+                  }`}>
+                    {variance.warningLevel === "low" ? "تحذير: انحراف طفيف في الأوزان" :
+                     variance.warningLevel === "medium" ? "تحذير: انحراف متوسط يتطلب المراجعة" :
+                     "تحذير حرج: انحراف كبير يتطلب إجراء فوري"}
+                  </span>
+                </div>
+                <p className={`text-sm mt-1 ${
+                  variance.warningLevel === "low" ? "text-yellow-700" :
+                  variance.warningLevel === "medium" ? "text-orange-700" :
+                  "text-red-700"
+                }`}>
+                  الانحراف الكلي: {variance.variancePercentage > 0 ? "+" : ""}{variance.variancePercentage.toFixed(2)}% 
+                  • دقة الخلط: {variance.accuracy.toFixed(1)}%
+                  {variance.warningLevel === "high" && " • يُنصح بمراجعة المعايرة والإجراءات"}
+                </p>
+              </div>
+            )}
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">المادة</TableHead>
+                  <TableHead className="text-right">النسبة المئوية</TableHead>
+                  <TableHead className="text-right">الوزن المخطط (كجم)</TableHead>
+                  <TableHead className="text-right">الوزن الفعلي (كجم)</TableHead>
+                  <TableHead className="text-right">الانحراف (كجم)</TableHead>
+                  <TableHead className="text-right">الانحراف (%)</TableHead>
+                  <TableHead className="text-right">التقييم</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {batch.ingredients.map((ingredient) => {
+                  const planned = parseFloat(ingredient.planned_weight_kg || "0");
+                  const actual = parseFloat(ingredient.actual_weight_kg || "0");
+                  const variance = actual - planned;
+                  const variancePercentage = planned > 0 ? (variance / planned) * 100 : 0;
+                  
+                  // حساب النسبة المئوية للمكون
+                  const totalPlannedWeight = parseFloat(batch.total_weight_kg);
+                  const ingredientPercentage = totalPlannedWeight > 0 ? (planned / totalPlannedWeight) * 100 : 0;
+                  
+                  let status = "معلق";
+                  let statusColor = "text-gray-500";
+                  let statusIcon = <Activity className="h-3 w-3" />;
+                  
+                  if (actual > 0) {
+                    const absVariancePercentage = Math.abs(variancePercentage);
+                    if (absVariancePercentage <= 1) {
+                      status = "ممتاز";
+                      statusColor = "text-green-600";
+                      statusIcon = <Target className="h-3 w-3" />;
+                    } else if (absVariancePercentage <= 3) {
+                      status = "جيد";
+                      statusColor = "text-yellow-600";
+                      statusIcon = <TrendingUp className="h-3 w-3" />;
+                    } else if (absVariancePercentage <= 5) {
+                      status = "تحذير";
+                      statusColor = "text-orange-600";
+                      statusIcon = <AlertTriangle className="h-3 w-3" />;
+                    } else {
+                      status = "حرج";
+                      statusColor = "text-red-600";
+                      statusIcon = <AlertTriangle className="h-3 w-3" />;
+                    }
+                  }
+
+                  return (
+                    <TableRow key={ingredient.id} className={
+                      actual > 0 && Math.abs(variancePercentage) > 5 ? "bg-red-50" :
+                      actual > 0 && Math.abs(variancePercentage) > 3 ? "bg-orange-50" :
+                      actual > 0 && Math.abs(variancePercentage) > 1 ? "bg-yellow-50" :
+                      actual > 0 ? "bg-green-50" : ""
+                    }>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div>{ingredient.item_name_ar || ingredient.item_name}</div>
+                          <div className="text-xs text-gray-500">ID: {ingredient.item_id}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium">{ingredientPercentage.toFixed(1)}%</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-medium">{planned.toFixed(2)}</span>
+                      </TableCell>
+                      <TableCell>
+                        {actual > 0 ? (
+                          <span className="font-medium">{actual.toFixed(2)}</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <span className="text-gray-400">غير محدد</span>
+                            {batch.status !== "completed" && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0"
+                                onClick={() => {
+                                  // TODO: فتح نافذة إدخال الوزن الفعلي
+                                }}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {actual > 0 ? (
+                          <span className={`font-medium ${variance >= 0 ? "text-orange-600" : "text-blue-600"}`}>
+                            {variance > 0 ? "+" : ""}{variance.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {actual > 0 ? (
+                          <span className={`font-medium ${variancePercentage >= 0 ? "text-orange-600" : "text-blue-600"}`}>
+                            {variancePercentage > 0 ? "+" : ""}{variancePercentage.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className={`flex items-center gap-1 ${statusColor}`}>
+                          {statusIcon}
+                          <span className="text-sm font-medium">{status}</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+
+            {/* ملخص إحصائي */}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-500">المكونات الكلي:</span>
+                  <span className="font-medium mr-2">{batch.ingredients.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">مع بيانات فعلية:</span>
+                  <span className="font-medium mr-2">{variance.ingredientsWithData}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">مكونات ممتازة:</span>
+                  <span className="font-medium mr-2 text-green-600">
+                    {batch.ingredients.filter(ing => {
+                      const planned = parseFloat(ing.planned_weight_kg || "0");
+                      const actual = parseFloat(ing.actual_weight_kg || "0");
+                      const variance = planned > 0 && actual > 0 ? Math.abs((actual - planned) / planned) * 100 : 0;
+                      return actual > 0 && variance <= 1;
+                    }).length}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-500">مكونات تحتاج مراجعة:</span>
+                  <span className="font-medium mr-2 text-orange-600">
+                    {batch.ingredients.filter(ing => {
+                      const planned = parseFloat(ing.planned_weight_kg || "0");
+                      const actual = parseFloat(ing.actual_weight_kg || "0");
+                      const variance = planned > 0 && actual > 0 ? Math.abs((actual - planned) / planned) * 100 : 0;
+                      return actual > 0 && variance > 3;
+                    }).length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* معلومات إضافية */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>معلومات الوصفة</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-500">اسم الوصفة:</span>
+              <span className="font-medium">{formula?.formula_name || `وصفة #${batch.formula_id}`}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">الماكينة:</span>
+              <span className="font-medium">{batch.machine_id}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-500">المشغل:</span>
+              <span className="font-medium">المشغل #{batch.operator_id}</span>
+            </div>
+            {formula && (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">نطاق العرض:</span>
+                  <span className="font-medium">{formula.width_min} - {formula.width_max} سم</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">السماكة:</span>
+                  <span className="font-medium">{formula.thickness_min} - {formula.thickness_max} ميكرون</span>
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>معلومات التشغيل</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-500">تاريخ البدء:</span>
+              <span className="font-medium">{new Date(batch.started_at).toLocaleString("ar-EG")}</span>
+            </div>
+            {batch.completed_at && (
+              <div className="flex justify-between">
+                <span className="text-gray-500">تاريخ الانتهاء:</span>
+                <span className="font-medium">{new Date(batch.completed_at).toLocaleString("ar-EG")}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-gray-500">الحالة:</span>
+              <Badge variant={
+                batch.status === "completed" ? "default" :
+                batch.status === "in_progress" ? "secondary" : "outline"
+              }>
+                {batch.status === "completed" ? "مكتمل" :
+                 batch.status === "in_progress" ? "قيد التنفيذ" : "معلق"}
+              </Badge>
+            </div>
+            {batch.notes && (
+              <div>
+                <span className="text-gray-500">ملاحظات:</span>
+                <p className="text-sm mt-1 p-2 bg-gray-50 rounded">{batch.notes}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
 
 // قائمة ألوان الماستر باتش الشائعة
 const MASTER_BATCH_COLORS = [
@@ -2125,5 +3586,641 @@ function CopyFormulaForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+// مكون مراقبة المخزون
+function InventoryMonitoring({ 
+  formulas, 
+  batches, 
+  inventory, 
+  inventoryTransactions,
+  items,
+  onRecordConsumption 
+}: { 
+  formulas: MixingFormula[];
+  batches: MixingBatch[];
+  inventory: any[];
+  inventoryTransactions: InventoryTransaction[];
+  items: Item[];
+  onRecordConsumption: any;
+}) {
+  const [selectedView, setSelectedView] = useState("overview");
+
+  // حساب إجمالي استهلاك المواد من الدفعات
+  const materialConsumptionData = items.map(item => {
+    const totalConsumed = batches.reduce((sum, batch) => {
+      if (batch.ingredients) {
+        const ingredient = batch.ingredients.find(ing => ing.item_id === item.id);
+        if (ingredient && ingredient.actual_weight_kg) {
+          return sum + parseFloat(ingredient.actual_weight_kg);
+        }
+      }
+      return sum;
+    }, 0);
+
+    const inventoryItem = inventory.find(inv => inv.item_id === item.id);
+    const currentStock = inventoryItem?.quantity || 0;
+    const reorderPoint = inventoryItem?.reorder_point || 0;
+    const isLowStock = currentStock <= reorderPoint;
+
+    // حساب الاستهلاك في آخر 30 يوم
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentConsumption = batches
+      .filter(batch => new Date(batch.started_at) >= thirtyDaysAgo && batch.status === "completed")
+      .reduce((sum, batch) => {
+        if (batch.ingredients) {
+          const ingredient = batch.ingredients.find(ing => ing.item_id === item.id);
+          if (ingredient && ingredient.actual_weight_kg) {
+            return sum + parseFloat(ingredient.actual_weight_kg);
+          }
+        }
+        return sum;
+      }, 0);
+
+    // تقدير عدد الأيام المتبقية بناءً على معدل الاستهلاك
+    const dailyConsumption = recentConsumption / 30;
+    const daysRemaining = dailyConsumption > 0 ? Math.floor(currentStock / dailyConsumption) : Infinity;
+
+    return {
+      ...item,
+      totalConsumed,
+      currentStock,
+      reorderPoint,
+      isLowStock,
+      recentConsumption,
+      dailyConsumption,
+      daysRemaining: daysRemaining === Infinity ? "غير محدد" : daysRemaining
+    };
+  });
+
+  // المواد منخفضة المخزون
+  const lowStockItems = materialConsumptionData.filter(item => item.isLowStock);
+
+  // المواد الأكثر استهلاكاً
+  const topConsumedItems = materialConsumptionData
+    .sort((a, b) => b.totalConsumed - a.totalConsumed)
+    .slice(0, 10);
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Warehouse className="h-5 w-5" />
+            مراقبة المخزون للمواد الخام
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* شريط اختيار العرض */}
+            <div className="flex gap-2">
+              <Button
+                variant={selectedView === "overview" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("overview")}
+              >
+                نظرة عامة
+              </Button>
+              <Button
+                variant={selectedView === "low-stock" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("low-stock")}
+              >
+                مخزون منخفض
+              </Button>
+              <Button
+                variant={selectedView === "consumption" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("consumption")}
+              >
+                تحليل الاستهلاك
+              </Button>
+              <Button
+                variant={selectedView === "transactions" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedView("transactions")}
+              >
+                سجل المعاملات
+              </Button>
+            </div>
+
+            {/* النظرة العامة */}
+            {selectedView === "overview" && (
+              <div className="space-y-4">
+                {/* إحصائيات سريعة */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{items.length}</div>
+                      <div className="text-sm text-gray-500">إجمالي المواد</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-red-600">{lowStockItems.length}</div>
+                      <div className="text-sm text-gray-500">مخزون منخفض</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-green-600">
+                        {materialConsumptionData.reduce((sum, item) => sum + item.totalConsumed, 0).toFixed(1)}
+                      </div>
+                      <div className="text-sm text-gray-500">إجمالي الاستهلاك (كجم)</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-yellow-600">
+                        {materialConsumptionData.reduce((sum, item) => sum + item.recentConsumption, 0).toFixed(1)}
+                      </div>
+                      <div className="text-sm text-gray-500">استهلاك آخر 30 يوم (كجم)</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* جدول المواد */}
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">المادة</TableHead>
+                        <TableHead className="text-right">المخزون الحالي</TableHead>
+                        <TableHead className="text-right">نقطة إعادة الطلب</TableHead>
+                        <TableHead className="text-right">إجمالي الاستهلاك</TableHead>
+                        <TableHead className="text-right">استهلاك 30 يوم</TableHead>
+                        <TableHead className="text-right">الأيام المتبقية</TableHead>
+                        <TableHead className="text-right">الحالة</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {materialConsumptionData.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-medium">
+                            {item.name_ar || item.name}
+                          </TableCell>
+                          <TableCell>{item.currentStock.toFixed(2)} كجم</TableCell>
+                          <TableCell>{item.reorderPoint.toFixed(2)} كجم</TableCell>
+                          <TableCell>{item.totalConsumed.toFixed(2)} كجم</TableCell>
+                          <TableCell>{item.recentConsumption.toFixed(2)} كجم</TableCell>
+                          <TableCell>
+                            {typeof item.daysRemaining === "number" ? 
+                              `${item.daysRemaining} يوم` : item.daysRemaining}
+                          </TableCell>
+                          <TableCell>
+                            {item.isLowStock ? (
+                              <Badge variant="destructive" className="gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                مخزون منخفض
+                              </Badge>
+                            ) : (
+                              <Badge variant="default">متوفر</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* المخزون المنخفض */}
+            {selectedView === "low-stock" && (
+              <div className="space-y-4">
+                {lowStockItems.length > 0 ? (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">المادة</TableHead>
+                          <TableHead className="text-right">المخزون الحالي</TableHead>
+                          <TableHead className="text-right">نقطة إعادة الطلب</TableHead>
+                          <TableHead className="text-right">النقص</TableHead>
+                          <TableHead className="text-right">الأيام المتبقية</TableHead>
+                          <TableHead className="text-right">مستوى الخطر</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {lowStockItems.map(item => {
+                          const shortage = item.reorderPoint - item.currentStock;
+                          const riskLevel = 
+                            item.currentStock <= 0 ? "critical" :
+                            item.currentStock <= item.reorderPoint * 0.5 ? "high" : "medium";
+                          
+                          return (
+                            <TableRow key={item.id}>
+                              <TableCell className="font-medium">
+                                {item.name_ar || item.name}
+                              </TableCell>
+                              <TableCell>
+                                <span className="text-red-600 font-medium">
+                                  {item.currentStock.toFixed(2)} كجم
+                                </span>
+                              </TableCell>
+                              <TableCell>{item.reorderPoint.toFixed(2)} كجم</TableCell>
+                              <TableCell>
+                                <span className="text-red-600">
+                                  {shortage.toFixed(2)} كجم
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                {typeof item.daysRemaining === "number" ? 
+                                  `${item.daysRemaining} يوم` : item.daysRemaining}
+                              </TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={
+                                    riskLevel === "critical" ? "destructive" :
+                                    riskLevel === "high" ? "destructive" : "secondary"
+                                  }
+                                >
+                                  {riskLevel === "critical" ? "حرج" :
+                                   riskLevel === "high" ? "عالي" : "متوسط"}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
+                    <p className="text-green-600 font-medium">ممتاز! جميع المواد متوفرة بكميات كافية</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* تحليل الاستهلاك */}
+            {selectedView === "consumption" && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">المواد الأكثر استهلاكاً</h3>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">المادة</TableHead>
+                        <TableHead className="text-right">إجمالي الاستهلاك</TableHead>
+                        <TableHead className="text-right">استهلاك آخر 30 يوم</TableHead>
+                        <TableHead className="text-right">المعدل اليومي</TableHead>
+                        <TableHead className="text-right">عدد الدفعات</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {topConsumedItems.map(item => {
+                        const batchesUsed = batches.filter(batch => 
+                          batch.ingredients?.some(ing => ing.item_id === item.id)
+                        ).length;
+                        
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell className="font-medium">
+                              {item.name_ar || item.name}
+                            </TableCell>
+                            <TableCell>{item.totalConsumed.toFixed(2)} كجم</TableCell>
+                            <TableCell>{item.recentConsumption.toFixed(2)} كجم</TableCell>
+                            <TableCell>{item.dailyConsumption.toFixed(2)} كجم/يوم</TableCell>
+                            <TableCell>{batchesUsed} دفعة</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {/* سجل المعاملات */}
+            {selectedView === "transactions" && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">سجل معاملات المخزون</h3>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-right">التاريخ</TableHead>
+                        <TableHead className="text-right">المادة</TableHead>
+                        <TableHead className="text-right">نوع المعاملة</TableHead>
+                        <TableHead className="text-right">الكمية</TableHead>
+                        <TableHead className="text-right">المرجع</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inventoryTransactions
+                        .filter(t => t.reference_type === "mixing_batch")
+                        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                        .slice(0, 50)
+                        .map(transaction => {
+                          const item = items.find(i => i.id === transaction.item_id);
+                          const batch = batches.find(b => b.id === transaction.reference_id);
+                          
+                          return (
+                            <TableRow key={transaction.id}>
+                              <TableCell>
+                                {new Date(transaction.created_at).toLocaleDateString("ar-EG")}
+                              </TableCell>
+                              <TableCell>{item?.name_ar || item?.name}</TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={transaction.transaction_type === "out" ? "destructive" : "default"}
+                                >
+                                  {transaction.transaction_type === "out" ? "استهلاك" : "إضافة"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <span className={transaction.transaction_type === "out" ? "text-red-600" : "text-green-600"}>
+                                  {transaction.transaction_type === "out" ? "-" : "+"}{transaction.quantity.toFixed(2)} كجم
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                دفعة خلط: {batch?.batch_number || transaction.reference_id}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// مكون تفاصيل استهلاك المخزون للدفعة
+function BatchInventoryDetails({ 
+  batch, 
+  formula, 
+  inventory, 
+  inventoryTransactions,
+  onRecordConsumption 
+}: { 
+  batch: MixingBatch;
+  formula?: MixingFormula;
+  inventory: any[];
+  inventoryTransactions: InventoryTransaction[];
+  onRecordConsumption: any;
+}) {
+  const [consumptionData, setConsumptionData] = useState<any[]>([]);
+
+  // تحضير بيانات الاستهلاك عند تحميل المكون
+  React.useEffect(() => {
+    if (batch.ingredients && formula?.ingredients) {
+      const data = batch.ingredients.map(batchIngredient => {
+        const formulaIngredient = formula.ingredients?.find(fi => fi.item_id === batchIngredient.item_id);
+        const inventoryItem = inventory.find(inv => inv.item_id === batchIngredient.item_id);
+        const plannedWeight = parseFloat(batchIngredient.planned_weight_kg || "0");
+        const actualWeight = parseFloat(batchIngredient.actual_weight_kg || "0");
+        
+        return {
+          item_id: batchIngredient.item_id,
+          item_name: batchIngredient.item_name_ar || batchIngredient.item_name,
+          percentage: formulaIngredient?.percentage || "0",
+          planned_weight: plannedWeight,
+          actual_weight: actualWeight,
+          current_stock: inventoryItem?.quantity || 0,
+          cost_per_unit: inventoryItem?.cost_per_unit || 0,
+          total_cost: actualWeight * (inventoryItem?.cost_per_unit || 0),
+          is_sufficient: (inventoryItem?.quantity || 0) >= actualWeight,
+          variance: actualWeight - plannedWeight,
+          variance_percentage: plannedWeight > 0 ? ((actualWeight - plannedWeight) / plannedWeight * 100) : 0
+        };
+      });
+      setConsumptionData(data);
+    }
+  }, [batch, formula, inventory]);
+
+  // دالة تسجيل الاستهلاك
+  const handleRecordConsumption = () => {
+    const consumptions = consumptionData
+      .filter(item => item.actual_weight > 0)
+      .map(item => ({
+        item_id: item.item_id,
+        quantity_consumed: item.actual_weight,
+        cost_at_consumption: item.cost_per_unit
+      }));
+
+    onRecordConsumption.mutate({
+      batchId: batch.id,
+      consumptions
+    });
+  };
+
+  // التحقق من إمكانية تسجيل الاستهلاك
+  const canRecordConsumption = consumptionData.every(item => item.is_sufficient) && 
+    consumptionData.some(item => item.actual_weight > 0);
+
+  // البحث عن المعاملات المسجلة للدفعة
+  const existingTransactions = inventoryTransactions.filter(
+    t => t.reference_type === "mixing_batch" && t.reference_id === batch.id
+  );
+
+  const isAlreadyRecorded = existingTransactions.length > 0;
+
+  return (
+    <div className="space-y-6">
+      {/* معلومات الدفعة */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-gray-500">رقم الدفعة</div>
+            <div className="text-lg font-medium">{batch.batch_number}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-gray-500">الوزن الكلي</div>
+            <div className="text-lg font-medium">{parseFloat(batch.total_weight_kg).toFixed(2)} كجم</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-gray-500">حالة التسجيل</div>
+            <div className="text-lg font-medium">
+              {isAlreadyRecorded ? (
+                <Badge variant="default">مسجل في المخزون</Badge>
+              ) : (
+                <Badge variant="secondary">غير مسجل</Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* جدول تفاصيل الاستهلاك */}
+      <Card>
+        <CardHeader>
+          <CardTitle>تفاصيل استهلاك المواد</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">المادة</TableHead>
+                  <TableHead className="text-right">النسبة</TableHead>
+                  <TableHead className="text-right">المخطط (كجم)</TableHead>
+                  <TableHead className="text-right">الفعلي (كجم)</TableHead>
+                  <TableHead className="text-right">الانحراف</TableHead>
+                  <TableHead className="text-right">المخزون الحالي</TableHead>
+                  <TableHead className="text-right">التكلفة</TableHead>
+                  <TableHead className="text-right">الحالة</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {consumptionData.map(item => (
+                  <TableRow key={item.item_id}>
+                    <TableCell className="font-medium">
+                      {item.item_name}
+                    </TableCell>
+                    <TableCell>{item.percentage}%</TableCell>
+                    <TableCell>{item.planned_weight.toFixed(2)}</TableCell>
+                    <TableCell>
+                      <span className={item.actual_weight > 0 ? "font-medium" : "text-gray-400"}>
+                        {item.actual_weight.toFixed(2)}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={
+                        Math.abs(item.variance_percentage) < 1 ? "text-green-600" :
+                        Math.abs(item.variance_percentage) < 3 ? "text-yellow-600" :
+                        "text-red-600"
+                      }>
+                        {item.variance > 0 ? "+" : ""}{item.variance.toFixed(2)} 
+                        ({item.variance_percentage.toFixed(1)}%)
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={item.is_sufficient ? "text-green-600" : "text-red-600"}>
+                        {item.current_stock.toFixed(2)} كجم
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {item.total_cost.toFixed(2)} ر.س
+                    </TableCell>
+                    <TableCell>
+                      {item.is_sufficient ? (
+                        <Badge variant="default">متوفر</Badge>
+                      ) : (
+                        <Badge variant="destructive">نقص في المخزون</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* ملخص التكلفة الإجمالية */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-sm text-gray-500">إجمالي الوزن المستهلك</div>
+                <div className="text-lg font-medium">
+                  {consumptionData.reduce((sum, item) => sum + item.actual_weight, 0).toFixed(2)} كجم
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">إجمالي التكلفة</div>
+                <div className="text-lg font-medium text-green-600">
+                  {consumptionData.reduce((sum, item) => sum + item.total_cost, 0).toFixed(2)} ر.س
+                </div>
+              </div>
+              <div>
+                <div className="text-sm text-gray-500">متوسط التكلفة</div>
+                <div className="text-lg font-medium">
+                  {batch.total_weight_kg ? 
+                    (consumptionData.reduce((sum, item) => sum + item.total_cost, 0) / parseFloat(batch.total_weight_kg)).toFixed(2) : 
+                    "0.00"} ر.س/كجم
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* أزرار الإجراءات */}
+          <div className="mt-4 flex gap-2">
+            {!isAlreadyRecorded && canRecordConsumption && (
+              <Button 
+                onClick={handleRecordConsumption}
+                className="gap-2"
+                disabled={onRecordConsumption.isPending}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {onRecordConsumption.isPending ? "جاري التسجيل..." : "تسجيل الاستهلاك في المخزون"}
+              </Button>
+            )}
+            
+            {!canRecordConsumption && (
+              <div className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-sm">لا يمكن تسجيل الاستهلاك - نقص في المخزون أو بيانات غير مكتملة</span>
+              </div>
+            )}
+
+            {isAlreadyRecorded && (
+              <div className="flex items-center gap-2 text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                <span className="text-sm">تم تسجيل الاستهلاك بنجاح في {new Date(existingTransactions[0]?.created_at).toLocaleDateString("ar-EG")}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* المعاملات المسجلة */}
+      {existingTransactions.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>المعاملات المسجلة</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">التاريخ</TableHead>
+                    <TableHead className="text-right">المادة</TableHead>
+                    <TableHead className="text-right">الكمية المستهلكة</TableHead>
+                    <TableHead className="text-right">سعر الوحدة</TableHead>
+                    <TableHead className="text-right">التكلفة الإجمالية</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {existingTransactions.map(transaction => {
+                    const item = consumptionData.find(cd => cd.item_id === transaction.item_id);
+                    return (
+                      <TableRow key={transaction.id}>
+                        <TableCell>
+                          {new Date(transaction.created_at).toLocaleDateString("ar-EG")}
+                        </TableCell>
+                        <TableCell>{item?.item_name}</TableCell>
+                        <TableCell className="text-red-600">
+                          -{transaction.quantity.toFixed(2)} كجم
+                        </TableCell>
+                        <TableCell>
+                          {transaction.cost_per_unit?.toFixed(2)} ر.س/كجم
+                        </TableCell>
+                        <TableCell>
+                          {((transaction.cost_per_unit || 0) * transaction.quantity).toFixed(2)} ر.س
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
