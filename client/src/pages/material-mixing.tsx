@@ -163,39 +163,47 @@ export default function MaterialMixing() {
   const [statusFilter, setStatusFilter] = useState("");
 
   // جلب البيانات
-  const { data: formulas, isLoading: formulasLoading } = useQuery<MixingFormula[]>({
+  const { data: formulasData, isLoading: formulasLoading } = useQuery<{ data: MixingFormula[] }>({
     queryKey: ["/api/mixing-formulas"],
   });
+  const formulas = formulasData?.data || [];
 
-  const { data: batches, isLoading: batchesLoading } = useQuery<MixingBatch[]>({
+  const { data: batchesData, isLoading: batchesLoading } = useQuery<{ data: MixingBatch[] }>({
     queryKey: ["/api/mixing-batches"],
   });
+  const batches = batchesData?.data || [];
 
-  const { data: machines = [] } = useQuery<any[]>({
+  const { data: machinesData } = useQuery<{ data: any[] }>({
     queryKey: ["/api/machines"],
   });
+  const machines = machinesData?.data || [];
 
-  const { data: users = [] } = useQuery<any[]>({
+  const { data: usersData } = useQuery<{ data: any[] }>({
     queryKey: ["/api/users"],
   });
+  const users = usersData?.data || [];
 
-  const { data: productionOrders = [] } = useQuery<any[]>({
+  const { data: productionOrdersData } = useQuery<{ data: any[] }>({
     queryKey: ["/api/production-orders"],
   });
+  const productionOrders = productionOrdersData?.data || [];
 
-  const { data: items = [] } = useQuery<Item[]>({
+  const { data: itemsData } = useQuery<{ data: Item[] }>({
     queryKey: ["/api/items"],
   });
+  const items = itemsData?.data || [];
 
   // جلب بيانات المخزون للحصول على الأسعار
-  const { data: inventory = [] } = useQuery<any[]>({
+  const { data: inventoryData } = useQuery<{ data: any[] }>({
     queryKey: ["/api/inventory"],
   });
+  const inventory = inventoryData?.data || [];
 
   // جلب معاملات المخزون
-  const { data: inventoryTransactions = [] } = useQuery<InventoryTransaction[]>({
+  const { data: inventoryTransactionsData } = useQuery<{ data: InventoryTransaction[] }>({
     queryKey: ["/api/inventory-transactions"],
   });
+  const inventoryTransactions = inventoryTransactionsData?.data || [];
 
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
   const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
