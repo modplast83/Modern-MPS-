@@ -31,7 +31,7 @@ import {
 } from "../components/ui/select";
 import { Checkbox } from "../components/ui/checkbox";
 import { useToast } from "../hooks/use-toast";
-import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package, X, Copy, Eye, Search, Filter } from "lucide-react";
+import { Beaker, Plus, Trash2, Edit, CheckCircle2, Package, X, Copy, Eye, Search, Filter, Calculator } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
 import Header from "../components/layout/Header";
@@ -135,11 +135,11 @@ export default function MaterialMixing() {
   const [statusFilter, setStatusFilter] = useState("");
 
   // جلب البيانات
-  const { data: formulas = [], isLoading: formulasLoading } = useQuery<MixingFormula[]>({
+  const { data: formulas, isLoading: formulasLoading } = useQuery<MixingFormula[]>({
     queryKey: ["/api/mixing-formulas"],
   });
 
-  const { data: batches = [], isLoading: batchesLoading } = useQuery<MixingBatch[]>({
+  const { data: batches, isLoading: batchesLoading } = useQuery<MixingBatch[]>({
     queryKey: ["/api/mixing-batches"],
   });
 
@@ -159,8 +159,40 @@ export default function MaterialMixing() {
     queryKey: ["/api/items"],
   });
 
+  // جلب بيانات المخزون للحصول على الأسعار
+  const { data: inventory = [] } = useQuery<any[]>({
+    queryKey: ["/api/inventory"],
+  });
+
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
   const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
+
+  // دالة حساب التكلفة التقديرية للوصفة
+  const calculateFormulaCost = (formula: MixingFormula, weightKg: number = 1) => {
+    if (!formula.ingredients || formula.ingredients.length === 0) return null;
+    
+    let totalCost = 0;
+    let missingPrices = 0;
+    
+    formula.ingredients.forEach((ingredient: any) => {
+      const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+      const costPerUnit = inventoryItem?.cost_per_unit;
+      
+      if (costPerUnit && parseFloat(costPerUnit) > 0) {
+        const ingredientWeight = (weightKg * parseFloat(ingredient.percentage)) / 100;
+        totalCost += ingredientWeight * parseFloat(costPerUnit);
+      } else {
+        missingPrices++;
+      }
+    });
+    
+    return {
+      totalCost: totalCost,
+      costPerKg: totalCost / weightKg,
+      missingPrices: missingPrices,
+      isComplete: missingPrices === 0
+    };
+  };
 
   // فلترة الوصفات
   const filteredFormulas = formulas?.filter((formula) => {
@@ -273,6 +305,7 @@ export default function MaterialMixing() {
                       formula={selectedFormula}
                       machines={machines || []}
                       items={rawMaterialItems}
+                      inventory={inventory || []}
                       onSuccess={() => {
                         setIsEditDialogOpen(false);
                         setSelectedFormula(null);
@@ -358,6 +391,7 @@ export default function MaterialMixing() {
                         <TableHead className="text-right">المقاس (سم)</TableHead>
                         <TableHead className="text-right">السماكة (ميكرون)</TableHead>
                         <TableHead className="text-right">المكونات</TableHead>
+                        <TableHead className="text-right">التكلفة التقديرية</TableHead>
                         <TableHead className="text-right">الألوان</TableHead>
                         <TableHead className="text-right">السكرو</TableHead>
                         <TableHead className="text-right">الحالة</TableHead>
@@ -408,6 +442,42 @@ export default function MaterialMixing() {
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
+                            </TableCell>
+                            <TableCell>
+                              {(() => {
+                                const costData = calculateFormulaCost(formula, 1);
+                                if (!costData) {
+                                  return <span className="text-gray-400 text-sm">غير محدد</span>;
+                                }
+                                
+                                if (!costData.isComplete) {
+                                  return (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center gap-1 text-amber-600">
+                                            <span className="text-sm">
+                                              {costData.costPerKg.toFixed(2)} ر.س/كجم
+                                            </span>
+                                            <span className="text-xs">⚠️</span>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">
+                                            تقدير جزئي - {costData.missingPrices} مكون بدون سعر
+                                          </p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  );
+                                }
+                                
+                                return (
+                                  <div className="text-sm font-medium text-green-600">
+                                    {costData.costPerKg.toFixed(2)} ر.س/كجم
+                                  </div>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
@@ -500,6 +570,76 @@ export default function MaterialMixing() {
                                     <p className="text-sm text-blue-800">{formula.notes}</p>
                                   </div>
                                 )}
+                                
+                                {/* تفاصيل التكلفة */}
+                                {(() => {
+                                  const costData = calculateFormulaCost(formula, 1);
+                                  if (costData) {
+                                    return (
+                                      <div className="mt-4 p-3 bg-green-50 rounded">
+                                        <h5 className="font-medium text-sm text-green-900 mb-2">تحليل التكلفة التقديرية (لكل كيلوجرام):</h5>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          <div className="space-y-2">
+                                            <div className="text-sm">
+                                              <span className="font-medium">التكلفة الإجمالية: </span>
+                                              <span className="text-green-700">{costData.costPerKg.toFixed(2)} ر.س/كجم</span>
+                                            </div>
+                                            {!costData.isComplete && (
+                                              <div className="text-xs text-amber-600">
+                                                ⚠️ تقدير جزئي - {costData.missingPrices} مكون بدون سعر محدد
+                                              </div>
+                                            )}
+                                            
+                                            {/* حاسبة الوزن السريعة */}
+                                            <div className="mt-2 p-2 bg-white rounded border">
+                                              <label className="text-xs font-medium text-gray-600">حساب التكلفة لوزن مختلف:</label>
+                                              <div className="flex items-center gap-2 mt-1">
+                                                <input
+                                                  type="number"
+                                                  min="0.1"
+                                                  step="0.1"
+                                                  defaultValue="1"
+                                                  className="w-16 px-1 py-1 text-xs border rounded"
+                                                  onChange={(e) => {
+                                                    const weight = parseFloat(e.target.value) || 1;
+                                                    const newCost = calculateFormulaCost(formula, weight);
+                                                    const display = e.target.nextElementSibling as HTMLElement;
+                                                    if (newCost && display) {
+                                                      display.textContent = `${newCost.totalCost.toFixed(2)} ر.س`;
+                                                    }
+                                                  }}
+                                                />
+                                                <span className="text-xs text-gray-500">كجم =</span>
+                                                <span className="text-xs font-medium text-green-600">
+                                                  {costData.totalCost.toFixed(2)} ر.س
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="space-y-1">
+                                            <h6 className="text-xs font-medium text-green-800">تفصيل المكونات:</h6>
+                                            {formula.ingredients?.map((ingredient: any) => {
+                                              const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+                                              const costPerUnit = inventoryItem?.cost_per_unit;
+                                              const ingredientCost = costPerUnit ? 
+                                                (parseFloat(ingredient.percentage) / 100) * parseFloat(costPerUnit) : null;
+                                              
+                                              return (
+                                                <div key={ingredient.id} className="flex justify-between text-xs">
+                                                  <span>{ingredient.item_name_ar || ingredient.item_name} ({ingredient.percentage}%)</span>
+                                                  <span className={ingredientCost ? "text-green-600" : "text-gray-400"}>
+                                                    {ingredientCost ? `${ingredientCost.toFixed(2)} ر.س` : "غير محدد"}
+                                                  </span>
+                                                </div>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -647,8 +787,9 @@ export default function MaterialMixing() {
           {editingFormula && (
             <EditFormulaForm
               formula={editingFormula}
-              machines={machines?.data || []}
-              items={items?.data || []}
+              machines={machines || []}
+              items={items || []}
+              inventory={inventory || []}
               onSuccess={() => {
                 setEditDialogOpen(false);
                 setEditingFormula(null);
@@ -668,8 +809,9 @@ export default function MaterialMixing() {
           {copyingFormula && (
             <CopyFormulaForm
               originalFormula={copyingFormula}
-              machines={machines?.data || []}
-              items={items?.data || []}
+              machines={machines || []}
+              items={items || []}
+              inventory={inventory || []}
               onSuccess={() => {
                 setCopyDialogOpen(false);
                 setCopyingFormula(null);
@@ -682,6 +824,33 @@ export default function MaterialMixing() {
     </div>
   );
 }
+
+// دالة مساعدة لحساب التكلفة خارج المكون الرئيسي
+const calculateCostForIngredients = (ingredients: any[], inventory: any[], weightKg: number = 1) => {
+  if (!ingredients || ingredients.length === 0) return null;
+  
+  let totalCost = 0;
+  let missingPrices = 0;
+  
+  ingredients.forEach((ingredient: any) => {
+    const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+    const costPerUnit = inventoryItem?.cost_per_unit;
+    
+    if (costPerUnit && parseFloat(costPerUnit) > 0) {
+      const ingredientWeight = (weightKg * parseFloat(ingredient.percentage)) / 100;
+      totalCost += ingredientWeight * parseFloat(costPerUnit);
+    } else {
+      missingPrices++;
+    }
+  });
+  
+  return {
+    totalCost: totalCost,
+    costPerKg: totalCost / weightKg,
+    missingPrices: missingPrices,
+    isComplete: missingPrices === 0
+  };
+};
 
 // قائمة ألوان الماستر باتش الشائعة
 const MASTER_BATCH_COLORS = [
@@ -1313,11 +1482,13 @@ function EditFormulaForm({
   formula,
   machines,
   items,
+  inventory,
   onSuccess,
 }: {
   formula: MixingFormula;
   machines: any[];
   items: Item[];
+  inventory: any[];
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
@@ -1433,7 +1604,7 @@ function EditFormulaForm({
             <Select
               value={formData.machine_id?.toString()}
               onValueChange={(value: any) =>
-                setFormData({ ...formData, machine_id: parseInt(value) })
+                setFormData({ ...formData, machine_id: value })
               }
             >
               <SelectTrigger>
@@ -1625,11 +1796,13 @@ function CopyFormulaForm({
   originalFormula,
   machines,
   items,
+  inventory,
   onSuccess,
 }: {
   originalFormula: MixingFormula;
   machines: any[];
   items: Item[];
+  inventory: any[];
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
@@ -1776,7 +1949,7 @@ function CopyFormulaForm({
             <Select
               value={formData.machine_id?.toString()}
               onValueChange={(value: any) =>
-                setFormData({ ...formData, machine_id: parseInt(value) })
+                setFormData({ ...formData, machine_id: value })
               }
             >
               <SelectTrigger>
@@ -1895,6 +2068,32 @@ function CopyFormulaForm({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* تقدير التكلفة للوصفة الجديدة */}
+        {ingredients.length > 0 && (
+          <div className="mt-4 p-3 bg-green-50 rounded">
+            <h5 className="font-medium text-sm text-green-900 mb-2">تقدير التكلفة للوصفة الجديدة:</h5>
+            {(() => {
+              const costData = calculateCostForIngredients(ingredients, inventory, 1);
+              if (costData) {
+                return (
+                  <div className="space-y-2">
+                    <div className="text-sm">
+                      <span className="font-medium">التكلفة المتوقعة: </span>
+                      <span className="text-green-700">{costData.costPerKg.toFixed(2)} ر.س/كجم</span>
+                    </div>
+                    {!costData.isComplete && (
+                      <div className="text-xs text-amber-600">
+                        ⚠️ تقدير جزئي - {costData.missingPrices} مكون بدون سعر محدد
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              return <div className="text-sm text-gray-500">لا يمكن حساب التكلفة</div>;
+            })()}
           </div>
         )}
       </div>
