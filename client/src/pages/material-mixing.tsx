@@ -451,12 +451,11 @@ export default function MaterialMixing() {
                       className="pr-10"
                     />
                   </div>
-                  <Select value={machineFilter} onValueChange={setMachineFilter}>
+                  <Select value={machineFilter || undefined} onValueChange={setMachineFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="فلترة حسب الماكينة" />
+                      <SelectValue placeholder="جميع الماكينات" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">جميع الماكينات</SelectItem>
                       {machines
                         ?.filter((m: any) => m.section_id === "extruder" || m.type === "extruder")
                         .map((machine: any) => (
@@ -466,12 +465,11 @@ export default function MaterialMixing() {
                         ))}
                     </SelectContent>
                   </Select>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
                     <SelectTrigger>
-                      <SelectValue placeholder="فلترة حسب الحالة" />
+                      <SelectValue placeholder="جميع الحالات" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">جميع الحالات</SelectItem>
                       <SelectItem value="active">نشط</SelectItem>
                       <SelectItem value="inactive">غير نشط</SelectItem>
                     </SelectContent>
@@ -834,12 +832,11 @@ export default function MaterialMixing() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="batch-status-filter">فلترة حسب الحالة</Label>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <Select value={statusFilter || undefined} onValueChange={setStatusFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="جميع الحالات" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">جميع الحالات</SelectItem>
                         <SelectItem value="pending">معلق</SelectItem>
                         <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
                         <SelectItem value="completed">مكتمل</SelectItem>
@@ -849,12 +846,11 @@ export default function MaterialMixing() {
 
                   <div className="space-y-2">
                     <Label htmlFor="variance-filter">فلترة حسب الانحراف</Label>
-                    <Select value={machineFilter} onValueChange={setMachineFilter}>
+                    <Select value={machineFilter || undefined} onValueChange={setMachineFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="جميع المستويات" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">جميع المستويات</SelectItem>
                         <SelectItem value="excellent">ممتاز (أقل من 1%)</SelectItem>
                         <SelectItem value="good">جيد (1-3%)</SelectItem>
                         <SelectItem value="warning">تحذير (3-5%)</SelectItem>
@@ -866,12 +862,11 @@ export default function MaterialMixing() {
 
                   <div className="space-y-2">
                     <Label htmlFor="machine-filter">فلترة حسب الماكينة</Label>
-                    <Select value={machineFilter} onValueChange={setMachineFilter}>
+                    <Select value={machineFilter || undefined} onValueChange={setMachineFilter}>
                       <SelectTrigger>
                         <SelectValue placeholder="جميع الماكينات" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">جميع الماكينات</SelectItem>
                         {machines && machines.map((machine) => (
                           <SelectItem key={machine.id} value={machine.id}>
                             {machine.name_ar || machine.name}
