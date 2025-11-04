@@ -912,3 +912,26 @@
     hsl(var(--danger-600))
   );
 }
+
+/* إخفاء layout من الصفحات المدمجة داخل tabs */
+.embedded-page-wrapper > div > header,
+.embedded-page-wrapper > div > .flex > aside,
+.embedded-page-wrapper > div > .flex > main > nav {
+  display: none !important;
+}
+
+/* إزالة padding وmargin من الصفحات المدمجة */
+.embedded-page-wrapper > div {
+  min-height: auto !important;
+  background: transparent !important;
+}
+
+.embedded-page-wrapper > div > .flex {
+  display: block !important;
+}
+
+.embedded-page-wrapper > div > .flex > main {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+

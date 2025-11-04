@@ -39,7 +39,6 @@ import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
 import MaterialMixing from "./pages/material-mixing";
-import ProductionManagement from "./pages/production-management";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -85,24 +84,17 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
-      {/* Unified Production Management Page */}
-      <Route path="/production-management/:tab?">
-        <ProtectedRoute path="/production-management/:tab?">
-          <ProductionManagement />
-        </ProtectedRoute>
-      </Route>
-
-      {/* Redirects from old routes to new unified page */}
+      {/* Redirects from old routes to Orders page with tabs */}
       <Route path="/production-orders-management">
-        <Redirect to="/production-management/production-orders" />
+        <Redirect to="/orders?tab=production-orders" />
       </Route>
 
       <Route path="/production-queues">
-        <Redirect to="/production-management/production-queues" />
+        <Redirect to="/orders?tab=production-queues" />
       </Route>
 
       <Route path="/roll-search">
-        <Redirect to="/production-management/roll-search" />
+        <Redirect to="/orders?tab=roll-search" />
       </Route>
 
       <Route path="/film-operator">
@@ -148,7 +140,7 @@ function AppRoutes() {
       </Route>
 
       <Route path="/production-reports">
-        <Redirect to="/production-management/production-reports" />
+        <Redirect to="/orders?tab=production-reports" />
       </Route>
 
       <Route path="/settings">
