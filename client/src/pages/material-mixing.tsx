@@ -135,11 +135,11 @@ export default function MaterialMixing() {
   const [statusFilter, setStatusFilter] = useState("");
 
   // جلب البيانات
-  const { data: formulas, isLoading: formulasLoading } = useQuery<MixingFormula[]>({
+  const { data: formulas = [], isLoading: formulasLoading } = useQuery<MixingFormula[]>({
     queryKey: ["/api/mixing-formulas"],
   });
 
-  const { data: batches, isLoading: batchesLoading } = useQuery<MixingBatch[]>({
+  const { data: batches = [], isLoading: batchesLoading } = useQuery<MixingBatch[]>({
     queryKey: ["/api/mixing-batches"],
   });
 
