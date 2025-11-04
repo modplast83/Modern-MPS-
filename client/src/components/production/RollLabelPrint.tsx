@@ -59,7 +59,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             padding: 0;
             width: 4in;
             height: 6in;
-            font-size: 11pt;
+            font-size: 9pt;
             color: #000;
             background: white;
           }
@@ -67,48 +67,49 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           .label-container {
             width: 100%;
             height: 100%;
-            padding: 8mm;
+            padding: 4mm;
             box-sizing: border-box;
-            border: 3px solid #000;
+            border: 2px solid #000;
             display: flex;
             flex-direction: column;
           }
           
           .header {
             text-align: center;
-            border-bottom: 3px solid #000;
-            padding-bottom: 4mm;
-            margin-bottom: 4mm;
+            border-bottom: 2px solid #000;
+            padding-bottom: 2mm;
+            margin-bottom: 2mm;
           }
           
           .company-name {
-            font-size: 14pt;
+            font-size: 10pt;
             font-weight: bold;
-            margin-bottom: 2mm;
+            margin-bottom: 1mm;
             color: #000;
           }
           
           .roll-number {
-            font-size: 18pt;
+            font-size: 14pt;
             font-weight: bold;
             background: #000;
             color: #fff;
-            padding: 2mm 4mm;
-            margin-top: 2mm;
-            border-radius: 2mm;
+            padding: 1.5mm 3mm;
+            margin-top: 1mm;
+            border-radius: 1mm;
+            display: inline-block;
           }
           
           .qr-section {
             text-align: center;
-            margin: 4mm 0;
-            padding: 3mm;
-            border: 2px solid #333;
+            margin: 2mm 0;
+            padding: 2mm;
+            border: 1px solid #333;
             background: #f9f9f9;
           }
           
           .qr-image {
-            max-width: 80px;
-            max-height: 80px;
+            max-width: 60px;
+            max-height: 60px;
             margin: 0 auto;
           }
           
@@ -116,21 +117,21 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             flex: 1;
             display: grid;
             grid-template-columns: 1fr;
-            gap: 3mm;
-            margin: 3mm 0;
+            gap: 1.5mm;
+            margin: 2mm 0;
           }
           
           .info-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3mm;
+            gap: 1.5mm;
           }
           
           .info-box {
-            border: 2px solid #333;
-            padding: 2.5mm;
+            border: 1px solid #333;
+            padding: 1.5mm;
             background: #fff;
-            min-height: 12mm;
+            min-height: 8mm;
           }
           
           .info-box.full {
@@ -140,29 +141,31 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           .info-box.highlight {
             background: #ffe6e6;
             border-color: #c00;
+            border-width: 2px;
           }
           
           .info-label {
-            font-size: 8pt;
+            font-size: 7pt;
             color: #666;
             font-weight: 600;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
             text-transform: uppercase;
           }
           
           .info-value {
-            font-size: 12pt;
+            font-size: 9pt;
             font-weight: bold;
             color: #000;
-            line-height: 1.2;
+            line-height: 1.1;
+            word-wrap: break-word;
           }
           
           .footer {
             margin-top: auto;
-            padding-top: 3mm;
-            border-top: 2px solid #333;
+            padding-top: 1.5mm;
+            border-top: 1px solid #333;
             text-align: center;
-            font-size: 8pt;
+            font-size: 6pt;
             color: #666;
           }
           
@@ -252,82 +255,26 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
               ` : ''}
             </div>
             
-            <!-- Raw Material & Punching -->
-            <div class="info-row">
-              ${productionOrder && productionOrder.raw_material ? `
-                <div class="info-box">
-                  <div class="info-label">المادة الخام</div>
-                  <div class="info-value">${productionOrder.raw_material}</div>
-                </div>
-              ` : ''}
-              
-              ${productionOrder && productionOrder.punching ? `
-                <div class="info-box">
-                  <div class="info-label">التخريم</div>
-                  <div class="info-value">${productionOrder.punching}</div>
-                </div>
-              ` : ''}
-            </div>
-            
-            <!-- Weight -->
+            <!-- Weight (Highlighted) -->
             <div class="info-box highlight full">
               <div class="info-label">الوزن الكلي</div>
               <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'} كجم</div>
             </div>
             
-            <!-- Operators Section -->
-            <div class="info-row">
-              ${roll.created_by_name ? `
-                <div class="info-box">
-                  <div class="info-label">مشغل الفيلم</div>
-                  <div class="info-value">${roll.created_by_name}</div>
-                </div>
-              ` : ''}
-              
-              ${roll.printed_by_name ? `
-                <div class="info-box">
-                  <div class="info-label">مشغل الطباعة</div>
-                  <div class="info-value">${roll.printed_by_name}</div>
-                </div>
-              ` : ''}
-            </div>
-            
-            ${roll.cut_by_name ? `
+            <!-- Machine Information - Compact -->
+            ${roll.film_machine_name || roll.machine_id ? `
               <div class="info-box full">
-                <div class="info-label">مشغل التقطيع</div>
-                <div class="info-value">${roll.cut_by_name}</div>
+                <div class="info-label">ماكينة الفيلم</div>
+                <div class="info-value">${roll.film_machine_name || roll.machine_id}</div>
               </div>
             ` : ''}
             
-            <!-- Machine Information -->
-            ${roll.film_machine_name || roll.printing_machine_name || roll.cutting_machine_name || roll.machine_id ? `
-              <div class="info-row">
-                ${roll.film_machine_name ? `
-                  <div class="info-box">
-                    <div class="info-label">ماكينة الفيلم</div>
-                    <div class="info-value">${roll.film_machine_name}</div>
-                  </div>
-                ` : roll.machine_id ? `
-                  <div class="info-box">
-                    <div class="info-label">الماكينة</div>
-                    <div class="info-value">${roll.machine_id}</div>
-                  </div>
-                ` : ''}
-                
-                ${roll.printing_machine_name ? `
-                  <div class="info-box">
-                    <div class="info-label">ماكينة الطباعة</div>
-                    <div class="info-value">${roll.printing_machine_name}</div>
-                  </div>
-                ` : ''}
+            <!-- Operators Section - Only Film Operator -->
+            ${roll.created_by_name ? `
+              <div class="info-box full">
+                <div class="info-label">مشغل الفيلم</div>
+                <div class="info-value">${roll.created_by_name}</div>
               </div>
-              
-              ${roll.cutting_machine_name ? `
-                <div class="info-box full">
-                  <div class="info-label">ماكينة التقطيع</div>
-                  <div class="info-value">${roll.cutting_machine_name}</div>
-                </div>
-              ` : ''}
             ` : ''}
             
             <!-- Creation Date -->

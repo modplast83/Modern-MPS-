@@ -76,7 +76,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
 
     // Get section information to match with production stages
     const userSection = sections.find(
-      (section) => section.id === String(userSectionId),
+      (section) => Number(section.id) === userSectionId || section.id === String(userSectionId),
     );
     const sectionName = userSection?.name?.toLowerCase();
 
@@ -147,22 +147,22 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   }
 
   return (
-    <Card className="mb-6">
+    <Card className="mb-6 border-2 border-gray-300 shadow-lg">
       <Tabs value={activeStage} onValueChange={setActiveStage}>
-        <div className="border-b border-gray-200">
-          <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-800">
+        <div className="border-b-2 border-gray-300">
+          <div className="flex justify-between items-center px-3 md:px-4 py-3 md:py-4 bg-gradient-to-b from-gray-50 to-gray-100">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900">
               طوابير الإنتاج
             </h3>
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={refreshProductionData}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-base md:text-lg font-semibold border-2 hover:bg-primary hover:text-white transition-all"
               data-testid="button-refresh-production"
             >
-              <RefreshCw className="h-4 w-4" />
-              تحديث
+              <RefreshCw className="h-5 w-5 md:h-6 md:w-6" />
+              <span className="hidden sm:inline">تحديث</span>
             </Button>
           </div>
           <TabsList
@@ -188,13 +188,13 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                 <TabsTrigger
                   key={stage.id}
                   value={stage.id}
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary py-4 px-2 text-sm font-medium rounded-none flex items-center gap-2"
+                  className="data-[state=active]:border-b-4 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:bg-primary/10 py-5 md:py-6 px-3 md:px-4 text-base md:text-lg font-bold rounded-none flex flex-col md:flex-row items-center justify-center gap-2 transition-all hover:bg-gray-50"
                   data-testid={`tab-${stage.key}`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {stage.name_ar}
+                  <Icon className="h-6 w-6 md:h-7 md:w-7" />
+                  <span>{stage.name_ar}</span>
                   {queueCount > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <Badge variant="secondary" className="ml-1 text-sm md:text-base font-bold px-3 py-1">
                       {queueCount}
                     </Badge>
                   )}
@@ -207,8 +207,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         {/* Film Stage - Hierarchical Orders View */}
         {visibleStages.some((stage) => stage.key === "film") && (
           <TabsContent value="film" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
+            <CardContent className="p-3 md:p-6">
+              <CardTitle className="text-xl md:text-2xl font-bold mb-4 md:mb-6 pb-3 border-b-2 border-gray-200">
                 طلبات الإنتاج - مرحلة الفيلم
               </CardTitle>
               <ProductionStageStats stage="film" data={hierarchicalOrders} />
@@ -239,8 +239,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               
               // Show standard view for managers
               return (
-                <CardContent className="p-6">
-                  <CardTitle className="text-lg mb-4">
+                <CardContent className="p-3 md:p-6">
+                  <CardTitle className="text-xl md:text-2xl font-bold mb-4 md:mb-6 pb-3 border-b-2 border-gray-200">
                     قائمة انتظار الطباعة
                   </CardTitle>
                   <ProductionStageStats stage="printing" data={printingQueue} />
@@ -270,8 +270,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               
               // Show standard view for managers
               return (
-                <CardContent className="p-6">
-                  <CardTitle className="text-lg mb-4">
+                <CardContent className="p-3 md:p-6">
+                  <CardTitle className="text-xl md:text-2xl font-bold mb-4 md:mb-6 pb-3 border-b-2 border-gray-200">
                     قائمة انتظار التقطيع
                   </CardTitle>
                   <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
