@@ -42,19 +42,34 @@ const modules = [
     active: false,
   },
   {
+    name: "أوامر الإنتاج",
+    name_ar: "أوامر الإنتاج",
+    icon: ClipboardCheck,
+    path: "/orders?tab=production-orders",
+    active: false,
+    requiredRoles: ["admin", "production_manager"],
+  },
+  {
+    name: "طوابير الإنتاج",
+    name_ar: "طوابير الإنتاج",
+    icon: Link2,
+    path: "/orders?tab=production-queues",
+    active: false,
+    requiredRoles: ["admin", "production_manager"],
+  },
+  {
+    name: "البحث عن الرولات",
+    name_ar: "البحث عن الرولات",
+    icon: FileText,
+    path: "/orders?tab=roll-search",
+    active: false,
+  },
+  {
     name: "الإنتاج",
     name_ar: "الإنتاج",
     icon: Cog,
     path: "/production",
     active: false,
-  },
-  {
-    name: "إدارة الإنتاج",
-    name_ar: "إدارة الإنتاج",
-    icon: ClipboardCheck,
-    path: "/production-management",
-    active: false,
-    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
   },
   {
     name: "لوحة عامل الفيلم",
@@ -119,6 +134,14 @@ const modules = [
     icon: BarChart3,
     path: "/reports",
     active: false,
+  },
+  {
+    name: "تقارير الإنتاج",
+    name_ar: "تقارير الإنتاج",
+    icon: BarChart3,
+    path: "/orders?tab=production-reports",
+    active: false,
+    requiredRoles: ["admin", "production_manager"],
   },
   {
       name: "الأدوات",
