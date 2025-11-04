@@ -49,25 +49,10 @@ const modules = [
     active: false,
   },
   {
-    name: "البحث عن الرولات",
-    name_ar: "البحث عن الرولات",
-    icon: FileText,
-    path: "/roll-search",
-    active: false,
-  },
-  {
-    name: "إدارة أوامر الإنتاج",
-    name_ar: "إدارة أوامر الإنتاج",
+    name: "إدارة الإنتاج",
+    name_ar: "إدارة الإنتاج",
     icon: ClipboardCheck,
-    path: "/production-orders-management",
-    active: false,
-    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
-  },
-  {
-    name: "طوابير الإنتاج",
-    name_ar: "طوابير الإنتاج",
-    icon: Link2,
-    path: "/production-queues",
+    path: "/production-management",
     active: false,
     requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
   },
@@ -134,14 +119,6 @@ const modules = [
     icon: BarChart3,
     path: "/reports",
     active: false,
-  },
-  {
-    name: "تقارير الإنتاج",
-    name_ar: "تقارير الإنتاج",
-    icon: BarChart3,
-    path: "/production-reports",
-    active: false,
-    requiredRoles: ["admin", "production_manager"],
   },
   {
       name: "الأدوات",

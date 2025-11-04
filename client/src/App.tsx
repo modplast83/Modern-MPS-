@@ -39,6 +39,7 @@ import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
 import MaterialMixing from "./pages/material-mixing";
+import ProductionManagement from "./pages/production-management";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -84,27 +85,29 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
-      <Route path="/production-orders-management">
-        <ProtectedRoute path="/production-orders-management">
-          <ProductionOrdersManagement />
+      {/* Unified Production Management Page */}
+      <Route path="/production-management/:tab?">
+        <ProtectedRoute path="/production-management/:tab?">
+          <ProductionManagement />
         </ProtectedRoute>
       </Route>
 
+      {/* Redirects from old routes to new unified page */}
+      <Route path="/production-orders-management">
+        <Redirect to="/production-management/production-orders" />
+      </Route>
+
       <Route path="/production-queues">
-        <ProtectedRoute path="/production-queues">
-          <ProductionQueues />
-        </ProtectedRoute>
+        <Redirect to="/production-management/production-queues" />
+      </Route>
+
+      <Route path="/roll-search">
+        <Redirect to="/production-management/roll-search" />
       </Route>
 
       <Route path="/film-operator">
         <ProtectedRoute path="/film-operator">
           <FilmOperatorDashboard />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/roll-search">
-        <ProtectedRoute path="/roll-search">
-          <RollSearch />
         </ProtectedRoute>
       </Route>
 
@@ -145,9 +148,7 @@ function AppRoutes() {
       </Route>
 
       <Route path="/production-reports">
-        <ProtectedRoute path="/production-reports">
-          <ProductionReports />
-        </ProtectedRoute>
+        <Redirect to="/production-management/production-reports" />
       </Route>
 
       <Route path="/settings">
