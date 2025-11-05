@@ -1,125 +1,78 @@
-# تعليمات البرمجة الذكية - نظام إدارة الإنتاج الحديث
+## Modern MPS – AI Coding Agent Quickstart
 
-## نظرة عامة على البنية المعمارية
+Purpose: Equip AI assistants to make safe, productive changes fast in this plastic bag manufacturing MPS (TypeScript full‑stack, Arabic/English, strict data integrity).
 
-هذا **نظام إدارة إنتاج (MPS)** لتصنيع الأكياس البلاستيكية مع دعم ثنائي اللغة (عربي/إنجليزي). يتبع النظام **بنية TypeScript كاملة** مع قيود صارمة لسلامة البيانات.
+### 1. Core Architecture (Big Picture)
+- Frontend: React + Vite + Wouter (minimal routing) + TanStack Query (server state) + Tailwind/Radix UI.
+- Backend: Express (ESM) + Drizzle ORM on Neon PostgreSQL (serverless WebSocket driver) – single `db` instance in `server/db.ts` (never recreate connections).
+- Shared domain & types in `shared/` (especially `shared/schema.ts` + Drizzle/Zod integration).
+- Production flow: Orders → Production Orders → Rolls → (Film → Printing → Cutting → Completed). Quantity constraints enforced centrally.
 
-### التقنيات الأساسية
-- **الواجهة الأمامية**: React + Vite + Wouter (routing) + TanStack Query + Tailwind/Radix UI
-- **الواجهة الخلفية**: Express.js + Drizzle ORM + Neon PostgreSQL
-- **البناء**: مشروع ESM-only مع Vite للعميل و esbuild للخادم
-- **المصادقة**: مبنية على الجلسات مع express-session + PostgreSQL store
+### 2. Critical Data Integrity (لا تخرق القواعد)
+Defined in `shared/schema.ts` + enforced by `server/services/data-validator.ts` + transactional middleware:
+1. Σ ProductionOrder.quantity_kg ≤ Order.total_quantity + tolerance.
+2. Σ Roll.weight_kg ≤ ProductionOrder.final_quantity_kg + tolerance.
+3. Inventory (current_stock) must never go negative.
+Always wrap multi‑table mutations with transaction utilities in `server/middleware/transaction.ts`.
 
-## منطق العمل الحرج
+### 3. Key Conventions
+- ESM only: use `.js` in relative imports (no CommonJS require).
+- Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `attached_assets/`.
+- Bilingual UI: Arabic primary text with English fallback; ensure RTL-safe layout & error messages.
+- Permissions: use `requireAuth` + `requirePermission` from `shared/permissions.ts` on every protected route.
 
-### قيود سير العمل الإنتاجي
-يفرض النظام **قيود كمية صارمة** عبر خط الإنتاج:
+### 4. Backend Patterns
+- All Express routes consolidated in large `server/routes.ts`; add domain-specific endpoints following existing Arabic naming/comment style.
+- Validation: derive Zod schemas from Drizzle tables (`createInsertSchema`) then extend (e.g. positive quantities) – never handcraft types that drift.
+- External services: see `server/services/` (notification-manager, ml-service, meta-whatsapp, data-validator). Reuse rather than duplicating logic.
+- Storage & external APIs: `server/storage.ts` (GCS), OpenAI/Twilio integrations – keep secrets in env vars.
 
-```typescript
-// حرج: هذه القيود مطبقة على مستوى المخطط (shared/schema.ts)
-// أ) قيد الطلب-الإنتاج: ∑(ProductionOrder.quantity_kg) ≤ Order.total_quantity + tolerance
-// ب) قيد الإنتاج-اللفة: ∑(Roll.weight_kg) ≤ ProductionOrder.final_quantity_kg + tolerance  
-// ج) المخزون: current_stock ≥ 0 في جميع الأوقات
-```
+### 5. Frontend Patterns
+- Data fetching: TanStack Query + backend JSON; wrap risky queries with `QueryErrorBoundary`.
+- Forms: React Hook Form + Zod resolver; server errors return Arabic message strings.
+- Protected navigation: wrap sensitive pages with `ProtectedRoute`.
+- Keep domain modeling client‑light: leverage types imported from `@shared/schema`.
 
-**تدفق الحالة**: `الطلبات → أوامر الإنتاج → اللفائف → (الفيلم → الطباعة → القطع → مكتمل)`
+### 6. Migrations & Deployment
+- Schema source of truth is Drizzle definitions; run `npm run db:push` for dev syncing.
+- Production startup runs migrations automatically (`scripts/migrate.js` + logic in `server/index.ts`).
+- Health check: `/api/health` (used in deployment monitors).
+- Deployment guides: see `DEPLOYMENT_GUIDE.md` + `DEPLOYMENT-SOLUTIONS.md` for validated process & troubleshooting.
 
-جميع العمليات المتعلقة بالكمية يجب أن تستخدم middleware المعاملات والتحقق من `server/middleware/transaction.ts` و `server/services/data-validator.ts`.
-
-## سير العمل التطويري
-
-### عمليات قاعدة البيانات
+### 7. Essential Commands
 ```bash
-# الأوامر الأساسية (لا حاجة لـ npm install في dev container)
-npm run db:push          # دفع تغييرات المخطط إلى قاعدة البيانات
-npm run dev             # بدء التطوير (tsx + vite بالتوازي)
-npm run build           # بناء الإنتاج (vite + esbuild)
-npm test                # تشغيل اختبارات سلامة البيانات
+npm run dev        # concurrent backend (tsx) + Vite frontend
+npm run db:push    # apply schema changes (Drizzle → Neon)
+npm run build      # production build (Vite + esbuild)
+npm test           # data integrity + concurrency tests
 ```
 
-### حل المسارات (حرج)
-استخدم دائماً الأسماء المستعارة المكونة:
-- `@/` → `client/src/`
-- `@shared/` → `shared/`
-- `@assets/` → `attached_assets/`
+### 8. Testing Focus
+- `tests/data-integrity.test.ts` stresses concurrent operations / quantity & stock invariants – add cases here when changing production logic.
+- Prefer simulation of multi-step workflows over isolated unit tests when touching order / roll logic.
 
-## أنماط خاصة بالمشروع
+### 9. Safe Change Checklist (قبل الدمج)
+1. Schema change? Update Drizzle table + regenerate & push; never patch raw SQL manually.
+2. Quantity or stock logic? Update validator + add/adjust test.
+3. New route? Enforce permission + Arabic error messages.
+4. Transaction? Use provided middleware – avoid ad‑hoc `db` calls across awaits.
+5. UI strings? Provide Arabic primary + English fallback; ensure RTL styling unaffected.
 
-### هيكل مسارات API
-المسارات تتبع تسمية المجال التجاري العربي في `server/routes.ts` (6000+ سطر):
-```typescript
-// النمط: نقاط نهاية خاصة بالمجال مع سياق عربي
-app.get("/api/orders", requirePermission("orders_read"), ...)
-app.post("/api/production", requirePermission("production_write"), ...)
-```
+### 10. Common Pitfalls To Avoid
+- Creating new DB connections (always import `db`).
+- Skipping transaction middleware for multi-table writes.
+- Mixing CommonJS require with ESM imports.
+- Returning English-only or raw technical errors to client.
+- Bypassing Drizzle/Zod validation for inserts/updates.
 
-### استراتيجية التحقق
-يستخدم **تكامل Drizzle-Zod** للتحقق الآمن من النوع:
-```typescript
-// النمط: التحقق المبني على المخطط في shared/schema.ts
-const insertOrderSchema = createInsertSchema(orders).extend({
-  quantity_kg: z.number().positive()
-});
-```
+### 11. Adding Features Quickly (Pattern Example)
+1. Define/extend table in `shared/schema.ts`.
+2. Generate Zod insert/update schema via Drizzle helpers, extend for business rules.
+3. Add route in `server/routes.ts` with `requirePermission` + transaction wrapper.
+4. Update frontend hook/query; handle errors with `QueryErrorBoundary`.
+5. Add integrity test covering edge (e.g. over-allocation attempt).
 
-### المصادقة/التخويل
-- مصادقة مبنية على الجلسات مع تخزين PostgreSQL
-- صلاحيات مبنية على الأدوار عبر `shared/permissions.ts`
-- رسائل خطأ عربية للاستجابات المواجهة للمستخدم
-- استخدم `requireAuth` و `requirePermission` middleware بانتظام
+### 12. When Unsure
+Search existing patterns in `server/routes.ts` & `data-validator.ts` before introducing new abstractions. Maintain Arabic domain vocabulary consistently.
 
-### أنماط مكونات الواجهة
-- **مكونات ثنائية اللغة**: نص بالعربية مع احتياطي إنجليزي
-- **حدود الأخطاء**: استخدم `QueryErrorBoundary` لأخطاء API
-- **مسارات محمية**: لف الصفحات الحساسة بـ `ProtectedRoute`
-- **التحقق من النماذج**: React Hook Form + محللات Zod
-
-### اتصال قاعدة البيانات
-يستخدم **Neon serverless** مع تكوين WebSocket (مطلوب):
-```typescript
-// النمط: جميع عمليات قاعدة البيانات تستخدم المجموعة المكونة في server/db.ts
-import { db } from "./db";
-// لا تنشئ اتصالات جديدة مباشرة أبداً
-```
-
-## نقاط التكامل
-
-### بنية الخدمات
-الخدمات الرئيسية في `server/services/`:
-- `notification-manager.ts` - تنبيهات النظام في الوقت الفعلي
-- `ml-service.ts` - تحليلات مدعومة بالذكاء الاصطناعي
-- `meta-whatsapp.ts` - تكامل واتساب
-- `data-validator.ts` - فرض قواعد العمل
-
-### التبعيات الخارجية
-- **Google Cloud Storage** لرفع الملفات (`server/storage.ts`)
-- **Neon PostgreSQL** لقاعدة البيانات الأساسية
-- **OpenAI API** للميزات الذكية
-- **Twilio** لرسائل SMS/WhatsApp
-
-## استراتيجية الاختبار
-
-التركيز على **اختبارات سلامة البيانات** (`tests/data-integrity.test.ts`):
-```typescript
-// النمط: اختبار العمليات المتزامنة وانتهاكات القيود
-describe("🔒 Data Integrity - Concurrent Operations Safety", () => {
-  // اختبار قيود المخزون وحدود الكمية وانتقالات الحالة
-});
-```
-
-## اعتبارات الأمان
-
-- **تشفير كلمات المرور**: اكتشاف تلقائي لكلمات المرور النصية عند البدء
-- **إدارة الجلسات**: جلسات مدعومة بـ PostgreSQL مع connect-pg-simple
-- **حقن SQL**: جميع الاستعلامات تستخدم استعلامات Drizzle المعاملة
-- **التخويل**: تحكم في الوصول مبني على الصلاحيات على جميع المسارات
-
-## مخاطر شائعة
-
-1. **ESM فقط**: استخدم امتدادات `.js` في الاستيراد، لا CommonJS
-2. **النص العربي**: جميع النصوص المواجهة للمستخدم يجب أن تدعم تخطيط RTL
-3. **معاملات قاعدة البيانات**: العمليات متعددة الجداول تتطلب معاملات صريحة
-4. **أمان النوع**: استفد من أنواع مخطط Drizzle بشكل مكثف
-5. **معالجة الأخطاء**: قدم دائماً رسائل خطأ عربية للواجهة
-
-عند تعديل منطق الإنتاج، تحقق دائماً من قيود سير العمل الإنتاجي الموثقة في `shared/schema.ts`.
+Keep changes minimal, typed, transactional, bilingual, and constraint-safe. اطبق القيود دائمًا.

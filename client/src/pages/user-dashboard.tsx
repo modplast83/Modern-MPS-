@@ -197,6 +197,8 @@ export default function UserDashboard() {
       status: string;
       notes?: string;
       action?: string;
+      latitude?: number;
+      longitude?: number;
     }) => {
       const response = await fetch("/api/attendance", {
         method: "POST",
@@ -207,6 +209,8 @@ export default function UserDashboard() {
           action: data.action,
           date: new Date().toISOString().split("T")[0],
           notes: data.notes,
+          latitude: data.latitude,
+          longitude: data.longitude,
         }),
       });
 
@@ -393,8 +397,30 @@ export default function UserDashboard() {
     },
   });
 
+  // تحديث: طلب الموقع الجغرافي قبل إرسال الحضور
   const handleAttendanceAction = (status: string, action?: string) => {
-    attendanceMutation.mutate({ status, action });
+    if (!navigator.geolocation) {
+      toast({
+        title: "الموقع غير مدعوم",
+        description: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
+        variant: "destructive",
+      });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        attendanceMutation.mutate({ status, action, latitude, longitude });
+      },
+      (error) => {
+        toast({
+          title: "فشل في تحديد الموقع",
+          description: "يجب السماح بالوصول للموقع لتسجيل الحضور.",
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
   };
 
   const getStatusColor = (status: string) => {

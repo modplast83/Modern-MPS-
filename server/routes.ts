@@ -5237,8 +5237,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // تسجيل الحضور مع تحقق الموقع الجغرافي
+  const { isInsideFactory } = require("./factory-location.ts");
   app.post("/api/attendance", async (req, res) => {
     try {
+      const { latitude, longitude } = req.body;
+      if (
+        typeof latitude !== "number" ||
+        typeof longitude !== "number" ||
+        !isInsideFactory(latitude, longitude)
+      ) {
+        return res.status(400).json({
+          message: "يجب أن تكون داخل المصنع لتسجيل الحضور",
+        });
+      }
+
       const attendance = await storage.createAttendance(req.body);
 
       // Send attendance notification
