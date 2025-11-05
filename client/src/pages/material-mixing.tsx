@@ -207,13 +207,6 @@ export default function MaterialMixing() {
 
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
   const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
-  
-  // Debug logs
-  console.log("Total items:", items.length);
-  console.log("Raw material items:", rawMaterialItems.length);
-  console.log("Raw material items data:", rawMaterialItems);
-  console.log("Total machines:", machines.length);
-  console.log("Extruder machines:", machines.filter((m: any) => m.type === "extruder").length);
 
   // فلترة الدفعات
   const filteredBatches = batches?.filter(batch => {
@@ -420,14 +413,23 @@ export default function MaterialMixing() {
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
-                  <FormulaForm
-                    machines={machines || []}
-                    items={rawMaterialItems}
-                    onSuccess={() => {
-                      setIsFormulaDialogOpen(false);
-                      queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
-                    }}
-                  />
+                  {formulasLoading || !machines || !items || machines.length === 0 || items.length === 0 ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <FormulaForm
+                      machines={machines}
+                      items={rawMaterialItems}
+                      onSuccess={() => {
+                        setIsFormulaDialogOpen(false);
+                        queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
+                      }}
+                    />
+                  )}
                 </DialogContent>
               </Dialog>
 
