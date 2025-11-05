@@ -173,31 +173,26 @@ export default function MaterialMixing() {
   });
   const batches = batchesData?.data || [];
 
-  const { data: machinesData, isLoading: machinesLoading } = useQuery<{ data: any[] }>({
+  const { data: machines, isLoading: machinesLoading } = useQuery<any[]>({
     queryKey: ["/api/machines"],
   });
-  const machines = machinesData?.data || [];
 
-  const { data: usersData } = useQuery<{ data: any[] }>({
+  const { data: users } = useQuery<any[]>({
     queryKey: ["/api/users"],
   });
-  const users = usersData?.data || [];
 
-  const { data: productionOrdersData } = useQuery<{ data: any[] }>({
+  const { data: productionOrders } = useQuery<any[]>({
     queryKey: ["/api/production-orders"],
   });
-  const productionOrders = productionOrdersData?.data || [];
 
-  const { data: itemsData, isLoading: itemsLoading } = useQuery<{ data: Item[] }>({
+  const { data: items, isLoading: itemsLoading } = useQuery<Item[]>({
     queryKey: ["/api/items"],
   });
-  const items = itemsData?.data || [];
 
   // جلب بيانات المخزون للحصول على الأسعار
-  const { data: inventoryData } = useQuery<{ data: any[] }>({
+  const { data: inventory } = useQuery<any[]>({
     queryKey: ["/api/inventory"],
   });
-  const inventory = inventoryData?.data || [];
 
   // جلب معاملات المخزون
   const { data: inventoryTransactionsData } = useQuery<{ data: InventoryTransaction[] }>({
@@ -207,7 +202,7 @@ export default function MaterialMixing() {
   const inventoryTransactions = inventoryTransactionsData?.data || [];
 
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
-  const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
+  const rawMaterialItems = items?.filter((item: any) => item.category_id === "CAT10") || [];
 
   // فلترة الدفعات
   const filteredBatches = batches?.filter(batch => {
@@ -239,7 +234,7 @@ export default function MaterialMixing() {
     let missingPrices = 0;
     
     formula.ingredients.forEach((ingredient: any) => {
-      const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+      const inventoryItem = inventory?.find((inv: any) => inv.item_id === ingredient.item_id);
       const costPerUnit = inventoryItem?.cost_per_unit;
       
       if (costPerUnit && parseFloat(costPerUnit) > 0) {
@@ -307,7 +302,7 @@ export default function MaterialMixing() {
 
     formula.ingredients.forEach(ingredient => {
       const requiredWeight = (parseFloat(batch.total_weight_kg) * parseFloat(ingredient.percentage)) / 100;
-      const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+      const inventoryItem = inventory?.find((inv: any) => inv.item_id === ingredient.item_id);
       const availableQuantity = inventoryItem?.quantity || 0;
 
       if (availableQuantity < requiredWeight) {
@@ -414,35 +409,23 @@ export default function MaterialMixing() {
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
-                  {(() => {
-                    console.log("Dialog content - machines:", machines?.length || 0);
-                    console.log("Dialog content - items:", items?.length || 0);
-                    console.log("Dialog content - rawMaterialItems:", rawMaterialItems?.length || 0);
-                    console.log("Dialog content - machinesLoading:", machinesLoading);
-                    console.log("Dialog content - itemsLoading:", itemsLoading);
-                    
-                    if (machinesLoading || itemsLoading) {
-                      return (
-                        <div className="flex items-center justify-center py-12">
-                          <div className="text-center space-y-3">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                            <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                    
-                    return (
-                      <FormulaForm
-                        machines={machines}
-                        items={rawMaterialItems}
-                        onSuccess={() => {
-                          setIsFormulaDialogOpen(false);
-                          queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
-                        }}
-                      />
-                    );
-                  })()}
+                  {machinesLoading || itemsLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <FormulaForm
+                      machines={machines || []}
+                      items={rawMaterialItems}
+                      onSuccess={() => {
+                        setIsFormulaDialogOpen(false);
+                        queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
+                      }}
+                    />
+                  )}
                 </DialogContent>
               </Dialog>
 
@@ -769,7 +752,7 @@ export default function MaterialMixing() {
                                           <div className="space-y-1">
                                             <h6 className="text-xs font-medium text-green-800">تفصيل المكونات:</h6>
                                             {formula.ingredients?.map((ingredient: any) => {
-                                              const inventoryItem = inventory.find((inv: any) => inv.item_id === ingredient.item_id);
+                                              const inventoryItem = inventory?.find((inv: any) => inv.item_id === ingredient.item_id);
                                               const costPerUnit = inventoryItem?.cost_per_unit;
                                               const ingredientCost = costPerUnit ? 
                                                 (parseFloat(ingredient.percentage) / 100) * parseFloat(costPerUnit) : null;
@@ -1131,7 +1114,7 @@ export default function MaterialMixing() {
                 <BatchInventoryDetails 
                   batch={selectedBatchForInventory}
                   formula={formulas?.find(f => f.id === selectedBatchForInventory.formula_id)}
-                  inventory={inventory}
+                  inventory={inventory || []}
                   inventoryTransactions={inventoryTransactions}
                   onRecordConsumption={recordMaterialConsumption}
                 />
@@ -2362,15 +2345,6 @@ function FormulaForm({
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
-  
-  // Debug: تحقق من البيانات
-  console.log("FormulaForm received:");
-  console.log("- machines count:", machines.length);
-  console.log("- items count:", items.length);
-  console.log("- extruder machines:", machines.filter(m => m.type === "extruder").length);
-  console.log("- first machine:", machines[0]);
-  console.log("- first item:", items[0]);
-  
   const [formData, setFormData] = useState({
     formula_name: "",
     machine_id: "",
