@@ -465,7 +465,7 @@ export default function MaterialMixing() {
                     </SelectTrigger>
                     <SelectContent>
                       {machines
-                        ?.filter((m: any) => m.section_id === "extruder" || m.type === "extruder")
+                        ?.filter((m: any) => m.type === "extruder")
                         .map((machine: any) => (
                           <SelectItem key={machine.id} value={machine.id}>
                             {machine.name_ar || machine.name || machine.id}
@@ -2512,7 +2512,7 @@ function FormulaForm({
               </SelectTrigger>
               <SelectContent>
                 {machines
-                  ?.filter((m) => m.section_id === "extruder" || m.type === "extruder")
+                  ?.filter((m) => m.type === "extruder")
                   .map((machine: any) => (
                     <SelectItem key={machine.id} value={machine.id}>
                       {machine.name_ar || machine.name || machine.id}
