@@ -202,6 +202,7 @@ export default function MaterialMixing() {
   // جلب معاملات المخزون
   const { data: inventoryTransactionsData } = useQuery<{ data: InventoryTransaction[] }>({
     queryKey: ["/api/inventory-transactions"],
+    enabled: false, // تعطيل مؤقتاً لأن الـ endpoint غير موجود بعد
   });
   const inventoryTransactions = inventoryTransactionsData?.data || [];
 
