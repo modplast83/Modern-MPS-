@@ -2356,7 +2356,7 @@ function FormulaForm({
     notes: "",
   });
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [ingredients, setIngredients] = useState<{ item_id: number; percentage: string }[]>([]);
+  const [ingredients, setIngredients] = useState<{ item_id: string; percentage: string }[]>([]);
 
   const selectedMachine = machines.find((m) => m.id === formData.machine_id);
   const isABAMachine = selectedMachine?.screw_type === "ABA";
@@ -2416,7 +2416,7 @@ function FormulaForm({
   };
 
   const addIngredient = () => {
-    setIngredients([...ingredients, { item_id: 0, percentage: "" }]);
+    setIngredients([...ingredients, { item_id: "", percentage: "" }]);
   };
 
   const removeIngredient = (index: number) => {
@@ -2434,7 +2434,7 @@ function FormulaForm({
 
     // Validation - check all ingredients have valid item_id
     const invalidIngredients = ingredients.filter(
-      (ing) => !ing.item_id || Number(ing.item_id) === 0
+      (ing) => !ing.item_id || ing.item_id === ""
     );
     if (invalidIngredients.length > 0) {
       toast({
@@ -2477,11 +2477,12 @@ function FormulaForm({
       master_batch_colors: selectedColors,
       screw_assignment: isABAMachine ? formData.screw_assignment : null,
       ingredients: ingredients.map((ing) => ({
-        item_id: Number(ing.item_id),
-        percentage: ing.percentage,
+        item_id: ing.item_id,
+        percentage: parseFloat(ing.percentage),
       })),
     };
 
+    console.log("Submitting formula with payload:", payload);
     createFormula.mutate(payload);
   };
 
@@ -2669,9 +2670,9 @@ function FormulaForm({
                 <div className="flex-1 space-y-2">
                   <Label>المادة الخام *</Label>
                   <Select
-                    value={ingredient.item_id.toString()}
+                    value={ingredient.item_id || undefined}
                     onValueChange={(value) =>
-                      updateIngredient(index, "item_id", Number(value))
+                      updateIngredient(index, "item_id", value)
                     }
                   >
                     <SelectTrigger data-testid={`select-ingredient-item-${index}`}>
