@@ -414,23 +414,35 @@ export default function MaterialMixing() {
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
-                  {machinesLoading || itemsLoading ? (
-                    <div className="flex items-center justify-center py-12">
-                      <div className="text-center space-y-3">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-                        <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <FormulaForm
-                      machines={machines}
-                      items={rawMaterialItems}
-                      onSuccess={() => {
-                        setIsFormulaDialogOpen(false);
-                        queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
-                      }}
-                    />
-                  )}
+                  {(() => {
+                    console.log("Dialog content - machines:", machines?.length || 0);
+                    console.log("Dialog content - items:", items?.length || 0);
+                    console.log("Dialog content - rawMaterialItems:", rawMaterialItems?.length || 0);
+                    console.log("Dialog content - machinesLoading:", machinesLoading);
+                    console.log("Dialog content - itemsLoading:", itemsLoading);
+                    
+                    if (machinesLoading || itemsLoading) {
+                      return (
+                        <div className="flex items-center justify-center py-12">
+                          <div className="text-center space-y-3">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                            <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    return (
+                      <FormulaForm
+                        machines={machines}
+                        items={rawMaterialItems}
+                        onSuccess={() => {
+                          setIsFormulaDialogOpen(false);
+                          queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
+                        }}
+                      />
+                    );
+                  })()}
                 </DialogContent>
               </Dialog>
 
