@@ -173,7 +173,7 @@ export default function MaterialMixing() {
   });
   const batches = batchesData?.data || [];
 
-  const { data: machinesData } = useQuery<{ data: any[] }>({
+  const { data: machinesData, isLoading: machinesLoading } = useQuery<{ data: any[] }>({
     queryKey: ["/api/machines"],
   });
   const machines = machinesData?.data || [];
@@ -188,7 +188,7 @@ export default function MaterialMixing() {
   });
   const productionOrders = productionOrdersData?.data || [];
 
-  const { data: itemsData } = useQuery<{ data: Item[] }>({
+  const { data: itemsData, isLoading: itemsLoading } = useQuery<{ data: Item[] }>({
     queryKey: ["/api/items"],
   });
   const items = itemsData?.data || [];
@@ -414,7 +414,7 @@ export default function MaterialMixing() {
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
-                  {formulasLoading || !machines || !items || machines.length === 0 || items.length === 0 ? (
+                  {machinesLoading || itemsLoading ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center space-y-3">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
