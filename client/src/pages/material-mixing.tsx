@@ -207,6 +207,13 @@ export default function MaterialMixing() {
 
   // تصفية الأصناف للحصول على المواد الخام من فئة CAT10 فقط
   const rawMaterialItems = items.filter((item: any) => item.category_id === "CAT10");
+  
+  // Debug logs
+  console.log("Total items:", items.length);
+  console.log("Raw material items:", rawMaterialItems.length);
+  console.log("Raw material items data:", rawMaterialItems);
+  console.log("Total machines:", machines.length);
+  console.log("Extruder machines:", machines.filter((m: any) => m.type === "extruder").length);
 
   // فلترة الدفعات
   const filteredBatches = batches?.filter(batch => {
