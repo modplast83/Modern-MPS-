@@ -73,7 +73,7 @@ type MixingFormula = {
 type FormulaIngredient = {
   id: number;
   formula_id: number;
-  item_id: number;
+  item_id: string;
   item_name?: string;
   item_name_ar?: string;
   percentage: string;
@@ -99,7 +99,7 @@ type MixingBatch = {
 type BatchIngredient = {
   id: number;
   batch_id: number;
-  item_id: number;
+  item_id: string;
   item_name?: string;
   item_name_ar?: string;
   planned_weight_kg: string;
@@ -109,7 +109,7 @@ type BatchIngredient = {
 };
 
 type Item = {
-  id: number;
+  id: string;
   name: string;
   name_ar: string;
   category_id: string;
@@ -129,7 +129,7 @@ type InventoryConsumption = {
 
 type InventoryTransaction = {
   id: number;
-  item_id: number;
+  item_id: string;
   transaction_type: "in" | "out" | "adjustment";
   quantity: number;
   cost_per_unit?: number;
@@ -2680,7 +2680,7 @@ function FormulaForm({
                     </SelectTrigger>
                     <SelectContent>
                       {items.map((item) => (
-                        <SelectItem key={item.id} value={item.id.toString()}>
+                        <SelectItem key={item.id} value={item.id}>
                           {item.name_ar || item.name}
                         </SelectItem>
                       ))}
@@ -2973,7 +2973,7 @@ function EditFormulaForm({
     notes: formula.notes || "",
     is_active: formula.is_active,
   });
-  const [ingredients, setIngredients] = useState<{ item_id: number; percentage: string }[]>(
+  const [ingredients, setIngredients] = useState<{ item_id: string; percentage: string }[]>(
     formula.ingredients?.map((ing: any) => ({
       item_id: ing.item_id,
       percentage: ing.percentage,
@@ -3005,7 +3005,7 @@ function EditFormulaForm({
   });
 
   const addIngredient = () => {
-    setIngredients([...ingredients, { item_id: 0, percentage: "" }]);
+    setIngredients([...ingredients, { item_id: "", percentage: "" }]);
   };
 
   const removeIngredient = (index: number) => {
@@ -3039,7 +3039,7 @@ function EditFormulaForm({
     const payload = {
       ...formData,
       ingredients: ingredients.map((ing: any) => ({
-        item_id: Number(ing.item_id),
+        item_id: ing.item_id,
         percentage: parseFloat(ing.percentage),
       })),
     };
@@ -3202,9 +3202,9 @@ function EditFormulaForm({
             <div className="col-span-6 space-y-1">
               <Label>المادة الخام</Label>
               <Select
-                value={ingredient.item_id?.toString() || ""}
+                value={ingredient.item_id || ""}
                 onValueChange={(value: any) =>
-                  updateIngredient(index, "item_id", parseInt(value))
+                  updateIngredient(index, "item_id", value)
                 }
               >
                 <SelectTrigger>
@@ -3214,7 +3214,7 @@ function EditFormulaForm({
                   {items
                     .filter((item: any) => item.item_type === "raw_material")
                     .map((item: any) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <SelectItem key={item.id} value={item.id}>
                         {item.name}
                       </SelectItem>
                     ))}
@@ -3287,7 +3287,7 @@ function CopyFormulaForm({
     notes: originalFormula.notes || "",
     is_active: true, // الوصفة المنسوخة تكون نشطة افتراضياً
   });
-  const [ingredients, setIngredients] = useState<{ item_id: number; percentage: string }[]>(
+  const [ingredients, setIngredients] = useState<{ item_id: string; percentage: string }[]>(
     originalFormula.ingredients?.map((ing: any) => ({
       item_id: ing.item_id,
       percentage: ing.percentage,
@@ -3319,7 +3319,7 @@ function CopyFormulaForm({
   });
 
   const addIngredient = () => {
-    setIngredients([...ingredients, { item_id: 0, percentage: "" }]);
+    setIngredients([...ingredients, { item_id: "", percentage: "" }]);
   };
 
   const removeIngredient = (index: number) => {
@@ -3363,7 +3363,7 @@ function CopyFormulaForm({
     const payload = {
       ...formData,
       ingredients: ingredients.map((ing: any) => ({
-        item_id: Number(ing.item_id),
+        item_id: ing.item_id,
         percentage: parseFloat(ing.percentage),
       })),
     };
@@ -3478,9 +3478,9 @@ function CopyFormulaForm({
             <div className="col-span-6 space-y-1">
               <Label>المادة الخام</Label>
               <Select
-                value={ingredient.item_id?.toString() || ""}
+                value={ingredient.item_id || ""}
                 onValueChange={(value: any) =>
-                  updateIngredient(index, "item_id", parseInt(value))
+                  updateIngredient(index, "item_id", value)
                 }
               >
                 <SelectTrigger>
@@ -3490,7 +3490,7 @@ function CopyFormulaForm({
                   {items
                     .filter((item: any) => item.item_type === "raw_material")
                     .map((item: any) => (
-                      <SelectItem key={item.id} value={item.id.toString()}>
+                      <SelectItem key={item.id} value={item.id}>
                         {item.name}
                       </SelectItem>
                     ))}

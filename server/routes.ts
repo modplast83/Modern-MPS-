@@ -7180,11 +7180,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate all ingredients have valid item_id
       const invalidIngredients = ingredients.filter(
-        (ing: any) => !ing.item_id || Number(ing.item_id) <= 0
+        (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
       );
       if (invalidIngredients.length > 0) {
         return res.status(400).json({ 
-          message: "جميع المكونات يجب أن يكون لها صنف صحيح (item_id > 0)" 
+          message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
         });
       }
 
@@ -7243,11 +7243,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
         // Validate all ingredients have valid item_id
         const invalidIngredients = ingredients.filter(
-          (ing: any) => !ing.item_id || Number(ing.item_id) <= 0
+          (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
         );
         if (invalidIngredients.length > 0) {
           return res.status(400).json({ 
-            message: "جميع المكونات يجب أن يكون لها صنف صحيح (item_id > 0)" 
+            message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
           });
         }
 
