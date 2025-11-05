@@ -2350,6 +2350,15 @@ function FormulaForm({
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
+  
+  // Debug: تحقق من البيانات
+  console.log("FormulaForm received:");
+  console.log("- machines count:", machines.length);
+  console.log("- items count:", items.length);
+  console.log("- extruder machines:", machines.filter(m => m.type === "extruder").length);
+  console.log("- first machine:", machines[0]);
+  console.log("- first item:", items[0]);
+  
   const [formData, setFormData] = useState({
     formula_name: "",
     machine_id: "",
