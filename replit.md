@@ -36,6 +36,44 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
 -   **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
 -   **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios like weight validation, printing, cutting, and queue management.
 
+## System Integration
+
+The system features comprehensive integration between four main sections:
+
+1. **Warehouse (المستودع)**
+   - `inventory`: Current stock levels
+   - `inventory_movements`: Transaction history
+   - `items`: Master data for all materials
+
+2. **Orders (الطلبات)**
+   - `orders` → `production_orders` (via `order_id`)
+   - One order can have multiple production orders
+   - Status tracking and validation through the entire lifecycle
+
+3. **Production (الإنتاج)**
+   - `production_orders` → `rolls` (via `production_order_id`)
+   - `rolls` → `warehouse_receipts` (via `production_order_id`)
+   - Three-stage workflow: Film → Printing → Cutting → Warehouse
+
+4. **Material Mixing (خلط المواد)**
+   - `mixing_formulas` → `formula_ingredients`: Recipe definitions
+   - `mixing_batches` → `batch_ingredients`: Actual production batches
+   - **Inventory Consumption API** (`/api/inventory/consumption`): Links mixing batches to inventory movements
+   - Automatic stock deduction with full transaction logging
+
+**Integration Points:**
+- All sections share referential integrity via foreign keys
+- Real-time cache invalidation ensures data consistency
+- Transaction-safe operations prevent data corruption
+- Comprehensive error handling with Arabic messaging
+
+## Recent Changes (November 2025)
+
+- ✅ Fixed React Key prop error in material-mixing.tsx
+- ✅ Added `/api/inventory/consumption` endpoint for material tracking
+- ✅ Verified all four-way system integration
+- ✅ Confirmed WebSocket issues were Vite HMR related (non-critical)
+
 ## External Dependencies
 
 -   **Database**: PostgreSQL (Neon Serverless)
