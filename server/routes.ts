@@ -7443,6 +7443,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Record material consumption from mixing batch
+  app.post("/api/inventory/consumption", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { batchId, consumptions } = req.body;
+      const userId = req.session.userId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      if (!batchId || !consumptions || !Array.isArray(consumptions)) {
+        return res.status(400).json({ message: "بيانات الاستهلاك غير مكتملة" });
+      }
+
+      // Get batch details
+      const batch = await storage.getMixingBatchById(batchId);
+      if (!batch) {
+        return res.status(404).json({ message: "دفعة الخلط غير موجودة" });
+      }
+
+      // Record consumption for each ingredient
+      const results = [];
+      for (const consumption of consumptions) {
+        const { item_id, quantity_consumed, cost_at_consumption } = consumption;
+
+        // Get inventory item
+        const inventoryItem = await storage.getInventoryByItemId(item_id);
+        if (!inventoryItem) {
+          throw new Error(`الصنف ${item_id} غير موجود في المخزون`);
+        }
+
+        // Create inventory movement (out)
+        const movement = await storage.createInventoryMovement({
+          inventory_id: inventoryItem.id,
+          movement_type: "out",
+          quantity: quantity_consumed.toString(),
+          unit_cost: cost_at_consumption?.toString(),
+          total_cost: cost_at_consumption 
+            ? (parseFloat(quantity_consumed) * parseFloat(cost_at_consumption)).toString()
+            : undefined,
+          reference_number: `BATCH-${batch.batch_number}`,
+          reference_type: "production",
+          notes: `استهلاك من دفعة خلط ${batch.batch_number}`,
+          created_by: userId,
+        });
+
+        results.push({
+          item_id,
+          quantity_consumed,
+          movement_id: movement.id,
+          new_quantity: parseFloat(inventoryItem.current_stock) - parseFloat(quantity_consumed),
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "تم تسجيل استهلاك المواد بنجاح",
+        results,
+      });
+    } catch (error: any) {
+      console.error("Error recording material consumption:", error);
+      res.status(500).json({ 
+        message: "خطأ في تسجيل استهلاك المواد", 
+        error: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
