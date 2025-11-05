@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
@@ -54,6 +54,8 @@ import {
   Copy,
   ChevronLeft,
   ChevronRight,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { formatNumber } from "../lib/formatNumber";
 
@@ -176,15 +178,20 @@ export default function Definitions() {
     type: "extruder",
     section_id: "none",
     status: "active",
+    capacity_small_kg_per_hour: "",
+    capacity_medium_kg_per_hour: "",
+    capacity_large_kg_per_hour: "",
   });
   const [userForm, setUserForm] = useState({
     username: "",
     display_name: "",
     display_name_ar: "",
+    password: "",
     role_id: "none",
     section_id: "none",
     status: "active",
   });
+  const [showPassword, setShowPassword] = useState(false);
 
   // Master Batch Colors (24 من الكتالوج)
   const masterBatchColors = [
@@ -714,7 +721,11 @@ export default function Definitions() {
     printWindow.document.close();
   };
 
-  // Auto-set printing status based on cylinder selection
+  // Debounce timers for auto-calculations
+  const sizeCaptionTimer = useRef<NodeJS.Timeout | null>(null);
+  const packageWeightTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-set printing status based on cylinder selection (immediate, no debounce needed)
   React.useEffect(() => {
     const isPrinted = customerProductForm.printing_cylinder !== "بدون طباعة";
     setCustomerProductForm((prev) => ({
@@ -723,24 +734,36 @@ export default function Definitions() {
     }));
   }, [customerProductForm.printing_cylinder]);
 
-  // Auto-generate size caption
+  // Auto-generate size caption with debouncing
   React.useEffect(() => {
-    const { width, right_facing, left_facing, cutting_length_cm } =
-      customerProductForm;
-    if (width && right_facing && left_facing && cutting_length_cm) {
-      const w = parseFloat(width);
-      const rf = parseFloat(right_facing);
-      const lf = parseFloat(left_facing);
-      const cl = parseFloat(cutting_length_cm);
-
-      if (w && rf && lf && cl) {
-        const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
-        setCustomerProductForm((prev) => ({
-          ...prev,
-          size_caption: sizeCaption,
-        }));
-      }
+    if (sizeCaptionTimer.current) {
+      clearTimeout(sizeCaptionTimer.current);
     }
+
+    sizeCaptionTimer.current = setTimeout(() => {
+      const { width, right_facing, left_facing, cutting_length_cm } =
+        customerProductForm;
+      if (width && right_facing && left_facing && cutting_length_cm) {
+        const w = parseFloat(width);
+        const rf = parseFloat(right_facing);
+        const lf = parseFloat(left_facing);
+        const cl = parseFloat(cutting_length_cm);
+
+        if (w && rf && lf && cl) {
+          const sizeCaption = `${w}+${rf}+${lf}X${cl}`;
+          setCustomerProductForm((prev) => ({
+            ...prev,
+            size_caption: sizeCaption,
+          }));
+        }
+      }
+    }, 300);
+
+    return () => {
+      if (sizeCaptionTimer.current) {
+        clearTimeout(sizeCaptionTimer.current);
+      }
+    };
   }, [
     customerProductForm.width,
     customerProductForm.right_facing,
@@ -748,21 +771,33 @@ export default function Definitions() {
     customerProductForm.cutting_length_cm,
   ]);
 
-  // Auto-calculate package weight
+  // Auto-calculate package weight with debouncing
   React.useEffect(() => {
-    const { unit_weight_kg, unit_quantity } = customerProductForm;
-    if (unit_weight_kg && unit_quantity) {
-      const unitWeight = parseFloat(unit_weight_kg);
-      const quantity = parseInt(unit_quantity);
-
-      if (unitWeight && quantity) {
-        const packageWeight = unitWeight * quantity;
-        setCustomerProductForm((prev) => ({
-          ...prev,
-          package_weight_kg: packageWeight.toFixed(3),
-        }));
-      }
+    if (packageWeightTimer.current) {
+      clearTimeout(packageWeightTimer.current);
     }
+
+    packageWeightTimer.current = setTimeout(() => {
+      const { unit_weight_kg, unit_quantity } = customerProductForm;
+      if (unit_weight_kg && unit_quantity) {
+        const unitWeight = parseFloat(unit_weight_kg);
+        const quantity = parseInt(unit_quantity);
+
+        if (unitWeight && quantity) {
+          const packageWeight = unitWeight * quantity;
+          setCustomerProductForm((prev) => ({
+            ...prev,
+            package_weight_kg: packageWeight.toFixed(3),
+          }));
+        }
+      }
+    }, 300);
+
+    return () => {
+      if (packageWeightTimer.current) {
+        clearTimeout(packageWeightTimer.current);
+      }
+    };
   }, [customerProductForm.unit_weight_kg, customerProductForm.unit_quantity]);
 
   // Data queries
@@ -1494,11 +1529,15 @@ export default function Definitions() {
       type: "extruder",
       section_id: "none",
       status: "active",
+      capacity_small_kg_per_hour: "",
+      capacity_medium_kg_per_hour: "",
+      capacity_large_kg_per_hour: "",
     });
     setUserForm({
       username: "",
       display_name: "",
       display_name_ar: "",
+      password: "",
       role_id: "none",
       section_id: "none",
       status: "active",
@@ -2749,6 +2788,24 @@ export default function Definitions() {
                                   النوع
                                 </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  نشطة
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة صغير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة وسط
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة كبير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   العمليات
                                 </th>
                               </tr>
@@ -2778,6 +2835,23 @@ export default function Definitions() {
                                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.type || "-"}
                                       </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-center" data-testid={`text-status-${machine.id}`}>
+                                        <Badge 
+                                          variant={machine.status === "active" ? "default" : "secondary"}
+                                          className={machine.status === "active" ? "bg-green-500 hover:bg-green-600" : "bg-gray-500 hover:bg-gray-600"}
+                                        >
+                                          {machine.status === "active" ? "نشطة" : machine.status === "maintenance" ? "صيانة" : "متوقفة"}
+                                        </Badge>
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-small-${machine.id}`}>
+                                        {machine.capacity_small_kg_per_hour ? formatNumber(parseFloat(machine.capacity_small_kg_per_hour)) : "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-medium-${machine.id}`}>
+                                        {machine.capacity_medium_kg_per_hour ? formatNumber(parseFloat(machine.capacity_medium_kg_per_hour)) : "-"}
+                                      </td>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-large-${machine.id}`}>
+                                        {machine.capacity_large_kg_per_hour ? formatNumber(parseFloat(machine.capacity_large_kg_per_hour)) : "-"}
+                                      </td>
                                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                         <div className="flex items-center justify-center gap-2">
                                           <Button
@@ -2794,6 +2868,9 @@ export default function Definitions() {
                                                   machine.section_id || "",
                                                 status:
                                                   machine.status || "active",
+                                                capacity_small_kg_per_hour: machine.capacity_small_kg_per_hour || "",
+                                                capacity_medium_kg_per_hour: machine.capacity_medium_kg_per_hour || "",
+                                                capacity_large_kg_per_hour: machine.capacity_large_kg_per_hour || "",
                                               });
                                               setSelectedTab("machines");
                                               setIsDialogOpen(true);
@@ -2808,7 +2885,7 @@ export default function Definitions() {
                                 ) : (
                                   <tr>
                                     <td
-                                      colSpan={5}
+                                      colSpan={9}
                                       className="px-6 py-8 text-center text-gray-500"
                                     >
                                       لا توجد ماكينات مطابقة للبحث
@@ -2973,6 +3050,7 @@ export default function Definitions() {
                                                   user.display_name || "",
                                                 display_name_ar:
                                                   user.display_name_ar || "",
+                                                password: "",
                                                 role_id: user.role_id
                                                   ? `ROLE0${user.role_id < 10 ? "0" + user.role_id : user.role_id}`
                                                   : "none",
@@ -2999,6 +3077,7 @@ export default function Definitions() {
                                                 status: user.status || "active",
                                               });
                                               setSelectedTab("users");
+                                              setShowPassword(false);
                                               setIsDialogOpen(true);
                                             }}
                                           >
@@ -4753,6 +4832,90 @@ export default function Definitions() {
                         </Select>
                       </div>
                     </div>
+                    
+                    {/* حالة الماكينة */}
+                    <div>
+                      <Label htmlFor="status">حالة الماكينة</Label>
+                      <Select
+                        value={machineForm.status}
+                        onValueChange={(value) =>
+                          setMachineForm({
+                            ...machineForm,
+                            status: value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="mt-1" data-testid="select-machine-status">
+                          <SelectValue placeholder="اختر الحالة" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">نشطة</SelectItem>
+                          <SelectItem value="maintenance">صيانة</SelectItem>
+                          <SelectItem value="down">متوقفة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* قدرة الإنتاج حسب الحجم */}
+                    <div className="border-t pt-4 mt-4">
+                      <h3 className="text-sm font-medium mb-3">قدرة الإنتاج (كجم/ساعة)</h3>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="capacity_small">حجم صغير</Label>
+                          <Input
+                            id="capacity_small"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_small_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_small_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-small"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="capacity_medium">حجم وسط</Label>
+                          <Input
+                            id="capacity_medium"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_medium_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_medium_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-medium"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="capacity_large">حجم كبير</Label>
+                          <Input
+                            id="capacity_large"
+                            type="number"
+                            step="0.01"
+                            value={machineForm.capacity_large_kg_per_hour}
+                            onChange={(e) =>
+                              setMachineForm({
+                                ...machineForm,
+                                capacity_large_kg_per_hour: e.target.value,
+                              })
+                            }
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
+                            data-testid="input-capacity-large"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <DialogFooter>
                     <Button
@@ -4857,8 +5020,44 @@ export default function Definitions() {
                           }
                           placeholder="username"
                           className="mt-1"
+                          data-testid="input-username"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="password">
+                          كلمة المرور {editingItem ? "(اتركها فارغة إذا لم ترد تغييرها)" : "*"}
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="password"
+                            type={showPassword ? "text" : "password"}
+                            value={userForm.password}
+                            onChange={(e) =>
+                              setUserForm({
+                                ...userForm,
+                                password: e.target.value,
+                              })
+                            }
+                            placeholder={editingItem ? "أدخل كلمة مرور جديدة" : "أدخل كلمة المرور"}
+                            className="mt-1 pr-10"
+                            data-testid="input-password"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            data-testid="button-toggle-password"
+                          >
+                            {showPassword ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="role_id">الدور</Label>
                         <Select
@@ -4892,8 +5091,6 @@ export default function Definitions() {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="section_id">القسم</Label>
                         <Select
@@ -4957,11 +5154,25 @@ export default function Definitions() {
                     <Button
                       onClick={() => {
                         if (editingItem) {
+                          // When updating, only send password if it's not empty
+                          const { password, ...restData } = userForm;
+                          const updateData = password && password.trim() !== "" 
+                            ? userForm 
+                            : restData;
                           updateUserMutation.mutate({
                             id: editingItem.id,
-                            data: userForm,
+                            data: updateData,
                           });
                         } else {
+                          // When creating, password is required
+                          if (!userForm.password || userForm.password.trim() === "") {
+                            toast({
+                              title: "خطأ",
+                              description: "كلمة المرور مطلوبة عند إنشاء مستخدم جديد",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
                           createUserMutation.mutate(userForm);
                         }
                       }}
@@ -4969,6 +5180,7 @@ export default function Definitions() {
                         createUserMutation.isPending ||
                         updateUserMutation.isPending
                       }
+                      data-testid="button-save-user"
                     >
                       {createUserMutation.isPending ||
                       updateUserMutation.isPending ? (

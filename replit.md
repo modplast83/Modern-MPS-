@@ -2,84 +2,7 @@
 
 ## Overview
 
-This project is an advanced AI-powered order management system specifically designed for plastic bag manufacturing. Its primary purpose is to enhance operational efficiency through intelligent data processing, real-time tracking, and multilingual interfaces. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform for the industry.
-
-## Recent Completed Features (January 2025)
-
-- ✅ Complete roles and permissions management with direct editing from roles table
-- ✅ Comprehensive work hours calculation system with detailed display (8-hour workday including 1-hour break, overtime calculation, Friday special handling)
-- ✅ Enhanced user dashboard with comprehensive daily work summary and time calculations
-- ✅ Fixed maintenance action form validation issue with executor field ("المنفذ")
-- ✅ Automatic user assignment for maintenance actions with proper form validation
-- ✅ WhatsApp Business integration via Twilio with webhook endpoints configured for bi-directional messaging
-- ✅ Meta WhatsApp Business API implementation with direct integration support
-- ✅ Twilio Content Template setup guide for resolving template approval issues
-- ✅ Automatic API selection (Meta vs Twilio) based on environment configuration
-- ✅ Complete Twilio Content Template integration with ContentSid (HXc4485f514cb7d4536026fc56250f75e7)
-- ✅ Final resolution of error 63016 - WhatsApp messages now use approved Meta templates via Twilio
-- ✅ Production-ready WhatsApp Business API with full template support
-- ✅ Enhanced production orders table with comprehensive Arabic column formatting
-- ✅ Implemented proper order number display format (ORD005JO01)
-- ✅ Added size descriptions without decimal points and colored circles for master batch column
-- ✅ Integrated product names from items table for accurate display
-- ✅ Added separate quantity column and improved packaging weight display
-- ✅ Complete pagination system for definitions page with 25 records per page across all 8 tabs
-- ✅ Enhanced search functionality with proper field mapping for all entity types
-- ✅ Advanced search for customer products including related customer and item names
-- ✅ Independent pagination state management for each tab (customers, categories, sections, items, customer products, locations, machines, users)
-- ✅ **Critical SelectItem Validation Fix (January 2025)**: Completely resolved data import crashes caused by empty/null values in SelectItem components
-- ✅ Comprehensive filtering system for all SelectItem components to prevent empty value props
-- ✅ Enhanced data import reliability across all definition tables (customers, categories, items, etc.)
-- ✅ **Security Hardening (October 2025)**: Removed all hardcoded user ID fallbacks preventing privilege escalation
-  - Phase 1: Eliminated `|| 1` fallbacks across AI assistant, warehouse receipts, and maintenance report creation
-  - Phase 2 (October 7, 2025): Fixed remaining hardcoded user IDs discovered during bug audit:
-    - Fixed maintenance.tsx request_created_by hardcoded to "1"
-    - Fixed orders.tsx created_by fallback to "1" (now requires authentication)
-    - Fixed FieldTrainingPrograms.tsx evaluator_id hardcoded to "1"
-    - Fixed server/storage.ts created_by fallback to "8" in import function (now requires field in imported data)
-  - System now requires authenticated user context with proper error messages when not logged in
-  - Import operations now validate required user attribution fields for data integrity
-- ✅ **Batch Production Order Processing (October 2025)**: Optimized production order creation for high-volume operations
-  - Implemented `/api/production-orders/batch` endpoint for creating multiple orders in single transaction
-  - Uses PostgreSQL advisory locks (`pg_advisory_xact_lock`) for concurrency-safe order number generation
-  - Prevents race conditions in empty tables and concurrent batch processing scenarios
-  - Maintains per-order success/failure reporting without losing partial batches
-
-## Critical Bug Fixes (October 2025)
-
-- ✅ **Production Analytics SQL Query Fixes**: Resolved critical SQL errors in analytics functions
-  - Fixed getUserPerformanceStats orderBy clause that referenced non-existent alias columns
-  - Corrected getRolePerformanceStats join logic to properly relate rolls→users→roles
-  - Fixed getMachineUtilizationStats orderBy issues with Drizzle ORM
-  - Removed complex orderBy clauses that were incompatible with Drizzle's SQL generation
-  - All production analytics endpoints now return HTTP 200 with valid data
-  - Architect review confirmed proper implementation and no security issues
-
-## Critical Bug Fixes (January 2025)
-
-- ✅ **Database Integrity Resolution**: Fixed critical foreign key data type mismatches across the entire system
-  - Updated 12+ tables with varchar(20) foreign keys to reference users.id (integer) correctly
-  - Fixed operator_negligence_reports.operator_id, training_enrollments.employee_id, and multiple other relationships
-  - Resolved TypeScript compilation errors in storage layer related to parameter type conflicts
-  - Updated interface definitions to match implementation (getTrainingEnrollments, getOperatorNegligenceReportsByOperator)
-  - Fixed routes.ts parameter parsing to convert string query parameters to proper integer types
-  - Updated system settings methods to use consistent number types for user IDs
-- ✅ **Type Safety Improvements**: Resolved all LSP diagnostics errors ensuring complete type consistency
-- ✅ **Runtime Stability**: Eliminated potential database constraint violations and query failures
-- ✅ **Data Consistency**: Ensured referential integrity across all foreign key relationships
-- ✅ **Session Management Enhancement**: Fixed automatic logout issue by improving session persistence
-  - Extended session duration from 7 days to 30 days for better user experience
-  - Enhanced session configuration with `resave: true` and `rolling: true` for automatic session extension
-  - Added middleware to automatically extend sessions on any API activity
-  - Improved `/api/me` endpoint to actively maintain and extend sessions
-  - Enhanced frontend auth handling to preserve user login state on network errors
-  - Added proper session touching and saving mechanisms to prevent premature timeouts
-- ✅ **Production Queue SQL Query Fix (October 2025)**: Resolved critical SQL errors in user name retrieval across production queues
-  - Fixed "column users.name does not exist" error in `getPrintingQueue`, `getHierarchicalOrdersForProduction`, and `getGroupedCuttingQueue`
-  - Replaced problematic SQL subqueries with efficient separate user name lookups using `inArray`
-  - Implemented Set/Map pattern to collect unique user IDs and fetch all names in a single query
-  - Properly associates created_by, printed_by, and cut_by user names with roll labels for complete operator attribution
-  - Improved query performance by reducing redundant database calls
+This project is an advanced AI-powered order management system designed to enhance operational efficiency in plastic bag manufacturing. Its primary purpose is to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to provide real-time tracking, multilingual interfaces, and intelligent data processing to improve overall operational efficiency and decision-making in the manufacturing process.
 
 ## User Preferences
 
@@ -90,26 +13,69 @@ This project is an advanced AI-powered order management system specifically desi
 
 ## System Architecture
 
-The system is built with a modern stack emphasizing efficiency and scalability.
+The system is built with a modern stack emphasizing efficiency and scalability, with a strong focus on Arabic RTL design principles.
 
-- **Frontend**: React, TypeScript, Vite, TanStack Query, utilizing Tailwind CSS and shadcn/ui components for a responsive and intuitive user interface. UI/UX decisions prioritize Arabic RTL design principles.
-- **Backend**: Node.js and Express, providing robust API endpoints.
-- **Database**: PostgreSQL (Neon Serverless) managed with Drizzle ORM, ensuring efficient data storage and retrieval.
-- **AI Features**: Integration with OpenAI for advanced analytics and machine learning capabilities, including predictive analysis.
-- **Core Features**:
-  - Multilingual support (Arabic/English).
-  - Real-time order tracking and management.
-  - Voice recognition and synthesis.
-  - Advanced production order management, including detailed product specifications and production notes.
-  - Quality control systems.
-  - Maintenance tracking, including spare parts management.
-  - HR management with attendance tracking and training programs.
-- **System Design**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
-- **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations.
-- **Technical Implementations**: Includes a comprehensive number formatting system, sequential ID generation for various entities, and integrated attendance and notification systems.
+-   **Frontend**: React, TypeScript, Vite, TanStack Query, Tailwind CSS, and shadcn/ui components for a responsive and intuitive user interface.
+-   **Backend**: Node.js and Express, providing robust API endpoints.
+-   **Database**: PostgreSQL (Neon Serverless) managed with Drizzle ORM.
+-   **UI/UX Decisions**: Prioritizes Arabic RTL design, features a centralized toast notification system, IconWithTooltip for accessibility, and enhanced loading states with skeleton loaders across dashboards.
+-   **Technical Implementations**: Includes a comprehensive number formatting system (Arabic numerals, 2 decimal places for weight, 1-2 decimal precision for percentages), sequential ID generation, and integrated attendance and notification systems. Query optimization is achieved through indexed foreign keys, aggregate functions, and grouping for various queues. Real-time updates are managed via TanStack Query with 30-second refetch intervals, cache invalidation on mutations, and optimistic updates.
+-   **Feature Specifications**:
+    -   Multilingual support (Arabic/English).
+    -   Real-time order tracking and management.
+    -   Voice recognition and synthesis.
+    -   Advanced production order management, including detailed product specifications and notes.
+    -   **Three-Machine Roll Tracking**: Tracks each roll through film/extruder, printing, and cutting stages, replacing a single-machine system. Roll labels display comprehensive information for all three stages.
+    -   **Material Mixing System** (Film Section Only): Formula-based mixing system using size ranges (width in cm), thickness ranges (micron per layer), and master batch colors. Film machines categorized by screw type ('A' or 'ABA'), with ABA-type machines requiring separate A/B mixing recipes. All mixing ingredients sourced from items table (category CAT10 - raw materials only).
+    -   Quality control systems.
+    -   Maintenance tracking, including spare parts management.
+    -   HR management with attendance tracking and training programs.
+    -   Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
+    -   AI Assistant with context-aware intelligence, improved intent analysis, enhanced UI, and performance optimizations for smart query handling and data processing.
+    -   **Replit Auth Integration**: Dual authentication support - traditional username/password and Replit Auth for seamless integration with Replit platform.
+-   **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
+-   **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios like weight validation, printing, cutting, and queue management.
+
+## System Integration
+
+The system features comprehensive integration between four main sections:
+
+1. **Warehouse (المستودع)**
+   - `inventory`: Current stock levels
+   - `inventory_movements`: Transaction history
+   - `items`: Master data for all materials
+
+2. **Orders (الطلبات)**
+   - `orders` → `production_orders` (via `order_id`)
+   - One order can have multiple production orders
+   - Status tracking and validation through the entire lifecycle
+
+3. **Production (الإنتاج)**
+   - `production_orders` → `rolls` (via `production_order_id`)
+   - `rolls` → `warehouse_receipts` (via `production_order_id`)
+   - Three-stage workflow: Film → Printing → Cutting → Warehouse
+
+4. **Material Mixing (خلط المواد)**
+   - `mixing_formulas` → `formula_ingredients`: Recipe definitions
+   - `mixing_batches` → `batch_ingredients`: Actual production batches
+   - **Inventory Consumption API** (`/api/inventory/consumption`): Links mixing batches to inventory movements
+   - Automatic stock deduction with full transaction logging
+
+**Integration Points:**
+- All sections share referential integrity via foreign keys
+- Real-time cache invalidation ensures data consistency
+- Transaction-safe operations prevent data corruption
+- Comprehensive error handling with Arabic messaging
+
+## Recent Changes (November 2025)
+
+- ✅ Fixed React Key prop error in material-mixing.tsx
+- ✅ Added `/api/inventory/consumption` endpoint for material tracking
+- ✅ Verified all four-way system integration
+- ✅ Confirmed WebSocket issues were Vite HMR related (non-critical)
 
 ## External Dependencies
 
-- **Database**: PostgreSQL (Neon Serverless)
-- **AI/ML**: OpenAI
-- **Messaging**: Twilio (for WhatsApp notifications)
+-   **Database**: PostgreSQL (Neon Serverless)
+-   **AI/ML**: OpenAI
+-   **Messaging**: Twilio (for WhatsApp notifications)

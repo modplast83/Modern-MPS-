@@ -316,7 +316,7 @@ export default function OrdersTabs({
                         العميل
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        الفئة / المنتج
+                        الفئة
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         المنتج
@@ -354,25 +354,27 @@ export default function OrdersTabs({
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {customer?.name_ar || customer?.name || "غير محدد"}
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-category-${po.id}`}>
+                            {category?.name_ar || category?.name || "غير محدد"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900" data-testid={`text-product-${po.id}`}>
                             <div className="text-right">
                               <div className="font-medium text-gray-900">
-                                {category?.name_ar || category?.name || "غير محدد"}
-                              </div>
-                              <div className="text-xs text-gray-500">
                                 {item?.name_ar || item?.name || "غير محدد"}
                               </div>
+                              {customerProduct?.size_caption && (
+                                <div className="text-xs text-gray-500 mt-0.5">
+                                  {customerProduct.size_caption}
+                                </div>
+                              )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {customerProduct?.size_caption || "غير محدد"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {po.quantity_kg || 0}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-overrun-percentage-${po.id}`}>
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                              {po.overrun_percentage || 5}%
+                              {po.overrun_percentage ?? 0}%
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-testid={`text-final-quantity-${po.id}`}>

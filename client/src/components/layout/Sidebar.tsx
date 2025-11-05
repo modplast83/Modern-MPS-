@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   Monitor,
   Activity,
+  Beaker,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
@@ -34,8 +35,8 @@ const modules = [
     active: false,
   },
   {
-    name: "الطلبات",
-    name_ar: "الطلبات",
+    name: "الطلبات والإنتاج",
+    name_ar: "الطلبات والإنتاج",
     icon: FileText,
     path: "/orders",
     active: false,
@@ -46,6 +47,14 @@ const modules = [
     icon: Cog,
     path: "/production",
     active: false,
+  },
+  {
+    name: "لوحة عامل الفيلم",
+    name_ar: "لوحة عامل الفيلم",
+    icon: Cog,
+    path: "/film-operator",
+    active: false,
+    requiredSections: [1], // مخصص لعاملي قسم الفيلم
   },
   {
     name: "مراقبة الإنتاج",
@@ -83,6 +92,13 @@ const modules = [
     active: false,
   },
   {
+    name: "خلط المواد",
+    name_ar: "خلط المواد",
+    icon: Beaker,
+    path: "/material-mixing",
+    active: false,
+  },
+  {
     name: "التعريفات",
     name_ar: "التعريفات",
     icon: Database,
@@ -97,6 +113,13 @@ const modules = [
     active: false,
   },
   {
+      name: "الأدوات",
+      name_ar: "الأدوات",
+      icon: Wrench,
+      path: "/tools",
+      active: false,
+    },
+  {
     name: "الإعدادات",
     name_ar: "الإعدادات",
     icon: Settings,
@@ -109,8 +132,17 @@ export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
 
-  // Filter modules based on user permissions
+  // Filter modules based on user permissions and sections
   const accessibleModules = modules.filter(module => {
+    // Check if module has section requirements
+    if (module.requiredSections) {
+      // Check if user's section matches any of the required sections
+      const userSectionId = user?.section_id;
+      if (!userSectionId || !module.requiredSections.includes(userSectionId)) {
+        return false;
+      }
+    }
+    
     // Check route permissions for all pages including home
     return canAccessRoute(user, module.path);
   });

@@ -1151,7 +1151,7 @@ export default function Orders() {
   const getStatusBadge = (status: string) => {
     const statusMap = {
       waiting: { label: "انتظار", variant: "secondary" as const },
-      in_production: { label: "انتاج", variant: "default" as const },
+      in_production: { label: "قيد الإنتاج", variant: "default" as const },
       paused: { label: "معلق", variant: "destructive" as const },
       completed: { label: "مكتمل", variant: "default" as const },
       received: { label: "مستلم", variant: "default" as const },
@@ -1188,7 +1188,7 @@ export default function Orders() {
                     : statusFilter === "waiting"
                       ? "طلبات في الانتظار"
                       : statusFilter === "in_production"
-                        ? "طلبات في الانتاج"
+                        ? "طلبات قيد الإنتاج"
                         : statusFilter === "paused"
                           ? "طلبات معلقة"
                           : statusFilter === "completed"
@@ -1296,7 +1296,7 @@ export default function Orders() {
                         <SelectContent>
                           <SelectItem value="all">جميع الطلبات</SelectItem>
                           <SelectItem value="waiting">انتظار</SelectItem>
-                          <SelectItem value="in_production">انتاج</SelectItem>
+                          <SelectItem value="in_production">قيد الإنتاج</SelectItem>
                           <SelectItem value="paused">معلق</SelectItem>
                           <SelectItem value="completed">مكتمل</SelectItem>
                           <SelectItem value="received">مستلم</SelectItem>

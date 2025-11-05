@@ -93,7 +93,7 @@ export default function OrdersTable({
         color: "bg-yellow-100 text-yellow-800",
       },
       in_production: {
-        label: "انتاج",
+        label: "قيد الإنتاج",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
@@ -214,28 +214,51 @@ export default function OrdersTable({
             (po: any) => po.order_id === order.id
           );
           
-          // حساب متوسط نسبة الإكمال لكل مرحلة عبر جميع أوامر الإنتاج
+          // حساب متوسط مرجح لنسبة الإكمال لكل مرحلة بناءً على الكميات الفعلية
           let avgFilmPercentage = 0;
           let avgPrintingPercentage = 0;
           let avgCuttingPercentage = 0;
           
           if (orderProductionOrders.length > 0) {
-            const totalFilm = orderProductionOrders.reduce(
-              (sum: number, po: any) => sum + parseFloat(po.film_completion_percentage || 0),
-              0
-            );
-            const totalPrinting = orderProductionOrders.reduce(
-              (sum: number, po: any) => sum + parseFloat(po.printing_completion_percentage || 0),
-              0
-            );
-            const totalCutting = orderProductionOrders.reduce(
-              (sum: number, po: any) => sum + parseFloat(po.cutting_completion_percentage || 0),
+            // حساب الكمية الإجمالية لجميع أوامر الإنتاج
+            const totalQuantity = orderProductionOrders.reduce(
+              (sum: number, po: any) => sum + parseFloat(po.final_quantity_kg || po.quantity_kg || 0),
               0
             );
             
-            avgFilmPercentage = totalFilm / orderProductionOrders.length;
-            avgPrintingPercentage = totalPrinting / orderProductionOrders.length;
-            avgCuttingPercentage = totalCutting / orderProductionOrders.length;
+            if (totalQuantity > 0) {
+              // حساب المتوسط المرجح لكل مرحلة
+              const weightedFilm = orderProductionOrders.reduce(
+                (sum: number, po: any) => {
+                  const quantity = parseFloat(po.final_quantity_kg || po.quantity_kg || 0);
+                  const percentage = parseFloat(po.film_completion_percentage || 0);
+                  return sum + (quantity * percentage);
+                },
+                0
+              );
+              
+              const weightedPrinting = orderProductionOrders.reduce(
+                (sum: number, po: any) => {
+                  const quantity = parseFloat(po.final_quantity_kg || po.quantity_kg || 0);
+                  const percentage = parseFloat(po.printing_completion_percentage || 0);
+                  return sum + (quantity * percentage);
+                },
+                0
+              );
+              
+              const weightedCutting = orderProductionOrders.reduce(
+                (sum: number, po: any) => {
+                  const quantity = parseFloat(po.final_quantity_kg || po.quantity_kg || 0);
+                  const percentage = parseFloat(po.cutting_completion_percentage || 0);
+                  return sum + (quantity * percentage);
+                },
+                0
+              );
+              
+              avgFilmPercentage = weightedFilm / totalQuantity;
+              avgPrintingPercentage = weightedPrinting / totalQuantity;
+              avgCuttingPercentage = weightedCutting / totalQuantity;
+            }
           }
 
           return (

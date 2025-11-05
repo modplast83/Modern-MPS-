@@ -46,6 +46,7 @@ import {
   notifications,
   notification_templates,
   user_requests,
+  machine_queues,
 
   // نظام التحذيرات الذكية
   system_alerts,
@@ -54,9 +55,35 @@ import {
   system_performance_metrics,
   corrective_actions,
   system_analytics,
+  
+  // الملاحظات السريعة
+  quick_notes,
+  note_attachments,
+  type QuickNote,
+  type InsertQuickNote,
+  type NoteAttachment,
+  type InsertNoteAttachment,
+  type MachineQueue,
+  type InsertMachineQueue,
+  
+  // نظام الخلط
+  mixing_formulas,
+  formula_ingredients,
+  mixing_batches,
+  batch_ingredients,
+  type MixingFormula,
+  type InsertMixingFormula,
+  type FormulaIngredient,
+  type InsertFormulaIngredient,
+  type MixingBatch,
+  type InsertMixingBatch,
+  type BatchIngredient,
+  type InsertBatchIngredient,
+  
   type User,
   type SafeUser,
   type InsertUser,
+  type UpsertUser,
   type NewOrder,
   type InsertNewOrder,
   type ProductionOrder,
@@ -390,11 +417,18 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Replit Auth user operations
+  getUserByReplitId(replitUserId: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
 
   // Safe users (without sensitive data like passwords)
   getSafeUser(id: number): Promise<SafeUser | undefined>;
   getSafeUsers(): Promise<SafeUser[]>;
   getSafeUsersByRole(roleId: number): Promise<SafeUser[]>;
+  
+  // Roles
+  getRoleById(id: number): Promise<Role | undefined>;
 
   // Orders
   getAllOrders(): Promise<NewOrder[]>;
@@ -443,6 +477,20 @@ export interface IStorage {
   // Machines
   getMachines(): Promise<Machine[]>;
   getMachineById(id: string): Promise<Machine | undefined>;
+
+  // Machine Queues
+  getMachineQueues(): Promise<any[]>;
+  assignToMachineQueue(productionOrderId: number, machineId: string, position: number, userId: number): Promise<MachineQueue>;
+  updateQueuePosition(queueId: number, newPosition: number): Promise<MachineQueue>;
+  removeFromQueue(queueId: number): Promise<void>;
+  suggestOptimalDistribution(): Promise<any[]>;
+  
+  // Smart Distribution Functions
+  smartDistributeOrders(algorithm: string, params?: any): Promise<any>;
+  calculateMachineCapacity(machineId: string): Promise<any>;
+  getDistributionPreview(algorithm: string, params?: any): Promise<any>;
+  optimizeQueueOrder(machineId: string): Promise<void>;
+  getMachineCapacityStats(): Promise<any[]>;
 
   // Customers
   getCustomers(): Promise<Customer[]>;
@@ -675,6 +723,14 @@ export interface IStorage {
     wastePercentage: number;
   }>;
 
+  // Production Reports
+  getProductionSummary(filters?: any): Promise<any>;
+  getProductionByDate(filters?: any): Promise<any>;
+  getProductionByProduct(filters?: any): Promise<any>;
+  getWasteAnalysis(filters?: any): Promise<any>;
+  getMachinePerformance(filters?: any): Promise<any>;
+  getOperatorPerformance(filters?: any): Promise<any>;
+
   // Settings
   getSystemSettings(): Promise<SystemSetting[]>;
   getUserSettings(userId: number): Promise<UserSetting[]>;
@@ -779,7 +835,7 @@ export interface IStorage {
     weight_kg: number;
     created_by: number;
   }): Promise<Roll>;
-  markRollPrinted(rollId: number, operatorId: number): Promise<Roll>;
+  markRollPrinted(rollId: number, operatorId: number, printingMachineId?: string): Promise<Roll>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(
     receiptData: InsertWarehouseReceipt,
@@ -790,6 +846,43 @@ export interface IStorage {
   getCuttingQueue(): Promise<Roll[]>;
   getGroupedCuttingQueue(): Promise<any[]>;
   getOrderProgress(productionOrderId: number): Promise<any>;
+  
+  // Enhanced Cutting Operations
+  getRollsForCuttingBySection(sectionId?: number): Promise<{
+    rolls: Roll[];
+    stats: {
+      totalRolls: number;
+      totalWeight: number;
+      todayWaste: number;
+      todayWastePercentage: number;
+      averageWastePercentage: number;
+    };
+  }>;
+  completeCutting(rollId: number, netWeight: number, operatorId: number): Promise<{
+    roll: Roll;
+    production_order: ProductionOrder;
+    waste_percentage: number;
+    is_order_completed: boolean;
+  }>;
+  calculateWasteStatistics(productionOrderId: number): Promise<{
+    totalWaste: number;
+    wastePercentage: number;
+    operatorStats: Array<{
+      operatorId: number;
+      operatorName: string;
+      rollsCut: number;
+      totalWaste: number;
+      averageWastePercentage: number;
+    }>;
+    dailyStats: Array<{
+      date: string;
+      totalWaste: number;
+      wastePercentage: number;
+      rollsCount: number;
+    }>;
+  }>;
+  checkCuttingCompletion(productionOrderId: number): Promise<boolean>;
+  
   getRollQR(
     rollId: number,
   ): Promise<{ qr_code_text: string; qr_png_base64: string }>;
@@ -941,6 +1034,51 @@ export interface IStorage {
   // Alert Rate Limiting - Persistent Storage
   getLastAlertTime(checkKey: string): Promise<Date | null>;
   setLastAlertTime(checkKey: string, timestamp: Date): Promise<void>;
+
+  // Quick Notes
+  getQuickNotes(userId?: number): Promise<any[]>;
+  getQuickNoteById(id: number): Promise<any | undefined>;
+  createQuickNote(note: any): Promise<any>;
+  updateQuickNote(id: number, updates: any): Promise<any>;
+  deleteQuickNote(id: number): Promise<void>;
+  markNoteAsRead(id: number): Promise<any>;
+  
+  // Note Attachments
+  createNoteAttachment(attachment: any): Promise<any>;
+  getNoteAttachments(noteId: number): Promise<any[]>;
+  deleteNoteAttachment(id: number): Promise<void>;
+  
+  // Film Operator Functions
+  getActiveProductionOrdersForOperator(userId: number): Promise<any[]>;
+  createRollWithTiming(rollData: InsertRoll & { is_last_roll?: boolean }): Promise<Roll>;
+  createFinalRoll(rollData: InsertRoll): Promise<Roll>;
+  calculateProductionTime(productionOrderId: number): Promise<number>;
+
+  // Mixing Formulas Management
+  getAllMixingFormulas(): Promise<any[]>;
+  getMixingFormulaById(id: number): Promise<any | undefined>;
+  createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any>;
+  updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any>;
+  deleteMixingFormula(id: number): Promise<void>;
+  findMatchingFormulas(criteria: {
+    machineId: string;
+    rawMaterial: string;
+    thickness: number;
+    width?: number;
+  }): Promise<any[]>;
+
+  // Mixing Batches
+  getAllMixingBatches(): Promise<any[]>;
+  getMixingBatchById(id: number): Promise<any | undefined>;
+  createMixingBatch(batch: InsertMixingBatch, ingredients: InsertBatchIngredient[]): Promise<any>;
+  updateMixingBatch(id: number, updates: Partial<MixingBatch>): Promise<any>;
+  updateBatchIngredientActuals(batchId: number, ingredientUpdates: Array<{
+    id: number;
+    actual_weight_kg: string;
+  }>): Promise<void>;
+  completeMixingBatch(id: number): Promise<any>;
+  getMixingBatchesByOperator(operatorId: number): Promise<any[]>;
+  getMixingBatchesByProductionOrder(productionOrderId: number): Promise<any[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -983,6 +1121,21 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async getRoleById(id: number): Promise<Role | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!id || typeof id !== "number" || id <= 0) {
+          throw new Error("معرف الدور غير صحيح");
+        }
+
+        const [role] = await db.select().from(roles).where(eq(roles.id, id));
+        return role || undefined;
+      },
+      "جلب بيانات الدور",
+      `الدور رقم ${id}`,
+    );
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     return withDatabaseErrorHandling(
       async () => {
@@ -1014,6 +1167,56 @@ export class DatabaseStorage implements IStorage {
       },
       "إنشاء مستخدم جديد",
       `اسم المستخدم: ${insertUser.username}`,
+    );
+  }
+
+  // Replit Auth user operations
+  async getUserByReplitId(replitUserId: string): Promise<User | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!replitUserId || typeof replitUserId !== "string") {
+          throw new Error("معرف مستخدم Replit غير صحيح");
+        }
+
+        const [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.replit_user_id, replitUserId));
+        return user || undefined;
+      },
+      "البحث عن مستخدم Replit",
+      `معرف Replit: ${replitUserId}`,
+    );
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [user] = await db
+          .insert(users)
+          .values({
+            replit_user_id: userData.id,
+            email: userData.email,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            profile_image_url: userData.profileImageUrl,
+            status: "active",
+          })
+          .onConflictDoUpdate({
+            target: users.replit_user_id,
+            set: {
+              email: userData.email,
+              first_name: userData.firstName,
+              last_name: userData.lastName,
+              profile_image_url: userData.profileImageUrl,
+              updated_at: new Date(),
+            },
+          })
+          .returning();
+        return user;
+      },
+      "إنشاء/تحديث مستخدم Replit",
+      `معرف Replit: ${userData.id}`,
     );
   }
 
@@ -1131,8 +1334,8 @@ export class DatabaseStorage implements IStorage {
     await db.delete(customers).where(eq(customers.id, id));
   }
 
-  async getAllOrders(): Promise<NewOrder[]> {
-    return await db.select().from(orders).orderBy(desc(orders.created_at));
+  async getAllOrders(limit: number = 1000): Promise<NewOrder[]> {
+    return await db.select().from(orders).orderBy(desc(orders.created_at)).limit(limit);
   }
 
   async createOrder(insertOrder: InsertNewOrder): Promise<NewOrder> {
@@ -1659,7 +1862,7 @@ export class DatabaseStorage implements IStorage {
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
         .where(
-          sql`${production_orders.order_id} IN (${sql.raw(orderIds.join(","))})`,
+          inArray(production_orders.order_id, orderIds)
         )
         .limit(100);
 
@@ -1688,7 +1891,7 @@ export class DatabaseStorage implements IStorage {
           })
           .from(rolls)
           .where(
-            sql`${rolls.production_order_id} IN (${sql.raw(productionOrderIds.join(","))})`,
+            inArray(rolls.production_order_id, productionOrderIds)
           )
           .orderBy(desc(rolls.created_at));
       }
@@ -1766,7 +1969,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Production Orders Implementation
-  async getAllProductionOrders(): Promise<ProductionOrder[]> {
+  async getAllProductionOrders(limit: number = 1000): Promise<ProductionOrder[]> {
     return await withDatabaseErrorHandling(async () => {
       const results = await db
         .select({
@@ -1826,10 +2029,11 @@ export class DatabaseStorage implements IStorage {
           eq(production_orders.customer_product_id, customer_products.id),
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .orderBy(desc(production_orders.created_at));
+        .orderBy(desc(production_orders.created_at))
+        .limit(limit);
 
       // Return results with proper type mapping - keep decimal fields as strings for consistency
-      return results;
+      return results as any;
     }, "تحميل أوامر الإنتاج");
   }
 
@@ -1891,7 +2095,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(production_orders.id, id))
         .limit(1);
 
-      return results.length > 0 ? results[0] : undefined;
+      return results.length > 0 ? (results[0] as any) : undefined;
     }, "تحميل أمر الإنتاج");
   }
 
@@ -2288,6 +2492,238 @@ export class DatabaseStorage implements IStorage {
     invalidateProductionCache("all");
   }
 
+  // Production Orders Management Functions
+  async getProductionOrdersWithDetails(): Promise<any[]> {
+    return await withDatabaseErrorHandling(async () => {
+      const results = await db
+        .select({
+          id: production_orders.id,
+          production_order_number: production_orders.production_order_number,
+          order_id: production_orders.order_id,
+          customer_product_id: production_orders.customer_product_id,
+          quantity_kg: production_orders.quantity_kg,
+          overrun_percentage: production_orders.overrun_percentage,
+          final_quantity_kg: production_orders.final_quantity_kg,
+          produced_quantity_kg: production_orders.produced_quantity_kg,
+          printed_quantity_kg: production_orders.printed_quantity_kg,
+          net_quantity_kg: production_orders.net_quantity_kg,
+          waste_quantity_kg: production_orders.waste_quantity_kg,
+          film_completion_percentage: production_orders.film_completion_percentage,
+          printing_completion_percentage: production_orders.printing_completion_percentage,
+          cutting_completion_percentage: production_orders.cutting_completion_percentage,
+          status: production_orders.status,
+          created_at: production_orders.created_at,
+          
+          // حقول التخصيص والأوقات
+          assigned_machine_id: production_orders.assigned_machine_id,
+          assigned_operator_id: production_orders.assigned_operator_id,
+          production_start_time: production_orders.production_start_time,
+          production_end_time: production_orders.production_end_time,
+          production_time_minutes: production_orders.production_time_minutes,
+          
+          // معلومات الطلب
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
+          customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          
+          // معلومات المنتج
+          size_caption: customer_products.size_caption,
+          width: customer_products.width,
+          cutting_length_cm: customer_products.cutting_length_cm,
+          thickness: customer_products.thickness,
+          raw_material: customer_products.raw_material,
+          is_printed: customer_products.is_printed,
+          
+          // معلومات الماكينة المخصصة
+          machine_name: machines.name,
+          machine_name_ar: machines.name_ar,
+          machine_status: machines.status,
+          
+          // معلومات العامل المخصص
+          operator_name: users.display_name,
+          operator_name_ar: users.display_name_ar,
+        })
+        .from(production_orders)
+        .leftJoin(orders, eq(production_orders.order_id, orders.id))
+        .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(
+          customer_products,
+          eq(production_orders.customer_product_id, customer_products.id)
+        )
+        .leftJoin(machines, eq(production_orders.assigned_machine_id, machines.id))
+        .leftJoin(users, eq(production_orders.assigned_operator_id, users.id))
+        .orderBy(desc(production_orders.created_at));
+
+      return results;
+    }, "تحميل أوامر الإنتاج مع التفاصيل");
+  }
+
+  async activateProductionOrder(
+    id: number,
+    machineId?: string,
+    operatorId?: number
+  ): Promise<ProductionOrder> {
+    return await withDatabaseErrorHandling(async () => {
+      return await db.transaction(async (tx) => {
+        // جلب أمر الإنتاج الحالي
+        const [currentOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, id));
+
+        if (!currentOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (currentOrder.status !== "pending") {
+          throw new Error(`لا يمكن تفعيل أمر إنتاج بحالة ${currentOrder.status}`);
+        }
+
+        // تحديث أمر الإنتاج
+        const updateData: any = {
+          status: "active",
+          production_start_time: new Date(),
+        };
+
+        if (machineId) {
+          updateData.assigned_machine_id = machineId;
+        }
+
+        if (operatorId) {
+          updateData.assigned_operator_id = operatorId;
+        }
+
+        const [updatedOrder] = await tx
+          .update(production_orders)
+          .set(updateData)
+          .where(eq(production_orders.id, id))
+          .returning();
+
+        // تحديث حالة الطلب الأساسي إلى in_production إذا كان في حالة waiting
+        const [parentOrder] = await tx
+          .select()
+          .from(orders)
+          .where(eq(orders.id, updatedOrder.order_id));
+
+        if (parentOrder && parentOrder.status === "waiting") {
+          await tx
+            .update(orders)
+            .set({ status: "in_production" })
+            .where(eq(orders.id, updatedOrder.order_id));
+        }
+
+        // إبطال الكاش
+        invalidateProductionCache("all");
+
+        return updatedOrder;
+      });
+    }, "تفعيل أمر الإنتاج");
+  }
+
+  async getProductionOrderStats(id: number): Promise<any> {
+    return await withDatabaseErrorHandling(async () => {
+      // جلب إحصائيات الرولات لأمر الإنتاج
+      const rollStats = await db
+        .select({
+          total_rolls: sql<number>`COUNT(*)`,
+          total_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+          film_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'film' THEN 1 END)`,
+          printing_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'printing' THEN 1 END)`,
+          cutting_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'cutting' THEN 1 END)`,
+          done_rolls: sql<number>`COUNT(CASE WHEN ${rolls.stage} = 'done' THEN 1 END)`,
+          total_waste: sql<number>`COALESCE(SUM(${rolls.waste_kg}), 0)`,
+        })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, id));
+
+      // جلب معلومات أمر الإنتاج
+      const [productionOrder] = await db
+        .select()
+        .from(production_orders)
+        .where(eq(production_orders.id, id));
+
+      if (!productionOrder) {
+        throw new Error("أمر الإنتاج غير موجود");
+      }
+
+      // حساب نسب الإكمال
+      const stats = rollStats[0] || {
+        total_rolls: 0,
+        total_weight: 0,
+        film_rolls: 0,
+        printing_rolls: 0,
+        cutting_rolls: 0,
+        done_rolls: 0,
+        total_waste: 0,
+      };
+
+      // حساب نسبة الإكمال الكلية
+      const completionPercentage = 
+        parseFloat(productionOrder.final_quantity_kg) > 0
+          ? (parseFloat(stats.total_weight.toString()) / parseFloat(productionOrder.final_quantity_kg)) * 100
+          : 0;
+
+      // حساب الوقت المستغرق إذا بدأ الإنتاج
+      let productionTimeHours = 0;
+      if (productionOrder.production_start_time) {
+        const startTime = new Date(productionOrder.production_start_time);
+        const endTime = productionOrder.production_end_time 
+          ? new Date(productionOrder.production_end_time)
+          : new Date();
+        productionTimeHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      }
+
+      return {
+        ...stats,
+        production_order: productionOrder,
+        completion_percentage: Math.min(completionPercentage, 100).toFixed(2),
+        production_time_hours: productionTimeHours.toFixed(2),
+        remaining_quantity: Math.max(
+          parseFloat(productionOrder.final_quantity_kg) - parseFloat(stats.total_weight.toString()),
+          0
+        ).toFixed(2),
+      };
+    }, "إحصائيات أمر الإنتاج");
+  }
+
+  async updateProductionOrderAssignment(
+    id: number,
+    machineId?: string,
+    operatorId?: number
+  ): Promise<ProductionOrder> {
+    return await withDatabaseErrorHandling(async () => {
+      const updateData: any = {};
+      
+      if (machineId !== undefined) {
+        updateData.assigned_machine_id = machineId || null;
+      }
+      
+      if (operatorId !== undefined) {
+        updateData.assigned_operator_id = operatorId || null;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        throw new Error("لا توجد بيانات للتحديث");
+      }
+
+      const [updated] = await db
+        .update(production_orders)
+        .set(updateData)
+        .where(eq(production_orders.id, id))
+        .returning();
+
+      if (!updated) {
+        throw new Error("فشل تحديث التخصيص");
+      }
+
+      // إبطال الكاش
+      invalidateProductionCache("all");
+
+      return updated;
+    }, "تحديث تخصيص أمر الإنتاج");
+  }
+
   async getRolls(options?: {
     limit?: number;
     offset?: number;
@@ -2379,21 +2815,60 @@ export class DatabaseStorage implements IStorage {
             throw new DatabaseError("طلب الإنتاج غير موجود", { code: "23503" });
           }
 
-          // STEP 2: INVARIANT E - Verify machine exists and is active
-          const [machine] = await tx
+          // STEP 2: INVARIANT E - Verify film machine exists and is active
+          // Printing and cutting machines are assigned later in their respective stages
+          const [filmMachine] = await tx
             .select()
             .from(machines)
-            .where(eq(machines.id, insertRoll.machine_id));
+            .where(eq(machines.id, insertRoll.film_machine_id));
 
-          if (!machine) {
-            throw new DatabaseError("الماكينة غير موجودة", { code: "23503" });
+          if (!filmMachine) {
+            throw new DatabaseError("ماكينة الفيلم غير موجودة", { code: "23503" });
           }
 
-          if (machine.status !== "active") {
+          if (filmMachine.status !== "active") {
             throw new DatabaseError(
-              `لا يمكن إنشاء رول على ماكينة غير نشطة - حالة الماكينة: ${machine.status}`,
+              `لا يمكن إنشاء رول على ماكينة فيلم غير نشطة - حالة الماكينة: ${filmMachine.status}`,
               { code: "INVARIANT_E_VIOLATION" },
             );
+          }
+
+          // Optionally validate printing machine if provided
+          if (insertRoll.printing_machine_id) {
+            const [printingMachine] = await tx
+              .select()
+              .from(machines)
+              .where(eq(machines.id, insertRoll.printing_machine_id));
+
+            if (!printingMachine) {
+              throw new DatabaseError("ماكينة الطباعة غير موجودة", { code: "23503" });
+            }
+
+            if (printingMachine.status !== "active") {
+              throw new DatabaseError(
+                `لا يمكن إنشاء رول على ماكينة طباعة غير نشطة - حالة الماكينة: ${printingMachine.status}`,
+                { code: "INVARIANT_E_VIOLATION" },
+              );
+            }
+          }
+
+          // Optionally validate cutting machine if provided
+          if (insertRoll.cutting_machine_id) {
+            const [cuttingMachine] = await tx
+              .select()
+              .from(machines)
+              .where(eq(machines.id, insertRoll.cutting_machine_id));
+
+            if (!cuttingMachine) {
+              throw new DatabaseError("ماكينة التقطيع غير موجودة", { code: "23503" });
+            }
+
+            if (cuttingMachine.status !== "active") {
+              throw new DatabaseError(
+                `لا يمكن إنشاء رول على ماكينة تقطيع غير نشطة - حالة الماكينة: ${cuttingMachine.status}`,
+                { code: "INVARIANT_E_VIOLATION" },
+              );
+            }
           }
 
           // STEP 3: INVARIANT B - Check roll weight constraints
@@ -2455,7 +2930,9 @@ export class DatabaseStorage implements IStorage {
             roll_number: rollNumber,
             production_order: productionOrder.production_order_number,
             weight_kg: insertRoll.weight_kg,
-            machine_id: insertRoll.machine_id,
+            film_machine_id: insertRoll.film_machine_id,
+            printing_machine_id: insertRoll.printing_machine_id,
+            cutting_machine_id: insertRoll.cutting_machine_id,
             created_at: new Date().toISOString(),
             stage: "film",
             internal_ref: `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}`,
@@ -2499,7 +2976,9 @@ export class DatabaseStorage implements IStorage {
               rollWeight: rollWeightKg,
               newTotalWeight: newTotalWeight.toFixed(2),
               maxAllowed: maxAllowedWeight.toFixed(2),
-              machineStatus: machine.status,
+              filmMachine: filmMachine.status,
+              printingMachine: insertRoll.printing_machine_id ? "will be assigned in printing stage" : "not assigned",
+              cuttingMachine: insertRoll.cutting_machine_id ? "will be assigned in cutting stage" : "not assigned",
             },
           );
 
@@ -2523,6 +3002,434 @@ export class DatabaseStorage implements IStorage {
     return roll;
   }
 
+  // ============ Roll Search Functions ============
+
+  // البحث الشامل عن الرولات
+  async searchRolls(query: string, filters?: {
+    stage?: string;
+    startDate?: string;
+    endDate?: string;
+    machineId?: string;
+    operatorId?: number;
+    minWeight?: number;
+    maxWeight?: number;
+    productionOrderId?: number;
+    orderId?: number;
+  }): Promise<any[]> {
+    const cacheKey = `roll_search:${query}:${JSON.stringify(filters)}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    let queryBuilder = db
+      .select({
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        film_machine_id: rolls.film_machine_id,
+        film_machine_name: sql<string>`film_machine.name`,
+        printing_machine_id: rolls.printing_machine_id,
+        printing_machine_name: sql<string>`printing_machine.name`,
+        cutting_machine_id: rolls.cutting_machine_id,
+        cutting_machine_name: sql<string>`cutting_machine.name`,
+        created_by: rolls.created_by,
+        created_by_name: sql<string>`created_user.display_name`,
+        printed_by: rolls.printed_by,
+        printed_by_name: sql<string>`printed_user.display_name`,
+        cut_by: rolls.cut_by,
+        cut_by_name: sql<string>`cut_user.display_name`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(alias(machines, 'film_machine'), eq(rolls.film_machine_id, sql`film_machine.id`))
+      .leftJoin(alias(machines, 'printing_machine'), eq(rolls.printing_machine_id, sql`printing_machine.id`))
+      .leftJoin(alias(machines, 'cutting_machine'), eq(rolls.cutting_machine_id, sql`cutting_machine.id`))
+      .leftJoin(alias(users, 'created_user'), eq(rolls.created_by, sql`created_user.id`))
+      .leftJoin(alias(users, 'printed_user'), eq(rolls.printed_by, sql`printed_user.id`))
+      .leftJoin(alias(users, 'cut_user'), eq(rolls.cut_by, sql`cut_user.id`));
+
+    // Build conditions array
+    const conditions = [];
+
+    // Search query
+    if (query && query.trim()) {
+      const searchPattern = `%${query.trim()}%`;
+      conditions.push(
+        or(
+          sql`${rolls.roll_number} ILIKE ${searchPattern}`,
+          sql`${rolls.qr_code_text} ILIKE ${searchPattern}`,
+          sql`${production_orders.production_order_number} ILIKE ${searchPattern}`,
+          sql`${orders.order_number} ILIKE ${searchPattern}`,
+          sql`${customers.name} ILIKE ${searchPattern}`,
+          sql`${customers.name_ar} ILIKE ${searchPattern}`
+        )
+      );
+    }
+
+    // Stage filter
+    if (filters?.stage) {
+      conditions.push(eq(rolls.stage, filters.stage));
+    }
+
+    // Date range filter
+    if (filters?.startDate) {
+      conditions.push(sql`${rolls.created_at} >= ${filters.startDate}`);
+    }
+    if (filters?.endDate) {
+      conditions.push(sql`${rolls.created_at} <= ${filters.endDate}`);
+    }
+
+    // Machine filter
+    if (filters?.machineId) {
+      conditions.push(
+        or(
+          eq(rolls.film_machine_id, filters.machineId),
+          eq(rolls.printing_machine_id, filters.machineId),
+          eq(rolls.cutting_machine_id, filters.machineId)
+        )
+      );
+    }
+
+    // Operator filter
+    if (filters?.operatorId) {
+      conditions.push(
+        or(
+          eq(rolls.created_by, filters.operatorId),
+          eq(rolls.printed_by, filters.operatorId),
+          eq(rolls.cut_by, filters.operatorId)
+        )
+      );
+    }
+
+    // Weight range filter
+    if (filters?.minWeight !== undefined) {
+      conditions.push(sql`${rolls.weight_kg} >= ${filters.minWeight}`);
+    }
+    if (filters?.maxWeight !== undefined) {
+      conditions.push(sql`${rolls.weight_kg} <= ${filters.maxWeight}`);
+    }
+
+    // Production order filter
+    if (filters?.productionOrderId) {
+      conditions.push(eq(rolls.production_order_id, filters.productionOrderId));
+    }
+
+    // Order filter
+    if (filters?.orderId) {
+      conditions.push(eq(production_orders.order_id, filters.orderId));
+    }
+
+    // Apply conditions and ordering
+    const results = await (conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder
+    )
+      .orderBy(desc(rolls.created_at))
+      .limit(100);
+
+    // Parse and add product info from qr_code_text
+    const resultsWithProductInfo = results.map(roll => {
+      try {
+        const qrData = JSON.parse(roll.qr_code_text);
+        return {
+          ...roll,
+          item_name: qrData.item_name || qrData.product_name,
+          item_name_ar: qrData.item_name_ar || qrData.product_name_ar,
+          size_caption: qrData.size_caption,
+          raw_material: qrData.raw_material,
+          color: qrData.color,
+          punching: qrData.punching,
+        };
+      } catch {
+        return roll;
+      }
+    });
+
+    setCachedData(cacheKey, resultsWithProductInfo, CACHE_TTL.SHORT);
+    return resultsWithProductInfo;
+  }
+
+  // البحث بالباركود
+  async getRollByBarcode(barcode: string): Promise<any | null> {
+    const cacheKey = `roll_barcode:${barcode}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    // Search by QR code text
+    const result = await db
+      .select({
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .where(sql`${rolls.qr_code_text} ILIKE ${'%' + barcode + '%'}`)
+      .limit(1);
+
+    if (result.length === 0) return null;
+
+    const roll = result[0];
+    setCachedData(cacheKey, roll, CACHE_TTL.MEDIUM);
+    return roll;
+  }
+
+  // جلب التفاصيل الكاملة للرول
+  async getRollFullDetails(rollId: number): Promise<any | null> {
+    const cacheKey = `roll_full_details:${rollId}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        // Roll info
+        roll_id: rolls.id,
+        roll_number: rolls.roll_number,
+        roll_seq: rolls.roll_seq,
+        qr_code_text: rolls.qr_code_text,
+        qr_png_base64: rolls.qr_png_base64,
+        stage: rolls.stage,
+        weight_kg: rolls.weight_kg,
+        cut_weight_total_kg: rolls.cut_weight_total_kg,
+        waste_kg: rolls.waste_kg,
+        created_at: rolls.created_at,
+        printed_at: rolls.printed_at,
+        cut_completed_at: rolls.cut_completed_at,
+        // Production order info
+        production_order_id: rolls.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        production_quantity_kg: production_orders.quantity_kg,
+        production_final_quantity_kg: production_orders.final_quantity_kg,
+        production_status: production_orders.status,
+        production_overrun_percentage: production_orders.overrun_percentage,
+        // Order info
+        order_id: production_orders.order_id,
+        order_number: orders.order_number,
+        order_status: orders.status,
+        order_delivery_date: orders.delivery_date,
+        // Customer info
+        customer_id: orders.customer_id,
+        customer_name: customers.name,
+        customer_name_ar: customers.name_ar,
+        customer_phone: customers.phone,
+        customer_city: customers.city,
+        // Machine info
+        film_machine_id: rolls.film_machine_id,
+        film_machine_name: sql<string>`film_machine.name`,
+        film_machine_name_ar: sql<string>`film_machine.name_ar`,
+        printing_machine_id: rolls.printing_machine_id,
+        printing_machine_name: sql<string>`printing_machine.name`,
+        printing_machine_name_ar: sql<string>`printing_machine.name_ar`,
+        cutting_machine_id: rolls.cutting_machine_id,
+        cutting_machine_name: sql<string>`cutting_machine.name`,
+        cutting_machine_name_ar: sql<string>`cutting_machine.name_ar`,
+        // Operator info
+        created_by: rolls.created_by,
+        created_by_name: sql<string>`created_user.display_name`,
+        created_by_name_ar: sql<string>`created_user.display_name_ar`,
+        printed_by: rolls.printed_by,
+        printed_by_name: sql<string>`printed_user.display_name`,
+        printed_by_name_ar: sql<string>`printed_user.display_name_ar`,
+        cut_by: rolls.cut_by,
+        cut_by_name: sql<string>`cut_user.display_name`,
+        cut_by_name_ar: sql<string>`cut_user.display_name_ar`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customers, eq(orders.customer_id, customers.id))
+      .leftJoin(alias(machines, 'film_machine'), eq(rolls.film_machine_id, sql`film_machine.id`))
+      .leftJoin(alias(machines, 'printing_machine'), eq(rolls.printing_machine_id, sql`printing_machine.id`))
+      .leftJoin(alias(machines, 'cutting_machine'), eq(rolls.cutting_machine_id, sql`cutting_machine.id`))
+      .leftJoin(alias(users, 'created_user'), eq(rolls.created_by, sql`created_user.id`))
+      .leftJoin(alias(users, 'printed_user'), eq(rolls.printed_by, sql`printed_user.id`))
+      .leftJoin(alias(users, 'cut_user'), eq(rolls.cut_by, sql`cut_user.id`))
+      .where(eq(rolls.id, rollId))
+      .limit(1);
+
+    if (result.length === 0) return null;
+
+    let rollData: any = result[0];
+
+    // Parse product info from QR code
+    try {
+      const qrData = JSON.parse(rollData.qr_code_text);
+      rollData = {
+        ...rollData,
+        item_name: qrData.item_name || qrData.product_name,
+        item_name_ar: qrData.item_name_ar || qrData.product_name_ar,
+        size_caption: qrData.size_caption,
+        raw_material: qrData.raw_material,
+        color: qrData.color,
+        punching: qrData.punching,
+        thickness: qrData.thickness,
+      };
+    } catch {
+      // Ignore parse error
+    }
+
+    // Get related cuts
+    const cutsData = await db
+      .select({
+        cut_id: cuts.id,
+        weight_kg: cuts.cut_weight_kg,
+        pieces_count: cuts.pieces_count,
+        created_at: cuts.created_at,
+        created_by_name: users.display_name,
+      })
+      .from(cuts)
+      .leftJoin(users, eq(cuts.performed_by, users.id))
+      .where(eq(cuts.roll_id, rollId))
+      .orderBy(desc(cuts.created_at));
+
+    const roll = {
+      ...rollData,
+      cuts: cutsData,
+      cuts_count: cutsData.length,
+      total_cuts_weight: cutsData.reduce((sum, cut) => sum + parseFloat(cut.weight_kg || "0"), 0),
+    };
+
+    setCachedData(cacheKey, roll, CACHE_TTL.MEDIUM);
+    return roll;
+  }
+
+  // جلب سجل تحركات الرول
+  async getRollHistory(rollId: number): Promise<any[]> {
+    const cacheKey = `roll_history:${rollId}`;
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    // Get roll basic info
+    const [roll] = await db
+      .select()
+      .from(rolls)
+      .where(eq(rolls.id, rollId));
+
+    if (!roll) return [];
+
+    const history = [];
+
+    // Film stage
+    history.push({
+      stage: 'film',
+      stage_ar: 'مرحلة الفيلم',
+      timestamp: roll.created_at,
+      machine_id: roll.film_machine_id,
+      operator_id: roll.created_by,
+      operator_name: await this.getUserDisplayName(roll.created_by),
+      weight_kg: roll.weight_kg,
+      status: 'completed',
+      icon: 'Film',
+    });
+
+    // Printing stage
+    if (roll.printed_at) {
+      history.push({
+        stage: 'printing',
+        stage_ar: 'مرحلة الطباعة',
+        timestamp: roll.printed_at,
+        machine_id: roll.printing_machine_id,
+        operator_id: roll.printed_by,
+        operator_name: await this.getUserDisplayName(roll.printed_by),
+        status: 'completed',
+        icon: 'Printer',
+      });
+    }
+
+    // Cutting stage
+    if (roll.cut_completed_at) {
+      history.push({
+        stage: 'cutting',
+        stage_ar: 'مرحلة التقطيع',
+        timestamp: roll.cut_completed_at,
+        machine_id: roll.cutting_machine_id,
+        operator_id: roll.cut_by,
+        operator_name: await this.getUserDisplayName(roll.cut_by),
+        cut_weight_total_kg: roll.cut_weight_total_kg,
+        waste_kg: roll.waste_kg,
+        status: 'completed',
+        icon: 'Scissors',
+      });
+    }
+
+    // Get cuts
+    const cutsHistory = await db
+      .select({
+        weight_kg: cuts.cut_weight_kg,
+        pieces_count: cuts.pieces_count,
+        created_at: cuts.created_at,
+        performed_by: cuts.performed_by,
+        created_by_name: users.display_name,
+      })
+      .from(cuts)
+      .leftJoin(users, eq(cuts.performed_by, users.id))
+      .where(eq(cuts.roll_id, rollId))
+      .orderBy(cuts.created_at);
+
+    // Add each cut to history
+    cutsHistory.forEach(cut => {
+      history.push({
+        stage: 'cut',
+        stage_ar: 'قطع',
+        timestamp: cut.created_at,
+        weight_kg: cut.weight_kg,
+        pieces_count: cut.pieces_count,
+        operator_id: cut.performed_by,
+        operator_name: cut.created_by_name,
+        status: 'completed',
+        icon: 'Package',
+      });
+    });
+
+    // Sort by timestamp
+    history.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    setCachedData(cacheKey, history, CACHE_TTL.MEDIUM);
+    return history;
+  }
+
+  // Helper function to get user display name
+  async getUserDisplayName(userId: number | null): Promise<string | null> {
+    if (!userId) return null;
+    const user = await this.getUserById(userId);
+    return user?.display_name || user?.username || null;
+  }
+
   async getMachines(): Promise<Machine[]> {
     return await db.select().from(machines);
   }
@@ -2533,6 +3440,909 @@ export class DatabaseStorage implements IStorage {
       .from(machines)
       .where(eq(machines.id, id));
     return machine || undefined;
+  }
+
+  // Machine Queue functions for production scheduling
+  async getMachineQueues(): Promise<any[]> {
+    const cacheKey = "machine_queues";
+    const cached = getCachedData(cacheKey);
+    if (cached) return cached;
+
+    const result = await db
+      .select({
+        queue_id: machine_queues.id,
+        machine_id: machine_queues.machine_id,
+        machine_name: machines.name,
+        machine_name_ar: machines.name_ar,
+        machine_status: machines.status,
+        production_order_id: machine_queues.production_order_id,
+        production_order_number: production_orders.production_order_number,
+        customer_product_id: production_orders.customer_product_id,
+        quantity_kg: production_orders.quantity_kg,
+        final_quantity_kg: production_orders.final_quantity_kg,
+        status: production_orders.status,
+        queue_position: machine_queues.queue_position,
+        estimated_start_time: machine_queues.estimated_start_time,
+        assigned_at: machine_queues.assigned_at,
+        assigned_by: machine_queues.assigned_by,
+        assigned_by_name: users.display_name,
+      })
+      .from(machine_queues)
+      .leftJoin(machines, eq(machine_queues.machine_id, machines.id))
+      .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+      .leftJoin(users, eq(machine_queues.assigned_by, users.id))
+      .orderBy(machine_queues.machine_id, machine_queues.queue_position);
+
+    setCachedData(cacheKey, result, CACHE_TTL.REALTIME);
+    return result;
+  }
+
+  async assignToMachineQueue(
+    productionOrderId: number,
+    machineId: string,
+    position: number,
+    userId: number
+  ): Promise<MachineQueue> {
+    return await db.transaction(async (tx) => {
+      // Check if production order exists and is active
+      const [po] = await tx
+        .select()
+        .from(production_orders)
+        .where(eq(production_orders.id, productionOrderId));
+      
+      if (!po) {
+        throw new DatabaseError("أمر الإنتاج غير موجود");
+      }
+
+      if (!["pending", "active", "in_production"].includes(po.status)) {
+        throw new DatabaseError("أمر الإنتاج غير نشط");
+      }
+
+      // Check if machine exists and is active
+      const [machine] = await tx
+        .select()
+        .from(machines)
+        .where(eq(machines.id, machineId));
+      
+      if (!machine) {
+        throw new DatabaseError("الماكينة غير موجودة");
+      }
+
+      if (machine.status !== "active") {
+        throw new DatabaseError("الماكينة غير نشطة");
+      }
+
+      // Check if already assigned
+      const existing = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.production_order_id, productionOrderId));
+      
+      if (existing.length > 0) {
+        throw new DatabaseError("أمر الإنتاج مخصص بالفعل لماكينة");
+      }
+
+      // Shift positions for other items in the queue
+      await tx.execute(
+        sql`UPDATE machine_queues 
+            SET queue_position = queue_position + 1 
+            WHERE machine_id = ${machineId} 
+            AND queue_position >= ${position}`
+      );
+
+      // Insert new queue entry
+      const [queueEntry] = await tx
+        .insert(machine_queues)
+        .values({
+          machine_id: machineId,
+          production_order_id: productionOrderId,
+          queue_position: position,
+          assigned_by: userId,
+        })
+        .returning();
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+
+      return queueEntry;
+    });
+  }
+
+  async updateQueuePosition(queueId: number, newPosition: number): Promise<MachineQueue> {
+    return await db.transaction(async (tx) => {
+      // Get current queue entry
+      const [currentEntry] = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.id, queueId));
+      
+      if (!currentEntry) {
+        throw new DatabaseError("إدخال الطابور غير موجود");
+      }
+
+      const oldPosition = currentEntry.queue_position;
+      const machineId = currentEntry.machine_id;
+
+      if (oldPosition === newPosition) {
+        return currentEntry; // No change needed
+      }
+
+      // Update positions for other items
+      if (newPosition < oldPosition) {
+        // Moving up - shift items down
+        await tx.execute(
+          sql`UPDATE machine_queues 
+              SET queue_position = queue_position + 1 
+              WHERE machine_id = ${machineId} 
+              AND queue_position >= ${newPosition} 
+              AND queue_position < ${oldPosition}
+              AND id != ${queueId}`
+        );
+      } else {
+        // Moving down - shift items up
+        await tx.execute(
+          sql`UPDATE machine_queues 
+              SET queue_position = queue_position - 1 
+              WHERE machine_id = ${machineId} 
+              AND queue_position > ${oldPosition} 
+              AND queue_position <= ${newPosition}
+              AND id != ${queueId}`
+        );
+      }
+
+      // Update the target entry position
+      const [updated] = await tx
+        .update(machine_queues)
+        .set({ queue_position: newPosition })
+        .where(eq(machine_queues.id, queueId))
+        .returning();
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+
+      return updated;
+    });
+  }
+
+  async removeFromQueue(queueId: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      // Get the entry to be removed
+      const [entry] = await tx
+        .select()
+        .from(machine_queues)
+        .where(eq(machine_queues.id, queueId));
+      
+      if (!entry) {
+        throw new DatabaseError("إدخال الطابور غير موجود");
+      }
+
+      // Delete the entry
+      await tx.delete(machine_queues).where(eq(machine_queues.id, queueId));
+
+      // Shift positions for remaining items
+      await tx.execute(
+        sql`UPDATE machine_queues 
+            SET queue_position = queue_position - 1 
+            WHERE machine_id = ${entry.machine_id} 
+            AND queue_position > ${entry.queue_position}`
+      );
+
+      // Clear cache
+      cache.delete("machine_queues");
+      invalidateProductionCache("all");
+    });
+  }
+
+  async suggestOptimalDistribution(): Promise<any[]> {
+    // Get all active machines and their current queue sizes
+    const machineLoads = await db
+      .select({
+        machine_id: machines.id,
+        machine_name: machines.name,
+        machine_name_ar: machines.name_ar,
+        machine_type: machines.type,
+        queue_count: sql<number>`COUNT(${machine_queues.id})`,
+      })
+      .from(machines)
+      .leftJoin(machine_queues, eq(machines.id, machine_queues.machine_id))
+      .where(eq(machines.status, "active"))
+      .groupBy(machines.id, machines.name, machines.name_ar, machines.type);
+
+    // Get unassigned active production orders
+    const unassignedOrders = await db
+      .select({
+        id: production_orders.id,
+        production_order_number: production_orders.production_order_number,
+        quantity_kg: production_orders.quantity_kg,
+        customer_product_id: production_orders.customer_product_id,
+      })
+      .from(production_orders)
+      .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+      .where(
+        and(
+          eq(production_orders.status, "active"),
+          sql`${machine_queues.id} IS NULL`
+        )
+      );
+
+    // Sort machines by load (ascending)
+    machineLoads.sort((a, b) => (a.queue_count || 0) - (b.queue_count || 0));
+
+    // Distribute orders optimally
+    const suggestions = [];
+    let machineIndex = 0;
+
+    for (const order of unassignedOrders) {
+      const targetMachine = machineLoads[machineIndex % machineLoads.length];
+      suggestions.push({
+        production_order_id: order.id,
+        production_order_number: order.production_order_number,
+        suggested_machine_id: targetMachine.machine_id,
+        suggested_machine_name: targetMachine.machine_name,
+        suggested_machine_name_ar: targetMachine.machine_name_ar,
+        current_queue_size: targetMachine.queue_count || 0,
+      });
+      
+      // Update the count for round-robin distribution
+      targetMachine.queue_count = (targetMachine.queue_count || 0) + 1;
+      machineIndex++;
+    }
+
+    return suggestions;
+  }
+
+  // Smart Distribution Functions Implementation
+  async smartDistributeOrders(algorithm: string, params: any = {}): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get all active machines
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+        
+        if (activeMachines.length === 0) {
+          throw new DatabaseError("لا توجد مكائن نشطة للتوزيع");
+        }
+
+        // Get unassigned active production orders
+        const unassignedOrders = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+            created_at: production_orders.created_at,
+          })
+          .from(production_orders)
+          .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              sql`${machine_queues.id} IS NULL`
+            )
+          );
+
+        if (unassignedOrders.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد أوامر إنتاج غير مخصصة",
+            distributed: 0,
+          };
+        }
+
+        // Get current machine loads
+        const machineLoads = new Map<string, number>();
+        const machineCapacities = new Map<string, number>();
+        
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          machineCapacities.set(machine.id, capacity.availableCapacity);
+          machineLoads.set(machine.id, capacity.currentLoad);
+        }
+
+        let distributionPlan: Array<{ orderId: number; machineId: string; position: number }> = [];
+
+        switch (algorithm) {
+          case "balanced":
+            // التوزيع المتوازن - توزيع متساوٍ حسب عدد الأوامر
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "load-based":
+            // التوزيع حسب الحمولة - توزيع حسب الكمية الإجمالية
+            distributionPlan = this.distributeByLoad(unassignedOrders, activeMachines, machineCapacities);
+            break;
+
+          case "priority":
+            // التوزيع حسب الأولوية - أوامر عاجلة أولاً
+            distributionPlan = this.distributeByPriority(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "product-type":
+            // التوزيع حسب نوع المنتج - تجميع منتجات مشابهة
+            distributionPlan = await this.distributeByProductType(unassignedOrders, activeMachines, machineLoads);
+            break;
+
+          case "hybrid":
+            // التوزيع الهجين - مزج المعايير المختلفة
+            distributionPlan = await this.distributeHybrid(unassignedOrders, activeMachines, machineCapacities, params);
+            break;
+
+          default:
+            throw new DatabaseError(`خوارزمية التوزيع غير معروفة: ${algorithm}`);
+        }
+
+        // Apply the distribution plan
+        const results = [];
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const plan of distributionPlan) {
+          try {
+            await this.assignToMachineQueue(
+              plan.orderId,
+              plan.machineId,
+              plan.position,
+              params.userId || 1
+            );
+            successCount++;
+            results.push({
+              orderId: plan.orderId,
+              machineId: plan.machineId,
+              status: "success",
+            });
+          } catch (error: any) {
+            failCount++;
+            results.push({
+              orderId: plan.orderId,
+              machineId: plan.machineId,
+              status: "failed",
+              error: error.message,
+            });
+          }
+        }
+
+        // Invalidate cache
+        cache.delete("machine_queues");
+        invalidateProductionCache("all");
+
+        return {
+          success: true,
+          message: `تم توزيع ${successCount} أمر بنجاح`,
+          distributed: successCount,
+          failed: failCount,
+          results,
+          algorithm,
+        };
+      },
+      "smartDistributeOrders",
+      "توزيع أوامر الإنتاج بذكاء"
+    );
+  }
+
+  // Helper function for balanced distribution
+  private distributeBalanced(orders: any[], machines: Machine[], loads: Map<string, number>): any[] {
+    const plan = [];
+    let machineIndex = 0;
+
+    // Sort machines by current load (ascending)
+    const sortedMachines = machines.sort((a, b) => {
+      const loadA = loads.get(a.id) || 0;
+      const loadB = loads.get(b.id) || 0;
+      return loadA - loadB;
+    });
+
+    for (const order of orders) {
+      const machine = sortedMachines[machineIndex % sortedMachines.length];
+      const currentLoad = loads.get(machine.id) || 0;
+      
+      plan.push({
+        orderId: order.id,
+        machineId: machine.id,
+        position: currentLoad,
+      });
+
+      loads.set(machine.id, currentLoad + 1);
+      machineIndex++;
+    }
+
+    return plan;
+  }
+
+  // Helper function for load-based distribution
+  private distributeByLoad(orders: any[], machines: Machine[], capacities: Map<string, number>): any[] {
+    const plan: Array<{ orderId: number; machineId: string; position: number }> = [];
+    const machineWeights = new Map<string, number>();
+    
+    // Initialize weights
+    machines.forEach(m => machineWeights.set(m.id, 0));
+
+    // Sort orders by weight (descending) - largest first
+    const sortedOrders = orders.sort((a, b) => {
+      const weightA = parseFloat(a.final_quantity_kg || a.quantity_kg || "0");
+      const weightB = parseFloat(b.final_quantity_kg || b.quantity_kg || "0");
+      return weightB - weightA;
+    });
+
+    for (const order of sortedOrders) {
+      // Find machine with most available capacity
+      let bestMachine = machines[0];
+      let maxCapacity = -1;
+
+      for (const machine of machines) {
+        const currentWeight = machineWeights.get(machine.id) || 0;
+        const capacity = capacities.get(machine.id) || 0;
+        const availableCapacity = capacity - currentWeight;
+
+        if (availableCapacity > maxCapacity) {
+          maxCapacity = availableCapacity;
+          bestMachine = machine;
+        }
+      }
+
+      const orderWeight = parseFloat(order.final_quantity_kg || order.quantity_kg || "0");
+      machineWeights.set(bestMachine.id, (machineWeights.get(bestMachine.id) || 0) + orderWeight);
+
+      plan.push({
+        orderId: order.id,
+        machineId: bestMachine.id,
+        position: plan.filter(p => p.machineId === bestMachine.id).length,
+      });
+    }
+
+    return plan;
+  }
+
+  // Helper function for priority-based distribution
+  private distributeByPriority(orders: any[], machines: Machine[], loads: Map<string, number>): any[] {
+    const plan = [];
+
+    // Sort orders by creation date (oldest first) since priority field doesn't exist
+    const sortedOrders = orders.sort((a, b) => {
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    });
+
+    for (const order of sortedOrders) {
+      // Find machine with least load
+      let bestMachine = machines[0];
+      let minLoad = Infinity;
+
+      for (const machine of machines) {
+        const load = loads.get(machine.id) || 0;
+        if (load < minLoad) {
+          minLoad = load;
+          bestMachine = machine;
+        }
+      }
+
+      plan.push({
+        orderId: order.id,
+        machineId: bestMachine.id,
+        position: minLoad,
+      });
+
+      loads.set(bestMachine.id, minLoad + 1);
+    }
+
+    return plan;
+  }
+
+  // Helper function for product-type-based distribution
+  private async distributeByProductType(orders: any[], machines: Machine[], loads: Map<string, number>): Promise<any[]> {
+    const plan = [];
+    
+    // Group orders by customer_product_id
+    const productGroups = new Map<number, any[]>();
+    
+    for (const order of orders) {
+      const productId = order.customer_product_id;
+      if (!productGroups.has(productId)) {
+        productGroups.set(productId, []);
+      }
+      productGroups.get(productId)!.push(order);
+    }
+
+    // Assign each product group to machines
+    let machineIndex = 0;
+    
+    for (const [productId, productOrders] of Array.from(productGroups.entries())) {
+      const machine = machines[machineIndex % machines.length];
+      let position = loads.get(machine.id) || 0;
+
+      for (const order of productOrders) {
+        plan.push({
+          orderId: order.id,
+          machineId: machine.id,
+          position: position++,
+        });
+      }
+
+      loads.set(machine.id, position);
+      machineIndex++;
+    }
+
+    return plan;
+  }
+
+  // Helper function for hybrid distribution
+  private async distributeHybrid(
+    orders: any[], 
+    machines: Machine[], 
+    capacities: Map<string, number>,
+    params: any
+  ): Promise<any[]> {
+    const plan = [];
+    const machineScores = new Map<string, Map<number, number>>();
+
+    // Initialize scores
+    machines.forEach(m => machineScores.set(m.id, new Map()));
+
+    // Calculate scores for each order-machine combination
+    for (const order of orders) {
+      for (const machine of machines) {
+        let score = 0;
+
+        // Factor 1: Current load (lower is better)
+        const currentLoad = await this.getMachineQueueCount(machine.id);
+        score += (10 - Math.min(currentLoad, 10)) * (params.loadWeight || 0.3);
+
+        // Factor 2: Capacity (higher available capacity is better)
+        const capacity = capacities.get(machine.id) || 0;
+        score += (capacity / 1000) * (params.capacityWeight || 0.3);
+
+        // Factor 3: Priority matching
+        if (order.priority === "urgent" || order.priority === "high") {
+          score += 5 * (params.priorityWeight || 0.2);
+        }
+
+        // Factor 4: Machine type preference (if specified)
+        if (params.machineTypePreference && machine.type === params.machineTypePreference) {
+          score += 10 * (params.typeWeight || 0.2);
+        }
+
+        machineScores.get(machine.id)!.set(order.id, score);
+      }
+    }
+
+    // Assign orders to machines based on highest scores
+    const assignedOrders = new Set<number>();
+    const machinePositions = new Map<string, number>();
+
+    while (assignedOrders.size < orders.length) {
+      let bestScore = -1;
+      let bestOrder: any = null;
+      let bestMachine: Machine | null = null;
+
+      for (const order of orders) {
+        if (assignedOrders.has(order.id)) continue;
+
+        for (const machine of machines) {
+          const score = machineScores.get(machine.id)!.get(order.id) || 0;
+          if (score > bestScore) {
+            bestScore = score;
+            bestOrder = order;
+            bestMachine = machine;
+          }
+        }
+      }
+
+      if (!bestOrder || !bestMachine) break;
+
+      const position = machinePositions.get(bestMachine.id) || 0;
+      plan.push({
+        orderId: bestOrder.id,
+        machineId: bestMachine.id,
+        position,
+      });
+
+      machinePositions.set(bestMachine.id, position + 1);
+      assignedOrders.add(bestOrder.id);
+
+      // Reduce scores for this machine to balance distribution
+      for (const order of orders) {
+        const currentScore = machineScores.get(bestMachine.id)!.get(order.id) || 0;
+        machineScores.get(bestMachine.id)!.set(order.id, currentScore * 0.9);
+      }
+    }
+
+    return plan;
+  }
+
+  // Helper to get machine queue count
+  private async getMachineQueueCount(machineId: string): Promise<number> {
+    const [result] = await db
+      .select({ count: count() })
+      .from(machine_queues)
+      .where(eq(machine_queues.machine_id, machineId));
+    
+    return result?.count || 0;
+  }
+
+  async calculateMachineCapacity(machineId: string): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get machine details
+        const machine = await this.getMachineById(machineId);
+        if (!machine) {
+          throw new DatabaseError("الماكينة غير موجودة");
+        }
+
+        // Get current queue for this machine
+        const queueItems = await db
+          .select({
+            quantity_kg: production_orders.final_quantity_kg,
+          })
+          .from(machine_queues)
+          .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+          .where(eq(machine_queues.machine_id, machineId));
+
+        // Calculate current load
+        let currentLoad = 0;
+        let orderCount = 0;
+
+        for (const item of queueItems) {
+          if (item.quantity_kg) {
+            currentLoad += parseFloat(item.quantity_kg.toString());
+          }
+          orderCount++;
+        }
+
+        // Default capacities based on machine type (in kg)
+        const defaultCapacities = {
+          "extruder": 5000,   // 5 tons
+          "printer": 3000,    // 3 tons
+          "cutter": 4000,     // 4 tons
+        };
+
+        const maxCapacity = defaultCapacities[machine.type as keyof typeof defaultCapacities] || 4000;
+        const availableCapacity = maxCapacity - currentLoad;
+        const utilizationPercentage = (currentLoad / maxCapacity) * 100;
+
+        // Estimate production rate (kg/hour) based on machine type
+        const productionRates = {
+          "extruder": 200,
+          "printer": 150,
+          "cutter": 250,
+        };
+
+        const productionRate = productionRates[machine.type as keyof typeof productionRates] || 200;
+        const estimatedTimeHours = currentLoad / productionRate;
+
+        return {
+          machineId,
+          machineName: machine.name,
+          machineNameAr: machine.name_ar,
+          machineType: machine.type,
+          machineStatus: machine.status,
+          currentLoad,
+          maxCapacity,
+          availableCapacity,
+          utilizationPercentage,
+          orderCount,
+          productionRate,
+          estimatedTimeHours,
+          capacityStatus: utilizationPercentage > 90 ? "overloaded" : 
+                         utilizationPercentage > 70 ? "high" :
+                         utilizationPercentage > 40 ? "moderate" : "low",
+        };
+      },
+      "calculateMachineCapacity",
+      "حساب سعة الماكينة"
+    );
+  }
+
+  async getDistributionPreview(algorithm: string, params: any = {}): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get all active machines
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+
+        if (activeMachines.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد مكائن نشطة للتوزيع",
+            preview: [],
+          };
+        }
+
+        // Get unassigned active production orders
+        const unassignedOrders = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+            created_at: production_orders.created_at,
+          })
+          .from(production_orders)
+          .leftJoin(machine_queues, eq(production_orders.id, machine_queues.production_order_id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              sql`${machine_queues.id} IS NULL`
+            )
+          );
+
+        if (unassignedOrders.length === 0) {
+          return {
+            success: false,
+            message: "لا توجد أوامر إنتاج غير مخصصة",
+            preview: [],
+          };
+        }
+
+        // Get current machine states
+        const machineStates = [];
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          machineStates.push({
+            ...capacity,
+            proposedOrders: [],
+            proposedLoad: 0,
+            proposedUtilization: 0,
+          });
+        }
+
+        // Simulate distribution without applying
+        const machineLoads = new Map<string, number>();
+        const machineCapacities = new Map<string, number>();
+        
+        for (const state of machineStates) {
+          machineCapacities.set(state.machineId, state.availableCapacity);
+          machineLoads.set(state.machineId, state.orderCount);
+        }
+
+        let distributionPlan;
+        
+        switch (algorithm) {
+          case "balanced":
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "load-based":
+            distributionPlan = this.distributeByLoad(unassignedOrders, activeMachines, machineCapacities);
+            break;
+          case "priority":
+            distributionPlan = this.distributeByPriority(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "product-type":
+            distributionPlan = await this.distributeByProductType(unassignedOrders, activeMachines, machineLoads);
+            break;
+          case "hybrid":
+            distributionPlan = await this.distributeHybrid(unassignedOrders, activeMachines, machineCapacities, params);
+            break;
+          default:
+            distributionPlan = this.distributeBalanced(unassignedOrders, activeMachines, machineLoads);
+        }
+
+        // Apply plan to preview
+        for (const plan of distributionPlan) {
+          const order = unassignedOrders.find(o => o.id === plan.orderId);
+          const machineState = machineStates.find(s => s.machineId === plan.machineId);
+          
+          if (order && machineState) {
+            const orderWeight = parseFloat(order.final_quantity_kg || order.quantity_kg || "0");
+            machineState.proposedOrders.push({
+              orderId: order.id,
+              orderNumber: order.production_order_number,
+              weight: orderWeight,
+            });
+            machineState.proposedLoad += orderWeight;
+          }
+        }
+
+        // Calculate new utilization
+        for (const state of machineStates) {
+          const newTotalLoad = state.currentLoad + state.proposedLoad;
+          state.proposedUtilization = (newTotalLoad / state.maxCapacity) * 100;
+          state.newCapacityStatus = state.proposedUtilization > 90 ? "overloaded" :
+                                    state.proposedUtilization > 70 ? "high" :
+                                    state.proposedUtilization > 40 ? "moderate" : "low";
+        }
+
+        // Calculate distribution efficiency
+        const loadVariance = this.calculateLoadVariance(machineStates);
+        const efficiency = Math.max(0, 100 - loadVariance);
+
+        return {
+          success: true,
+          algorithm,
+          totalOrders: unassignedOrders.length,
+          machineCount: activeMachines.length,
+          efficiency: efficiency.toFixed(2),
+          preview: machineStates,
+        };
+      },
+      "getDistributionPreview",
+      "معاينة توزيع الأوامر"
+    );
+  }
+
+  private calculateLoadVariance(machineStates: any[]): number {
+    if (machineStates.length === 0) return 0;
+    
+    const loads = machineStates.map(s => s.proposedUtilization);
+    const mean = loads.reduce((a, b) => a + b, 0) / loads.length;
+    const variance = loads.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / loads.length;
+    
+    return Math.sqrt(variance);
+  }
+
+  async optimizeQueueOrder(machineId: string): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get current queue for the machine
+        const queue = await db
+          .select({
+            id: machine_queues.id,
+            production_order_id: machine_queues.production_order_id,
+            queue_position: machine_queues.queue_position,
+            quantity_kg: production_orders.final_quantity_kg,
+            customer_product_id: production_orders.customer_product_id,
+          })
+          .from(machine_queues)
+          .leftJoin(production_orders, eq(machine_queues.production_order_id, production_orders.id))
+          .where(eq(machine_queues.machine_id, machineId))
+          .orderBy(machine_queues.queue_position);
+
+        if (queue.length === 0) return;
+
+        // Sort queue by optimization criteria
+        const optimizedQueue = queue.sort((a, b) => {
+          // First by product type to group similar products
+          if (a.customer_product_id !== b.customer_product_id) {
+            return (a.customer_product_id || 0) - (b.customer_product_id || 0);
+          }
+          
+          // Then by current position to maintain some stability
+          return a.queue_position - b.queue_position;
+        });
+
+        // Update positions
+        await db.transaction(async (tx) => {
+          for (let i = 0; i < optimizedQueue.length; i++) {
+            if (optimizedQueue[i].queue_position !== i) {
+              await tx
+                .update(machine_queues)
+                .set({ queue_position: i })
+                .where(eq(machine_queues.id, optimizedQueue[i].id));
+            }
+          }
+        });
+
+        // Invalidate cache
+        cache.delete("machine_queues");
+        invalidateProductionCache("all");
+      },
+      "optimizeQueueOrder",
+      "تحسين ترتيب طابور الماكينة"
+    );
+  }
+
+  async getMachineCapacityStats(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const machines = await this.getMachines();
+        const activeMachines = machines.filter(m => m.status === "active");
+        
+        const stats = [];
+        
+        for (const machine of activeMachines) {
+          const capacity = await this.calculateMachineCapacity(machine.id);
+          stats.push(capacity);
+        }
+
+        // Sort by utilization percentage (descending)
+        stats.sort((a, b) => b.utilizationPercentage - a.utilizationPercentage);
+        
+        return stats;
+      },
+      "getMachineCapacityStats",
+      "إحصائيات سعة المكائن"
+    );
   }
 
   async getCustomers(): Promise<Customer[]> {
@@ -3421,10 +5231,15 @@ export class DatabaseStorage implements IStorage {
   async getHRReports(dateFrom?: string, dateTo?: string): Promise<any> {
     return await withDatabaseErrorHandling(
       async () => {
-        const dateFilter =
+        const attendanceDateFilter =
           dateFrom && dateTo
             ? sql`DATE(${attendance.date}) BETWEEN ${dateFrom} AND ${dateTo}`
             : sql`DATE(${attendance.date}) >= CURRENT_DATE - INTERVAL '30 days'`;
+
+        const rollsDateFilter =
+          dateFrom && dateTo
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '30 days'`;
 
         const [attendanceStats, performanceStats, trainingStats] =
           await Promise.all([
@@ -3437,14 +5252,14 @@ export class DatabaseStorage implements IStorage {
                 role_name: sql<string>`COALESCE(${roles.name_ar}, ${roles.name})`,
                 present_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)`,
                 absent_days: sql<number>`COUNT(CASE WHEN ${attendance.status} = 'غائب' THEN 1 END)`,
-                late_days: sql<number>`COUNT(CASE WHEN ${attendance.check_in_time} > TIME '08:30:00' THEN 1 END)`,
+                late_days: sql<number>`COUNT(CASE WHEN EXTRACT(HOUR FROM ${attendance.check_in_time}) * 60 + EXTRACT(MINUTE FROM ${attendance.check_in_time}) > 510 THEN 1 END)`,
                 attendance_rate: sql<number>`COALESCE((COUNT(CASE WHEN ${attendance.status} = 'حاضر' THEN 1 END)::decimal / NULLIF(COUNT(*), 0) * 100), 0)`,
               })
               .from(users)
               .leftJoin(roles, eq(users.role_id, roles.id))
               .leftJoin(
                 attendance,
-                and(eq(users.id, attendance.user_id), dateFilter),
+                and(eq(users.id, attendance.user_id), attendanceDateFilter),
               )
               .groupBy(
                 users.id,
@@ -3466,7 +5281,7 @@ export class DatabaseStorage implements IStorage {
                 improvement_trend: sql<number>`COALESCE(CASE WHEN AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)) > 90 THEN 1 ELSE -1 END, 0)`,
               })
               .from(users)
-              .leftJoin(rolls, and(eq(users.id, rolls.created_by), dateFilter))
+              .leftJoin(rolls, and(eq(users.id, rolls.created_by), rollsDateFilter))
               .groupBy(users.id, users.username, users.display_name_ar),
 
             // إحصائيات التدريب
@@ -3602,7 +5417,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getCustomerProducts(): Promise<CustomerProduct[]> {
+  async getCustomerProducts(limit: number = 1000): Promise<CustomerProduct[]> {
     return await db
       .select({
         id: customer_products.id,
@@ -3636,6 +5451,7 @@ export class DatabaseStorage implements IStorage {
       .from(customer_products)
       .leftJoin(customers, eq(customer_products.customer_id, customers.id))
       .orderBy(desc(customer_products.created_at))
+      .limit(limit)
       .then((results) =>
         results.map((row) => ({
           ...row,
@@ -3766,6 +5582,215 @@ export class DatabaseStorage implements IStorage {
     };
 
     return result;
+  }
+
+  // Production Reports
+  async getProductionSummary(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId, productId, status, machineId, operatorId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${production_orders.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${production_orders.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+    if (productId && productId.length > 0) conditions.push(inArray(production_orders.customer_product_id, productId));
+    if (status && status.length > 0) conditions.push(inArray(production_orders.status, status));
+    if (machineId) conditions.push(eq(rolls.film_machine_id, machineId));
+    if (operatorId) conditions.push(eq(rolls.created_by, operatorId));
+
+    const [summaryResult] = await db
+      .select({
+        totalOrders: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
+        activeOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'active' THEN ${production_orders.id} END)`,
+        completedOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'completed' THEN ${production_orders.id} END)`,
+        totalRolls: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgProductionTime: sql<number>`AVG(EXTRACT(EPOCH FROM (${rolls.cut_completed_at} - ${rolls.created_at})) / 3600)`,
+      })
+      .from(production_orders)
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const [wasteResult] = await db
+      .select({
+        totalWaste: sql<number>`COALESCE(SUM(${waste.quantity_wasted}), 0)`,
+      })
+      .from(waste)
+      .where(
+        dateFrom && dateTo
+          ? and(
+              sql`${waste.created_at} >= ${dateFrom}`,
+              sql`${waste.created_at} <= ${dateTo}`
+            )
+          : undefined
+      );
+
+    const totalProduction = Number(summaryResult?.totalWeight || 0);
+    const totalWaste = Number(wasteResult?.totalWaste || 0);
+    const wastePercentage = totalProduction > 0 ? (totalWaste / totalProduction) * 100 : 0;
+    const completionRate = Number(summaryResult?.totalOrders || 0) > 0
+      ? (Number(summaryResult?.completedOrders || 0) / Number(summaryResult?.totalOrders)) * 100
+      : 0;
+
+    return {
+      totalOrders: Number(summaryResult?.totalOrders || 0),
+      activeOrders: Number(summaryResult?.activeOrders || 0),
+      completedOrders: Number(summaryResult?.completedOrders || 0),
+      totalRolls: Number(summaryResult?.totalRolls || 0),
+      totalWeight: totalProduction,
+      avgProductionTime: Number(summaryResult?.avgProductionTime || 0),
+      wastePercentage,
+      completionRate,
+    };
+  }
+
+  async getProductionByDate(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId, productId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+    if (productId && productId.length > 0) conditions.push(inArray(production_orders.customer_product_id, productId));
+
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${rolls.created_at})`,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+      })
+      .from(rolls)
+      .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(sql`DATE(${rolls.created_at})`)
+      .orderBy(sql`DATE(${rolls.created_at})`);
+
+    return result.map(row => ({
+      date: row.date,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+    }));
+  }
+
+  async getProductionByProduct(filters?: any): Promise<any> {
+    const { dateFrom, dateTo, customerId } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${production_orders.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${production_orders.created_at} <= ${dateTo}`);
+    if (customerId && customerId.length > 0) conditions.push(inArray(orders.customer_id, customerId));
+
+    const result = await db
+      .select({
+        productId: customer_products.id,
+        productName: customer_products.size_caption,
+        ordersCount: sql<number>`COUNT(DISTINCT ${production_orders.id})`,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+      })
+      .from(production_orders)
+      .leftJoin(orders, eq(production_orders.order_id, orders.id))
+      .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+      .leftJoin(rolls, eq(production_orders.id, rolls.production_order_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(customer_products.id, customer_products.size_caption)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      productId: row.productId,
+      productName: row.productName,
+      ordersCount: Number(row.ordersCount),
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+    }));
+  }
+
+  async getWasteAnalysis(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${waste.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${waste.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        date: sql<string>`DATE(${waste.created_at})`,
+        totalWaste: sql<number>`COALESCE(SUM(${waste.quantity_wasted}), 0)`,
+        reason: waste.reason,
+      })
+      .from(waste)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(sql`DATE(${waste.created_at})`, waste.reason)
+      .orderBy(sql`DATE(${waste.created_at})`);
+
+    return result.map(row => ({
+      date: row.date,
+      totalWaste: Number(row.totalWaste),
+      reason: row.reason,
+    }));
+  }
+
+  async getMachinePerformance(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        machineId: machines.id,
+        machineName: machines.name_ar,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgProductionTime: sql<number>`AVG(EXTRACT(EPOCH FROM (${rolls.cut_completed_at} - ${rolls.created_at})) / 3600)`,
+      })
+      .from(machines)
+      .leftJoin(rolls, eq(machines.id, rolls.film_machine_id))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(machines.id, machines.name_ar)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      machineId: row.machineId,
+      machineName: row.machineName,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+      avgProductionTime: Number(row.avgProductionTime || 0),
+      efficiency: Number(row.rollsCount) > 0 ? Number(row.totalWeight) / Number(row.rollsCount) : 0,
+    }));
+  }
+
+  async getOperatorPerformance(filters?: any): Promise<any> {
+    const { dateFrom, dateTo } = filters || {};
+    
+    const conditions: any[] = [];
+    if (dateFrom) conditions.push(sql`${rolls.created_at} >= ${dateFrom}`);
+    if (dateTo) conditions.push(sql`${rolls.created_at} <= ${dateTo}`);
+
+    const result = await db
+      .select({
+        operatorId: users.id,
+        operatorName: users.display_name_ar,
+        rollsCount: sql<number>`COUNT(${rolls.id})`,
+        totalWeight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+        avgRollWeight: sql<number>`AVG(${rolls.weight_kg})`,
+      })
+      .from(users)
+      .leftJoin(rolls, eq(users.id, rolls.created_by))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(users.id, users.display_name_ar)
+      .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+    return result.map(row => ({
+      operatorId: row.operatorId,
+      operatorName: row.operatorName,
+      rollsCount: Number(row.rollsCount),
+      totalWeight: Number(row.totalWeight),
+      avgRollWeight: Number(row.avgRollWeight || 0),
+      productivity: Number(row.rollsCount) > 0 ? Number(row.totalWeight) / Number(row.rollsCount) : 0,
+    }));
   }
 
   // Training Records
@@ -5853,145 +7878,33 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  // Deprecated: Use createRoll instead which supports three separate machines
+  // Keeping for backward compatibility during migration period
   async createRollWithQR(rollData: {
     production_order_id: number;
-    machine_id: string;
+    film_machine_id?: string;
+    printing_machine_id?: string;
+    cutting_machine_id?: string;
+    machine_id?: string; // Legacy field
     weight_kg: number;
     created_by: number;
   }): Promise<Roll> {
-    try {
-      return await db.transaction(async (tx) => {
-        // Lock the production order to prevent race conditions
-        const [productionOrder] = await tx
-          .select()
-          .from(production_orders)
-          .where(eq(production_orders.id, rollData.production_order_id))
-          .for("update");
-
-        if (!productionOrder) {
-          throw new Error("طلب الإنتاج غير موجود");
-        }
-
-        // Get current total weight
-        const totalWeightResult = await tx
-          .select({ total: sql<number>`COALESCE(SUM(weight_kg), 0)` })
-          .from(rolls)
-          .where(eq(rolls.production_order_id, rollData.production_order_id));
-
-        const totalWeight = Number(totalWeightResult[0]?.total || 0);
-        const newTotal = totalWeight + Number(rollData.weight_kg);
-
-        // Check quantity limits - allow final roll to exceed required quantity
-        const quantityRequired = parseFloat(
-          productionOrder.quantity_kg?.toString() || "0",
-        );
-
-        // السماح بتجاوز الكمية في آخر رول فقط
-        // المنطق: إذا كان الوزن الحالي أقل من المطلوب، يُسمح بإنشاء رول قد يتجاوز الكمية المطلوبة
-        // ولكن إذا كان الوزن الحالي يتجاوز المطلوب بالفعل، لا نسمح برولات إضافية
-        if (totalWeight > quantityRequired) {
-          throw new Error(
-            `تم تجاوز الكمية المطلوبة بالفعل (${totalWeight.toFixed(2)}/${quantityRequired.toFixed(2)} كيلو). لا يمكن إنشاء رولات إضافية`,
-          );
-        }
-
-        // إذا كان الوزن الحالي أقل من أو يساوي المطلوب، يُسمح بإنشاء الرول حتى لو تجاوز الكمية المطلوبة
-
-        // Generate roll sequence number (sequential: 1, 2, 3, 4...)
-        const rollCount = await tx
-          .select({ count: sql<number>`COUNT(*)` })
-          .from(rolls)
-          .where(eq(rolls.production_order_id, rollData.production_order_id));
-
-        const rollSeq = (rollCount[0]?.count || 0) + 1;
-
-        // Generate QR code content
-        const qrCodeText = JSON.stringify({
-          roll_seq: rollSeq,
-          production_order_id: rollData.production_order_id,
-          production_order_number: productionOrder.production_order_number,
-          weight_kg: rollData.weight_kg,
-          machine_id: rollData.machine_id,
-          created_at: new Date().toISOString(),
-        });
-
-        // Generate QR code image
-        const { default: QRCode } = await import("qrcode");
-        const qrPngBase64 = await QRCode.toDataURL(qrCodeText, {
-          width: 256,
-          margin: 2,
-          color: { dark: "#000000", light: "#FFFFFF" },
-        });
-
-        // Create the roll
-        const [roll] = await tx
-          .insert(rolls)
-          .values({
-            roll_number: `${productionOrder.production_order_number}-${rollSeq}`,
-            production_order_id: rollData.production_order_id,
-            machine_id: rollData.machine_id,
-            created_by: rollData.created_by,
-            weight_kg: rollData.weight_kg.toString(),
-            stage: "film",
-            roll_seq: rollSeq,
-            qr_code_text: qrCodeText,
-            qr_png_base64: qrPngBase64,
-          })
-          .returning();
-
-        // Check if production order quantity is now completed
-        if (
-          newTotal >= quantityRequired &&
-          productionOrder.status !== "completed"
-        ) {
-          // Update production order status to completed
-          await tx
-            .update(production_orders)
-            .set({ status: "completed" })
-            .where(eq(production_orders.id, rollData.production_order_id));
-
-          console.log(
-            `Production order ${productionOrder.production_order_number} automatically completed - required quantity reached (${newTotal}/${quantityRequired} kg)`,
-          );
-
-          // Check if all production orders for the parent order are now completed
-          const orderId = productionOrder.order_id;
-
-          // Get all production orders for this order
-          const allProductionOrders = await tx
-            .select()
-            .from(production_orders)
-            .where(eq(production_orders.order_id, orderId));
-
-          // Check if all production orders are completed
-          const allCompleted = allProductionOrders.every((po) =>
-            po.id === rollData.production_order_id
-              ? true
-              : po.status === "completed",
-          );
-
-          // If all production orders are completed, automatically mark the order as completed
-          if (allCompleted) {
-            await tx
-              .update(orders)
-              .set({ status: "completed" })
-              .where(eq(orders.id, orderId));
-
-            console.log(
-              `Order ${orderId} automatically completed - all production orders finished`,
-            );
-          }
-        }
-
-        return roll;
-      });
-    } catch (error) {
-      console.error("Error creating roll with QR:", error);
-      throw error;
-    }
+    // Map old machine_id to new fields if not provided
+    const insertData = {
+      production_order_id: rollData.production_order_id,
+      film_machine_id: rollData.film_machine_id || rollData.machine_id || "",
+      printing_machine_id: rollData.printing_machine_id || rollData.machine_id || "",
+      cutting_machine_id: rollData.cutting_machine_id || rollData.machine_id || "",
+      weight_kg: rollData.weight_kg,
+      created_by: rollData.created_by,
+      stage: "film" as const,
+    };
+    
+    // Use the updated createRoll method
+    return this.createRoll(insertData as any);
   }
 
-  async markRollPrinted(rollId: number, operatorId: number): Promise<Roll> {
+  async markRollPrinted(rollId: number, operatorId: number, printingMachineId?: string): Promise<Roll> {
     try {
       return await db.transaction(async (tx) => {
         // احصل على معلومات الرول الحالية
@@ -6004,14 +7917,37 @@ export class DatabaseStorage implements IStorage {
           throw new Error("الرول غير موجود");
         }
 
+        // Validate printing machine if provided
+        if (printingMachineId) {
+          const [printingMachine] = await tx
+            .select()
+            .from(machines)
+            .where(eq(machines.id, printingMachineId));
+          
+          if (!printingMachine) {
+            throw new Error("ماكينة الطباعة غير موجودة");
+          }
+          
+          if (printingMachine.status !== "active") {
+            throw new Error("ماكينة الطباعة غير نشطة");
+          }
+        }
+
         // نقل الرول إلى مرحلة الطباعة وتسجيل البيانات
+        const updateData: any = {
+          stage: "printing", // نقل إلى مرحلة الطباعة
+          printed_at: new Date(),
+          printed_by: operatorId,
+        };
+        
+        // Add printing_machine_id if provided
+        if (printingMachineId) {
+          updateData.printing_machine_id = printingMachineId;
+        }
+        
         const [updatedRoll] = await tx
           .update(rolls)
-          .set({
-            stage: "printing", // نقل إلى مرحلة الطباعة
-            printed_at: new Date(),
-            printed_by: operatorId,
-          })
+          .set(updateData)
           .where(eq(rolls.id, rollId))
           .returning();
 
@@ -6041,13 +7977,13 @@ export class DatabaseStorage implements IStorage {
           .where(eq(production_orders.id, currentRoll.production_order_id));
 
         if (productionOrder) {
-          const finalQuantityKg = parseFloat(
-            productionOrder.final_quantity_kg?.toString() || "0"
+          const producedQuantityKg = parseFloat(
+            productionOrder.produced_quantity_kg?.toString() || "0"
           );
           
-          // احسب نسبة إكمال الطباعة
-          const printingPercentage = finalQuantityKg > 0 
-            ? Math.min(100, (printedQuantity / finalQuantityKg) * 100)
+          // احسب نسبة إكمال الطباعة بناءً على الكمية المطبوعة من الكمية المنتجة في مرحلة الفيلم
+          const printingPercentage = producedQuantityKg > 0 
+            ? Math.min(100, (printedQuantity / producedQuantityKg) * 100)
             : 0;
 
           // حدث أمر الإنتاج بالكمية المطبوعة ونسبة الإكمال
@@ -6115,16 +8051,23 @@ export class DatabaseStorage implements IStorage {
         const waste = rollWeight - totalCutWeight;
 
         // تحديث بيانات الرول مع الكمية الصافية والهدر ونقل إلى مرحلة done
+        const rollUpdateData: any = {
+          cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
+          waste_kg: numberToDecimalString(waste, 3),
+          stage: "done", // تحديث المرحلة إلى مكتمل
+          cut_completed_at: new Date(),
+          cut_by: cutData.performed_by,
+          completed_at: new Date(), // تحديد وقت الإكمال
+        };
+        
+        // Add cutting_machine_id if provided
+        if ((cutData as any).cutting_machine_id) {
+          rollUpdateData.cutting_machine_id = (cutData as any).cutting_machine_id;
+        }
+        
         await tx
           .update(rolls)
-          .set({
-            cut_weight_total_kg: numberToDecimalString(totalCutWeight, 3),
-            waste_kg: numberToDecimalString(waste, 3),
-            stage: "done", // تحديث المرحلة إلى مكتمل
-            cut_completed_at: new Date(),
-            cut_by: cutData.performed_by,
-            completed_at: new Date(), // تحديد وقت الإكمال
-          })
+          .set(rollUpdateData)
           .where(eq(rolls.id, cutData.roll_id));
 
         // احسب مجموع الكميات لأمر الإنتاج
@@ -6153,14 +8096,17 @@ export class DatabaseStorage implements IStorage {
           .where(eq(production_orders.id, productionOrderId));
 
         if (productionOrder) {
-          const finalQuantityKg = parseFloat(
-            productionOrder.final_quantity_kg?.toString() || "0"
+          const producedQuantityKg = parseFloat(
+            productionOrder.produced_quantity_kg?.toString() || "0"
           );
           
-          // احسب نسبة إكمال التقطيع بناءً على عدد الرولات المكتملة
-          const cuttingPercentage = totalRolls > 0 
-            ? Math.min(100, (completedRolls / totalRolls) * 100)
+          // احسب نسبة إكمال التقطيع بناءً على (الكمية المقطعة + الهدر) من الكمية المنتجة في مرحلة الفيلم
+          const totalCutAndWaste = netQuantity + wasteQuantity;
+          const cuttingPercentage = producedQuantityKg > 0 
+            ? Math.min(100, (totalCutAndWaste / producedQuantityKg) * 100)
             : 0;
+
+          const isProductionOrderCompleted = completedRolls === totalRolls && totalRolls > 0;
 
           // حدث أمر الإنتاج بالكميات الجديدة
           await tx
@@ -6170,9 +8116,43 @@ export class DatabaseStorage implements IStorage {
               waste_quantity_kg: numberToDecimalString(wasteQuantity, 2),
               cutting_completion_percentage: numberToDecimalString(cuttingPercentage, 2),
               // إذا كانت جميع الرولات مكتملة، حدث الحالة إلى completed
-              status: completedRolls === totalRolls && totalRolls > 0 ? "completed" : productionOrder.status,
+              status: isProductionOrderCompleted ? "completed" : productionOrder.status,
             })
             .where(eq(production_orders.id, productionOrderId));
+
+          // إذا اكتمل أمر الإنتاج، تحقق من اكتمال الطلب الرئيسي
+          if (isProductionOrderCompleted && productionOrder.status !== "completed") {
+            const orderId = productionOrder.order_id;
+
+            console.log(
+              `Production order ${productionOrder.production_order_number} automatically completed - all rolls finished`,
+            );
+
+            // Get all production orders for this order
+            const allProductionOrders = await tx
+              .select()
+              .from(production_orders)
+              .where(eq(production_orders.order_id, orderId));
+
+            // Check if all production orders are completed
+            const allCompleted = allProductionOrders.every((po) =>
+              po.id === productionOrderId
+                ? true
+                : po.status === "completed",
+            );
+
+            // If all production orders are completed, automatically mark the order as completed
+            if (allCompleted) {
+              await tx
+                .update(orders)
+                .set({ status: "completed" })
+                .where(eq(orders.id, orderId));
+
+              console.log(
+                `Order ${orderId} automatically completed - all production orders finished`,
+              );
+            }
+          }
         }
 
         // تحديث الكاش
@@ -6399,6 +8379,7 @@ export class DatabaseStorage implements IStorage {
   async getFilmQueue(): Promise<ProductionOrder[]> {
     try {
       // Optimized: Reduce JOINs and simplify query for better performance
+      // الطلبات تبقى في قائمة الفيلم حتى يتم إنتاج الكمية الكاملة
       const results = await db
         .select({
           id: production_orders.id,
@@ -6406,6 +8387,7 @@ export class DatabaseStorage implements IStorage {
           order_id: production_orders.order_id,
           customer_product_id: production_orders.customer_product_id,
           quantity_kg: production_orders.quantity_kg,
+          final_quantity_kg: production_orders.final_quantity_kg,
           status: production_orders.status,
           created_at: production_orders.created_at,
           // حساب الكمية المنتجة من مجموع وزن الرولات
@@ -6425,7 +8407,17 @@ export class DatabaseStorage implements IStorage {
           eq(production_orders.customer_product_id, customer_products.id),
         )
         .leftJoin(items, eq(customer_products.item_id, items.id))
-        .where(eq(production_orders.status, "in_production"))
+        .where(
+          and(
+            eq(production_orders.status, "in_production"),
+            // الطلب يبقى ظاهراً حتى يتم إنتاج الكمية كاملة
+            sql`COALESCE((
+              SELECT SUM(weight_kg)
+              FROM rolls 
+              WHERE production_order_id = ${production_orders.id}
+            ), 0) < ${production_orders.final_quantity_kg}`
+          )
+        )
         .orderBy(production_orders.created_at)
         .limit(100); // Add limit for performance
 
@@ -6906,6 +8898,397 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching roll QR:", error);
       throw new Error("فشل في جلب رمز QR للرول");
+    }
+  }
+
+  // Enhanced Cutting Operations
+  async getRollsForCuttingBySection(sectionId?: number): Promise<{
+    rolls: Roll[];
+    stats: {
+      totalRolls: number;
+      totalWeight: number;
+      todayWaste: number;
+      todayWastePercentage: number;
+      averageWastePercentage: number;
+    };
+  }> {
+    try {
+      // جلب الرولات في مرحلة الطباعة (الجاهزة للتقطيع)
+      const rollsQuery = db
+        .select({
+          roll: rolls,
+          production_order: production_orders,
+          customer_product: customer_products,
+          customer: customers,
+        })
+        .from(rolls)
+        .innerJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+        .leftJoin(customers, eq(customer_products.customer_id, customers.id))
+        .where(eq(rolls.stage, "printing"))
+        .orderBy(desc(rolls.printed_at));
+
+      const rollsData = await rollsQuery;
+
+      // حساب الإحصائيات
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // إحصائيات اليوم
+      const todayRolls = await db
+        .select({
+          waste_kg: rolls.waste_kg,
+          weight_kg: rolls.weight_kg,
+          cut_weight_total_kg: rolls.cut_weight_total_kg,
+        })
+        .from(rolls)
+        .where(
+          and(
+            eq(rolls.stage, "done"),
+            sql`DATE(${rolls.cut_completed_at}) = DATE(NOW())`
+          )
+        );
+
+      const todayWaste = todayRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.waste_kg?.toString() || "0"), 0);
+      
+      const todayTotalWeight = todayRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg?.toString() || "0"), 0);
+      
+      const todayWastePercentage = todayTotalWeight > 0 
+        ? (todayWaste / todayTotalWeight) * 100 : 0;
+
+      // متوسط نسبة الهدر للأسبوع الماضي
+      const weekRolls = await db
+        .select({
+          waste_kg: rolls.waste_kg,
+          weight_kg: rolls.weight_kg,
+        })
+        .from(rolls)
+        .where(
+          and(
+            eq(rolls.stage, "done"),
+            sql`${rolls.cut_completed_at} >= NOW() - INTERVAL '7 days'`
+          )
+        );
+
+      const weekTotalWaste = weekRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.waste_kg?.toString() || "0"), 0);
+      
+      const weekTotalWeight = weekRolls.reduce((sum, roll) => 
+        sum + parseFloat(roll.weight_kg?.toString() || "0"), 0);
+      
+      const averageWastePercentage = weekTotalWeight > 0 
+        ? (weekTotalWaste / weekTotalWeight) * 100 : 0;
+
+      // تجهيز البيانات
+      const rollsFormatted: Roll[] = rollsData.map(item => ({
+        ...item.roll,
+        production_order: {
+          ...item.production_order,
+          customer_product: item.customer_product ? {
+            ...item.customer_product,
+            customer: item.customer || undefined,
+          } : undefined,
+        },
+      })) as Roll[];
+
+      return {
+        rolls: rollsFormatted,
+        stats: {
+          totalRolls: rollsFormatted.length,
+          totalWeight: rollsFormatted.reduce((sum, roll) => 
+            sum + parseFloat(roll.weight_kg?.toString() || "0"), 0),
+          todayWaste,
+          todayWastePercentage,
+          averageWastePercentage,
+        },
+      };
+    } catch (error) {
+      console.error("Error fetching cutting queue by section:", error);
+      throw new Error("فشل في جلب قائمة التقطيع");
+    }
+  }
+
+  async completeCutting(rollId: number, netWeight: number, operatorId: number): Promise<{
+    roll: Roll;
+    production_order: ProductionOrder;
+    waste_percentage: number;
+    is_order_completed: boolean;
+  }> {
+    try {
+      // بدء المعاملة
+      const result = await db.transaction(async (tx) => {
+        // جلب بيانات الرول
+        const [roll] = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.id, rollId));
+
+        if (!roll) {
+          throw new Error("الرول غير موجود");
+        }
+
+        if (roll.stage !== "printing") {
+          throw new Error("الرول غير جاهز للتقطيع");
+        }
+
+        const grossWeight = parseFloat(roll.weight_kg?.toString() || "0");
+        
+        if (netWeight >= grossWeight) {
+          throw new Error("الوزن الصافي يجب أن يكون أقل من الوزن الخام");
+        }
+
+        // حساب الهدر
+        const wasteWeight = grossWeight - netWeight;
+        const wastePercentage = (wasteWeight / grossWeight) * 100;
+
+        // تحديث الرول
+        const [updatedRoll] = await tx
+          .update(rolls)
+          .set({
+            stage: "done",
+            cut_weight_total_kg: numberToDecimalString(netWeight),
+            waste_kg: numberToDecimalString(wasteWeight),
+            cut_completed_at: new Date(),
+            cut_by: operatorId,
+          })
+          .where(eq(rolls.id, rollId))
+          .returning();
+
+        // جلب أمر الإنتاج
+        const [productionOrder] = await tx
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, roll.production_order_id));
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        // جلب جميع رولات أمر الإنتاج لحساب الإحصائيات
+        const allRolls = await tx
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, roll.production_order_id));
+
+        // حساب الكميات الإجمالية
+        const totalNetWeight = allRolls.reduce((sum, r) => 
+          sum + parseFloat(r.cut_weight_total_kg?.toString() || "0"), 0);
+        
+        const totalWaste = allRolls.reduce((sum, r) => 
+          sum + parseFloat(r.waste_kg?.toString() || "0"), 0);
+
+        // التحقق من اكتمال جميع الرولات
+        const allCompleted = allRolls.every(r => r.stage === "done");
+        
+        // حساب نسبة إكمال التقطيع
+        const completedCount = allRolls.filter(r => r.stage === "done").length;
+        const cuttingPercentage = (completedCount / allRolls.length) * 100;
+
+        // تحديث أمر الإنتاج
+        const [updatedProductionOrder] = await tx
+          .update(production_orders)
+          .set({
+            net_quantity_kg: numberToDecimalString(totalNetWeight),
+            waste_quantity_kg: numberToDecimalString(totalWaste),
+            cutting_completion_percentage: numberToDecimalString(cuttingPercentage),
+            status: allCompleted ? "completed" : productionOrder.status,
+          })
+          .where(eq(production_orders.id, roll.production_order_id))
+          .returning();
+
+        // إذا اكتملت جميع أوامر الإنتاج للطلب، حدث حالة الطلب
+        if (allCompleted) {
+          const [order] = await tx
+            .select()
+            .from(orders)
+            .where(eq(orders.id, productionOrder.order_id));
+
+          if (order) {
+            // التحقق من اكتمال جميع أوامر الإنتاج للطلب
+            const allProductionOrders = await tx
+              .select()
+              .from(production_orders)
+              .where(eq(production_orders.order_id, order.id));
+
+            const allOrdersCompleted = allProductionOrders.every(po => 
+              po.status === "completed" || po.id === productionOrder.id);
+
+            if (allOrdersCompleted) {
+              await tx
+                .update(orders)
+                .set({ status: "completed" })
+                .where(eq(orders.id, order.id));
+            }
+          }
+        }
+
+        // إبطال الكاش
+        invalidateProductionCache("cutting");
+
+        return {
+          roll: updatedRoll,
+          production_order: updatedProductionOrder,
+          waste_percentage: wastePercentage,
+          is_order_completed: allCompleted,
+        };
+      });
+
+      return result;
+    } catch (error) {
+      console.error("Error completing cutting:", error);
+      throw error;
+    }
+  }
+
+  async calculateWasteStatistics(productionOrderId: number): Promise<{
+    totalWaste: number;
+    wastePercentage: number;
+    operatorStats: Array<{
+      operatorId: number;
+      operatorName: string;
+      rollsCut: number;
+      totalWaste: number;
+      averageWastePercentage: number;
+    }>;
+    dailyStats: Array<{
+      date: string;
+      totalWaste: number;
+      wastePercentage: number;
+      rollsCount: number;
+    }>;
+  }> {
+    try {
+      // جلب جميع الرولات المقطوعة لأمر الإنتاج
+      const rollsData = await db
+        .select({
+          roll: rolls,
+          operator: users,
+        })
+        .from(rolls)
+        .leftJoin(users, eq(rolls.cut_by, users.id))
+        .where(
+          and(
+            eq(rolls.production_order_id, productionOrderId),
+            eq(rolls.stage, "done")
+          )
+        );
+
+      if (rollsData.length === 0) {
+        return {
+          totalWaste: 0,
+          wastePercentage: 0,
+          operatorStats: [],
+          dailyStats: [],
+        };
+      }
+
+      // حساب الإحصائيات الإجمالية
+      const totalWaste = rollsData.reduce((sum, item) => 
+        sum + parseFloat(item.roll.waste_kg?.toString() || "0"), 0);
+      
+      const totalWeight = rollsData.reduce((sum, item) => 
+        sum + parseFloat(item.roll.weight_kg?.toString() || "0"), 0);
+      
+      const wastePercentage = totalWeight > 0 
+        ? (totalWaste / totalWeight) * 100 : 0;
+
+      // إحصائيات العاملين
+      const operatorMap = new Map<number, {
+        name: string;
+        rollsCut: number;
+        totalWaste: number;
+        totalWeight: number;
+      }>();
+
+      rollsData.forEach(item => {
+        if (item.roll.cut_by) {
+          const existing = operatorMap.get(item.roll.cut_by) || {
+            name: item.operator?.display_name_ar || item.operator?.display_name || "غير معروف",
+            rollsCut: 0,
+            totalWaste: 0,
+            totalWeight: 0,
+          };
+
+          existing.rollsCut++;
+          existing.totalWaste += parseFloat(item.roll.waste_kg?.toString() || "0");
+          existing.totalWeight += parseFloat(item.roll.weight_kg?.toString() || "0");
+
+          operatorMap.set(item.roll.cut_by, existing);
+        }
+      });
+
+      const operatorStats = Array.from(operatorMap.entries()).map(([id, stats]) => ({
+        operatorId: id,
+        operatorName: stats.name,
+        rollsCut: stats.rollsCut,
+        totalWaste: stats.totalWaste,
+        averageWastePercentage: stats.totalWeight > 0 
+          ? (stats.totalWaste / stats.totalWeight) * 100 : 0,
+      }));
+
+      // إحصائيات يومية
+      const dailyMap = new Map<string, {
+        totalWaste: number;
+        totalWeight: number;
+        rollsCount: number;
+      }>();
+
+      rollsData.forEach(item => {
+        if (item.roll.cut_completed_at) {
+          const date = new Date(item.roll.cut_completed_at).toISOString().split('T')[0];
+          const existing = dailyMap.get(date) || {
+            totalWaste: 0,
+            totalWeight: 0,
+            rollsCount: 0,
+          };
+
+          existing.rollsCount++;
+          existing.totalWaste += parseFloat(item.roll.waste_kg?.toString() || "0");
+          existing.totalWeight += parseFloat(item.roll.weight_kg?.toString() || "0");
+
+          dailyMap.set(date, existing);
+        }
+      });
+
+      const dailyStats = Array.from(dailyMap.entries())
+        .map(([date, stats]) => ({
+          date,
+          totalWaste: stats.totalWaste,
+          wastePercentage: stats.totalWeight > 0 
+            ? (stats.totalWaste / stats.totalWeight) * 100 : 0,
+          rollsCount: stats.rollsCount,
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      return {
+        totalWaste,
+        wastePercentage,
+        operatorStats,
+        dailyStats,
+      };
+    } catch (error) {
+      console.error("Error calculating waste statistics:", error);
+      throw new Error("فشل في حساب إحصائيات الهدر");
+    }
+  }
+
+  async checkCuttingCompletion(productionOrderId: number): Promise<boolean> {
+    try {
+      const rollsData = await db
+        .select({ stage: rolls.stage })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, productionOrderId));
+
+      if (rollsData.length === 0) {
+        return false;
+      }
+
+      return rollsData.every(roll => roll.stage === "done");
+    } catch (error) {
+      console.error("Error checking cutting completion:", error);
+      throw new Error("فشل في التحقق من اكتمال التقطيع");
     }
   }
 
@@ -8763,6 +11146,1267 @@ export class DatabaseStorage implements IStorage {
       console.error("[DatabaseStorage] خطأ في حفظ وقت التحذير:", error);
       throw error;
     }
+  }
+
+  // Quick Notes Implementation
+  async getQuickNotes(userId?: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const assignee = alias(users, "assignee");
+        
+        const baseQuery = db
+          .select({
+            id: quick_notes.id,
+            content: quick_notes.content,
+            note_type: quick_notes.note_type,
+            priority: quick_notes.priority,
+            created_by: quick_notes.created_by,
+            assigned_to: quick_notes.assigned_to,
+            is_read: quick_notes.is_read,
+            created_at: quick_notes.created_at,
+            updated_at: quick_notes.updated_at,
+            creator_name: users.display_name,
+            assignee_name: assignee.display_name,
+          })
+          .from(quick_notes)
+          .leftJoin(users, eq(quick_notes.created_by, users.id))
+          .leftJoin(assignee, eq(quick_notes.assigned_to, assignee.id));
+
+        const notes = await (userId
+          ? baseQuery.where(
+              or(
+                eq(quick_notes.created_by, userId),
+                eq(quick_notes.assigned_to, userId),
+              ),
+            )
+          : baseQuery
+        ).orderBy(desc(quick_notes.created_at));
+        
+        // Get attachments for each note
+        const noteIds = notes.map((n) => n.id);
+        const attachments = noteIds.length > 0
+          ? await db
+              .select()
+              .from(note_attachments)
+              .where(inArray(note_attachments.note_id, noteIds))
+          : [];
+
+        // Group attachments by note_id
+        const attachmentsByNote = new Map<number, any[]>();
+        attachments.forEach((att) => {
+          if (!attachmentsByNote.has(att.note_id)) {
+            attachmentsByNote.set(att.note_id, []);
+          }
+          attachmentsByNote.get(att.note_id)!.push(att);
+        });
+
+        // Add attachments to notes
+        return notes.map((note) => ({
+          ...note,
+          attachments: attachmentsByNote.get(note.id) || [],
+        }));
+      },
+      "جلب الملاحظات السريعة",
+      userId ? `للمستخدم: ${userId}` : "جميع الملاحظات",
+    );
+  }
+
+  async getQuickNoteById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const assignee = alias(users, "assignee");
+        
+        const [note] = await db
+          .select({
+            id: quick_notes.id,
+            content: quick_notes.content,
+            note_type: quick_notes.note_type,
+            priority: quick_notes.priority,
+            created_by: quick_notes.created_by,
+            assigned_to: quick_notes.assigned_to,
+            is_read: quick_notes.is_read,
+            created_at: quick_notes.created_at,
+            updated_at: quick_notes.updated_at,
+            creator_name: users.display_name,
+            assignee_name: assignee.display_name,
+          })
+          .from(quick_notes)
+          .leftJoin(users, eq(quick_notes.created_by, users.id))
+          .leftJoin(assignee, eq(quick_notes.assigned_to, assignee.id))
+          .where(eq(quick_notes.id, id));
+
+        if (!note) return undefined;
+
+        // Get attachments
+        const attachments = await db
+          .select()
+          .from(note_attachments)
+          .where(eq(note_attachments.note_id, id));
+
+        return {
+          ...note,
+          attachments,
+        };
+      },
+      "جلب ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async createQuickNote(note: InsertQuickNote): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [newNote] = await db
+          .insert(quick_notes)
+          .values(note)
+          .returning();
+        return newNote;
+      },
+      "إنشاء ملاحظة سريعة",
+      "",
+    );
+  }
+
+  async updateQuickNote(id: number, updates: Partial<QuickNote>): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedNote] = await db
+          .update(quick_notes)
+          .set({ ...updates, updated_at: new Date() })
+          .where(eq(quick_notes.id, id))
+          .returning();
+        return updatedNote;
+      },
+      "تحديث ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async deleteQuickNote(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.delete(quick_notes).where(eq(quick_notes.id, id));
+      },
+      "حذف ملاحظة",
+      `رقم ${id}`,
+    );
+  }
+
+  async markNoteAsRead(id: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedNote] = await db
+          .update(quick_notes)
+          .set({ is_read: true, updated_at: new Date() })
+          .where(eq(quick_notes.id, id))
+          .returning();
+        return updatedNote;
+      },
+      "تحديث حالة القراءة",
+      `رقم ${id}`,
+    );
+  }
+
+  async createNoteAttachment(attachment: InsertNoteAttachment): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [newAttachment] = await db
+          .insert(note_attachments)
+          .values(attachment)
+          .returning();
+        return newAttachment;
+      },
+      "إضافة مرفق",
+      "",
+    );
+  }
+
+  async getNoteAttachments(noteId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db
+          .select()
+          .from(note_attachments)
+          .where(eq(note_attachments.note_id, noteId));
+      },
+      "جلب المرفقات",
+      `للملاحظة رقم ${noteId}`,
+    );
+  }
+
+  async deleteNoteAttachment(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.delete(note_attachments).where(eq(note_attachments.id, id));
+      },
+      "حذف مرفق",
+      `رقم ${id}`,
+    );
+  }
+
+  // ============ Film Operator Functions ============
+  
+  async getActiveProductionOrdersForOperator(userId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get user to check section
+        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user.length || String(user[0].section_id) !== '3') { // Film section is 3 (SEC03 - Production-Extruder)
+          return [];
+        }
+
+        // Get active production orders for film section
+        const ordersData = await db
+          .select({
+            id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            order_id: production_orders.order_id,
+            customer_product_id: production_orders.customer_product_id,
+            quantity_kg: production_orders.quantity_kg,
+            produced_quantity_kg: production_orders.produced_quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            status: production_orders.status,
+            is_final_roll_created: production_orders.is_final_roll_created,
+            film_completed: production_orders.film_completed,
+            production_start_time: production_orders.production_start_time,
+            production_end_time: production_orders.production_end_time,
+            production_time_minutes: production_orders.production_time_minutes,
+            order_number: orders.order_number,
+            customer_id: orders.customer_id,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+          })
+          .from(production_orders)
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(
+            and(
+              eq(production_orders.status, "active"),
+              eq(production_orders.film_completed, false)
+            )
+          )
+          .orderBy(desc(production_orders.created_at));
+
+        // Get rolls count for each production order
+        const rollsCounts = await db
+          .select({
+            production_order_id: rolls.production_order_id,
+            rolls_count: count(rolls.id),
+            total_weight: sum(rolls.weight_kg),
+          })
+          .from(rolls)
+          .where(
+            inArray(
+              rolls.production_order_id,
+              ordersData.map(o => o.id)
+            )
+          )
+          .groupBy(rolls.production_order_id);
+
+        // Merge data
+        return ordersData.map(order => {
+          const rollData = rollsCounts.find(r => r.production_order_id === order.id);
+          return {
+            ...order,
+            rolls_count: rollData?.rolls_count || 0,
+            total_weight_produced: rollData?.total_weight || 0,
+            can_create_roll: !order.is_final_roll_created,
+            remaining_quantity: Number(order.final_quantity_kg) - (Number(rollData?.total_weight) || 0),
+          };
+        });
+      },
+      "getActiveProductionOrdersForOperator",
+      "جلب أوامر الإنتاج النشطة للعامل",
+    );
+  }
+
+  async createRollWithTiming(rollData: InsertRoll & { is_last_roll?: boolean }): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const productionOrderId = rollData.production_order_id;
+        
+        // Get production order details
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (productionOrder.is_final_roll_created) {
+          throw new Error("لا يمكن إنشاء رولات جديدة بعد آخر رول");
+        }
+
+        // Calculate production time if this is not the first roll
+        let productionTimeMinutes: number | null = null;
+        const previousRolls = await db
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId))
+          .orderBy(desc(rolls.roll_created_at));
+
+        if (previousRolls.length > 0) {
+          const lastRoll = previousRolls[0];
+          const timeDiff = Date.now() - new Date(lastRoll.roll_created_at || lastRoll.created_at).getTime();
+          productionTimeMinutes = Math.floor(timeDiff / (1000 * 60)); // Convert to minutes
+        }
+
+        // Start production if this is the first roll
+        if (!productionOrder.production_start_time) {
+          await db
+            .update(production_orders)
+            .set({ production_start_time: new Date() })
+            .where(eq(production_orders.id, productionOrderId));
+        }
+
+        // Create the roll
+        const [newRoll] = await db
+          .insert(rolls)
+          .values(rollData as any)
+          .returning();
+
+        // Update produced quantity
+        const allRolls = await db
+          .select({ weight_kg: rolls.weight_kg })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId));
+
+        const totalProduced = allRolls.reduce(
+          (sum, r) => sum + Number(r.weight_kg), 
+          0
+        );
+
+        await db
+          .update(production_orders)
+          .set({ 
+            produced_quantity_kg: numberToDecimalString(totalProduced),
+            film_completion_percentage: numberToDecimalString(
+              Math.min(100, (totalProduced / Number(productionOrder.final_quantity_kg)) * 100)
+            ),
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        return newRoll;
+      },
+      "createRollWithTiming",
+      "إنشاء رول مع حساب الوقت",
+    );
+  }
+
+  async createFinalRoll(rollData: InsertRoll): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const productionOrderId = rollData.production_order_id;
+        
+        // Get production order details
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (productionOrder.is_final_roll_created) {
+          throw new Error("آخر رول تم إنشاؤه بالفعل");
+        }
+
+        // Calculate production time from first roll
+        const firstRoll = await db
+          .select()
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId))
+          .orderBy(rolls.roll_created_at)
+          .limit(1);
+
+        let totalProductionMinutes = 0;
+        if (firstRoll.length > 0) {
+          const startTime = productionOrder.production_start_time || firstRoll[0].roll_created_at || firstRoll[0].created_at;
+          const timeDiff = Date.now() - new Date(startTime).getTime();
+          totalProductionMinutes = Math.floor(timeDiff / (1000 * 60));
+        }
+
+        // Create the final roll
+        const [newRoll] = await db
+          .insert(rolls)
+          .values(rollData as any)
+          .returning();
+
+        // Update production order to mark film as completed
+        const endTime = new Date();
+        await db
+          .update(production_orders)
+          .set({
+            is_final_roll_created: true,
+            film_completed: true,
+            production_end_time: endTime,
+            production_time_minutes: totalProductionMinutes,
+            film_completion_percentage: "100",
+            status: "completed", // Mark order as completed in film stage
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        // Calculate final produced quantity
+        const allRolls = await db
+          .select({ weight_kg: rolls.weight_kg })
+          .from(rolls)
+          .where(eq(rolls.production_order_id, productionOrderId));
+
+        const totalProduced = allRolls.reduce(
+          (sum, r) => sum + Number(r.weight_kg), 
+          0
+        );
+
+        await db
+          .update(production_orders)
+          .set({ 
+            produced_quantity_kg: numberToDecimalString(totalProduced),
+          })
+          .where(eq(production_orders.id, productionOrderId));
+
+        return newRoll;
+      },
+      "createFinalRoll",
+      "إنشاء آخر رول وإغلاق مرحلة الفيلم",
+    );
+  }
+
+  async calculateProductionTime(productionOrderId: number): Promise<number> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [productionOrder] = await db
+          .select()
+          .from(production_orders)
+          .where(eq(production_orders.id, productionOrderId))
+          .limit(1);
+
+        if (!productionOrder) {
+          throw new Error("أمر الإنتاج غير موجود");
+        }
+
+        if (!productionOrder.production_start_time) {
+          return 0;
+        }
+
+        const endTime = productionOrder.production_end_time || new Date();
+        const startTime = new Date(productionOrder.production_start_time);
+        const diffMinutes = Math.floor((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+        
+        return diffMinutes;
+      },
+      "calculateProductionTime",
+      "حساب وقت الإنتاج",
+    );
+  }
+
+  // ============ Mixing Formulas Management ============
+
+  async getAllMixingFormulas(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const formulas = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            machine_name: machines.name,
+            machine_name_ar: machines.name_ar,
+            screw_type: machines.screw_type,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
+            screw_assignment: mixing_formulas.screw_assignment,
+            is_active: mixing_formulas.is_active,
+            notes: mixing_formulas.notes,
+            created_by: mixing_formulas.created_by,
+            creator_name: users.display_name,
+            created_at: mixing_formulas.created_at,
+            updated_at: mixing_formulas.updated_at,
+          })
+          .from(mixing_formulas)
+          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
+          .orderBy(desc(mixing_formulas.created_at));
+
+        // Get ingredients with item details for each formula
+        for (const formula of formulas) {
+          const ingredients = await db
+            .select({
+              id: formula_ingredients.id,
+              formula_id: formula_ingredients.formula_id,
+              item_id: formula_ingredients.item_id,
+              item_name: items.name,
+              item_name_ar: items.name_ar,
+              percentage: formula_ingredients.percentage,
+              notes: formula_ingredients.notes,
+            })
+            .from(formula_ingredients)
+            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
+            .where(eq(formula_ingredients.formula_id, formula.id));
+          (formula as any).ingredients = ingredients;
+        }
+
+        return formulas;
+      },
+      "getAllMixingFormulas",
+      "جلب جميع وصفات الخلط",
+    );
+  }
+
+  async getMixingFormulaById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [formula] = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            machine_name: machines.name,
+            machine_name_ar: machines.name_ar,
+            screw_type: machines.screw_type,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
+            screw_assignment: mixing_formulas.screw_assignment,
+            is_active: mixing_formulas.is_active,
+            notes: mixing_formulas.notes,
+            created_by: mixing_formulas.created_by,
+            creator_name: users.display_name,
+            created_at: mixing_formulas.created_at,
+            updated_at: mixing_formulas.updated_at,
+          })
+          .from(mixing_formulas)
+          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
+          .where(eq(mixing_formulas.id, id));
+
+        if (!formula) return undefined;
+
+        const ingredients = await db
+          .select({
+            id: formula_ingredients.id,
+            formula_id: formula_ingredients.formula_id,
+            item_id: formula_ingredients.item_id,
+            item_name: items.name,
+            item_name_ar: items.name_ar,
+            percentage: formula_ingredients.percentage,
+            notes: formula_ingredients.notes,
+          })
+          .from(formula_ingredients)
+          .leftJoin(items, eq(formula_ingredients.item_id, items.id))
+          .where(eq(formula_ingredients.formula_id, id));
+
+        return { ...formula, ingredients };
+      },
+      "getMixingFormulaById",
+      `جلب وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Validate ingredients total percentage
+          const totalPercentage = ingredients.reduce(
+            (sum, ing) => sum + parseFloat(ing.percentage.toString()),
+            0
+          );
+          
+          if (Math.abs(totalPercentage - 100) > 0.01) {
+            throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
+          }
+
+          // Create formula
+          const [newFormula] = await tx
+            .insert(mixing_formulas)
+            .values(formula)
+            .returning();
+
+          // Create ingredients
+          const ingredientsWithFormulaId = ingredients.map(ing => ({
+            ...ing,
+            formula_id: newFormula.id,
+          }));
+
+          const newIngredients = await tx
+            .insert(formula_ingredients)
+            .values(ingredientsWithFormulaId)
+            .returning();
+
+          return { ...newFormula, ingredients: newIngredients };
+        });
+      },
+      "createMixingFormula",
+      "إنشاء وصفة خلط جديدة",
+    );
+  }
+
+  async updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Update formula
+          const [updatedFormula] = await tx
+            .update(mixing_formulas)
+            .set({ ...formula, updated_at: new Date() })
+            .where(eq(mixing_formulas.id, id))
+            .returning();
+
+          if (!updatedFormula) {
+            throw new Error("الوصفة غير موجودة");
+          }
+
+          // Update ingredients if provided
+          if (ingredients) {
+            // Validate total percentage
+            const totalPercentage = ingredients.reduce(
+              (sum, ing) => sum + parseFloat(ing.percentage.toString()),
+              0
+            );
+            
+            if (Math.abs(totalPercentage - 100) > 0.01) {
+              throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
+            }
+
+            // Delete old ingredients
+            await tx.delete(formula_ingredients).where(eq(formula_ingredients.formula_id, id));
+
+            // Insert new ingredients
+            const ingredientsWithFormulaId = ingredients.map(ing => ({
+              ...ing,
+              formula_id: id,
+            }));
+
+            await tx.insert(formula_ingredients).values(ingredientsWithFormulaId);
+          }
+
+          // Get updated formula with ingredients
+          const newIngredients = await tx
+            .select()
+            .from(formula_ingredients)
+            .where(eq(formula_ingredients.formula_id, id));
+
+          return { ...updatedFormula, ingredients: newIngredients };
+        });
+      },
+      "updateMixingFormula",
+      `تحديث وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async deleteMixingFormula(id: number): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Check if formula is used in any batches
+        const [batch] = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.formula_id, id))
+          .limit(1);
+
+        if (batch) {
+          throw new Error("لا يمكن حذف وصفة مستخدمة في عمليات خلط موجودة");
+        }
+
+        await db.delete(mixing_formulas).where(eq(mixing_formulas.id, id));
+      },
+      "deleteMixingFormula",
+      `حذف وصفة الخلط رقم ${id}`,
+    );
+  }
+
+  async findMatchingFormulas(criteria: {
+    machineId: string;
+    thickness: number;
+    width?: number;
+  }): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const conditions = [
+          eq(mixing_formulas.machine_id, criteria.machineId),
+          eq(mixing_formulas.is_active, true),
+          sql`${mixing_formulas.thickness_min} <= ${criteria.thickness}`,
+          sql`${mixing_formulas.thickness_max} >= ${criteria.thickness}`,
+        ];
+
+        if (criteria.width !== undefined) {
+          conditions.push(
+            sql`${mixing_formulas.width_min} <= ${criteria.width}`
+          );
+          conditions.push(
+            sql`${mixing_formulas.width_max} >= ${criteria.width}`
+          );
+        }
+
+        const formulas = await db
+          .select({
+            id: mixing_formulas.id,
+            formula_name: mixing_formulas.formula_name,
+            machine_id: mixing_formulas.machine_id,
+            screw_assignment: mixing_formulas.screw_assignment,
+            thickness_min: mixing_formulas.thickness_min,
+            thickness_max: mixing_formulas.thickness_max,
+            width_min: mixing_formulas.width_min,
+            width_max: mixing_formulas.width_max,
+            master_batch_colors: mixing_formulas.master_batch_colors,
+            notes: mixing_formulas.notes,
+          })
+          .from(mixing_formulas)
+          .where(and(...conditions))
+          .orderBy(mixing_formulas.created_at);
+
+        // Get ingredients with item details for each matching formula
+        for (const formula of formulas) {
+          const ingredients = await db
+            .select({
+              id: formula_ingredients.id,
+              formula_id: formula_ingredients.formula_id,
+              item_id: formula_ingredients.item_id,
+              item_name: items.name,
+              item_name_ar: items.name_ar,
+              percentage: formula_ingredients.percentage,
+              notes: formula_ingredients.notes,
+            })
+            .from(formula_ingredients)
+            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
+            .where(eq(formula_ingredients.formula_id, formula.id));
+          (formula as any).ingredients = ingredients;
+        }
+
+        return formulas;
+      },
+      "findMatchingFormulas",
+      "البحث عن وصفات خلط مطابقة",
+    );
+  }
+
+  // ============ Mixing Batches ============
+
+  async getAllMixingBatches(): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select({
+            id: mixing_batches.id,
+            batch_number: mixing_batches.batch_number,
+            formula_id: mixing_batches.formula_id,
+            formula_name: mixing_formulas.formula_name,
+            production_order_id: mixing_batches.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            roll_id: mixing_batches.roll_id,
+            roll_number: rolls.roll_number,
+            machine_id: mixing_batches.machine_id,
+            machine_name: machines.name_ar,
+            operator_id: mixing_batches.operator_id,
+            operator_name: users.display_name,
+            total_weight_kg: mixing_batches.total_weight_kg,
+            status: mixing_batches.status,
+            started_at: mixing_batches.started_at,
+            completed_at: mixing_batches.completed_at,
+            notes: mixing_batches.notes,
+            created_at: mixing_batches.created_at,
+          })
+          .from(mixing_batches)
+          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
+          .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
+          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
+          .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_batches.operator_id, users.id))
+          .orderBy(desc(mixing_batches.created_at));
+
+        // Get ingredients for each batch
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getAllMixingBatches",
+      "جلب جميع عمليات الخلط",
+    );
+  }
+
+  async getMixingBatchById(id: number): Promise<any | undefined> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [batch] = await db
+          .select({
+            id: mixing_batches.id,
+            batch_number: mixing_batches.batch_number,
+            formula_id: mixing_batches.formula_id,
+            formula_name: mixing_formulas.formula_name,
+            production_order_id: mixing_batches.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            roll_id: mixing_batches.roll_id,
+            roll_number: rolls.roll_number,
+            machine_id: mixing_batches.machine_id,
+            machine_name: machines.name_ar,
+            operator_id: mixing_batches.operator_id,
+            operator_name: users.display_name,
+            total_weight_kg: mixing_batches.total_weight_kg,
+            status: mixing_batches.status,
+            started_at: mixing_batches.started_at,
+            completed_at: mixing_batches.completed_at,
+            notes: mixing_batches.notes,
+            created_at: mixing_batches.created_at,
+          })
+          .from(mixing_batches)
+          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
+          .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
+          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
+          .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
+          .leftJoin(users, eq(mixing_batches.operator_id, users.id))
+          .where(eq(mixing_batches.id, id));
+
+        if (!batch) return undefined;
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...batch, ingredients };
+      },
+      "getMixingBatchById",
+      `جلب عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async createMixingBatch(batch: InsertMixingBatch, ingredients: InsertBatchIngredient[]): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Create batch
+          const [newBatch] = await tx
+            .insert(mixing_batches)
+            .values(batch)
+            .returning();
+
+          // Create ingredients
+          const ingredientsWithBatchId = ingredients.map(ing => ({
+            ...ing,
+            batch_id: newBatch.id,
+          }));
+
+          const newIngredients = await tx
+            .insert(batch_ingredients)
+            .values(ingredientsWithBatchId)
+            .returning();
+
+          return { ...newBatch, ingredients: newIngredients };
+        });
+      },
+      "createMixingBatch",
+      "إنشاء عملية خلط جديدة",
+    );
+  }
+
+  async updateMixingBatch(id: number, updates: Partial<MixingBatch>): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedBatch] = await db
+          .update(mixing_batches)
+          .set(updates)
+          .where(eq(mixing_batches.id, id))
+          .returning();
+
+        if (!updatedBatch) {
+          throw new Error("عملية الخلط غير موجودة");
+        }
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...updatedBatch, ingredients };
+      },
+      "updateMixingBatch",
+      `تحديث عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async updateBatchIngredientActuals(batchId: number, ingredientUpdates: Array<{
+    id: number;
+    actual_weight_kg: string;
+  }>): Promise<void> {
+    return withDatabaseErrorHandling(
+      async () => {
+        await db.transaction(async (tx) => {
+          for (const update of ingredientUpdates) {
+            const [ingredient] = await tx
+              .select()
+              .from(batch_ingredients)
+              .where(eq(batch_ingredients.id, update.id));
+
+            if (!ingredient) {
+              throw new Error(`المكون رقم ${update.id} غير موجود`);
+            }
+
+            const plannedWeight = parseFloat(ingredient.planned_weight_kg.toString());
+            const actualWeight = parseFloat(update.actual_weight_kg);
+            const variance = actualWeight - plannedWeight;
+
+            await tx
+              .update(batch_ingredients)
+              .set({
+                actual_weight_kg: update.actual_weight_kg,
+                variance_kg: numberToDecimalString(variance, 2),
+              })
+              .where(eq(batch_ingredients.id, update.id));
+          }
+        });
+      },
+      "updateBatchIngredientActuals",
+      `تحديث الكميات الفعلية لخلطة رقم ${batchId}`,
+    );
+  }
+
+  async completeMixingBatch(id: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [updatedBatch] = await db
+          .update(mixing_batches)
+          .set({
+            status: "completed",
+            completed_at: new Date(),
+          })
+          .where(eq(mixing_batches.id, id))
+          .returning();
+
+        if (!updatedBatch) {
+          throw new Error("عملية الخلط غير موجودة");
+        }
+
+        const ingredients = await db
+          .select()
+          .from(batch_ingredients)
+          .where(eq(batch_ingredients.batch_id, id));
+
+        return { ...updatedBatch, ingredients };
+      },
+      "completeMixingBatch",
+      `إتمام عملية الخلط رقم ${id}`,
+    );
+  }
+
+  async getMixingBatchesByOperator(operatorId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.operator_id, operatorId))
+          .orderBy(desc(mixing_batches.created_at));
+
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getMixingBatchesByOperator",
+      `جلب عمليات الخلط للعامل رقم ${operatorId}`,
+    );
+  }
+
+  async getMixingBatchesByProductionOrder(productionOrderId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const batches = await db
+          .select()
+          .from(mixing_batches)
+          .where(eq(mixing_batches.production_order_id, productionOrderId))
+          .orderBy(mixing_batches.created_at);
+
+        for (const batch of batches) {
+          const ingredients = await db
+            .select()
+            .from(batch_ingredients)
+            .where(eq(batch_ingredients.batch_id, batch.id));
+          (batch as any).ingredients = ingredients;
+        }
+
+        return batches;
+      },
+      "getMixingBatchesByProductionOrder",
+      `جلب عمليات الخلط لأمر الإنتاج رقم ${productionOrderId}`,
+    );
+  }
+
+  // ============ Printing Operator Functions ============
+  
+  async getRollsForPrintingBySection(sectionId?: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get rolls in film stage ready for printing
+        const rollsData = await db
+          .select({
+            id: rolls.id,
+            roll_number: rolls.roll_number,
+            roll_seq: rolls.roll_seq,
+            weight_kg: rolls.weight_kg,
+            stage: rolls.stage,
+            production_order_id: rolls.production_order_id,
+            created_at: rolls.created_at,
+            qr_code_text: rolls.qr_code_text,
+            production_order_number: production_orders.production_order_number,
+            order_id: production_orders.order_id,
+            customer_product_id: production_orders.customer_product_id,
+            quantity_kg: production_orders.quantity_kg,
+            final_quantity_kg: production_orders.final_quantity_kg,
+            produced_quantity_kg: production_orders.produced_quantity_kg,
+            printed_quantity_kg: production_orders.printed_quantity_kg,
+            printing_completion_percentage: production_orders.printing_completion_percentage,
+            order_number: orders.order_number,
+            customer_id: orders.customer_id,
+            customer_name: customers.name,
+            customer_name_ar: customers.name_ar,
+            item_id: items.id,
+            item_name: items.name,
+            item_name_ar: items.name_ar,
+            size_caption: customer_products.size_caption,
+          })
+          .from(rolls)
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(
+            eq(rolls.stage, "film") // Only rolls in film stage ready for printing
+          )
+          .orderBy(desc(orders.created_at), production_orders.production_order_number, rolls.roll_seq);
+
+        // Group rolls by production order
+        const groupedOrders: Map<number, any> = new Map();
+
+        rollsData.forEach(roll => {
+          const orderId = roll.production_order_id;
+          if (!groupedOrders.has(orderId)) {
+            groupedOrders.set(orderId, {
+              id: orderId,
+              production_order_number: roll.production_order_number,
+              quantity_kg: roll.quantity_kg,
+              final_quantity_kg: roll.final_quantity_kg,
+              produced_quantity_kg: roll.produced_quantity_kg,
+              printed_quantity_kg: roll.printed_quantity_kg,
+              printing_completion_percentage: roll.printing_completion_percentage,
+              order_number: roll.order_number,
+              customer_name: roll.customer_name,
+              customer_name_ar: roll.customer_name_ar,
+              item_name: roll.item_name,
+              item_name_ar: roll.item_name_ar,
+              size_caption: roll.size_caption,
+              rolls: []
+            });
+          }
+
+          groupedOrders.get(orderId).rolls.push({
+            id: roll.id,
+            roll_number: roll.roll_number,
+            roll_seq: roll.roll_seq,
+            weight_kg: roll.weight_kg,
+            stage: roll.stage,
+            production_order_id: roll.production_order_id,
+            created_at: roll.created_at,
+            qr_code_text: roll.qr_code_text,
+          });
+        });
+
+        return Array.from(groupedOrders.values());
+      },
+      "getRollsForPrintingBySection",
+      "جلب الرولات الجاهزة للطباعة حسب القسم",
+    );
+  }
+
+  async markRollAsPrinted(rollId: number, operatorId: number): Promise<Roll> {
+    return withDatabaseErrorHandling(
+      async () => {
+        return await db.transaction(async (tx) => {
+          // Get current roll details
+          const [currentRoll] = await tx
+            .select()
+            .from(rolls)
+            .where(eq(rolls.id, rollId));
+          
+          if (!currentRoll) {
+            throw new Error("الرول غير موجود");
+          }
+
+          if (currentRoll.stage !== "film") {
+            throw new Error("الرول غير جاهز للطباعة");
+          }
+
+          // Update roll to cutting stage (skipping printing stage as it goes directly to cutting)
+          const [updatedRoll] = await tx
+            .update(rolls)
+            .set({
+              stage: "cutting", // Move directly to cutting as per requirements
+              printed_at: new Date(),
+              printed_by: operatorId,
+            })
+            .where(eq(rolls.id, rollId))
+            .returning();
+
+          // Calculate printed quantity for the production order
+          const printedRollsWeight = await tx
+            .select({
+              total: sql<number>`COALESCE(SUM(${rolls.weight_kg}::decimal), 0)`,
+            })
+            .from(rolls)
+            .where(
+              and(
+                eq(rolls.production_order_id, currentRoll.production_order_id),
+                or(
+                  eq(rolls.stage, "cutting"),
+                  eq(rolls.stage, "done")
+                )
+              )
+            );
+
+          const printedQuantity = Number(printedRollsWeight[0]?.total || 0);
+
+          // Get production order details
+          const [productionOrder] = await tx
+            .select()
+            .from(production_orders)
+            .where(eq(production_orders.id, currentRoll.production_order_id));
+
+          if (productionOrder) {
+            const producedQuantityKg = parseFloat(
+              productionOrder.produced_quantity_kg?.toString() || "0"
+            );
+            
+            // Calculate printing completion percentage
+            const printingPercentage = producedQuantityKg > 0 
+              ? Math.min(100, (printedQuantity / producedQuantityKg) * 100)
+              : 0;
+
+            // Check if all rolls are printed
+            const [remainingRolls] = await tx
+              .select({ count: count() })
+              .from(rolls)
+              .where(
+                and(
+                  eq(rolls.production_order_id, currentRoll.production_order_id),
+                  eq(rolls.stage, "film")
+                )
+              );
+
+            const allRollsPrinted = remainingRolls.count === 0;
+
+            // Update production order
+            await tx
+              .update(production_orders)
+              .set({
+                printed_quantity_kg: numberToDecimalString(printedQuantity, 2),
+                printing_completion_percentage: numberToDecimalString(printingPercentage, 2),
+                printing_completed: allRollsPrinted,
+              })
+              .where(eq(production_orders.id, currentRoll.production_order_id));
+          }
+
+          // Invalidate cache
+          invalidateProductionCache("all");
+
+          return updatedRoll;
+        });
+      },
+      "markRollAsPrinted",
+      "تسجيل طباعة الرول",
+    );
+  }
+
+  async getPrintingStats(userId?: number): Promise<any> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get today's printed rolls count
+        const [todayPrinted] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(
+            and(
+              sql`${rolls.printed_at}::date >= ${today}`,
+              sql`${rolls.printed_at} IS NOT NULL`
+            )
+          );
+
+        // Get hourly rate for today
+        const hoursElapsed = (Date.now() - today.getTime()) / (1000 * 60 * 60);
+        const hourlyRate = hoursElapsed > 0 ? todayPrinted.count / hoursElapsed : 0;
+
+        // Get pending rolls (in film stage)
+        const [pendingRolls] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(eq(rolls.stage, "film"));
+
+        // Get completed orders today
+        const [completedOrders] = await db
+          .select({ count: count() })
+          .from(production_orders)
+          .where(
+            and(
+              eq(production_orders.printing_completed, true),
+              sql`DATE(${production_orders.created_at}) = CURRENT_DATE`
+            )
+          );
+
+        return {
+          todayPrintedCount: todayPrinted.count,
+          hourlyRate: Math.round(hourlyRate * 10) / 10,
+          pendingRolls: pendingRolls.count,
+          completedOrders: completedOrders.count,
+        };
+      },
+      "getPrintingStats",
+      "جلب إحصائيات الطباعة",
+    );
+  }
+
+  async checkPrintingCompletion(productionOrderId: number): Promise<boolean> {
+    return withDatabaseErrorHandling(
+      async () => {
+        const [remainingRolls] = await db
+          .select({ count: count() })
+          .from(rolls)
+          .where(
+            and(
+              eq(rolls.production_order_id, productionOrderId),
+              eq(rolls.stage, "film")
+            )
+          );
+
+        return remainingRolls.count === 0;
+      },
+      "checkPrintingCompletion",
+      "التحقق من اكتمال الطباعة",
+    );
   }
 }
 

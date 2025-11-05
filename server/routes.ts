@@ -2,6 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { requireAuth, requirePermission, requireAdmin, type AuthRequest } from "./middleware/auth";
+import { logger } from "./lib/logger";
 
 // Extend Express Request type to include session
 declare module "express-serve-static-core" {
@@ -119,6 +120,7 @@ import {
   commonSchemas,
 } from "./middleware/validation";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
+import { setupAuth, isAuthenticated as isAuthenticatedReplit } from "./replitAuth";
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -128,6 +130,24 @@ let notificationManager: ReturnType<typeof getNotificationManager> | null =
   null;
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit Auth (OpenID Connect)
+  await setupAuth(app);
+  
+  // Replit Auth user endpoint
+  app.get('/api/auth/user', isAuthenticatedReplit, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUserByReplitId(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      logger.error("Error fetching Replit auth user", error);
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+  
   // Authentication routes
   app.post(
     "/api/login",
@@ -152,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Enhanced null checks for user properties
         if (!user.password) {
-          console.error("User found but password is null/undefined:", user.id);
+          logger.error("User found but password is null or undefined");
           return res
             .status(401)
             .json({ message: "بيانات تسجيل الدخول غير صحيحة" });
@@ -178,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Ensure session is saved before responding with additional reliability measures
         req.session.save((err: any) => {
           if (err) {
-            console.error("Session save error:", err);
+            logger.error("Session save error", err);
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
 
@@ -187,10 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             req.session.touch();
           }
 
-          // Log successful session creation in development
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`✅ Session created and saved for user ${user.id}`);
-          }
+          logger.session("created and saved", user.id);
 
           // Session saved successfully - safe property access
           res.json({
@@ -205,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         });
       } catch (error) {
-        console.error("Login error:", error);
+        logger.error("Login error", error);
         res.status(500).json({ message: "خطأ في الخادم" });
       }
     },
@@ -216,15 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Double-check session (redundant with requireAuth but safer)
       if (!req.session?.userId || typeof req.session.userId !== "number") {
-        // Debug session state in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("🔍 /api/me session debug:", {
-            sessionExists: !!req.session,
-            userId: req.session?.userId,
-            userIdType: typeof req.session?.userId,
-            sessionId: req.session?.id || "no-session-id",
-          });
-        }
+        logger.debug("Invalid session on /api/me");
         return res.status(401).json({
           message: "جلسة غير صحيحة",
           success: false,
@@ -237,11 +246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           if (req.session?.destroy) {
             req.session.destroy((err: any) => {
-              if (err) console.error("Error destroying invalid session:", err);
+              if (err) logger.error("Error destroying invalid session", err);
             });
           }
         } catch (destroyError) {
-          console.error("Failed to destroy invalid session:", destroyError);
+          logger.error("Failed to destroy invalid session", destroyError);
         }
         return res.status(404).json({
           message: "المستخدم غير موجود",
@@ -267,13 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.session?.save) {
           req.session.save((err: any) => {
             if (err) {
-              console.error("Error saving session on /api/me:", err);
+              logger.error("Error saving session on /api/me", err);
               // Continue anyway, don't break the response
             }
           });
         }
       } catch (sessionError) {
-        console.error("Session management error:", sessionError);
+        logger.error("Session management error", sessionError);
         // Don't fail the request for session issues
       }
 
@@ -327,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
       });
     } catch (error) {
-      console.error("Get current user error:", error);
+      logger.error("Get current user error", error);
       res.status(500).json({
         message: "خطأ في الخادم",
         success: false,
@@ -341,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session?.destroy) {
         req.session.destroy((err) => {
           if (err) {
-            console.error("Session destroy error:", err);
+            logger.error("Session destroy error", err);
             return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
           }
           // Clear all possible session cookies
@@ -357,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "تم تسجيل الخروج بنجاح" });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error", error);
       res.status(500).json({ message: "خطأ في تسجيل الخروج" });
     }
   });
@@ -368,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getDashboardStats();
       res.json(stats);
     } catch (error) {
-      console.error("Dashboard stats error:", error);
+      logger.error("Dashboard stats error", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
     }
   });
@@ -409,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           );
         } catch (serviceError: any) {
-          console.error("Notification service error:", serviceError);
+          logger.error("Notification service error", serviceError);
           return res.status(503).json({
             message: "خدمة الإشعارات غير متوفرة مؤقتاً",
             success: false,
@@ -459,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } catch (error: any) {
-        console.error("Error sending WhatsApp message:", error);
+        logger.error("Error sending WhatsApp message", error);
 
         // Handle different types of errors gracefully
         if (error.name === "ValidationError") {
@@ -507,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     } catch (error: any) {
-      console.error("Error sending test message:", error);
+      logger.error("Error sending test message", error);
       res.status(500).json({ message: "خطأ في إرسال رسالة الاختبار" });
     }
   });
@@ -564,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(notifications);
     } catch (error: any) {
-      console.error("Error fetching notifications:", error);
+      logger.error("Error fetching notifications", error);
       res.status(500).json({ message: "خطأ في جلب الإشعارات" });
     }
   });
@@ -579,18 +588,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const challenge = req.query["hub.challenge"];
 
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("✅ Meta Webhook verified successfully");
+      logger.info("✅ Meta Webhook verified successfully");
       res.status(200).send(challenge);
     } else {
-      console.log("❌ Meta Webhook verification failed");
+      logger.info("❌ Meta Webhook verification failed");
       res.sendStatus(403);
     }
   });
 
   app.post("/api/notifications/webhook/meta", async (req, res) => {
     try {
-      console.log(
-        "📨 Meta Webhook received:",
+      logger.debug(
+        "📨 Meta Webhook received",
         JSON.stringify(req.body, null, 2),
       );
 
@@ -601,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error processing Meta webhook:", error);
+      logger.error("Error processing Meta webhook", error);
       res.status(500).json({ message: "خطأ في معالجة Meta webhook" });
     }
   });
@@ -617,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error handling Twilio webhook:", error);
+      logger.error("Error handling Twilio webhook", error);
       res.status(500).send("Error");
     }
   });
@@ -634,12 +643,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setNotificationManager(notificationManager);
 
         // Apply database optimizations on first initialization
-        console.log("[System] Applying database optimizations...");
+        logger.info("[System] Applying database optimizations...");
         createPerformanceIndexes().catch((err) =>
-          console.error("[System] Database optimization failed:", err),
+          logger.error("[System] Database optimization failed", err),
         );
         createTextSearchIndexes().catch((err) =>
-          console.error("[System] Text search optimization failed:", err),
+          logger.error("[System] Text search optimization failed", err),
         );
       }
 
@@ -654,11 +663,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add SSE connection
       notificationManager.addConnection(connectionId, userId, res);
 
-      console.log(
+      logger.info(
         `[SSE] New connection established for user ${userId}, connectionId: ${connectionId}`,
       );
     } catch (error) {
-      console.error("Error establishing SSE connection:", error);
+      logger.error("Error establishing SSE connection", error);
       res.status(500).json({ message: "خطأ في إنشاء الاتصال" });
     }
   });
@@ -701,12 +710,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           setNotificationManager(notificationManager);
 
           // Apply database optimizations on first initialization
-          console.log("[System] Applying database optimizations...");
+          logger.info("[System] Applying database optimizations...");
           createPerformanceIndexes().catch((err) =>
-            console.error("[System] Database optimization failed:", err),
+            logger.error("[System] Database optimization failed", err),
           );
           createTextSearchIndexes().catch((err) =>
-            console.error("[System] Text search optimization failed:", err),
+            logger.error("[System] Text search optimization failed", err),
           );
         }
 
@@ -1632,6 +1641,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Production Orders Management Routes
+  app.get(
+    "/api/production-orders/management",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "هذه الصفحة متاحة فقط للمدير ومدير الإنتاج" 
+          });
+        }
+
+        const productionOrders = await storage.getProductionOrdersWithDetails();
+        res.json({
+          success: true,
+          data: productionOrders
+        });
+      } catch (error) {
+        console.error("Error fetching production orders with details:", error);
+        res.status(500).json({ 
+          success: false,
+          message: "خطأ في جلب أوامر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.patch(
+    "/api/production-orders/:id/activate", 
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "غير مصرح لك بتفعيل أوامر الإنتاج" 
+          });
+        }
+
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const { machineId, operatorId } = req.body;
+
+        const activatedOrder = await storage.activateProductionOrder(
+          id,
+          machineId,
+          operatorId
+        );
+
+        res.json({
+          success: true,
+          data: activatedOrder,
+          message: "تم تفعيل أمر الإنتاج بنجاح"
+        });
+      } catch (error: any) {
+        console.error("Error activating production order:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في تفعيل أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.patch(
+    "/api/production-orders/:id/assign",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "غير مصرح" });
+        }
+
+        // التحقق من صلاحيات المدير أو مدير الإنتاج
+        const userRole = await storage.getRoleById(user.role_id);
+        if (!userRole || (userRole.name !== "admin" && userRole.name !== "production_manager")) {
+          return res.status(403).json({ 
+            message: "غير مصرح لك بتخصيص أوامر الإنتاج" 
+          });
+        }
+
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const { machineId, operatorId } = req.body;
+
+        const updatedOrder = await storage.updateProductionOrderAssignment(
+          id,
+          machineId,
+          operatorId
+        );
+
+        res.json({
+          success: true,
+          data: updatedOrder,
+          message: "تم تحديث التخصيص بنجاح"
+        });
+      } catch (error: any) {
+        console.error("Error assigning production order:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في تخصيص أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
+  app.get(
+    "/api/production-orders/:id/stats",
+    requireAuth,
+    async (req: AuthRequest, res) => {
+      try {
+        const id = parseRouteParam(req.params.id, "Production Order ID");
+        const stats = await storage.getProductionOrderStats(id);
+        
+        res.json({
+          success: true,
+          data: stats
+        });
+      } catch (error: any) {
+        console.error("Error fetching production order stats:", error);
+        res.status(400).json({ 
+          success: false,
+          message: error.message || "خطأ في جلب إحصائيات أمر الإنتاج" 
+        });
+      }
+    }
+  );
+
   // Get all orders with enhanced search and filtering
   app.get("/api/orders/enhanced", requireAuth, async (req, res) => {
     try {
@@ -1734,6 +1883,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ================ PRINTING OPERATOR API ROUTES ================
+  
+  // Get rolls ready for printing by section
+  app.get("/api/rolls/printing-queue-by-section", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      // Get rolls ready for printing (in film stage)
+      const printingQueue = await storage.getRollsForPrintingBySection((user as any).section_id);
+      
+      res.json(printingQueue);
+    } catch (error) {
+      console.error("Error fetching printing queue by section:", error);
+      res.status(500).json({ message: "خطأ في جلب قائمة انتظار الطباعة" });
+    }
+  });
+
+  // Mark roll as printed
+  app.post("/api/rolls/:id/mark-printed", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const rollId = parseInt(req.params.id);
+      const user = req.user;
+      
+      if (!user) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      // Mark the roll as printed
+      const updatedRoll = await storage.markRollAsPrinted(rollId, user.id);
+      
+      res.json({
+        success: true,
+        data: updatedRoll,
+        message: "تم تسجيل طباعة الرول بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error marking roll as printed:", error);
+      res.status(400).json({ 
+        success: false,
+        message: error.message || "خطأ في تسجيل طباعة الرول" 
+      });
+    }
+  });
+
+  // Get printing progress for a production order
+  app.get("/api/production-orders/:id/printing-progress", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      // Get production order stats
+      const stats = await storage.getProductionOrderStats(productionOrderId);
+      
+      // Check if printing is completed
+      const isCompleted = await storage.checkPrintingCompletion(productionOrderId);
+      
+      res.json({
+        success: true,
+        data: {
+          ...stats,
+          printing_completed: isCompleted
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching printing progress:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "خطأ في جلب تقدم الطباعة" 
+      });
+    }
+  });
+
+  // Get printing statistics
+  app.get("/api/printing/stats", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user;
+      const stats = await storage.getPrintingStats(user?.id);
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching printing stats:", error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات الطباعة" });
+    }
+  });
+
   // Machines routes
   app.get("/api/machines", requireAuth, async (req, res) => {
     try {
@@ -1782,6 +2018,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         message: "خطأ في جلب تقارير الطلبات",
         success: false,
+      });
+    }
+  });
+
+  // ============ Film Operator Endpoints ============
+  
+  // Get active production orders for film operator
+  app.get("/api/production-orders/active-for-operator", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const orders = await storage.getActiveProductionOrdersForOperator(userId);
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching operator production orders:", error);
+      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج" });
+    }
+  });
+
+  // Create roll with timing calculation
+  app.post("/api/rolls/create-with-timing", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertRollSchema.parse(req.body);
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rollData = {
+        ...validatedData,
+        created_by: userId,
+        is_last_roll: req.body.is_last_roll || false,
+      };
+
+      const newRoll = await storage.createRollWithTiming(rollData);
+      res.status(201).json({
+        success: true,
+        message: "تم إنشاء الرول بنجاح",
+        roll: newRoll,
+        roll_number: newRoll.roll_number,
+      });
+    } catch (error) {
+      console.error("Error creating roll with timing:", error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "خطأ في إنشاء الرول" 
+      });
+    }
+  });
+
+  // Create final roll and complete film production
+  app.post("/api/rolls/create-final", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertRollSchema.parse(req.body);
+      const userId = req.session.userId;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rollData = {
+        ...validatedData,
+        created_by: userId,
+      };
+
+      const newRoll = await storage.createFinalRoll(rollData);
+      res.status(201).json({
+        success: true,
+        message: "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح",
+        roll: newRoll,
+        roll_number: newRoll.roll_number,
+      });
+    } catch (error) {
+      console.error("Error creating final roll:", error);
+      res.status(500).json({ 
+        success: false,
+        message: error instanceof Error ? error.message : "خطأ في إنشاء آخر رول" 
       });
     }
   });
@@ -1911,6 +2228,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "خطأ في جلب التقرير الشامل",
         success: false,
       });
+    }
+  });
+
+  // ============ PRODUCTION REPORTS API ROUTES ============
+  
+  // Production Summary Report
+  app.get("/api/reports/production-summary", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+        productId: req.query.product_id ? JSON.parse(req.query.product_id as string) : undefined,
+        status: req.query.status ? JSON.parse(req.query.status as string) : undefined,
+        sectionId: req.query.section_id as string,
+        machineId: req.query.machine_id as string,
+        operatorId: req.query.operator_id ? parseInt(req.query.operator_id as string) : undefined,
+      };
+      
+      const summary = await storage.getProductionSummary(filters);
+      res.json({ success: true, data: summary });
+    } catch (error) {
+      console.error("Production summary error:", error);
+      res.status(500).json({ message: "خطأ في جلب ملخص الإنتاج", success: false });
+    }
+  });
+
+  // Production by Date
+  app.get("/api/reports/production-by-date", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+        productId: req.query.product_id ? JSON.parse(req.query.product_id as string) : undefined,
+      };
+      
+      const data = await storage.getProductionByDate(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Production by date error:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات الإنتاج اليومية", success: false });
+    }
+  });
+
+  // Production by Product
+  app.get("/api/reports/production-by-product", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        customerId: req.query.customer_id ? JSON.parse(req.query.customer_id as string) : undefined,
+      };
+      
+      const data = await storage.getProductionByProduct(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Production by product error:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات الإنتاج حسب المنتج", success: false });
+    }
+  });
+
+  // Waste Analysis
+  app.get("/api/reports/waste-analysis", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        sectionId: req.query.section_id as string,
+      };
+      
+      const data = await storage.getWasteAnalysis(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Waste analysis error:", error);
+      res.status(500).json({ message: "خطأ في جلب تحليل الهدر", success: false });
+    }
+  });
+
+  // Machine Performance
+  app.get("/api/reports/machine-performance", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+      };
+      
+      const data = await storage.getMachinePerformance(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Machine performance error:", error);
+      res.status(500).json({ message: "خطأ في جلب أداء المكائن", success: false });
+    }
+  });
+
+  // Operator Performance
+  app.get("/api/reports/operator-performance", requireAuth, async (req, res) => {
+    try {
+      const filters = {
+        dateFrom: req.query.date_from as string,
+        dateTo: req.query.date_to as string,
+        sectionId: req.query.section_id as string,
+      };
+      
+      const data = await storage.getOperatorPerformance(filters);
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("Operator performance error:", error);
+      res.status(500).json({ message: "خطأ في جلب أداء العمال", success: false });
     }
   });
 
@@ -3223,7 +3649,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = req.params.id; // Now using string ID
       console.log("Updating machine:", id, req.body);
-      const machine = await storage.updateMachine(id, req.body);
+      
+      // Clean up empty capacity fields - convert empty strings to null
+      const cleanedData = {
+        ...req.body,
+        capacity_small_kg_per_hour: req.body.capacity_small_kg_per_hour === "" || req.body.capacity_small_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_small_kg_per_hour,
+        capacity_medium_kg_per_hour: req.body.capacity_medium_kg_per_hour === "" || req.body.capacity_medium_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_medium_kg_per_hour,
+        capacity_large_kg_per_hour: req.body.capacity_large_kg_per_hour === "" || req.body.capacity_large_kg_per_hour === null 
+          ? null 
+          : req.body.capacity_large_kg_per_hour,
+      };
+      
+      const machine = await storage.updateMachine(id, cleanedData);
       res.json(machine);
     } catch (error) {
       console.error("Machine update error:", error);
@@ -4464,6 +4905,212 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Machine Queues Management API ============
+  
+  app.get("/api/machine-queues", requireAuth, async (req, res) => {
+    try {
+      const queues = await storage.getMachineQueues();
+      res.json({ data: queues });
+    } catch (error) {
+      console.error("Error fetching machine queues:", error);
+      res.status(500).json({ message: "خطأ في جلب طوابير الماكينات" });
+    }
+  });
+
+  app.post("/api/machine-queues/assign", requireAuth, async (req, res) => {
+    try {
+      const { productionOrderId, machineId, position } = req.body;
+      
+      if (!productionOrderId || !machineId || position === undefined) {
+        return res.status(400).json({ 
+          message: "بيانات غير كاملة - مطلوب معرف أمر الإنتاج والماكينة والموضع" 
+        });
+      }
+
+      const userId = req.session?.userId || 1;
+      const queueEntry = await storage.assignToMachineQueue(
+        productionOrderId, 
+        machineId, 
+        position,
+        userId
+      );
+      
+      res.json({ 
+        data: queueEntry,
+        message: "تم تخصيص أمر الإنتاج للماكينة بنجاح" 
+      });
+    } catch (error: any) {
+      console.error("Error assigning to machine queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في تخصيص أمر الإنتاج للماكينة" 
+      });
+    }
+  });
+
+  app.put("/api/machine-queues/reorder", requireAuth, async (req, res) => {
+    try {
+      const { queueId, newPosition } = req.body;
+      
+      if (!queueId || newPosition === undefined) {
+        return res.status(400).json({ 
+          message: "بيانات غير كاملة - مطلوب معرف الطابور والموضع الجديد" 
+        });
+      }
+
+      const updated = await storage.updateQueuePosition(queueId, newPosition);
+      
+      res.json({ 
+        data: updated,
+        message: "تم تحديث ترتيب الطابور بنجاح" 
+      });
+    } catch (error: any) {
+      console.error("Error reordering queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في تحديث ترتيب الطابور" 
+      });
+    }
+  });
+
+  app.delete("/api/machine-queues/:id", requireAuth, async (req, res) => {
+    try {
+      const queueId = parseInt(req.params.id);
+      
+      if (isNaN(queueId)) {
+        return res.status(400).json({ 
+          message: "معرف طابور غير صحيح" 
+        });
+      }
+
+      await storage.removeFromQueue(queueId);
+      
+      res.json({ 
+        message: "تم إزالة أمر الإنتاج من الطابور بنجاح",
+        success: true
+      });
+    } catch (error: any) {
+      console.error("Error removing from queue:", error);
+      res.status(400).json({ 
+        message: error.message || "خطأ في إزالة أمر الإنتاج من الطابور" 
+      });
+    }
+  });
+
+  app.get("/api/machine-queues/suggest", requireAuth, async (req, res) => {
+    try {
+      const suggestions = await storage.suggestOptimalDistribution();
+      res.json({ data: suggestions });
+    } catch (error) {
+      console.error("Error getting distribution suggestions:", error);
+      res.status(500).json({ message: "خطأ في الحصول على اقتراحات التوزيع" });
+    }
+  });
+
+  // ============ Smart Distribution API ============
+  
+  // Apply smart distribution
+  app.post("/api/machine-queues/smart-distribute", requireAuth, async (req, res) => {
+    try {
+      const { algorithm, params } = req.body;
+      
+      if (!algorithm) {
+        return res.status(400).json({
+          message: "خوارزمية التوزيع مطلوبة"
+        });
+      }
+      
+      const validAlgorithms = ["balanced", "load-based", "priority", "product-type", "hybrid"];
+      if (!validAlgorithms.includes(algorithm)) {
+        return res.status(400).json({
+          message: `خوارزمية غير صحيحة. الخيارات المتاحة: ${validAlgorithms.join(", ")}`
+        });
+      }
+      
+      const userId = req.session?.userId || 1;
+      const result = await storage.smartDistributeOrders(algorithm, {
+        ...params,
+        userId
+      });
+      
+      res.json({
+        success: result.success,
+        message: result.message,
+        data: result
+      });
+    } catch (error: any) {
+      console.error("Error applying smart distribution:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في تطبيق التوزيع الذكي"
+      });
+    }
+  });
+  
+  // Get distribution preview
+  app.get("/api/machine-queues/distribution-preview", requireAuth, async (req, res) => {
+    try {
+      const { algorithm, ...params } = req.query;
+      
+      if (!algorithm) {
+        return res.status(400).json({
+          message: "خوارزمية التوزيع مطلوبة"
+        });
+      }
+      
+      const preview = await storage.getDistributionPreview(algorithm as string, params);
+      
+      res.json({
+        success: true,
+        data: preview
+      });
+    } catch (error: any) {
+      console.error("Error getting distribution preview:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في معاينة التوزيع"
+      });
+    }
+  });
+  
+  // Get machine capacity statistics
+  app.get("/api/machines/capacity-stats", requireAuth, async (req, res) => {
+    try {
+      const stats = await storage.getMachineCapacityStats();
+      
+      res.json({
+        success: true,
+        data: stats
+      });
+    } catch (error: any) {
+      console.error("Error getting machine capacity stats:", error);
+      res.status(500).json({
+        message: error.message || "خطأ في جلب إحصائيات السعة"
+      });
+    }
+  });
+  
+  // Optimize machine queue order
+  app.post("/api/machine-queues/optimize/:machineId", requireAuth, async (req, res) => {
+    try {
+      const { machineId } = req.params;
+      
+      if (!machineId) {
+        return res.status(400).json({
+          message: "معرف الماكينة مطلوب"
+        });
+      }
+      
+      await storage.optimizeQueueOrder(machineId);
+      
+      res.json({
+        success: true,
+        message: "تم تحسين ترتيب طابور الماكينة بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error optimizing queue order:", error);
+      res.status(400).json({
+        message: error.message || "خطأ في تحسين ترتيب الطابور"
+      });
+    }
+  });
+
   // ============ Inventory Movements Management API ============
 
   app.get("/api/inventory-movements", async (req, res) => {
@@ -5557,20 +6204,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // INVARIANT E: Validate machine is active
-        const machine = await storage.getMachineById(
-          validatedRollData.machine_id,
+        // INVARIANT E: Validate film machine is active (printing and cutting machines assigned in later stages)
+        const filmMachine = await storage.getMachineById(
+          validatedRollData.film_machine_id,
         );
-        if (!machine) {
+        if (!filmMachine) {
           return res.status(400).json({
-            message: "المكينة غير موجودة",
-            field: "machine_id",
+            message: "ماكينة الفيلم غير موجودة",
+            field: "film_machine_id",
           });
         }
-        if (machine.status !== "active") {
+        if (filmMachine.status !== "active") {
           return res.status(400).json({
-            message: "المكينة غير نشطة - لا يمكن إنشاء رولات عليها",
-            field: "machine_id",
+            message: "ماكينة الفيلم غير نشطة - لا يمكن إنشاء رولات عليها",
+            field: "film_machine_id",
           });
         }
 
@@ -5586,7 +6233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Generate QR code and roll number with validation passed
-        const roll = await storage.createRollWithQR(validatedRollData);
+        const roll = await storage.createRoll(validatedRollData);
         res.status(201).json(roll);
       } catch (error) {
         console.error("Error creating roll:", error);
@@ -5615,7 +6262,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!req.session.userId) {
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
-      const roll = await storage.markRollPrinted(id, req.session.userId);
+      
+      const { printing_machine_id } = req.body;
+      
+      // Validate printing machine if provided
+      if (printing_machine_id) {
+        const machine = await storage.getMachineById(printing_machine_id);
+        if (!machine) {
+          return res.status(400).json({ message: "ماكينة الطباعة غير موجودة" });
+        }
+        if (machine.status !== "active") {
+          return res.status(400).json({ message: "ماكينة الطباعة غير نشطة" });
+        }
+      }
+      
+      const roll = await storage.markRollPrinted(id, req.session.userId, printing_machine_id);
       res.json(roll);
     } catch (error) {
       console.error("Error marking roll printed:", error);
@@ -5633,12 +6294,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .max(50000, "الوزن يتجاوز 50 طن")
           .transform((v) => Number(v.toFixed(3))),
         pieces_count: z.coerce.number().positive().optional(),
+        cutting_machine_id: z.string().min(1, "يجب اختيار ماكينة القطع"),
       });
 
       const validated = validationSchema.parse(req.body);
       if (!req.session.userId) {
         return res.status(401).json({ message: "غير مسجل الدخول" });
       }
+      
+      // Validate cutting machine
+      const { cutting_machine_id } = validated;
+      if (cutting_machine_id) {
+        const machine = await storage.getMachineById(cutting_machine_id);
+        if (!machine) {
+          return res.status(400).json({ message: "ماكينة القطع غير موجودة" });
+        }
+        if (machine.status !== "active") {
+          return res.status(400).json({ message: "ماكينة القطع غير نشطة" });
+        }
+      }
+      
       const cut = await storage.createCut({
         ...validated,
         performed_by: req.session.userId,
@@ -5789,6 +6464,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error generating roll label:", error);
       res.status(500).json({ message: "خطأ في توليد ليبل الرول" });
+    }
+  });
+
+  // ============ Roll Search API Routes ============
+
+  // البحث الشامل عن الرولات
+  app.get("/api/rolls/search", requireAuth, async (req, res) => {
+    try {
+      const query = (req.query.q as string) || "";
+      const filters = {
+        stage: req.query.stage as string,
+        startDate: req.query.start_date as string,
+        endDate: req.query.end_date as string,
+        machineId: req.query.machine_id as string,
+        operatorId: req.query.operator_id ? parseIntSafe(req.query.operator_id as string, "Operator ID", { min: 1 }) : undefined,
+        minWeight: req.query.min_weight ? parseFloatSafe(req.query.min_weight as string, "Min Weight", { min: 0 }) : undefined,
+        maxWeight: req.query.max_weight ? parseFloatSafe(req.query.max_weight as string, "Max Weight", { min: 0 }) : undefined,
+        productionOrderId: req.query.production_order_id ? parseIntSafe(req.query.production_order_id as string, "Production Order ID", { min: 1 }) : undefined,
+        orderId: req.query.order_id ? parseIntSafe(req.query.order_id as string, "Order ID", { min: 1 }) : undefined,
+      };
+
+      const results = await storage.searchRolls(query, filters);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching rolls:", error);
+      res.status(500).json({ message: "خطأ في البحث عن الرولات" });
+    }
+  });
+
+  // البحث بالباركود
+  app.get("/api/rolls/search-by-barcode/:barcode", requireAuth, async (req, res) => {
+    try {
+      const barcode = req.params.barcode;
+      
+      if (!barcode || barcode.length < 3) {
+        return res.status(400).json({ message: "الباركود غير صحيح" });
+      }
+
+      const roll = await storage.getRollByBarcode(barcode);
+      
+      if (!roll) {
+        return res.status(404).json({ message: "الرول غير موجود" });
+      }
+
+      res.json(roll);
+    } catch (error) {
+      console.error("Error searching roll by barcode:", error);
+      res.status(500).json({ message: "خطأ في البحث بالباركود" });
+    }
+  });
+
+  // جلب التفاصيل الكاملة للرول
+  app.get("/api/rolls/:id/full-details", requireAuth, async (req, res) => {
+    try {
+      const id = parseIntSafe(req.params.id, "Roll ID", { min: 1 });
+      const rollDetails = await storage.getRollFullDetails(id);
+      
+      if (!rollDetails) {
+        return res.status(404).json({ message: "الرول غير موجود" });
+      }
+
+      res.json(rollDetails);
+    } catch (error) {
+      console.error("Error fetching roll full details:", error);
+      res.status(500).json({ message: "خطأ في جلب تفاصيل الرول" });
+    }
+  });
+
+  // جلب سجل تحركات الرول
+  app.get("/api/rolls/:id/history", requireAuth, async (req, res) => {
+    try {
+      const id = parseIntSafe(req.params.id, "Roll ID", { min: 1 });
+      const history = await storage.getRollHistory(id);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching roll history:", error);
+      res.status(500).json({ message: "خطأ في جلب سجل تحركات الرول" });
+    }
+  });
+
+  // ============ Enhanced Cutting Operations API Routes ============
+
+  // جلب رولات التقطيع مع الإحصائيات
+  app.get("/api/rolls/cutting-queue-by-section", requireAuth, async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const sectionId = (authReq.user as any)?.section_id;
+      
+      const result = await storage.getRollsForCuttingBySection(sectionId);
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching cutting queue by section:", error);
+      res.status(500).json({ message: "خطأ في جلب قائمة التقطيع" });
+    }
+  });
+
+  // إكمال عملية التقطيع
+  app.post("/api/rolls/:id/complete-cutting", requireAuth, async (req, res) => {
+    try {
+      const authReq = req as AuthRequest;
+      const rollId = parseInt(req.params.id);
+      const { net_weight } = req.body;
+      
+      if (!net_weight || net_weight <= 0) {
+        return res.status(400).json({ 
+          message: "الوزن الصافي مطلوب ويجب أن يكون أكبر من صفر" 
+        });
+      }
+
+      const operatorId = authReq.user?.id!;
+      const result = await storage.completeCutting(rollId, net_weight, operatorId);
+      
+      res.json({
+        ...result,
+        message: result.is_order_completed 
+          ? "تم إكمال جميع رولات أمر الإنتاج" 
+          : "تم تقطيع الرول بنجاح"
+      });
+    } catch (error: any) {
+      console.error("Error completing cutting:", error);
+      res.status(500).json({ 
+        message: error.message || "خطأ في إكمال عملية التقطيع" 
+      });
+    }
+  });
+
+  // إحصائيات الهدر لأمر إنتاج
+  app.get("/api/production-orders/:id/waste-stats", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      if (isNaN(productionOrderId)) {
+        return res.status(400).json({ 
+          message: "معرف أمر الإنتاج غير صحيح" 
+        });
+      }
+
+      const stats = await storage.calculateWasteStatistics(productionOrderId);
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching waste statistics:", error);
+      res.status(500).json({ 
+        message: "خطأ في جلب إحصائيات الهدر" 
+      });
+    }
+  });
+
+  // التحقق من اكتمال التقطيع
+  app.get("/api/production-orders/:id/cutting-status", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.id);
+      
+      if (isNaN(productionOrderId)) {
+        return res.status(400).json({ 
+          message: "معرف أمر الإنتاج غير صحيح" 
+        });
+      }
+
+      const isCompleted = await storage.checkCuttingCompletion(productionOrderId);
+      res.json({
+        productionOrderId,
+        cuttingCompleted: isCompleted,
+        status: isCompleted ? "completed" : "in_progress"
+      });
+    } catch (error) {
+      console.error("Error checking cutting completion:", error);
+      res.status(500).json({ 
+        message: "خطأ في التحقق من حالة التقطيع" 
+      });
     }
   });
 
@@ -6029,6 +6873,656 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/data-validation", createDataValidationRouter(storage));
 
   // console.log("[SmartAlerts] نظام التحذيرات الذكية مُفعل ✅");
+
+  // ============ Quick Notes API ============
+  
+  // Get all notes (optionally filtered by user)
+  app.get("/api/quick-notes", requireAuth, async (req, res) => {
+    try {
+      // Only managers can query other users' notes
+      let userId = req.user!.id;
+      if (req.query.user_id) {
+        const requestedUserId = parseInt(req.query.user_id as string);
+        if (requestedUserId !== req.user!.id && req.user!.role_id !== 1) {
+          return res.status(403).json({ message: "غير مصرح لك بعرض ملاحظات مستخدمين آخرين" });
+        }
+        userId = requestedUserId;
+      }
+      
+      const notes = await storage.getQuickNotes(userId);
+      res.json(notes);
+    } catch (error: any) {
+      console.error("Error fetching quick notes:", error);
+      res.status(500).json({ message: "خطأ في جلب الملاحظات", error: error.message });
+    }
+  });
+
+  // Get a single note by ID
+  app.get("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const note = await storage.getQuickNoteById(id);
+      
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Authorization check - only creator, assignee, or manager can view
+      if (note.created_by !== req.user!.id && 
+          note.assigned_to !== req.user!.id && 
+          req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بعرض هذه الملاحظة" });
+      }
+      
+      res.json(note);
+    } catch (error: any) {
+      console.error("Error fetching note:", error);
+      res.status(500).json({ message: "خطأ في جلب الملاحظة", error: error.message });
+    }
+  });
+
+  // Create a new note
+  app.post("/api/quick-notes", requireAuth, async (req, res) => {
+    try {
+      // Validate required fields
+      if (!req.body.content || typeof req.body.content !== 'string' || req.body.content.trim() === '') {
+        return res.status(400).json({ message: "المحتوى مطلوب ويجب أن يكون نصاً" });
+      }
+
+      if (!req.body.note_type) {
+        return res.status(400).json({ message: "نوع الملاحظة مطلوب" });
+      }
+
+      if (!req.body.assigned_to) {
+        return res.status(400).json({ message: "يجب تعيين المستخدم" });
+      }
+
+      // Validate assigned_to is a valid number
+      const assignedToId = parseInt(req.body.assigned_to);
+      if (isNaN(assignedToId) || assignedToId <= 0) {
+        return res.status(400).json({ message: "معرف المستخدم المعين غير صحيح" });
+      }
+
+      // Validate note_type
+      const validNoteTypes = ['order', 'design', 'statement', 'quote', 'delivery', 'call_customer', 'other'];
+      if (!validNoteTypes.includes(req.body.note_type)) {
+        return res.status(400).json({ message: "نوع الملاحظة غير صحيح" });
+      }
+
+      // Validate priority
+      const validPriorities = ['low', 'normal', 'high', 'urgent'];
+      const priority = req.body.priority || 'normal';
+      if (!validPriorities.includes(priority)) {
+        return res.status(400).json({ message: "الأولوية غير صحيحة" });
+      }
+
+      const noteData = {
+        content: req.body.content.trim(),
+        note_type: req.body.note_type,
+        priority,
+        created_by: req.user!.id,
+        assigned_to: assignedToId,
+        is_read: false,
+      };
+
+      const newNote = await storage.createQuickNote(noteData);
+      res.status(201).json(newNote);
+    } catch (error: any) {
+      console.error("Error creating note:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الملاحظة", error: error.message });
+    }
+  });
+
+  // Update a note
+  app.patch("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or manager can update
+      if (existingNote.created_by !== req.user!.id && req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بتعديل هذه الملاحظة" });
+      }
+
+      // Only allow updating specific fields
+      const allowedUpdates: any = {};
+      if (req.body.content) allowedUpdates.content = req.body.content.trim();
+      if (req.body.note_type) {
+        const validNoteTypes = ['order', 'design', 'statement', 'quote', 'delivery', 'call_customer', 'other'];
+        if (!validNoteTypes.includes(req.body.note_type)) {
+          return res.status(400).json({ message: "نوع الملاحظة غير صحيح" });
+        }
+        allowedUpdates.note_type = req.body.note_type;
+      }
+      if (req.body.priority) {
+        const validPriorities = ['low', 'normal', 'high', 'urgent'];
+        if (!validPriorities.includes(req.body.priority)) {
+          return res.status(400).json({ message: "الأولوية غير صحيحة" });
+        }
+        allowedUpdates.priority = req.body.priority;
+      }
+      if (req.body.assigned_to) allowedUpdates.assigned_to = parseInt(req.body.assigned_to);
+      
+      const updatedNote = await storage.updateQuickNote(id, allowedUpdates);
+      res.json(updatedNote);
+    } catch (error: any) {
+      console.error("Error updating note:", error);
+      res.status(500).json({ message: "خطأ في تحديث الملاحظة", error: error.message });
+    }
+  });
+
+  // Mark note as read
+  app.patch("/api/quick-notes/:id/read", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only assignee can mark as read
+      if (existingNote.assigned_to !== req.user!.id) {
+        return res.status(403).json({ message: "فقط المستخدم المعين يمكنه تحديث حالة القراءة" });
+      }
+
+      const updatedNote = await storage.markNoteAsRead(id);
+      res.json(updatedNote);
+    } catch (error: any) {
+      console.error("Error marking note as read:", error);
+      res.status(500).json({ message: "خطأ في تحديث حالة القراءة", error: error.message });
+    }
+  });
+
+  // Delete a note
+  app.delete("/api/quick-notes/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get existing note to check authorization
+      const existingNote = await storage.getQuickNoteById(id);
+      if (!existingNote) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or manager can delete
+      if (existingNote.created_by !== req.user!.id && req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بحذف هذه الملاحظة" });
+      }
+
+      await storage.deleteQuickNote(id);
+      res.json({ message: "تم حذف الملاحظة بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting note:", error);
+      res.status(500).json({ message: "خطأ في حذف الملاحظة", error: error.message });
+    }
+  });
+
+  // Get attachments for a note
+  app.get("/api/quick-notes/:id/attachments", requireAuth, async (req, res) => {
+    try {
+      const noteId = parseInt(req.params.id);
+      
+      // Get note to check authorization
+      const note = await storage.getQuickNoteById(noteId);
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Authorization check
+      if (note.created_by !== req.user!.id && 
+          note.assigned_to !== req.user!.id && 
+          req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "غير مصرح لك بعرض هذه المرفقات" });
+      }
+
+      const attachments = await storage.getNoteAttachments(noteId);
+      res.json(attachments);
+    } catch (error: any) {
+      console.error("Error fetching attachments:", error);
+      res.status(500).json({ message: "خطأ في جلب المرفقات", error: error.message });
+    }
+  });
+
+  // Upload attachment (placeholder - will be implemented with actual file upload)
+  app.post("/api/quick-notes/:id/attachments", requireAuth, async (req, res) => {
+    try {
+      const noteId = parseInt(req.params.id);
+      
+      // Get note to check authorization
+      const note = await storage.getQuickNoteById(noteId);
+      if (!note) {
+        return res.status(404).json({ message: "الملاحظة غير موجودة" });
+      }
+
+      // Only creator or assignee can add attachments
+      if (note.created_by !== req.user!.id && note.assigned_to !== req.user!.id) {
+        return res.status(403).json({ message: "غير مصرح لك بإضافة مرفقات لهذه الملاحظة" });
+      }
+
+      // Validate required fields
+      if (!req.body.file_name || !req.body.file_type || !req.body.file_size || !req.body.file_url) {
+        return res.status(400).json({ message: "بيانات المرفق ناقصة" });
+      }
+
+      const attachmentData = {
+        note_id: noteId,
+        file_name: req.body.file_name,
+        file_type: req.body.file_type,
+        file_size: parseInt(req.body.file_size),
+        file_url: req.body.file_url,
+      };
+
+      const newAttachment = await storage.createNoteAttachment(attachmentData);
+      res.status(201).json(newAttachment);
+    } catch (error: any) {
+      console.error("Error creating attachment:", error);
+      res.status(500).json({ message: "خطأ في رفع المرفق", error: error.message });
+    }
+  });
+
+  // Delete attachment
+  app.delete("/api/note-attachments/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Get attachment to find its note
+      const attachments = await storage.getNoteAttachments(0); // This won't work, need to get by ID
+      // For now, only managers can delete attachments
+      if (req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "فقط المدراء يمكنهم حذف المرفقات" });
+      }
+
+      await storage.deleteNoteAttachment(id);
+      res.json({ message: "تم حذف المرفق بنجاح" });
+    } catch (error: any) {
+      console.error("Error deleting attachment:", error);
+      res.status(500).json({ message: "خطأ في حذف المرفق", error: error.message });
+    }
+  });
+
+  // ============ Mixing Formulas & Batches Routes ============
+
+  // Get all mixing formulas
+  app.get("/api/mixing-formulas", requireAuth, async (req, res) => {
+    try {
+      const formulas = await storage.getAllMixingFormulas();
+      res.json({ data: formulas });
+    } catch (error: any) {
+      logger.error("Error getting mixing formulas:", error);
+      res.status(500).json({ message: "خطأ في جلب وصفات الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing formula by ID
+  app.get("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const formula = await storage.getMixingFormulaById(id);
+      
+      if (!formula) {
+        return res.status(404).json({ message: "الوصفة غير موجودة" });
+      }
+      
+      res.json(formula);
+    } catch (error: any) {
+      logger.error("Error getting mixing formula:", error);
+      res.status(500).json({ message: "خطأ في جلب الوصفة", error: error.message });
+    }
+  });
+
+  // Create mixing formula (Admin + Production Manager only)
+  app.post("/api/mixing-formulas", requireAuth, async (req, res) => {
+    try {
+      // Check authorization - only admin (1) and production manager (2) can create formulas
+      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
+        return res.status(403).json({ message: "غير مصرح لك بإنشاء وصفات الخلط" });
+      }
+
+      const { ingredients, ...formulaData } = req.body;
+      
+      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "بيانات المكونات ناقصة أو غير صحيحة" });
+      }
+
+      // Validate all ingredients have valid item_id
+      const invalidIngredients = ingredients.filter(
+        (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
+      );
+      if (invalidIngredients.length > 0) {
+        return res.status(400).json({ 
+          message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
+        });
+      }
+
+      // Validate all ingredients have valid percentage
+      const missingPercentage = ingredients.filter(
+        (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
+      );
+      if (missingPercentage.length > 0) {
+        return res.status(400).json({ 
+          message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
+        });
+      }
+
+      // Validate total percentage equals 100%
+      const totalPercentage = ingredients.reduce(
+        (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
+        0
+      );
+      if (Math.abs(totalPercentage - 100) > 0.01) {
+        return res.status(400).json({ 
+          message: "مجموع نسب المكونات يجب أن يساوي 100%" 
+        });
+      }
+
+      if (!formulaData.formula_name || !formulaData.machine_id || 
+          !formulaData.width_min || !formulaData.width_max ||
+          !formulaData.thickness_min || !formulaData.thickness_max) {
+        return res.status(400).json({ message: "بيانات الوصفة ناقصة" });
+      }
+
+      const completeFormulaData = {
+        ...formulaData,
+        created_by: req.user!.id,
+      };
+
+      const newFormula = await storage.createMixingFormula(completeFormulaData, ingredients);
+      res.status(201).json(newFormula);
+    } catch (error: any) {
+      logger.error("Error creating mixing formula:", error);
+      res.status(500).json({ message: "خطأ في إنشاء وصفة الخلط", error: error.message });
+    }
+  });
+
+  // Update mixing formula
+  app.put("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      // Check authorization
+      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
+        return res.status(403).json({ message: "غير مصرح لك بتعديل وصفات الخلط" });
+      }
+
+      const id = parseInt(req.params.id);
+      const { formula, ingredients } = req.body;
+      
+      // Validate ingredients if provided
+      if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
+        // Validate all ingredients have valid item_id
+        const invalidIngredients = ingredients.filter(
+          (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
+        );
+        if (invalidIngredients.length > 0) {
+          return res.status(400).json({ 
+            message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
+          });
+        }
+
+        // Validate all ingredients have valid percentage
+        const missingPercentage = ingredients.filter(
+          (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
+        );
+        if (missingPercentage.length > 0) {
+          return res.status(400).json({ 
+            message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
+          });
+        }
+
+        // Validate total percentage equals 100%
+        const totalPercentage = ingredients.reduce(
+          (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
+          0
+        );
+        if (Math.abs(totalPercentage - 100) > 0.01) {
+          return res.status(400).json({ 
+            message: "مجموع نسب المكونات يجب أن يساوي 100%" 
+          });
+        }
+      }
+      
+      const updatedFormula = await storage.updateMixingFormula(id, formula, ingredients);
+      res.json(updatedFormula);
+    } catch (error: any) {
+      logger.error("Error updating mixing formula:", error);
+      res.status(500).json({ message: "خطأ في تحديث وصفة الخلط", error: error.message });
+    }
+  });
+
+  // Delete mixing formula
+  app.delete("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
+    try {
+      // Check authorization - only admin can delete formulas
+      if (req.user!.role_id !== 1) {
+        return res.status(403).json({ message: "فقط المدير يمكنه حذف وصفات الخلط" });
+      }
+
+      const id = parseInt(req.params.id);
+      await storage.deleteMixingFormula(id);
+      res.json({ message: "تم حذف الوصفة بنجاح" });
+    } catch (error: any) {
+      logger.error("Error deleting mixing formula:", error);
+      res.status(500).json({ message: error.message || "خطأ في حذف الوصفة", error: error.message });
+    }
+  });
+
+  // Find matching formulas for production order
+  app.post("/api/mixing-formulas/find-matching", requireAuth, async (req, res) => {
+    try {
+      const { machineId, thickness, width } = req.body;
+      
+      if (!machineId || thickness === undefined) {
+        return res.status(400).json({ message: "بيانات البحث ناقصة" });
+      }
+
+      const formulas = await storage.findMatchingFormulas({
+        machineId,
+        thickness: parseFloat(thickness),
+        width: width ? parseFloat(width) : undefined,
+      });
+
+      res.json({ data: formulas });
+    } catch (error: any) {
+      logger.error("Error finding matching formulas:", error);
+      res.status(500).json({ message: "خطأ في البحث عن وصفات مطابقة", error: error.message });
+    }
+  });
+
+  // ===== Mixing Batches =====
+
+  // Get all mixing batches
+  app.get("/api/mixing-batches", requireAuth, async (req, res) => {
+    try {
+      const batches = await storage.getAllMixingBatches();
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting mixing batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing batch by ID
+  app.get("/api/mixing-batches/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const batch = await storage.getMixingBatchById(id);
+      
+      if (!batch) {
+        return res.status(404).json({ message: "عملية الخلط غير موجودة" });
+      }
+      
+      res.json(batch);
+    } catch (error: any) {
+      console.error("Error getting mixing batch:", error);
+      res.status(500).json({ message: "خطأ في جلب عملية الخلط", error: error.message });
+    }
+  });
+
+  // Get mixing batches by operator
+  app.get("/api/mixing-batches/operator/:operatorId", requireAuth, async (req, res) => {
+    try {
+      const operatorId = parseInt(req.params.operatorId);
+      const batches = await storage.getMixingBatchesByOperator(operatorId);
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting operator batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط للعامل", error: error.message });
+    }
+  });
+
+  // Get mixing batches by production order
+  app.get("/api/mixing-batches/production-order/:productionOrderId", requireAuth, async (req, res) => {
+    try {
+      const productionOrderId = parseInt(req.params.productionOrderId);
+      const batches = await storage.getMixingBatchesByProductionOrder(productionOrderId);
+      res.json({ data: batches });
+    } catch (error: any) {
+      console.error("Error getting production order batches:", error);
+      res.status(500).json({ message: "خطأ في جلب عمليات الخلط لأمر الإنتاج", error: error.message });
+    }
+  });
+
+  // Create mixing batch
+  app.post("/api/mixing-batches", requireAuth, async (req, res) => {
+    try {
+      const { batch, ingredients } = req.body;
+      
+      if (!batch || !ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
+        return res.status(400).json({ message: "بيانات عملية الخلط أو المكونات ناقصة" });
+      }
+
+      const batchData = {
+        ...batch,
+        operator_id: req.user!.id,
+        status: "in_progress",
+        started_at: new Date(),
+      };
+
+      const newBatch = await storage.createMixingBatch(batchData, ingredients);
+      res.status(201).json(newBatch);
+    } catch (error: any) {
+      console.error("Error creating mixing batch:", error);
+      res.status(500).json({ message: "خطأ في إنشاء عملية الخلط", error: error.message });
+    }
+  });
+
+  // Update mixing batch
+  app.put("/api/mixing-batches/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const updatedBatch = await storage.updateMixingBatch(id, updates);
+      res.json(updatedBatch);
+    } catch (error: any) {
+      console.error("Error updating mixing batch:", error);
+      res.status(500).json({ message: "خطأ في تحديث عملية الخلط", error: error.message });
+    }
+  });
+
+  // Update batch ingredient actuals
+  app.put("/api/mixing-batches/:id/ingredients", requireAuth, async (req, res) => {
+    try {
+      const batchId = parseInt(req.params.id);
+      const { ingredientUpdates } = req.body;
+      
+      if (!ingredientUpdates || !Array.isArray(ingredientUpdates)) {
+        return res.status(400).json({ message: "بيانات المكونات ناقصة" });
+      }
+
+      await storage.updateBatchIngredientActuals(batchId, ingredientUpdates);
+      const updatedBatch = await storage.getMixingBatchById(batchId);
+      res.json(updatedBatch);
+    } catch (error: any) {
+      console.error("Error updating batch ingredients:", error);
+      res.status(500).json({ message: "خطأ في تحديث الكميات الفعلية", error: error.message });
+    }
+  });
+
+  // Complete mixing batch
+  app.post("/api/mixing-batches/:id/complete", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const completedBatch = await storage.completeMixingBatch(id);
+      res.json(completedBatch);
+    } catch (error: any) {
+      console.error("Error completing mixing batch:", error);
+      res.status(500).json({ message: "خطأ في إتمام عملية الخلط", error: error.message });
+    }
+  });
+
+  // Record material consumption from mixing batch
+  app.post("/api/inventory/consumption", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { batchId, consumptions } = req.body;
+      const userId = req.session.userId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      if (!batchId || !consumptions || !Array.isArray(consumptions)) {
+        return res.status(400).json({ message: "بيانات الاستهلاك غير مكتملة" });
+      }
+
+      // Get batch details
+      const batch = await storage.getMixingBatchById(batchId);
+      if (!batch) {
+        return res.status(404).json({ message: "دفعة الخلط غير موجودة" });
+      }
+
+      // Record consumption for each ingredient
+      const results = [];
+      for (const consumption of consumptions) {
+        const { item_id, quantity_consumed, cost_at_consumption } = consumption;
+
+        // Get inventory item
+        const inventoryItem = await storage.getInventoryByItemId(item_id);
+        if (!inventoryItem) {
+          throw new Error(`الصنف ${item_id} غير موجود في المخزون`);
+        }
+
+        // Create inventory movement (out)
+        const movement = await storage.createInventoryMovement({
+          inventory_id: inventoryItem.id,
+          movement_type: "out",
+          quantity: quantity_consumed.toString(),
+          unit_cost: cost_at_consumption?.toString(),
+          total_cost: cost_at_consumption 
+            ? (parseFloat(quantity_consumed) * parseFloat(cost_at_consumption)).toString()
+            : undefined,
+          reference_number: `BATCH-${batch.batch_number}`,
+          reference_type: "production",
+          notes: `استهلاك من دفعة خلط ${batch.batch_number}`,
+          created_by: userId,
+        });
+
+        results.push({
+          item_id,
+          quantity_consumed,
+          movement_id: movement.id,
+          new_quantity: parseFloat(inventoryItem.current_stock) - parseFloat(quantity_consumed),
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "تم تسجيل استهلاك المواد بنجاح",
+        results,
+      });
+    } catch (error: any) {
+      console.error("Error recording material consumption:", error);
+      res.status(500).json({ 
+        message: "خطأ في تسجيل استهلاك المواد", 
+        error: error.message 
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

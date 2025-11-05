@@ -8,9 +8,11 @@ import {
   date,
   timestamp,
   json,
+  jsonb,
   text,
   decimal,
   check,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -104,11 +106,22 @@ export const sections = pgTable("sections", {
   description: text("description"),
 });
 
-// 🧑‍💼 جدول المستخدمين
+// Session storage table for Replit Auth
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// 🧑‍💼 جدول المستخدمين (supports both username/password and Replit Auth)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: varchar("username", { length: 50 }).notNull().unique(),
-  password: varchar("password", { length: 100 }).notNull(),
+  username: varchar("username", { length: 50 }).unique(),
+  password: varchar("password", { length: 100 }),
   display_name: varchar("display_name", { length: 100 }),
   display_name_ar: varchar("display_name_ar", { length: 100 }),
   full_name: varchar("full_name", { length: 200 }),
@@ -118,6 +131,13 @@ export const users = pgTable("users", {
   section_id: integer("section_id"),
   status: varchar("status", { length: 20 }).default("active"), // active / suspended / deleted
   created_at: timestamp("created_at").defaultNow(),
+  
+  // Replit Auth fields (from integration blueprint)
+  replit_user_id: varchar("replit_user_id", { length: 255 }).unique(), // Replit user ID from OpenID Connect
+  first_name: varchar("first_name", { length: 100 }),
+  last_name: varchar("last_name", { length: 100 }),
+  profile_image_url: varchar("profile_image_url", { length: 500 }),
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 // 📋 جدول طلبات المستخدمين
@@ -233,6 +253,23 @@ export const machines = pgTable(
       { onDelete: "restrict" },
     ), // ON DELETE RESTRICT
     status: varchar("status", { length: 20 }).notNull().default("active"), // ENUM: active / maintenance / down
+    
+    // قدرة الإنتاج بالكيلوجرام في الساعة حسب الحجم
+    capacity_small_kg_per_hour: decimal("capacity_small_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الصغير
+    capacity_medium_kg_per_hour: decimal("capacity_medium_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الوسط
+    capacity_large_kg_per_hour: decimal("capacity_large_kg_per_hour", {
+      precision: 8,
+      scale: 2,
+    }), // قدرة الإنتاج للحجم الكبير
+    
+    // نوع السكرو لمكائن الفيلم (A أو ABA فقط)
+    screw_type: varchar("screw_type", { length: 10 }).default("A"), // 'A' للسكرو الواحد، 'ABA' لنظام السكروين
   },
   (table) => ({
     // Check constraints for machine integrity
@@ -249,6 +286,10 @@ export const machines = pgTable(
       sql`${table.status} IN ('active', 'maintenance', 'down')`,
     ),
     nameNotEmpty: check("name_not_empty", sql`LENGTH(TRIM(${table.name})) > 0`),
+    screwTypeValid: check(
+      "screw_type_valid",
+      sql`${table.screw_type} IS NULL OR ${table.screw_type} IN ('A', 'ABA')`,
+    ), // نوع السكرو يكون 'A' أو 'ABA' فقط
   }),
 );
 
@@ -361,6 +402,22 @@ export const production_orders = pgTable(
       .notNull()
       .default("0"), // نسبة إكمال التقطيع
 
+    // NEW: حقول تخصيص الماكينة والعامل
+    assigned_machine_id: varchar("assigned_machine_id", { length: 20 })
+      .references(() => machines.id, { onDelete: "set null" }), // تخصيص ماكينة الفيلم
+    assigned_operator_id: integer("assigned_operator_id")
+      .references(() => users.id, { onDelete: "set null" }), // تخصيص العامل المسؤول
+    
+    // NEW: حقول أوقات الإنتاج
+    production_start_time: timestamp("production_start_time"), // وقت بداية الإنتاج
+    production_end_time: timestamp("production_end_time"), // وقت نهاية الإنتاج
+    production_time_minutes: integer("production_time_minutes"), // المدة الإجمالية بالدقائق
+    
+    // NEW: علامات اكتمال المراحل
+    film_completed: boolean("film_completed").default(false), // علامة اكتمال مرحلة الفيلم
+    printing_completed: boolean("printing_completed").default(false), // علامة اكتمال الطباعة
+    is_final_roll_created: boolean("is_final_roll_created").default(false), // علامة إنشاء آخر رول
+
     status: varchar("status", { length: 30 }).notNull().default("pending"),
     created_at: timestamp("created_at").notNull().defaultNow(),
   },
@@ -449,9 +506,17 @@ export const rolls = pgTable(
     performed_by: integer("performed_by").references(() => users.id, {
       onDelete: "set null",
     }), // Legacy field, ON DELETE SET NULL
-    machine_id: varchar("machine_id", { length: 20 })
+    film_machine_id: varchar("film_machine_id", { length: 20 })
       .notNull()
-      .references(() => machines.id, { onDelete: "restrict" }), // ON DELETE RESTRICT, machine must be 'active'
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for film production
+    printing_machine_id: varchar("printing_machine_id", { length: 20 })
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for printing (assigned in printing stage)
+    cutting_machine_id: varchar("cutting_machine_id", { length: 20 })
+      .references(() => machines.id, { onDelete: "restrict" }), // Machine used for cutting (assigned in cutting stage)
+    machine_id: varchar("machine_id", { length: 20 }).references(
+      () => machines.id,
+      { onDelete: "restrict" },
+    ), // Legacy field for backward compatibility
     employee_id: integer("employee_id").references(() => users.id, {
       onDelete: "set null",
     }), // Legacy field, ON DELETE SET NULL
@@ -464,6 +529,12 @@ export const rolls = pgTable(
     cut_by: integer("cut_by").references(() => users.id, {
       onDelete: "set null",
     }), // ON DELETE SET NULL - user who cut the roll
+    
+    // NEW: حقول إضافية لتتبع الإنتاج
+    is_last_roll: boolean("is_last_roll").default(false), // لتحديد آخر رول في أمر الإنتاج
+    production_time_minutes: integer("production_time_minutes"), // وقت إنتاج الرول بالدقائق
+    roll_created_at: timestamp("roll_created_at").defaultNow(), // وقت إنشاء الرول بدقة
+    
     qr_code: varchar("qr_code", { length: 255 }), // Legacy field
     created_at: timestamp("created_at").notNull().defaultNow(),
     completed_at: timestamp("completed_at"), // Set when stage = 'done'
@@ -533,6 +604,23 @@ export const warehouse_receipts = pgTable("warehouse_receipts", {
     scale: 3,
   }).notNull(),
   received_by: integer("received_by").references(() => users.id),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+// 🏭 جدول طوابير الماكينات - Machine Queues for Production Scheduling
+export const machine_queues = pgTable("machine_queues", {
+  id: serial("id").primaryKey(),
+  machine_id: varchar("machine_id", { length: 20 })
+    .notNull()
+    .references(() => machines.id, { onDelete: "cascade" }), // مرجع للماكينة
+  production_order_id: integer("production_order_id")
+    .notNull()
+    .references(() => production_orders.id, { onDelete: "cascade" }), // مرجع لأمر الإنتاج
+  queue_position: integer("queue_position").notNull(), // الترتيب في الطابور
+  estimated_start_time: timestamp("estimated_start_time"), // الوقت التقديري للبدء
+  assigned_at: timestamp("assigned_at").defaultNow(), // وقت التخصيص
+  assigned_by: integer("assigned_by")
+    .references(() => users.id, { onDelete: "set null" }), // المستخدم الذي خصص
   created_at: timestamp("created_at").defaultNow(),
 });
 
@@ -1360,6 +1448,21 @@ export const rollsRelations = relations(rolls, ({ one, many }) => ({
     fields: [rolls.production_order_id],
     references: [production_orders.id],
   }),
+  filmMachine: one(machines, {
+    fields: [rolls.film_machine_id],
+    references: [machines.id],
+    relationName: "film_machine",
+  }),
+  printingMachine: one(machines, {
+    fields: [rolls.printing_machine_id],
+    references: [machines.id],
+    relationName: "printing_machine",
+  }),
+  cuttingMachine: one(machines, {
+    fields: [rolls.cutting_machine_id],
+    references: [machines.id],
+    relationName: "cutting_machine",
+  }),
   machine: one(machines, {
     fields: [rolls.machine_id],
     references: [machines.id],
@@ -1368,6 +1471,21 @@ export const rollsRelations = relations(rolls, ({ one, many }) => ({
   performedBy: one(users, {
     fields: [rolls.performed_by],
     references: [users.id],
+  }),
+  createdBy: one(users, {
+    fields: [rolls.created_by],
+    references: [users.id],
+    relationName: "created_by_user",
+  }),
+  printedBy: one(users, {
+    fields: [rolls.printed_by],
+    references: [users.id],
+    relationName: "printed_by_user",
+  }),
+  cutBy: one(users, {
+    fields: [rolls.cut_by],
+    references: [users.id],
+    relationName: "cut_by_user",
   }),
   waste: many(waste),
   qualityChecks: many(quality_checks),
@@ -1542,8 +1660,11 @@ export const insertRollSchema = createInsertSchema(rolls)
   .extend({
     // INVARIANT B: Enforce production order constraints
     production_order_id: z.number().int().positive("معرف أمر الإنتاج مطلوب"),
-    // INVARIANT E: Machine must be valid and active
-    machine_id: z.string().min(1, "معرف المكينة مطلوب"),
+    // INVARIANT E: Machines must be valid and active
+    film_machine_id: z.string().min(1, "معرف ماكينة الفيلم مطلوب"),
+    // Printing and cutting machines are optional at creation, assigned in later stages
+    printing_machine_id: z.string().optional(),
+    cutting_machine_id: z.string().optional(),
     // Weight validation with business rules
     weight_kg: z
       .union([z.string(), z.number()])
@@ -1815,6 +1936,13 @@ export const insertProductionOrderSchema = createInsertSchema(production_orders)
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = {
+  id: string;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+};
 export type SparePart = typeof spare_parts.$inferSelect;
 export type InsertSparePart = typeof spare_parts.$inferInsert;
 // Legacy order types - will be phased out
@@ -1897,6 +2025,13 @@ export const insertUserSettingSchema = createInsertSchema(user_settings).omit({
   updated_at: true,
 });
 
+// Insert schema for machine_queues
+export const insertMachineQueueSchema = createInsertSchema(machine_queues).omit({
+  id: true,
+  created_at: true,
+  assigned_at: true,
+});
+
 export type CustomerProduct = typeof customer_products.$inferSelect & {
   customer_name?: string;
   customer_name_ar?: string;
@@ -1907,6 +2042,10 @@ export type SystemSetting = typeof system_settings.$inferSelect;
 export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
 export type UserSetting = typeof user_settings.$inferSelect;
 export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
+
+// Machine Queue types
+export type MachineQueue = typeof machine_queues.$inferSelect;
+export type InsertMachineQueue = z.infer<typeof insertMachineQueueSchema>;
 
 export const insertCustomerProductSchema = createInsertSchema(customer_products)
   .omit({
@@ -2567,6 +2706,305 @@ export const insertSystemPerformanceMetricSchema = createInsertSchema(
 export const insertCorrectiveActionSchema =
   createInsertSchema(corrective_actions);
 export const insertSystemAnalyticsSchema = createInsertSchema(system_analytics);
+
+// 📝 جدول الملاحظات السريعة
+export const quick_notes = pgTable("quick_notes", {
+  id: serial("id").primaryKey(),
+  content: text("content").notNull(),
+  note_type: varchar("note_type", { length: 50 }).notNull(), // order, design, statement, quote, delivery, call_customer, other
+  priority: varchar("priority", { length: 20 }).default("normal"), // low, normal, high, urgent
+  created_by: integer("created_by")
+    .notNull()
+    .references(() => users.id),
+  assigned_to: integer("assigned_to")
+    .notNull()
+    .references(() => users.id),
+  is_read: boolean("is_read").default(false),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+});
+
+// 📎 جدول مرفقات الملاحظات
+export const note_attachments = pgTable("note_attachments", {
+  id: serial("id").primaryKey(),
+  note_id: integer("note_id")
+    .notNull()
+    .references(() => quick_notes.id, { onDelete: "cascade" }),
+  file_name: varchar("file_name", { length: 255 }).notNull(),
+  file_type: varchar("file_type", { length: 100 }).notNull(),
+  file_size: integer("file_size").notNull(),
+  file_url: text("file_url").notNull(),
+  uploaded_at: timestamp("uploaded_at").defaultNow(),
+});
+
+// علاقات الملاحظات
+export const quickNotesRelations = relations(quick_notes, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [quick_notes.created_by],
+    references: [users.id],
+    relationName: "note_creator",
+  }),
+  assignee: one(users, {
+    fields: [quick_notes.assigned_to],
+    references: [users.id],
+    relationName: "note_assignee",
+  }),
+  attachments: many(note_attachments),
+}));
+
+export const noteAttachmentsRelations = relations(note_attachments, ({ one }) => ({
+  note: one(quick_notes, {
+    fields: [note_attachments.note_id],
+    references: [quick_notes.id],
+  }),
+}));
+
+// أنواع البيانات للملاحظات
+export type QuickNote = typeof quick_notes.$inferSelect;
+export type InsertQuickNote = typeof quick_notes.$inferInsert;
+export type NoteAttachment = typeof note_attachments.$inferSelect;
+export type InsertNoteAttachment = typeof note_attachments.$inferInsert;
+
+// مخططات التحقق من البيانات للملاحظات
+export const insertQuickNoteSchema = createInsertSchema(quick_notes).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+export const insertNoteAttachmentSchema = createInsertSchema(note_attachments).omit({
+  id: true,
+  uploaded_at: true,
+});
+
+// =================================================================
+// 🧪 MIXING FORMULAS MANAGEMENT SYSTEM
+// =================================================================
+
+// 📋 جدول وصفات الخلط
+export const mixing_formulas = pgTable("mixing_formulas", {
+  id: serial("id").primaryKey(),
+  formula_name: varchar("formula_name", { length: 255 }).notNull(), // اسم الوصفة
+  machine_id: varchar("machine_id", { length: 20 })
+    .notNull()
+    .references(() => machines.id), // ماكينة الفيلم فقط (type='extruder')
+  
+  // نطاق المقاس (بالسم)
+  width_min: decimal("width_min", { precision: 6, scale: 2 }).notNull(), // الحد الأدنى للعرض (سم)
+  width_max: decimal("width_max", { precision: 6, scale: 2 }).notNull(), // الحد الأقصى للعرض (سم)
+  
+  // نطاق السماكة للطبقة الواحدة (بالمايكرون)
+  thickness_min: decimal("thickness_min", { precision: 5, scale: 2 }).notNull(), // الحد الأدنى للسماكة (ميكرون)
+  thickness_max: decimal("thickness_max", { precision: 5, scale: 2 }).notNull(), // الحد الأقصى للسماكة (ميكرون)
+  
+  // ألوان الماستر باتش (قائمة متعددة الاختيار من items)
+  master_batch_colors: varchar("master_batch_colors", { length: 20 }).array(), // مثال: ['CLEAR', 'WHITE', 'BLACK']
+  
+  // تحديد السكرو للماكينات ذات السكروين
+  screw_assignment: varchar("screw_assignment", { length: 10 }).default("A"), // A أو B (للماكينات ذات السكروين)
+  
+  is_active: boolean("is_active").default(true).notNull(), // هل الوصفة نشطة؟
+  notes: text("notes"), // ملاحظات
+  created_by: integer("created_by")
+    .notNull()
+    .references(() => users.id),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  thicknessRangeValid: check(
+    "thickness_range_valid",
+    sql`${table.thickness_min} <= ${table.thickness_max}`
+  ),
+  widthRangeValid: check(
+    "width_range_valid",
+    sql`${table.width_min} <= ${table.width_max}`
+  ),
+  screwAssignmentValid: check(
+    "screw_assignment_valid",
+    sql`${table.screw_assignment} IN ('A', 'B')`
+  ),
+}));
+
+// 🧪 جدول مكونات الوصفة (مواد خام فقط من جدول items)
+export const formula_ingredients = pgTable("formula_ingredients", {
+  id: serial("id").primaryKey(),
+  formula_id: integer("formula_id")
+    .notNull()
+    .references(() => mixing_formulas.id, { onDelete: "cascade" }),
+  item_id: varchar("item_id", { length: 20 })
+    .notNull()
+    .references(() => items.id), // المادة الخام من جدول الأصناف
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(), // النسبة المئوية
+  notes: text("notes"), // ملاحظات
+}, (table) => ({
+  percentageValid: check(
+    "percentage_valid",
+    sql`${table.percentage} > 0 AND ${table.percentage} <= 100`
+  ),
+}));
+
+// 📦 جدول عمليات الخلط الفعلية
+export const mixing_batches = pgTable("mixing_batches", {
+  id: serial("id").primaryKey(),
+  batch_number: varchar("batch_number", { length: 50 }).notNull().unique(), // رقم الخلطة
+  formula_id: integer("formula_id")
+    .notNull()
+    .references(() => mixing_formulas.id),
+  production_order_id: integer("production_order_id")
+    .references(() => production_orders.id),
+  roll_id: integer("roll_id")
+    .references(() => rolls.id), // الرول المرتبط بالخلطة
+  machine_id: varchar("machine_id", { length: 20 })
+    .notNull()
+    .references(() => machines.id),
+  operator_id: integer("operator_id")
+    .notNull()
+    .references(() => users.id),
+  total_weight_kg: decimal("total_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن الكلي للخلطة
+  status: varchar("status", { length: 30 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
+  started_at: timestamp("started_at"),
+  completed_at: timestamp("completed_at"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  totalWeightPositive: check(
+    "total_weight_positive",
+    sql`${table.total_weight_kg} > 0`
+  ),
+}));
+
+// 🧬 جدول المكونات الفعلية للخلطة
+export const batch_ingredients = pgTable("batch_ingredients", {
+  id: serial("id").primaryKey(),
+  batch_id: integer("batch_id")
+    .notNull()
+    .references(() => mixing_batches.id, { onDelete: "cascade" }),
+  item_id: varchar("item_id", { length: 20 })
+    .notNull()
+    .references(() => items.id), // المادة الخام من جدول الأصناف
+  planned_weight_kg: decimal("planned_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن المخطط
+  actual_weight_kg: decimal("actual_weight_kg", { precision: 10, scale: 2 }), // الوزن الفعلي
+  variance_kg: decimal("variance_kg", { precision: 10, scale: 2 }), // الفرق (فعلي - مخطط)
+  notes: text("notes"),
+}, (table) => ({
+  plannedWeightPositive: check(
+    "planned_weight_positive",
+    sql`${table.planned_weight_kg} > 0`
+  ),
+  actualWeightPositive: check(
+    "actual_weight_positive",
+    sql`${table.actual_weight_kg} IS NULL OR ${table.actual_weight_kg} > 0`
+  ),
+}));
+
+// علاقات نظام الخلط
+export const mixingFormulasRelations = relations(mixing_formulas, ({ one, many }) => ({
+  machine: one(machines, {
+    fields: [mixing_formulas.machine_id],
+    references: [machines.id],
+  }),
+  creator: one(users, {
+    fields: [mixing_formulas.created_by],
+    references: [users.id],
+  }),
+  ingredients: many(formula_ingredients),
+  batches: many(mixing_batches),
+}));
+
+export const formulaIngredientsRelations = relations(formula_ingredients, ({ one }) => ({
+  formula: one(mixing_formulas, {
+    fields: [formula_ingredients.formula_id],
+    references: [mixing_formulas.id],
+  }),
+  item: one(items, {
+    fields: [formula_ingredients.item_id],
+    references: [items.id],
+  }),
+}));
+
+export const mixingBatchesRelations = relations(mixing_batches, ({ one, many }) => ({
+  formula: one(mixing_formulas, {
+    fields: [mixing_batches.formula_id],
+    references: [mixing_formulas.id],
+  }),
+  productionOrder: one(production_orders, {
+    fields: [mixing_batches.production_order_id],
+    references: [production_orders.id],
+  }),
+  roll: one(rolls, {
+    fields: [mixing_batches.roll_id],
+    references: [rolls.id],
+  }),
+  machine: one(machines, {
+    fields: [mixing_batches.machine_id],
+    references: [machines.id],
+  }),
+  operator: one(users, {
+    fields: [mixing_batches.operator_id],
+    references: [users.id],
+  }),
+  ingredients: many(batch_ingredients),
+}));
+
+export const batchIngredientsRelations = relations(batch_ingredients, ({ one }) => ({
+  batch: one(mixing_batches, {
+    fields: [batch_ingredients.batch_id],
+    references: [mixing_batches.id],
+  }),
+  item: one(items, {
+    fields: [batch_ingredients.item_id],
+    references: [items.id],
+  }),
+}));
+
+// أنواع البيانات
+export type MixingFormula = typeof mixing_formulas.$inferSelect;
+export type InsertMixingFormula = typeof mixing_formulas.$inferInsert;
+export type FormulaIngredient = typeof formula_ingredients.$inferSelect;
+export type InsertFormulaIngredient = typeof formula_ingredients.$inferInsert;
+export type MixingBatch = typeof mixing_batches.$inferSelect;
+export type InsertMixingBatch = typeof mixing_batches.$inferInsert;
+export type BatchIngredient = typeof batch_ingredients.$inferSelect;
+export type InsertBatchIngredient = typeof batch_ingredients.$inferInsert;
+
+// مخططات التحقق من البيانات
+export const insertMixingFormulaSchema = createInsertSchema(mixing_formulas).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+}).extend({
+  width_min: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأدنى يجب أن يكون أكبر من صفر"),
+  width_max: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأقصى يجب أن يكون أكبر من صفر"),
+  thickness_min: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة الدنيا يجب أن تكون أكبر من صفر"),
+  thickness_max: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة القصوى يجب أن تكون أكبر من صفر"),
+  master_batch_colors: z.array(z.string()).optional(), // قائمة ألوان الماستر باتش
+  screw_assignment: z.enum(["A", "B"]).default("A"),
+});
+
+export const insertFormulaIngredientSchema = createInsertSchema(formula_ingredients).omit({
+  id: true,
+}).extend({
+  percentage: z.string().refine(
+    (val) => {
+      const num = parseFloatSafe(val);
+      return num > 0 && num <= 100;
+    },
+    "النسبة يجب أن تكون بين 0 و 100"
+  ),
+});
+
+export const insertMixingBatchSchema = createInsertSchema(mixing_batches).omit({
+  id: true,
+  created_at: true,
+}).extend({
+  total_weight_kg: z.string().refine((val) => parseFloatSafe(val) > 0, "الوزن الكلي يجب أن يكون أكبر من صفر"),
+});
+
+export const insertBatchIngredientSchema = createInsertSchema(batch_ingredients).omit({
+  id: true,
+}).extend({
+  planned_weight_kg: z.string().refine((val) => parseFloatSafe(val) > 0, "الوزن المخطط يجب أن يكون أكبر من صفر"),
+  actual_weight_kg: z.string().optional(),
+});
 
 // Sanitized user type that excludes sensitive fields like password
 export type SafeUser = Omit<User, "password">;

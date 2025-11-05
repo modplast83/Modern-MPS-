@@ -15,6 +15,8 @@ import GroupedPrintingQueue from "./GroupedPrintingQueue";
 import GroupedCuttingQueue from "./GroupedCuttingQueue";
 import HierarchicalOrdersView from "./HierarchicalOrdersView";
 import ProductionStageStats from "./ProductionStageStats";
+import PrintingOperatorDashboard from "../../pages/PrintingOperatorDashboard";
+import CuttingOperatorDashboard from "../../pages/CuttingOperatorDashboard";
 
 interface ProductionTabsProps {
   onCreateRoll: (productionOrderId?: number) => void;
@@ -74,7 +76,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
 
     // Get section information to match with production stages
     const userSection = sections.find(
-      (section) => section.id === String(userSectionId),
+      (section) => Number(section.id) === userSectionId || section.id === String(userSectionId),
     );
     const sectionName = userSection?.name?.toLowerCase();
 
@@ -145,32 +147,32 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   }
 
   return (
-    <Card className="mb-6">
+    <Card className="border-2 shadow-md">
       <Tabs value={activeStage} onValueChange={setActiveStage}>
-        <div className="border-b border-gray-200">
-          <div className="flex justify-between items-center px-4 py-2 bg-gray-50">
-            <h3 className="text-lg font-semibold text-gray-800">
-              طوابير الإنتاج
-            </h3>
+        <CardHeader className="p-3 md:p-4 border-b">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-xl md:text-2xl">
+              إدارة الإنتاج
+            </CardTitle>
             <Button
               variant="outline"
-              size="sm"
+              size="default"
               onClick={refreshProductionData}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-2"
               data-testid="button-refresh-production"
             >
-              <RefreshCw className="h-4 w-4" />
-              تحديث
+              <RefreshCw className="h-5 w-5" />
+              <span className="hidden sm:inline">تحديث</span>
             </Button>
           </div>
           <TabsList
-            className={`grid w-full ${
+            className={`grid w-full mt-3 ${
               visibleStages.length === 1
                 ? "grid-cols-1"
                 : visibleStages.length === 2
                   ? "grid-cols-2"
                   : "grid-cols-3"
-            } bg-transparent p-0`}
+            } bg-muted p-1`}
           >
             {visibleStages.map((stage) => {
               const Icon = stage.icon;
@@ -186,13 +188,14 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                 <TabsTrigger
                   key={stage.id}
                   value={stage.id}
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary py-4 px-2 text-sm font-medium rounded-none flex items-center gap-2"
+                  className="py-3 md:py-4 text-base md:text-lg font-semibold flex items-center justify-center gap-2"
                   data-testid={`tab-${stage.key}`}
                 >
-                  <Icon className="h-4 w-4" />
-                  {stage.name_ar}
+                  <Icon className="h-5 w-5 md:h-6 md:w-6" />
+                  <span className="hidden sm:inline">{stage.name_ar}</span>
+                  <span className="sm:hidden">{stage.name_ar.split(' ')[1]}</span>
                   {queueCount > 0 && (
-                    <Badge variant="secondary" className="ml-1 text-xs">
+                    <Badge variant="secondary" className="text-xs md:text-sm">
                       {queueCount}
                     </Badge>
                   )}
@@ -200,15 +203,12 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               );
             })}
           </TabsList>
-        </div>
+        </CardHeader>
 
         {/* Film Stage - Hierarchical Orders View */}
         {visibleStages.some((stage) => stage.key === "film") && (
           <TabsContent value="film" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
-                طلبات الإنتاج - مرحلة الفيلم
-              </CardTitle>
+            <CardContent className="p-2 md:p-4">
               <ProductionStageStats stage="film" data={hierarchicalOrders} />
               <HierarchicalOrdersView
                 stage="film"
@@ -221,26 +221,56 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         {/* Printing Stage - Rolls Ready for Printing */}
         {visibleStages.some((stage) => stage.key === "printing") && (
           <TabsContent value="printing" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
-                قائمة انتظار الطباعة
-              </CardTitle>
-              <ProductionStageStats stage="printing" data={printingQueue} />
-              <GroupedPrintingQueue items={printingQueue} />
-            </CardContent>
+            {/* Check if user is specifically in printing section */}
+            {(() => {
+              const userSection = sections.find(
+                (section) => section.id === String(currentUser?.section_id)
+              );
+              const isPrintingOperator = 
+                userSection?.name?.toLowerCase().includes("print") || 
+                userSection?.name?.toLowerCase().includes("طباعة");
+              
+              // Show dedicated dashboard for printing operators
+              if (isPrintingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
+                return <PrintingOperatorDashboard />;
+              }
+              
+              // Show standard view for managers
+              return (
+                <CardContent className="p-2 md:p-4">
+                  <ProductionStageStats stage="printing" data={printingQueue} />
+                  <GroupedPrintingQueue items={printingQueue} />
+                </CardContent>
+              );
+            })()}
           </TabsContent>
         )}
 
         {/* Cutting Stage - Printed Rolls Ready for Cutting */}
         {visibleStages.some((stage) => stage.key === "cutting") && (
           <TabsContent value="cutting" className="mt-0">
-            <CardContent className="p-6">
-              <CardTitle className="text-lg mb-4">
-                قائمة انتظار التقطيع
-              </CardTitle>
-              <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
-              <GroupedCuttingQueue items={groupedCuttingQueue} />
-            </CardContent>
+            {/* Check if user is specifically in cutting section */}
+            {(() => {
+              const userSection = sections.find(
+                (section) => section.id === String(currentUser?.section_id)
+              );
+              const isCuttingOperator = 
+                userSection?.name?.toLowerCase().includes("cut") || 
+                userSection?.name?.toLowerCase().includes("تقطيع");
+              
+              // Show dedicated dashboard for cutting operators
+              if (isCuttingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
+                return <CuttingOperatorDashboard />;
+              }
+              
+              // Show standard view for managers
+              return (
+                <CardContent className="p-2 md:p-4">
+                  <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
+                  <GroupedCuttingQueue items={groupedCuttingQueue} />
+                </CardContent>
+              );
+            })()}
           </TabsContent>
         )}
       </Tabs>

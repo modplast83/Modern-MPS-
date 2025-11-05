@@ -7,7 +7,14 @@ interface RollLabelPrintProps {
     roll_seq: number;
     weight_kg: number;
     machine_id?: string;
+    film_machine_id?: string;
+    printing_machine_id?: string;
+    cutting_machine_id?: string;
+    film_machine_name?: string;
+    printing_machine_name?: string;
+    cutting_machine_name?: string;
     qr_code_text?: string;
+    qr_png_base64?: string;
     created_at?: string;
     created_by_name?: string;
     printed_by_name?: string;
@@ -22,6 +29,9 @@ interface RollLabelPrintProps {
     item_name?: string;
     item_name_ar?: string;
     size_caption?: string;
+    color?: string;
+    raw_material?: string;
+    punching?: string;
   };
   order?: {
     order_number: string;
@@ -31,19 +41,6 @@ interface RollLabelPrintProps {
 }
 
 export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintProps) {
-  const getStatusLabel = (status?: string) => {
-    switch (status) {
-      case "created":
-        return "تم الإنشاء";
-      case "printed":
-        return "تم الطباعة";
-      case "cut":
-        return "تم التقطيع";
-      default:
-        return status || "غير محدد";
-    }
-  };
-
   const printContent = `
     <html dir="rtl">
       <head>
@@ -51,245 +48,263 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
         <title>ليبل رول - ${roll.roll_number}</title>
         <style>
           @page {
-            size: 10cm 7cm;
+            size: 4in 6in;
             margin: 0;
           }
           
           body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Arial', 'Segoe UI', sans-serif;
             direction: rtl;
             margin: 0;
-            padding: 10mm;
-            font-size: 10pt;
-            line-height: 1.3;
+            padding: 0;
+            width: 4in;
+            height: 6in;
+            font-size: 9pt;
             color: #000;
+            background: white;
           }
           
           .label-container {
-            border: 2px solid #000;
-            padding: 5mm;
+            width: 100%;
             height: 100%;
+            padding: 4mm;
             box-sizing: border-box;
+            border: 2px solid #000;
+            display: flex;
+            flex-direction: column;
           }
           
           .header {
             text-align: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 3mm;
-            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+            margin-bottom: 2mm;
           }
           
-          .header h1 {
-            font-size: 16pt;
+          .company-name {
+            font-size: 10pt;
             font-weight: bold;
-            margin: 0 0 2mm 0;
-          }
-          
-          .qr-code {
-            text-align: center;
-            margin: 3mm 0;
-          }
-          
-          .qr-code-text {
-            font-family: monospace;
-            font-size: 9pt;
-            font-weight: bold;
-            letter-spacing: 1px;
-          }
-          
-          .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2mm;
-            margin: 3mm 0;
-          }
-          
-          .info-item {
-            border: 1px solid #333;
-            padding: 2mm;
-            background: #f9f9f9;
-          }
-          
-          .info-label {
-            font-weight: bold;
-            font-size: 8pt;
-            color: #555;
             margin-bottom: 1mm;
-          }
-          
-          .info-value {
-            font-size: 11pt;
-            font-weight: bold;
             color: #000;
           }
           
-          .full-width {
+          .roll-number {
+            font-size: 14pt;
+            font-weight: bold;
+            background: #000;
+            color: #fff;
+            padding: 1.5mm 3mm;
+            margin-top: 1mm;
+            border-radius: 1mm;
+            display: inline-block;
+          }
+          
+          .qr-section {
+            text-align: center;
+            margin: 2mm 0;
+            padding: 2mm;
+            border: 1px solid #333;
+            background: #f9f9f9;
+          }
+          
+          .qr-image {
+            max-width: 60px;
+            max-height: 60px;
+            margin: 0 auto;
+          }
+          
+          .main-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5mm;
+            margin: 2mm 0;
+          }
+          
+          .info-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5mm;
+          }
+          
+          .info-box {
+            border: 1px solid #333;
+            padding: 1.5mm;
+            background: #fff;
+            min-height: 8mm;
+          }
+          
+          .info-box.full {
             grid-column: 1 / -1;
           }
           
-          .status-box {
-            text-align: center;
-            padding: 2mm;
-            margin-top: 2mm;
-            border: 2px solid #000;
-            background: #f0f0f0;
+          .info-box.highlight {
+            background: #ffe6e6;
+            border-color: #c00;
+            border-width: 2px;
+          }
+          
+          .info-label {
+            font-size: 7pt;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.5mm;
+            text-transform: uppercase;
+          }
+          
+          .info-value {
+            font-size: 9pt;
             font-weight: bold;
-            font-size: 12pt;
+            color: #000;
+            line-height: 1.1;
+            word-wrap: break-word;
           }
           
           .footer {
-            margin-top: 3mm;
+            margin-top: auto;
+            padding-top: 1.5mm;
+            border-top: 1px solid #333;
             text-align: center;
-            font-size: 7pt;
+            font-size: 6pt;
             color: #666;
           }
           
           @media print {
-            body { margin: 0; padding: 10mm; }
-            .label-container { page-break-after: always; }
+            body { 
+              margin: 0; 
+              padding: 0;
+            }
+            .label-container { 
+              page-break-after: always;
+              border: 3px solid #000;
+            }
+            @page {
+              margin: 0;
+            }
           }
         </style>
       </head>
       <body>
         <div class="label-container">
+          <!-- Header -->
           <div class="header">
-            <h1>ليبل رول</h1>
-            <div style="font-size: 12pt; font-weight: bold;">${roll.roll_number}</div>
+            <div class="company-name">نظام إدارة إنتاج الأكياس البلاستيكية</div>
+            <div class="roll-number">${roll.roll_number}</div>
           </div>
           
-          ${roll.qr_code_text ? `
-            <div class="qr-code">
-              <div class="qr-code-text">${roll.qr_code_text}</div>
+          <!-- QR Code Section -->
+          ${roll.qr_png_base64 || roll.qr_code_text ? `
+            <div class="qr-section">
+              ${roll.qr_png_base64 ? `
+                <img src="data:image/png;base64,${roll.qr_png_base64}" class="qr-image" alt="QR Code">
+              ` : roll.qr_code_text ? `
+                <div style="font-family: monospace; font-size: 9pt; font-weight: bold;">
+                  ${roll.qr_code_text}
+                </div>
+              ` : ''}
             </div>
           ` : ''}
           
-          <div class="info-grid">
-            ${order ? `
-              <div class="info-item full-width">
+          <!-- Main Information -->
+          <div class="main-info">
+            <!-- Customer Name -->
+            ${order && (order.customer_name_ar || order.customer_name) ? `
+              <div class="info-box full">
                 <div class="info-label">العميل</div>
-                <div class="info-value">${order.customer_name_ar || order.customer_name || 'غير محدد'}</div>
-              </div>
-              
-              <div class="info-item">
-                <div class="info-label">رقم الطلب</div>
-                <div class="info-value">${order.order_number}</div>
+                <div class="info-value">${order.customer_name_ar || order.customer_name}</div>
               </div>
             ` : ''}
             
-            ${productionOrder ? `
-              <div class="info-item">
-                <div class="info-label">رقم أمر الإنتاج</div>
-                <div class="info-value">${productionOrder.production_order_number}</div>
-              </div>
-              
-              ${productionOrder.item_name_ar || productionOrder.item_name ? `
-                <div class="info-item full-width">
-                  <div class="info-label">المنتج</div>
-                  <div class="info-value">${productionOrder.item_name_ar || productionOrder.item_name}</div>
+            <!-- Production Order Number & Roll Sequence -->
+            <div class="info-row">
+              ${productionOrder ? `
+                <div class="info-box">
+                  <div class="info-label">أمر الإنتاج</div>
+                  <div class="info-value">${productionOrder.production_order_number}</div>
                 </div>
               ` : ''}
               
-              ${productionOrder.size_caption ? `
-                <div class="info-item full-width">
+              <div class="info-box">
+                <div class="info-label">رقم الرول</div>
+                <div class="info-value">#${roll.roll_seq}</div>
+              </div>
+            </div>
+            
+            <!-- Product Name -->
+            ${productionOrder && (productionOrder.item_name_ar || productionOrder.item_name) ? `
+              <div class="info-box full">
+                <div class="info-label">المنتج</div>
+                <div class="info-value">${productionOrder.item_name_ar || productionOrder.item_name}</div>
+              </div>
+            ` : ''}
+            
+            <!-- Size & Color -->
+            <div class="info-row">
+              ${productionOrder && productionOrder.size_caption ? `
+                <div class="info-box">
                   <div class="info-label">المقاس</div>
                   <div class="info-value">${productionOrder.size_caption}</div>
                 </div>
               ` : ''}
-            ` : ''}
-            
-            <div class="info-item">
-              <div class="info-label">رقم الرول</div>
-              <div class="info-value">#${roll.roll_seq}</div>
+              
+              ${productionOrder && productionOrder.color ? `
+                <div class="info-box">
+                  <div class="info-label">اللون</div>
+                  <div class="info-value">${productionOrder.color}</div>
+                </div>
+              ` : ''}
             </div>
             
-            <div class="info-item">
-              <div class="info-label">الوزن (كجم)</div>
-              <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'}</div>
+            <!-- Weight (Highlighted) -->
+            <div class="info-box highlight full">
+              <div class="info-label">الوزن الكلي</div>
+              <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'} كجم</div>
             </div>
             
-            ${roll.machine_id ? `
-              <div class="info-item">
-                <div class="info-label">رقم الماكينة</div>
-                <div class="info-value">${roll.machine_id}</div>
+            <!-- Machine Information - Compact -->
+            ${roll.film_machine_name || roll.machine_id ? `
+              <div class="info-box full">
+                <div class="info-label">ماكينة الفيلم</div>
+                <div class="info-value">${roll.film_machine_name || roll.machine_id}</div>
               </div>
             ` : ''}
             
+            <!-- Operators Section - Only Film Operator -->
             ${roll.created_by_name ? `
-              <div class="info-item">
-                <div class="info-label">تم الإنشاء بواسطة</div>
+              <div class="info-box full">
+                <div class="info-label">مشغل الفيلم</div>
                 <div class="info-value">${roll.created_by_name}</div>
               </div>
             ` : ''}
             
+            <!-- Creation Date -->
             ${roll.created_at ? `
-              <div class="info-item">
-                <div class="info-label">تاريخ الإنشاء</div>
-                <div class="info-value">${format(new Date(roll.created_at), 'dd/MM/yyyy HH:mm')}</div>
-              </div>
-            ` : ''}
-            
-            ${roll.printed_by_name ? `
-              <div class="info-item">
-                <div class="info-label">تم الطباعة بواسطة</div>
-                <div class="info-value">${roll.printed_by_name}</div>
-              </div>
-            ` : ''}
-            
-            ${roll.printed_at ? `
-              <div class="info-item">
-                <div class="info-label">تاريخ الطباعة</div>
-                <div class="info-value">${format(new Date(roll.printed_at), 'dd/MM/yyyy HH:mm')}</div>
-              </div>
-            ` : ''}
-            
-            ${roll.cut_by_name ? `
-              <div class="info-item">
-                <div class="info-label">تم التقطيع بواسطة</div>
-                <div class="info-value">${roll.cut_by_name}</div>
-              </div>
-            ` : ''}
-            
-            ${roll.cut_at ? `
-              <div class="info-item">
-                <div class="info-label">تاريخ التقطيع</div>
-                <div class="info-value">${format(new Date(roll.cut_at), 'dd/MM/yyyy HH:mm')}</div>
-              </div>
-            ` : ''}
-            
-            ${roll.cut_weight_total_kg != null ? `
-              <div class="info-item">
-                <div class="info-label">الوزن بعد التقطيع</div>
-                <div class="info-value">${parseFloat(String(roll.cut_weight_total_kg)).toFixed(2)} كجم</div>
+              <div class="info-box full">
+                <div class="info-label">تاريخ الإنتاج</div>
+                <div class="info-value">${format(new Date(roll.created_at), 'dd/MM/yyyy - HH:mm')}</div>
               </div>
             ` : ''}
           </div>
           
-          <div class="status-box">
-            الحالة: ${getStatusLabel(roll.status)}
-          </div>
-          
+          <!-- Footer -->
           <div class="footer">
-            تمت الطباعة في: ${format(new Date(), 'dd/MM/yyyy - HH:mm:ss')}
+            طُبع في: ${format(new Date(), 'dd/MM/yyyy - HH:mm')}
           </div>
         </div>
       </body>
     </html>
   `;
 
-  const printWindow = window.open('', '_blank', 'width=800,height=600');
+  const printWindow = window.open('', '_blank', 'width=400,height=600');
   if (printWindow) {
     printWindow.document.write(printContent);
     printWindow.document.close();
     printWindow.focus();
     
-    // Use onload event to ensure content is fully loaded before printing
-    // This is more reliable than setTimeout
     printWindow.onload = () => {
       printWindow.print();
     };
     
-    // Fallback in case onload doesn't fire (e.g., for about:blank)
-    // Only use setTimeout as a fallback, not primary method
     if (printWindow.document.readyState === 'complete') {
       printWindow.print();
     } else {

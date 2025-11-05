@@ -3,7 +3,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
@@ -16,6 +16,20 @@ app.use(express.urlencoded({ extended: false, limit: "50mb" }));
 // Security function to check for plaintext passwords
 async function performPasswordSecurityCheck(): Promise<void> {
   try {
+    // Check for security bypass flag (emergency use only)
+    if (process.env.SKIP_SECURITY_CHECK === "true") {
+      console.warn("⚠️  ============================================================");
+      console.warn("⚠️  WARNING: Password security check has been BYPASSED!");
+      console.warn("⚠️  This is for EMERGENCY deployment only.");
+      console.warn("⚠️  ============================================================");
+      console.warn("⚠️  IMMEDIATE ACTION REQUIRED:");
+      console.warn("⚠️  1. Run: node scripts/hash-passwords.js");
+      console.warn("⚠️  2. Remove SKIP_SECURITY_CHECK environment variable");
+      console.warn("⚠️  3. Restart the application");
+      console.warn("⚠️  ============================================================");
+      return;
+    }
+
     console.log("🔒 Performing startup password security check...");
 
     const allUsers = await db.select().from(users);
@@ -71,10 +85,22 @@ async function performPasswordSecurityCheck(): Promise<void> {
           `├─────────────────────────────────────────────────────────────────────┤`,
         );
         console.error(
-          `│ Run: node scripts/hash-passwords.js to fix plaintext passwords    │`,
+          `│ OPTION 1 (Recommended): Hash passwords in production database     │`,
         );
         console.error(
-          `│ Contact system administrator immediately                           │`,
+          `│   Run: node scripts/hash-passwords.js                             │`,
+        );
+        console.error(
+          `│                                                                     │`,
+        );
+        console.error(
+          `│ OPTION 2 (Emergency only): Bypass security check temporarily      │`,
+        );
+        console.error(
+          `│   Set environment variable: SKIP_SECURITY_CHECK=true              │`,
+        );
+        console.error(
+          `│   Then immediately run hash-passwords.js and remove bypass        │`,
         );
         console.error(
           `└─────────────────────────────────────────────────────────────────────┘`,
@@ -170,7 +196,7 @@ if (isProduction && !process.env.SESSION_SECRET) {
 // Configure PostgreSQL session store for all environments to prevent session loss during restarts
 const PgSession = connectPgSimple(session);
 const sessionStore = new PgSession({
-  conString: process.env.DATABASE_URL,
+  pool: pool,
   tableName: "user_sessions",
   createTableIfMissing: true,
   pruneSessionInterval: 60 * 15, // Clean expired sessions every 15 minutes
@@ -229,7 +255,11 @@ app.use((req, res, next) => {
           `🔄 Session extended for user ${req.session.userId} on ${req.path}`,
         );
       }
-    } else if (req.path !== "/api/login" && req.path !== "/api/health") {
+    } else if (
+      req.path !== "/api/login" &&
+      req.path !== "/api/health" &&
+      !req.path.startsWith("/api/notifications/webhook/")
+    ) {
       // Log unauthenticated API requests for debugging (only in development)
       if (!isProduction) {
         console.log(`⚠️ Unauthenticated API request: ${req.path}`);
@@ -462,6 +492,7 @@ function sanitizeResponseForLogging(response: any): any {
               );
 
               // Check for required columns and add if missing
+              const ALLOWED_COLUMN_TYPES = new Set(["VARCHAR(100)", "VARCHAR(20)"]);
               const requiredColumns = [
                 { name: "title_ar", type: "VARCHAR(100)" },
                 { name: "issued_by", type: "VARCHAR(20)" },
@@ -469,6 +500,9 @@ function sanitizeResponseForLogging(response: any): any {
 
               for (const col of requiredColumns) {
                 try {
+                  if (!ALLOWED_COLUMN_TYPES.has(col.type)) {
+                    throw new Error(`Invalid column type: ${col.type}`);
+                  }
                   const columnExists = await db.execute(sql`
                     SELECT column_name FROM information_schema.columns 
                     WHERE table_name = 'admin_decisions' 

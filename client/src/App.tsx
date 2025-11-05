@@ -8,6 +8,8 @@ import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import Orders from "./pages/orders";
 import Production from "./pages/production";
+import ProductionOrdersManagement from "./pages/ProductionOrdersManagement";
+import ProductionQueues from "./pages/ProductionQueues";
 import Quality from "./pages/quality";
 import Warehouse from "./pages/warehouse";
 import Maintenance from "./pages/maintenance";
@@ -32,6 +34,11 @@ import TwilioContentTemplate from "./pages/twilio-content-template";
 import WhatsAppTemplateTest from "./pages/whatsapp-template-test";
 import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ToolsPage from "./pages/tools_page";
+import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
+import RollSearch from "./pages/RollSearch";
+import ProductionReports from "./pages/ProductionReports";
+import MaterialMixing from "./pages/material-mixing";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -51,8 +58,14 @@ function AppRoutes() {
     <Switch>
       <Route path="/login">
         {isAuthenticated ? <Redirect to="/" /> : <Login />}
+      
       </Route>
-
+<Route path="/tools">
+  <ProtectedRoute path="/tools">
+    <ToolsPage />
+  </ProtectedRoute>
+</Route>
+     
       <Route path="/">
         <ProtectedRoute path="/">
           <Dashboard />
@@ -71,6 +84,25 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
+      {/* Redirects from old routes to Orders page with tabs */}
+      <Route path="/production-orders-management">
+        <Redirect to="/orders?tab=production-orders" />
+      </Route>
+
+      <Route path="/production-queues">
+        <Redirect to="/orders?tab=production-queues" />
+      </Route>
+
+      <Route path="/roll-search">
+        <Redirect to="/orders?tab=roll-search" />
+      </Route>
+
+      <Route path="/film-operator">
+        <ProtectedRoute path="/film-operator">
+          <FilmOperatorDashboard />
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/quality">
         <ProtectedRoute path="/quality">
           <Quality />
@@ -80,6 +112,12 @@ function AppRoutes() {
       <Route path="/warehouse">
         <ProtectedRoute path="/warehouse">
           <Warehouse />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/material-mixing">
+        <ProtectedRoute path="/material-mixing">
+          <MaterialMixing />
         </ProtectedRoute>
       </Route>
 
@@ -99,6 +137,10 @@ function AppRoutes() {
         <ProtectedRoute path="/reports">
           <Reports />
         </ProtectedRoute>
+      </Route>
+
+      <Route path="/production-reports">
+        <Redirect to="/orders?tab=production-reports" />
       </Route>
 
       <Route path="/settings">

@@ -1,78 +1,107 @@
-## Modern MPS – AI Coding Agent Quickstart
+# MPBF Next - AI Coding Instructions
 
-Purpose: Equip AI assistants to make safe, productive changes fast in this plastic bag manufacturing MPS (TypeScript full‑stack, Arabic/English, strict data integrity).
+## Project Overview
+**Modern Plastic Bag Factory (MPBF Next)** - An Arabic-first ERP system for plastic bag manufacturing with RTL design and intelligent production workflows.
 
-### 1. Core Architecture (Big Picture)
-- Frontend: React + Vite + Wouter (minimal routing) + TanStack Query (server state) + Tailwind/Radix UI.
-- Backend: Express (ESM) + Drizzle ORM on Neon PostgreSQL (serverless WebSocket driver) – single `db` instance in `server/db.ts` (never recreate connections).
-- Shared domain & types in `shared/` (especially `shared/schema.ts` + Drizzle/Zod integration).
-- Production flow: Orders → Production Orders → Rolls → (Film → Printing → Cutting → Completed). Quantity constraints enforced centrally.
+## Architecture & Stack
 
-### 2. Critical Data Integrity (لا تخرق القواعد)
-Defined in `shared/schema.ts` + enforced by `server/services/data-validator.ts` + transactional middleware:
-1. Σ ProductionOrder.quantity_kg ≤ Order.total_quantity + tolerance.
-2. Σ Roll.weight_kg ≤ ProductionOrder.final_quantity_kg + tolerance.
-3. Inventory (current_stock) must never go negative.
-Always wrap multi‑table mutations with transaction utilities in `server/middleware/transaction.ts`.
+### Tech Stack
+- **Frontend**: React + TypeScript + Vite, TanStack Query v5, shadcn/ui, Tailwind CSS
+- **Backend**: Express.js + TypeScript (ESM), Drizzle ORM with PostgreSQL 
+- **Database**: PostgreSQL (Neon Serverless) with comprehensive manufacturing schema
+- **Build**: Vite (client) + esbuild (server), dual bundle output to `dist/`
 
-### 3. Key Conventions
-- ESM only: use `.js` in relative imports (no CommonJS require).
-- Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `attached_assets/`.
-- Bilingual UI: Arabic primary text with English fallback; ensure RTL-safe layout & error messages.
-- Permissions: use `requireAuth` + `requirePermission` from `shared/permissions.ts` on every protected route.
-
-### 4. Backend Patterns
-- All Express routes consolidated in large `server/routes.ts`; add domain-specific endpoints following existing Arabic naming/comment style.
-- Validation: derive Zod schemas from Drizzle tables (`createInsertSchema`) then extend (e.g. positive quantities) – never handcraft types that drift.
-- External services: see `server/services/` (notification-manager, ml-service, meta-whatsapp, data-validator). Reuse rather than duplicating logic.
-- Storage & external APIs: `server/storage.ts` (GCS), OpenAI/Twilio integrations – keep secrets in env vars.
-
-### 5. Frontend Patterns
-- Data fetching: TanStack Query + backend JSON; wrap risky queries with `QueryErrorBoundary`.
-- Forms: React Hook Form + Zod resolver; server errors return Arabic message strings.
-- Protected navigation: wrap sensitive pages with `ProtectedRoute`.
-- Keep domain modeling client‑light: leverage types imported from `@shared/schema`.
-
-### 6. Migrations & Deployment
-- Schema source of truth is Drizzle definitions; run `npm run db:push` for dev syncing.
-- Production startup runs migrations automatically (`scripts/migrate.js` + logic in `server/index.ts`).
-- Health check: `/api/health` (used in deployment monitors).
-- Deployment guides: see `DEPLOYMENT_GUIDE.md` + `DEPLOYMENT-SOLUTIONS.md` for validated process & troubleshooting.
-
-### 7. Essential Commands
-```bash
-npm run dev        # concurrent backend (tsx) + Vite frontend
-npm run db:push    # apply schema changes (Drizzle → Neon)
-npm run build      # production build (Vite + esbuild)
-npm test           # data integrity + concurrency tests
+### Monorepo Structure
+```
+├── client/src/        # React app with Arabic RTL UI
+├── server/           # Express API with manufacturing logic  
+├── shared/           # Common schemas, validation, utilities
+├── migrations/       # Drizzle database migrations
+└── attached_assets/  # Business documents and test data
 ```
 
-### 8. Testing Focus
-- `tests/data-integrity.test.ts` stresses concurrent operations / quantity & stock invariants – add cases here when changing production logic.
-- Prefer simulation of multi-step workflows over isolated unit tests when touching order / roll logic.
+## Core Business Domain
 
-### 9. Safe Change Checklist (قبل الدمج)
-1. Schema change? Update Drizzle table + regenerate & push; never patch raw SQL manually.
-2. Quantity or stock logic? Update validator + add/adjust test.
-3. New route? Enforce permission + Arabic error messages.
-4. Transaction? Use provided middleware – avoid ad‑hoc `db` calls across awaits.
-5. UI strings? Provide Arabic primary + English fallback; ensure RTL styling unaffected.
+### Manufacturing Workflow (4-Stage Process)
+1. **Film Production** (Extruder) → Creates rolls with QR codes
+2. **Printing** (Optional) → Adds graphics/branding to rolls  
+3. **Cutting** → Converts rolls to final bag products
+4. **Warehouse Receipt** → Final quality control and storage
 
-### 10. Common Pitfalls To Avoid
-- Creating new DB connections (always import `db`).
-- Skipping transaction middleware for multi-table writes.
-- Mixing CommonJS require with ESM imports.
-- Returning English-only or raw technical errors to client.
-- Bypassing Drizzle/Zod validation for inserts/updates.
+**Critical Pattern**: Each roll tracks through all stages via `rolls` table with stage progression (`film` → `for_printing` → `printing` → `for_cutting` → `cutting` → `done`).
 
-### 11. Adding Features Quickly (Pattern Example)
-1. Define/extend table in `shared/schema.ts`.
-2. Generate Zod insert/update schema via Drizzle helpers, extend for business rules.
-3. Add route in `server/routes.ts` with `requirePermission` + transaction wrapper.
-4. Update frontend hook/query; handle errors with `QueryErrorBoundary`.
-5. Add integrity test covering edge (e.g. over-allocation attempt).
+### Key Data Relationships
+- `orders` → `production_orders` (1:many) → `rolls` (1:many) → `cuts` (1:many)
+- Every production operation requires valid, active machines (`machines` table)
+- All operations enforce business invariants defined in `shared/schema.ts` header comments
 
-### 12. When Unsure
-Search existing patterns in `server/routes.ts` & `data-validator.ts` before introducing new abstractions. Maintain Arabic domain vocabulary consistently.
+## Development Guidelines
 
-Keep changes minimal, typed, transactional, bilingual, and constraint-safe. اطبق القيود دائمًا.
+### Arabic-First Development
+- **All UI text**: Arabic with English fallback
+- **Error messages**: Always Arabic (`خطأ في...` pattern)
+- **RTL Layout**: `dir="rtl"` and `lang="ar"` in HTML, RTL-aware Tailwind classes
+- **Number formatting**: Arabic numerals, 2 decimals for weights
+
+### Database & Validation Patterns
+- **Schema location**: `shared/schema.ts` (3000+ lines with business rules)
+- **Validation**: Zod schemas with Arabic error messages
+- **Database operations**: Always use transactions for multi-table operations
+- **Key constraint**: Inventory cannot go negative, production quantities cannot exceed order quantities
+
+### API Development
+- **Route structure**: RESTful with Arabic error responses
+- **Authentication**: Session-based with `requireAuth` middleware
+- **Query patterns**: TanStack Query with 30s refetch intervals
+- **Error handling**: Comprehensive try-catch with Arabic user messages
+
+### Component Architecture
+- **shadcn/ui components**: Customized for RTL and Arabic content
+- **Modal patterns**: Follow existing modal structure in `client/src/components/modals/`
+- **Form validation**: React Hook Form + Zod with Arabic error display
+- **State management**: TanStack Query for server state, React state for UI
+
+## Development Commands
+
+### Environment Setup
+```bash
+npm run dev          # Start development server (client + server)
+npm run build        # Build for production
+npm run db:push      # Push schema changes to database
+npm run lint         # ESLint with Arabic-friendly rules
+```
+
+### Development Workflow
+1. **Schema changes**: Update `shared/schema.ts` → run `npm run db:push`
+2. **New features**: Create API endpoint in `server/routes.ts` → add React Query hooks
+3. **UI components**: Follow shadcn/ui patterns with RTL adaptations
+
+## Integration Points
+
+### External Services
+- **AI**: OpenAI integration in `server/services/openai.ts`
+- **WhatsApp**: Twilio/Meta integration for production notifications
+- **File Storage**: Google Cloud Storage for attachments
+- **Authentication**: Dual support (traditional + Replit Auth)
+
+### Testing & Deployment
+- **Environment**: Configured for Replit deployment with Neon PostgreSQL
+- **Health checks**: `/api/health` endpoint for monitoring
+- **Migration**: Automatic on server startup in production
+- **Security**: Password hashing validation on startup (see `server/index.ts`)
+
+## Critical Files to Understand
+- `shared/schema.ts` - Complete database schema with business rules
+- `server/routes.ts` - Main API routes (6000+ lines)
+- `client/src/App.tsx` - Route structure and authentication flow
+- `server/storage.ts` - Database operations and business logic
+- `vite.config.ts` - Build configuration with path aliases
+
+## Common Patterns to Follow
+- **Error boundaries**: Global error handling with Arabic messages
+- **Loading states**: Skeleton loaders for all data fetching
+- **Form validation**: Immediate feedback with Arabic error text
+- **Optimistic updates**: UI updates before server confirmation
+- **Cache invalidation**: Proper query key management for real-time updates
+
+When implementing new features, always consider the manufacturing workflow context and maintain consistency with existing Arabic-first patterns.

@@ -61,8 +61,7 @@ const rollFormSchema = z.object({
       const num = safeParseFloat(val.replace(",", "."), -1);
       return num > 0;
     }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
-  // Align with typical Machine.id being a number. We coerce the Select value to number.
-  machine_id: z.string().min(1, "يرجى اختيار المكينة"),
+  film_machine_id: z.string().min(1, "يرجى اختيار ماكينة الفيلم"),
 });
 
 export type RollFormData = z.infer<typeof rollFormSchema>;
@@ -80,7 +79,7 @@ export default function RollCreationModal({
     defaultValues: {
       production_order_id: selectedProductionOrderId && selectedProductionOrderId > 0 ? selectedProductionOrderId : undefined,
       weight_kg: "",
-      machine_id: "",
+      film_machine_id: "",
     },
     mode: "onChange",
   });
@@ -148,7 +147,7 @@ export default function RollCreationModal({
         body: JSON.stringify({
           production_order_id: data.production_order_id,
           weight_kg: weightParsed,
-          machine_id: data.machine_id,
+          film_machine_id: data.film_machine_id,
         }),
       });
       if (!response.ok) {
@@ -212,18 +211,19 @@ export default function RollCreationModal({
     }
   };
 
-  // Filter machines to show only film section machines and active ones
+  // Filter machines by section
   const filmSectionMachines = useMemo(() => {
-    if (!sections.length || !machines.length) return machines as any[];
+    if (!sections.length || !machines.length) return [];
     const filmSection = sections.find((s: any) =>
       [s.name, s.name_ar]
         .filter(Boolean)
         .map((x: string) => x.toLowerCase())
         .some((n: string) => n.includes("film") || n.includes("فيلم"))
     );
-    if (!filmSection) return machines as any[];
+    if (!filmSection) return [];
     return (machines as any[]).filter((m: any) => m.section_id === filmSection.id && m.status === "active" && m.id);
   }, [machines, sections]);
+
 
   return (
     <Dialog
@@ -329,18 +329,18 @@ export default function RollCreationModal({
 
             <FormField
               control={form.control}
-              name="machine_id"
+              name="film_machine_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>المكينة *</FormLabel>
+                  <FormLabel>ماكينة الفيلم *</FormLabel>
                   <Select
                     value={field.value != null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange(value)}
                     disabled={machinesLoading}
                   >
                     <FormControl>
-                      <SelectTrigger data-testid="select-machine">
-                        <SelectValue placeholder="اختر المكينة" />
+                      <SelectTrigger data-testid="select-film-machine">
+                        <SelectValue placeholder="اختر ماكينة الفيلم" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
