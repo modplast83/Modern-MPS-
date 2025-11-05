@@ -533,8 +533,8 @@ export default function MaterialMixing() {
                     </TableHeader>
                     <TableBody>
                       {filteredFormulas.map((formula: any) => (
-                        <>
-                          <TableRow key={formula.id} data-testid={`row-formula-${formula.id}`}>
+                        <React.Fragment key={formula.id}>
+                          <TableRow data-testid={`row-formula-${formula.id}`}>
                             <TableCell className="font-medium">
                               <div className="flex items-center gap-2">
                                 <Button
@@ -777,7 +777,7 @@ export default function MaterialMixing() {
                             </TableCell>
                           </TableRow>
                         )}
-                        </>
+                        </React.Fragment>
                       ))}
                     </TableBody>
                   </Table>
