@@ -413,14 +413,23 @@ export default function MaterialMixing() {
                   <DialogHeader>
                     <DialogTitle>إضافة وصفة خلط جديدة</DialogTitle>
                   </DialogHeader>
-                  <FormulaForm
-                    machines={machines || []}
-                    items={rawMaterialItems}
-                    onSuccess={() => {
-                      setIsFormulaDialogOpen(false);
-                      queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
-                    }}
-                  />
+                  {formulasLoading || !machines || !items || machines.length === 0 || items.length === 0 ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center space-y-3">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+                        <p className="text-sm text-muted-foreground">جاري تحميل البيانات...</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <FormulaForm
+                      machines={machines}
+                      items={rawMaterialItems}
+                      onSuccess={() => {
+                        setIsFormulaDialogOpen(false);
+                        queryClient.invalidateQueries({ queryKey: ["/api/mixing-formulas"] });
+                      }}
+                    />
+                  )}
                 </DialogContent>
               </Dialog>
 
