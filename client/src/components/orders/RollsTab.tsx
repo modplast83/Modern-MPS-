@@ -62,6 +62,9 @@ interface RollData {
   film_machine_name?: string;
   printing_machine_name?: string;
   cutting_machine_name?: string;
+  created_by_name?: string;
+  printed_by_name?: string;
+  cut_by_name?: string;
 }
 
 interface RollsTabProps {
@@ -145,7 +148,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
     return stages[stage] || stage;
   };
 
-  const getStageBadgeVariant = (stage: string) => {
+  const getStageBadgeVariant = (stage: string): "default" | "secondary" | "destructive" | "outline" => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       film: "secondary",
       printing: "default",
@@ -154,6 +157,13 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
       archived: "secondary",
     };
     return variants[stage] || "default";
+  };
+
+  const getStageBadgeClassName = (stage: string) => {
+    if (stage === "done") {
+      return "bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100";
+    }
+    return "";
   };
 
   const getStageIcon = (stage: string) => {
@@ -184,6 +194,9 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
       "المقاس": roll.size_caption || "-",
       "المرحلة": getStageNameAr(roll.stage),
       "الوزن (كجم)": roll.weight_kg,
+      "فيلم بواسطة": roll.created_by_name || "-",
+      "طبع بواسطة": roll.printed_by_name || "-",
+      "قطع بواسطة": roll.cut_by_name || "-",
       "وزن التقطيع": roll.cut_weight_total_kg || "-",
       "الهدر": roll.waste_kg || "-",
       "تاريخ الإنشاء": format(new Date(roll.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
@@ -471,6 +484,9 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                     <TableHead className="text-right">العميل</TableHead>
                     <TableHead className="text-right">المنتج</TableHead>
                     <TableHead className="text-right">الوزن (كجم)</TableHead>
+                    <TableHead className="text-right">فيلم بواسطة</TableHead>
+                    <TableHead className="text-right">طبع بواسطة</TableHead>
+                    <TableHead className="text-right">قطع بواسطة</TableHead>
                     <TableHead className="text-right">تاريخ الإنشاء</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -483,7 +499,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                       <TableCell>
                         <Badge 
                           variant={getStageBadgeVariant(roll.stage)} 
-                          className="flex items-center gap-1 w-fit"
+                          className={`flex items-center gap-1 w-fit ${getStageBadgeClassName(roll.stage)}`}
                           data-testid={`badge-stage-${roll.roll_id}`}
                         >
                           {getStageIcon(roll.stage)}
@@ -509,6 +525,15 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                       </TableCell>
                       <TableCell className="font-medium" data-testid={`text-weight-${roll.roll_id}`}>
                         {parseFloat(roll.weight_kg).toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-sm" data-testid={`text-created-by-${roll.roll_id}`}>
+                        {roll.created_by_name || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm" data-testid={`text-printed-by-${roll.roll_id}`}>
+                        {roll.printed_by_name || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm" data-testid={`text-cut-by-${roll.roll_id}`}>
+                        {roll.cut_by_name || "-"}
                       </TableCell>
                       <TableCell data-testid={`text-created-at-${roll.roll_id}`}>
                         {format(new Date(roll.created_at), "dd/MM/yyyy HH:mm", { locale: ar })}
