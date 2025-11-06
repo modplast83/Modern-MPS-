@@ -5886,12 +5886,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attendance", async (req, res) => {
     try {
-      // إعدادات موقع المصنع (نفس الإعدادات في Frontend)
+      // جلب إعدادات موقع المصنع من قاعدة البيانات
+      const latSetting = await storage.getSystemSettingByKey("factory_location_lat");
+      const lngSetting = await storage.getSystemSettingByKey("factory_location_lng");
+      const radiusSetting = await storage.getSystemSettingByKey("attendance_allowed_radius");
+
+      // القيم الافتراضية إذا لم توجد في قاعدة البيانات
       const FACTORY_LOCATION = {
-        lat: 24.7136,
-        lng: 46.6753,
+        lat: latSetting ? parseFloat(latSetting.setting_value) : 24.7136,
+        lng: lngSetting ? parseFloat(lngSetting.setting_value) : 46.6753,
       };
-      const ALLOWED_RADIUS_METERS = 500;
+      const ALLOWED_RADIUS_METERS = radiusSetting ? parseInt(radiusSetting.setting_value) : 500;
 
       // دالة حساب المسافة بين نقطتين جغرافيتين
       const calculateDistance = (

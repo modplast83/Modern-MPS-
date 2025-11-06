@@ -53,6 +53,7 @@ import {
   RefreshCw,
   MessageSquare,
   Webhook,
+  MapPin,
 } from "lucide-react";
 import RoleManagementTab from "../components/RoleManagementTab";
 import { canAccessSettingsTab } from "../utils/roleUtils";
@@ -869,7 +870,7 @@ export default function Settings() {
           </div>
 
           <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
               <TabsTrigger value="profile" className="flex items-center gap-2">
                 <User className="w-4 h-4" />
                 الملف الشخصي
@@ -889,6 +890,10 @@ export default function Settings() {
               <TabsTrigger value="database" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
                 قاعدة البيانات
+              </TabsTrigger>
+              <TabsTrigger value="location" className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
+                موقع المصنع
               </TabsTrigger>
               <TabsTrigger value="notification-center" className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
@@ -2200,12 +2205,187 @@ export default function Settings() {
               <NotificationCenter />
             </TabsContent>
 
+            <TabsContent value="location" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>إعدادات موقع المصنع</CardTitle>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    حدد الموقع الجغرافي للمصنع والنطاق المسموح لتسجيل الحضور
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <LocationSettingsForm />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="whatsapp-webhooks" className="space-y-6">
               <WhatsAppWebhooksTab />
             </TabsContent>
           </Tabs>
         </main>
       </div>
+    </div>
+  );
+}
+
+// Component for Location Settings
+function LocationSettingsForm() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch current location settings
+  const { data: locationSettings, isLoading: isLoadingSettings } = useQuery({
+    queryKey: ["/api/system-settings"],
+  });
+
+  const [factoryLat, setFactoryLat] = useState("24.7136");
+  const [factoryLng, setFactoryLng] = useState("46.6753");
+  const [allowedRadius, setAllowedRadius] = useState("500");
+
+  useEffect(() => {
+    if (locationSettings) {
+      const latSetting = locationSettings.find((s: any) => s.setting_key === "factory_location_lat");
+      const lngSetting = locationSettings.find((s: any) => s.setting_key === "factory_location_lng");
+      const radiusSetting = locationSettings.find((s: any) => s.setting_key === "attendance_allowed_radius");
+
+      if (latSetting) setFactoryLat(latSetting.setting_value);
+      if (lngSetting) setFactoryLng(lngSetting.setting_value);
+      if (radiusSetting) setAllowedRadius(radiusSetting.setting_value);
+    }
+  }, [locationSettings]);
+
+  const handleSaveSettings = async () => {
+    try {
+      setIsLoading(true);
+
+      // Update or create settings
+      const updates = [
+        { key: "factory_location_lat", value: factoryLat },
+        { key: "factory_location_lng", value: factoryLng },
+        { key: "attendance_allowed_radius", value: allowedRadius },
+      ];
+
+      for (const { key, value } of updates) {
+        const existingSetting = locationSettings?.find((s: any) => s.setting_key === key);
+        if (existingSetting) {
+          await apiRequest(`/api/system-settings/${key}`, {
+            method: "PUT",
+            body: JSON.stringify({ setting_value: value }),
+            headers: { "Content-Type": "application/json" },
+          });
+        } else {
+          await apiRequest("/api/system-settings", {
+            method: "POST",
+            body: JSON.stringify({
+              setting_key: key,
+              setting_value: value,
+              setting_type: "number",
+              description: key === "factory_location_lat" ? "دائرة العرض لموقع المصنع" :
+                           key === "factory_location_lng" ? "خط الطول لموقع المصنع" :
+                           "النطاق المسموح لتسجيل الحضور بالأمتار",
+              is_editable: true,
+            }),
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["/api/system-settings"] });
+
+      toast({
+        title: "تم الحفظ بنجاح",
+        description: "تم تحديث إعدادات الموقع الجغرافي",
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ الإعدادات",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoadingSettings) {
+    return <div>جاري التحميل...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="factory-lat">دائرة العرض (Latitude)</Label>
+          <Input
+            id="factory-lat"
+            type="number"
+            step="0.0001"
+            value={factoryLat}
+            onChange={(e) => setFactoryLat(e.target.value)}
+            placeholder="24.7136"
+            data-testid="input-factory-lat"
+          />
+          <p className="text-xs text-gray-500">إحداثية دائرة العرض لموقع المصنع</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="factory-lng">خط الطول (Longitude)</Label>
+          <Input
+            id="factory-lng"
+            type="number"
+            step="0.0001"
+            value={factoryLng}
+            onChange={(e) => setFactoryLng(e.target.value)}
+            placeholder="46.6753"
+            data-testid="input-factory-lng"
+          />
+          <p className="text-xs text-gray-500">إحداثية خط الطول لموقع المصنع</p>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="allowed-radius">النطاق المسموح (بالأمتار)</Label>
+        <Input
+          id="allowed-radius"
+          type="number"
+          value={allowedRadius}
+          onChange={(e) => setAllowedRadius(e.target.value)}
+          placeholder="500"
+          data-testid="input-allowed-radius"
+        />
+        <p className="text-xs text-gray-500">
+          المسافة المسموح بها من المصنع لتسجيل الحضور (مثال: 500 متر)
+        </p>
+      </div>
+
+      <Separator />
+
+      <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
+        <h4 className="font-medium mb-2 flex items-center gap-2">
+          <MapPin className="w-4 h-4" />
+          الموقع الحالي
+        </h4>
+        <div className="text-sm space-y-1">
+          <p>
+            <strong>الإحداثيات:</strong> {factoryLat}, {factoryLng}
+          </p>
+          <p>
+            <strong>النطاق المسموح:</strong> {allowedRadius} متر
+          </p>
+        </div>
+      </div>
+
+      <Button
+        onClick={handleSaveSettings}
+        disabled={isLoading}
+        className="w-full"
+        data-testid="button-save-location"
+      >
+        <Save className="w-4 h-4 ml-2" />
+        {isLoading ? "جاري الحفظ..." : "حفظ الإعدادات"}
+      </Button>
     </div>
   );
 }
