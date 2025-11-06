@@ -71,20 +71,35 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
-- ✅ **Factory Location Settings Management**: Added admin panel for managing geolocation settings
-  - New tab "موقع المصنع" in Settings page (/settings)
-  - Configurable factory coordinates (latitude, longitude)
-  - Adjustable allowed radius for attendance check-in
-  - Settings stored in `system_settings` table in database
-  - API endpoints: GET/POST/PUT `/api/system-settings`
-  - Real-time updates: Both frontend and backend now read from database instead of hardcoded values
-  - Default values: Riyadh (24.7136, 46.6753) with 500m radius
+- ✅ **Multiple Factory Locations with Interactive Maps** (November 6, 2025):
+  - **New Database Table**: `factory_locations` for managing multiple factory sites
+  - **Interactive Map Component**: Using react-leaflet@4.2.1 for visual location selection
+  - **Full CRUD API**: Complete REST endpoints for factory locations management
+    - GET/POST `/api/factory-locations` - List all/create new location
+    - GET `/api/factory-locations/active` - Get active locations only
+    - GET/PUT/DELETE `/api/factory-locations/:id` - Single location operations
+  - **Settings Interface**: Enhanced admin panel with:
+    - Map-based location picker (click to select coordinates)
+    - Multiple location cards with active/inactive toggle
+    - Real-time preview of allowed radius circles on map
+    - Bilingual naming (English + Arabic)
+  - **Attendance Verification**: Updated to check against ALL active locations
+    - Frontend: Validates user is within range of ANY active factory
+    - Backend: Server-side verification against all active locations
+    - Distance calculation shows closest factory when out of range
+    - Loading guards prevent false rejections during data fetch
+  - **Technical Stack**: 
+    - Leaflet.js for interactive mapping
+    - OpenStreetMap tiles for map visualization
+    - Haversine formula for accurate distance calculations
+
+- ✅ **Factory Location Settings Management**: Added admin panel for managing geolocation settings (Deprecated - replaced by multiple locations system)
+  - Replaced single-location system with multiple locations support
 
 - ✅ **Geolocation Attendance System**: GPS-based location verification for attendance check-in
-  - Frontend: Haversine distance calculation in user-dashboard.tsx
-  - Backend: Server-side validation in /api/attendance endpoint
-  - Location settings dynamically loaded from database
-  - Clear error messages in Arabic when outside range
+  - Upgraded to support multiple factory locations
+  - Enhanced validation with nearest-location feedback
+  - Loading state handling to prevent race conditions
 
 ### Previous Updates
 - ✅ Added Rolls Tab in /orders page with advanced filters and Excel export
