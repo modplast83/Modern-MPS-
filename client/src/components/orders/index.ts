@@ -5,3 +5,4 @@ export { default as OrdersForm } from "./OrdersForm";
 export { default as OrdersTabs } from "./OrdersTabs";
 export { default as ProductionProgress } from "./ProductionProgress";
 export { default as OrderPrintTemplate } from "./OrderPrintTemplate";
+export { default as RollsTab } from "./RollsTab";

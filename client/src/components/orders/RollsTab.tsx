@@ -266,7 +266,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
             <CardTitle className="text-sm font-medium text-gray-600">إجمالي الوزن</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold">{formatNumber(stats.totalWeight, 2)} كجم</div>
+            <div className="text-xl font-bold">{stats.totalWeight.toFixed(2)} كجم</div>
           </CardContent>
         </Card>
       </div>
@@ -508,7 +508,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                         </div>
                       </TableCell>
                       <TableCell className="font-medium" data-testid={`text-weight-${roll.roll_id}`}>
-                        {formatNumber(parseFloat(roll.weight_kg), 2)}
+                        {parseFloat(roll.weight_kg).toFixed(2)}
                       </TableCell>
                       <TableCell data-testid={`text-created-at-${roll.roll_id}`}>
                         {format(new Date(roll.created_at), "dd/MM/yyyy HH:mm", { locale: ar })}

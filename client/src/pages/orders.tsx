@@ -9,11 +9,11 @@ import { useToast } from "../hooks/use-toast";
 import { parseIntSafe } from "../../../shared/validation-utils";
 import { format } from "date-fns";
 import { isUserAdmin } from "../utils/roleUtils";
-import { OrdersStats, OrdersTabs, OrderPrintTemplate } from "../components/orders";
+import { OrdersStats, OrdersTabs, OrderPrintTemplate, RollsTab } from "../components/orders";
 import ViewOrderDialog from "../components/orders/ViewOrderDialog";
 import { Skeleton } from "../components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
-import { Search, ClipboardCheck, Link2, BarChart3 } from "lucide-react";
+import { Search, ClipboardCheck, Link2, BarChart3, Package } from "lucide-react";
 
 // استيراد كسول للصفحات
 const RollSearch = lazy(() => import("./RollSearch"));
@@ -757,13 +757,17 @@ export default function Orders() {
 
           {/* التبويبات الرئيسية */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
-            <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
               <TabsTrigger value="orders" data-testid="tab-orders">
                 الطلبات
               </TabsTrigger>
               <TabsTrigger value="production-orders" data-testid="tab-production-orders">
                 <ClipboardCheck className="h-4 w-4 ml-2" />
                 <span>أوامر الإنتاج</span>
+              </TabsTrigger>
+              <TabsTrigger value="rolls" data-testid="tab-rolls">
+                <Package className="h-4 w-4 ml-2" />
+                <span>الرولات</span>
               </TabsTrigger>
               <TabsTrigger value="production-queues" data-testid="tab-production-queues">
                 <Link2 className="h-4 w-4 ml-2" />
@@ -830,6 +834,14 @@ export default function Orders() {
                   <ProductionOrdersManagement />
                 </div>
               </Suspense>
+            </TabsContent>
+
+            {/* محتوى الرولات */}
+            <TabsContent value="rolls">
+              <RollsTab 
+                customers={customers}
+                productionOrders={productionOrders}
+              />
             </TabsContent>
 
             {/* محتوى طوابير الإنتاج */}
