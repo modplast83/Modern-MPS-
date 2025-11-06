@@ -58,6 +58,34 @@ import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/use-auth";
 import { formatNumber } from "../lib/formatNumber";
 
+// إعدادات موقع المصنع (يمكن تغييرها حسب الموقع الفعلي)
+const FACTORY_LOCATION = {
+  lat: 24.7136, // مثال: الرياض (يجب تحديث هذا بالموقع الفعلي للمصنع)
+  lng: 46.6753,
+};
+const ALLOWED_RADIUS_METERS = 500; // نطاق 500 متر من المصنع
+
+// دالة حساب المسافة بين نقطتين جغرافيتين (Haversine formula)
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371e3; // نصف قطر الأرض بالأمتار
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // المسافة بالأمتار
+}
+
 // Types for dashboard data
 interface UserData {
   id: number;
@@ -197,6 +225,11 @@ export default function UserDashboard() {
       status: string;
       notes?: string;
       action?: string;
+      location?: {
+        lat: number;
+        lng: number;
+        distance: number;
+      };
     }) => {
       const response = await fetch("/api/attendance", {
         method: "POST",
@@ -207,6 +240,7 @@ export default function UserDashboard() {
           action: data.action,
           date: new Date().toISOString().split("T")[0],
           notes: data.notes,
+          location: data.location,
         }),
       });
 
@@ -394,7 +428,44 @@ export default function UserDashboard() {
   });
 
   const handleAttendanceAction = (status: string, action?: string) => {
-    attendanceMutation.mutate({ status, action });
+    // التحقق من وجود الموقع الحالي
+    if (!currentLocation) {
+      toast({
+        title: "خطأ في الموقع",
+        description: "يرجى السماح بالوصول إلى موقعك الجغرافي لتسجيل الحضور",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // حساب المسافة من المصنع
+    const distance = calculateDistance(
+      currentLocation.lat,
+      currentLocation.lng,
+      FACTORY_LOCATION.lat,
+      FACTORY_LOCATION.lng
+    );
+
+    // التحقق من أن المستخدم داخل النطاق المسموح
+    if (distance > ALLOWED_RADIUS_METERS) {
+      toast({
+        title: "خارج نطاق المصنع",
+        description: `أنت على بعد ${Math.round(distance)} متر من المصنع. يجب أن تكون داخل نطاق ${ALLOWED_RADIUS_METERS} متر لتسجيل الحضور.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // إرسال الطلب مع الموقع الجغرافي
+    attendanceMutation.mutate({ 
+      status, 
+      action,
+      location: {
+        lat: currentLocation.lat,
+        lng: currentLocation.lng,
+        distance: Math.round(distance)
+      }
+    });
   };
 
   const getStatusColor = (status: string) => {

@@ -30,6 +30,7 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
     -   Quality control systems.
     -   Maintenance tracking, including spare parts management.
     -   HR management with attendance tracking and training programs.
+    -   **Geolocation-Based Attendance**: Attendance check-in system with GPS verification ensuring employees are within factory premises (500m radius) before allowing check-in. Uses Haversine formula for distance calculation.
     -   Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
     -   AI Assistant with context-aware intelligence, improved intent analysis, enhanced UI, and performance optimizations for smart query handling and data processing.
     -   **Replit Auth Integration**: Dual authentication support - traditional username/password and Replit Auth for seamless integration with Replit platform.
@@ -69,6 +70,18 @@ The system features comprehensive integration between four main sections:
 
 ## Recent Changes (November 2025)
 
+### Latest Updates
+- ✅ **Geolocation Attendance System**: Added GPS-based location verification for attendance check-in
+  - Frontend: Haversine distance calculation in user-dashboard.tsx
+  - Backend: Server-side validation in /api/attendance endpoint
+  - Factory location: Riyadh coordinates (configurable)
+  - Allowed radius: 500 meters
+  - Clear error messages in Arabic when outside range
+
+### Previous Updates
+- ✅ Added Rolls Tab in /orders page with advanced filters and Excel export
+- ✅ Added user name columns (created_by, printed_by, cut_by) in Rolls table
+- ✅ Green badge color for "منتهي" (done) status in rolls
 - ✅ Fixed React Key prop error in material-mixing.tsx
 - ✅ Added `/api/inventory/consumption` endpoint for material tracking
 - ✅ Verified all four-way system integration

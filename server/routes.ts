@@ -5886,6 +5886,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attendance", async (req, res) => {
     try {
+      // إعدادات موقع المصنع (نفس الإعدادات في Frontend)
+      const FACTORY_LOCATION = {
+        lat: 24.7136,
+        lng: 46.6753,
+      };
+      const ALLOWED_RADIUS_METERS = 500;
+
+      // دالة حساب المسافة بين نقطتين جغرافيتين
+      const calculateDistance = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number => {
+        const R = 6371e3;
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      };
+
+      // التحقق من وجود بيانات الموقع
+      if (!req.body.location || !req.body.location.lat || !req.body.location.lng) {
+        return res.status(400).json({
+          message: "يجب توفير الموقع الجغرافي لتسجيل الحضور",
+        });
+      }
+
+      // التحقق من المسافة
+      const distance = calculateDistance(
+        req.body.location.lat,
+        req.body.location.lng,
+        FACTORY_LOCATION.lat,
+        FACTORY_LOCATION.lng
+      );
+
+      if (distance > ALLOWED_RADIUS_METERS) {
+        console.log(`❌ Attendance denied - Outside factory range. Distance: ${Math.round(distance)}m`);
+        return res.status(403).json({
+          message: `أنت خارج نطاق المصنع. المسافة الحالية: ${Math.round(distance)} متر. يجب أن تكون داخل نطاق ${ALLOWED_RADIUS_METERS} متر.`,
+        });
+      }
+
+      console.log(`✅ Location verified - Distance: ${Math.round(distance)}m from factory`);
+
       const attendance = await storage.createAttendance(req.body);
 
       // Send attendance notification
