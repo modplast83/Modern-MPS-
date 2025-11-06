@@ -58,13 +58,6 @@ import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/use-auth";
 import { formatNumber } from "../lib/formatNumber";
 
-// إعدادات موقع المصنع (يمكن تغييرها حسب الموقع الفعلي)
-const FACTORY_LOCATION = {
-  lat: 24.7136, // مثال: الرياض (يجب تحديث هذا بالموقع الفعلي للمصنع)
-  lng: 46.6753,
-};
-const ALLOWED_RADIUS_METERS = 500; // نطاق 500 متر من المصنع
-
 // دالة حساب المسافة بين نقطتين جغرافيتين (Haversine formula)
 function calculateDistance(
   lat1: number,
@@ -144,6 +137,17 @@ export default function UserDashboard() {
   } | null>(null);
   const [locationError, setLocationError] = useState<string>("");
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // جلب إعدادات الموقع من قاعدة البيانات
+  const { data: systemSettings } = useQuery<any[]>({
+    queryKey: ["/api/system-settings"],
+  });
+
+  const factoryLocation = {
+    lat: parseFloat(systemSettings?.find((s) => s.setting_key === "factory_location_lat")?.setting_value || "24.7136"),
+    lng: parseFloat(systemSettings?.find((s) => s.setting_key === "factory_location_lng")?.setting_value || "46.6753"),
+  };
+  const allowedRadius = parseInt(systemSettings?.find((s) => s.setting_key === "attendance_allowed_radius")?.setting_value || "500");
 
   // Get current location
   useEffect(() => {
@@ -442,15 +446,15 @@ export default function UserDashboard() {
     const distance = calculateDistance(
       currentLocation.lat,
       currentLocation.lng,
-      FACTORY_LOCATION.lat,
-      FACTORY_LOCATION.lng
+      factoryLocation.lat,
+      factoryLocation.lng
     );
 
     // التحقق من أن المستخدم داخل النطاق المسموح
-    if (distance > ALLOWED_RADIUS_METERS) {
+    if (distance > allowedRadius) {
       toast({
         title: "خارج نطاق المصنع",
-        description: `أنت على بعد ${Math.round(distance)} متر من المصنع. يجب أن تكون داخل نطاق ${ALLOWED_RADIUS_METERS} متر لتسجيل الحضور.`,
+        description: `أنت على بعد ${Math.round(distance)} متر من المصنع. يجب أن تكون داخل نطاق ${allowedRadius} متر لتسجيل الحضور.`,
         variant: "destructive",
       });
       return;
