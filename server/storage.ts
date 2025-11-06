@@ -2927,13 +2927,14 @@ export class DatabaseStorage implements IStorage {
             sql`SELECT pg_advisory_xact_lock(${insertRoll.production_order_id})`
           );
           
-          const poRollCount = await tx
-            .select({ count: sql<number>`COUNT(*)` })
+          // استخدام MAX(roll_seq) بدلاً من COUNT لضمان الترتيب الصحيح حتى بعد حذف رولات
+          const maxSeqResult = await tx
+            .select({ maxSeq: sql<number>`COALESCE(MAX(${rolls.roll_seq}), 0)` })
             .from(rolls)
             .where(
               eq(rolls.production_order_id, insertRoll.production_order_id),
             );
-          const nextRollSeq = (poRollCount[0]?.count || 0) + 1;
+          const nextRollSeq = (maxSeqResult[0]?.maxSeq || 0) + 1;
 
           // STEP 5: Generate roll identifiers using production order number + sequence
           const rollNumber = `${productionOrder.production_order_number}-R${nextRollSeq.toString().padStart(2, "0")}`;
@@ -11530,13 +11531,10 @@ export class DatabaseStorage implements IStorage {
             .where(eq(production_orders.id, productionOrderId));
         }
 
-        // Create the roll
-        const [newRoll] = await db
-          .insert(rolls)
-          .values(rollData as any)
-          .returning();
+        // Create the roll using the main createRoll method to ensure proper roll_seq generation
+        const newRoll = await this.createRoll(rollData);
 
-        // Update produced quantity
+        // Update produced quantity (already handled in createRoll, but we need to update film_completion_percentage)
         const allRolls = await db
           .select({ weight_kg: rolls.weight_kg })
           .from(rolls)
@@ -11599,11 +11597,8 @@ export class DatabaseStorage implements IStorage {
           totalProductionMinutes = Math.floor(timeDiff / (1000 * 60));
         }
 
-        // Create the final roll
-        const [newRoll] = await db
-          .insert(rolls)
-          .values(rollData as any)
-          .returning();
+        // Create the final roll using the main createRoll method to ensure proper roll_seq generation
+        const newRoll = await this.createRoll(rollData);
 
         // Update production order to mark film as completed
         const endTime = new Date();
