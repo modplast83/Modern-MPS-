@@ -138,16 +138,10 @@ export default function UserDashboard() {
   const [locationError, setLocationError] = useState<string>("");
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // جلب إعدادات الموقع من قاعدة البيانات
-  const { data: systemSettings } = useQuery<any[]>({
-    queryKey: ["/api/system-settings"],
+  // جلب مواقع المصانع النشطة من قاعدة البيانات
+  const { data: activeLocations, isLoading: isLoadingLocations } = useQuery<any[]>({
+    queryKey: ["/api/factory-locations/active"],
   });
-
-  const factoryLocation = {
-    lat: parseFloat(systemSettings?.find((s) => s.setting_key === "factory_location_lat")?.setting_value || "24.7136"),
-    lng: parseFloat(systemSettings?.find((s) => s.setting_key === "factory_location_lng")?.setting_value || "46.6753"),
-  };
-  const allowedRadius = parseInt(systemSettings?.find((s) => s.setting_key === "attendance_allowed_radius")?.setting_value || "500");
 
   // Get current location
   useEffect(() => {
@@ -442,19 +436,55 @@ export default function UserDashboard() {
       return;
     }
 
-    // حساب المسافة من المصنع
-    const distance = calculateDistance(
-      currentLocation.lat,
-      currentLocation.lng,
-      factoryLocation.lat,
-      factoryLocation.lng
-    );
-
-    // التحقق من أن المستخدم داخل النطاق المسموح
-    if (distance > allowedRadius) {
+    // انتظار تحميل المواقع
+    if (isLoadingLocations) {
       toast({
-        title: "خارج نطاق المصنع",
-        description: `أنت على بعد ${Math.round(distance)} متر من المصنع. يجب أن تكون داخل نطاق ${allowedRadius} متر لتسجيل الحضور.`,
+        title: "جاري التحميل",
+        description: "جاري تحميل مواقع المصانع، يرجى الانتظار...",
+      });
+      return;
+    }
+
+    // التحقق من وجود مواقع نشطة
+    if (!activeLocations || activeLocations.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // التحقق من وجود المستخدم ضمن أي من المواقع النشطة
+    let isWithinRange = false;
+    let closestDistance = Infinity;
+    let closestLocation = null;
+    let validDistance = 0;
+
+    for (const factoryLocation of activeLocations) {
+      const distance = calculateDistance(
+        currentLocation.lat,
+        currentLocation.lng,
+        parseFloat(factoryLocation.latitude),
+        parseFloat(factoryLocation.longitude)
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestLocation = factoryLocation;
+      }
+
+      if (distance <= factoryLocation.allowed_radius) {
+        isWithinRange = true;
+        validDistance = distance;
+        break;
+      }
+    }
+
+    if (!isWithinRange) {
+      toast({
+        title: "خارج نطاق المصانع",
+        description: `أنت على بعد ${Math.round(closestDistance)} متر من أقرب موقع (${closestLocation?.name_ar}). يجب أن تكون داخل نطاق ${closestLocation?.allowed_radius} متر لتسجيل الحضور.`,
         variant: "destructive",
       });
       return;
@@ -467,7 +497,7 @@ export default function UserDashboard() {
       location: {
         lat: currentLocation.lat,
         lng: currentLocation.lng,
-        distance: Math.round(distance)
+        distance: Math.round(validDistance)
       }
     });
   };
