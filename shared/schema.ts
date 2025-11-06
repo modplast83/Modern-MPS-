@@ -2000,6 +2000,21 @@ export const system_settings = pgTable("system_settings", {
   updated_by: varchar("updated_by", { length: 20 }).references(() => users.id),
 });
 
+// 📍 جدول مواقع المصانع
+export const factory_locations = pgTable("factory_locations", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  name_ar: varchar("name_ar", { length: 100 }).notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }).notNull(),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }).notNull(),
+  allowed_radius: integer("allowed_radius").notNull().default(500), // بالأمتار
+  is_active: boolean("is_active").notNull().default(true),
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow(),
+  updated_at: timestamp("updated_at").defaultNow(),
+  created_by: integer("created_by").references(() => users.id),
+});
+
 // 👤 جدول إعدادات المستخدمين
 export const user_settings = pgTable("user_settings", {
   id: serial("id").primaryKey(),
@@ -2017,6 +2032,14 @@ export const insertSystemSettingSchema = createInsertSchema(
   system_settings,
 ).omit({
   id: true,
+  updated_at: true,
+});
+
+export const insertFactoryLocationSchema = createInsertSchema(
+  factory_locations,
+).omit({
+  id: true,
+  created_at: true,
   updated_at: true,
 });
 
@@ -2040,6 +2063,8 @@ export type CustomerProduct = typeof customer_products.$inferSelect & {
 export type InsertCustomerProduct = z.infer<typeof insertCustomerProductSchema>;
 export type SystemSetting = typeof system_settings.$inferSelect;
 export type InsertSystemSetting = z.infer<typeof insertSystemSettingSchema>;
+export type FactoryLocation = typeof factory_locations.$inferSelect;
+export type InsertFactoryLocation = z.infer<typeof insertFactoryLocationSchema>;
 export type UserSetting = typeof user_settings.$inferSelect;
 export type InsertUserSetting = z.infer<typeof insertUserSettingSchema>;
 
