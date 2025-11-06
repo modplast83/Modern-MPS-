@@ -5886,17 +5886,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/attendance", async (req, res) => {
     try {
-      // جلب إعدادات موقع المصنع من قاعدة البيانات
-      const latSetting = await storage.getSystemSettingByKey("factory_location_lat");
-      const lngSetting = await storage.getSystemSettingByKey("factory_location_lng");
-      const radiusSetting = await storage.getSystemSettingByKey("attendance_allowed_radius");
-
-      // القيم الافتراضية إذا لم توجد في قاعدة البيانات
-      const FACTORY_LOCATION = {
-        lat: latSetting ? parseFloat(latSetting.setting_value) : 24.7136,
-        lng: lngSetting ? parseFloat(lngSetting.setting_value) : 46.6753,
-      };
-      const ALLOWED_RADIUS_METERS = radiusSetting ? parseInt(radiusSetting.setting_value) : 500;
+      // جلب جميع المواقع النشطة للمصانع
+      const activeLocations = await storage.getActiveFactoryLocations();
 
       // دالة حساب المسافة بين نقطتين جغرافيتين
       const calculateDistance = (
@@ -5926,22 +5917,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // التحقق من المسافة
-      const distance = calculateDistance(
-        req.body.location.lat,
-        req.body.location.lng,
-        FACTORY_LOCATION.lat,
-        FACTORY_LOCATION.lng
-      );
-
-      if (distance > ALLOWED_RADIUS_METERS) {
-        console.log(`❌ Attendance denied - Outside factory range. Distance: ${Math.round(distance)}m`);
-        return res.status(403).json({
-          message: `أنت خارج نطاق المصنع. المسافة الحالية: ${Math.round(distance)} متر. يجب أن تكون داخل نطاق ${ALLOWED_RADIUS_METERS} متر.`,
+      // التحقق من وجود مواقع نشطة
+      if (activeLocations.length === 0) {
+        return res.status(400).json({
+          message: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
         });
       }
 
-      console.log(`✅ Location verified - Distance: ${Math.round(distance)}m from factory`);
+      // التحقق من وجود المستخدم ضمن أي من المواقع النشطة
+      let isWithinRange = false;
+      let closestDistance = Infinity;
+      let closestLocation = null;
+
+      for (const factoryLocation of activeLocations) {
+        const distance = calculateDistance(
+          req.body.location.lat,
+          req.body.location.lng,
+          parseFloat(factoryLocation.latitude),
+          parseFloat(factoryLocation.longitude)
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestLocation = factoryLocation;
+        }
+
+        if (distance <= factoryLocation.allowed_radius) {
+          isWithinRange = true;
+          console.log(`✅ Location verified at ${factoryLocation.name_ar} - Distance: ${Math.round(distance)}m`);
+          break;
+        }
+      }
+
+      if (!isWithinRange) {
+        console.log(`❌ Attendance denied - Outside all factory ranges. Closest: ${Math.round(closestDistance)}m`);
+        return res.status(403).json({
+          message: `أنت خارج نطاق جميع المصانع. أقرب موقع (${closestLocation?.name_ar}): ${Math.round(closestDistance)} متر. النطاق المسموح: ${closestLocation?.allowed_radius} متر.`,
+        });
+      }
 
       const attendance = await storage.createAttendance(req.body);
 

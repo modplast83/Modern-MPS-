@@ -59,6 +59,8 @@ import RoleManagementTab from "../components/RoleManagementTab";
 import { canAccessSettingsTab } from "../utils/roleUtils";
 import NotificationCenter from "../components/notifications/NotificationCenter";
 import WhatsAppWebhooksTab from "../components/settings/WhatsAppWebhooksTab";
+import LocationMapPicker from "../components/LocationMapPicker";
+import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -2229,163 +2231,332 @@ export default function Settings() {
   );
 }
 
-// Component for Location Settings
+// Component for Location Settings with Multiple Locations
 function LocationSettingsForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isLoading, setIsLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<any>(null);
 
-  // Fetch current location settings
-  const { data: locationSettings, isLoading: isLoadingSettings } = useQuery({
-    queryKey: ["/api/system-settings"],
+  // Form state
+  const [name, setName] = useState("");
+  const [nameAr, setNameAr] = useState("");
+  const [latitude, setLatitude] = useState(24.7136);
+  const [longitude, setLongitude] = useState(46.6753);
+  const [radius, setRadius] = useState(500);
+  const [description, setDescription] = useState("");
+
+  // Fetch factory locations
+  const { data: locations, isLoading } = useQuery({
+    queryKey: ["/api/factory-locations"],
   });
 
-  const [factoryLat, setFactoryLat] = useState("24.7136");
-  const [factoryLng, setFactoryLng] = useState("46.6753");
-  const [allowedRadius, setAllowedRadius] = useState("500");
+  const createMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("/api/factory-locations", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/factory-locations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-settings"] });
+      toast({ title: "تم إضافة الموقع بنجاح" });
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "خطأ في إضافة الموقع", variant: "destructive" });
+    },
+  });
 
-  useEffect(() => {
-    if (locationSettings) {
-      const latSetting = locationSettings.find((s: any) => s.setting_key === "factory_location_lat");
-      const lngSetting = locationSettings.find((s: any) => s.setting_key === "factory_location_lng");
-      const radiusSetting = locationSettings.find((s: any) => s.setting_key === "attendance_allowed_radius");
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      return await apiRequest(`/api/factory-locations/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/factory-locations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/system-settings"] });
+      toast({ title: "تم تحديث الموقع بنجاح" });
+      resetForm();
+    },
+    onError: () => {
+      toast({ title: "خطأ في تحديث الموقع", variant: "destructive" });
+    },
+  });
 
-      if (latSetting) setFactoryLat(latSetting.setting_value);
-      if (lngSetting) setFactoryLng(lngSetting.setting_value);
-      if (radiusSetting) setAllowedRadius(radiusSetting.setting_value);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await apiRequest(`/api/factory-locations/${id}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/factory-locations"] });
+      toast({ title: "تم حذف الموقع بنجاح" });
+    },
+    onError: () => {
+      toast({ title: "خطأ في حذف الموقع", variant: "destructive" });
+    },
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      return await apiRequest(`/api/factory-locations/${id}`, {
+        method: "PUT",
+        body: JSON.stringify({ is_active: !isActive }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/factory-locations"] });
+      toast({ title: "تم تحديث حالة الموقع" });
+    },
+  });
+
+  const resetForm = () => {
+    setShowForm(false);
+    setEditingLocation(null);
+    setName("");
+    setNameAr("");
+    setLatitude(24.7136);
+    setLongitude(46.6753);
+    setRadius(500);
+    setDescription("");
+  };
+
+  const handleEdit = (location: any) => {
+    setEditingLocation(location);
+    setName(location.name);
+    setNameAr(location.name_ar);
+    setLatitude(parseFloat(location.latitude));
+    setLongitude(parseFloat(location.longitude));
+    setRadius(location.allowed_radius);
+    setDescription(location.description || "");
+    setShowForm(true);
+  };
+
+  const handleSubmit = () => {
+    if (!name || !nameAr) {
+      toast({ title: "يرجى ملء جميع الحقول المطلوبة", variant: "destructive" });
+      return;
     }
-  }, [locationSettings]);
 
-  const handleSaveSettings = async () => {
-    try {
-      setIsLoading(true);
+    const data = {
+      name,
+      name_ar: nameAr,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
+      allowed_radius: radius,
+      description,
+      is_active: true,
+    };
 
-      // Update or create settings
-      const updates = [
-        { key: "factory_location_lat", value: factoryLat },
-        { key: "factory_location_lng", value: factoryLng },
-        { key: "attendance_allowed_radius", value: allowedRadius },
-      ];
-
-      for (const { key, value } of updates) {
-        const existingSetting = locationSettings?.find((s: any) => s.setting_key === key);
-        if (existingSetting) {
-          await apiRequest(`/api/system-settings/${key}`, {
-            method: "PUT",
-            body: JSON.stringify({ setting_value: value }),
-            headers: { "Content-Type": "application/json" },
-          });
-        } else {
-          await apiRequest("/api/system-settings", {
-            method: "POST",
-            body: JSON.stringify({
-              setting_key: key,
-              setting_value: value,
-              setting_type: "number",
-              description: key === "factory_location_lat" ? "دائرة العرض لموقع المصنع" :
-                           key === "factory_location_lng" ? "خط الطول لموقع المصنع" :
-                           "النطاق المسموح لتسجيل الحضور بالأمتار",
-              is_editable: true,
-            }),
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      }
-
-      await queryClient.invalidateQueries({ queryKey: ["/api/system-settings"] });
-
-      toast({
-        title: "تم الحفظ بنجاح",
-        description: "تم تحديث إعدادات الموقع الجغرافي",
-      });
-    } catch (error) {
-      toast({
-        title: "خطأ",
-        description: "فشل في حفظ الإعدادات",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    if (editingLocation) {
+      updateMutation.mutate({ id: editingLocation.id, data });
+    } else {
+      createMutation.mutate(data);
     }
   };
 
-  if (isLoadingSettings) {
+  if (isLoading) {
     return <div>جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="factory-lat">دائرة العرض (Latitude)</Label>
-          <Input
-            id="factory-lat"
-            type="number"
-            step="0.0001"
-            value={factoryLat}
-            onChange={(e) => setFactoryLat(e.target.value)}
-            placeholder="24.7136"
-            data-testid="input-factory-lat"
-          />
-          <p className="text-xs text-gray-500">إحداثية دائرة العرض لموقع المصنع</p>
+      {/* List of locations */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-semibold">مواقع المصانع</h3>
+          <Button onClick={() => setShowForm(!showForm)} data-testid="button-add-location">
+            <Plus className="w-4 h-4 ml-2" />
+            {showForm ? "إلغاء" : "إضافة موقع جديد"}
+          </Button>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="factory-lng">خط الطول (Longitude)</Label>
-          <Input
-            id="factory-lng"
-            type="number"
-            step="0.0001"
-            value={factoryLng}
-            onChange={(e) => setFactoryLng(e.target.value)}
-            placeholder="46.6753"
-            data-testid="input-factory-lng"
-          />
-          <p className="text-xs text-gray-500">إحداثية خط الطول لموقع المصنع</p>
-        </div>
+        {locations && locations.length > 0 ? (
+          <div className="grid gap-4">
+            {locations.map((location: any) => (
+              <Card key={location.id} className={!location.is_active ? "opacity-50" : ""}>
+                <CardContent className="pt-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h4 className="font-semibold">{location.name_ar}</h4>
+                        <Badge variant={location.is_active ? "default" : "secondary"}>
+                          {location.is_active ? "نشط" : "غير نشط"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        {location.description || location.name}
+                      </p>
+                      <div className="text-sm space-y-1">
+                        <p>
+                          <strong>الإحداثيات:</strong> {location.latitude}, {location.longitude}
+                        </p>
+                        <p>
+                          <strong>النطاق:</strong> {location.allowed_radius} متر
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleActiveMutation.mutate({ 
+                          id: location.id, 
+                          isActive: location.is_active 
+                        })}
+                        data-testid={`button-toggle-${location.id}`}
+                      >
+                        {location.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEdit(location)}
+                        data-testid={`button-edit-${location.id}`}
+                      >
+                        تعديل
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => deleteMutation.mutate(location.id)}
+                        data-testid={`button-delete-${location.id}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 py-8">لا توجد مواقع مضافة بعد</p>
+        )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="allowed-radius">النطاق المسموح (بالأمتار)</Label>
-        <Input
-          id="allowed-radius"
-          type="number"
-          value={allowedRadius}
-          onChange={(e) => setAllowedRadius(e.target.value)}
-          placeholder="500"
-          data-testid="input-allowed-radius"
-        />
-        <p className="text-xs text-gray-500">
-          المسافة المسموح بها من المصنع لتسجيل الحضور (مثال: 500 متر)
-        </p>
-      </div>
+      {/* Add/Edit form */}
+      {showForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{editingLocation ? "تعديل الموقع" : "إضافة موقع جديد"}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="name-en">الاسم (English)</Label>
+                <Input
+                  id="name-en"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Main Factory"
+                  data-testid="input-name-en"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name-ar">الاسم (عربي)</Label>
+                <Input
+                  id="name-ar"
+                  value={nameAr}
+                  onChange={(e) => setNameAr(e.target.value)}
+                  placeholder="المصنع الرئيسي"
+                  data-testid="input-name-ar"
+                />
+              </div>
+            </div>
 
-      <Separator />
+            <div className="space-y-2">
+              <Label htmlFor="description">الوصف (اختياري)</Label>
+              <Input
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="وصف الموقع..."
+                data-testid="input-description"
+              />
+            </div>
 
-      <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
-        <h4 className="font-medium mb-2 flex items-center gap-2">
-          <MapPin className="w-4 h-4" />
-          الموقع الحالي
-        </h4>
-        <div className="text-sm space-y-1">
-          <p>
-            <strong>الإحداثيات:</strong> {factoryLat}, {factoryLng}
-          </p>
-          <p>
-            <strong>النطاق المسموح:</strong> {allowedRadius} متر
-          </p>
-        </div>
-      </div>
+            <div className="space-y-2">
+              <Label>اختر الموقع من الخريطة</Label>
+              <LocationMapPicker
+                latitude={latitude}
+                longitude={longitude}
+                radius={radius}
+                onLocationChange={(lat, lng) => {
+                  setLatitude(lat);
+                  setLongitude(lng);
+                }}
+                editable={true}
+              />
+              <p className="text-xs text-gray-500">
+                انقر على الخريطة لتحديد الموقع
+              </p>
+            </div>
 
-      <Button
-        onClick={handleSaveSettings}
-        disabled={isLoading}
-        className="w-full"
-        data-testid="button-save-location"
-      >
-        <Save className="w-4 h-4 ml-2" />
-        {isLoading ? "جاري الحفظ..." : "حفظ الإعدادات"}
-      </Button>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="lat">دائرة العرض</Label>
+                <Input
+                  id="lat"
+                  type="number"
+                  step="0.0001"
+                  value={latitude}
+                  onChange={(e) => setLatitude(parseFloat(e.target.value))}
+                  data-testid="input-lat"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lng">خط الطول</Label>
+                <Input
+                  id="lng"
+                  type="number"
+                  step="0.0001"
+                  value={longitude}
+                  onChange={(e) => setLongitude(parseFloat(e.target.value))}
+                  data-testid="input-lng"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="radius">النطاق (متر)</Label>
+                <Input
+                  id="radius"
+                  type="number"
+                  value={radius}
+                  onChange={(e) => setRadius(parseInt(e.target.value))}
+                  data-testid="input-radius"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSubmit}
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="flex-1"
+                data-testid="button-submit-location"
+              >
+                <Save className="w-4 h-4 ml-2" />
+                {editingLocation ? "تحديث الموقع" : "إضافة الموقع"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={resetForm}
+                data-testid="button-cancel-form"
+              >
+                إلغاء
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
