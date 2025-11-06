@@ -71,11 +71,19 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
-- ✅ **Geolocation Attendance System**: Added GPS-based location verification for attendance check-in
+- ✅ **Factory Location Settings Management**: Added admin panel for managing geolocation settings
+  - New tab "موقع المصنع" in Settings page (/settings)
+  - Configurable factory coordinates (latitude, longitude)
+  - Adjustable allowed radius for attendance check-in
+  - Settings stored in `system_settings` table in database
+  - API endpoints: GET/POST/PUT `/api/system-settings`
+  - Real-time updates: Both frontend and backend now read from database instead of hardcoded values
+  - Default values: Riyadh (24.7136, 46.6753) with 500m radius
+
+- ✅ **Geolocation Attendance System**: GPS-based location verification for attendance check-in
   - Frontend: Haversine distance calculation in user-dashboard.tsx
   - Backend: Server-side validation in /api/attendance endpoint
-  - Factory location: Riyadh coordinates (configurable)
-  - Allowed radius: 500 meters
+  - Location settings dynamically loaded from database
   - Clear error messages in Arabic when outside range
 
 ### Previous Updates
