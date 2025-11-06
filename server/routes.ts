@@ -6133,6 +6133,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ System Settings API ============
+
+  // Get all system settings
+  app.get("/api/system-settings", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات النظام" });
+    }
+  });
+
+  // Get specific system setting by key
+  app.get("/api/system-settings/:key", async (req, res) => {
+    try {
+      const setting = await storage.getSystemSettingByKey(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "الإعداد غير موجود" });
+      }
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching system setting:", error);
+      res.status(500).json({ message: "خطأ في جلب الإعداد" });
+    }
+  });
+
+  // Update system setting
+  app.put("/api/system-settings/:key", async (req, res) => {
+    try {
+      const { setting_value } = req.body;
+      const updated = await storage.updateSystemSetting(req.params.key, setting_value, req.session.userId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating system setting:", error);
+      res.status(500).json({ message: "خطأ في تحديث الإعداد" });
+    }
+  });
+
+  // Create system setting
+  app.post("/api/system-settings", async (req, res) => {
+    try {
+      const setting = await storage.createSystemSetting(req.body);
+      res.status(201).json(setting);
+    } catch (error) {
+      console.error("Error creating system setting:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الإعداد" });
+    }
+  });
+
   // ============ PRODUCTION FLOW API ENDPOINTS ============
 
   // Production Settings
