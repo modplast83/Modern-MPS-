@@ -43,6 +43,7 @@ import {
   leave_balances,
   system_settings,
   user_settings,
+  factory_locations,
   notifications,
   notification_templates,
   user_requests,
@@ -138,6 +139,8 @@ import {
   type InsertLeaveRequest,
   type SystemSetting,
   type InsertSystemSetting,
+  type FactoryLocation,
+  type InsertFactoryLocation,
   type UserSetting,
   type InsertUserSetting,
   type LeaveBalance,
@@ -744,6 +747,16 @@ export interface IStorage {
     key: string,
     value: string,
   ): Promise<UserSetting>;
+  getSystemSettingByKey(key: string): Promise<SystemSetting | undefined>;
+  createSystemSetting(setting: InsertSystemSetting): Promise<SystemSetting>;
+
+  // Factory Locations
+  getFactoryLocations(): Promise<FactoryLocation[]>;
+  getActiveFactoryLocations(): Promise<FactoryLocation[]>;
+  getFactoryLocation(id: number): Promise<FactoryLocation | undefined>;
+  createFactoryLocation(location: InsertFactoryLocation): Promise<FactoryLocation>;
+  updateFactoryLocation(id: number, location: Partial<InsertFactoryLocation>): Promise<FactoryLocation>;
+  deleteFactoryLocation(id: number): Promise<void>;
 
   // Database Management
   getDatabaseStats(): Promise<any>;
@@ -6700,6 +6713,59 @@ export class DatabaseStorage implements IStorage {
       .values(setting)
       .returning();
     return newSetting;
+  }
+
+  // Factory Locations Implementation
+  async getFactoryLocations(): Promise<FactoryLocation[]> {
+    return await db
+      .select()
+      .from(factory_locations)
+      .orderBy(factory_locations.name_ar);
+  }
+
+  async getActiveFactoryLocations(): Promise<FactoryLocation[]> {
+    return await db
+      .select()
+      .from(factory_locations)
+      .where(eq(factory_locations.is_active, true))
+      .orderBy(factory_locations.name_ar);
+  }
+
+  async getFactoryLocation(id: number): Promise<FactoryLocation | undefined> {
+    const [location] = await db
+      .select()
+      .from(factory_locations)
+      .where(eq(factory_locations.id, id));
+    return location || undefined;
+  }
+
+  async createFactoryLocation(location: InsertFactoryLocation): Promise<FactoryLocation> {
+    const [newLocation] = await db
+      .insert(factory_locations)
+      .values(location)
+      .returning();
+    return newLocation;
+  }
+
+  async updateFactoryLocation(
+    id: number,
+    location: Partial<InsertFactoryLocation>
+  ): Promise<FactoryLocation> {
+    const [updated] = await db
+      .update(factory_locations)
+      .set({
+        ...location,
+        updated_at: new Date(),
+      })
+      .where(eq(factory_locations.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteFactoryLocation(id: number): Promise<void> {
+    await db
+      .delete(factory_locations)
+      .where(eq(factory_locations.id, id));
   }
 
   async updateSystemSetting(
