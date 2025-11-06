@@ -6188,6 +6188,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Factory Locations API ============
+
+  // Get all factory locations
+  app.get("/api/factory-locations", async (req, res) => {
+    try {
+      const locations = await storage.getFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب مواقع المصانع" });
+    }
+  });
+
+  // Get active factory locations only
+  app.get("/api/factory-locations/active", async (req, res) => {
+    try {
+      const locations = await storage.getActiveFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching active factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب المواقع النشطة" });
+    }
+  });
+
+  // Get single factory location
+  app.get("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getFactoryLocation(id);
+      if (!location) {
+        return res.status(404).json({ message: "الموقع غير موجود" });
+      }
+      res.json(location);
+    } catch (error) {
+      console.error("Error fetching factory location:", error);
+      res.status(500).json({ message: "خطأ في جلب الموقع" });
+    }
+  });
+
+  // Create factory location
+  app.post("/api/factory-locations", async (req, res) => {
+    try {
+      const location = await storage.createFactoryLocation({
+        ...req.body,
+        created_by: req.session.userId,
+      });
+      res.status(201).json(location);
+    } catch (error) {
+      console.error("Error creating factory location:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
+  // Update factory location
+  app.put("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.updateFactoryLocation(id, req.body);
+      res.json(location);
+    } catch (error) {
+      console.error("Error updating factory location:", error);
+      res.status(500).json({ message: "خطأ في تحديث الموقع" });
+    }
+  });
+
+  // Delete factory location
+  app.delete("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFactoryLocation(id);
+      res.json({ message: "تم حذف الموقع بنجاح" });
+    } catch (error) {
+      console.error("Error deleting factory location:", error);
+      res.status(500).json({ message: "خطأ في حذف الموقع" });
+    }
+  });
+
   // ============ PRODUCTION FLOW API ENDPOINTS ============
 
   // Production Settings
