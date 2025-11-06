@@ -71,6 +71,16 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Fixed Roll Sequential Numbering System** (November 6, 2025):
+  - **Issue**: Roll sequence numbers (roll_seq) were using COUNT(*) which could cause issues after deletions
+  - **Fix**: Changed to use MAX(roll_seq) + 1 for reliable sequential numbering per production order
+  - **Impact**: All roll creation functions (createRoll, createRollWithTiming, createFinalRoll) now use consistent logic
+  - **Result**: Roll numbers are always sequential and never reuse deleted numbers (e.g., PO001-R01, PO001-R02, PO001-R03)
+  - **Technical Details**:
+    - Uses PostgreSQL advisory locks to prevent race conditions
+    - Each production order has its own independent sequence
+    - Format: {production_order_number}-R{seq} (e.g., PO001-R01)
+
 - ✅ **Multiple Factory Locations with Interactive Maps** (November 6, 2025):
   - **New Database Table**: `factory_locations` for managing multiple factory sites
   - **Interactive Map Component**: Using react-leaflet@4.2.1 for visual location selection
