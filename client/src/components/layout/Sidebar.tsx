@@ -57,6 +57,22 @@ const modules = [
     requiredSections: [1], // مخصص لعاملي قسم الفيلم
   },
   {
+    name: "لوحة عامل الطباعة",
+    name_ar: "لوحة عامل الطباعة",
+    icon: Cog,
+    path: "/printing-operator",
+    active: false,
+    requiredSections: [4], // مخصص لعاملي قسم الطباعة
+  },
+  {
+    name: "لوحة عامل التقطيع",
+    name_ar: "لوحة عامل التقطيع",
+    icon: Cog,
+    path: "/cutting-operator",
+    active: false,
+    requiredSections: [5], // مخصص لعاملي قسم التقطيع
+  },
+  {
     name: "مراقبة الإنتاج",
     name_ar: "مراقبة الإنتاج",
     icon: Monitor,
