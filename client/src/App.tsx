@@ -36,6 +36,8 @@ import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
+import PrintingOperatorDashboard from "./pages/PrintingOperatorDashboard";
+import CuttingOperatorDashboard from "./pages/CuttingOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
 import MaterialMixing from "./pages/material-mixing";
@@ -100,6 +102,18 @@ function AppRoutes() {
       <Route path="/film-operator">
         <ProtectedRoute path="/film-operator">
           <FilmOperatorDashboard />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/printing-operator">
+        <ProtectedRoute path="/printing-operator">
+          <PrintingOperatorDashboard />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/cutting-operator">
+        <ProtectedRoute path="/cutting-operator">
+          <CuttingOperatorDashboard />
         </ProtectedRoute>
       </Route>
 
