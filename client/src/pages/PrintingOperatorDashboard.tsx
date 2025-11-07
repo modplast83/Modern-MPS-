@@ -252,7 +252,7 @@ export default function PrintingOperatorDashboard() {
                                 ) : (
                                   <>
                                     <ArrowRight className="h-4 w-4 ml-1" />
-                                    <span className="hidden sm:inline">إلى التقطيع</span>
+                                    <span className="hidden sm:inline">طباعة</span>
                                   </>
                                 )}
                               </Button>
