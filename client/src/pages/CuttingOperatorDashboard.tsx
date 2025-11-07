@@ -252,7 +252,7 @@ export default function CuttingOperatorDashboard() {
                                 ) : (
                                   <>
                                     <CheckCircle2 className="h-4 w-4 ml-1" />
-                                    <span className="hidden sm:inline">إنهاء</span>
+                                    <span className="hidden sm:inline">قطع</span>
                                   </>
                                 )}
                               </Button>
