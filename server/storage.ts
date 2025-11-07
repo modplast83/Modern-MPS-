@@ -5431,7 +5431,7 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async getCustomerProducts(limit: number = 1000): Promise<CustomerProduct[]> {
+  async getCustomerProducts(): Promise<CustomerProduct[]> {
     return await db
       .select({
         id: customer_products.id,
@@ -5465,7 +5465,6 @@ export class DatabaseStorage implements IStorage {
       .from(customer_products)
       .leftJoin(customers, eq(customer_products.customer_id, customers.id))
       .orderBy(desc(customer_products.created_at))
-      .limit(limit)
       .then((results) =>
         results.map((row) => ({
           ...row,
