@@ -1260,6 +1260,11 @@ export class DatabaseStorage implements IStorage {
             section_id: users.section_id,
             status: users.status,
             created_at: users.created_at,
+            replit_user_id: users.replit_user_id,
+            first_name: users.first_name,
+            last_name: users.last_name,
+            profile_image_url: users.profile_image_url,
+            updated_at: users.updated_at,
           })
           .from(users)
           .where(eq(users.id, id));
@@ -1286,6 +1291,11 @@ export class DatabaseStorage implements IStorage {
             section_id: users.section_id,
             status: users.status,
             created_at: users.created_at,
+            replit_user_id: users.replit_user_id,
+            first_name: users.first_name,
+            last_name: users.last_name,
+            profile_image_url: users.profile_image_url,
+            updated_at: users.updated_at,
           })
           .from(users);
       },
@@ -1314,6 +1324,11 @@ export class DatabaseStorage implements IStorage {
             section_id: users.section_id,
             status: users.status,
             created_at: users.created_at,
+            replit_user_id: users.replit_user_id,
+            first_name: users.first_name,
+            last_name: users.last_name,
+            profile_image_url: users.profile_image_url,
+            updated_at: users.updated_at,
           })
           .from(users)
           .where(eq(users.role_id, roleId));
@@ -1343,6 +1358,11 @@ export class DatabaseStorage implements IStorage {
             section_id: users.section_id,
             status: users.status,
             created_at: users.created_at,
+            replit_user_id: users.replit_user_id,
+            first_name: users.first_name,
+            last_name: users.last_name,
+            profile_image_url: users.profile_image_url,
+            updated_at: users.updated_at,
           })
           .from(users)
           .where(eq(users.section_id, sectionId));

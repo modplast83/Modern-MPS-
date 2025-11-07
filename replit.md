@@ -71,6 +71,24 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Sales Representative Selection in Customer Form** (November 7, 2025):
+  - **New Feature**: Added sales representative dropdown in customer creation/edit form
+  - **Backend Changes**:
+    - Created `getSafeUsersBySection()` method in storage.ts to fetch users by section
+    - Added `/api/users/sales-reps` endpoint to retrieve sales team members (section_id = 7)
+  - **Frontend Changes**:
+    - Added sales rep dropdown in customer form (definitions.tsx)
+    - Fetches and displays only users from Sales section (SEC07)
+    - Dropdown shows display name in Arabic/English or username
+  - **Database**: `customers.sales_rep_id` field already existed, now actively used in UI
+  - **Impact**: Customers can now be assigned to specific sales representatives for better customer relationship management
+
+- ✅ **User Profile Moved to Dashboard** (November 7, 2025):
+  - **Change**: Moved user profile tab from Settings page to main Dashboard
+  - **New Component**: Created `UserProfile.tsx` component in `client/src/components/dashboard/`
+  - **Impact**: User settings (name, email, phone, theme, notifications) now accessible directly from dashboard
+  - **UI Improvement**: Better user experience with profile settings at the main dashboard level
+
 - ✅ **Fixed Customer Products Limit in Orders Form** (November 7, 2025):
   - **Issue**: `getCustomerProducts()` had a limit of 1000 products, preventing display of all customer products in the order form
   - **Fix**: Removed the limit parameter entirely to fetch all customer products
