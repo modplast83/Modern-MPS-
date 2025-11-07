@@ -28,6 +28,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Search, Plus, Trash2 } from "lucide-react";
+import { formatNumber, formatWeight, formatPercentage } from "../../lib/formatNumber";
 
 // Master batch colors mapping
 const masterBatchColors = [
@@ -555,11 +556,11 @@ export default function OrdersForm({
                             <div className="text-xs space-y-1">
                               <div className="text-blue-700">
                                 <span className="font-medium">نسبة الزيادة:</span>{" "}
-                                {quantityPreviews[prodOrder.uid].overrun_percentage}%
+                                {formatPercentage(quantityPreviews[prodOrder.uid].overrun_percentage)}
                               </div>
                               <div className="text-blue-700">
                                 <span className="font-medium">الكمية النهائية:</span>{" "}
-                                {quantityPreviews[prodOrder.uid].final_quantity_kg} كيلو
+                                {formatWeight(quantityPreviews[prodOrder.uid].final_quantity_kg)}
                               </div>
                             </div>
                           </div>
