@@ -1656,6 +1656,9 @@ export const insertRollSchema = createInsertSchema(rolls)
     roll_seq: true,
     qr_code_text: true,
     qr_png_base64: true,
+    created_by: true, // Added on server-side from session
+    printed_by: true, // Added on server-side when printed
+    cut_by: true, // Added on server-side when cut
   })
   .extend({
     // INVARIANT B: Enforce production order constraints
