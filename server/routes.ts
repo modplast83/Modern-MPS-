@@ -2043,16 +2043,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create roll with timing calculation
   app.post("/api/rolls/create-with-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
+      const dataToValidate = {
+        ...req.body,
+        created_by: userId,
+      };
+
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
       const rollData = {
         ...validatedData,
-        created_by: userId,
         is_last_roll: req.body.is_last_roll || false,
       };
 
@@ -2075,19 +2080,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create final roll and complete film production
   app.post("/api/rolls/create-final", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
-      const rollData = {
-        ...validatedData,
+      const dataToValidate = {
+        ...req.body,
         created_by: userId,
       };
 
-      const newRoll = await storage.createFinalRoll(rollData);
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
+      const newRoll = await storage.createFinalRoll(validatedData);
       res.status(201).json({
         success: true,
         message: "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح",
