@@ -71,6 +71,12 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Fixed Customer Products Limit in Orders Form** (November 7, 2025):
+  - **Issue**: `getCustomerProducts()` had a limit of 1000 products, preventing display of all customer products in the order form
+  - **Fix**: Removed the limit parameter entirely to fetch all customer products
+  - **Impact**: Order creation form now displays all customer products when selecting a customer
+  - **Technical Details**: Modified `server/storage.ts` to remove `.limit(limit)` from the query
+
 - ✅ **Fixed Roll Sequential Numbering System** (November 6, 2025):
   - **Issue**: Roll sequence numbers (roll_seq) were using COUNT(*) which could cause issues after deletions
   - **Fix**: Changed to use MAX(roll_seq) + 1 for reliable sequential numbering per production order
