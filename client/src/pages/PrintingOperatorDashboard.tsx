@@ -51,26 +51,26 @@ export default function PrintingOperatorDashboard() {
     refetchInterval: 30000,
   });
 
-  const moveToCuttingMutation = useMutation({
+  const moveToPrintingMutation = useMutation({
     mutationFn: async (rollId: number) => {
       return await apiRequest(`/api/rolls/${rollId}`, {
         method: "PATCH",
-        body: JSON.stringify({ stage: "cutting" }),
+        body: JSON.stringify({ stage: "printing" }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rolls/active-for-printing"] });
-      toast({ title: "✓ تم بنجاح", description: "تم نقل الرول إلى مرحلة التقطيع", variant: "default" });
+      toast({ title: "✓ تم بنجاح", description: "تم نقل الرول إلى مرحلة الطباعة", variant: "default" });
     },
     onError: (error: Error) => {
       toast({ title: "خطأ", description: error.message || "فشل نقل الرول", variant: "destructive" });
     },
   });
 
-  const handleMoveToCutting = async (rollId: number) => {
+  const handleMoveToPrinting = async (rollId: number) => {
     setProcessingRollIds(prev => new Set(prev).add(rollId));
     try {
-      await moveToCuttingMutation.mutateAsync(rollId);
+      await moveToPrintingMutation.mutateAsync(rollId);
     } finally {
       setProcessingRollIds(prev => {
         const newSet = new Set(prev);
@@ -242,16 +242,16 @@ export default function PrintingOperatorDashboard() {
                               </div>
                               
                               <Button
-                                onClick={() => handleMoveToCutting(roll.roll_id)}
+                                onClick={() => handleMoveToPrinting(roll.roll_id)}
                                 disabled={processingRollIds.has(roll.roll_id)}
                                 size="sm"
-                                data-testid={`button-move-to-cutting-${roll.roll_id}`}
+                                data-testid={`button-move-to-printing-${roll.roll_id}`}
                               >
                                 {processingRollIds.has(roll.roll_id) ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                   <>
-                                    <ArrowRight className="h-4 w-4 ml-1" />
+                                    <Printer className="h-4 w-4 ml-1" />
                                     <span className="hidden sm:inline">طباعة</span>
                                   </>
                                 )}

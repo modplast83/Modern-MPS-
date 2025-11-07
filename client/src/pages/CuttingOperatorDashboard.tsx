@@ -50,26 +50,26 @@ export default function CuttingOperatorDashboard() {
     refetchInterval: 30000,
   });
 
-  const moveToDoneMutation = useMutation({
+  const moveToCuttingMutation = useMutation({
     mutationFn: async (rollId: number) => {
       return await apiRequest(`/api/rolls/${rollId}`, {
         method: "PATCH",
-        body: JSON.stringify({ stage: "done" }),
+        body: JSON.stringify({ stage: "cutting" }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rolls/active-for-cutting"] });
-      toast({ title: "✓ تم بنجاح", description: "تم إنهاء الرول ونقله إلى المستودع", variant: "default" });
+      toast({ title: "✓ تم بنجاح", description: "تم نقل الرول إلى مرحلة التقطيع", variant: "default" });
     },
     onError: (error: Error) => {
-      toast({ title: "خطأ", description: error.message || "فشل نقل الرول", variant: "destructive" });
+      toast({ title: "خطأ", description: "فشل نقل الرول", variant: "destructive" });
     },
   });
 
-  const handleMoveToDone = async (rollId: number) => {
+  const handleMoveToCutting = async (rollId: number) => {
     setProcessingRollIds(prev => new Set(prev).add(rollId));
     try {
-      await moveToDoneMutation.mutateAsync(rollId);
+      await moveToCuttingMutation.mutateAsync(rollId);
     } finally {
       setProcessingRollIds(prev => {
         const newSet = new Set(prev);
@@ -241,17 +241,17 @@ export default function CuttingOperatorDashboard() {
                               </div>
                               
                               <Button
-                                onClick={() => handleMoveToDone(roll.roll_id)}
+                                onClick={() => handleMoveToCutting(roll.roll_id)}
                                 disabled={processingRollIds.has(roll.roll_id)}
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
-                                data-testid={`button-move-to-done-${roll.roll_id}`}
+                                data-testid={`button-move-to-cutting-${roll.roll_id}`}
                               >
                                 {processingRollIds.has(roll.roll_id) ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
                                   <>
-                                    <CheckCircle2 className="h-4 w-4 ml-1" />
+                                    <Scissors className="h-4 w-4 ml-1" />
                                     <span className="hidden sm:inline">قطع</span>
                                   </>
                                 )}

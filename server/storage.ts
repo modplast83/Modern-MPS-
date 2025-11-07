@@ -11701,7 +11701,7 @@ export class DatabaseStorage implements IStorage {
           return [];
         }
 
-        // Get rolls in printing stage
+        // Get rolls in film stage (ready for printing)
         const rollsData = await db
           .select({
             roll_id: rolls.id,
@@ -11724,7 +11724,7 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(customers, eq(orders.customer_id, customers.id))
           .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
           .leftJoin(items, eq(customer_products.item_id, items.id))
-          .where(eq(rolls.stage, 'printing'))
+          .where(eq(rolls.stage, 'film'))
           .orderBy(desc(rolls.roll_created_at));
 
         // Group by production order
@@ -11775,7 +11775,7 @@ export class DatabaseStorage implements IStorage {
           return [];
         }
 
-        // Get rolls in cutting stage
+        // Get rolls in printing stage (ready for cutting)
         const rollsData = await db
           .select({
             roll_id: rolls.id,
@@ -11799,7 +11799,7 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(customers, eq(orders.customer_id, customers.id))
           .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
           .leftJoin(items, eq(customer_products.item_id, items.id))
-          .where(eq(rolls.stage, 'cutting'))
+          .where(eq(rolls.stage, 'printing'))
           .orderBy(desc(rolls.roll_created_at));
 
         // Group by production order
