@@ -71,6 +71,19 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Added Operator Dashboard Permissions** (November 7, 2025):
+  - **New Permissions**: Added three new permissions for operator dashboards
+    - `view_film_dashboard` - عرض لوحة عامل الفيلم
+    - `view_printing_dashboard` - عرض لوحة عامل الطباعة
+    - `view_cutting_dashboard` - عرض لوحة عامل التقطيع
+  - **Route Permissions**: Added route mappings for operator dashboards
+    - `/film-operator` requires `view_film_dashboard`
+    - `/printing-operator` requires `view_printing_dashboard`
+    - `/cutting-operator` requires `view_cutting_dashboard`
+  - **Category**: All three permissions under "الإنتاج" (Production) category
+  - **Total Permissions**: System now has 41 permissions (was 38)
+  - **Impact**: Better access control for production floor operators with dedicated dashboard permissions
+
 - ✅ **Sales Representative Selection in Customer Form** (November 7, 2025):
   - **New Feature**: Added sales representative dropdown in customer creation/edit form
   - **Backend Changes**:

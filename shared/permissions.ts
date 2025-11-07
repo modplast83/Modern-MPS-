@@ -35,6 +35,9 @@ export type PermissionKey =
   | 'manage_analytics'
   | 'view_production_monitoring'
   | 'manage_whatsapp'
+  | 'view_film_dashboard'
+  | 'view_printing_dashboard'
+  | 'view_cutting_dashboard'
   | 'admin'; // Super admin permission
 
 export interface Permission {
@@ -100,6 +103,27 @@ export const PERMISSIONS: Permission[] = [
     name_ar: 'إدارة الإنتاج', 
     category: 'الإنتاج',
     description: 'Create and manage production orders'
+  },
+  { 
+    id: 'view_film_dashboard', 
+    name: 'View Film Operator Dashboard', 
+    name_ar: 'عرض لوحة عامل الفيلم', 
+    category: 'الإنتاج',
+    description: 'Access to film production operator dashboard'
+  },
+  { 
+    id: 'view_printing_dashboard', 
+    name: 'View Printing Operator Dashboard', 
+    name_ar: 'عرض لوحة عامل الطباعة', 
+    category: 'الإنتاج',
+    description: 'Access to printing operator dashboard'
+  },
+  { 
+    id: 'view_cutting_dashboard', 
+    name: 'View Cutting Operator Dashboard', 
+    name_ar: 'عرض لوحة عامل التقطيع', 
+    category: 'الإنتاج',
+    description: 'Access to cutting operator dashboard'
   },
   
   // Maintenance
@@ -283,6 +307,9 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey[]> = {
   '/dashboard': ['view_dashboard'],
   '/orders': ['manage_orders'],
   '/production': ['view_production', 'manage_production'],
+  '/film-operator': ['view_film_dashboard'],
+  '/printing-operator': ['view_printing_dashboard'],
+  '/cutting-operator': ['view_cutting_dashboard'],
   '/maintenance': ['view_maintenance', 'manage_maintenance'],
   '/quality': ['view_quality', 'manage_quality'],
   '/warehouse': ['view_warehouse', 'manage_warehouse'],
