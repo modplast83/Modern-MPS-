@@ -838,6 +838,10 @@ export default function Definitions() {
     queryKey: ["/api/roles"],
     staleTime: 0,
   });
+  const { data: salesReps = [], isLoading: salesRepsLoading } = useQuery({
+    queryKey: ["/api/users/sales-reps"],
+    staleTime: 0,
+  });
 
   // Auto-calculations after data is loaded
   React.useEffect(() => {
@@ -3374,6 +3378,51 @@ export default function Definitions() {
                             })
                           }
                           placeholder="المدينة"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="sales_rep_id">المندوب</Label>
+                        <Select
+                          value={customerForm.sales_rep_id?.toString() || "none"}
+                          onValueChange={(value) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              sales_rep_id: value === "none" ? "" : value,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="mt-1" data-testid="select-sales-rep">
+                            <SelectValue placeholder="اختر المندوب" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">بدون مندوب</SelectItem>
+                            {Array.isArray(salesReps) &&
+                              salesReps.map((rep: any) => (
+                                <SelectItem
+                                  key={rep.id}
+                                  value={rep.id.toString()}
+                                >
+                                  {rep.display_name_ar || rep.display_name || rep.username}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="tax_number">الرقم الضريبي</Label>
+                        <Input
+                          id="tax_number"
+                          value={customerForm.tax_number}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              tax_number: e.target.value,
+                            })
+                          }
+                          placeholder="الرقم الضريبي"
                           className="mt-1"
                         />
                       </div>

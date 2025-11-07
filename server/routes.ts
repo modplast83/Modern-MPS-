@@ -6235,7 +6235,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/system-settings/:key", async (req, res) => {
     try {
       const { setting_value } = req.body;
-      const updated = await storage.updateSystemSetting(req.params.key, setting_value, req.session.userId);
+      const userId = req.session.userId || 1; // Default to admin if not logged in
+      const updated = await storage.updateSystemSetting(req.params.key, setting_value, userId);
       res.json(updated);
     } catch (error) {
       console.error("Error updating system setting:", error);
