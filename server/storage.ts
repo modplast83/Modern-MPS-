@@ -11415,9 +11415,18 @@ export class DatabaseStorage implements IStorage {
   async getActiveProductionOrdersForOperator(userId: number): Promise<any[]> {
     return withDatabaseErrorHandling(
       async () => {
-        // Get user to check section
+        // Get user to check role and section
         const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-        if (!user.length || String(user[0].section_id) !== '3') { // Film section is 3 (SEC03 - Production-Extruder)
+        if (!user.length) {
+          return [];
+        }
+
+        // Allow admin (role_id = 1) or Film Operator (role_id = 3) or users in Film section (SEC03)
+        const isAdmin = user[0].role_id === 1;
+        const isFilmOperator = user[0].role_id === 3;
+        const isInFilmSection = user[0].section_id === 'SEC03';
+        
+        if (!isAdmin && !isFilmOperator && !isInFilmSection) {
           return [];
         }
 
@@ -11449,7 +11458,7 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(items, eq(customer_products.item_id, items.id))
           .where(
             and(
-              eq(production_orders.status, "active"),
+              inArray(production_orders.status, ["pending", "in_production"]),
               eq(production_orders.film_completed, false)
             )
           )
