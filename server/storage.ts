@@ -1067,6 +1067,12 @@ export interface IStorage {
   createFinalRoll(rollData: InsertRoll): Promise<Roll>;
   calculateProductionTime(productionOrderId: number): Promise<number>;
 
+  // Printing Operator Functions
+  getActivePrintingRollsForOperator(userId: number): Promise<any[]>;
+
+  // Cutting Operator Functions
+  getActiveCuttingRollsForOperator(userId: number): Promise<any[]>;
+
   // Mixing Formulas Management
   getAllMixingFormulas(): Promise<any[]>;
   getMixingFormulaById(id: number): Promise<any | undefined>;
@@ -11672,6 +11678,155 @@ export class DatabaseStorage implements IStorage {
       },
       "calculateProductionTime",
       "حساب وقت الإنتاج",
+    );
+  }
+
+  // ============ Printing Operator Functions ============
+
+  async getActivePrintingRollsForOperator(userId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get user to check role and section
+        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user.length) {
+          return [];
+        }
+
+        // Allow admin (role_id = 1) or Printing Operator (role_id = 4) or users in Printing section (SEC04)
+        const isAdmin = user[0].role_id === 1;
+        const isPrintingOperator = user[0].role_id === 4;
+        const isInPrintingSection = user[0].section_id === 'SEC04';
+        
+        if (!isAdmin && !isPrintingOperator && !isInPrintingSection) {
+          return [];
+        }
+
+        // Get rolls in printing stage
+        const rollsData = await db
+          .select({
+            roll_id: rolls.id,
+            roll_number: rolls.roll_number,
+            roll_seq: rolls.roll_seq,
+            weight_kg: rolls.weight_kg,
+            waste_kg: rolls.waste_kg,
+            stage: rolls.stage,
+            roll_created_at: rolls.roll_created_at,
+            printed_at: rolls.printed_at,
+            production_order_id: rolls.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            order_number: orders.order_number,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+          })
+          .from(rolls)
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(eq(rolls.stage, 'printing'))
+          .orderBy(desc(rolls.roll_created_at));
+
+        // Group by production order
+        const groupedByOrder = rollsData.reduce((acc: any, roll: any) => {
+          const orderId = roll.production_order_id;
+          if (!acc[orderId]) {
+            acc[orderId] = {
+              production_order_id: orderId,
+              production_order_number: roll.production_order_number,
+              order_number: roll.order_number,
+              customer_name: roll.customer_name,
+              product_name: roll.product_name,
+              rolls: [],
+              total_rolls: 0,
+              total_weight: 0,
+            };
+          }
+          acc[orderId].rolls.push(roll);
+          acc[orderId].total_rolls++;
+          acc[orderId].total_weight += Number(roll.weight_kg) || 0;
+          return acc;
+        }, {});
+
+        return Object.values(groupedByOrder);
+      },
+      "getActivePrintingRollsForOperator",
+      "جلب الرولات النشطة لعامل الطباعة",
+    );
+  }
+
+  // ============ Cutting Operator Functions ============
+
+  async getActiveCuttingRollsForOperator(userId: number): Promise<any[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        // Get user to check role and section
+        const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        if (!user.length) {
+          return [];
+        }
+
+        // Allow admin (role_id = 1) or Cutting Operator (role_id = 6) or users in Cutting section (SEC05)
+        const isAdmin = user[0].role_id === 1;
+        const isCuttingOperator = user[0].role_id === 6;
+        const isInCuttingSection = user[0].section_id === 'SEC05';
+        
+        if (!isAdmin && !isCuttingOperator && !isInCuttingSection) {
+          return [];
+        }
+
+        // Get rolls in cutting stage
+        const rollsData = await db
+          .select({
+            roll_id: rolls.id,
+            roll_number: rolls.roll_number,
+            roll_seq: rolls.roll_seq,
+            weight_kg: rolls.weight_kg,
+            waste_kg: rolls.waste_kg,
+            stage: rolls.stage,
+            roll_created_at: rolls.roll_created_at,
+            printed_at: rolls.printed_at,
+            cut_completed_at: rolls.cut_completed_at,
+            production_order_id: rolls.production_order_id,
+            production_order_number: production_orders.production_order_number,
+            order_number: orders.order_number,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+          })
+          .from(rolls)
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
+          .leftJoin(items, eq(customer_products.item_id, items.id))
+          .where(eq(rolls.stage, 'cutting'))
+          .orderBy(desc(rolls.roll_created_at));
+
+        // Group by production order
+        const groupedByOrder = rollsData.reduce((acc: any, roll: any) => {
+          const orderId = roll.production_order_id;
+          if (!acc[orderId]) {
+            acc[orderId] = {
+              production_order_id: orderId,
+              production_order_number: roll.production_order_number,
+              order_number: roll.order_number,
+              customer_name: roll.customer_name,
+              product_name: roll.product_name,
+              rolls: [],
+              total_rolls: 0,
+              total_weight: 0,
+            };
+          }
+          acc[orderId].rolls.push(roll);
+          acc[orderId].total_rolls++;
+          acc[orderId].total_weight += Number(roll.weight_kg) || 0;
+          return acc;
+        }, {});
+
+        return Object.values(groupedByOrder);
+      },
+      "getActiveCuttingRollsForOperator",
+      "جلب الرولات النشطة لعامل التقطيع",
     );
   }
 
