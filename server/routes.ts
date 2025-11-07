@@ -2103,6 +2103,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Printing Operator Endpoints ============
+  
+  // Get active rolls for printing operator
+  app.get("/api/rolls/active-for-printing", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActivePrintingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching printing rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات الطباعة" });
+    }
+  });
+
+  // ============ Cutting Operator Endpoints ============
+  
+  // Get active rolls for cutting operator
+  app.get("/api/rolls/active-for-cutting", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActiveCuttingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching cutting rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات التقطيع" });
+    }
+  });
+
   // Advanced Metrics (OEE, Cycle Time, Quality)
   app.get("/api/reports/advanced-metrics", requireAuth, async (req, res) => {
     try {
