@@ -4,12 +4,19 @@ import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
 import { Button } from "../components/ui/button";
+import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { formatNumberAr } from "../../../shared/number-utils";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
-import { Package, Scissors, CheckCircle2, ArrowRight, Loader2, Info } from "lucide-react";
+import { 
+  Package, 
+  Scissors,
+  CheckCircle2,
+  Loader2,
+  Info
+} from "lucide-react";
 
 interface RollDetails {
   roll_id: number;
@@ -101,43 +108,45 @@ export default function CuttingOperatorDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
+
       <div className="flex">
         <Sidebar />
         <MobileNav />
+
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل التقطيع</h1>
-            <p className="text-base md:text-lg text-gray-600 dark:text-gray-400">إدارة رولات التقطيع وإنهائها</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل التقطيع</h1>
+            <p className="text-gray-600 dark:text-gray-400">إدارة رولات التقطيع وإنهائها</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card data-testid="card-active-orders">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base md:text-lg font-medium">أوامر الإنتاج</CardTitle>
+                <CardTitle className="text-sm font-medium">الأوامر النشطة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl md:text-4xl font-bold" data-testid="stat-active-orders">{stats.totalOrders}</div>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">أمر إنتاج</p>
+                <div className="text-2xl font-bold" data-testid="stat-active-orders">{stats.totalOrders}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-rolls">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base md:text-lg font-medium">إجمالي الرولات</CardTitle>
+                <CardTitle className="text-sm font-medium">إجمالي الرولات</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl md:text-4xl font-bold" data-testid="stat-total-rolls">{stats.totalRolls}</div>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">رول</p>
+                <div className="text-2xl font-bold" data-testid="stat-total-rolls">{stats.totalRolls}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">رول</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-weight">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base md:text-lg font-medium">إجمالي الوزن</CardTitle>
+                <CardTitle className="text-sm font-medium">إجمالي الوزن</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl md:text-4xl font-bold" data-testid="stat-total-weight">{formatNumberAr(stats.totalWeight)}</div>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">كيلوجرام</p>
+                <div className="text-2xl font-bold" data-testid="stat-total-weight">{formatNumberAr(stats.totalWeight)}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
               </CardContent>
             </Card>
           </div>
@@ -146,91 +155,115 @@ export default function CuttingOperatorDashboard() {
             <Card className="p-8" data-testid="card-no-rolls">
               <div className="text-center">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl md:text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">لا توجد رولات في مرحلة التقطيع</h3>
-                <p className="text-base md:text-lg text-gray-600 dark:text-gray-400" data-testid="text-no-rolls">لا توجد رولات جاهزة للتقطيع حالياً</p>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  لا توجد رولات في مرحلة التقطيع
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400" data-testid="text-no-rolls">
+                  لا توجد رولات جاهزة للتقطيع حالياً
+                </p>
               </div>
             </Card>
           ) : (
-            <div className="space-y-6">
-              {productionOrders.map((order) => (
-                <Card key={order.production_order_id} className="transition-all hover:shadow-lg" data-testid={`card-production-order-${order.production_order_id}`}>
-                  <CardHeader>
-                    <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
-                      <div>
-                        <CardTitle className="text-xl md:text-2xl" data-testid={`text-order-number-${order.production_order_id}`}>{order.production_order_number}</CardTitle>
-                        <CardDescription className="text-base md:text-lg" data-testid={`text-order-ref-${order.production_order_id}`}>الطلب: {order.order_number}</CardDescription>
-                      </div>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800 w-fit">
-                        <Scissors className="h-4 w-4 ml-1" />
-                        {order.total_rolls} رول
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base md:text-lg">
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">العميل</p>
-                        <p className="font-medium" data-testid={`text-customer-${order.production_order_id}`}>{order.customer_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 dark:text-gray-400">المنتج</p>
-                        <p className="font-medium" data-testid={`text-product-${order.production_order_id}`}>{order.product_name}</p>
-                      </div>
-                    </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {productionOrders.map((order) => {
+                const completedRolls = order.rolls.filter(r => r.cut_completed_at).length;
+                const progress = order.total_rolls > 0 ? (completedRolls / order.total_rolls) * 100 : 0;
 
-                    <div className="space-y-2">
-                      <h4 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-gray-100">الرولات:</h4>
-                      <div className="grid grid-cols-1 gap-3">
-                        {order.rolls.map((roll) => (
-                          <div key={roll.roll_id} className="flex flex-col md:flex-row md:justify-between md:items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700" data-testid={`roll-item-${roll.roll_id}`}>
-                            <div className="flex-1 space-y-1">
-                              <div className="flex items-center gap-2">
-                                <Package className="h-5 w-5 text-gray-400" />
-                                <span className="font-bold text-lg md:text-xl" data-testid={`text-roll-number-${roll.roll_id}`}>{roll.roll_number}</span>
-                              </div>
-                              <div className="text-base md:text-lg text-gray-600 dark:text-gray-400">
-                                <span>الوزن: </span>
-                                <span className="font-medium" data-testid={`text-roll-weight-${roll.roll_id}`}>{formatNumberAr(Number(roll.weight_kg))} كجم</span>
-                              </div>
-                            </div>
-                            
-                            <Button
-                              onClick={() => handleMoveToDone(roll.roll_id)}
-                              disabled={processingRollIds.has(roll.roll_id)}
-                              variant="default"
-                              className="w-full md:w-auto text-base md:text-lg py-6 md:py-3 bg-green-600 hover:bg-green-700"
-                              data-testid={`button-move-to-done-${roll.roll_id}`}
-                            >
-                              {processingRollIds.has(roll.roll_id) ? (
-                                <>
-                                  <Loader2 className="h-5 w-5 ml-2 animate-spin" />
-                                  جاري الإنهاء...
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle2 className="h-5 w-5 ml-2" />
-                                  إنهاء ونقل للمستودع
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        ))}
+                return (
+                  <Card 
+                    key={order.production_order_id} 
+                    className="transition-all hover:shadow-lg"
+                    data-testid={`card-production-order-${order.production_order_id}`}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="text-lg" data-testid={`text-order-number-${order.production_order_id}`}>
+                            {order.production_order_number}
+                          </CardTitle>
+                          <CardDescription data-testid={`text-order-ref-${order.production_order_id}`}>
+                            الطلب: {order.order_number}
+                          </CardDescription>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          <Scissors className="h-3 w-3 ml-1" />
+                          {order.total_rolls} رول
+                        </Badge>
                       </div>
-                    </div>
-
-                    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        <div className="text-base md:text-lg">
-                          <span className="font-medium text-green-900 dark:text-green-100">إجمالي الوزن: </span>
-                          <span className="mr-2 font-bold">{formatNumberAr(order.total_weight)} كجم</span>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400">العميل</p>
+                          <p className="font-medium" data-testid={`text-customer-${order.production_order_id}`}>{order.customer_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 dark:text-gray-400">المنتج</p>
+                          <p className="font-medium" data-testid={`text-product-${order.production_order_id}`}>{order.product_name}</p>
                         </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">التقدم</span>
+                          <span className="font-medium" data-testid={`text-progress-${order.production_order_id}`}>
+                            {completedRolls} / {order.total_rolls} رول
+                          </span>
+                        </div>
+                        <Progress value={progress} className="h-2" data-testid={`progress-bar-${order.production_order_id}`} />
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm">
+                        <Package className="h-4 w-4 text-gray-400" />
+                        <span className="text-gray-600 dark:text-gray-400">الوزن الإجمالي:</span>
+                        <span className="font-medium">{formatNumberAr(order.total_weight)} كجم</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">الرولات المتاحة:</p>
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {order.rolls.map((roll) => (
+                            <div 
+                              key={roll.roll_id}
+                              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+                              data-testid={`roll-item-${roll.roll_id}`}
+                            >
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm" data-testid={`text-roll-number-${roll.roll_id}`}>
+                                    {roll.roll_number}
+                                  </span>
+                                </div>
+                                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                  الوزن: {formatNumberAr(Number(roll.weight_kg))} كجم
+                                </div>
+                              </div>
+                              
+                              <Button
+                                onClick={() => handleMoveToDone(roll.roll_id)}
+                                disabled={processingRollIds.has(roll.roll_id)}
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                data-testid={`button-move-to-done-${roll.roll_id}`}
+                              >
+                                {processingRollIds.has(roll.roll_id) ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <CheckCircle2 className="h-4 w-4 ml-1" />
+                                    <span className="hidden sm:inline">إنهاء</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </main>
