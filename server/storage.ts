@@ -1323,6 +1323,35 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
+  async getSafeUsersBySection(sectionId: number): Promise<SafeUser[]> {
+    return withDatabaseErrorHandling(
+      async () => {
+        if (!sectionId || typeof sectionId !== "number" || sectionId <= 0) {
+          throw new Error("معرف القسم غير صحيح");
+        }
+
+        return await db
+          .select({
+            id: users.id,
+            username: users.username,
+            display_name: users.display_name,
+            display_name_ar: users.display_name_ar,
+            full_name: users.full_name,
+            phone: users.phone,
+            email: users.email,
+            role_id: users.role_id,
+            section_id: users.section_id,
+            status: users.status,
+            created_at: users.created_at,
+          })
+          .from(users)
+          .where(eq(users.section_id, sectionId));
+      },
+      "جلب المستخدمين حسب القسم",
+      `القسم رقم ${sectionId}`,
+    );
+  }
+
   // Delete methods
 
   async deleteSection(id: string): Promise<void> {
