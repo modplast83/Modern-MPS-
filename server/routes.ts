@@ -2690,6 +2690,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/sales-reps", async (req, res) => {
+    try {
+      // Sales section ID is 7 (SEC07)
+      const salesReps = await storage.getSafeUsersBySection(7);
+      res.json(salesReps);
+    } catch (error) {
+      console.error("Error fetching sales reps:", error);
+      res.status(500).json({ message: "خطأ في جلب مندوبي المبيعات" });
+    }
+  });
+
   app.get("/api/users/:id", async (req, res) => {
     try {
       // Enhanced parameter validation
