@@ -871,12 +871,8 @@ export default function Settings() {
             </p>
           </div>
 
-          <Tabs defaultValue="profile" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-8">
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                الملف الشخصي
-              </TabsTrigger>
+          <Tabs defaultValue="roles" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
                 الأدوار والصلاحيات
@@ -906,139 +902,6 @@ export default function Settings() {
                 Webhooks واتساب
               </TabsTrigger>
             </TabsList>
-
-            <TabsContent value="profile" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    المعلومات الشخصية
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="displayName">الاسم المعروض</Label>
-                      <Input
-                        id="displayName"
-                        value={userSettings.displayName}
-                        onChange={(e) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            displayName: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">البريد الإلكتروني</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={userSettings.email}
-                        onChange={(e) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            email: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">رقم الهاتف</Label>
-                      <Input
-                        id="phone"
-                        value={userSettings.phone}
-                        onChange={(e) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            phone: e.target.value,
-                          }))
-                        }
-                        placeholder="+966 5X XXX XXXX"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="language">اللغة المفضلة</Label>
-                      <Select
-                        value={userSettings.language ?? "ar"}
-                        onValueChange={(value) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            language: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ar">العربية</SelectItem>
-                          <SelectItem value="en">English</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">المظهر</h4>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {userSettings.theme === "light" ? (
-                          <Sun className="w-4 h-4" />
-                        ) : (
-                          <Moon className="w-4 h-4" />
-                        )}
-                        <Label>الوضع الداكن</Label>
-                      </div>
-                      <Switch
-                        checked={userSettings.theme === "dark"}
-                        onCheckedChange={(checked) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            theme: checked ? "dark" : "light",
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Monitor className="w-4 h-4" />
-                        <Label>العرض المدمج</Label>
-                      </div>
-                      <Switch
-                        checked={userSettings.dashboard.compactView}
-                        onCheckedChange={(checked) =>
-                          setUserSettings((prev) => ({
-                            ...prev,
-                            dashboard: {
-                              ...prev.dashboard,
-                              compactView: checked,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleSaveUserSettings}
-                      disabled={saveUserSettingsMutation.isPending}
-                    >
-                      {saveUserSettingsMutation.isPending ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
-                      )}
-                      حفظ التغييرات
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
 
             <TabsContent value="roles" className="space-y-6">
               <Card>
