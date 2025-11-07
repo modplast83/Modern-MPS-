@@ -201,8 +201,8 @@ export default function OrdersForm({
 
     if (productId && quantity && quantity > 0) {
       const preview = await previewQuantityCalculation(productId, quantity);
-      if (preview) {
-        setQuantityPreviews((prev) => ({ ...prev, [uid]: preview }));
+      if (preview && preview.data) {
+        setQuantityPreviews((prev) => ({ ...prev, [uid]: preview.data }));
       }
     } else {
       setQuantityPreviews((prev) => {
