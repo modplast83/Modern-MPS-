@@ -387,47 +387,6 @@ export default function OrdersForm({
               )}
             />
 
-            {/* Delivery Days & Notes in one row */}
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={orderForm.control}
-                name="delivery_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>أيام التسليم</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        placeholder="عدد أيام التسليم"
-                        data-testid="input-delivery-days"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={orderForm.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>ملاحظات</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="ملاحظات إضافية..."
-                        className="min-h-[40px] resize-none"
-                        data-testid="textarea-notes"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             {/* Production Orders Section */}
             <div className="border-t pt-4">
               <div className="flex items-center justify-between mb-3">
@@ -609,6 +568,49 @@ export default function OrdersForm({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Delivery Days & Notes Section */}
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={orderForm.control}
+                  name="delivery_days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>أيام التسليم</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          placeholder="عدد أيام التسليم"
+                          data-testid="input-delivery-days"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={orderForm.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>ملاحظات</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="ملاحظات إضافية..."
+                          className="min-h-[40px] resize-none"
+                          data-testid="textarea-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
