@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
+import UserProfile from "../components/dashboard/UserProfile";
 import {
   Card,
   CardContent,
@@ -549,8 +550,9 @@ export default function UserDashboard() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+                <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
                 <TabsTrigger value="attendance">الحضور</TabsTrigger>
                 <TabsTrigger value="violations">المخالفات</TabsTrigger>
                 <TabsTrigger value="requests">طلباتي</TabsTrigger>
@@ -1104,6 +1106,11 @@ export default function UserDashboard() {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Profile Tab */}
+              <TabsContent value="profile">
+                <UserProfile />
               </TabsContent>
 
               {/* Attendance Tab */}

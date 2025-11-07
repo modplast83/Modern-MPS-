@@ -6,7 +6,6 @@ import Shortcuts from "../components/dashboard/Shortcuts";
 import QuickNotes from "../components/dashboard/QuickNotes";
 import AIAssistant from "../components/ai/AIAssistant";
 import { VoiceAssistant } from "../components/voice/VoiceAssistant";
-import UserProfile from "../components/dashboard/UserProfile";
 
 export default function Dashboard() {
   return (
@@ -20,10 +19,6 @@ export default function Dashboard() {
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <Shortcuts />
           <DashboardStats />
-
-          <div className="mb-6">
-            <UserProfile />
-          </div>
 
           <div className="mb-6">
             <QuickNotes />

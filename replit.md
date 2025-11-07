@@ -71,6 +71,13 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Moved User Profile to User Dashboard** (November 7, 2025):
+  - **Change**: Moved user profile tab from main Dashboard to User Dashboard
+  - **New Component**: UserProfile is now a tab in `/user-dashboard` instead of being on main dashboard
+  - **Impact**: User settings (name, email, phone, theme, notifications) now accessible from personal dashboard
+  - **UI Improvement**: User Dashboard now has 6 tabs: Overview, Profile, Attendance, Violations, Requests, Location
+  - **Benefits**: Better organization and cleaner main dashboard interface
+
 - ✅ **Added Operator Dashboard Permissions** (November 7, 2025):
   - **New Permissions**: Added three new permissions for operator dashboards
     - `view_film_dashboard` - عرض لوحة عامل الفيلم
