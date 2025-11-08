@@ -3351,20 +3351,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant routes
+  // AI Assistant routes - Enhanced version with security
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { message, context, userId } = req.body;
+      const { message, context, userId, useEnhanced = true } = req.body;
 
-      if (!message) {
-        return res.status(400).json({ message: "الرسالة مطلوبة" });
+      // 1️⃣ التحقق من المدخلات
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "الرسالة مطلوبة ويجب أن تكون نص" });
       }
 
-      // استخدام المساعد الذكي المتطور
-      const reply = await openaiService.processMessage(message, userId);
-      res.json({ reply });
+      if (message.length > 5000) {
+        return res.status(400).json({ message: "الرسالة طويلة جداً (الحد الأقصى 5000 حرف)" });
+      }
+
+      // 2️⃣ التحقق من المستخدم (اختياري - يمكن السماح بالاستخدام بدون تسجيل دخول)
+      const effectiveUserId = userId || req.session?.userId;
+
+      // 3️⃣ فحص محاولات SQL injection في الرسالة
+      const suspiciousPatterns = [
+        /;\s*DROP/i,
+        /;\s*DELETE\s+FROM/i,
+        /xp_cmdshell/i,
+        /<script>/i
+      ];
+
+      const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(message));
+      if (isSuspicious) {
+        const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+        await ErrorLearningEnhancer.recordError(
+          "suspicious_input",
+          "محاولة إدخال مشبوهة مكتشفة",
+          { userId: effectiveUserId, action: "suspicious_chat", data: { message: message.substring(0, 100) } }
+        );
+        return res.status(400).json({ 
+          message: "تم رفض الطلب لأسباب أمنية" 
+        });
+      }
+
+      // 4️⃣ استخدام المساعد المحسّن (الافتراضي) أو القديم
+      if (useEnhanced) {
+        const { enhancedAI } = await import("./services/enhanced-ai-assistant");
+        const aiResponse = await enhancedAI.processMessageWithIntelligence(
+          message,
+          { userId: effectiveUserId, previousMessages: context?.previousMessages }
+        );
+        
+        res.json({
+          reply: aiResponse.message,
+          requiresClarification: aiResponse.requiresClarification,
+          clarificationQuestion: aiResponse.clarificationQuestion,
+          suggestedActions: aiResponse.suggestedActions,
+          requiresConfirmation: aiResponse.requiresConfirmation,
+          confirmationMessage: aiResponse.confirmationMessage,
+          actionPlan: aiResponse.actionPlan,
+          confidence: aiResponse.confidence
+        });
+      } else {
+        // المساعد القديم (للتوافق مع الكود القديم)
+        const reply = await openaiService.processMessage(message, effectiveUserId);
+        res.json({ reply });
+      }
     } catch (error) {
       console.error("AI Chat Error:", error);
+      const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+      await ErrorLearningEnhancer.recordError(
+        "ai_chat_error",
+        (error as Error).message,
+        { userId: req.body.userId, action: "chat", data: req.body }
+      );
+      
       const fallbackResponse = generateFallbackResponse(req.body.message);
       res.json({ reply: fallbackResponse });
     }
