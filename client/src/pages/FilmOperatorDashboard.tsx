@@ -9,6 +9,7 @@ import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { formatNumberAr } from "../../../shared/number-utils";
+import { printRollLabel } from "../components/production/RollLabelPrint";
 import { 
   Package, 
   Clock, 
@@ -17,7 +18,9 @@ import {
   Plus,
   Flag,
   Loader2,
-  Info
+  Info,
+  Printer,
+  User
 } from "lucide-react";
 
 // تعريف نوع البيانات لأمر الإنتاج النشط للعامل
@@ -44,15 +47,39 @@ interface ActiveProductionOrderDetails {
   production_time_minutes?: number;
 }
 
+interface Roll {
+  id: number;
+  roll_number: string;
+  roll_seq: number;
+  weight_kg: number;
+  status: string;
+  created_by_name?: string;
+  created_at?: string;
+  production_order_id: number;
+  production_order_number?: string;
+  machine_id?: string;
+  film_machine_id?: string;
+  film_machine_name?: string;
+  qr_code_text?: string;
+  qr_png_base64?: string;
+}
+
 export default function FilmOperatorDashboard() {
   const [selectedProductionOrder, setSelectedProductionOrder] = useState<ActiveProductionOrderDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFinalRoll, setIsFinalRoll] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
   // Fetch active production orders for operator
   const { data: productionOrders = [], isLoading } = useQuery<ActiveProductionOrderDetails[]>({
     queryKey: ["/api/production-orders/active-for-operator"],
     refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Fetch all rolls data
+  const { data: allRolls = [] } = useQuery<Roll[]>({
+    queryKey: ["/api/rolls"],
+    refetchInterval: 30000,
   });
 
   const handleCreateRoll = (order: ActiveProductionOrderDetails, final: boolean = false) => {
@@ -65,6 +92,33 @@ export default function FilmOperatorDashboard() {
     setIsModalOpen(false);
     setSelectedProductionOrder(null);
     setIsFinalRoll(false);
+  };
+
+  const toggleOrderExpansion = (orderId: number) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
+  };
+
+  const handlePrintLabel = async (roll: Roll) => {
+    try {
+      const response = await fetch(`/api/rolls/${roll.id}/label`);
+      const labelData = await response.json();
+      
+      printRollLabel({
+        roll: labelData.roll,
+        productionOrder: labelData.productionOrder,
+        order: labelData.order
+      });
+    } catch (error) {
+      console.error("Error printing label:", error);
+    }
   };
 
   // Calculate overall statistics
@@ -282,6 +336,78 @@ export default function FilmOperatorDashboard() {
                           </div>
                         )}
                       </div>
+
+                      {/* Display Rolls for this order */}
+                      {order.rolls_count > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => toggleOrderExpansion(order.id)}
+                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                              data-testid={`button-toggle-rolls-${order.id}`}
+                            >
+                              {expandedOrders.has(order.id) ? '▼' : '◀'} عرض الرولات ({order.rolls_count})
+                            </button>
+                          </div>
+                          
+                          {expandedOrders.has(order.id) && (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                              {allRolls
+                                .filter(roll => roll.production_order_id === order.id)
+                                .sort((a, b) => a.roll_seq - b.roll_seq)
+                                .map((roll) => (
+                                  <div
+                                    key={roll.id}
+                                    className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 hover:shadow-md transition-shadow"
+                                    data-testid={`roll-card-${roll.id}`}
+                                  >
+                                    <div className="flex items-start justify-between mb-2">
+                                      <div className="flex-1">
+                                        <div className="font-bold text-sm text-blue-900 dark:text-blue-100" data-testid={`roll-number-${roll.id}`}>
+                                          {roll.roll_number}
+                                        </div>
+                                        <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                          الرول #{roll.roll_seq}
+                                        </div>
+                                      </div>
+                                      <Badge 
+                                        variant="secondary" 
+                                        className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100"
+                                      >
+                                        {roll.status}
+                                      </Badge>
+                                    </div>
+                                    
+                                    <div className="space-y-1 text-xs">
+                                      <div className="flex items-center gap-1 text-blue-800 dark:text-blue-200">
+                                        <Package className="h-3 w-3" />
+                                        <span className="font-medium">{formatNumberAr(roll.weight_kg)} كجم</span>
+                                      </div>
+                                      
+                                      {roll.created_by_name && (
+                                        <div className="flex items-center gap-1 text-blue-700 dark:text-blue-300">
+                                          <User className="h-3 w-3" />
+                                          <span>{roll.created_by_name}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    <Button
+                                      onClick={() => handlePrintLabel(roll)}
+                                      size="sm"
+                                      variant="outline"
+                                      className="w-full mt-2 h-7 text-xs bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
+                                      data-testid={`button-print-label-${roll.id}`}
+                                    >
+                                      <Printer className="h-3 w-3 ml-1" />
+                                      طباعة ليبل
+                                    </Button>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className="flex gap-2 pt-2">
