@@ -9413,39 +9413,38 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getRollLabelData(rollId: number): Promise<{
-    roll_number: string;
-    production_order_number: string;
-    customer_name: string;
-    weight_kg: string;
-    stage: string;
-    created_at: string;
-    machine_name: string;
-    qr_png_base64: string;
-    label_dimensions: { width: string; height: string };
-  }> {
+  async getRollLabelData(rollId: number): Promise<any> {
     try {
       const [rollData] = await db
         .select({
-          id: rolls.id,
+          roll_id: rolls.id,
           roll_number: rolls.roll_number,
-          production_order_id: rolls.production_order_id,
+          roll_seq: rolls.roll_seq,
           weight_kg: rolls.weight_kg,
           stage: rolls.stage,
           created_at: rolls.created_at,
-          machine_id: rolls.machine_id,
+          created_by: rolls.created_by,
+          film_machine_id: rolls.film_machine_id,
+          printing_machine_id: rolls.printing_machine_id,
+          cutting_machine_id: rolls.cutting_machine_id,
+          qr_code_text: rolls.qr_code_text,
           qr_png_base64: rolls.qr_png_base64,
+          production_order_id: rolls.production_order_id,
           production_order_number: production_orders.production_order_number,
-          machine_name: machines.name,
-          machine_name_ar: machines.name_ar,
+          order_id: production_orders.order_id,
+          order_number: orders.order_number,
+          customer_id: orders.customer_id,
           customer_name: customers.name,
+          customer_name_ar: customers.name_ar,
+          film_machine_name: sql<string>`(SELECT name FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name'),
+          film_machine_name_ar: sql<string>`(SELECT name_ar FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name_ar'),
+          created_by_name: sql<string>`(SELECT full_name FROM users WHERE id = ${rolls.created_by})`.as('created_by_name'),
         })
         .from(rolls)
         .leftJoin(
           production_orders,
           eq(rolls.production_order_id, production_orders.id),
         )
-        .leftJoin(machines, eq(rolls.machine_id, machines.id))
         .leftJoin(orders, eq(production_orders.order_id, orders.id))
         .leftJoin(customers, eq(orders.customer_id, customers.id))
         .where(eq(rolls.id, rollId));
@@ -9454,21 +9453,30 @@ export class DatabaseStorage implements IStorage {
         throw new Error("الرول غير موجود");
       }
 
+      // Format data for label printing component
       return {
-        roll_number: rollData.roll_number || "",
-        production_order_number: rollData.production_order_number || "",
-        customer_name: rollData.customer_name || "غير محدد",
-        weight_kg: `${rollData.weight_kg} كغ`,
-        stage: this.getStageArabicName(rollData.stage || ""),
-        created_at: rollData.created_at
-          ? new Date(rollData.created_at).toLocaleDateString("ar")
-          : "",
-        machine_name:
-          rollData.machine_name_ar || rollData.machine_name || "غير محدد",
-        qr_png_base64: rollData.qr_png_base64 || "",
-        label_dimensions: {
-          width: "4 بوصة",
-          height: "5 بوصة",
+        roll: {
+          id: rollData.roll_id,
+          roll_number: rollData.roll_number || "",
+          roll_seq: rollData.roll_seq || 0,
+          weight_kg: Number(rollData.weight_kg) || 0,
+          status: this.getStageArabicName(rollData.stage || ""),
+          stage: rollData.stage || "",
+          created_at: rollData.created_at || new Date().toISOString(),
+          created_by_name: rollData.created_by_name || "",
+          film_machine_id: rollData.film_machine_id || "",
+          film_machine_name: rollData.film_machine_name_ar || rollData.film_machine_name || "",
+          printing_machine_id: rollData.printing_machine_id || "",
+          cutting_machine_id: rollData.cutting_machine_id || "",
+          qr_code_text: rollData.qr_code_text || "",
+          qr_png_base64: rollData.qr_png_base64 || "",
+        },
+        productionOrder: {
+          production_order_number: rollData.production_order_number || "",
+        },
+        order: {
+          order_number: rollData.order_number || "",
+          customer_name: rollData.customer_name_ar || rollData.customer_name || "غير محدد",
         },
       };
     } catch (error) {
