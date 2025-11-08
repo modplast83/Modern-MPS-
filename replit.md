@@ -71,6 +71,21 @@ The system features comprehensive integration between four main sections:
 ## Recent Changes (November 2025)
 
 ### Latest Updates
+- ✅ **Enhanced Location Tab in User Dashboard** (November 8, 2025):
+  - **Issue Fixed**: Location detection was not working properly, preventing attendance check-in
+  - **New Features**:
+    - Added loading state with animated icon while detecting location
+    - Improved error handling with specific messages for different error types (permission denied, unavailable, timeout)
+    - Added "Refresh Location" button to retry without reloading page
+    - Display all active factory locations with distance from current position
+    - Visual indicators showing which factories are in range (green) and which are not (gray)
+    - Better user guidance with instructions on how to enable location permissions
+  - **Technical Improvements**:
+    - Created dedicated `requestLocation()` function for on-demand location requests
+    - Added high-accuracy GPS mode with 10-second timeout
+    - Improved UX with clear visual feedback and actionable instructions
+  - **Impact**: Users can now successfully check in from the location tab with clear visibility of their proximity to factory locations
+
 - ✅ **Moved User Profile to User Dashboard** (November 7, 2025):
   - **Change**: Moved user profile tab from main Dashboard to User Dashboard
   - **New Component**: UserProfile is now a tab in `/user-dashboard` instead of being on main dashboard
