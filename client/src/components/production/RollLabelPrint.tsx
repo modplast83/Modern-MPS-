@@ -28,7 +28,9 @@ interface RollLabelPrintProps {
     production_order_number: string;
     item_name?: string;
     item_name_ar?: string;
+    category_name?: string;
     size_caption?: string;
+    thickness?: number;
     color?: string;
     raw_material?: string;
     punching?: string;
@@ -230,15 +232,23 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
               </div>
             </div>
             
+            <!-- Category Name -->
+            ${productionOrder && productionOrder.category_name ? `
+              <div class="info-box full">
+                <div class="info-label">الفئة</div>
+                <div class="info-value">${productionOrder.category_name}</div>
+              </div>
+            ` : ''}
+            
             <!-- Product Name -->
             ${productionOrder && (productionOrder.item_name_ar || productionOrder.item_name) ? `
               <div class="info-box full">
-                <div class="info-label">المنتج</div>
+                <div class="info-label">اسم الصنف</div>
                 <div class="info-value">${productionOrder.item_name_ar || productionOrder.item_name}</div>
               </div>
             ` : ''}
             
-            <!-- Size & Color -->
+            <!-- Size & Thickness -->
             <div class="info-row">
               ${productionOrder && productionOrder.size_caption ? `
                 <div class="info-box">
@@ -247,10 +257,10 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
                 </div>
               ` : ''}
               
-              ${productionOrder && productionOrder.color ? `
+              ${productionOrder && productionOrder.thickness ? `
                 <div class="info-box">
-                  <div class="info-label">اللون</div>
-                  <div class="info-value">${productionOrder.color}</div>
+                  <div class="info-label">السماكة</div>
+                  <div class="info-value">${productionOrder.thickness} مم</div>
                 </div>
               ` : ''}
             </div>
