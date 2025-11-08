@@ -9431,14 +9431,23 @@ export class DatabaseStorage implements IStorage {
           qr_png_base64: rolls.qr_png_base64,
           production_order_id: rolls.production_order_id,
           production_order_number: production_orders.production_order_number,
+          customer_product_id: production_orders.customer_product_id,
           order_id: production_orders.order_id,
           order_number: orders.order_number,
           customer_id: orders.customer_id,
           customer_name: customers.name,
           customer_name_ar: customers.name_ar,
+          size_caption: customer_products.size_caption,
+          thickness: customer_products.thickness,
+          item_id: customer_products.item_id,
+          category_id: customer_products.category_id,
           film_machine_name: sql<string>`(SELECT name FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name'),
           film_machine_name_ar: sql<string>`(SELECT name_ar FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name_ar'),
           created_by_name: sql<string>`(SELECT full_name FROM users WHERE id = ${rolls.created_by})`.as('created_by_name'),
+          item_name: sql<string>`(SELECT name FROM items WHERE id = ${customer_products.item_id})`.as('item_name'),
+          item_name_ar: sql<string>`(SELECT name_ar FROM items WHERE id = ${customer_products.item_id})`.as('item_name_ar'),
+          category_name: sql<string>`(SELECT name FROM categories WHERE id = ${customer_products.category_id})`.as('category_name'),
+          category_name_ar: sql<string>`(SELECT name_ar FROM categories WHERE id = ${customer_products.category_id})`.as('category_name_ar'),
         })
         .from(rolls)
         .leftJoin(
@@ -9447,6 +9456,7 @@ export class DatabaseStorage implements IStorage {
         )
         .leftJoin(orders, eq(production_orders.order_id, orders.id))
         .leftJoin(customers, eq(orders.customer_id, customers.id))
+        .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
         .where(eq(rolls.id, rollId));
 
       if (!rollData) {
@@ -9473,6 +9483,10 @@ export class DatabaseStorage implements IStorage {
         },
         productionOrder: {
           production_order_number: rollData.production_order_number || "",
+          size_caption: rollData.size_caption || "",
+          thickness: rollData.thickness ? Number(rollData.thickness) : 0,
+          item_name: rollData.item_name_ar || rollData.item_name || "",
+          category_name: rollData.category_name_ar || rollData.category_name || "",
         },
         order: {
           order_number: rollData.order_number || "",
