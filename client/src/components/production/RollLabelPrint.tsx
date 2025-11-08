@@ -279,11 +279,15 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
               </div>
             ` : ''}
             
-            <!-- Operators Section - Only Film Operator -->
-            ${roll.created_by_name ? `
+            <!-- Operators Section - Compact Display -->
+            ${roll.created_by_name || roll.printed_by_name || roll.cut_by_name ? `
               <div class="info-box full">
-                <div class="info-label">مشغل الفيلم</div>
-                <div class="info-value">${roll.created_by_name}</div>
+                <div class="info-label">العاملين</div>
+                <div class="info-value" style="font-size: 8pt; line-height: 1.3;">
+                  ${roll.created_by_name ? `<div>▪ فيلم: ${roll.created_by_name}</div>` : ''}
+                  ${roll.printed_by_name ? `<div>▪ طباعة: ${roll.printed_by_name}</div>` : ''}
+                  ${roll.cut_by_name ? `<div>▪ قص: ${roll.cut_by_name}</div>` : ''}
+                </div>
               </div>
             ` : ''}
             
