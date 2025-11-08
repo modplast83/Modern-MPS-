@@ -69,7 +69,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           .label-container {
             width: 100%;
             height: 100%;
-            padding: 4mm;
+            padding: 3mm;
             box-sizing: border-box;
             border: 2px solid #000;
             display: flex;
@@ -79,39 +79,39 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           .header {
             text-align: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 2mm;
-            margin-bottom: 2mm;
+            padding-bottom: 1mm;
+            margin-bottom: 1.5mm;
           }
           
           .company-name {
-            font-size: 10pt;
+            font-size: 9pt;
             font-weight: bold;
-            margin-bottom: 1mm;
+            margin-bottom: 0.5mm;
             color: #000;
           }
           
           .roll-number {
-            font-size: 14pt;
+            font-size: 13pt;
             font-weight: bold;
             background: #000;
             color: #fff;
-            padding: 1.5mm 3mm;
-            margin-top: 1mm;
+            padding: 1mm 2.5mm;
+            margin-top: 0.5mm;
             border-radius: 1mm;
             display: inline-block;
           }
           
           .qr-section {
             text-align: center;
-            margin: 2mm 0;
-            padding: 2mm;
+            margin: 1mm 0;
+            padding: 1mm;
             border: 1px solid #333;
             background: #f9f9f9;
           }
           
           .qr-image {
-            max-width: 60px;
-            max-height: 60px;
+            max-width: 50px;
+            max-height: 50px;
             margin: 0 auto;
           }
           
@@ -119,21 +119,21 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             flex: 1;
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1.5mm;
-            margin: 2mm 0;
+            gap: 1mm;
+            margin: 1mm 0;
           }
           
           .info-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5mm;
+            gap: 1mm;
           }
           
           .info-box {
             border: 1px solid #333;
-            padding: 1.5mm;
+            padding: 1mm;
             background: #fff;
-            min-height: 8mm;
+            min-height: 6mm;
           }
           
           .info-box.full {
@@ -147,27 +147,27 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           }
           
           .info-label {
-            font-size: 7pt;
+            font-size: 6.5pt;
             color: #666;
             font-weight: 600;
-            margin-bottom: 0.5mm;
+            margin-bottom: 0.3mm;
             text-transform: uppercase;
           }
           
           .info-value {
-            font-size: 9pt;
+            font-size: 8.5pt;
             font-weight: bold;
             color: #000;
-            line-height: 1.1;
+            line-height: 1.05;
             word-wrap: break-word;
           }
           
           .footer {
             margin-top: auto;
-            padding-top: 1.5mm;
+            padding-top: 1mm;
             border-top: 1px solid #333;
             text-align: center;
-            font-size: 6pt;
+            font-size: 5.5pt;
             color: #666;
           }
           
@@ -283,10 +283,10 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             ${roll.created_by_name || roll.printed_by_name || roll.cut_by_name ? `
               <div class="info-box full">
                 <div class="info-label">العاملين</div>
-                <div class="info-value" style="font-size: 8pt; line-height: 1.3;">
-                  ${roll.created_by_name ? `<div>▪ فيلم: ${roll.created_by_name}</div>` : ''}
-                  ${roll.printed_by_name ? `<div>▪ طباعة: ${roll.printed_by_name}</div>` : ''}
-                  ${roll.cut_by_name ? `<div>▪ قص: ${roll.cut_by_name}</div>` : ''}
+                <div class="info-value" style="font-size: 7.5pt; line-height: 1.2;">
+                  ${roll.created_by_name ? `<div>▪ فيلم: <strong>${roll.created_by_name}</strong></div>` : ''}
+                  ${roll.printed_by_name ? `<div>▪ طباعة: <strong>${roll.printed_by_name}</strong></div>` : ''}
+                  ${roll.cut_by_name ? `<div>▪ قص: <strong>${roll.cut_by_name}</strong></div>` : ''}
                 </div>
               </div>
             ` : ''}
