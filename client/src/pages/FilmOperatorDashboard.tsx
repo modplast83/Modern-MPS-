@@ -410,7 +410,7 @@ export default function FilmOperatorDashboard() {
                                       data-testid={`button-print-label-${roll.id}`}
                                     >
                                       <Printer className="h-3 w-3 ml-1" />
-                                      طباعة ليبل
+                                      طباعة ملصق
                                     </Button>
                                   </div>
                                 ))}
