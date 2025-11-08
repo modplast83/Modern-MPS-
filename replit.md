@@ -32,7 +32,20 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
     - HR management with attendance tracking and training programs.
     - **Geolocation-Based Attendance**: Attendance check-in system with GPS verification within factory premises (500m radius) using the Haversine formula. Supports multiple factory locations.
     - Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
-    - AI Assistant with context-aware intelligence, improved intent analysis, and enhanced UI.
+    - **Enhanced AI Assistant (v2.0)**: 
+      - Database schema understanding with 20+ supported tables
+      - Clarification logic - asks for clarification when confidence < 60%
+      - Missing information detection - requests required data
+      - Confirmation system - requires approval before write operations
+      - Error learning system - learns from mistakes and patterns (threshold: 3 errors)
+      - Context-aware intelligence with improved intent analysis
+      - Confidence scoring (0.0-1.0) for all responses
+      - **Security Features**:
+        - SQL injection prevention via whitelist validation and parameterized queries
+        - Schema tampering prevention with strict table/column validation
+        - XSS prevention through input sanitization
+        - Read-only operations (SELECT only) for AI queries
+        - Suspicious input detection and blocking
     - **Replit Auth Integration**: Dual authentication support (traditional username/password and Replit Auth).
 - **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
 - **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios.
