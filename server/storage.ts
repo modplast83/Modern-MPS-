@@ -9441,9 +9441,13 @@ export class DatabaseStorage implements IStorage {
           thickness: customer_products.thickness,
           item_id: customer_products.item_id,
           category_id: customer_products.category_id,
+          printed_by: rolls.printed_by,
+          cut_by: rolls.cut_by,
           film_machine_name: sql<string>`(SELECT name FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name'),
           film_machine_name_ar: sql<string>`(SELECT name_ar FROM machines WHERE id = ${rolls.film_machine_id})`.as('film_machine_name_ar'),
           created_by_name: sql<string>`(SELECT full_name FROM users WHERE id = ${rolls.created_by})`.as('created_by_name'),
+          printed_by_name: sql<string>`(SELECT full_name FROM users WHERE id = ${rolls.printed_by})`.as('printed_by_name'),
+          cut_by_name: sql<string>`(SELECT full_name FROM users WHERE id = ${rolls.cut_by})`.as('cut_by_name'),
           item_name: sql<string>`(SELECT name FROM items WHERE id = ${customer_products.item_id})`.as('item_name'),
           item_name_ar: sql<string>`(SELECT name_ar FROM items WHERE id = ${customer_products.item_id})`.as('item_name_ar'),
           category_name: sql<string>`(SELECT name FROM categories WHERE id = ${customer_products.category_id})`.as('category_name'),
@@ -9474,6 +9478,8 @@ export class DatabaseStorage implements IStorage {
           stage: rollData.stage || "",
           created_at: rollData.created_at || new Date().toISOString(),
           created_by_name: rollData.created_by_name || "",
+          printed_by_name: rollData.printed_by_name || "",
+          cut_by_name: rollData.cut_by_name || "",
           film_machine_id: rollData.film_machine_id || "",
           film_machine_name: rollData.film_machine_name_ar || rollData.film_machine_name || "",
           printing_machine_id: rollData.printing_machine_id || "",
@@ -11498,10 +11504,10 @@ export class DatabaseStorage implements IStorage {
           return [];
         }
 
-        // Allow admin (role_id = 1) or Film Operator (role_id = 3) or users in Film section (SEC03)
+        // Allow admin (role_id = 1) or Film Operator (role_id = 3) or users in Film section (section_id = 3)
         const isAdmin = user[0].role_id === 1;
         const isFilmOperator = user[0].role_id === 3;
-        const isInFilmSection = user[0].section_id === 'SEC03';
+        const isInFilmSection = user[0].section_id === 3;
         
         if (!isAdmin && !isFilmOperator && !isInFilmSection) {
           return [];
@@ -11763,10 +11769,10 @@ export class DatabaseStorage implements IStorage {
           return [];
         }
 
-        // Allow admin (role_id = 1) or Printing Operator (role_id = 4) or users in Printing section (SEC04)
+        // Allow admin (role_id = 1) or Printing Operator (role_id = 4) or users in Printing section (section_id = 4)
         const isAdmin = user[0].role_id === 1;
         const isPrintingOperator = user[0].role_id === 4;
-        const isInPrintingSection = user[0].section_id === 'SEC04';
+        const isInPrintingSection = user[0].section_id === 4;
         
         if (!isAdmin && !isPrintingOperator && !isInPrintingSection) {
           return [];
@@ -11837,10 +11843,10 @@ export class DatabaseStorage implements IStorage {
           return [];
         }
 
-        // Allow admin (role_id = 1) or Cutting Operator (role_id = 6) or users in Cutting section (SEC05)
+        // Allow admin (role_id = 1) or Cutting Operator (role_id = 6) or users in Cutting section (section_id = 5)
         const isAdmin = user[0].role_id === 1;
         const isCuttingOperator = user[0].role_id === 6;
-        const isInCuttingSection = user[0].section_id === 'SEC05';
+        const isInCuttingSection = user[0].section_id === 5;
         
         if (!isAdmin && !isCuttingOperator && !isInCuttingSection) {
           return [];
