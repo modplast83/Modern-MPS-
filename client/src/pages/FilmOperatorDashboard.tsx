@@ -51,7 +51,7 @@ interface Roll {
   id: number;
   roll_number: string;
   roll_seq: number;
-  weight_kg: number;
+  weight_kg: number | string;
   status: string;
   created_by_name?: string;
   created_at?: string;
@@ -109,7 +109,16 @@ export default function FilmOperatorDashboard() {
   const handlePrintLabel = async (roll: Roll) => {
     try {
       const response = await fetch(`/api/rolls/${roll.id}/label`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const labelData = await response.json();
+      
+      if (!labelData || !labelData.roll) {
+        throw new Error("Invalid label data received");
+      }
       
       printRollLabel({
         roll: labelData.roll,
@@ -118,6 +127,7 @@ export default function FilmOperatorDashboard() {
       });
     } catch (error) {
       console.error("Error printing label:", error);
+      alert(`خطأ في طباعة الليبل: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     }
   };
 
@@ -381,7 +391,7 @@ export default function FilmOperatorDashboard() {
                                     <div className="space-y-1 text-xs">
                                       <div className="flex items-center gap-1 text-blue-800 dark:text-blue-200">
                                         <Package className="h-3 w-3" />
-                                        <span className="font-medium">{formatNumberAr(roll.weight_kg)} كجم</span>
+                                        <span className="font-medium">{formatNumberAr(Number(roll.weight_kg))} كجم</span>
                                       </div>
                                       
                                       {roll.created_by_name && (
