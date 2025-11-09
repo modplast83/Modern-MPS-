@@ -101,7 +101,7 @@ export default function MLAnalytics() {
   // تدريب النموذج - استخدام apiRequest
   const trainModelMutation = useMutation({
     mutationFn: async (machineId: number) => {
-      const { apiRequest } = await import("/client/src/lib/queryClient");
+      const { apiRequest } = await import("@/lib/queryClient");
       const response = await apiRequest(`/api/ml/train/${machineId}`, {
         method: "POST",
       });
@@ -119,7 +119,7 @@ export default function MLAnalytics() {
   // تطبيق التحسينات - استخدام apiRequest
   const applyOptimizationMutation = useMutation({
     mutationFn: async (optimization: OptimizationResult) => {
-      const { apiRequest } = await import("/client/src/lib/queryClient");
+      const { apiRequest } = await import("@/lib/queryClient");
       const response = await apiRequest(
         `/api/ml/apply-optimization/${selectedMachine}`,
         {

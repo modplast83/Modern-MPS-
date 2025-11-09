@@ -461,6 +461,7 @@ export default function UserDashboard() {
     },
   });
 
+  // تحديث: طلب الموقع الجغرافي قبل إرسال الحضور
   const handleAttendanceAction = (status: string, action?: string) => {
     // التحقق من وجود الموقع الحالي
     if (!currentLocation) {

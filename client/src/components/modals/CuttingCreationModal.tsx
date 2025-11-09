@@ -21,9 +21,9 @@ import {
 } from "../ui/form";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
-import NumberInput from "../shared/NumberInput";
-import { ProductionOrderSelect } from "../shared/ProductionOrderSelect";
-import { MachineSelect } from "../shared/MachineSelect";
+import NumberInput from "@shared/NumberInput";
+import { ProductionOrderSelect } from "@shared/ProductionOrderSelect";
+import { MachineSelect } from "@shared/MachineSelect";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import type { ProductionOrder, Machine } from "../../../../shared/schema";
@@ -221,7 +221,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
                 <FormItem>
                   <FormLabel>إعداد السكاكين *</FormLabel>
                   {/* TODO: Replace with real Select when API is ready */}
-                  <NumberInput value={String(field.value ?? "")} onChange={(v) => field.onChange(Number.parseInt(v || "0", 10))} placeholder="معرّف الإعداد" />
+                  <NumberInput value={String(field.value ?? "")} onChange={(v: string) => field.onChange(Number.parseInt(v || "0", 10))} placeholder="معرّف الإعداد" />
                   <FormMessage />
                 </FormItem>
               )}

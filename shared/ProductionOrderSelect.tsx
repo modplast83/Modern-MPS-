@@ -1,10 +1,10 @@
 import React from "react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { FormControl } from "../ui/form";
-import type { ProductionOrder } from "../../../../shared/schema";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../client/src/components/ui/select";
+import { FormControl } from "../client/src/components/ui/form";
+import type { ProductionOrder } from "./schema";
 export function ProductionOrderSelect({ value, onChange, loading, orders }:{ value?: number; onChange:(id:number)=>void; loading?: boolean; orders: ProductionOrder[]; }) {
   return (
-    <Select value={value != null ? String(value) : undefined} onValueChange={(val)=>onChange(Number.parseInt(val,10))} disabled={loading}>
+    <Select value={value != null ? String(value) : undefined} onValueChange={(val: string)=>onChange(Number.parseInt(val,10))} disabled={loading}>
       <FormControl><SelectTrigger><SelectValue placeholder="اختر أمر الإنتاج" /></SelectTrigger></FormControl>
       <SelectContent>
         {loading ? <SelectItem value="loading" disabled>جارِ التحميل...</SelectItem> : (orders.length ? orders.filter(o=>o.id).map((o)=>(
