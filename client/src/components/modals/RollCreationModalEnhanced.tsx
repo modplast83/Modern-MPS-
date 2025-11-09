@@ -90,9 +90,9 @@ export default function RollCreationModalEnhanced({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Filter film machines only
+  // Filter film machines only (section_id = "SEC03" for film section)
   const filmMachines = useMemo(() => {
-    return machines.filter(m => m.section_id === "1" && m.status === "active");
+    return machines.filter(m => m.section_id === "SEC03" && m.status === "active");
   }, [machines]);
 
   // Calculate remaining quantity

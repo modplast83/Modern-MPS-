@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
+import UserProfile from "../components/dashboard/UserProfile";
 import {
   Card,
   CardContent,
@@ -57,6 +58,27 @@ import { useForm } from "react-hook-form";
 import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/use-auth";
 import { formatNumber } from "../lib/formatNumber";
+
+// دالة حساب المسافة بين نقطتين جغرافيتين (Haversine formula)
+function calculateDistance(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371e3; // نصف قطر الأرض بالأمتار
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // المسافة بالأمتار
+}
 
 // Types for dashboard data
 interface UserData {
@@ -115,23 +137,63 @@ export default function UserDashboard() {
     lng: number;
   } | null>(null);
   const [locationError, setLocationError] = useState<string>("");
+  const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Get current location
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        (error) => {
-          setLocationError("لا يمكن الحصول على الموقع الحالي");
-        },
-      );
+  // جلب مواقع المصانع النشطة من قاعدة البيانات
+  const { data: activeLocations, isLoading: isLoadingLocations } = useQuery<any[]>({
+    queryKey: ["/api/factory-locations/active"],
+  });
+
+  // دالة لطلب الموقع الجغرافي
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError("المتصفح لا يدعم تحديد الموقع الجغرافي");
+      return;
     }
+
+    setIsLoadingLocation(true);
+    setLocationError("");
+    setCurrentLocation(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCurrentLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocationError("");
+        setIsLoadingLocation(false);
+      },
+      (error) => {
+        setIsLoadingLocation(false);
+        let errorMessage = "لا يمكن الحصول على الموقع الحالي";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "تم رفض الإذن للوصول إلى الموقع. يرجى السماح بالوصول إلى الموقع من إعدادات المتصفح";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "معلومات الموقع غير متوفرة. تأكد من تفعيل خدمات الموقع في جهازك";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "انتهت مهلة طلب الموقع. يرجى المحاولة مرة أخرى";
+            break;
+        }
+        
+        setLocationError(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
+  // Get current location on mount
+  useEffect(() => {
+    requestLocation();
   }, []);
 
   // Update time display every minute for live hour calculation
@@ -197,8 +259,11 @@ export default function UserDashboard() {
       status: string;
       notes?: string;
       action?: string;
-      latitude?: number;
-      longitude?: number;
+      location?: {
+        lat: number;
+        lng: number;
+        distance: number;
+      };
     }) => {
       const response = await fetch("/api/attendance", {
         method: "POST",
@@ -209,8 +274,7 @@ export default function UserDashboard() {
           action: data.action,
           date: new Date().toISOString().split("T")[0],
           notes: data.notes,
-          latitude: data.latitude,
-          longitude: data.longitude,
+          location: data.location,
         }),
       });
 
@@ -399,28 +463,80 @@ export default function UserDashboard() {
 
   // تحديث: طلب الموقع الجغرافي قبل إرسال الحضور
   const handleAttendanceAction = (status: string, action?: string) => {
-    if (!navigator.geolocation) {
+    // التحقق من وجود الموقع الحالي
+    if (!currentLocation) {
       toast({
-        title: "الموقع غير مدعوم",
-        description: "المتصفح لا يدعم تحديد الموقع الجغرافي.",
+        title: "خطأ في الموقع",
+        description: "يرجى السماح بالوصول إلى موقعك الجغرافي لتسجيل الحضور",
         variant: "destructive",
       });
       return;
     }
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        attendanceMutation.mutate({ status, action, latitude, longitude });
-      },
-      (error) => {
-        toast({
-          title: "فشل في تحديد الموقع",
-          description: "يجب السماح بالوصول للموقع لتسجيل الحضور.",
-          variant: "destructive",
-        });
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+
+    // انتظار تحميل المواقع
+    if (isLoadingLocations) {
+      toast({
+        title: "جاري التحميل",
+        description: "جاري تحميل مواقع المصانع، يرجى الانتظار...",
+      });
+      return;
+    }
+
+    // التحقق من وجود مواقع نشطة
+    if (!activeLocations || activeLocations.length === 0) {
+      toast({
+        title: "خطأ",
+        description: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // التحقق من وجود المستخدم ضمن أي من المواقع النشطة
+    let isWithinRange = false;
+    let closestDistance = Infinity;
+    let closestLocation = null;
+    let validDistance = 0;
+
+    for (const factoryLocation of activeLocations) {
+      const distance = calculateDistance(
+        currentLocation.lat,
+        currentLocation.lng,
+        parseFloat(factoryLocation.latitude),
+        parseFloat(factoryLocation.longitude)
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestLocation = factoryLocation;
+      }
+
+      if (distance <= factoryLocation.allowed_radius) {
+        isWithinRange = true;
+        validDistance = distance;
+        break;
+      }
+    }
+
+    if (!isWithinRange) {
+      toast({
+        title: "خارج نطاق المصانع",
+        description: `أنت على بعد ${Math.round(closestDistance)} متر من أقرب موقع (${closestLocation?.name_ar}). يجب أن تكون داخل نطاق ${closestLocation?.allowed_radius} متر لتسجيل الحضور.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // إرسال الطلب مع الموقع الجغرافي
+    attendanceMutation.mutate({ 
+      status, 
+      action,
+      location: {
+        lat: currentLocation.lat,
+        lng: currentLocation.lng,
+        distance: Math.round(validDistance)
+      }
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -470,8 +586,9 @@ export default function UserDashboard() {
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+                <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
                 <TabsTrigger value="attendance">الحضور</TabsTrigger>
                 <TabsTrigger value="violations">المخالفات</TabsTrigger>
                 <TabsTrigger value="requests">طلباتي</TabsTrigger>
@@ -1027,6 +1144,11 @@ export default function UserDashboard() {
                 </Card>
               </TabsContent>
 
+              {/* Profile Tab */}
+              <TabsContent value="profile">
+                <UserProfile />
+              </TabsContent>
+
               {/* Attendance Tab */}
               <TabsContent value="attendance">
                 <Card>
@@ -1375,42 +1497,120 @@ export default function UserDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {currentLocation ? (
+                    {isLoadingLocation ? (
+                      <div className="text-center py-8">
+                        <div className="animate-pulse">
+                          <MapPin className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                        </div>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          جاري تحديد موقعك الحالي...
+                        </p>
+                        <p className="text-sm text-gray-500 mt-2">
+                          يرجى السماح بالوصول إلى الموقع من المتصفح
+                        </p>
+                      </div>
+                    ) : currentLocation ? (
                       <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-5 w-5 text-green-600" />
+                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                          <MapPin className="h-5 w-5" />
                           <span className="font-medium">
                             تم تحديد الموقع بنجاح
                           </span>
                         </div>
-                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg">
-                          <p>
+                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-2">
+                          <p className="text-sm">
                             <strong>خط العرض:</strong>{" "}
                             {currentLocation.lat.toFixed(6)}
                           </p>
-                          <p>
+                          <p className="text-sm">
                             <strong>خط الطول:</strong>{" "}
                             {currentLocation.lng.toFixed(6)}
                           </p>
                         </div>
-                        <Button
-                          onClick={() => handleAttendanceAction("حاضر")}
-                          className="w-full"
-                          disabled={todayAttendance?.status === "حاضر"}
-                        >
-                          تسجيل الحضور من الموقع الحالي
-                        </Button>
+                        
+                        {/* Display active factory locations */}
+                        {activeLocations && activeLocations.length > 0 && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                            <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">
+                              مواقع المصانع المتاحة:
+                            </h4>
+                            <div className="space-y-2">
+                              {activeLocations.map((location) => {
+                                const distance = calculateDistance(
+                                  currentLocation.lat,
+                                  currentLocation.lng,
+                                  parseFloat(location.latitude),
+                                  parseFloat(location.longitude)
+                                );
+                                const isInRange = distance <= location.allowed_radius;
+                                
+                                return (
+                                  <div 
+                                    key={location.id}
+                                    className={`text-sm p-2 rounded ${
+                                      isInRange 
+                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
+                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium">
+                                        {location.name_ar || location.name}
+                                      </span>
+                                      <span className="text-xs">
+                                        {Math.round(distance)} متر
+                                        {isInRange && ' ✓'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleAttendanceAction("حاضر")}
+                            className="flex-1"
+                            disabled={
+                              !dailyAttendanceStatus || 
+                              dailyAttendanceStatus.hasCheckedIn
+                            }
+                            data-testid="button-checkin-location"
+                          >
+                            {dailyAttendanceStatus?.hasCheckedIn 
+                              ? "✓ تم تسجيل الحضور" 
+                              : "تسجيل الحضور"}
+                          </Button>
+                          <Button
+                            onClick={requestLocation}
+                            variant="outline"
+                            data-testid="button-refresh-location"
+                          >
+                            تحديث الموقع
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-center py-8">
-                        <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                        <p className="text-gray-600">
-                          {locationError || "جاري تحديد الموقع الحالي..."}
+                        <MapPin className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                        <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
+                          {locationError || "لا يمكن الحصول على الموقع الحالي"}
                         </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                          للسماح بالوصول إلى الموقع:
+                        </p>
+                        <ul className="text-xs text-gray-600 dark:text-gray-400 text-right mb-4 space-y-1">
+                          <li>• انقر على أيقونة القفل بجانب عنوان الموقع</li>
+                          <li>• اختر "السماح" للموقع الجغرافي</li>
+                          <li>• أعد تحميل الصفحة أو اضغط على زر "إعادة المحاولة"</li>
+                        </ul>
                         <Button
-                          onClick={() => window.location.reload()}
-                          variant="outline"
-                          className="mt-4"
+                          onClick={requestLocation}
+                          variant="default"
+                          className="mt-2"
+                          data-testid="button-retry-location"
                         >
                           إعادة المحاولة
                         </Button>

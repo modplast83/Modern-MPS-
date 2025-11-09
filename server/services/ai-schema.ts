@@ -5,7 +5,8 @@
 // Description: Core schema and relationship intelligence
 // ===============================================
 
-import { Pool } from "pg";
+import pg from "pg";
+const { Pool } = pg;
 
 // إنشاء الاتصال بقاعدة PostgreSQL باستخدام متغيرات البيئة
 export const db = new Pool({

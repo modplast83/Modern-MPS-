@@ -2043,16 +2043,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create roll with timing calculation
   app.post("/api/rolls/create-with-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
+      const dataToValidate = {
+        ...req.body,
+        created_by: userId,
+      };
+
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
       const rollData = {
         ...validatedData,
-        created_by: userId,
         is_last_roll: req.body.is_last_roll || false,
       };
 
@@ -2075,19 +2080,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create final roll and complete film production
   app.post("/api/rolls/create-final", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
-      const rollData = {
-        ...validatedData,
+      const dataToValidate = {
+        ...req.body,
         created_by: userId,
       };
 
-      const newRoll = await storage.createFinalRoll(rollData);
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
+      const newRoll = await storage.createFinalRoll(validatedData);
       res.status(201).json({
         success: true,
         message: "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح",
@@ -2100,6 +2106,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         message: error instanceof Error ? error.message : "خطأ في إنشاء آخر رول" 
       });
+    }
+  });
+
+  // ============ Printing Operator Endpoints ============
+  
+  // Get active rolls for printing operator
+  app.get("/api/rolls/active-for-printing", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActivePrintingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching printing rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات الطباعة" });
+    }
+  });
+
+  // ============ Cutting Operator Endpoints ============
+  
+  // Get active rolls for cutting operator
+  app.get("/api/rolls/active-for-cutting", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActiveCuttingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching cutting rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات التقطيع" });
     }
   });
 
@@ -2645,6 +2687,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching safe users:", error);
       res.status(500).json({ message: "خطأ في جلب المستخدمين" });
+    }
+  });
+
+  app.get("/api/users/sales-reps", async (req, res) => {
+    try {
+      // Sales section ID is 7 (SEC07)
+      const salesReps = await storage.getSafeUsersBySection(7);
+      res.json(salesReps);
+    } catch (error) {
+      console.error("Error fetching sales reps:", error);
+      res.status(500).json({ message: "خطأ في جلب مندوبي المبيعات" });
     }
   });
 
@@ -3298,20 +3351,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant routes
+  // AI Assistant routes - Enhanced version with security
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { message, context, userId } = req.body;
+      const { message, context, userId, useEnhanced = true } = req.body;
 
-      if (!message) {
-        return res.status(400).json({ message: "الرسالة مطلوبة" });
+      // 1️⃣ التحقق من المدخلات
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "الرسالة مطلوبة ويجب أن تكون نص" });
       }
 
-      // استخدام المساعد الذكي المتطور
-      const reply = await openaiService.processMessage(message, userId);
-      res.json({ reply });
+      if (message.length > 5000) {
+        return res.status(400).json({ message: "الرسالة طويلة جداً (الحد الأقصى 5000 حرف)" });
+      }
+
+      // 2️⃣ التحقق من المستخدم (اختياري - يمكن السماح بالاستخدام بدون تسجيل دخول)
+      const effectiveUserId = userId || req.session?.userId;
+
+      // 3️⃣ فحص محاولات SQL injection في الرسالة
+      const suspiciousPatterns = [
+        /;\s*DROP/i,
+        /;\s*DELETE\s+FROM/i,
+        /xp_cmdshell/i,
+        /<script>/i
+      ];
+
+      const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(message));
+      if (isSuspicious) {
+        const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+        await ErrorLearningEnhancer.recordError(
+          "suspicious_input",
+          "محاولة إدخال مشبوهة مكتشفة",
+          { userId: effectiveUserId, action: "suspicious_chat", data: { message: message.substring(0, 100) } }
+        );
+        return res.status(400).json({ 
+          message: "تم رفض الطلب لأسباب أمنية" 
+        });
+      }
+
+      // 4️⃣ استخدام المساعد المحسّن (الافتراضي) أو القديم
+      if (useEnhanced) {
+        const { enhancedAI } = await import("./services/enhanced-ai-assistant");
+        const aiResponse = await enhancedAI.processMessageWithIntelligence(
+          message,
+          { userId: effectiveUserId, previousMessages: context?.previousMessages }
+        );
+        
+        res.json({
+          reply: aiResponse.message,
+          requiresClarification: aiResponse.requiresClarification,
+          clarificationQuestion: aiResponse.clarificationQuestion,
+          suggestedActions: aiResponse.suggestedActions,
+          requiresConfirmation: aiResponse.requiresConfirmation,
+          confirmationMessage: aiResponse.confirmationMessage,
+          actionPlan: aiResponse.actionPlan,
+          confidence: aiResponse.confidence
+        });
+      } else {
+        // المساعد القديم (للتوافق مع الكود القديم)
+        const reply = await openaiService.processMessage(message, effectiveUserId);
+        res.json({ reply });
+      }
     } catch (error) {
       console.error("AI Chat Error:", error);
+      const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+      await ErrorLearningEnhancer.recordError(
+        "ai_chat_error",
+        (error as Error).message,
+        { userId: req.body.userId, action: "chat", data: req.body }
+      );
+      
       const fallbackResponse = generateFallbackResponse(req.body.message);
       res.json({ reply: fallbackResponse });
     }
@@ -5888,14 +5997,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { isInsideFactory } = require("./factory-location.ts");
   app.post("/api/attendance", async (req, res) => {
     try {
-      const { latitude, longitude } = req.body;
-      if (
-        typeof latitude !== "number" ||
-        typeof longitude !== "number" ||
-        !isInsideFactory(latitude, longitude)
-      ) {
+      // جلب جميع المواقع النشطة للمصانع
+      const activeLocations = await storage.getActiveFactoryLocations();
+
+      // دالة حساب المسافة بين نقطتين جغرافيتين
+      const calculateDistance = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number => {
+        const R = 6371e3;
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      };
+
+      // التحقق من وجود بيانات الموقع
+      if (!req.body.location || !req.body.location.lat || !req.body.location.lng) {
         return res.status(400).json({
-          message: "يجب أن تكون داخل المصنع لتسجيل الحضور",
+          message: "يجب توفير الموقع الجغرافي لتسجيل الحضور",
+        });
+      }
+
+      // التحقق من وجود مواقع نشطة
+      if (activeLocations.length === 0) {
+        return res.status(400).json({
+          message: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
+        });
+      }
+
+      // التحقق من وجود المستخدم ضمن أي من المواقع النشطة
+      let isWithinRange = false;
+      let closestDistance = Infinity;
+      let closestLocation = null;
+
+      for (const factoryLocation of activeLocations) {
+        const distance = calculateDistance(
+          req.body.location.lat,
+          req.body.location.lng,
+          parseFloat(factoryLocation.latitude),
+          parseFloat(factoryLocation.longitude)
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestLocation = factoryLocation;
+        }
+
+        if (distance <= factoryLocation.allowed_radius) {
+          isWithinRange = true;
+          console.log(`✅ Location verified at ${factoryLocation.name_ar} - Distance: ${Math.round(distance)}m`);
+          break;
+        }
+      }
+
+      if (!isWithinRange) {
+        console.log(`❌ Attendance denied - Outside all factory ranges. Closest: ${Math.round(closestDistance)}m`);
+        return res.status(403).json({
+          message: `أنت خارج نطاق جميع المصانع. أقرب موقع (${closestLocation?.name_ar}): ${Math.round(closestDistance)} متر. النطاق المسموح: ${closestLocation?.allowed_radius} متر.`,
         });
       }
 
@@ -6091,6 +6259,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user request:", error);
       res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
+  // ============ System Settings API ============
+
+  // Get all system settings
+  app.get("/api/system-settings", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات النظام" });
+    }
+  });
+
+  // Get specific system setting by key
+  app.get("/api/system-settings/:key", async (req, res) => {
+    try {
+      const setting = await storage.getSystemSettingByKey(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "الإعداد غير موجود" });
+      }
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching system setting:", error);
+      res.status(500).json({ message: "خطأ في جلب الإعداد" });
+    }
+  });
+
+  // Update system setting
+  app.put("/api/system-settings/:key", async (req, res) => {
+    try {
+      const { setting_value } = req.body;
+      const userId = req.session.userId || 1; // Default to admin if not logged in
+      const updated = await storage.updateSystemSetting(req.params.key, setting_value, userId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating system setting:", error);
+      res.status(500).json({ message: "خطأ في تحديث الإعداد" });
+    }
+  });
+
+  // Create system setting
+  app.post("/api/system-settings", async (req, res) => {
+    try {
+      const setting = await storage.createSystemSetting(req.body);
+      res.status(201).json(setting);
+    } catch (error) {
+      console.error("Error creating system setting:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الإعداد" });
+    }
+  });
+
+  // ============ Factory Locations API ============
+
+  // Get all factory locations
+  app.get("/api/factory-locations", async (req, res) => {
+    try {
+      const locations = await storage.getFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب مواقع المصانع" });
+    }
+  });
+
+  // Get active factory locations only
+  app.get("/api/factory-locations/active", async (req, res) => {
+    try {
+      const locations = await storage.getActiveFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching active factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب المواقع النشطة" });
+    }
+  });
+
+  // Get single factory location
+  app.get("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getFactoryLocation(id);
+      if (!location) {
+        return res.status(404).json({ message: "الموقع غير موجود" });
+      }
+      res.json(location);
+    } catch (error) {
+      console.error("Error fetching factory location:", error);
+      res.status(500).json({ message: "خطأ في جلب الموقع" });
+    }
+  });
+
+  // Create factory location
+  app.post("/api/factory-locations", async (req, res) => {
+    try {
+      const location = await storage.createFactoryLocation({
+        ...req.body,
+        created_by: req.session.userId,
+      });
+      res.status(201).json(location);
+    } catch (error) {
+      console.error("Error creating factory location:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
+  // Update factory location
+  app.put("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.updateFactoryLocation(id, req.body);
+      res.json(location);
+    } catch (error) {
+      console.error("Error updating factory location:", error);
+      res.status(500).json({ message: "خطأ في تحديث الموقع" });
+    }
+  });
+
+  // Delete factory location
+  app.delete("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFactoryLocation(id);
+      res.json({ message: "تم حذف الموقع بنجاح" });
+    } catch (error) {
+      console.error("Error deleting factory location:", error);
+      res.status(500).json({ message: "خطأ في حذف الموقع" });
     }
   });
 

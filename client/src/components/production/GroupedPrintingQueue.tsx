@@ -483,7 +483,7 @@ export default function GroupedPrintingQueue({
                                             data-testid={`button-print-label-${roll.id}`}
                                           >
                                             <Printer className="h-3 w-3 mr-1" />
-                                            طباعة ليبل
+                                            طباعة ملصق
                                           </Button>
                                         </div>
                                       </div>
