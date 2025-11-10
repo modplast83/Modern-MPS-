@@ -1047,18 +1047,6 @@ export const warehouse_transactions = pgTable("warehouse_transactions", {
   notes: text("notes"),
 });
 
-// 🧱 جدول خلطات المواد
-export const mixing_recipes = pgTable("mixing_recipes", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  name_ar: varchar("name_ar", { length: 100 }),
-  machine_type: varchar("machine_type", { length: 20 }), // A / ABA
-  formula_layers: integer("formula_layers"),
-  material_items:
-    json("material_items").$type<{ item_id: number; percentage: number }[]>(),
-  created_at: timestamp("created_at").defaultNow(),
-});
-
 // 🧍‍♂️ جدول التدريب
 export const training_records = pgTable("training_records", {
   id: serial("id").primaryKey(),
@@ -1820,13 +1808,6 @@ export const insertInventoryMovementSchema = createInsertSchema(
   created_at: true,
 });
 
-export const insertMixingRecipeSchema = createInsertSchema(mixing_recipes).omit(
-  {
-    id: true,
-    created_at: true,
-  },
-);
-
 export const insertTrainingRecordSchema = createInsertSchema(
   training_records,
 ).omit({
@@ -1981,8 +1962,6 @@ export type WarehouseTransaction = typeof warehouse_transactions.$inferSelect;
 export type InsertWarehouseTransaction = z.infer<
   typeof insertWarehouseTransactionSchema
 >;
-export type MixingRecipe = typeof mixing_recipes.$inferSelect;
-export type InsertMixingRecipe = z.infer<typeof insertMixingRecipeSchema>;
 export type TrainingRecord = typeof training_records.$inferSelect;
 export type InsertTrainingRecord = z.infer<typeof insertTrainingRecordSchema>;
 export type AdminDecision = typeof admin_decisions.$inferSelect;
@@ -2824,46 +2803,33 @@ export const insertNoteAttachmentSchema = createInsertSchema(note_attachments).o
 });
 
 // =================================================================
-// 🧪 MIXING FORMULAS MANAGEMENT SYSTEM
+// 🧪 SIMPLIFIED MATERIAL MIXING SYSTEM
 // =================================================================
 
-// 📋 جدول وصفات الخلط
-export const mixing_formulas = pgTable("mixing_formulas", {
+// 📦 جدول عمليات الخلط المباشرة (بدون وصفات مسبقة)
+export const mixing_batches = pgTable("mixing_batches", {
   id: serial("id").primaryKey(),
-  formula_name: varchar("formula_name", { length: 255 }).notNull(), // اسم الوصفة
+  batch_number: varchar("batch_number", { length: 50 }).notNull().unique(), // رقم الخلطة تلقائي
+  production_order_id: integer("production_order_id")
+    .notNull()
+    .references(() => production_orders.id), // أمر الإنتاج المرتبط
   machine_id: varchar("machine_id", { length: 20 })
     .notNull()
-    .references(() => machines.id), // ماكينة الفيلم فقط (type='extruder')
-  
-  // نطاق المقاس (بالسم)
-  width_min: decimal("width_min", { precision: 6, scale: 2 }).notNull(), // الحد الأدنى للعرض (سم)
-  width_max: decimal("width_max", { precision: 6, scale: 2 }).notNull(), // الحد الأقصى للعرض (سم)
-  
-  // نطاق السماكة للطبقة الواحدة (بالمايكرون)
-  thickness_min: decimal("thickness_min", { precision: 5, scale: 2 }).notNull(), // الحد الأدنى للسماكة (ميكرون)
-  thickness_max: decimal("thickness_max", { precision: 5, scale: 2 }).notNull(), // الحد الأقصى للسماكة (ميكرون)
-  
-  // ألوان الماستر باتش (قائمة متعددة الاختيار من items)
-  master_batch_colors: varchar("master_batch_colors", { length: 20 }).array(), // مثال: ['CLEAR', 'WHITE', 'BLACK']
-  
-  // تحديد السكرو للماكينات ذات السكروين
-  screw_assignment: varchar("screw_assignment", { length: 10 }).default("A"), // A أو B (للماكينات ذات السكروين)
-  
-  is_active: boolean("is_active").default(true).notNull(), // هل الوصفة نشطة؟
-  notes: text("notes"), // ملاحظات
-  created_by: integer("created_by")
+    .references(() => machines.id), // ماكينة الفيلم
+  screw_assignment: varchar("screw_assignment", { length: 10 })
     .notNull()
-    .references(() => users.id),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-  updated_at: timestamp("updated_at").defaultNow().notNull(),
+    .default("A"), // A أو B (للماكينات ذات السكروين)
+  operator_id: integer("operator_id")
+    .notNull()
+    .references(() => users.id), // العامل الذي قام بالخلط
+  total_weight_kg: decimal("total_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن الكلي للخلطة
+  status: varchar("status", { length: 30 }).notNull().default("completed"), // completed, cancelled
+  notes: text("notes"), // ملاحظات
+  created_at: timestamp("created_at").defaultNow().notNull(), // تاريخ ووقت الخلط
 }, (table) => ({
-  thicknessRangeValid: check(
-    "thickness_range_valid",
-    sql`${table.thickness_min} <= ${table.thickness_max}`
-  ),
-  widthRangeValid: check(
-    "width_range_valid",
-    sql`${table.width_min} <= ${table.width_max}`
+  totalWeightPositive: check(
+    "total_weight_positive",
+    sql`${table.total_weight_kg} > 0`
   ),
   screwAssignmentValid: check(
     "screw_assignment_valid",
@@ -2871,55 +2837,7 @@ export const mixing_formulas = pgTable("mixing_formulas", {
   ),
 }));
 
-// 🧪 جدول مكونات الوصفة (مواد خام فقط من جدول items)
-export const formula_ingredients = pgTable("formula_ingredients", {
-  id: serial("id").primaryKey(),
-  formula_id: integer("formula_id")
-    .notNull()
-    .references(() => mixing_formulas.id, { onDelete: "cascade" }),
-  item_id: varchar("item_id", { length: 20 })
-    .notNull()
-    .references(() => items.id), // المادة الخام من جدول الأصناف
-  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(), // النسبة المئوية
-  notes: text("notes"), // ملاحظات
-}, (table) => ({
-  percentageValid: check(
-    "percentage_valid",
-    sql`${table.percentage} > 0 AND ${table.percentage} <= 100`
-  ),
-}));
-
-// 📦 جدول عمليات الخلط الفعلية
-export const mixing_batches = pgTable("mixing_batches", {
-  id: serial("id").primaryKey(),
-  batch_number: varchar("batch_number", { length: 50 }).notNull().unique(), // رقم الخلطة
-  formula_id: integer("formula_id")
-    .notNull()
-    .references(() => mixing_formulas.id),
-  production_order_id: integer("production_order_id")
-    .references(() => production_orders.id),
-  roll_id: integer("roll_id")
-    .references(() => rolls.id), // الرول المرتبط بالخلطة
-  machine_id: varchar("machine_id", { length: 20 })
-    .notNull()
-    .references(() => machines.id),
-  operator_id: integer("operator_id")
-    .notNull()
-    .references(() => users.id),
-  total_weight_kg: decimal("total_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن الكلي للخلطة
-  status: varchar("status", { length: 30 }).notNull().default("pending"), // pending, in_progress, completed, cancelled
-  started_at: timestamp("started_at"),
-  completed_at: timestamp("completed_at"),
-  notes: text("notes"),
-  created_at: timestamp("created_at").defaultNow().notNull(),
-}, (table) => ({
-  totalWeightPositive: check(
-    "total_weight_positive",
-    sql`${table.total_weight_kg} > 0`
-  ),
-}));
-
-// 🧬 جدول المكونات الفعلية للخلطة
+// 🧬 جدول المكونات المخلوطة (المواد الخام والكميات الفعلية)
 export const batch_ingredients = pgTable("batch_ingredients", {
   id: serial("id").primaryKey(),
   batch_id: integer("batch_id")
@@ -2928,58 +2846,25 @@ export const batch_ingredients = pgTable("batch_ingredients", {
   item_id: varchar("item_id", { length: 20 })
     .notNull()
     .references(() => items.id), // المادة الخام من جدول الأصناف
-  planned_weight_kg: decimal("planned_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن المخطط
-  actual_weight_kg: decimal("actual_weight_kg", { precision: 10, scale: 2 }), // الوزن الفعلي
-  variance_kg: decimal("variance_kg", { precision: 10, scale: 2 }), // الفرق (فعلي - مخطط)
+  actual_weight_kg: decimal("actual_weight_kg", { precision: 10, scale: 2 }).notNull(), // الوزن الفعلي المخلوط
+  percentage: decimal("percentage", { precision: 5, scale: 2 }), // النسبة المئوية (محسوبة تلقائياً)
   notes: text("notes"),
 }, (table) => ({
-  plannedWeightPositive: check(
-    "planned_weight_positive",
-    sql`${table.planned_weight_kg} > 0`
-  ),
   actualWeightPositive: check(
     "actual_weight_positive",
-    sql`${table.actual_weight_kg} IS NULL OR ${table.actual_weight_kg} > 0`
+    sql`${table.actual_weight_kg} > 0`
+  ),
+  percentageValid: check(
+    "percentage_valid",
+    sql`${table.percentage} IS NULL OR (${table.percentage} > 0 AND ${table.percentage} <= 100)`
   ),
 }));
 
-// علاقات نظام الخلط
-export const mixingFormulasRelations = relations(mixing_formulas, ({ one, many }) => ({
-  machine: one(machines, {
-    fields: [mixing_formulas.machine_id],
-    references: [machines.id],
-  }),
-  creator: one(users, {
-    fields: [mixing_formulas.created_by],
-    references: [users.id],
-  }),
-  ingredients: many(formula_ingredients),
-  batches: many(mixing_batches),
-}));
-
-export const formulaIngredientsRelations = relations(formula_ingredients, ({ one }) => ({
-  formula: one(mixing_formulas, {
-    fields: [formula_ingredients.formula_id],
-    references: [mixing_formulas.id],
-  }),
-  item: one(items, {
-    fields: [formula_ingredients.item_id],
-    references: [items.id],
-  }),
-}));
-
+// علاقات نظام الخلط المبسط
 export const mixingBatchesRelations = relations(mixing_batches, ({ one, many }) => ({
-  formula: one(mixing_formulas, {
-    fields: [mixing_batches.formula_id],
-    references: [mixing_formulas.id],
-  }),
   productionOrder: one(production_orders, {
     fields: [mixing_batches.production_order_id],
     references: [production_orders.id],
-  }),
-  roll: one(rolls, {
-    fields: [mixing_batches.roll_id],
-    references: [rolls.id],
   }),
   machine: one(machines, {
     fields: [mixing_batches.machine_id],
@@ -3004,53 +2889,26 @@ export const batchIngredientsRelations = relations(batch_ingredients, ({ one }) 
 }));
 
 // أنواع البيانات
-export type MixingFormula = typeof mixing_formulas.$inferSelect;
-export type InsertMixingFormula = typeof mixing_formulas.$inferInsert;
-export type FormulaIngredient = typeof formula_ingredients.$inferSelect;
-export type InsertFormulaIngredient = typeof formula_ingredients.$inferInsert;
 export type MixingBatch = typeof mixing_batches.$inferSelect;
 export type InsertMixingBatch = typeof mixing_batches.$inferInsert;
 export type BatchIngredient = typeof batch_ingredients.$inferSelect;
 export type InsertBatchIngredient = typeof batch_ingredients.$inferInsert;
 
 // مخططات التحقق من البيانات
-export const insertMixingFormulaSchema = createInsertSchema(mixing_formulas).omit({
-  id: true,
-  created_at: true,
-  updated_at: true,
-}).extend({
-  width_min: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأدنى يجب أن يكون أكبر من صفر"),
-  width_max: z.string().refine((val) => parseFloatSafe(val) > 0, "العرض الأقصى يجب أن يكون أكبر من صفر"),
-  thickness_min: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة الدنيا يجب أن تكون أكبر من صفر"),
-  thickness_max: z.string().refine((val) => parseFloatSafe(val) > 0, "السماكة القصوى يجب أن تكون أكبر من صفر"),
-  master_batch_colors: z.array(z.string()).optional(), // قائمة ألوان الماستر باتش
-  screw_assignment: z.enum(["A", "B"]).default("A"),
-});
-
-export const insertFormulaIngredientSchema = createInsertSchema(formula_ingredients).omit({
-  id: true,
-}).extend({
-  percentage: z.string().refine(
-    (val) => {
-      const num = parseFloatSafe(val);
-      return num > 0 && num <= 100;
-    },
-    "النسبة يجب أن تكون بين 0 و 100"
-  ),
-});
-
 export const insertMixingBatchSchema = createInsertSchema(mixing_batches).omit({
   id: true,
+  batch_number: true,
   created_at: true,
 }).extend({
   total_weight_kg: z.string().refine((val) => parseFloatSafe(val) > 0, "الوزن الكلي يجب أن يكون أكبر من صفر"),
+  screw_assignment: z.enum(["A", "B"]).default("A"),
 });
 
 export const insertBatchIngredientSchema = createInsertSchema(batch_ingredients).omit({
   id: true,
+  percentage: true,
 }).extend({
-  planned_weight_kg: z.string().refine((val) => parseFloatSafe(val) > 0, "الوزن المخطط يجب أن يكون أكبر من صفر"),
-  actual_weight_kg: z.string().optional(),
+  actual_weight_kg: z.string().refine((val) => parseFloatSafe(val) > 0, "الوزن يجب أن يكون أكبر من صفر"),
 });
 
 // Sanitized user type that excludes sensitive fields like password
