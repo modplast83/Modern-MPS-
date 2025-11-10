@@ -29,7 +29,6 @@ import {
   training_records,
   admin_decisions,
   warehouse_transactions,
-  mixing_recipes,
   training_programs,
   training_materials,
   training_enrollments,
@@ -67,15 +66,9 @@ import {
   type MachineQueue,
   type InsertMachineQueue,
   
-  // نظام الخلط
-  mixing_formulas,
-  formula_ingredients,
+  // نظام الخلط المبسط
   mixing_batches,
   batch_ingredients,
-  type MixingFormula,
-  type InsertMixingFormula,
-  type FormulaIngredient,
-  type InsertFormulaIngredient,
   type MixingBatch,
   type InsertMixingBatch,
   type BatchIngredient,
@@ -116,7 +109,6 @@ import {
   type TrainingRecord,
   type AdminDecision,
   type WarehouseTransaction,
-  type MixingRecipe,
   type TrainingProgram,
   type InsertTrainingProgram,
   type TrainingMaterial,
@@ -524,8 +516,8 @@ export interface IStorage {
   createWarehouseTransaction(transaction: any): Promise<WarehouseTransaction>;
 
   // Mixing Recipes
-  getMixingRecipes(): Promise<MixingRecipe[]>;
-  createMixingRecipe(recipe: any): Promise<MixingRecipe>;
+  getMixingRecipes(): Promise<any[]>;
+  createMixingRecipe(recipe: any): Promise<any>;
 
   // Sections
   getSections(): Promise<Section[]>;
@@ -1072,19 +1064,6 @@ export interface IStorage {
 
   // Cutting Operator Functions
   getActiveCuttingRollsForOperator(userId: number): Promise<any[]>;
-
-  // Mixing Formulas Management
-  getAllMixingFormulas(): Promise<any[]>;
-  getMixingFormulaById(id: number): Promise<any | undefined>;
-  createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any>;
-  updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any>;
-  deleteMixingFormula(id: number): Promise<void>;
-  findMatchingFormulas(criteria: {
-    machineId: string;
-    rawMaterial: string;
-    thickness: number;
-    width?: number;
-  }): Promise<any[]>;
 
   // Mixing Batches
   getAllMixingBatches(): Promise<any[]>;
@@ -5911,20 +5890,13 @@ export class DatabaseStorage implements IStorage {
     return newTransaction;
   }
 
-  // Mixing Recipes
-  async getMixingRecipes(): Promise<MixingRecipe[]> {
-    return await db
-      .select()
-      .from(mixing_recipes)
-      .orderBy(desc(mixing_recipes.created_at));
+  // Mixing Recipes (deprecated - use mixing batches instead)
+  async getMixingRecipes(): Promise<any[]> {
+    return [];
   }
 
-  async createMixingRecipe(recipe: any): Promise<MixingRecipe> {
-    const [newRecipe] = await db
-      .insert(mixing_recipes)
-      .values(recipe)
-      .returning();
-    return newRecipe;
+  async createMixingRecipe(recipe: any): Promise<any> {
+    throw new Error("Mixing recipes have been deprecated. Use mixing batches instead.");
   }
 
   // ============ HR System Implementation ============
@@ -11907,292 +11879,6 @@ export class DatabaseStorage implements IStorage {
     );
   }
 
-  // ============ Mixing Formulas Management ============
-
-  async getAllMixingFormulas(): Promise<any[]> {
-    return withDatabaseErrorHandling(
-      async () => {
-        const formulas = await db
-          .select({
-            id: mixing_formulas.id,
-            formula_name: mixing_formulas.formula_name,
-            machine_id: mixing_formulas.machine_id,
-            machine_name: machines.name,
-            machine_name_ar: machines.name_ar,
-            screw_type: machines.screw_type,
-            width_min: mixing_formulas.width_min,
-            width_max: mixing_formulas.width_max,
-            thickness_min: mixing_formulas.thickness_min,
-            thickness_max: mixing_formulas.thickness_max,
-            master_batch_colors: mixing_formulas.master_batch_colors,
-            screw_assignment: mixing_formulas.screw_assignment,
-            is_active: mixing_formulas.is_active,
-            notes: mixing_formulas.notes,
-            created_by: mixing_formulas.created_by,
-            creator_name: users.display_name,
-            created_at: mixing_formulas.created_at,
-            updated_at: mixing_formulas.updated_at,
-          })
-          .from(mixing_formulas)
-          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
-          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
-          .orderBy(desc(mixing_formulas.created_at));
-
-        // Get ingredients with item details for each formula
-        for (const formula of formulas) {
-          const ingredients = await db
-            .select({
-              id: formula_ingredients.id,
-              formula_id: formula_ingredients.formula_id,
-              item_id: formula_ingredients.item_id,
-              item_name: items.name,
-              item_name_ar: items.name_ar,
-              percentage: formula_ingredients.percentage,
-              notes: formula_ingredients.notes,
-            })
-            .from(formula_ingredients)
-            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
-            .where(eq(formula_ingredients.formula_id, formula.id));
-          (formula as any).ingredients = ingredients;
-        }
-
-        return formulas;
-      },
-      "getAllMixingFormulas",
-      "جلب جميع وصفات الخلط",
-    );
-  }
-
-  async getMixingFormulaById(id: number): Promise<any | undefined> {
-    return withDatabaseErrorHandling(
-      async () => {
-        const [formula] = await db
-          .select({
-            id: mixing_formulas.id,
-            formula_name: mixing_formulas.formula_name,
-            machine_id: mixing_formulas.machine_id,
-            machine_name: machines.name,
-            machine_name_ar: machines.name_ar,
-            screw_type: machines.screw_type,
-            width_min: mixing_formulas.width_min,
-            width_max: mixing_formulas.width_max,
-            thickness_min: mixing_formulas.thickness_min,
-            thickness_max: mixing_formulas.thickness_max,
-            master_batch_colors: mixing_formulas.master_batch_colors,
-            screw_assignment: mixing_formulas.screw_assignment,
-            is_active: mixing_formulas.is_active,
-            notes: mixing_formulas.notes,
-            created_by: mixing_formulas.created_by,
-            creator_name: users.display_name,
-            created_at: mixing_formulas.created_at,
-            updated_at: mixing_formulas.updated_at,
-          })
-          .from(mixing_formulas)
-          .leftJoin(machines, eq(mixing_formulas.machine_id, machines.id))
-          .leftJoin(users, eq(mixing_formulas.created_by, users.id))
-          .where(eq(mixing_formulas.id, id));
-
-        if (!formula) return undefined;
-
-        const ingredients = await db
-          .select({
-            id: formula_ingredients.id,
-            formula_id: formula_ingredients.formula_id,
-            item_id: formula_ingredients.item_id,
-            item_name: items.name,
-            item_name_ar: items.name_ar,
-            percentage: formula_ingredients.percentage,
-            notes: formula_ingredients.notes,
-          })
-          .from(formula_ingredients)
-          .leftJoin(items, eq(formula_ingredients.item_id, items.id))
-          .where(eq(formula_ingredients.formula_id, id));
-
-        return { ...formula, ingredients };
-      },
-      "getMixingFormulaById",
-      `جلب وصفة الخلط رقم ${id}`,
-    );
-  }
-
-  async createMixingFormula(formula: InsertMixingFormula, ingredients: InsertFormulaIngredient[]): Promise<any> {
-    return withDatabaseErrorHandling(
-      async () => {
-        return await db.transaction(async (tx) => {
-          // Validate ingredients total percentage
-          const totalPercentage = ingredients.reduce(
-            (sum, ing) => sum + parseFloat(ing.percentage.toString()),
-            0
-          );
-          
-          if (Math.abs(totalPercentage - 100) > 0.01) {
-            throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
-          }
-
-          // Create formula
-          const [newFormula] = await tx
-            .insert(mixing_formulas)
-            .values(formula)
-            .returning();
-
-          // Create ingredients
-          const ingredientsWithFormulaId = ingredients.map(ing => ({
-            ...ing,
-            formula_id: newFormula.id,
-          }));
-
-          const newIngredients = await tx
-            .insert(formula_ingredients)
-            .values(ingredientsWithFormulaId)
-            .returning();
-
-          return { ...newFormula, ingredients: newIngredients };
-        });
-      },
-      "createMixingFormula",
-      "إنشاء وصفة خلط جديدة",
-    );
-  }
-
-  async updateMixingFormula(id: number, formula: Partial<MixingFormula>, ingredients?: InsertFormulaIngredient[]): Promise<any> {
-    return withDatabaseErrorHandling(
-      async () => {
-        return await db.transaction(async (tx) => {
-          // Update formula
-          const [updatedFormula] = await tx
-            .update(mixing_formulas)
-            .set({ ...formula, updated_at: new Date() })
-            .where(eq(mixing_formulas.id, id))
-            .returning();
-
-          if (!updatedFormula) {
-            throw new Error("الوصفة غير موجودة");
-          }
-
-          // Update ingredients if provided
-          if (ingredients) {
-            // Validate total percentage
-            const totalPercentage = ingredients.reduce(
-              (sum, ing) => sum + parseFloat(ing.percentage.toString()),
-              0
-            );
-            
-            if (Math.abs(totalPercentage - 100) > 0.01) {
-              throw new Error(`مجموع النسب يجب أن يساوي 100%. المجموع الحالي: ${totalPercentage.toFixed(2)}%`);
-            }
-
-            // Delete old ingredients
-            await tx.delete(formula_ingredients).where(eq(formula_ingredients.formula_id, id));
-
-            // Insert new ingredients
-            const ingredientsWithFormulaId = ingredients.map(ing => ({
-              ...ing,
-              formula_id: id,
-            }));
-
-            await tx.insert(formula_ingredients).values(ingredientsWithFormulaId);
-          }
-
-          // Get updated formula with ingredients
-          const newIngredients = await tx
-            .select()
-            .from(formula_ingredients)
-            .where(eq(formula_ingredients.formula_id, id));
-
-          return { ...updatedFormula, ingredients: newIngredients };
-        });
-      },
-      "updateMixingFormula",
-      `تحديث وصفة الخلط رقم ${id}`,
-    );
-  }
-
-  async deleteMixingFormula(id: number): Promise<void> {
-    return withDatabaseErrorHandling(
-      async () => {
-        // Check if formula is used in any batches
-        const [batch] = await db
-          .select()
-          .from(mixing_batches)
-          .where(eq(mixing_batches.formula_id, id))
-          .limit(1);
-
-        if (batch) {
-          throw new Error("لا يمكن حذف وصفة مستخدمة في عمليات خلط موجودة");
-        }
-
-        await db.delete(mixing_formulas).where(eq(mixing_formulas.id, id));
-      },
-      "deleteMixingFormula",
-      `حذف وصفة الخلط رقم ${id}`,
-    );
-  }
-
-  async findMatchingFormulas(criteria: {
-    machineId: string;
-    thickness: number;
-    width?: number;
-  }): Promise<any[]> {
-    return withDatabaseErrorHandling(
-      async () => {
-        const conditions = [
-          eq(mixing_formulas.machine_id, criteria.machineId),
-          eq(mixing_formulas.is_active, true),
-          sql`${mixing_formulas.thickness_min} <= ${criteria.thickness}`,
-          sql`${mixing_formulas.thickness_max} >= ${criteria.thickness}`,
-        ];
-
-        if (criteria.width !== undefined) {
-          conditions.push(
-            sql`${mixing_formulas.width_min} <= ${criteria.width}`
-          );
-          conditions.push(
-            sql`${mixing_formulas.width_max} >= ${criteria.width}`
-          );
-        }
-
-        const formulas = await db
-          .select({
-            id: mixing_formulas.id,
-            formula_name: mixing_formulas.formula_name,
-            machine_id: mixing_formulas.machine_id,
-            screw_assignment: mixing_formulas.screw_assignment,
-            thickness_min: mixing_formulas.thickness_min,
-            thickness_max: mixing_formulas.thickness_max,
-            width_min: mixing_formulas.width_min,
-            width_max: mixing_formulas.width_max,
-            master_batch_colors: mixing_formulas.master_batch_colors,
-            notes: mixing_formulas.notes,
-          })
-          .from(mixing_formulas)
-          .where(and(...conditions))
-          .orderBy(mixing_formulas.created_at);
-
-        // Get ingredients with item details for each matching formula
-        for (const formula of formulas) {
-          const ingredients = await db
-            .select({
-              id: formula_ingredients.id,
-              formula_id: formula_ingredients.formula_id,
-              item_id: formula_ingredients.item_id,
-              item_name: items.name,
-              item_name_ar: items.name_ar,
-              percentage: formula_ingredients.percentage,
-              notes: formula_ingredients.notes,
-            })
-            .from(formula_ingredients)
-            .leftJoin(items, eq(formula_ingredients.item_id, items.id))
-            .where(eq(formula_ingredients.formula_id, formula.id));
-          (formula as any).ingredients = ingredients;
-        }
-
-        return formulas;
-      },
-      "findMatchingFormulas",
-      "البحث عن وصفات خلط مطابقة",
-    );
-  }
-
   // ============ Mixing Batches ============
 
   async getAllMixingBatches(): Promise<any[]> {
@@ -12202,27 +11888,20 @@ export class DatabaseStorage implements IStorage {
           .select({
             id: mixing_batches.id,
             batch_number: mixing_batches.batch_number,
-            formula_id: mixing_batches.formula_id,
-            formula_name: mixing_formulas.formula_name,
             production_order_id: mixing_batches.production_order_id,
             production_order_number: production_orders.production_order_number,
-            roll_id: mixing_batches.roll_id,
-            roll_number: rolls.roll_number,
             machine_id: mixing_batches.machine_id,
             machine_name: machines.name_ar,
             operator_id: mixing_batches.operator_id,
             operator_name: users.display_name,
+            screw_assignment: mixing_batches.screw_assignment,
             total_weight_kg: mixing_batches.total_weight_kg,
             status: mixing_batches.status,
-            started_at: mixing_batches.started_at,
-            completed_at: mixing_batches.completed_at,
             notes: mixing_batches.notes,
             created_at: mixing_batches.created_at,
           })
           .from(mixing_batches)
-          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
           .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
-          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
           .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
           .leftJoin(users, eq(mixing_batches.operator_id, users.id))
           .orderBy(desc(mixing_batches.created_at));
@@ -12250,27 +11929,20 @@ export class DatabaseStorage implements IStorage {
           .select({
             id: mixing_batches.id,
             batch_number: mixing_batches.batch_number,
-            formula_id: mixing_batches.formula_id,
-            formula_name: mixing_formulas.formula_name,
             production_order_id: mixing_batches.production_order_id,
             production_order_number: production_orders.production_order_number,
-            roll_id: mixing_batches.roll_id,
-            roll_number: rolls.roll_number,
             machine_id: mixing_batches.machine_id,
             machine_name: machines.name_ar,
             operator_id: mixing_batches.operator_id,
             operator_name: users.display_name,
+            screw_assignment: mixing_batches.screw_assignment,
             total_weight_kg: mixing_batches.total_weight_kg,
             status: mixing_batches.status,
-            started_at: mixing_batches.started_at,
-            completed_at: mixing_batches.completed_at,
             notes: mixing_batches.notes,
             created_at: mixing_batches.created_at,
           })
           .from(mixing_batches)
-          .leftJoin(mixing_formulas, eq(mixing_batches.formula_id, mixing_formulas.id))
           .leftJoin(production_orders, eq(mixing_batches.production_order_id, production_orders.id))
-          .leftJoin(rolls, eq(mixing_batches.roll_id, rolls.id))
           .leftJoin(machines, eq(mixing_batches.machine_id, machines.id))
           .leftJoin(users, eq(mixing_batches.operator_id, users.id))
           .where(eq(mixing_batches.id, id));
@@ -12293,10 +11965,29 @@ export class DatabaseStorage implements IStorage {
     return withDatabaseErrorHandling(
       async () => {
         return await db.transaction(async (tx) => {
-          // Create batch
+          // Auto-generate batch_number (MX001, MX002, etc.)
+          const latestBatch = await tx
+            .select({ batch_number: mixing_batches.batch_number })
+            .from(mixing_batches)
+            .orderBy(desc(mixing_batches.id))
+            .limit(1);
+
+          let nextNumber = 1;
+          if (latestBatch.length > 0 && latestBatch[0].batch_number) {
+            const match = latestBatch[0].batch_number.match(/MX(\d+)/);
+            if (match) {
+              nextNumber = parseInt(match[1], 10) + 1;
+            }
+          }
+          const batch_number = `MX${nextNumber.toString().padStart(3, '0')}`;
+
+          // Create batch with auto-generated batch_number
           const [newBatch] = await tx
             .insert(mixing_batches)
-            .values(batch)
+            .values({
+              ...batch,
+              batch_number,
+            })
             .returning();
 
           // Create ingredients
@@ -12360,15 +12051,10 @@ export class DatabaseStorage implements IStorage {
               throw new Error(`المكون رقم ${update.id} غير موجود`);
             }
 
-            const plannedWeight = parseFloat(ingredient.planned_weight_kg.toString());
-            const actualWeight = parseFloat(update.actual_weight_kg);
-            const variance = actualWeight - plannedWeight;
-
             await tx
               .update(batch_ingredients)
               .set({
                 actual_weight_kg: update.actual_weight_kg,
-                variance_kg: numberToDecimalString(variance, 2),
               })
               .where(eq(batch_ingredients.id, update.id));
           }
@@ -12386,7 +12072,6 @@ export class DatabaseStorage implements IStorage {
           .update(mixing_batches)
           .set({
             status: "completed",
-            completed_at: new Date(),
           })
           .where(eq(mixing_batches.id, id))
           .returning();
