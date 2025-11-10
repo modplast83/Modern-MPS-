@@ -7469,193 +7469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============ Mixing Formulas & Batches Routes ============
-
-  // Get all mixing formulas
-  app.get("/api/mixing-formulas", requireAuth, async (req, res) => {
-    try {
-      const formulas = await storage.getAllMixingFormulas();
-      res.json({ data: formulas });
-    } catch (error: any) {
-      logger.error("Error getting mixing formulas:", error);
-      res.status(500).json({ message: "خطأ في جلب وصفات الخلط", error: error.message });
-    }
-  });
-
-  // Get mixing formula by ID
-  app.get("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const formula = await storage.getMixingFormulaById(id);
-      
-      if (!formula) {
-        return res.status(404).json({ message: "الوصفة غير موجودة" });
-      }
-      
-      res.json(formula);
-    } catch (error: any) {
-      logger.error("Error getting mixing formula:", error);
-      res.status(500).json({ message: "خطأ في جلب الوصفة", error: error.message });
-    }
-  });
-
-  // Create mixing formula (Admin + Production Manager only)
-  app.post("/api/mixing-formulas", requireAuth, async (req, res) => {
-    try {
-      // Check authorization - only admin (1) and production manager (2) can create formulas
-      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
-        return res.status(403).json({ message: "غير مصرح لك بإنشاء وصفات الخلط" });
-      }
-
-      const { ingredients, ...formulaData } = req.body;
-      
-      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-        return res.status(400).json({ message: "بيانات المكونات ناقصة أو غير صحيحة" });
-      }
-
-      // Validate all ingredients have valid item_id
-      const invalidIngredients = ingredients.filter(
-        (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
-      );
-      if (invalidIngredients.length > 0) {
-        return res.status(400).json({ 
-          message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
-        });
-      }
-
-      // Validate all ingredients have valid percentage
-      const missingPercentage = ingredients.filter(
-        (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
-      );
-      if (missingPercentage.length > 0) {
-        return res.status(400).json({ 
-          message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
-        });
-      }
-
-      // Validate total percentage equals 100%
-      const totalPercentage = ingredients.reduce(
-        (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
-        0
-      );
-      if (Math.abs(totalPercentage - 100) > 0.01) {
-        return res.status(400).json({ 
-          message: "مجموع نسب المكونات يجب أن يساوي 100%" 
-        });
-      }
-
-      if (!formulaData.formula_name || !formulaData.machine_id || 
-          !formulaData.width_min || !formulaData.width_max ||
-          !formulaData.thickness_min || !formulaData.thickness_max) {
-        return res.status(400).json({ message: "بيانات الوصفة ناقصة" });
-      }
-
-      const completeFormulaData = {
-        ...formulaData,
-        created_by: req.user!.id,
-      };
-
-      const newFormula = await storage.createMixingFormula(completeFormulaData, ingredients);
-      res.status(201).json(newFormula);
-    } catch (error: any) {
-      logger.error("Error creating mixing formula:", error);
-      res.status(500).json({ message: "خطأ في إنشاء وصفة الخلط", error: error.message });
-    }
-  });
-
-  // Update mixing formula
-  app.put("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      // Check authorization
-      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
-        return res.status(403).json({ message: "غير مصرح لك بتعديل وصفات الخلط" });
-      }
-
-      const id = parseInt(req.params.id);
-      const { formula, ingredients } = req.body;
-      
-      // Validate ingredients if provided
-      if (ingredients && Array.isArray(ingredients) && ingredients.length > 0) {
-        // Validate all ingredients have valid item_id
-        const invalidIngredients = ingredients.filter(
-          (ing: any) => !ing.item_id || ing.item_id === "" || ing.item_id === 0
-        );
-        if (invalidIngredients.length > 0) {
-          return res.status(400).json({ 
-            message: "جميع المكونات يجب أن يكون لها صنف صحيح" 
-          });
-        }
-
-        // Validate all ingredients have valid percentage
-        const missingPercentage = ingredients.filter(
-          (ing: any) => !ing.percentage || parseFloat(ing.percentage) <= 0
-        );
-        if (missingPercentage.length > 0) {
-          return res.status(400).json({ 
-            message: "جميع المكونات يجب أن يكون لها نسبة صحيحة" 
-          });
-        }
-
-        // Validate total percentage equals 100%
-        const totalPercentage = ingredients.reduce(
-          (sum: number, ing: any) => sum + (parseFloat(ing.percentage) || 0),
-          0
-        );
-        if (Math.abs(totalPercentage - 100) > 0.01) {
-          return res.status(400).json({ 
-            message: "مجموع نسب المكونات يجب أن يساوي 100%" 
-          });
-        }
-      }
-      
-      const updatedFormula = await storage.updateMixingFormula(id, formula, ingredients);
-      res.json(updatedFormula);
-    } catch (error: any) {
-      logger.error("Error updating mixing formula:", error);
-      res.status(500).json({ message: "خطأ في تحديث وصفة الخلط", error: error.message });
-    }
-  });
-
-  // Delete mixing formula
-  app.delete("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      // Check authorization - only admin can delete formulas
-      if (req.user!.role_id !== 1) {
-        return res.status(403).json({ message: "فقط المدير يمكنه حذف وصفات الخلط" });
-      }
-
-      const id = parseInt(req.params.id);
-      await storage.deleteMixingFormula(id);
-      res.json({ message: "تم حذف الوصفة بنجاح" });
-    } catch (error: any) {
-      logger.error("Error deleting mixing formula:", error);
-      res.status(500).json({ message: error.message || "خطأ في حذف الوصفة", error: error.message });
-    }
-  });
-
-  // Find matching formulas for production order
-  app.post("/api/mixing-formulas/find-matching", requireAuth, async (req, res) => {
-    try {
-      const { machineId, thickness, width } = req.body;
-      
-      if (!machineId || thickness === undefined) {
-        return res.status(400).json({ message: "بيانات البحث ناقصة" });
-      }
-
-      const formulas = await storage.findMatchingFormulas({
-        machineId,
-        thickness: parseFloat(thickness),
-        width: width ? parseFloat(width) : undefined,
-      });
-
-      res.json({ data: formulas });
-    } catch (error: any) {
-      logger.error("Error finding matching formulas:", error);
-      res.status(500).json({ message: "خطأ في البحث عن وصفات مطابقة", error: error.message });
-    }
-  });
-
-  // ===== Mixing Batches =====
+  // ============ Mixing Batches Routes ============
 
   // Get all mixing batches
   app.get("/api/mixing-batches", requireAuth, async (req, res) => {
@@ -7718,8 +7532,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات عملية الخلط أو المكونات ناقصة" });
       }
 
+      // Validate screw_assignment
+      if (!batch.screw_assignment || !['A', 'B'].includes(batch.screw_assignment)) {
+        return res.status(400).json({ message: "يجب تحديد البريمة (A أو B)" });
+      }
+
+      // Validate machine_id is provided
+      if (!batch.machine_id) {
+        return res.status(400).json({ message: "يجب تحديد الماكينة" });
+      }
+
+      // Ensure batch_number is auto-generated (remove if user provided it)
+      const { batch_number, formula_id, roll_id, ...cleanBatchData } = batch;
+
       const batchData = {
-        ...batch,
+        ...cleanBatchData,
         operator_id: req.user!.id,
         status: "in_progress",
         started_at: new Date(),
