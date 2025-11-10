@@ -37,8 +37,10 @@ import {
   customer_products,
   locations,
   users,
+  newCustomers,
+  insertNewCustomerSchema,
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
 import { z } from "zod";
@@ -1987,6 +1989,271 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(customers);
     } catch (error) {
       res.status(500).json({ message: "خطأ في جلب العملاء" });
+    }
+  });
+
+  // ================ NEW CUSTOMERS API ROUTES ================
+
+  // Get all new customers
+  app.get("/api/new-customers", requireAuth, async (req, res) => {
+    try {
+      const { status, migration_status } = req.query;
+      
+      let query = db.select().from(newCustomers);
+      
+      // Apply filters if provided
+      if (status) {
+        query = query.where(eq(newCustomers.status, status as string)) as any;
+      }
+      if (migration_status) {
+        query = query.where(eq(newCustomers.migration_status, migration_status as string)) as any;
+      }
+      
+      const result = await query;
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching new customers:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات العملاء الجديد" });
+    }
+  });
+
+  // Get single new customer
+  app.get("/api/new-customers/:id", requireAuth, async (req, res) => {
+    try {
+      const customer = await db
+        .select()
+        .from(newCustomers)
+        .where(eq(newCustomers.id, req.params.id))
+        .limit(1);
+      
+      if (customer.length === 0) {
+        return res.status(404).json({ message: "العميل غير موجود" });
+      }
+      
+      res.json(customer[0]);
+    } catch (error) {
+      console.error("Error fetching customer:", error);
+      res.status(500).json({ message: "خطأ في جلب بيانات العميل" });
+    }
+  });
+
+  // Create new customer
+  app.post("/api/new-customers", requireAuth, async (req, res) => {
+    try {
+      const validation = insertNewCustomerSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: validation.error });
+      }
+
+      // Generate new ID (NCID001, NCID002, etc.)
+      const lastCustomer = await db
+        .select({ id: newCustomers.id })
+        .from(newCustomers)
+        .orderBy(desc(newCustomers.id))
+        .limit(1);
+      
+      let newId = "NCID001";
+      if (lastCustomer.length > 0) {
+        const lastNum = parseInt(lastCustomer[0].id.replace("NCID", ""));
+        newId = `NCID${String(lastNum + 1).padStart(3, "0")}`;
+      }
+
+      const newCustomer = await db
+        .insert(newCustomers)
+        .values({
+          ...validation.data,
+          id: newId,
+          created_by: req.session.userId,
+          updated_by: req.session.userId,
+        })
+        .returning();
+
+      res.status(201).json(newCustomer[0]);
+    } catch (error) {
+      console.error("Error creating customer:", error);
+      res.status(500).json({ message: "خطأ في إضافة العميل" });
+    }
+  });
+
+  // Update new customer
+  app.put("/api/new-customers/:id", requireAuth, async (req, res) => {
+    try {
+      const validation = schema.insertNewCustomerSchema.partial().safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ message: "بيانات غير صحيحة", errors: validation.error });
+      }
+
+      const updated = await db
+        .update(schema.newCustomers)
+        .set({
+          ...validation.data,
+          updated_by: req.session.userId,
+          updated_at: new Date(),
+        })
+        .where(eq(schema.newCustomers.id, req.params.id))
+        .returning();
+
+      if (updated.length === 0) {
+        return res.status(404).json({ message: "العميل غير موجود" });
+      }
+
+      res.json(updated[0]);
+    } catch (error) {
+      console.error("Error updating customer:", error);
+      res.status(500).json({ message: "خطأ في تحديث بيانات العميل" });
+    }
+  });
+
+  // Delete new customer
+  app.delete("/api/new-customers/:id", requireAuth, async (req, res) => {
+    try {
+      const deleted = await db
+        .delete(schema.newCustomers)
+        .where(eq(schema.newCustomers.id, req.params.id))
+        .returning();
+
+      if (deleted.length === 0) {
+        return res.status(404).json({ message: "العميل غير موجود" });
+      }
+
+      res.json({ message: "تم حذف العميل بنجاح" });
+    } catch (error) {
+      console.error("Error deleting customer:", error);
+      res.status(500).json({ message: "خطأ في حذف العميل" });
+    }
+  });
+
+  // Migrate single customer from old to new table
+  app.post("/api/new-customers/migrate/:id", requireAuth, async (req, res) => {
+    try {
+      // Get old customer
+      const oldCustomer = await db
+        .select()
+        .from(schema.customers)
+        .where(eq(schema.customers.id, req.params.id))
+        .limit(1);
+
+      if (oldCustomer.length === 0) {
+        return res.status(404).json({ message: "العميل غير موجود في الجدول القديم" });
+      }
+
+      // Generate new ID
+      const lastCustomer = await db
+        .select({ id: schema.newCustomers.id })
+        .from(schema.newCustomers)
+        .orderBy(desc(schema.newCustomers.id))
+        .limit(1);
+      
+      let newId = "NCID001";
+      if (lastCustomer.length > 0) {
+        const lastNum = parseInt(lastCustomer[0].id.replace("NCID", ""));
+        newId = `NCID${String(lastNum + 1).padStart(3, "0")}`;
+      }
+
+      // Migrate customer
+      const migratedCustomer = await db
+        .insert(schema.newCustomers)
+        .values({
+          id: newId,
+          name: oldCustomer[0].name,
+          name_ar: oldCustomer[0].name_ar,
+          code: oldCustomer[0].code,
+          user_id: oldCustomer[0].user_id,
+          plate_drawer_code: oldCustomer[0].plate_drawer_code,
+          city: oldCustomer[0].city,
+          address: oldCustomer[0].address,
+          tax_number: oldCustomer[0].tax_number,
+          phone: oldCustomer[0].phone,
+          sales_rep_id: oldCustomer[0].sales_rep_id,
+          migrated_from_id: oldCustomer[0].id,
+          migration_status: "migrated",
+          migrated_at: new Date(),
+          created_by: req.session.userId,
+          updated_by: req.session.userId,
+        })
+        .returning();
+
+      res.json({ 
+        message: "تم نقل العميل بنجاح",
+        customer: migratedCustomer[0]
+      });
+    } catch (error) {
+      console.error("Error migrating customer:", error);
+      res.status(500).json({ message: "خطأ في نقل العميل" });
+    }
+  });
+
+  // Migrate all customers from old to new table
+  app.post("/api/new-customers/migrate-all", requireAuth, async (req, res) => {
+    try {
+      // Get all old customers
+      const oldCustomers = await db.select().from(schema.customers);
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const oldCustomer of oldCustomers) {
+        try {
+          // Check if already migrated
+          const existing = await db
+            .select()
+            .from(schema.newCustomers)
+            .where(eq(schema.newCustomers.migrated_from_id, oldCustomer.id))
+            .limit(1);
+
+          if (existing.length > 0) {
+            continue; // Skip already migrated
+          }
+
+          // Generate new ID
+          const lastCustomer = await db
+            .select({ id: schema.newCustomers.id })
+            .from(schema.newCustomers)
+            .orderBy(desc(schema.newCustomers.id))
+            .limit(1);
+          
+          let newId = "NCID001";
+          if (lastCustomer.length > 0) {
+            const lastNum = parseInt(lastCustomer[0].id.replace("NCID", ""));
+            newId = `NCID${String(lastNum + 1).padStart(3, "0")}`;
+          }
+
+          // Migrate customer
+          await db.insert(schema.newCustomers).values({
+            id: newId,
+            name: oldCustomer.name,
+            name_ar: oldCustomer.name_ar,
+            code: oldCustomer.code,
+            user_id: oldCustomer.user_id,
+            plate_drawer_code: oldCustomer.plate_drawer_code,
+            city: oldCustomer.city,
+            address: oldCustomer.address,
+            tax_number: oldCustomer.tax_number,
+            phone: oldCustomer.phone,
+            sales_rep_id: oldCustomer.sales_rep_id,
+            migrated_from_id: oldCustomer.id,
+            migration_status: "migrated",
+            migrated_at: new Date(),
+            created_by: req.session.userId,
+            updated_by: req.session.userId,
+          });
+
+          successCount++;
+        } catch (error) {
+          console.error(`Error migrating customer ${oldCustomer.id}:`, error);
+          errorCount++;
+        }
+      }
+
+      res.json({
+        message: `تم نقل ${successCount} عميل بنجاح`,
+        successCount,
+        errorCount,
+        totalCustomers: oldCustomers.length
+      });
+    } catch (error) {
+      console.error("Error migrating all customers:", error);
+      res.status(500).json({ message: "خطأ في عملية النقل الجماعي" });
     }
   });
 
