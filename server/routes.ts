@@ -6021,7 +6021,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // تسجيل الحضور مع تحقق الموقع الجغرافي
-  const { isInsideFactory } = require("./factory-location.ts");
   app.post("/api/attendance", async (req, res) => {
     try {
       // جلب جميع المواقع النشطة للمصانع
