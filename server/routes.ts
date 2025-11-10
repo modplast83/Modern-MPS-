@@ -6020,6 +6020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // تسجيل الحضور مع تحقق الموقع الجغرافي
   app.post("/api/attendance", async (req, res) => {
     try {
       // جلب جميع المواقع النشطة للمصانع
