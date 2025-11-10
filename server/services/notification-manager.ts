@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { EventEmitter } from "events";
 import type { IStorage } from "../storage";
+import { logger } from "../lib/logger";
 
 // SSE message types
 export interface SSEMessage {
@@ -58,8 +59,8 @@ export class NotificationManager extends EventEmitter {
     userId: number,
     response: Response,
   ): void {
-    console.log(
-      `[NotificationManager] Adding SSE connection for user ${userId}, connection: ${connectionId}`,
+    logger.debug(
+      `[NotificationManager] Adding SSE connection for user ${userId}, connection ${connectionId}`,
     );
 
     response.writeHead(200, {
@@ -102,8 +103,8 @@ export class NotificationManager extends EventEmitter {
         }
       } catch (error) {
         // Log but don't throw - connection cleanup should be resilient
-        console.warn(
-          `[NotificationManager] Error cleaning up connection ${connectionId}:`,
+        logger.warn(
+          `[NotificationManager] Error cleaning up connection ${connectionId}`,
           error,
         );
       } finally {
@@ -120,7 +121,7 @@ export class NotificationManager extends EventEmitter {
     notificationData: SystemNotificationData,
   ): Promise<void> {
     if (notificationData.priority === "low") {
-      console.log(
+      logger.debug(
         `[NotificationManager] Skipped low-priority notification for user ${userId}`,
       );
       return;
@@ -171,8 +172,8 @@ export class NotificationManager extends EventEmitter {
         );
       }
     } catch (error) {
-      console.error(
-        `[NotificationManager] Error sending notification to user ${userId}:`,
+      logger.error(
+        `[NotificationManager] Error sending notification to user ${userId}`,
         error,
       );
       throw error;
@@ -234,8 +235,8 @@ export class NotificationManager extends EventEmitter {
         );
       });
     } catch (error) {
-      console.error(
-        `[NotificationManager] Error sending notification to role ${roleId}:`,
+      logger.error(
+        `[NotificationManager] Error sending notification to role ${roleId}`,
         error,
       );
       throw error;
@@ -256,8 +257,8 @@ export class NotificationManager extends EventEmitter {
       );
       await Promise.all(promises);
     } catch (error) {
-      console.error(
-        `[NotificationManager] Error sending notification to all users:`,
+      logger.error(
+        `[NotificationManager] Error sending notification to all users`,
         error,
       );
       throw error;
@@ -302,8 +303,8 @@ export class NotificationManager extends EventEmitter {
         this.sendToConnection(connectionId, response, recentData);
       }
     } catch (error) {
-      console.error(
-        `[NotificationManager] Error sending recent notifications to user ${userId}:`,
+      logger.error(
+        `[NotificationManager] Error sending recent notifications to user ${userId}`,
         error,
       );
     }
@@ -323,7 +324,7 @@ export class NotificationManager extends EventEmitter {
 
       // Check if connection is still writable
       if (response.destroyed || response.writableEnded || !response.writable) {
-        console.log(
+        logger.debug(
           `[NotificationManager] Connection ${connectionId} is no longer writable, removing`,
         );
         this.removeConnection(connectionId);
@@ -339,8 +340,8 @@ export class NotificationManager extends EventEmitter {
       response.write(sseMessage);
       connection.lastHeartbeat = new Date();
     } catch (error) {
-      console.warn(
-        `[NotificationManager] Error sending to connection ${connectionId}:`,
+      logger.warn(
+        `[NotificationManager] Error sending to connection ${connectionId}`,
         error,
       );
       this.removeConnection(connectionId);
@@ -369,8 +370,8 @@ export class NotificationManager extends EventEmitter {
         conn.response.write(ping);
         conn.lastHeartbeat = new Date();
       } catch (error) {
-        console.warn(
-          `[NotificationManager] Heartbeat failed for connection ${connectionId}:`,
+        logger.warn(
+          `[NotificationManager] Heartbeat failed for connection ${connectionId}`,
           error,
         );
         stalConnections.push(connectionId);
@@ -406,7 +407,7 @@ export class NotificationManager extends EventEmitter {
           conn.response.writableEnded ||
           !conn.response.writable
         ) {
-          console.log(
+          logger.debug(
             `[NotificationManager] Found destroyed connection ${id}, marking for cleanup`,
           );
           stale.push(id);
@@ -418,8 +419,8 @@ export class NotificationManager extends EventEmitter {
 
       // Memory optimization: log connection stats for monitoring
       if (stale.length > 0) {
-        console.log(
-          `[NotificationManager] Cleaned up ${stale.length} stale connections. Active: ${this.connections.size}`,
+        logger.debug(
+          `[NotificationManager] Cleaned up ${stale.length} stale connections. Active ${this.connections.size}`,
         );
       }
 
@@ -437,7 +438,7 @@ export class NotificationManager extends EventEmitter {
    */
   private performMemoryCleanup(): void {
     try {
-      console.log("[NotificationManager] Running memory cleanup...");
+      logger.debug("[NotificationManager] Running memory cleanup");
 
       // First, validate all connections and remove any that are invalid
       const invalidConnections: string[] = [];
@@ -457,8 +458,8 @@ export class NotificationManager extends EventEmitter {
       const listenerCounts =
         this.listenerCount("error") + this.listenerCount("close");
       if (listenerCounts > this.connections.size * 2) {
-        console.log(
-          `[NotificationManager] Found ${listenerCounts} listeners, cleaning up...`,
+        logger.debug(
+          `[NotificationManager] Found ${listenerCounts} listeners, cleaning up`,
         );
         this.removeAllListeners("error");
         this.removeAllListeners("close");
@@ -469,11 +470,11 @@ export class NotificationManager extends EventEmitter {
         global.gc();
       }
 
-      console.log(
-        `[NotificationManager] Memory cleanup completed. Active connections: ${this.connections.size}, Cleaned invalid: ${invalidConnections.length}`,
+      logger.debug(
+        `[NotificationManager] Memory cleanup completed. Active connections ${this.connections.size}, Cleaned invalid ${invalidConnections.length}`,
       );
     } catch (error) {
-      console.error("[NotificationManager] Memory cleanup failed:", error);
+      logger.error("[NotificationManager] Memory cleanup failed", error);
     }
   }
 
@@ -511,7 +512,7 @@ export class NotificationManager extends EventEmitter {
   }
 
   shutdown(): void {
-    console.log("[NotificationManager] Shutting down...");
+    logger.info("[NotificationManager] Shutting down");
 
     // Clear all intervals
     if (this.heartbeatInterval) {
@@ -534,8 +535,8 @@ export class NotificationManager extends EventEmitter {
     // Clear all event listeners
     this.removeAllListeners();
 
-    console.log(
-      `[NotificationManager] Shutdown complete. Cleaned up ${connectionIds.length} connections.`,
+    logger.info(
+      `[NotificationManager] Shutdown complete. Cleaned up ${connectionIds.length} connections`,
     );
   }
 
@@ -553,8 +554,8 @@ export class NotificationManager extends EventEmitter {
     this.productionUpdateDebounce = setTimeout(() => {
       if (this.connections.size === 0) return;
 
-      console.log(
-        `[NotificationManager] Broadcasting production update: ${updateType}`,
+      logger.debug(
+        `[NotificationManager] Broadcasting production update ${updateType}`,
       );
 
       const updateMessage: SSEMessage = {
@@ -615,8 +616,8 @@ export class NotificationManager extends EventEmitter {
         });
       }
     } catch (error) {
-      console.error(
-        "[NotificationManager] Error broadcasting production update to roles:",
+      logger.error(
+        "[NotificationManager] Error broadcasting production update to roles",
         error,
       );
     }

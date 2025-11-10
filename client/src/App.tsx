@@ -36,6 +36,8 @@ import WhatsAppWebhooks from "./pages/whatsapp-webhooks";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
+import PrintingOperatorDashboard from "./pages/PrintingOperatorDashboard";
+import CuttingOperatorDashboard from "./pages/CuttingOperatorDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
 import MaterialMixing from "./pages/material-mixing";
@@ -84,16 +86,17 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
+      {/* Redirects from old routes to Orders page with tabs */}
       <Route path="/production-orders-management">
-        <ProtectedRoute path="/production-orders-management">
-          <ProductionOrdersManagement />
-        </ProtectedRoute>
+        <Redirect to="/orders?tab=production-orders" />
       </Route>
 
       <Route path="/production-queues">
-        <ProtectedRoute path="/production-queues">
-          <ProductionQueues />
-        </ProtectedRoute>
+        <Redirect to="/orders?tab=production-queues" />
+      </Route>
+
+      <Route path="/roll-search">
+        <Redirect to="/orders?tab=roll-search" />
       </Route>
 
       <Route path="/film-operator">
@@ -102,9 +105,15 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
 
-      <Route path="/roll-search">
-        <ProtectedRoute path="/roll-search">
-          <RollSearch />
+      <Route path="/printing-operator">
+        <ProtectedRoute path="/printing-operator">
+          <PrintingOperatorDashboard />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/cutting-operator">
+        <ProtectedRoute path="/cutting-operator">
+          <CuttingOperatorDashboard />
         </ProtectedRoute>
       </Route>
 
@@ -145,9 +154,7 @@ function AppRoutes() {
       </Route>
 
       <Route path="/production-reports">
-        <ProtectedRoute path="/production-reports">
-          <ProductionReports />
-        </ProtectedRoute>
+        <Redirect to="/orders?tab=production-reports" />
       </Route>
 
       <Route path="/settings">

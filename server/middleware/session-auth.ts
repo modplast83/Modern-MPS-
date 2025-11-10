@@ -67,9 +67,9 @@ export async function populateUserFromSession(req: Request, res: Response, next:
             }
           } catch (e) {
             // If parsing fails, check if it's a single permission string
-            if (typeof userRole.permissions === 'string' && userRole.permissions.trim()) {
+            if (typeof userRole.permissions === 'string' && (userRole.permissions as string).trim()) {
               // Legacy single permission string (e.g., "production")
-              permissions = [userRole.permissions.trim()];
+              permissions = [(userRole.permissions as string).trim()];
             } else {
               permissions = [];
             }

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is an advanced AI-powered order management system designed to enhance operational efficiency in plastic bag manufacturing. Its primary purpose is to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to provide real-time tracking, multilingual interfaces, and intelligent data processing to improve overall operational efficiency and decision-making in the manufacturing process.
+This project is an advanced AI-powered order management system for plastic bag manufacturing. Its main purpose is to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to provide real-time tracking, multilingual interfaces, and intelligent data processing to improve overall operational efficiency and decision-making.
 
 ## User Preferences
 
@@ -15,29 +15,49 @@ This project is an advanced AI-powered order management system designed to enhan
 
 The system is built with a modern stack emphasizing efficiency and scalability, with a strong focus on Arabic RTL design principles.
 
--   **Frontend**: React, TypeScript, Vite, TanStack Query, Tailwind CSS, and shadcn/ui components for a responsive and intuitive user interface.
--   **Backend**: Node.js and Express, providing robust API endpoints.
--   **Database**: PostgreSQL (Neon Serverless) managed with Drizzle ORM.
--   **UI/UX Decisions**: Prioritizes Arabic RTL design, features a centralized toast notification system, IconWithTooltip for accessibility, and enhanced loading states with skeleton loaders across dashboards.
--   **Technical Implementations**: Includes a comprehensive number formatting system (Arabic numerals, 2 decimal places for weight, 1-2 decimal precision for percentages), sequential ID generation, and integrated attendance and notification systems. Query optimization is achieved through indexed foreign keys, aggregate functions, and grouping for various queues. Real-time updates are managed via TanStack Query with 30-second refetch intervals, cache invalidation on mutations, and optimistic updates.
--   **Feature Specifications**:
-    -   Multilingual support (Arabic/English).
-    -   Real-time order tracking and management.
-    -   Voice recognition and synthesis.
-    -   Advanced production order management, including detailed product specifications and notes.
-    -   **Three-Machine Roll Tracking**: Tracks each roll through film/extruder, printing, and cutting stages, replacing a single-machine system. Roll labels display comprehensive information for all three stages.
-    -   **Material Mixing System** (Film Section Only): Formula-based mixing system using size ranges (width in cm), thickness ranges (micron per layer), and master batch colors. Film machines categorized by screw type ('A' or 'ABA'), with ABA-type machines requiring separate A/B mixing recipes. All mixing ingredients sourced from items table (category CAT10 - raw materials only).
-    -   Quality control systems.
-    -   Maintenance tracking, including spare parts management.
-    -   HR management with attendance tracking and training programs.
-    -   Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
-    -   AI Assistant with context-aware intelligence, improved intent analysis, enhanced UI, and performance optimizations for smart query handling and data processing.
-    -   **Replit Auth Integration**: Dual authentication support - traditional username/password and Replit Auth for seamless integration with Replit platform.
--   **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
--   **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios like weight validation, printing, cutting, and queue management.
+- **Frontend**: React, TypeScript, Vite, TanStack Query, Tailwind CSS, and shadcn/ui components.
+- **Backend**: Node.js and Express.
+- **Database**: PostgreSQL (Neon Serverless) managed with Drizzle ORM.
+- **UI/UX Decisions**: Prioritizes Arabic RTL design, features a centralized toast notification system, IconWithTooltip for accessibility, and enhanced loading states with skeleton loaders.
+- **Technical Implementations**: Includes comprehensive number formatting (Arabic numerals, 2 decimal places for weight, 1-2 decimal precision for percentages), sequential ID generation, and integrated attendance and notification systems. Query optimization utilizes indexed foreign keys, aggregate functions, and grouping. Real-time updates are managed via TanStack Query with 30-second refetch intervals, cache invalidation on mutations, and optimistic updates.
+- **Feature Specifications**:
+    - Multilingual support (Arabic/English).
+    - Real-time order tracking and management.
+    - Voice recognition and synthesis.
+    - Advanced production order management, including detailed product specifications and notes.
+    - **Three-Machine Roll Tracking**: Tracks each roll through film/extruder, printing, and cutting stages.
+    - **Material Mixing System**: Formula-based mixing system using size and thickness ranges, and master batch colors. Categorized by machine screw type ('A' or 'ABA'). Ingredients sourced from items table (CAT10 - raw materials).
+    - Quality control systems.
+    - Maintenance tracking, including spare parts management.
+    - HR management with attendance tracking and training programs.
+    - **Geolocation-Based Attendance**: Attendance check-in system with GPS verification within factory premises (500m radius) using the Haversine formula. Supports multiple factory locations.
+    - Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
+    - **Enhanced AI Assistant (v2.0)**: 
+      - Database schema understanding with 20+ supported tables
+      - Clarification logic - asks for clarification when confidence < 60%
+      - Missing information detection - requests required data
+      - Confirmation system - requires approval before write operations
+      - Error learning system - learns from mistakes and patterns (threshold: 3 errors)
+      - Context-aware intelligence with improved intent analysis
+      - Confidence scoring (0.0-1.0) for all responses
+      - **Security Features**:
+        - SQL injection prevention via whitelist validation and parameterized queries
+        - Schema tampering prevention with strict table/column validation
+        - XSS prevention through input sanitization
+        - Read-only operations (SELECT only) for AI queries
+        - Suspicious input detection and blocking
+    - **Replit Auth Integration**: Dual authentication support (traditional username/password and Replit Auth).
+- **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
+- **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios.
+- **System Integration**:
+    1.  **Warehouse**: `inventory`, `inventory_movements`, `items` tables.
+    2.  **Orders**: `orders` linked to `production_orders`.
+    3.  **Production**: `production_orders` linked to `rolls` and `warehouse_receipts`, managing a three-stage workflow (Film → Printing → Cutting → Warehouse).
+    4.  **Material Mixing**: `mixing_formulas`, `formula_ingredients`, `mixing_batches`, `batch_ingredients`. Includes an `Inventory Consumption API` for automatic stock deduction.
+    All sections maintain referential integrity via foreign keys, real-time cache invalidation, and transaction-safe operations.
 
 ## External Dependencies
 
--   **Database**: PostgreSQL (Neon Serverless)
--   **AI/ML**: OpenAI
--   **Messaging**: Twilio (for WhatsApp notifications)
+- **Database**: PostgreSQL (Neon Serverless)
+- **AI/ML**: OpenAI
+- **Messaging**: Twilio (for WhatsApp notifications)

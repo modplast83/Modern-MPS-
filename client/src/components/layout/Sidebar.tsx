@@ -14,6 +14,9 @@ import {
   Monitor,
   Activity,
   Beaker,
+  Film,
+  Printer,
+  Scissors,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
@@ -35,8 +38,8 @@ const modules = [
     active: false,
   },
   {
-    name: "الطلبات",
-    name_ar: "الطلبات",
+    name: "الطلبات والإنتاج",
+    name_ar: "الطلبات والإنتاج",
     icon: FileText,
     path: "/orders",
     active: false,
@@ -49,35 +52,28 @@ const modules = [
     active: false,
   },
   {
-    name: "البحث عن الرولات",
-    name_ar: "البحث عن الرولات",
-    icon: FileText,
-    path: "/roll-search",
-    active: false,
-  },
-  {
-    name: "إدارة أوامر الإنتاج",
-    name_ar: "إدارة أوامر الإنتاج",
-    icon: ClipboardCheck,
-    path: "/production-orders-management",
-    active: false,
-    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
-  },
-  {
-    name: "طوابير الإنتاج",
-    name_ar: "طوابير الإنتاج",
-    icon: Link2,
-    path: "/production-queues",
-    active: false,
-    requiredRoles: ["admin", "production_manager"], // مخصص للمدير ومدير الإنتاج
-  },
-  {
     name: "لوحة عامل الفيلم",
     name_ar: "لوحة عامل الفيلم",
-    icon: Cog,
+    icon: Film,
     path: "/film-operator",
     active: false,
-    requiredSections: [1], // مخصص لعاملي قسم الفيلم
+    requiredSections: [3], // SEC03 - قسم الفيلم/البثق
+  },
+  {
+    name: "لوحة عامل الطباعة",
+    name_ar: "لوحة عامل الطباعة",
+    icon: Printer,
+    path: "/printing-operator",
+    active: false,
+    requiredSections: [4], // مخصص لعاملي قسم الطباعة
+  },
+  {
+    name: "لوحة عامل التقطيع",
+    name_ar: "لوحة عامل التقطيع",
+    icon: Scissors,
+    path: "/cutting-operator",
+    active: false,
+    requiredSections: [5], // مخصص لعاملي قسم التقطيع
   },
   {
     name: "مراقبة الإنتاج",
@@ -136,14 +132,6 @@ const modules = [
     active: false,
   },
   {
-    name: "تقارير الإنتاج",
-    name_ar: "تقارير الإنتاج",
-    icon: BarChart3,
-    path: "/production-reports",
-    active: false,
-    requiredRoles: ["admin", "production_manager"],
-  },
-  {
       name: "الأدوات",
       name_ar: "الأدوات",
       icon: Wrench,
@@ -165,17 +153,25 @@ export default function Sidebar() {
 
   // Filter modules based on user permissions and sections
   const accessibleModules = modules.filter(module => {
-    // Check if module has section requirements
+    // First check route permissions (this allows admin to access everything)
+    if (!canAccessRoute(user, module.path)) {
+      return false;
+    }
+    
+    // Check if module has section requirements (but skip for admins)
     if (module.requiredSections) {
-      // Check if user's section matches any of the required sections
-      const userSectionId = user?.section_id;
-      if (!userSectionId || !module.requiredSections.includes(userSectionId)) {
-        return false;
+      // Admin can access all sections
+      const isAdmin = user?.role_id === 1;
+      if (!isAdmin) {
+        // For non-admin users, check if user's section matches
+        const userSectionId = user?.section_id;
+        if (!userSectionId || !module.requiredSections.includes(userSectionId)) {
+          return false;
+        }
       }
     }
     
-    // Check route permissions for all pages including home
-    return canAccessRoute(user, module.path);
+    return true;
   });
 
   return (

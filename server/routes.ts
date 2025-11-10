@@ -2,6 +2,7 @@ import type { Express, Request } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcrypt";
 import { requireAuth, requirePermission, requireAdmin, type AuthRequest } from "./middleware/auth";
+import { logger } from "./lib/logger";
 
 // Extend Express Request type to include session
 declare module "express-serve-static-core" {
@@ -142,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(user);
     } catch (error) {
-      console.error("Error fetching Replit auth user:", error);
+      logger.error("Error fetching Replit auth user", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -171,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Enhanced null checks for user properties
         if (!user.password) {
-          console.error("User found but password is null/undefined:", user.id);
+          logger.error("User found but password is null or undefined");
           return res
             .status(401)
             .json({ message: "بيانات تسجيل الدخول غير صحيحة" });
@@ -197,7 +198,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Ensure session is saved before responding with additional reliability measures
         req.session.save((err: any) => {
           if (err) {
-            console.error("Session save error:", err);
+            logger.error("Session save error", err);
             return res.status(500).json({ message: "خطأ في حفظ الجلسة" });
           }
 
@@ -206,10 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             req.session.touch();
           }
 
-          // Log successful session creation in development
-          if (process.env.NODE_ENV !== "production") {
-            console.log(`✅ Session created and saved for user ${user.id}`);
-          }
+          logger.session("created and saved", user.id);
 
           // Session saved successfully - safe property access
           res.json({
@@ -224,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         });
       } catch (error) {
-        console.error("Login error:", error);
+        logger.error("Login error", error);
         res.status(500).json({ message: "خطأ في الخادم" });
       }
     },
@@ -235,15 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Double-check session (redundant with requireAuth but safer)
       if (!req.session?.userId || typeof req.session.userId !== "number") {
-        // Debug session state in development
-        if (process.env.NODE_ENV !== "production") {
-          console.log("🔍 /api/me session debug:", {
-            sessionExists: !!req.session,
-            userId: req.session?.userId,
-            userIdType: typeof req.session?.userId,
-            sessionId: req.session?.id || "no-session-id",
-          });
-        }
+        logger.debug("Invalid session on /api/me");
         return res.status(401).json({
           message: "جلسة غير صحيحة",
           success: false,
@@ -256,11 +246,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           if (req.session?.destroy) {
             req.session.destroy((err: any) => {
-              if (err) console.error("Error destroying invalid session:", err);
+              if (err) logger.error("Error destroying invalid session", err);
             });
           }
         } catch (destroyError) {
-          console.error("Failed to destroy invalid session:", destroyError);
+          logger.error("Failed to destroy invalid session", destroyError);
         }
         return res.status(404).json({
           message: "المستخدم غير موجود",
@@ -286,13 +276,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.session?.save) {
           req.session.save((err: any) => {
             if (err) {
-              console.error("Error saving session on /api/me:", err);
+              logger.error("Error saving session on /api/me", err);
               // Continue anyway, don't break the response
             }
           });
         }
       } catch (sessionError) {
-        console.error("Session management error:", sessionError);
+        logger.error("Session management error", sessionError);
         // Don't fail the request for session issues
       }
 
@@ -346,7 +336,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
       });
     } catch (error) {
-      console.error("Get current user error:", error);
+      logger.error("Get current user error", error);
       res.status(500).json({
         message: "خطأ في الخادم",
         success: false,
@@ -360,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.session?.destroy) {
         req.session.destroy((err) => {
           if (err) {
-            console.error("Session destroy error:", err);
+            logger.error("Session destroy error", err);
             return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
           }
           // Clear all possible session cookies
@@ -376,7 +366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ message: "تم تسجيل الخروج بنجاح" });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      logger.error("Logout error", error);
       res.status(500).json({ message: "خطأ في تسجيل الخروج" });
     }
   });
@@ -387,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getDashboardStats();
       res.json(stats);
     } catch (error) {
-      console.error("Dashboard stats error:", error);
+      logger.error("Dashboard stats error", error);
       res.status(500).json({ message: "خطأ في جلب الإحصائيات" });
     }
   });
@@ -428,7 +418,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
           );
         } catch (serviceError: any) {
-          console.error("Notification service error:", serviceError);
+          logger.error("Notification service error", serviceError);
           return res.status(503).json({
             message: "خدمة الإشعارات غير متوفرة مؤقتاً",
             success: false,
@@ -478,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       } catch (error: any) {
-        console.error("Error sending WhatsApp message:", error);
+        logger.error("Error sending WhatsApp message", error);
 
         // Handle different types of errors gracefully
         if (error.name === "ValidationError") {
@@ -526,7 +516,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
     } catch (error: any) {
-      console.error("Error sending test message:", error);
+      logger.error("Error sending test message", error);
       res.status(500).json({ message: "خطأ في إرسال رسالة الاختبار" });
     }
   });
@@ -583,7 +573,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(notifications);
     } catch (error: any) {
-      console.error("Error fetching notifications:", error);
+      logger.error("Error fetching notifications", error);
       res.status(500).json({ message: "خطأ في جلب الإشعارات" });
     }
   });
@@ -598,18 +588,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const challenge = req.query["hub.challenge"];
 
     if (mode === "subscribe" && token === VERIFY_TOKEN) {
-      console.log("✅ Meta Webhook verified successfully");
+      logger.info("✅ Meta Webhook verified successfully");
       res.status(200).send(challenge);
     } else {
-      console.log("❌ Meta Webhook verification failed");
+      logger.info("❌ Meta Webhook verification failed");
       res.sendStatus(403);
     }
   });
 
   app.post("/api/notifications/webhook/meta", async (req, res) => {
     try {
-      console.log(
-        "📨 Meta Webhook received:",
+      logger.debug(
+        "📨 Meta Webhook received",
         JSON.stringify(req.body, null, 2),
       );
 
@@ -620,7 +610,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error processing Meta webhook:", error);
+      logger.error("Error processing Meta webhook", error);
       res.status(500).json({ message: "خطأ في معالجة Meta webhook" });
     }
   });
@@ -636,7 +626,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.status(200).send("OK");
     } catch (error: any) {
-      console.error("Error handling Twilio webhook:", error);
+      logger.error("Error handling Twilio webhook", error);
       res.status(500).send("Error");
     }
   });
@@ -653,12 +643,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         setNotificationManager(notificationManager);
 
         // Apply database optimizations on first initialization
-        console.log("[System] Applying database optimizations...");
+        logger.info("[System] Applying database optimizations...");
         createPerformanceIndexes().catch((err) =>
-          console.error("[System] Database optimization failed:", err),
+          logger.error("[System] Database optimization failed", err),
         );
         createTextSearchIndexes().catch((err) =>
-          console.error("[System] Text search optimization failed:", err),
+          logger.error("[System] Text search optimization failed", err),
         );
       }
 
@@ -673,11 +663,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add SSE connection
       notificationManager.addConnection(connectionId, userId, res);
 
-      console.log(
+      logger.info(
         `[SSE] New connection established for user ${userId}, connectionId: ${connectionId}`,
       );
     } catch (error) {
-      console.error("Error establishing SSE connection:", error);
+      logger.error("Error establishing SSE connection", error);
       res.status(500).json({ message: "خطأ في إنشاء الاتصال" });
     }
   });
@@ -720,12 +710,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           setNotificationManager(notificationManager);
 
           // Apply database optimizations on first initialization
-          console.log("[System] Applying database optimizations...");
+          logger.info("[System] Applying database optimizations...");
           createPerformanceIndexes().catch((err) =>
-            console.error("[System] Database optimization failed:", err),
+            logger.error("[System] Database optimization failed", err),
           );
           createTextSearchIndexes().catch((err) =>
-            console.error("[System] Text search optimization failed:", err),
+            logger.error("[System] Text search optimization failed", err),
           );
         }
 
@@ -1450,8 +1440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         // Override with server-calculated values for security
         final_quantity_kg: quantityCalculation.finalQuantityKg,
-        overrun_percentage:
-          overrun_percentage || quantityCalculation.overrunPercentage,
+        overrun_percentage: quantityCalculation.overrunPercentage,
       };
 
       const validatedData =
@@ -1506,8 +1495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const productionOrderData = {
           ...order,
           final_quantity_kg: quantityCalculation.finalQuantityKg,
-          overrun_percentage:
-            overrun_percentage || quantityCalculation.overrunPercentage,
+          overrun_percentage: quantityCalculation.overrunPercentage,
         };
 
         try {
@@ -1559,6 +1547,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req, res) => {
       try {
         const id = parseInt(req.params.id);
+        
+        // If customer_product_id or quantity_kg is being updated, recalculate overrun_percentage
+        if (req.body.customer_product_id || req.body.quantity_kg) {
+          const customerProducts = await storage.getCustomerProducts();
+          
+          // Get the existing production order to fill in missing fields
+          const existingOrder = await storage.getProductionOrderById(id);
+          if (!existingOrder) {
+            return res.status(404).json({ message: "أمر الإنتاج غير موجود" });
+          }
+          
+          const customer_product_id = req.body.customer_product_id || existingOrder.customer_product_id;
+          const quantity_kg = req.body.quantity_kg || existingOrder.quantity_kg;
+          
+          const customerProduct = customerProducts.find(
+            (cp) => cp.id === parseInt(customer_product_id),
+          );
+          
+          if (customerProduct) {
+            const quantityCalculation = calculateProductionQuantities(
+              parseFloat(quantity_kg),
+              customerProduct.punching,
+            );
+            
+            req.body.overrun_percentage = quantityCalculation.overrunPercentage;
+            req.body.final_quantity_kg = quantityCalculation.finalQuantityKg;
+          }
+        }
+        
         const validatedData = insertProductionOrderSchema
           .partial()
           .parse(req.body);
@@ -2053,16 +2070,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create roll with timing calculation
   app.post("/api/rolls/create-with-timing", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
+      const dataToValidate = {
+        ...req.body,
+        created_by: userId,
+      };
+
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
       const rollData = {
         ...validatedData,
-        created_by: userId,
         is_last_roll: req.body.is_last_roll || false,
       };
 
@@ -2085,19 +2107,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create final roll and complete film production
   app.post("/api/rolls/create-final", requireAuth, async (req: AuthRequest, res) => {
     try {
-      const validatedData = insertRollSchema.parse(req.body);
       const userId = req.session.userId;
       
       if (!userId) {
         return res.status(401).json({ message: "غير مصرح" });
       }
 
-      const rollData = {
-        ...validatedData,
+      const dataToValidate = {
+        ...req.body,
         created_by: userId,
       };
 
-      const newRoll = await storage.createFinalRoll(rollData);
+      const validatedData = insertRollSchema.parse(dataToValidate);
+
+      const newRoll = await storage.createFinalRoll(validatedData);
       res.status(201).json({
         success: true,
         message: "تم إنشاء آخر رول وإغلاق مرحلة الفيلم بنجاح",
@@ -2110,6 +2133,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: false,
         message: error instanceof Error ? error.message : "خطأ في إنشاء آخر رول" 
       });
+    }
+  });
+
+  // ============ Printing Operator Endpoints ============
+  
+  // Get active rolls for printing operator
+  app.get("/api/rolls/active-for-printing", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActivePrintingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching printing rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات الطباعة" });
+    }
+  });
+
+  // ============ Cutting Operator Endpoints ============
+  
+  // Get active rolls for cutting operator
+  app.get("/api/rolls/active-for-cutting", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.session.userId;
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      const rolls = await storage.getActiveCuttingRollsForOperator(userId);
+      res.json(rolls);
+    } catch (error) {
+      console.error("Error fetching cutting rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب رولات التقطيع" });
     }
   });
 
@@ -2655,6 +2714,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching safe users:", error);
       res.status(500).json({ message: "خطأ في جلب المستخدمين" });
+    }
+  });
+
+  app.get("/api/users/sales-reps", async (req, res) => {
+    try {
+      // Sales section ID is 7 (SEC07)
+      const salesReps = await storage.getSafeUsersBySection(7);
+      res.json(salesReps);
+    } catch (error) {
+      console.error("Error fetching sales reps:", error);
+      res.status(500).json({ message: "خطأ في جلب مندوبي المبيعات" });
     }
   });
 
@@ -3308,20 +3378,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Assistant routes
+  // AI Assistant routes - Enhanced version with security
   app.post("/api/ai/chat", async (req, res) => {
     try {
-      const { message, context, userId } = req.body;
+      const { message, context, userId, useEnhanced = true } = req.body;
 
-      if (!message) {
-        return res.status(400).json({ message: "الرسالة مطلوبة" });
+      // 1️⃣ التحقق من المدخلات
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "الرسالة مطلوبة ويجب أن تكون نص" });
       }
 
-      // استخدام المساعد الذكي المتطور
-      const reply = await openaiService.processMessage(message, userId);
-      res.json({ reply });
+      if (message.length > 5000) {
+        return res.status(400).json({ message: "الرسالة طويلة جداً (الحد الأقصى 5000 حرف)" });
+      }
+
+      // 2️⃣ التحقق من المستخدم (اختياري - يمكن السماح بالاستخدام بدون تسجيل دخول)
+      const effectiveUserId = userId || req.session?.userId;
+
+      // 3️⃣ فحص محاولات SQL injection في الرسالة
+      const suspiciousPatterns = [
+        /;\s*DROP/i,
+        /;\s*DELETE\s+FROM/i,
+        /xp_cmdshell/i,
+        /<script>/i
+      ];
+
+      const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(message));
+      if (isSuspicious) {
+        const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+        await ErrorLearningEnhancer.recordError(
+          "suspicious_input",
+          "محاولة إدخال مشبوهة مكتشفة",
+          { userId: effectiveUserId, action: "suspicious_chat", data: { message: message.substring(0, 100) } }
+        );
+        return res.status(400).json({ 
+          message: "تم رفض الطلب لأسباب أمنية" 
+        });
+      }
+
+      // 4️⃣ استخدام المساعد المحسّن (الافتراضي) أو القديم
+      if (useEnhanced) {
+        const { enhancedAI } = await import("./services/enhanced-ai-assistant");
+        const aiResponse = await enhancedAI.processMessageWithIntelligence(
+          message,
+          { userId: effectiveUserId, previousMessages: context?.previousMessages }
+        );
+        
+        res.json({
+          reply: aiResponse.message,
+          requiresClarification: aiResponse.requiresClarification,
+          clarificationQuestion: aiResponse.clarificationQuestion,
+          suggestedActions: aiResponse.suggestedActions,
+          requiresConfirmation: aiResponse.requiresConfirmation,
+          confirmationMessage: aiResponse.confirmationMessage,
+          actionPlan: aiResponse.actionPlan,
+          confidence: aiResponse.confidence
+        });
+      } else {
+        // المساعد القديم (للتوافق مع الكود القديم)
+        const reply = await openaiService.processMessage(message, effectiveUserId);
+        res.json({ reply });
+      }
     } catch (error) {
       console.error("AI Chat Error:", error);
+      const { ErrorLearningEnhancer } = await import("./services/error-learning-enhancer");
+      await ErrorLearningEnhancer.recordError(
+        "ai_chat_error",
+        (error as Error).message,
+        { userId: req.body.userId, action: "chat", data: req.body }
+      );
+      
       const fallbackResponse = generateFallbackResponse(req.body.message);
       res.json({ reply: fallbackResponse });
     }
@@ -5894,8 +6020,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // تسجيل الحضور مع تحقق الموقع الجغرافي
   app.post("/api/attendance", async (req, res) => {
     try {
+      // جلب جميع المواقع النشطة للمصانع
+      const activeLocations = await storage.getActiveFactoryLocations();
+
+      // دالة حساب المسافة بين نقطتين جغرافيتين
+      const calculateDistance = (
+        lat1: number,
+        lon1: number,
+        lat2: number,
+        lon2: number
+      ): number => {
+        const R = 6371e3;
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+        return R * c;
+      };
+
+      // التحقق من وجود بيانات الموقع
+      if (!req.body.location || !req.body.location.lat || !req.body.location.lng) {
+        return res.status(400).json({
+          message: "يجب توفير الموقع الجغرافي لتسجيل الحضور",
+        });
+      }
+
+      // التحقق من وجود مواقع نشطة
+      if (activeLocations.length === 0) {
+        return res.status(400).json({
+          message: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
+        });
+      }
+
+      // التحقق من وجود المستخدم ضمن أي من المواقع النشطة
+      let isWithinRange = false;
+      let closestDistance = Infinity;
+      let closestLocation = null;
+
+      for (const factoryLocation of activeLocations) {
+        const distance = calculateDistance(
+          req.body.location.lat,
+          req.body.location.lng,
+          parseFloat(factoryLocation.latitude),
+          parseFloat(factoryLocation.longitude)
+        );
+
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestLocation = factoryLocation;
+        }
+
+        if (distance <= factoryLocation.allowed_radius) {
+          isWithinRange = true;
+          console.log(`✅ Location verified at ${factoryLocation.name_ar} - Distance: ${Math.round(distance)}m`);
+          break;
+        }
+      }
+
+      if (!isWithinRange) {
+        console.log(`❌ Attendance denied - Outside all factory ranges. Closest: ${Math.round(closestDistance)}m`);
+        return res.status(403).json({
+          message: `أنت خارج نطاق جميع المصانع. أقرب موقع (${closestLocation?.name_ar}): ${Math.round(closestDistance)} متر. النطاق المسموح: ${closestLocation?.allowed_radius} متر.`,
+        });
+      }
+
       const attendance = await storage.createAttendance(req.body);
 
       // Send attendance notification
@@ -6088,6 +6285,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting user request:", error);
       res.status(500).json({ message: "خطأ في حذف الطلب" });
+    }
+  });
+
+  // ============ System Settings API ============
+
+  // Get all system settings
+  app.get("/api/system-settings", async (req, res) => {
+    try {
+      const settings = await storage.getSystemSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "خطأ في جلب إعدادات النظام" });
+    }
+  });
+
+  // Get specific system setting by key
+  app.get("/api/system-settings/:key", async (req, res) => {
+    try {
+      const setting = await storage.getSystemSettingByKey(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ message: "الإعداد غير موجود" });
+      }
+      res.json(setting);
+    } catch (error) {
+      console.error("Error fetching system setting:", error);
+      res.status(500).json({ message: "خطأ في جلب الإعداد" });
+    }
+  });
+
+  // Update system setting
+  app.put("/api/system-settings/:key", async (req, res) => {
+    try {
+      const { setting_value } = req.body;
+      const userId = req.session.userId || 1; // Default to admin if not logged in
+      const updated = await storage.updateSystemSetting(req.params.key, setting_value, userId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating system setting:", error);
+      res.status(500).json({ message: "خطأ في تحديث الإعداد" });
+    }
+  });
+
+  // Create system setting
+  app.post("/api/system-settings", async (req, res) => {
+    try {
+      const setting = await storage.createSystemSetting(req.body);
+      res.status(201).json(setting);
+    } catch (error) {
+      console.error("Error creating system setting:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الإعداد" });
+    }
+  });
+
+  // ============ Factory Locations API ============
+
+  // Get all factory locations
+  app.get("/api/factory-locations", async (req, res) => {
+    try {
+      const locations = await storage.getFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب مواقع المصانع" });
+    }
+  });
+
+  // Get active factory locations only
+  app.get("/api/factory-locations/active", async (req, res) => {
+    try {
+      const locations = await storage.getActiveFactoryLocations();
+      res.json(locations);
+    } catch (error) {
+      console.error("Error fetching active factory locations:", error);
+      res.status(500).json({ message: "خطأ في جلب المواقع النشطة" });
+    }
+  });
+
+  // Get single factory location
+  app.get("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.getFactoryLocation(id);
+      if (!location) {
+        return res.status(404).json({ message: "الموقع غير موجود" });
+      }
+      res.json(location);
+    } catch (error) {
+      console.error("Error fetching factory location:", error);
+      res.status(500).json({ message: "خطأ في جلب الموقع" });
+    }
+  });
+
+  // Create factory location
+  app.post("/api/factory-locations", async (req, res) => {
+    try {
+      const location = await storage.createFactoryLocation({
+        ...req.body,
+        created_by: req.session.userId,
+      });
+      res.status(201).json(location);
+    } catch (error) {
+      console.error("Error creating factory location:", error);
+      res.status(500).json({ message: "خطأ في إنشاء الموقع" });
+    }
+  });
+
+  // Update factory location
+  app.put("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const location = await storage.updateFactoryLocation(id, req.body);
+      res.json(location);
+    } catch (error) {
+      console.error("Error updating factory location:", error);
+      res.status(500).json({ message: "خطأ في تحديث الموقع" });
+    }
+  });
+
+  // Delete factory location
+  app.delete("/api/factory-locations/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      await storage.deleteFactoryLocation(id);
+      res.json({ message: "تم حذف الموقع بنجاح" });
+    } catch (error) {
+      console.error("Error deleting factory location:", error);
+      res.status(500).json({ message: "خطأ في حذف الموقع" });
     }
   });
 
@@ -7144,128 +7469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // ============ Mixing Formulas & Batches Routes ============
-
-  // Get all mixing formulas
-  app.get("/api/mixing-formulas", requireAuth, async (req, res) => {
-    try {
-      const formulas = await storage.getAllMixingFormulas();
-      res.json({ data: formulas });
-    } catch (error: any) {
-      console.error("Error getting mixing formulas:", error);
-      res.status(500).json({ message: "خطأ في جلب وصفات الخلط", error: error.message });
-    }
-  });
-
-  // Get mixing formula by ID
-  app.get("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const formula = await storage.getMixingFormulaById(id);
-      
-      if (!formula) {
-        return res.status(404).json({ message: "الوصفة غير موجودة" });
-      }
-      
-      res.json(formula);
-    } catch (error: any) {
-      console.error("Error getting mixing formula:", error);
-      res.status(500).json({ message: "خطأ في جلب الوصفة", error: error.message });
-    }
-  });
-
-  // Create mixing formula (Admin + Production Manager only)
-  app.post("/api/mixing-formulas", requireAuth, async (req, res) => {
-    try {
-      // Check authorization - only admin (1) and production manager (2) can create formulas
-      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
-        return res.status(403).json({ message: "غير مصرح لك بإنشاء وصفات الخلط" });
-      }
-
-      const { ingredients, ...formulaData } = req.body;
-      
-      if (!ingredients || !Array.isArray(ingredients) || ingredients.length === 0) {
-        return res.status(400).json({ message: "بيانات المكونات ناقصة أو غير صحيحة" });
-      }
-
-      if (!formulaData.formula_name || !formulaData.machine_id || 
-          !formulaData.width_min || !formulaData.width_max ||
-          !formulaData.thickness_min || !formulaData.thickness_max) {
-        return res.status(400).json({ message: "بيانات الوصفة ناقصة" });
-      }
-
-      const completeFormulaData = {
-        ...formulaData,
-        created_by: req.user!.id,
-      };
-
-      const newFormula = await storage.createMixingFormula(completeFormulaData, ingredients);
-      res.status(201).json(newFormula);
-    } catch (error: any) {
-      console.error("Error creating mixing formula:", error);
-      res.status(500).json({ message: "خطأ في إنشاء وصفة الخلط", error: error.message });
-    }
-  });
-
-  // Update mixing formula
-  app.put("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      // Check authorization
-      if (req.user!.role_id !== 1 && req.user!.role_id !== 2) {
-        return res.status(403).json({ message: "غير مصرح لك بتعديل وصفات الخلط" });
-      }
-
-      const id = parseInt(req.params.id);
-      const { formula, ingredients } = req.body;
-      
-      const updatedFormula = await storage.updateMixingFormula(id, formula, ingredients);
-      res.json(updatedFormula);
-    } catch (error: any) {
-      console.error("Error updating mixing formula:", error);
-      res.status(500).json({ message: "خطأ في تحديث وصفة الخلط", error: error.message });
-    }
-  });
-
-  // Delete mixing formula
-  app.delete("/api/mixing-formulas/:id", requireAuth, async (req, res) => {
-    try {
-      // Check authorization - only admin can delete formulas
-      if (req.user!.role_id !== 1) {
-        return res.status(403).json({ message: "فقط المدير يمكنه حذف وصفات الخلط" });
-      }
-
-      const id = parseInt(req.params.id);
-      await storage.deleteMixingFormula(id);
-      res.json({ message: "تم حذف الوصفة بنجاح" });
-    } catch (error: any) {
-      console.error("Error deleting mixing formula:", error);
-      res.status(500).json({ message: error.message || "خطأ في حذف الوصفة", error: error.message });
-    }
-  });
-
-  // Find matching formulas for production order
-  app.post("/api/mixing-formulas/find-matching", requireAuth, async (req, res) => {
-    try {
-      const { machineId, thickness, width } = req.body;
-      
-      if (!machineId || thickness === undefined) {
-        return res.status(400).json({ message: "بيانات البحث ناقصة" });
-      }
-
-      const formulas = await storage.findMatchingFormulas({
-        machineId,
-        thickness: parseFloat(thickness),
-        width: width ? parseFloat(width) : undefined,
-      });
-
-      res.json({ data: formulas });
-    } catch (error: any) {
-      console.error("Error finding matching formulas:", error);
-      res.status(500).json({ message: "خطأ في البحث عن وصفات مطابقة", error: error.message });
-    }
-  });
-
-  // ===== Mixing Batches =====
+  // ============ Mixing Batches Routes ============
 
   // Get all mixing batches
   app.get("/api/mixing-batches", requireAuth, async (req, res) => {
@@ -7328,8 +7532,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "بيانات عملية الخلط أو المكونات ناقصة" });
       }
 
+      // Validate screw_assignment
+      if (!batch.screw_assignment || !['A', 'B'].includes(batch.screw_assignment)) {
+        return res.status(400).json({ message: "يجب تحديد البريمة (A أو B)" });
+      }
+
+      // Validate machine_id is provided
+      if (!batch.machine_id) {
+        return res.status(400).json({ message: "يجب تحديد الماكينة" });
+      }
+
+      // Ensure batch_number is auto-generated (remove if user provided it)
+      const { batch_number, formula_id, roll_id, ...cleanBatchData } = batch;
+
       const batchData = {
-        ...batch,
+        ...cleanBatchData,
         operator_id: req.user!.id,
         status: "in_progress",
         started_at: new Date(),
@@ -7385,6 +7602,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error completing mixing batch:", error);
       res.status(500).json({ message: "خطأ في إتمام عملية الخلط", error: error.message });
+    }
+  });
+
+  // Record material consumption from mixing batch
+  app.post("/api/inventory/consumption", requireAuth, async (req: AuthRequest, res) => {
+    try {
+      const { batchId, consumptions } = req.body;
+      const userId = req.session.userId;
+
+      if (!userId) {
+        return res.status(401).json({ message: "غير مصرح" });
+      }
+
+      if (!batchId || !consumptions || !Array.isArray(consumptions)) {
+        return res.status(400).json({ message: "بيانات الاستهلاك غير مكتملة" });
+      }
+
+      // Get batch details
+      const batch = await storage.getMixingBatchById(batchId);
+      if (!batch) {
+        return res.status(404).json({ message: "دفعة الخلط غير موجودة" });
+      }
+
+      // Record consumption for each ingredient
+      const results = [];
+      for (const consumption of consumptions) {
+        const { item_id, quantity_consumed, cost_at_consumption } = consumption;
+
+        // Get inventory item
+        const inventoryItem = await storage.getInventoryByItemId(item_id);
+        if (!inventoryItem) {
+          throw new Error(`الصنف ${item_id} غير موجود في المخزون`);
+        }
+
+        // Create inventory movement (out)
+        const movement = await storage.createInventoryMovement({
+          inventory_id: inventoryItem.id,
+          movement_type: "out",
+          quantity: quantity_consumed.toString(),
+          unit_cost: cost_at_consumption?.toString(),
+          total_cost: cost_at_consumption 
+            ? (parseFloat(quantity_consumed) * parseFloat(cost_at_consumption)).toString()
+            : undefined,
+          reference_number: `BATCH-${batch.batch_number}`,
+          reference_type: "production",
+          notes: `استهلاك من دفعة خلط ${batch.batch_number}`,
+          created_by: userId,
+        });
+
+        results.push({
+          item_id,
+          quantity_consumed,
+          movement_id: movement.id,
+          new_quantity: parseFloat(inventoryItem.current_stock) - parseFloat(quantity_consumed),
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "تم تسجيل استهلاك المواد بنجاح",
+        results,
+      });
+    } catch (error: any) {
+      console.error("Error recording material consumption:", error);
+      res.status(500).json({ 
+        message: "خطأ في تسجيل استهلاك المواد", 
+        error: error.message 
+      });
     }
   });
 

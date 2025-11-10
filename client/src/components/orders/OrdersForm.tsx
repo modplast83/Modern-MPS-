@@ -28,6 +28,7 @@ import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import { Search, Plus, Trash2 } from "lucide-react";
+import { formatNumber, formatWeight, formatPercentage } from "../../lib/formatNumber";
 
 // Master batch colors mapping
 const masterBatchColors = [
@@ -136,7 +137,7 @@ export default function OrdersForm({
               id: po.id,
               customer_product_id: po.customer_product_id ?? null,
               quantity_kg: po.quantity_kg != null ? parseFloat(po.quantity_kg) : null,
-              overrun_percentage: po.overrun_percentage != null ? parseFloat(po.overrun_percentage) : 5,
+              overrun_percentage: po.overrun_percentage != null ? parseFloat(po.overrun_percentage) : 0,
             }));
 
             setProductionOrdersInForm(formattedOrders);
@@ -201,8 +202,8 @@ export default function OrdersForm({
 
     if (productId && quantity && quantity > 0) {
       const preview = await previewQuantityCalculation(productId, quantity);
-      if (preview) {
-        setQuantityPreviews((prev) => ({ ...prev, [uid]: preview }));
+      if (preview && preview.data) {
+        setQuantityPreviews((prev) => ({ ...prev, [uid]: preview.data }));
       }
     } else {
       setQuantityPreviews((prev) => {
@@ -220,7 +221,7 @@ export default function OrdersForm({
         uid: genUid(),
         customer_product_id: null,
         quantity_kg: null,
-        overrun_percentage: 5.0,
+        overrun_percentage: 0,
       },
     ]);
   };
@@ -386,47 +387,6 @@ export default function OrdersForm({
                 </FormItem>
               )}
             />
-
-            {/* Delivery Days & Notes in one row */}
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={orderForm.control}
-                name="delivery_days"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>أيام التسليم</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        {...field}
-                        placeholder="عدد أيام التسليم"
-                        data-testid="input-delivery-days"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={orderForm.control}
-                name="notes"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>ملاحظات</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        placeholder="ملاحظات إضافية..."
-                        className="min-h-[40px] resize-none"
-                        data-testid="textarea-notes"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {/* Production Orders Section */}
             <div className="border-t pt-4">
@@ -596,11 +556,11 @@ export default function OrdersForm({
                             <div className="text-xs space-y-1">
                               <div className="text-blue-700">
                                 <span className="font-medium">نسبة الزيادة:</span>{" "}
-                                {quantityPreviews[prodOrder.uid].overrun_percentage}%
+                                {formatPercentage(quantityPreviews[prodOrder.uid].overrun_percentage)}
                               </div>
                               <div className="text-blue-700">
                                 <span className="font-medium">الكمية النهائية:</span>{" "}
-                                {quantityPreviews[prodOrder.uid].final_quantity_kg} كيلو
+                                {formatWeight(quantityPreviews[prodOrder.uid].final_quantity_kg)}
                               </div>
                             </div>
                           </div>
@@ -609,6 +569,49 @@ export default function OrdersForm({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+
+            {/* Delivery Days & Notes Section */}
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-3 gap-4">
+                <FormField
+                  control={orderForm.control}
+                  name="delivery_days"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>أيام التسليم</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          placeholder="عدد أيام التسليم"
+                          data-testid="input-delivery-days"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={orderForm.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem className="col-span-2">
+                      <FormLabel>ملاحظات</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="ملاحظات إضافية..."
+                          className="min-h-[40px] resize-none"
+                          data-testid="textarea-notes"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 

@@ -10,7 +10,8 @@
  * - متكامل مع openaiService و AILearning و mlService
  */
 
-import { Client } from "pg";
+import pg from "pg";
+const { Client } = pg;
 import { openaiService } from "./openai";
 import { AILearning } from "./ai-learning";
 import { mlService } from "./ml-service";
