@@ -196,41 +196,6 @@ export const customers = pgTable("customers", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
-// 🆕 جدول العملاء الجديد (لتصفية وتحديث البيانات)
-export const newCustomers = pgTable("new_customers", {
-  id: varchar("id", { length: 20 }).primaryKey(), // NCID001, NCID002, etc.
-  name: varchar("name", { length: 200 }).notNull(),
-  name_ar: varchar("name_ar", { length: 200 }),
-  code: varchar("code", { length: 20 }),
-  user_id: varchar("user_id", { length: 10 }),
-  plate_drawer_code: varchar("plate_drawer_code", { length: 20 }),
-  city: varchar("city", { length: 50 }),
-  address: text("address"),
-  tax_number: varchar("tax_number", { length: 20 }),
-  phone: varchar("phone", { length: 20 }),
-  email: varchar("email", { length: 100 }), // حقل جديد
-  sales_rep_id: integer("sales_rep_id").references(() => users.id),
-  
-  // حقول محسّنة للإدارة والتتبع
-  status: varchar("status", { length: 20 }).default("active"), // active, inactive, archived
-  is_verified: boolean("is_verified").default(false), // تحقق من صحة البيانات
-  credit_limit: decimal("credit_limit", { precision: 10, scale: 2 }), // حد ائتماني
-  
-  // حقول الهجرة من الجدول القديم
-  migrated_from_id: varchar("migrated_from_id", { length: 20 }), // مرجع للعميل القديم
-  migration_status: varchar("migration_status", { length: 30 }).default("pending"), // pending, migrated, verified
-  migrated_at: timestamp("migrated_at"), // تاريخ الهجرة
-  
-  // بيانات إضافية مرنة
-  metadata: jsonb("metadata"), // بيانات إضافية قابلة للتخصيص
-  notes: text("notes"), // ملاحظات
-  
-  created_at: timestamp("created_at").defaultNow(),
-  updated_at: timestamp("updated_at").defaultNow(),
-  created_by: integer("created_by").references(() => users.id),
-  updated_by: integer("updated_by").references(() => users.id),
-});
-
 // 🗂️ جدول المجموعات
 export const categories = pgTable("categories", {
   id: varchar("id", { length: 20 }).primaryKey(), // Changed to varchar to match CAT001 format
@@ -2207,15 +2172,6 @@ export const insertCategorySchema = createInsertSchema(categories);
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   created_at: true,
 });
-
-// New Customers Schemas
-export const insertNewCustomerSchema = createInsertSchema(newCustomers).omit({
-  created_at: true,
-  updated_at: true,
-});
-
-export type NewCustomerInsert = z.infer<typeof insertNewCustomerSchema>;
-export type NewCustomerSelect = typeof newCustomers.$inferSelect;
 
 // HR System Schemas
 export const insertTrainingProgramSchema = createInsertSchema(
