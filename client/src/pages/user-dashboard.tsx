@@ -135,6 +135,8 @@ export default function UserDashboard() {
   const [currentLocation, setCurrentLocation] = useState<{
     lat: number;
     lng: number;
+    accuracy?: number;
+    timestamp?: number;
   } | null>(null);
   const [locationError, setLocationError] = useState<string>("");
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
@@ -161,6 +163,8 @@ export default function UserDashboard() {
         setCurrentLocation({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp,
         });
         setLocationError("");
         setIsLoadingLocation(false);
@@ -1510,61 +1514,243 @@ export default function UserDashboard() {
                         </p>
                       </div>
                     ) : currentLocation ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                          <MapPin className="h-5 w-5" />
-                          <span className="font-medium">
-                            تم تحديد الموقع بنجاح
-                          </span>
+                      <div className="space-y-6">
+                        {/* GPS Status Header */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                            <MapPin className="h-5 w-5" />
+                            <span className="font-medium">
+                              تم تحديد الموقع بنجاح
+                            </span>
+                          </div>
+                          <Button
+                            onClick={requestLocation}
+                            variant="outline"
+                            size="sm"
+                            disabled={isLoadingLocation}
+                            data-testid="button-refresh-location-top"
+                          >
+                            {isLoadingLocation ? "جاري التحديث..." : "تحديث الموقع"}
+                          </Button>
                         </div>
-                        <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg space-y-2">
-                          <p className="text-sm">
-                            <strong>خط العرض:</strong>{" "}
-                            {currentLocation.lat.toFixed(6)}
-                          </p>
-                          <p className="text-sm">
-                            <strong>خط الطول:</strong>{" "}
-                            {currentLocation.lng.toFixed(6)}
-                          </p>
+
+                        {/* GPS Diagnostics Card */}
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg space-y-3">
+                          <h3 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            معلومات GPS التفصيلية
+                          </h3>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {/* Latitude */}
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">خط العرض (Latitude)</p>
+                              <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {currentLocation.lat.toFixed(8)}°
+                              </p>
+                            </div>
+
+                            {/* Longitude */}
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">خط الطول (Longitude)</p>
+                              <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {currentLocation.lng.toFixed(8)}°
+                              </p>
+                            </div>
+
+                            {/* Accuracy */}
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">دقة GPS</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {currentLocation.accuracy 
+                                    ? `±${Math.round(currentLocation.accuracy)} متر`
+                                    : "غير متاح"}
+                                </p>
+                                {currentLocation.accuracy && currentLocation.accuracy > 100 && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    دقة منخفضة
+                                  </Badge>
+                                )}
+                                {currentLocation.accuracy && currentLocation.accuracy <= 20 && (
+                                  <Badge className="bg-green-500 text-xs">
+                                    دقة عالية
+                                  </Badge>
+                                )}
+                                {currentLocation.accuracy && currentLocation.accuracy > 20 && currentLocation.accuracy <= 100 && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    دقة متوسطة
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Timestamp */}
+                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">آخر تحديث</p>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {currentLocation.timestamp 
+                                  ? new Date(currentLocation.timestamp).toLocaleTimeString("ar-SA", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      second: "2-digit",
+                                    })
+                                  : "غير متاح"}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* GPS Quality Warning */}
+                          {currentLocation.accuracy && currentLocation.accuracy > 100 && (
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded">
+                              <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                                ⚠️ <strong>تحذير:</strong> دقة GPS منخفضة ({Math.round(currentLocation.accuracy)} متر). 
+                                حاول الانتقال إلى مكان مفتوح أو بالقرب من نافذة للحصول على قراءة أدق.
+                              </p>
+                            </div>
+                          )}
                         </div>
                         
-                        {/* Display active factory locations */}
+                        {/* Factory Locations Distance Table */}
                         {activeLocations && activeLocations.length > 0 && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                            <h4 className="font-semibold text-sm mb-2 text-blue-900 dark:text-blue-100">
-                              مواقع المصانع المتاحة:
-                            </h4>
-                            <div className="space-y-2">
-                              {activeLocations.map((location) => {
-                                const distance = calculateDistance(
-                                  currentLocation.lat,
-                                  currentLocation.lng,
-                                  parseFloat(location.latitude),
-                                  parseFloat(location.longitude)
-                                );
-                                const isInRange = distance <= location.allowed_radius;
-                                
+                          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                                المسافة من مواقع المصانع
+                              </h4>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                يتم حساب المسافات باستخدام معادلة Haversine
+                              </p>
+                            </div>
+                            
+                            <div className="overflow-x-auto">
+                              <table className="w-full">
+                                <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                                  <tr>
+                                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+                                      اسم الموقع
+                                    </th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                      النطاق المسموح
+                                    </th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                      المسافة الفعلية
+                                    </th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                      الفرق
+                                    </th>
+                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                      الحالة
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                  {activeLocations.map((location) => {
+                                    const distance = calculateDistance(
+                                      currentLocation.lat,
+                                      currentLocation.lng,
+                                      parseFloat(location.latitude),
+                                      parseFloat(location.longitude)
+                                    );
+                                    const isInRange = distance <= location.allowed_radius;
+                                    const difference = Math.abs(distance - location.allowed_radius);
+                                    
+                                    return (
+                                      <tr 
+                                        key={location.id}
+                                        className={`${
+                                          isInRange 
+                                            ? 'bg-green-50 dark:bg-green-900/10' 
+                                            : 'bg-red-50 dark:bg-red-900/10'
+                                        }`}
+                                      >
+                                        <td className="px-4 py-3">
+                                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                            {location.name_ar || location.name}
+                                          </div>
+                                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                            {parseFloat(location.latitude).toFixed(6)}°, {parseFloat(location.longitude).toFixed(6)}°
+                                          </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                            {formatNumber(location.allowed_radius)} م
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                            {formatNumber(Math.round(distance))} م
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          <span className={`text-sm font-semibold ${
+                                            isInRange 
+                                              ? 'text-green-600 dark:text-green-400'
+                                              : 'text-red-600 dark:text-red-400'
+                                          }`}>
+                                            {isInRange ? '-' : '+'}{formatNumber(Math.round(difference))} م
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                          {isInRange ? (
+                                            <Badge className="bg-green-500">
+                                              ✓ ضمن النطاق
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="destructive">
+                                              ✗ خارج النطاق
+                                            </Badge>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+
+                            {/* Summary Card */}
+                            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                              {(() => {
+                                const closestLocation = activeLocations.reduce((closest, location) => {
+                                  const distance = calculateDistance(
+                                    currentLocation.lat,
+                                    currentLocation.lng,
+                                    parseFloat(location.latitude),
+                                    parseFloat(location.longitude)
+                                  );
+                                  if (!closest || distance < closest.distance) {
+                                    return { location, distance };
+                                  }
+                                  return closest;
+                                }, null as { location: any; distance: number } | null);
+
+                                const isAnyInRange = activeLocations.some((location) => {
+                                  const distance = calculateDistance(
+                                    currentLocation.lat,
+                                    currentLocation.lng,
+                                    parseFloat(location.latitude),
+                                    parseFloat(location.longitude)
+                                  );
+                                  return distance <= location.allowed_radius;
+                                });
+
                                 return (
-                                  <div 
-                                    key={location.id}
-                                    className={`text-sm p-2 rounded ${
-                                      isInRange 
-                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
-                                        : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-medium">
-                                        {location.name_ar || location.name}
+                                  <div className="text-sm">
+                                    <p className="text-gray-700 dark:text-gray-300">
+                                      <strong>أقرب موقع:</strong> {closestLocation?.location.name_ar || closestLocation?.location.name} 
+                                      <span className="font-mono text-xs mr-2">
+                                        ({formatNumber(Math.round(closestLocation?.distance || 0))} متر)
                                       </span>
-                                      <span className="text-xs">
-                                        {Math.round(distance)} متر
-                                        {isInRange && ' ✓'}
-                                      </span>
-                                    </div>
+                                    </p>
+                                    {!isAnyInRange && closestLocation && (
+                                      <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                                        ⚠️ أنت خارج نطاق جميع المواقع. تحتاج للاقتراب {formatNumber(Math.round(closestLocation.distance - closestLocation.location.allowed_radius))} متر إضافي.
+                                      </p>
+                                    )}
                                   </div>
                                 );
-                              })}
+                              })()}
                             </div>
                           </div>
                         )}

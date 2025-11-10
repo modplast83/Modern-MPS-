@@ -1440,8 +1440,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         // Override with server-calculated values for security
         final_quantity_kg: quantityCalculation.finalQuantityKg,
-        overrun_percentage:
-          overrun_percentage || quantityCalculation.overrunPercentage,
+        overrun_percentage: quantityCalculation.overrunPercentage,
       };
 
       const validatedData =
@@ -1496,8 +1495,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const productionOrderData = {
           ...order,
           final_quantity_kg: quantityCalculation.finalQuantityKg,
-          overrun_percentage:
-            overrun_percentage || quantityCalculation.overrunPercentage,
+          overrun_percentage: quantityCalculation.overrunPercentage,
         };
 
         try {
@@ -1549,6 +1547,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req, res) => {
       try {
         const id = parseInt(req.params.id);
+        
+        // If customer_product_id or quantity_kg is being updated, recalculate overrun_percentage
+        if (req.body.customer_product_id || req.body.quantity_kg) {
+          const customerProducts = await storage.getCustomerProducts();
+          
+          // Get the existing production order to fill in missing fields
+          const existingOrder = await storage.getProductionOrderById(id);
+          if (!existingOrder) {
+            return res.status(404).json({ message: "أمر الإنتاج غير موجود" });
+          }
+          
+          const customer_product_id = req.body.customer_product_id || existingOrder.customer_product_id;
+          const quantity_kg = req.body.quantity_kg || existingOrder.quantity_kg;
+          
+          const customerProduct = customerProducts.find(
+            (cp) => cp.id === parseInt(customer_product_id),
+          );
+          
+          if (customerProduct) {
+            const quantityCalculation = calculateProductionQuantities(
+              parseFloat(quantity_kg),
+              customerProduct.punching,
+            );
+            
+            req.body.overrun_percentage = quantityCalculation.overrunPercentage;
+            req.body.final_quantity_kg = quantityCalculation.finalQuantityKg;
+          }
+        }
+        
         const validatedData = insertProductionOrderSchema
           .partial()
           .parse(req.body);
@@ -5994,7 +6021,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // تسجيل الحضور مع تحقق الموقع الجغرافي
-  const { isInsideFactory } = require("./factory-location.ts");
   app.post("/api/attendance", async (req, res) => {
     try {
       // جلب جميع المواقع النشطة للمصانع

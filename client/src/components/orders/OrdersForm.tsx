@@ -137,7 +137,7 @@ export default function OrdersForm({
               id: po.id,
               customer_product_id: po.customer_product_id ?? null,
               quantity_kg: po.quantity_kg != null ? parseFloat(po.quantity_kg) : null,
-              overrun_percentage: po.overrun_percentage != null ? parseFloat(po.overrun_percentage) : 5,
+              overrun_percentage: po.overrun_percentage != null ? parseFloat(po.overrun_percentage) : 0,
             }));
 
             setProductionOrdersInForm(formattedOrders);
@@ -221,7 +221,7 @@ export default function OrdersForm({
         uid: genUid(),
         customer_product_id: null,
         quantity_kg: null,
-        overrun_percentage: 5.0,
+        overrun_percentage: 0,
       },
     ]);
   };
