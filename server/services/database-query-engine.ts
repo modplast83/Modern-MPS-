@@ -47,23 +47,6 @@ export const enhancedDatabaseSchema: DatabaseSchema[] = [
     ]
   },
   {
-    name: "new_customers",
-    arabicName: "العملاء الجديد",
-    description: "جدول العملاء المحدّث مع حقول محسّنة للإدارة والتتبع",
-    primaryKey: "id",
-    foreignKeys: [
-      { column: "sales_rep_id", referencedTable: "users", referencedColumn: "id" },
-      { column: "created_by", referencedTable: "users", referencedColumn: "id" },
-      { column: "updated_by", referencedTable: "users", referencedColumn: "id" }
-    ],
-    searchableFields: ["name", "name_ar", "phone", "city", "email", "tax_number"],
-    commonQueries: [
-      "البحث عن عميل بالاسم أو رقم الهاتف",
-      "عرض العملاء حسب الحالة",
-      "عرض العملاء المنقولين من الجدول القديم"
-    ]
-  },
-  {
     name: "orders",
     arabicName: "الطلبات",
     description: "طلبات العملاء الرئيسية مع الحالة والقيمة",
