@@ -304,7 +304,6 @@ export default function Orders() {
               order_id: editingOrder.id,
               customer_product_id: prodOrder.customer_product_id,
               quantity_kg: prodOrder.quantity_kg,
-              overrun_percentage: prodOrder.overrun_percentage || 5.0,
             };
 
             await fetch("/api/production-orders", {
@@ -415,8 +414,7 @@ export default function Orders() {
         order_id: newOrder.data?.id || newOrder.id,
         customer_product_id: prodOrder.customer_product_id,
         quantity_kg: prodOrder.quantity_kg,
-        overrun_percentage: prodOrder.overrun_percentage || 5.0,
-        // final_quantity_kg will be calculated server-side for security
+        // overrun_percentage and final_quantity_kg will be calculated server-side for security
       }));
 
       console.log("بيانات أوامر الإنتاج:", batchProductionOrders);
