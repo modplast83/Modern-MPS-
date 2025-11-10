@@ -190,11 +190,24 @@ export const customers = pgTable("customers", {
   plate_drawer_code: varchar("plate_drawer_code", { length: 20 }),
   city: varchar("city", { length: 50 }),
   address: text("address"),
-  tax_number: varchar("tax_number", { length: 20 }),
+  tax_number: varchar("tax_number", { length: 14 }),
+  commercial_name: varchar("commercial_name", { length: 200 }),
+  unified_number: varchar("unified_number", { length: 10 }),
+  unique_customer_number: varchar("unique_customer_number", { length: 20 }),
+  is_active: boolean("is_active").default(true),
   phone: varchar("phone", { length: 20 }),
   sales_rep_id: integer("sales_rep_id").references(() => users.id),
   created_at: timestamp("created_at").defaultNow(),
-});
+}, (table) => ({
+  unifiedNumberFormat: check(
+    "unified_number_format",
+    sql`${table.unified_number} IS NULL OR ${table.unified_number} ~ '^7[0-9]{9}$'`,
+  ),
+  taxNumberLength: check(
+    "tax_number_length",
+    sql`${table.tax_number} IS NULL OR LENGTH(${table.tax_number}) = 14`,
+  ),
+}));
 
 // 🗂️ جدول المجموعات
 export const categories = pgTable("categories", {
@@ -2171,6 +2184,12 @@ export const insertCustomerProductSchema = createInsertSchema(customer_products)
 export const insertCategorySchema = createInsertSchema(categories);
 export const insertCustomerSchema = createInsertSchema(customers).omit({
   created_at: true,
+}).extend({
+  tax_number: z.string().length(14, "الرقم الضريبي يجب أن يكون 14 خانة").optional().or(z.literal("")),
+  unified_number: z.string().regex(/^7\d{9}$/, "الرقم الموحد يجب أن يكون 10 أرقام ويبدأ بـ 7").optional().or(z.literal("")),
+  unique_customer_number: z.string().optional().or(z.literal("")),
+  commercial_name: z.string().optional().or(z.literal("")),
+  is_active: z.boolean().default(true).optional(),
 });
 
 // HR System Schemas
