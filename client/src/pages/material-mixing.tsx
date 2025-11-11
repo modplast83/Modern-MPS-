@@ -60,6 +60,11 @@ type BatchDetail = {
   status: string;
   created_at: string;
   notes?: string;
+  composition?: Array<{
+    material_name?: string;
+    material_name_ar?: string;
+    percentage: string;
+  }>;
   ingredients?: Array<{
     item_id: string;
     item_name?: string;
@@ -524,7 +529,7 @@ export default function MaterialMixing() {
                           <TableHead className="text-right">الوزن الكلي</TableHead>
                           <TableHead className="text-right">التاريخ</TableHead>
                           <TableHead className="text-right">المشغل</TableHead>
-                          <TableHead className="text-right">الحالة</TableHead>
+                          <TableHead className="text-right">الخلطة</TableHead>
                           <TableHead className="text-right">إجراءات</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -557,11 +562,18 @@ export default function MaterialMixing() {
                                 {operator?.display_name_ar || operator?.display_name || "-"}
                               </TableCell>
                               <TableCell>
-                                <Badge
-                                  variant={batch.status === "completed" ? "default" : "secondary"}
-                                >
-                                  {batch.status === "completed" ? "مكتملة" : batch.status}
-                                </Badge>
+                                <div className="text-sm space-y-0.5">
+                                  {batch.composition && batch.composition.length > 0 ? (
+                                    batch.composition.map((comp: any, idx: number) => (
+                                      <div key={idx} className="text-xs">
+                                        <span className="font-medium">{comp.material_name_ar || comp.material_name}</span>
+                                        <span className="text-muted-foreground"> ({comp.percentage})</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <Button
