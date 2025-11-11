@@ -11,6 +11,7 @@
 import OpenAI from "openai";
 import { queryEngine, enhancedDatabaseSchema } from "./database-query-engine";
 import { AILearning } from "./ai-learning";
+import { openaiService } from "./openai";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -69,9 +70,9 @@ export class EnhancedAIAssistant {
       if (intentAnalysis.requiresDatabase) {
         const searchResults = await this.searchDatabase(intentAnalysis);
         
-        // إذا كانت عملية كتابة (create/update/delete) - اطلب تأكيد
+        // إذا كانت عملية كتابة (create/update/delete) - نفذها مباشرة
         if (this.isWriteOperation(intentAnalysis.action)) {
-          return this.requestConfirmation(intentAnalysis, searchResults);
+          return this.executeWriteOperation(intentAnalysis, context);
         }
 
         // عملية قراءة - نفذ مباشرة
@@ -455,6 +456,58 @@ ${tablesInfo}
   private isWriteOperation(action: string): boolean {
     const writeActions = ['create', 'update', 'delete', 'insert', 'modify', 'remove'];
     return writeActions.some(w => action.toLowerCase().includes(w));
+  }
+
+  /**
+   * تنفيذ عملية كتابة (create/update/delete)
+   */
+  private async executeWriteOperation(intentAnalysis: any, context: UserContext): Promise<AIResponse> {
+    const startTime = Date.now();
+    
+    try {
+      // استخدام الخدمة القديمة (openaiService) للتعامل مع الأوامر المعقدة
+      // بناء رسالة واضحة للخدمة القديمة
+      const originalMessage = `${intentAnalysis.action}. البيانات: ${JSON.stringify(intentAnalysis.parameters, null, 2)}`;
+      const result = await openaiService.processMessage(originalMessage, context.userId);
+
+      // تسجيل النجاح
+      if (context.userId) {
+        await AILearning.recordLearningData(
+          context.userId,
+          intentAnalysis.intent,
+          intentAnalysis.action,
+          true,
+          Date.now() - startTime
+        );
+      }
+
+      return {
+        message: result || "✅ تم تنفيذ العملية بنجاح",
+        requiresClarification: false,
+        requiresConfirmation: false,
+        confidence: 0.9
+      };
+    } catch (error: any) {
+      console.error("Write operation error:", error);
+      
+      // تسجيل الفشل
+      if (context.userId) {
+        await AILearning.recordLearningData(
+          context.userId,
+          intentAnalysis.intent,
+          intentAnalysis.action,
+          false,
+          Date.now() - startTime
+        );
+      }
+
+      return {
+        message: `❌ عذراً، حدث خطأ: ${error.message}\n\nيمكنك المحاولة مرة أخرى أو تزويدي بالمعلومات بشكل أوضح.`,
+        requiresClarification: true,
+        requiresConfirmation: false,
+        confidence: 0
+      };
+    }
   }
 
   /**
