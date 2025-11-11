@@ -80,18 +80,20 @@ export default function MaterialMixing() {
   const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
-  // Fetch data - get active and pending production orders
+  // Fetch data - get in_production and pending production orders
   const { data: productionOrdersData, isLoading: ordersLoading } = useQuery<{ data: any[] }>({
     queryKey: ["/api/production-orders"],
   });
   const productionOrders = (productionOrdersData?.data || []).filter(
-    (po: any) => po.status === 'active' || po.status === 'pending'
+    (po: any) => po.status === 'in_production' || po.status === 'pending'
   );
 
   const { data: machinesData, isLoading: machinesLoading } = useQuery<{ data: any[] }>({
-    queryKey: ["/api/machines", { type: "extruder" }],
+    queryKey: ["/api/machines"],
   });
-  const machines = machinesData?.data || [];
+  const machines = (machinesData?.data || []).filter(
+    (machine: any) => machine.type === 'extruder'
+  );
 
   const { data: itemsData, isLoading: itemsLoading } = useQuery<any>({
     queryKey: ["/api/items"],
@@ -285,7 +287,7 @@ export default function MaterialMixing() {
                         <SelectContent>
                           {productionOrders.map((order: any) => (
                             <SelectItem key={order.id} value={order.id.toString()}>
-                              {order.order_number || `PO-${order.id}`}
+                              {order.production_order_number || `PO-${order.id}`}
                             </SelectItem>
                           ))}
                         </SelectContent>
