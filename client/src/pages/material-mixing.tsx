@@ -80,11 +80,13 @@ export default function MaterialMixing() {
   const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
-  // Fetch data
+  // Fetch data - get active and pending production orders
   const { data: productionOrdersData, isLoading: ordersLoading } = useQuery<{ data: any[] }>({
-    queryKey: ["/api/production-orders", { status: "film_in_progress" }],
+    queryKey: ["/api/production-orders"],
   });
-  const productionOrders = productionOrdersData?.data || [];
+  const productionOrders = (productionOrdersData?.data || []).filter(
+    (po: any) => po.status === 'active' || po.status === 'pending'
+  );
 
   const { data: machinesData, isLoading: machinesLoading } = useQuery<{ data: any[] }>({
     queryKey: ["/api/machines", { type: "extruder" }],
