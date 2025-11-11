@@ -301,7 +301,8 @@ export default function MaterialMixing() {
                                 <div className="font-semibold">{order.production_order_number}</div>
                                 <div className="text-sm text-gray-600">
                                   {order.item_name_ar || order.item_name} | 
-                                  {' '}{order.raw_material} | 
+                                  {' '}{order.raw_material}
+                                  {order.master_batch_id && ` | ${order.master_batch_id}`} | 
                                   {' '}{parseFloat(order.final_quantity_kg || order.quantity_kg || 0).toFixed(2)} كجم |
                                   {' '}{order.customer_name_ar || order.customer_name}
                                 </div>
