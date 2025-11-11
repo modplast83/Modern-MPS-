@@ -297,7 +297,15 @@ export default function MaterialMixing() {
                         <SelectContent>
                           {productionOrders.map((order: any) => (
                             <SelectItem key={order.id} value={order.id.toString()}>
-                              {order.production_order_number || `PO-${order.id}`}
+                              <div className="flex flex-col gap-1">
+                                <div className="font-semibold">{order.production_order_number}</div>
+                                <div className="text-sm text-gray-600">
+                                  {order.item_name_ar || order.item_name} | 
+                                  {' '}{order.raw_material} | 
+                                  {' '}{parseFloat(order.final_quantity_kg || order.quantity_kg || 0).toFixed(2)} كجم |
+                                  {' '}{order.customer_name_ar || order.customer_name}
+                                </div>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
