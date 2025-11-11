@@ -81,17 +81,27 @@ export default function MaterialMixing() {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   // Fetch data - get in_production and pending production orders
-  const { data: productionOrdersData, isLoading: ordersLoading } = useQuery<{ data: any[] }>({
+  const { data: productionOrdersData, isLoading: ordersLoading } = useQuery<any>({
     queryKey: ["/api/production-orders"],
   });
-  const productionOrders = (productionOrdersData?.data || []).filter(
+  
+  // Handle both response formats: direct array or {data: array}
+  const allProductionOrders = Array.isArray(productionOrdersData) 
+    ? productionOrdersData 
+    : (productionOrdersData?.data || []);
+  const productionOrders = allProductionOrders.filter(
     (po: any) => po.status === 'in_production' || po.status === 'pending'
   );
 
-  const { data: machinesData, isLoading: machinesLoading } = useQuery<{ data: any[] }>({
+  const { data: machinesData, isLoading: machinesLoading } = useQuery<any>({
     queryKey: ["/api/machines"],
   });
-  const machines = (machinesData?.data || []).filter(
+  
+  // Handle both response formats: direct array or {data: array}
+  const allMachines = Array.isArray(machinesData)
+    ? machinesData
+    : (machinesData?.data || []);
+  const machines = allMachines.filter(
     (machine: any) => machine.type === 'extruder'
   );
 
