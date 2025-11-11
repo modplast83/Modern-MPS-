@@ -69,6 +69,37 @@ type BatchDetail = {
   }>;
 };
 
+// Helper function to convert master batch code to color name
+const getMasterBatchColor = (code: string | null | undefined): string => {
+  if (!code) return '';
+  
+  // Map common codes to Arabic color names
+  const colorMap: Record<string, string> = {
+    'PT-000000': 'أبيض',
+    'PT-111111': 'أسود',
+    'PT-CLEAR': 'شفاف',
+    'PT-MIX': 'خليط ألوان',
+  };
+  
+  // Check exact match first
+  if (colorMap[code]) return colorMap[code];
+  
+  // Pattern matching for codes
+  if (code.startsWith('PT-00')) return 'أبيض';
+  if (code.startsWith('PT-11')) return 'أسود';
+  if (code.startsWith('PT-12')) return 'أحمر';
+  if (code.startsWith('PT-13')) return 'أزرق';
+  if (code.startsWith('PT-14')) return 'أخضر';
+  if (code.startsWith('PT-15')) return 'أصفر';
+  if (code.startsWith('PT-16')) return 'برتقالي';
+  if (code.startsWith('PT-17')) return 'بنفسجي';
+  if (code.startsWith('PT-18')) return 'بني';
+  if (code.startsWith('PT-10')) return 'رمادي';
+  
+  // Return code if no match (fallback)
+  return code;
+};
+
 export default function MaterialMixing() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -302,7 +333,7 @@ export default function MaterialMixing() {
                                 <div className="text-sm text-gray-600">
                                   {order.item_name_ar || order.item_name} | 
                                   {' '}{order.raw_material}
-                                  {order.master_batch_id && ` | ${order.master_batch_id}`} | 
+                                  {order.master_batch_id && ` | ${getMasterBatchColor(order.master_batch_id)}`} | 
                                   {' '}{parseFloat(order.final_quantity_kg || order.quantity_kg || 0).toFixed(2)} كجم |
                                   {' '}{order.customer_name_ar || order.customer_name}
                                 </div>
