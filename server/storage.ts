@@ -11906,13 +11906,30 @@ export class DatabaseStorage implements IStorage {
           .leftJoin(users, eq(mixing_batches.operator_id, users.id))
           .orderBy(desc(mixing_batches.created_at));
 
-        // Get ingredients for each batch
+        // Get ingredients for each batch with material names
         for (const batch of batches) {
           const ingredients = await db
-            .select()
+            .select({
+              id: batch_ingredients.id,
+              item_id: batch_ingredients.item_id,
+              actual_weight_kg: batch_ingredients.actual_weight_kg,
+              percentage: batch_ingredients.percentage,
+              notes: batch_ingredients.notes,
+              material_name: items.name,
+              material_name_ar: items.name_ar,
+            })
             .from(batch_ingredients)
+            .leftJoin(items, eq(batch_ingredients.item_id, items.id))
             .where(eq(batch_ingredients.batch_id, batch.id));
+          
           (batch as any).ingredients = ingredients;
+          
+          // Build composition array
+          (batch as any).composition = ingredients.map((ing: any) => ({
+            material_name: ing.material_name,
+            material_name_ar: ing.material_name_ar,
+            percentage: ing.percentage ? `${parseFloat(ing.percentage).toFixed(2)}%` : '0%',
+          }));
         }
 
         return batches;
