@@ -93,11 +93,19 @@ export default function AIAssistant() {
     },
     onSuccess: (response: any) => {
       setIsTyping(false);
+      
+      // Extract the message from different possible response fields
+      const content = 
+        response.reply || 
+        response.message || 
+        response.clarificationQuestion || 
+        response.confirmationMessage || 
+        "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.";
+      
       const assistantMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
-        content:
-          response.reply || "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.",
+        content,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, assistantMessage]);
@@ -201,7 +209,7 @@ export default function AIAssistant() {
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     {message.type === "assistant" && (
                       <Button
                         variant="ghost"
