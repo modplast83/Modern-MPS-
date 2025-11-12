@@ -2243,6 +2243,45 @@ export default function Settings() {
           </Tabs>
         </main>
       </div>
+
+      {/* Confirmation Dialog for Restore */}
+      <AlertDialog open={showRestoreConfirm} onOpenChange={setShowRestoreConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد استعادة النسخة الاحتياطية</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟</p>
+              <p className="font-semibold text-red-600">
+                تحذير: سيتم استبدال جميع البيانات الحالية بالبيانات من النسخة الاحتياطية.
+              </p>
+              {pendingBackupData?.metadata && (
+                <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+                  <p>الملف: {selectedBackupFile?.name}</p>
+                  <p>عدد الجداول: {pendingBackupData.metadata.totalTables}</p>
+                  <p>التاريخ: {new Date(pendingBackupData.metadata.timestamp).toLocaleString('ar-SA')}</p>
+                </div>
+              )}
+              <p className="text-sm mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowRestoreConfirm(false);
+              setSelectedBackupFile(null);
+              setPendingBackupData(null);
+            }}>
+              إلغاء
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmRestore}
+              disabled={restoreBackupMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {restoreBackupMutation.isPending ? "جاري الاستعادة..." : "استعادة النسخة"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
