@@ -7040,45 +7040,43 @@ export class DatabaseStorage implements IStorage {
         SELECT pg_size_pretty(pg_database_size(current_database())) as size
       `);
 
-      // Count total tables
-      const tableCount = await db.execute(sql`
-        SELECT COUNT(*) as count 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      // Get all table names dynamically (same approach as backup)
+      const tablesQuery = await db.execute(sql`
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public' 
+        AND tablename NOT LIKE 'pg_%' 
+        AND tablename NOT LIKE 'sql_%'
+        AND tablename != 'sessions'
+        ORDER BY tablename
       `);
 
-      // Get total records across all main tables
-      const recordCounts = await Promise.all([
-        db.select({ count: count() }).from(orders),
-        db.select({ count: count() }).from(customers),
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(machines),
-        db.select({ count: count() }).from(locations),
-        db.select({ count: count() }).from(categories),
-        db.select({ count: count() }).from(items),
-      ]);
+      const allTables = tablesQuery.rows.map((row: any) => row.tablename);
+      const tableCount = allTables.length;
 
-      const totalRecords = recordCounts.reduce(
-        (sum, result) => sum + (result[0]?.count || 0),
-        0,
-      );
+      // Count total records across ALL tables dynamically
+      let totalRecords = 0;
+      
+      for (const tableName of allTables) {
+        try {
+          // Query table count using raw SQL (same as backup logic)
+          const countResult: any = await db.execute(sql.raw(`SELECT COUNT(*) as count FROM "${tableName}"`));
+          const rowCount = parseInt(countResult.rows[0]?.count || '0');
+          totalRecords += rowCount;
+        } catch (err) {
+          console.warn(`تخطي جدول ${tableName} في الإحصائيات:`, err);
+        }
+      }
 
       return {
-        tableCount: tableCount.rows[0]?.count || 0,
+        tableCount,
         totalRecords,
         databaseSize: dbSize.rows[0]?.size || "0 MB",
         lastBackup: new Date().toLocaleDateString("ar"),
       };
     } catch (error) {
       console.error("Error getting database stats:", error);
-      // Return mock data for development
-      return {
-        tableCount: 8,
-        totalRecords: 1247,
-        databaseSize: "45.2 MB",
-        lastBackup: "اليوم",
-        tableStats: [],
-      };
+      throw error;
     }
   }
 
