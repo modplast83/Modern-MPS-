@@ -111,13 +111,6 @@ const modules = [
     active: false,
   },
   {
-    name: "خلط المواد",
-    name_ar: "خلط المواد",
-    icon: Beaker,
-    path: "/material-mixing",
-    active: false,
-  },
-  {
     name: "التعريفات",
     name_ar: "التعريفات",
     icon: Database,

@@ -4,10 +4,12 @@ import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
 import RollCreationModalEnhanced from "../components/modals/RollCreationModalEnhanced";
+import FilmMaterialMixingTab from "../components/production/FilmMaterialMixingTab";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { formatNumberAr } from "../../../shared/number-utils";
 import { printRollLabel } from "../components/production/RollLabelPrint";
 import { 
@@ -20,7 +22,8 @@ import {
   Loader2,
   Info,
   Printer,
-  User
+  User,
+  Beaker
 } from "lucide-react";
 
 // تعريف نوع البيانات لأمر الإنتاج النشط للعامل
@@ -179,10 +182,25 @@ export default function FilmOperatorDashboard() {
               لوحة عامل الفيلم
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              إدارة أوامر الإنتاج النشطة وإنشاء الرولات
+              إدارة أوامر الإنتاج وخلط المواد
             </p>
           </div>
 
+          {/* Tabs Navigation */}
+          <Tabs defaultValue="production" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="production" className="flex items-center gap-2" data-testid="tab-production">
+                <Package className="h-4 w-4" />
+                أوامر الإنتاج
+              </TabsTrigger>
+              <TabsTrigger value="mixing" className="flex items-center gap-2" data-testid="tab-mixing">
+                <Beaker className="h-4 w-4" />
+                خلط المواد
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Production Tab */}
+            <TabsContent value="production" className="space-y-6">
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card data-testid="card-active-orders">
@@ -470,6 +488,13 @@ export default function FilmOperatorDashboard() {
               })}
             </div>
           )}
+            </TabsContent>
+
+            {/* Material Mixing Tab */}
+            <TabsContent value="mixing" className="space-y-6">
+              <FilmMaterialMixingTab />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
 
