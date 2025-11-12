@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
@@ -29,6 +29,16 @@ import {
 } from "../components/ui/tabs";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../components/ui/alert-dialog";
 import { useToast } from "../hooks/use-toast";
 import { apiRequest } from "../lib/queryClient";
 import {
@@ -215,6 +225,12 @@ export default function Settings() {
       }));
     }
   }, [databaseStatsData]);
+
+  // Backup restore state
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedBackupFile, setSelectedBackupFile] = useState<File | null>(null);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+  const [pendingBackupData, setPendingBackupData] = useState<any>(null);
 
   // Enhanced file import state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -792,6 +808,104 @@ export default function Settings() {
     },
   });
 
+  // Restore backup mutation
+  const restoreBackupMutation = useMutation({
+    mutationFn: async (backupData: any) => {
+      return await apiRequest("/api/database/restore", {
+        method: "POST",
+        body: JSON.stringify({ backupData }),
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "تم استعادة قاعدة البيانات بنجاح",
+        description: "تمت استعادة جميع البيانات من النسخة الاحتياطية",
+      });
+      setSelectedBackupFile(null);
+      setPendingBackupData(null);
+      setShowRestoreConfirm(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/database/stats"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "خطأ في استعادة قاعدة البيانات",
+        description: error?.message || "حدث خطأ أثناء استعادة النسخة الاحتياطية",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle backup file selection
+  const handleBackupFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast({
+        title: "الملف كبير جداً",
+        description: "يجب أن يكون حجم الملف أقل من 50 ميجابايت",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.name.endsWith('.json')) {
+      toast({
+        title: "نوع ملف غير صحيح",
+        description: "يجب أن يكون الملف بصيغة JSON",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSelectedBackupFile(file);
+
+    // Read and parse JSON file
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const backupData = JSON.parse(event.target?.result as string);
+        
+        // Basic validation
+        if (!backupData.tables || typeof backupData.tables !== 'object') {
+          throw new Error("بنية ملف النسخة الاحتياطية غير صحيحة");
+        }
+
+        // Store the data and show confirmation dialog
+        setPendingBackupData(backupData);
+        setShowRestoreConfirm(true);
+      } catch (error) {
+        toast({
+          title: "خطأ في قراءة الملف",
+          description: error instanceof Error ? error.message : "الملف تالف أو غير صالح",
+          variant: "destructive",
+        });
+        setSelectedBackupFile(null);
+      }
+    };
+    
+    reader.onerror = () => {
+      toast({
+        title: "خطأ في قراءة الملف",
+        description: "فشل في قراءة الملف",
+        variant: "destructive",
+      });
+      setSelectedBackupFile(null);
+    };
+
+    reader.readAsText(file);
+  };
+
+  // Confirm and execute restore
+  const confirmRestore = () => {
+    if (pendingBackupData) {
+      restoreBackupMutation.mutate(pendingBackupData);
+    }
+  };
+
   // Mutation for saving user settings
   const saveUserSettingsMutation = useMutation({
     mutationFn: async (settings: any) => {
@@ -1359,14 +1473,34 @@ export default function Settings() {
                           <p className="text-xs text-muted-foreground">
                             استعادة قاعدة البيانات من نسخة احتياطية
                           </p>
+                          <input
+                            type="file"
+                            ref={backupFileInputRef}
+                            onChange={handleBackupFileSelect}
+                            accept=".json"
+                            className="hidden"
+                            data-testid="input-backup-file"
+                          />
                           <Button
                             variant="outline"
                             className="w-full"
                             size="sm"
+                            onClick={() => backupFileInputRef.current?.click()}
+                            disabled={restoreBackupMutation.isPending}
+                            data-testid="button-restore-backup"
                           >
-                            <Upload className="w-4 h-4 mr-2" />
-                            تحميل واستعادة
+                            {restoreBackupMutation.isPending ? (
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            ) : (
+                              <Upload className="w-4 h-4 mr-2" />
+                            )}
+                            {selectedBackupFile ? selectedBackupFile.name : "اختيار ملف واستعادة"}
                           </Button>
+                          {selectedBackupFile && !restoreBackupMutation.isPending && (
+                            <p className="text-xs text-green-600">
+                              تم اختيار: {selectedBackupFile.name}
+                            </p>
+                          )}
                         </div>
                       </Card>
                     </div>
