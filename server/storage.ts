@@ -170,7 +170,7 @@ import {
 } from "@shared/schema";
 
 import { db, pool } from "./db";
-import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
+import { eq, desc, and, sql, sum, count, inArray, or, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import bcrypt from "bcrypt";
 import {
@@ -11529,6 +11529,7 @@ export class DatabaseStorage implements IStorage {
             customer_id: orders.customer_id,
             customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
             product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+            order_status: orders.status,
           })
           .from(production_orders)
           .leftJoin(orders, eq(production_orders.order_id, orders.id))
@@ -11538,7 +11539,8 @@ export class DatabaseStorage implements IStorage {
           .where(
             and(
               inArray(production_orders.status, ["pending", "in_production"]),
-              eq(production_orders.film_completed, false)
+              eq(production_orders.film_completed, false),
+              ne(orders.status, "waiting")
             )
           )
           .orderBy(desc(production_orders.created_at));
