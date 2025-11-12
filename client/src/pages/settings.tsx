@@ -60,7 +60,7 @@ import { canAccessSettingsTab } from "../utils/roleUtils";
 import NotificationCenter from "../components/notifications/NotificationCenter";
 import WhatsAppWebhooksTab from "../components/settings/WhatsAppWebhooksTab";
 import LocationMapPicker from "../components/LocationMapPicker";
-import { Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Eye, EyeOff } from "lucide-react";
 
 export default function Settings() {
   const { user } = useAuth();
@@ -650,15 +650,34 @@ export default function Settings() {
   // Database operations mutations
   const createBackupMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/database/backup", {
+      const response = await fetch("/api/database/backup", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+      
+      if (!response.ok) throw new Error("Backup failed");
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch ? filenameMatch[1] : `backup-${new Date().toISOString().split("T")[0]}.json`;
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/database/stats"] });
       toast({
         title: "تم إنشاء النسخة الاحتياطية",
-        description: "تم إنشاء النسخة الاحتياطية بنجاح",
+        description: "تم تحميل النسخة الاحتياطية لجميع الجداول والسجلات بنجاح",
       });
     },
     onError: () => {
@@ -2110,7 +2129,7 @@ function LocationSettingsForm() {
   const [description, setDescription] = useState("");
 
   // Fetch factory locations
-  const { data: locations, isLoading } = useQuery({
+  const { data: locations, isLoading } = useQuery<any[]>({
     queryKey: ["/api/factory-locations"],
   });
 
@@ -2119,7 +2138,6 @@ function LocationSettingsForm() {
       return await apiRequest("/api/factory-locations", {
         method: "POST",
         body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
@@ -2138,7 +2156,6 @@ function LocationSettingsForm() {
       return await apiRequest(`/api/factory-locations/${id}`, {
         method: "PUT",
         body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
@@ -2172,7 +2189,6 @@ function LocationSettingsForm() {
       return await apiRequest(`/api/factory-locations/${id}`, {
         method: "PUT",
         body: JSON.stringify({ is_active: !isActive }),
-        headers: { "Content-Type": "application/json" },
       });
     },
     onSuccess: () => {
