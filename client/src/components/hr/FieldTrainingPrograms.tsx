@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -60,15 +61,15 @@ import { z } from "zod";
 import { format } from "date-fns";
 
 const trainingProgramSchema = z.object({
-  title: z.string().min(1, "عنوان التدريب مطلوب"),
-  title_ar: z.string().min(1, "العنوان بالعربية مطلوب"),
+  title: z.string().min(1, "Title required"),
+  title_ar: z.string().min(1, "Arabic title required"),
   description: z.string().optional(),
   description_ar: z.string().optional(),
-  category: z.string().min(1, "الفئة مطلوبة"),
-  training_scope: z.string().min(1, "نوع التدريب مطلوب"),
-  duration_hours: z.number().min(1, "مدة التدريب مطلوبة"),
-  max_participants: z.number().min(1, "العدد الأقصى للمشاركين مطلوب"),
-  location: z.string().min(1, "مكان التدريب مطلوب"),
+  category: z.string().min(1, "Category required"),
+  training_scope: z.string().min(1, "Training type required"),
+  duration_hours: z.number().min(1, "Duration required"),
+  max_participants: z.number().min(1, "Max participants required"),
+  location: z.string().min(1, "Location required"),
   practical_requirements: z.string().optional(),
   instructor_id: z.number().optional(),
   department_id: z.string().optional(),
@@ -76,27 +77,27 @@ const trainingProgramSchema = z.object({
 });
 
 const enrollmentSchema = z.object({
-  program_id: z.string().min(1, "برنامج التدريب مطلوب"),
-  employee_id: z.string().min(1, "الموظف مطلوب"),
-  training_date: z.string().min(1, "تاريخ التدريب مطلوب"),
+  program_id: z.string().min(1, "Program required"),
+  employee_id: z.string().min(1, "Employee required"),
+  training_date: z.string().min(1, "Training date required"),
   attendance_notes: z.string().optional(),
 });
 
 const evaluationSchema = z.object({
-  enrollment_id: z.string().min(1, "التسجيل مطلوب"),
-  program_id: z.string().min(1, "البرنامج مطلوب"),
-  employee_id: z.string().min(1, "الموظف مطلوب"),
-  evaluator_id: z.string().min(1, "المقيّم مطلوب"),
+  enrollment_id: z.string().min(1, "Enrollment required"),
+  program_id: z.string().min(1, "Program required"),
+  employee_id: z.string().min(1, "Employee required"),
+  evaluator_id: z.string().min(1, "Evaluator required"),
   evaluation_date: z.string(),
-  theoretical_understanding: z.string().min(1, "الفهم النظري مطلوب"),
-  practical_skills: z.string().min(1, "المهارات العملية مطلوبة"),
-  safety_compliance: z.string().min(1, "الالتزام بالسلامة مطلوب"),
-  teamwork: z.string().min(1, "العمل الجماعي مطلوب"),
-  communication: z.string().min(1, "التواصل مطلوب"),
+  theoretical_understanding: z.string().min(1, "Theoretical understanding required"),
+  practical_skills: z.string().min(1, "Practical skills required"),
+  safety_compliance: z.string().min(1, "Safety compliance required"),
+  teamwork: z.string().min(1, "Teamwork required"),
+  communication: z.string().min(1, "Communication required"),
   strengths: z.string().optional(),
   areas_for_improvement: z.string().optional(),
   additional_notes: z.string().optional(),
-  recommendation: z.string().min(1, "التوصية مطلوبة"),
+  recommendation: z.string().min(1, "Recommendation required"),
 });
 
 interface TrainingProgram {
@@ -153,6 +154,7 @@ interface TrainingEvaluation {
 }
 
 export default function FieldTrainingPrograms() {
+  const { t } = useTranslation();
   const [selectedView, setSelectedView] = useState<
     "programs" | "enrollments" | "evaluations"
   >("programs");

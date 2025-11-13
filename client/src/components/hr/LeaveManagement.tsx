@@ -150,10 +150,10 @@ export default function LeaveManagement() {
     if (!status) return status;
     const lowerStatus = status.toLowerCase();
     if (lowerStatus === "approved" || status === "موافق عليه" || status === "موافق")
-      return "موافق عليه";
-    if (lowerStatus === "rejected" || status === "مرفوض") return "مرفوض";
+      return t('hr.approved');
+    if (lowerStatus === "rejected" || status === "مرفوض") return t('hr.rejected');
     if (lowerStatus === "pending" || status === "معلق" || status === "قيد المراجعة")
-      return "قيد المراجعة";
+      return t('status.pending');
     return status;
   };
 
@@ -194,15 +194,15 @@ export default function LeaveManagement() {
     switch (priority.toLowerCase()) {
       case "high":
       case "عالية":
-        return "عالية";
+        return t('production.high');
       case "medium":
       case "متوسطة":
       case "عادي":
       case "عادية":
-        return "متوسطة";
+        return t('production.medium');
       case "low":
       case "منخفضة":
-        return "منخفضة";
+        return t('production.low');
       default:
         return priority;
     }
@@ -228,9 +228,9 @@ export default function LeaveManagement() {
   };
 
   const getUserDisplayName = (userId: number) => {
-    if (!Array.isArray(users) || users.length === 0) return `المستخدم ${userId}`;
+    if (!Array.isArray(users) || users.length === 0) return `${t('common.user')} ${userId}`;
     const user = users.find((u: any) => u.id === userId);
-    return user ? user.display_name_ar || user.display_name || user.username : `المستخدم ${userId}`;
+    return user ? user.display_name_ar || user.display_name || user.username : `${t('common.user')} ${userId}`;
   };
 
   // memoize the request groups
@@ -273,7 +273,7 @@ export default function LeaveManagement() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            جاري تحميل طلبات المستخدمين...
+            {t('common.loading')}
           </p>
         </div>
       </div>
@@ -286,15 +286,15 @@ export default function LeaveManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            إدارة طلبات المستخدمين
+            {t('hr.leaves')}
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            مراجعة والموافقة على طلبات المستخدمين
+            {t('hr.approveLeave')}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => refetchRequests()} variant="outline" className="text-sm">
-            إعادة تحميل البيانات
+          <Button onClick={() => refetchRequests()} variant="outline" className="text-sm" data-testid="button-refresh-requests">
+            {t('common.refresh')}
           </Button>
         </div>
       </div>
@@ -306,9 +306,9 @@ export default function LeaveManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  إجمالي الطلبات
+                  {t('common.total')}
                 </p>
-                <p className="text-2xl font-bold text-blue-600">{Array.isArray(userRequests) ? userRequests.length : 0}</p>
+                <p className="text-2xl font-bold text-blue-600" data-testid="text-total-requests">{Array.isArray(userRequests) ? userRequests.length : 0}</p>
               </div>
               <CalendarDays className="w-8 h-8 text-blue-500" />
             </div>
@@ -319,8 +319,8 @@ export default function LeaveManagement() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">قيد المراجعة</p>
-                <p className="text-2xl font-bold text-yellow-600">{pendingRequests.length}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('status.pending')}</p>
+                <p className="text-2xl font-bold text-yellow-600" data-testid="text-pending-requests">{pendingRequests.length}</p>
               </div>
               <Clock className="w-8 h-8 text-yellow-500" />
             </div>
@@ -331,8 +331,8 @@ export default function LeaveManagement() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">موافق عليها</p>
-                <p className="text-2xl font-bold text-green-600">{approvedRequests.length}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('hr.approved')}</p>
+                <p className="text-2xl font-bold text-green-600" data-testid="text-approved-requests">{approvedRequests.length}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-500" />
             </div>
@@ -343,8 +343,8 @@ export default function LeaveManagement() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">مرفوضة</p>
-                <p className="text-2xl font-bold text-red-600">{rejectedRequests.length}</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t('hr.rejected')}</p>
+                <p className="text-2xl font-bold text-red-600" data-testid="text-rejected-requests">{rejectedRequests.length}</p>
               </div>
               <XCircle className="w-8 h-8 text-red-500" />
             </div>
@@ -357,33 +357,33 @@ export default function LeaveManagement() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            قائمة طلبات المستخدمين
+            {t('hr.leaves')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {requestsLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">جاري تحميل الطلبات...</p>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">{t('common.loading')}</p>
             </div>
           ) : !Array.isArray(userRequests) || userRequests.length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>لا توجد طلبات مسجلة</p>
-              {requestsError && <p className="text-red-500 mt-2">خطأ في تحميل البيانات: {String(requestsError)}</p>}
+              <p>{t('common.noData')}</p>
+              {requestsError && <p className="text-red-500 mt-2">{t('common.error')}: {String(requestsError)}</p>}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="border-b bg-gray-50 dark:bg-gray-800">
-                    <th className="text-right p-3 font-semibold">المستخدم</th>
-                    <th className="text-right p-3 font-semibold">نوع الطلب</th>
-                    <th className="text-right p-3 font-semibold">العنوان</th>
-                    <th className="text-right p-3 font-semibold">الأولوية</th>
-                    <th className="text-right p-3 font-semibold">الحالة</th>
-                    <th className="text-right p-3 font-semibold">تاريخ الطلب</th>
-                    <th className="text-center p-3 font-semibold">الإجراءات</th>
+                    <th className="text-right p-3 font-semibold">{t('common.user')}</th>
+                    <th className="text-right p-3 font-semibold">{t('common.type')}</th>
+                    <th className="text-right p-3 font-semibold">{t('forms.title')}</th>
+                    <th className="text-right p-3 font-semibold">{t('quickNotes.priority')}</th>
+                    <th className="text-right p-3 font-semibold">{t('common.status')}</th>
+                    <th className="text-right p-3 font-semibold">{t('common.date')}</th>
+                    <th className="text-center p-3 font-semibold">{t('common.actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -430,21 +430,22 @@ export default function LeaveManagement() {
                                 setSelectedRequest(request);
                                 setIsViewDialogOpen(true);
                               }}
+                              data-testid="button-view-request"
                             >
                               <Eye className="w-4 h-4 mr-1" />
-                              عرض
+                              {t('common.view')}
                             </Button>
                             {(request.status?.toLowerCase() === "pending" ||
                               request.status === "معلق" ||
                               request.status === "قيد المراجعة") && (
                               <>
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApproval(request, "approve")}>
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleApproval(request, "approve")} data-testid="button-approve-request">
                                   <Check className="w-4 h-4 mr-1" />
-                                  موافقة
+                                  {t('hr.approveLeave')}
                                 </Button>
-                                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleApproval(request, "reject")}>
+                                <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleApproval(request, "reject")} data-testid="button-reject-request">
                                   <X className="w-4 h-4 mr-1" />
-                                  رفض
+                                  {t('hr.rejectLeave')}
                                 </Button>
                               </>
                             )}
@@ -463,36 +464,36 @@ export default function LeaveManagement() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>تفاصيل الطلب</DialogTitle>
-            <DialogDescription>عرض تفاصيل طلب الإجازة وحالة المراجعة</DialogDescription>
+            <DialogTitle>{t('common.details')}</DialogTitle>
+            <DialogDescription>{t('hr.requestLeave')}</DialogDescription>
           </DialogHeader>
 
           {selectedRequest && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold">المستخدم:</Label>
+                  <Label className="font-semibold">{t('common.user')}:</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     {getUserDisplayName(selectedRequest.user_id)}
                   </p>
                 </div>
                 <div>
-                  <Label className="font-semibold">نوع الطلب:</Label>
+                  <Label className="font-semibold">{t('common.type')}:</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{selectedRequest.type}</p>
                 </div>
                 <div>
-                  <Label className="font-semibold">العنوان:</Label>
+                  <Label className="font-semibold">{t('forms.title')}:</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{selectedRequest.title}</p>
                 </div>
                 <div>
-                  <Label className="font-semibold">الأولوية:</Label>
+                  <Label className="font-semibold">{t('quickNotes.priority')}:</Label>
                   <Badge className={getPriorityColor(selectedRequest.priority)}>
                     {getPriorityText(selectedRequest.priority)}
                   </Badge>
                 </div>
                 {selectedRequest.start_date && (
                   <div>
-                    <Label className="font-semibold">تاريخ البداية:</Label>
+                    <Label className="font-semibold">{t('common.from')}:</Label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {new Date(selectedRequest.start_date).toLocaleDateString("ar")}
                     </p>
@@ -500,7 +501,7 @@ export default function LeaveManagement() {
                 )}
                 {selectedRequest.end_date && (
                   <div>
-                    <Label className="font-semibold">تاريخ النهاية:</Label>
+                    <Label className="font-semibold">{t('common.to')}:</Label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {new Date(selectedRequest.end_date).toLocaleDateString("ar")}
                     </p>
@@ -508,14 +509,14 @@ export default function LeaveManagement() {
                 )}
                 {selectedRequest.requested_amount && (
                   <div>
-                    <Label className="font-semibold">المبلغ المطلوب:</Label>
+                    <Label className="font-semibold">{t('forms.amount')}:</Label>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {selectedRequest.requested_amount} ريال
+                      {selectedRequest.requested_amount}
                     </p>
                   </div>
                 )}
                 <div>
-                  <Label className="font-semibold">الحالة:</Label>
+                  <Label className="font-semibold">{t('common.status')}:</Label>
                   <Badge className={getStatusColor(selectedRequest.status)}>
                     {getStatusText(selectedRequest.status)}
                   </Badge>
@@ -523,7 +524,7 @@ export default function LeaveManagement() {
               </div>
 
               <div>
-                <Label className="font-semibold">الوصف:</Label>
+                <Label className="font-semibold">{t('common.description')}:</Label>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                   {selectedRequest.description}
                 </p>
@@ -531,7 +532,7 @@ export default function LeaveManagement() {
 
               {selectedRequest.manager_comments && (
                 <div>
-                  <Label className="font-semibold">تعليقات المدير:</Label>
+                  <Label className="font-semibold">{t('common.notes')}:</Label>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     {selectedRequest.manager_comments}
                   </p>
@@ -547,29 +548,28 @@ export default function LeaveManagement() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {approvalAction === "approve" ? "موافقة على الطلب" : "رفض الطلب"}
+              {approvalAction === "approve" ? t('hr.approveLeave') : t('hr.rejectLeave')}
             </DialogTitle>
             <DialogDescription>
-              {approvalAction === "approve"
-                ? "تأكيد الموافقة على الطلب مع إمكانية إضافة تعليقات"
-                : "رفض الطلب وإضافة تعليقات حول أسباب الرفض"}
+              {t('common.notes')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="comments">تعليقات (اختياري):</Label>
+              <Label htmlFor="comments">{t('common.notes')} ({t('common.optional')}):</Label>
               <Textarea
                 id="comments"
-                placeholder="أضف تعليقات حول قرارك..."
+                placeholder={t('common.notes')}
                 value={approvalComments}
                 onChange={(e) => setApprovalComments(e.target.value)}
                 className="mt-1"
+                data-testid="textarea-approval-comments"
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsApprovalDialogOpen(false)}>
-                إلغاء
+              <Button variant="outline" onClick={() => setIsApprovalDialogOpen(false)} data-testid="button-cancel-approval">
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleSubmitApproval}
@@ -577,21 +577,22 @@ export default function LeaveManagement() {
                 className={
                   approvalAction === "approve" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"
                 }
+                data-testid="button-submit-approval"
               >
                 {updateRequestMutation.isPending ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    جاري المعالجة...
+                    {t('common.loading')}
                   </div>
                 ) : approvalAction === "approve" ? (
                   <>
                     <Check className="w-4 h-4 mr-1" />
-                    موافقة
+                    {t('hr.approveLeave')}
                   </>
                 ) : (
                   <>
                     <X className="w-4 h-4 mr-1" />
-                    رفض
+                    {t('hr.rejectLeave')}
                   </>
                 )}
               </Button>
