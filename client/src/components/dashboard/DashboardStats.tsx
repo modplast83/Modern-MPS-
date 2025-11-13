@@ -3,6 +3,7 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { formatNumber, formatPercentage } from "../../lib/formatNumber";
 import ErrorBoundary from "../ErrorBoundary";
+import { useTranslation } from 'react-i18next';
 import {
   ShoppingCart,
   Package,
@@ -24,6 +25,7 @@ interface DashboardStat {
 }
 
 function DashboardStatsContent() {
+  const { t } = useTranslation();
   const {
     data: stats = {},
     isLoading,
@@ -52,22 +54,22 @@ function DashboardStatsContent() {
 
   const dashboardStats: DashboardStat[] = [
     {
-      label: "الطلبات النشطة",
+      label: t('dashboard.activeOrders'),
       value: formatNumber((stats as any)?.activeOrders || 12),
-      change: "+12% من الأسبوع الماضي",
+      change: `+12% ${t('dashboard.weeklyChange')}`,
       trend: "up",
       icon: <ShoppingCart className="w-6 h-6" />,
       color: "text-blue-600",
     },
     {
-      label: "معدل الإنتاج",
+      label: t('dashboard.productionRate'),
       value: formatPercentage((stats as any)?.productionRate || 85),
       change:
         ((stats as any)?.productionRate || 85) >= 85
-          ? "أداء ممتاز"
+          ? t('dashboard.excellentPerformance')
           : ((stats as any)?.productionRate || 85) >= 70
-            ? "أداء جيد"
-            : "يحتاج تحسين",
+            ? t('dashboard.goodPerformance')
+            : t('dashboard.needsImprovement'),
       trend:
         ((stats as any)?.productionRate || 85) >= 85
           ? "up"
@@ -83,20 +85,20 @@ function DashboardStatsContent() {
             : "text-red-600",
     },
     {
-      label: "العمال الحاضرين",
+      label: t('dashboard.presentEmployees'),
       value: `${formatNumber((stats as any)?.presentEmployees || 18)}/${formatNumber((stats as any)?.totalEmployees || 22)}`,
-      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} معدل الحضور`,
+      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} ${t('dashboard.attendanceRate')}`,
       trend: "neutral",
       icon: <Users className="w-6 h-6" />,
       color: "text-purple-600",
     },
     {
-      label: "تنبيهات الصيانة",
+      label: t('dashboard.maintenanceAlerts'),
       value: formatNumber((stats as any)?.maintenanceAlerts || 2),
       change:
         ((stats as any)?.maintenanceAlerts || 2) > 0
-          ? "يتطلب انتباه"
-          : "جميع المكائن تعمل بشكل طبيعي",
+          ? t('dashboard.requiresAttention')
+          : t('dashboard.allMachinesNormal'),
       trend: ((stats as any)?.maintenanceAlerts || 2) > 0 ? "down" : "up",
       icon: <AlertTriangle className="w-6 h-6" />,
       color:
@@ -164,10 +166,10 @@ function DashboardStatsContent() {
                 data-testid={`stat-badge-${index}`}
               >
                 {stat.trend === "up"
-                  ? "ممتاز"
+                  ? t('dashboard.excellent')
                   : stat.trend === "down"
-                    ? "يحتاج انتباه"
-                    : "مستقر"}
+                    ? t('dashboard.needsAttention')
+                    : t('dashboard.stable')}
               </Badge>
               <Clock className="w-3 h-3 text-gray-400" />
             </div>
@@ -179,11 +181,12 @@ function DashboardStatsContent() {
 }
 
 export default function DashboardStats() {
+  const { t } = useTranslation();
   return (
     <ErrorBoundary
       fallback="component"
-      title="خطأ في تحميل الإحصائيات"
-      description="تعذر تحميل إحصائيات لوحة التحكم. يرجى المحاولة مرة أخرى."
+      title={t('dashboard.errorLoadingStats')}
+      description={t('dashboard.errorDescription')}
       onError={(error, errorInfo) => {
         console.error("Dashboard stats error:", error, errorInfo);
       }}

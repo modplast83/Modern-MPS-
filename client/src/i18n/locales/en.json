@@ -150,6 +150,49 @@
     "saving": "Saving...",
     "deleting": "Deleting..."
   },
+  "shortcuts": {
+    "addOrder": "Add Order",
+    "addCustomer": "Add Customer",
+    "addCustomerProduct": "Add Customer Product",
+    "shortcut": "Shortcut"
+  },
+  "quickNotes": {
+    "title": "Quick Notes",
+    "addNote": "Add Note",
+    "newNote": "Add New Note",
+    "noteType": "Note Type",
+    "priority": "Priority",
+    "assignTo": "Assign To",
+    "content": "Content",
+    "placeholder": "Write your note here...",
+    "loading": "Loading...",
+    "noNotes": "No notes available",
+    "new": "New",
+    "from": "From",
+    "to": "To",
+    "noteCreated": "Note Created",
+    "noteCreatedSuccess": "Note added successfully",
+    "error": "Error",
+    "createFailed": "Failed to create note",
+    "contentRequired": "Please enter note content",
+    "deleted": "Deleted",
+    "deletedSuccess": "Note deleted successfully",
+    "types": {
+      "order": "Order",
+      "design": "Design",
+      "statement": "Statement",
+      "quote": "Quote",
+      "delivery": "Delivery",
+      "callCustomer": "Call Customer",
+      "other": "Other"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    }
+  },
   "orders": {
     "title": "Order Management",
     "orderNumber": "Order Number",
@@ -1171,6 +1214,28 @@
     "voiceAssistant": "Voice Assistant",
     "clickToSpeak": "Click to speak",
     "releaseToSend": "Release to send"
+  },
+  "aiAssistant": {
+    "registerClient": "Register Client",
+    "registerClientCommand": "Register new client",
+    "addClient": "Add new client",
+    "addProduct": "Add Product",
+    "addProductCommand": "Add new product",
+    "addClientProduct": "Add product to client",
+    "productionStatus": "Production Status",
+    "productionStatusCommand": "What's the production status?",
+    "productionStats": "Production Statistics",
+    "help": "Help",
+    "helpCommand": "Help",
+    "userGuide": "User Guide",
+    "processingError": "Sorry, I couldn't process your request at this time.",
+    "connectionError": "Sorry, a connection error occurred. Please try again.",
+    "assistantError": "AI Assistant Error",
+    "serviceUnavailable": "Cannot reach AI assistant service currently",
+    "voiceInput": "Voice Input",
+    "useVoiceAssistant": "Use the voice assistant on the main page for advanced voice input",
+    "thinking": "Thinking...",
+    "messagePlaceholder": "Type your message here..."
   },
   "misc": {
     "searching": "Searching...",

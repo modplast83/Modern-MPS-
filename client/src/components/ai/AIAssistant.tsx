@@ -7,6 +7,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 import { useToast } from "../../hooks/use-toast";
 import { useAuth } from "../../hooks/use-auth";
+import { useTranslation } from 'react-i18next';
 import { apiRequest } from "../../lib/queryClient";
 import ErrorBoundary from "../ErrorBoundary";
 import {
@@ -29,11 +30,12 @@ interface Message {
 }
 
 export default function AIAssistant() {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       type: "assistant",
-      content: `👋 **مرحباً! أنا مساعدك الذكي المطور**`,
+      content: t('ai.developedAssistant'),
       timestamp: new Date(),
     },
   ]);
@@ -45,35 +47,35 @@ export default function AIAssistant() {
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
     {
-      label: "سجل عميل",
+      label: t('aiAssistant.registerClient'),
       icon: User,
-      command: "سجل عميل جديد",
-      description: "إضافة عميل جديد",
+      command: t('aiAssistant.registerClientCommand'),
+      description: t('aiAssistant.addClient'),
     },
     {
-      label: "أضف منتج",
+      label: t('aiAssistant.addProduct'),
       icon: TrendingUp,
-      command: "أضف منتج جديد",
-      description: "إضافة منتج للعميل",
+      command: t('aiAssistant.addProductCommand'),
+      description: t('aiAssistant.addClientProduct'),
     },
     {
-      label: "حالة الإنتاج",
+      label: t('aiAssistant.productionStatus'),
       icon: Settings,
-      command: "ما حالة الإنتاج؟",
-      description: "إحصائيات الإنتاج",
+      command: t('aiAssistant.productionStatusCommand'),
+      description: t('aiAssistant.productionStats'),
     },
     {
-      label: "مساعدة",
+      label: t('aiAssistant.help'),
       icon: Bell,
-      command: "مساعدة",
-      description: "دليل الاستخدام",
+      command: t('aiAssistant.helpCommand'),
+      description: t('aiAssistant.userGuide'),
     },
   ];
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
       if (!user?.id) {
-        throw new Error("يجب تسجيل الدخول لاستخدام المساعد الذكي");
+        throw new Error(t('ai.loginRequired'));
       }
       
       setIsTyping(true);
@@ -100,7 +102,7 @@ export default function AIAssistant() {
         response.message || 
         response.clarificationQuestion || 
         response.confirmationMessage || 
-        "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.";
+        t('aiAssistant.processingError');
       
       const assistantMessage: Message = {
         id: generateMessageId(),
@@ -115,13 +117,13 @@ export default function AIAssistant() {
       const errorMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
-        content: "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
+        content: t('aiAssistant.connectionError'),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
       toast({
-        title: "خطأ في المساعد الذكي",
-        description: "لا يمكن الوصول لخدمة المساعد الذكي حالياً",
+        title: t('aiAssistant.assistantError'),
+        description: t('aiAssistant.serviceUnavailable'),
         variant: "destructive",
       });
     },
@@ -156,8 +158,8 @@ export default function AIAssistant() {
 
   const toggleVoiceInput = () => {
     toast({
-      title: "الإدخال الصوتي",
-      description: "استخدم المساعد الصوتي في الصفحة الرئيسية للإدخال الصوتي المتقدم",
+      title: t('aiAssistant.voiceInput'),
+      description: t('aiAssistant.useVoiceAssistant'),
     });
   };
 
@@ -174,9 +176,9 @@ export default function AIAssistant() {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-blue-500" />
-          المساعد الذكي
+          {t('ai.assistant')}
           <Badge variant="secondary" className="mr-auto">
-            نشط
+            {t('common.active')}
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -241,7 +243,7 @@ export default function AIAssistant() {
                         className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
                         style={{ animationDelay: "0.3s" }}
                       ></div>
-                      <span className="text-xs text-gray-500 mr-2">جاري التفكير...</span>
+                      <span className="text-xs text-gray-500 mr-2">{t('aiAssistant.thinking')}</span>
                     </div>
                   </div>
                 </div>
@@ -256,7 +258,7 @@ export default function AIAssistant() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="اكتب رسالتك هنا..."
+              placeholder={t('aiAssistant.messagePlaceholder')}
               className="flex-1"
               disabled={sendMessageMutation.isPending}
               data-testid="input-ai-message"
@@ -266,7 +268,7 @@ export default function AIAssistant() {
               size="sm"
               onClick={toggleVoiceInput}
               data-testid="button-ai-voice"
-              title="الإدخال الصوتي"
+              title={t('aiAssistant.voiceInput')}
             >
               <Mic className="w-4 h-4" />
             </Button>
@@ -274,7 +276,7 @@ export default function AIAssistant() {
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
               data-testid="button-ai-send"
-              title="إرسال"
+              title={t('ai.send')}
             >
               <Send className="w-4 h-4" />
             </Button>

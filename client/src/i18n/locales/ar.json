@@ -150,6 +150,49 @@
     "saving": "جاري الحفظ...",
     "deleting": "جاري الحذف..."
   },
+  "shortcuts": {
+    "addOrder": "إضافة طلب",
+    "addCustomer": "إضافة عميل",
+    "addCustomerProduct": "إضافة منتج عميل",
+    "shortcut": "اختصار"
+  },
+  "quickNotes": {
+    "title": "ملاحظات سريعة",
+    "addNote": "إضافة ملاحظة",
+    "newNote": "إضافة ملاحظة جديدة",
+    "noteType": "نوع الملاحظة",
+    "priority": "الأولوية",
+    "assignTo": "تعيين إلى",
+    "content": "المحتوى",
+    "placeholder": "اكتب ملاحظتك هنا...",
+    "loading": "جاري التحميل...",
+    "noNotes": "لا توجد ملاحظات حالياً",
+    "new": "جديد",
+    "from": "من",
+    "to": "إلى",
+    "noteCreated": "تم إنشاء الملاحظة",
+    "noteCreatedSuccess": "تم إضافة الملاحظة بنجاح",
+    "error": "خطأ",
+    "createFailed": "فشل إنشاء الملاحظة",
+    "contentRequired": "يرجى إدخال محتوى الملاحظة",
+    "deleted": "تم الحذف",
+    "deletedSuccess": "تم حذف الملاحظة بنجاح",
+    "types": {
+      "order": "طلبية",
+      "design": "تصميم",
+      "statement": "كشف حساب",
+      "quote": "عرض أسعار",
+      "delivery": "توصيل",
+      "callCustomer": "الاتصال بعميل",
+      "other": "أخرى"
+    },
+    "priorities": {
+      "low": "منخفضة",
+      "normal": "عادية",
+      "high": "عالية",
+      "urgent": "عاجلة"
+    }
+  },
   "orders": {
     "title": "إدارة الطلبات",
     "orderNumber": "رقم الطلب",
@@ -1171,6 +1214,28 @@
     "voiceAssistant": "المساعد الصوتي",
     "clickToSpeak": "انقر للتحدث",
     "releaseToSend": "حرر للإرسال"
+  },
+  "aiAssistant": {
+    "registerClient": "سجل عميل",
+    "registerClientCommand": "سجل عميل جديد",
+    "addClient": "إضافة عميل جديد",
+    "addProduct": "أضف منتج",
+    "addProductCommand": "أضف منتج جديد",
+    "addClientProduct": "إضافة منتج للعميل",
+    "productionStatus": "حالة الإنتاج",
+    "productionStatusCommand": "ما حالة الإنتاج؟",
+    "productionStats": "إحصائيات الإنتاج",
+    "help": "مساعدة",
+    "helpCommand": "مساعدة",
+    "userGuide": "دليل الاستخدام",
+    "processingError": "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.",
+    "connectionError": "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
+    "assistantError": "خطأ في المساعد الذكي",
+    "serviceUnavailable": "لا يمكن الوصول لخدمة المساعد الذكي حالياً",
+    "voiceInput": "الإدخال الصوتي",
+    "useVoiceAssistant": "استخدم المساعد الصوتي في الصفحة الرئيسية للإدخال الصوتي المتقدم",
+    "thinking": "جاري التفكير...",
+    "messagePlaceholder": "اكتب رسالتك هنا..."
   },
   "misc": {
     "searching": "جاري البحث...",

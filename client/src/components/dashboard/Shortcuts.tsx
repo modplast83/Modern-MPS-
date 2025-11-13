@@ -1,12 +1,14 @@
 // client/src/components/dashboard/Shortcuts.tsx
 import { Link } from "wouter";
 import { PlusCircle, UserPlus, Package } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export default function Shortcuts() {
+  const { t } = useTranslation();
   const items = [
-    { id: "order", label: "إضافة طلب", href: "/orders?create=1", Icon: PlusCircle, bg: "bg-blue-600" },
-    { id: "customer", label: "إضافة عميل", href: "/definitions?tab=customers&create=1", Icon: UserPlus, bg: "bg-green-600" },
-    { id: "cust-product", label: "إضافة منتج عميل", href: "/definitions?tab=customerProducts&create=1", Icon: Package, bg: "bg-indigo-600" },
+    { id: "order", label: t('shortcuts.addOrder'), href: "/orders?create=1", Icon: PlusCircle, bg: "bg-blue-600" },
+    { id: "customer", label: t('shortcuts.addCustomer'), href: "/definitions?tab=customers&create=1", Icon: UserPlus, bg: "bg-green-600" },
+    { id: "cust-product", label: t('shortcuts.addCustomerProduct'), href: "/definitions?tab=customerProducts&create=1", Icon: Package, bg: "bg-indigo-600" },
   ];
 
   return (
@@ -23,7 +25,7 @@ export default function Shortcuts() {
             >
               <it.Icon className="w-6 h-6" />
               <span className="font-semibold">{it.label}</span>
-              <span className="ml-auto text-sm opacity-80">اختصار</span>
+              <span className="ml-auto text-sm opacity-80">{t('shortcuts.shortcut')}</span>
             </div>
           </Link>
         ))}
