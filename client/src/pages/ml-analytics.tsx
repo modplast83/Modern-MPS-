@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -62,6 +63,7 @@ interface OptimizationResult {
 }
 
 export default function MLAnalytics() {
+  const { t } = useTranslation();
   const [selectedMachine, setSelectedMachine] = useState<number>(1);
   const queryClient = useQueryClient();
 
@@ -161,9 +163,9 @@ export default function MLAnalytics() {
         <div className="flex items-center gap-2">
           <Brain className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className="text-3xl font-bold">تحليلات التعلم الآلي</h1>
+            <h1 className="text-3xl font-bold">{t('mlAnalytics.title')}</h1>
             <p className="text-muted-foreground">
-              تحليل ذكي للإنتاج والتنبؤ بالأداء
+              {t('mlAnalytics.description')}
             </p>
           </div>
         </div>
@@ -174,9 +176,9 @@ export default function MLAnalytics() {
             onChange={(e) => setSelectedMachine(Number(e.target.value))}
             className="px-3 py-2 border rounded-md"
           >
-            <option value={1}>مكينة الإنتاج 1</option>
-            <option value={2}>مكينة الإنتاج 2</option>
-            <option value={3}>مكينة الإنتاج 3</option>
+            <option value={1}>{t('mlAnalytics.machine1')}</option>
+            <option value={2}>{t('mlAnalytics.machine2')}</option>
+            <option value={3}>{t('mlAnalytics.machine3')}</option>
           </select>
 
           <Button
@@ -187,7 +189,7 @@ export default function MLAnalytics() {
             <RefreshCw
               className={`h-4 w-4 ${trainModelMutation.isPending ? "animate-spin" : ""}`}
             />
-            تدريب النموذج
+            {t('mlAnalytics.trainModel')}
           </Button>
         </div>
       </div>
@@ -196,19 +198,19 @@ export default function MLAnalytics() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="predictions" className="gap-2">
             <TrendingUp className="h-4 w-4" />
-            التنبؤات
+            {t('mlAnalytics.predictions')}
           </TabsTrigger>
           <TabsTrigger value="anomalies" className="gap-2">
             <AlertTriangle className="h-4 w-4" />
-            اكتشاف الشذوذ
+            {t('mlAnalytics.anomalyDetection')}
           </TabsTrigger>
           <TabsTrigger value="patterns" className="gap-2">
             <BarChart3 className="h-4 w-4" />
-            تحليل الأنماط
+            {t('mlAnalytics.patternAnalysis')}
           </TabsTrigger>
           <TabsTrigger value="optimization" className="gap-2">
             <Target className="h-4 w-4" />
-            التحسين
+            {t('mlAnalytics.optimization')}
           </TabsTrigger>
         </TabsList>
 
@@ -217,7 +219,7 @@ export default function MLAnalytics() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  معدل الإنتاج المتوقع
+                  {t('mlAnalytics.predictedRate')}
                 </CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -228,7 +230,7 @@ export default function MLAnalytics() {
                     : `${predictions?.predictedRate.toFixed(1)}%`}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  للـ 24 ساعة القادمة
+                  {t('mlAnalytics.next24Hours')}
                 </p>
               </CardContent>
             </Card>
@@ -236,7 +238,7 @@ export default function MLAnalytics() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  توقع الجودة
+                  {t('mlAnalytics.qualityForecast')}
                 </CardTitle>
                 <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -247,7 +249,7 @@ export default function MLAnalytics() {
                     : `${predictions?.qualityForecast.toFixed(1)}%`}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  نسبة الجودة المتوقعة
+                  {t('mlAnalytics.expectedQuality')}
                 </p>
               </CardContent>
             </Card>
@@ -255,7 +257,7 @@ export default function MLAnalytics() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  تنبيه الصيانة
+                  {t('mlAnalytics.maintenanceAlert')}
                 </CardTitle>
                 <Settings className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -271,8 +273,8 @@ export default function MLAnalytics() {
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {predictions?.maintenanceAlert
-                    ? "صيانة مطلوبة"
-                    : "لا يوجد تنبيهات"}
+                    ? t('mlAnalytics.maintenanceRequired')
+                    : t('mlAnalytics.noAlerts')}
                 </p>
               </CardContent>
             </Card>
@@ -280,7 +282,7 @@ export default function MLAnalytics() {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
-                  مستوى الثقة
+                  {t('mlAnalytics.confidenceLevel')}
                 </CardTitle>
                 <Brain className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
@@ -292,14 +294,14 @@ export default function MLAnalytics() {
                     ? "..."
                     : `${((predictions?.confidence || 0) * 100).toFixed(0)}%`}
                 </div>
-                <p className="text-xs text-muted-foreground">دقة التنبؤ</p>
+                <p className="text-xs text-muted-foreground">{t('mlAnalytics.predictionAccuracy')}</p>
               </CardContent>
             </Card>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>التوصيات الذكية</CardTitle>
+              <CardTitle>{t('mlAnalytics.smartRecommendations')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -325,13 +327,13 @@ export default function MLAnalytics() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
-                  حالة الشذوذ
+                  {t('mlAnalytics.anomalyStatus')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
                   {anomalyLoading ? (
-                    <div className="animate-pulse">جاري التحليل...</div>
+                    <div className="animate-pulse">{t('mlAnalytics.analyzing')}</div>
                   ) : (
                     <>
                       {anomalies?.isAnomaly ? (
@@ -341,8 +343,8 @@ export default function MLAnalytics() {
                       )}
                       <p className="font-medium">
                         {anomalies?.isAnomaly
-                          ? "تم اكتشاف شذوذ"
-                          : "لا يوجد شذوذ"}
+                          ? t('mlAnalytics.anomalyDetected')
+                          : t('mlAnalytics.noAnomaly')}
                       </p>
                       {anomalies?.isAnomaly && (
                         <Badge
@@ -350,10 +352,10 @@ export default function MLAnalytics() {
                           className="mt-2"
                         >
                           {anomalies.severity === "high"
-                            ? "عالي"
+                            ? t('alertsCenter.highSeverity')
                             : anomalies.severity === "medium"
-                              ? "متوسط"
-                              : "منخفض"}
+                              ? t('alertsCenter.mediumSeverity')
+                              : t('alertsCenter.lowSeverity')}
                         </Badge>
                       )}
                     </>
@@ -364,19 +366,19 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>درجة الشذوذ</CardTitle>
+                <CardTitle>{t('mlAnalytics.anomalyScore')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-center">
                   {anomalyLoading ? "..." : anomalies?.anomalyScore.toFixed(2)}
                 </div>
-                <p className="text-center text-muted-foreground">من أصل 5.0</p>
+                <p className="text-center text-muted-foreground">{t('mlAnalytics.outOf5')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>المقاييس المتأثرة</CardTitle>
+                <CardTitle>{t('mlAnalytics.affectedMetrics')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-1">
@@ -393,7 +395,7 @@ export default function MLAnalytics() {
                   )}
                   {(!anomalies?.affectedMetrics ||
                     anomalies?.affectedMetrics?.length === 0) && (
-                    <p className="text-center text-muted-foreground">لا يوجد</p>
+                    <p className="text-center text-muted-foreground">{t('mlAnalytics.none')}</p>
                   )}
                 </div>
               </CardContent>
@@ -403,7 +405,7 @@ export default function MLAnalytics() {
           {anomalies?.isAnomaly && (
             <Card>
               <CardHeader>
-                <CardTitle>إجراءات مقترحة</CardTitle>
+                <CardTitle>{t('mlAnalytics.suggestedActions')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -428,7 +430,7 @@ export default function MLAnalytics() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>ساعات الذروة</CardTitle>
+                <CardTitle>{t('mlAnalytics.peakHours')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-6 gap-2">
@@ -443,7 +445,7 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>أفضل نوبات العمل</CardTitle>
+                <CardTitle>{t('mlAnalytics.optimalShifts')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
@@ -454,7 +456,7 @@ export default function MLAnalytics() {
                         variant="secondary"
                         className="block text-center"
                       >
-                        النوبة {shift}
+                        {t('mlAnalytics.shift')} {shift}
                       </Badge>
                     ),
                   )}
@@ -465,7 +467,7 @@ export default function MLAnalytics() {
 
           <Card>
             <CardHeader>
-              <CardTitle>رؤى الكفاءة</CardTitle>
+              <CardTitle>{t('mlAnalytics.efficiencyInsights')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -489,7 +491,7 @@ export default function MLAnalytics() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">السرعة المقترحة</CardTitle>
+                <CardTitle className="text-sm">{t('mlAnalytics.recommendedSpeed')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -502,7 +504,7 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">درجة الحرارة</CardTitle>
+                <CardTitle className="text-sm">{t('mlAnalytics.temperature')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
@@ -515,20 +517,20 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">الضغط المقترح</CardTitle>
+                <CardTitle className="text-sm">{t('mlAnalytics.recommendedPressure')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
                   {optimizationLoading
                     ? "..."
-                    : `${optimization?.recommendedPressure} بار`}
+                    : `${optimization?.recommendedPressure} ${t('mlAnalytics.bar')}`}
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">التحسن المتوقع</CardTitle>
+                <CardTitle className="text-sm">{t('mlAnalytics.expectedImprovement')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
@@ -542,12 +544,12 @@ export default function MLAnalytics() {
 
           <Card>
             <CardHeader>
-              <CardTitle>تطبيق التحسينات</CardTitle>
+              <CardTitle>{t('mlAnalytics.applyRecommended')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border rounded-md">
-                  <span>مستوى الثقة في التحسينات</span>
+                  <span>{t('mlAnalytics.optimizationConfidence')}</span>
                   <Badge variant="secondary">
                     {optimization
                       ? `${(optimization.confidence * 100).toFixed(0)}%`
@@ -566,7 +568,7 @@ export default function MLAnalytics() {
                   className="w-full gap-2"
                 >
                   <Target className="h-4 w-4" />
-                  تطبيق التحسينات المقترحة
+                  {t('mlAnalytics.applyRecommended')}
                 </Button>
               </div>
             </CardContent>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -103,6 +104,7 @@ interface HealthStatus {
  * مركز التحذيرات الذكية الشامل
  */
 export default function AlertsCenter() {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterSeverity, setFilterSeverity] = useState<string>("all");
@@ -155,20 +157,19 @@ export default function AlertsCenter() {
       queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/alerts/stats"] });
       toast({
-        title: "تم حل التحذير بنجاح",
-        description: "تم تحديث حالة التحذير",
+        title: t('common.success'),
+        description: t('alertsCenter.alertResolvedSuccess'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "خطأ في حل التحذير",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  // إغلاق التحذير
   const dismissAlertMutation = useMutation({
     mutationFn: async (alertId: number) => {
       return apiRequest(`/api/alerts/${alertId}/dismiss`, {
@@ -179,13 +180,13 @@ export default function AlertsCenter() {
       queryClient.invalidateQueries({ queryKey: ["/api/alerts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/alerts/stats"] });
       toast({
-        title: "تم إغلاق التحذير",
-        description: "تم إغلاق التحذير بنجاح",
+        title: t('common.success'),
+        description: t('alertsCenter.alertDismissedSuccess'),
       });
     },
     onError: (error: any) => {
       toast({
-        title: "خطأ في إغلاق التحذير",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive",
       });
@@ -248,20 +249,19 @@ export default function AlertsCenter() {
 
   return (
     <div className="container mx-auto p-6 space-y-6" dir="rtl">
-      {/* رأس الصفحة */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            مركز التحذيرات الذكية
+            {t('sidebar.alerts')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            مراقبة شاملة لحالة النظام والتحذيرات الاستباقية
+            {t('systemHealth.overallStatus')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
             <Activity className="w-4 h-4 ml-1" />
-            مراقبة مباشرة
+            {t('common.active')}
           </Badge>
         </div>
       </div>
@@ -272,7 +272,7 @@ export default function AlertsCenter() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
-              حالة النظام العامة
+              {t('systemHealth.overallStatus')}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -288,13 +288,13 @@ export default function AlertsCenter() {
                   }`}
                 >
                   {healthStatus.overall_status === "healthy"
-                    ? "سليم"
+                    ? t('systemHealth.healthy')
                     : healthStatus.overall_status === "warning"
-                      ? "تحذير"
-                      : "خطر"}
+                      ? t('systemHealth.warning')
+                      : t('systemHealth.critical')}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  الحالة العامة
+                  {t('systemHealth.overallStatus')}
                 </div>
               </div>
               <div className="text-center">
@@ -302,7 +302,7 @@ export default function AlertsCenter() {
                   {healthStatus.healthy_checks}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  فحوصات سليمة
+                  {t('systemHealth.healthyChecks')}
                 </div>
               </div>
               <div className="text-center">
@@ -310,7 +310,7 @@ export default function AlertsCenter() {
                   {healthStatus.warning_checks}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  تحذيرات
+                  {t('systemHealth.warningChecks')}
                 </div>
               </div>
               <div className="text-center">
@@ -318,7 +318,7 @@ export default function AlertsCenter() {
                   {healthStatus.critical_checks}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-300">
-                  حالات خطرة
+                  {t('systemHealth.criticalChecks')}
                 </div>
               </div>
             </div>
@@ -334,7 +334,7 @@ export default function AlertsCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    إجمالي التحذيرات
+                    {t('alertsCenter.totalAlerts')}
                   </p>
                   <p className="text-2xl font-bold">{stats.total_alerts}</p>
                 </div>
@@ -348,7 +348,7 @@ export default function AlertsCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    تحذيرات نشطة
+                    {t('alertsCenter.activeAlerts')}
                   </p>
                   <p className="text-2xl font-bold text-orange-600">
                     {stats.active_alerts}
@@ -364,7 +364,7 @@ export default function AlertsCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    تحذيرات حرجة
+                    {t('alertsCenter.criticalAlerts')}
                   </p>
                   <p className="text-2xl font-bold text-red-600">
                     {stats.critical_alerts}
@@ -380,7 +380,7 @@ export default function AlertsCenter() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                    تم حلها اليوم
+                    {t('alertsCenter.resolvedToday')}
                   </p>
                   <p className="text-2xl font-bold text-green-600">
                     {stats.resolved_today}
@@ -401,7 +401,7 @@ export default function AlertsCenter() {
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="البحث في التحذيرات..."
+                  placeholder={t('alertsCenter.searchAlerts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pr-10"
@@ -418,10 +418,10 @@ export default function AlertsCenter() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الحالات</SelectItem>
-                <SelectItem value="active">نشطة</SelectItem>
-                <SelectItem value="resolved">محلولة</SelectItem>
-                <SelectItem value="dismissed">مغلقة</SelectItem>
+                <SelectItem value="all">{t('common.all')}</SelectItem>
+                <SelectItem value="active">{t('alertsCenter.activeStatus')}</SelectItem>
+                <SelectItem value="resolved">{t('alertsCenter.resolvedStatus')}</SelectItem>
+                <SelectItem value="dismissed">{t('alertsCenter.dismissedStatus')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -430,13 +430,13 @@ export default function AlertsCenter() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع الأنواع</SelectItem>
-                <SelectItem value="system">نظام</SelectItem>
-                <SelectItem value="production">إنتاج</SelectItem>
-                <SelectItem value="inventory">مخزون</SelectItem>
-                <SelectItem value="quality">جودة</SelectItem>
-                <SelectItem value="maintenance">صيانة</SelectItem>
-                <SelectItem value="security">أمان</SelectItem>
+                <SelectItem value="all">{t('alertsCenter.allTypes')}</SelectItem>
+                <SelectItem value="system">{t('alertsCenter.systemType')}</SelectItem>
+                <SelectItem value="production">{t('alertsCenter.productionType')}</SelectItem>
+                <SelectItem value="inventory">{t('alertsCenter.inventoryType')}</SelectItem>
+                <SelectItem value="quality">{t('alertsCenter.qualityType')}</SelectItem>
+                <SelectItem value="maintenance">{t('alertsCenter.maintenanceType')}</SelectItem>
+                <SelectItem value="security">{t('alertsCenter.securityType')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -448,11 +448,11 @@ export default function AlertsCenter() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">جميع المستويات</SelectItem>
-                <SelectItem value="critical">حرج</SelectItem>
-                <SelectItem value="high">عالي</SelectItem>
-                <SelectItem value="medium">متوسط</SelectItem>
-                <SelectItem value="low">منخفض</SelectItem>
+                <SelectItem value="all">{t('alertsCenter.allSeverities')}</SelectItem>
+                <SelectItem value="critical">{t('alertsCenter.criticalSeverity')}</SelectItem>
+                <SelectItem value="high">{t('alertsCenter.highSeverity')}</SelectItem>
+                <SelectItem value="medium">{t('alertsCenter.mediumSeverity')}</SelectItem>
+                <SelectItem value="low">{t('alertsCenter.lowSeverity')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -464,7 +464,7 @@ export default function AlertsCenter() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
-            التحذيرات ({filteredAlerts.length})
+            {t('sidebar.alerts')} ({filteredAlerts.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -474,7 +474,7 @@ export default function AlertsCenter() {
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                   <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    جاري تحميل التحذيرات...
+                    {t('alertsCenter.loading')}
                   </p>
                 </div>
               </div>
@@ -482,10 +482,10 @@ export default function AlertsCenter() {
               <div className="text-center py-8">
                 <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  لا توجد تحذيرات
+                  {t('alertsCenter.noAlertsFound')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300">
-                  رائع! لا توجد تحذيرات تطابق المعايير المحددة
+                  {t('alertsCenter.noActiveAlerts')}
                 </p>
               </div>
             ) : (
@@ -523,26 +523,26 @@ export default function AlertsCenter() {
                                   variant={getSeverityColor(alert.severity)}
                                 >
                                   {alert.severity === "critical"
-                                    ? "حرج"
+                                    ? t('alertsCenter.criticalSeverity')
                                     : alert.severity === "high"
-                                      ? "عالي"
+                                      ? t('alertsCenter.highSeverity')
                                       : alert.severity === "medium"
-                                        ? "متوسط"
-                                        : "منخفض"}
+                                        ? t('alertsCenter.mediumSeverity')
+                                        : t('alertsCenter.lowSeverity')}
                                 </Badge>
                                 <Badge variant="outline">
                                   {alert.type === "system"
-                                    ? "نظام"
+                                    ? t('alertsCenter.systemType')
                                     : alert.type === "production"
-                                      ? "إنتاج"
+                                      ? t('alertsCenter.productionType')
                                       : alert.type === "inventory"
-                                        ? "مخزون"
+                                        ? t('alertsCenter.inventoryType')
                                         : alert.type === "quality"
-                                          ? "جودة"
+                                          ? t('alertsCenter.qualityType')
                                           : alert.type === "maintenance"
-                                            ? "صيانة"
+                                            ? t('alertsCenter.maintenanceType')
                                             : alert.type === "security"
-                                              ? "أمان"
+                                              ? t('alertsCenter.securityType')
                                               : alert.type}
                                 </Badge>
                               </div>
@@ -555,11 +555,11 @@ export default function AlertsCenter() {
                                 <div className="flex items-center gap-1">
                                   <StatusIcon className="w-4 h-4" />
                                   {alert.status === "active"
-                                    ? "نشط"
+                                    ? t('alertsCenter.activeStatus')
                                     : alert.status === "resolved"
-                                      ? "محلول"
+                                      ? t('alertsCenter.resolvedStatus')
                                       : alert.status === "dismissed"
-                                        ? "مغلق"
+                                        ? t('alertsCenter.dismissedStatus')
                                         : alert.status}
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -575,17 +575,16 @@ export default function AlertsCenter() {
                                 {alert.occurrences > 1 && (
                                   <div className="flex items-center gap-1">
                                     <TrendingUp className="w-4 h-4" />
-                                    {alert.occurrences} مرة
+                                    {alert.occurrences} {t('common.times')}
                                   </div>
                                 )}
                               </div>
 
-                              {/* الإجراءات المقترحة */}
                               {alert.suggested_actions &&
                                 alert.suggested_actions.length > 0 && (
                                   <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                                     <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-                                      إجراءات مقترحة:
+                                      {t('alertsCenter.suggestedActions')}:
                                     </p>
                                     <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                                       {alert.suggested_actions.map(
@@ -606,7 +605,6 @@ export default function AlertsCenter() {
                             </div>
                           </div>
 
-                          {/* أزرار الإجراءات */}
                           {alert.status === "active" && (
                             <div className="flex gap-2">
                               <Button
@@ -620,7 +618,7 @@ export default function AlertsCenter() {
                                 data-testid={`button-resolve-${alert.id}`}
                               >
                                 <CheckCircle2 className="w-4 h-4 ml-1" />
-                                حل
+                                {t('alertsCenter.resolveAlert')}
                               </Button>
                               <Button
                                 size="sm"
@@ -632,7 +630,7 @@ export default function AlertsCenter() {
                                 data-testid={`button-dismiss-${alert.id}`}
                               >
                                 <XCircle className="w-4 h-4 ml-1" />
-                                إغلاق
+                                {t('alertsCenter.dismissAlert')}
                               </Button>
                             </div>
                           )}

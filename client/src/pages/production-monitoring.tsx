@@ -1,6 +1,7 @@
 // src/pages/production-monitoring.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -148,6 +149,7 @@ interface ProductionAlert {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export default function ProductionMonitoring() {
+  const { t } = useTranslation();
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
   const [dateFilter, setDateFilter] = useState("7");
   const [dateFrom, setDateFrom] = useState("");
@@ -375,10 +377,10 @@ export default function ProductionMonitoring() {
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                لوحة مراقبة الإنتاج
+                {t('productionMonitoring.title')}
               </h1>
               <p className="text-gray-600">
-                مراقبة شاملة وفورية لعمليات الإنتاج والأداء
+                {t('productionMonitoring.description')}
               </p>
             </div>
 
@@ -394,7 +396,7 @@ export default function ProductionMonitoring() {
                 ) : (
                   <Play className="w-4 h-4 mr-2" />
                 )}
-                {isAutoRefreshEnabled ? "إيقاف التحديث" : "تشغيل التحديث"}
+                {isAutoRefreshEnabled ? t('productionMonitoring.stopRefresh') : t('productionMonitoring.startRefresh')}
               </Button>
 
               <Button
@@ -409,7 +411,7 @@ export default function ProductionMonitoring() {
                 data-testid="button-manual-refresh"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                تحديث الآن
+                {t('productionMonitoring.refreshNow')}
               </Button>
 
               <Button
@@ -419,7 +421,7 @@ export default function ProductionMonitoring() {
                 data-testid="button-export"
               >
                 <Download className="w-4 h-4 mr-2" />
-                تصدير التقرير
+                {t('productionMonitoring.exportReport')}
               </Button>
             </div>
           </div>
@@ -430,7 +432,7 @@ export default function ProductionMonitoring() {
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">فترة التقرير:</span>
+                  <span className="text-sm font-medium">{t('productionMonitoring.reportPeriod')}:</span>
                 </div>
 
                 <Select value={dateFilter || ""} onValueChange={setDateFilter}>
@@ -441,10 +443,10 @@ export default function ProductionMonitoring() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">اليوم</SelectItem>
-                    <SelectItem value="7">آخر أسبوع</SelectItem>
-                    <SelectItem value="30">آخر شهر</SelectItem>
-                    <SelectItem value="90">آخر 3 أشهر</SelectItem>
+                    <SelectItem value="1">{t('productionMonitoring.today')}</SelectItem>
+                    <SelectItem value="7">{t('productionMonitoring.lastWeek')}</SelectItem>
+                    <SelectItem value="30">{t('productionMonitoring.lastMonth')}</SelectItem>
+                    <SelectItem value="90">{t('productionMonitoring.last3Months')}</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -456,7 +458,7 @@ export default function ProductionMonitoring() {
                     className="w-36"
                     data-testid="input-date-from"
                   />
-                  <span className="text-sm text-gray-500">إلى</span>
+                  <span className="text-sm text-gray-500">{t('productionMonitoring.to')}</span>
                   <Input
                     type="date"
                     value={dateTo}
@@ -467,7 +469,7 @@ export default function ProductionMonitoring() {
                 </div>
 
                 <Badge variant="outline" className="text-xs">
-                  آخر تحديث:{" "}
+                  {t('productionMonitoring.lastUpdate')}:{" "}
                   {new Date(stats.lastUpdated).toLocaleString("ar-EG")}
                 </Badge>
               </div>
@@ -480,7 +482,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">رولات اليوم</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.dailyRolls')}</p>
                     <p
                       className="text-xl font-bold text-blue-600"
                       data-testid="stat-daily-rolls"
@@ -497,7 +499,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">الإنتاج اليومي</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.dailyProduction')}</p>
                     <p
                       className="text-xl font-bold text-green-600"
                       data-testid="stat-daily-weight"
@@ -514,7 +516,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">الطلبات النشطة</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.activeOrders')}</p>
                     <p
                       className="text-xl font-bold text-purple-600"
                       data-testid="stat-active-orders"
@@ -531,7 +533,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">مكتمل اليوم</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.completedToday')}</p>
                     <p
                       className="text-xl font-bold text-emerald-600"
                       data-testid="stat-completed-today"
@@ -548,7 +550,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">الهدر الحالي</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.currentWaste')}</p>
                     <p
                       className="text-xl font-bold text-red-600"
                       data-testid="stat-current-waste"
@@ -565,7 +567,7 @@ export default function ProductionMonitoring() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-gray-600">متوسط الكفاءة</p>
+                    <p className="text-xs text-gray-600">{t('productionMonitoring.avgEfficiency')}</p>
                     <p
                       className="text-xl font-bold text-indigo-600"
                       data-testid="stat-avg-efficiency"
@@ -584,7 +586,7 @@ export default function ProductionMonitoring() {
             <div className="space-y-2">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                تنبيهات الإنتاج ({alerts.length})
+                {t('productionMonitoring.productionAlerts')} ({alerts.length})
               </h3>
               {alerts.slice(0, 3).map((alert, index) => (
                 <Alert
@@ -610,7 +612,7 @@ export default function ProductionMonitoring() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <PieChartIcon className="w-5 h-5" />
-                  حالة الطوابير
+                  {t('productionMonitoring.queueStatus')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -641,7 +643,7 @@ export default function ProductionMonitoring() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="w-5 h-5" />
-                  أداء الأقسام
+                  {t('productionMonitoring.departmentPerformance')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -654,7 +656,7 @@ export default function ProductionMonitoring() {
                     <Bar
                       dataKey="production"
                       fill="#8884d8"
-                      name="الإنتاج (كجم)"
+                      name={t('productionMonitoring.productionKg')}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -667,13 +669,13 @@ export default function ProductionMonitoring() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                حالة المكائن
+                {t('productionMonitoring.machineStatus')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.machineStatus.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500 col-span-full">لا توجد بيانات للمكائن</div>
+                  <div className="text-center py-6 text-gray-500 col-span-full">{t('productionMonitoring.noMachineData')}</div>
                 ) : (
                   stats.machineStatus.map((machine) => (
                     <MachineCard key={machine.machine_id} machine={machine} />
@@ -687,34 +689,34 @@ export default function ProductionMonitoring() {
           <Tabs defaultValue="users" className="w-full">
             <TabsList className="w-full lg:w-auto">
               <TabsTrigger value="users" data-testid="tab-users">
-                أداء المستخدمين
+                {t('productionMonitoring.userPerformance')}
               </TabsTrigger>
               <TabsTrigger value="roles" data-testid="tab-roles">
-                أداء الأقسام
+                {t('productionMonitoring.departmentPerformance')}
               </TabsTrigger>
               <TabsTrigger value="efficiency" data-testid="tab-efficiency">
-                مؤشرات الكفاءة
+                {t('productionMonitoring.efficiencyMetrics')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="users">
               <Card>
                 <CardHeader>
-                  <CardTitle>إحصائيات أداء المستخدمين</CardTitle>
+                  <CardTitle>{t('productionMonitoring.userPerformanceStats')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>المستخدم</TableHead>
-                          <TableHead>القسم</TableHead>
-                          <TableHead>الرولات المُنشأة</TableHead>
-                          <TableHead>الرولات المطبوعة</TableHead>
-                          <TableHead>الرولات المقطوعة</TableHead>
-                          <TableHead>إجمالي الوزن</TableHead>
-                          <TableHead>ساعات العمل</TableHead>
-                          <TableHead>نقاط الكفاءة</TableHead>
+                          <TableHead>{t('productionMonitoring.user')}</TableHead>
+                          <TableHead>{t('productionMonitoring.department')}</TableHead>
+                          <TableHead>{t('productionMonitoring.rollsCreated')}</TableHead>
+                          <TableHead>{t('productionMonitoring.rollsPrinted')}</TableHead>
+                          <TableHead>{t('productionMonitoring.rollsCut')}</TableHead>
+                          <TableHead>{t('productionMonitoring.totalWeight')}</TableHead>
+                          <TableHead>{t('productionMonitoring.workHours')}</TableHead>
+                          <TableHead>{t('productionMonitoring.efficiencyPoints')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -777,21 +779,21 @@ export default function ProductionMonitoring() {
             <TabsContent value="roles">
               <Card>
                 <CardHeader>
-                  <CardTitle>إحصائيات أداء الأقسام</CardTitle>
+                  <CardTitle>{t('productionMonitoring.departmentPerformanceStats')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>القسم</TableHead>
-                          <TableHead>عدد المستخدمين</TableHead>
-                          <TableHead>أوامر الإنتاج</TableHead>
-                          <TableHead>إجمالي الرولات</TableHead>
-                          <TableHead>إجمالي الوزن</TableHead>
-                          <TableHead>متوسط وقت الإنجاز</TableHead>
-                          <TableHead>نقاط الجودة</TableHead>
-                          <TableHead>معدل التسليم في الوقت</TableHead>
+                          <TableHead>{t('productionMonitoring.department')}</TableHead>
+                          <TableHead>{t('productionMonitoring.userCount')}</TableHead>
+                          <TableHead>{t('productionMonitoring.productionOrders')}</TableHead>
+                          <TableHead>{t('productionMonitoring.totalRolls')}</TableHead>
+                          <TableHead>{t('productionMonitoring.totalWeight')}</TableHead>
+                          <TableHead>{t('productionMonitoring.avgCompletionTime')}</TableHead>
+                          <TableHead>{t('productionMonitoring.qualityScore')}</TableHead>
+                          <TableHead>{t('productionMonitoring.onTimeDelivery')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -822,7 +824,7 @@ export default function ProductionMonitoring() {
                               {formatNumber(
                                 Math.round(role.avg_order_completion_time),
                               )}{" "}
-                              ساعة
+                              {t('productionMonitoring.hours')}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
@@ -858,12 +860,12 @@ export default function ProductionMonitoring() {
             <TabsContent value="efficiency">
               <Card>
                 <CardHeader>
-                  <CardTitle>مؤشرات الكفاءة العامة</CardTitle>
+                  <CardTitle>{t('productionMonitoring.generalEfficiencyMetrics')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {efficiencyLoading ? (
                     <div className="text-center py-8">
-                      جاري تحميل البيانات...
+                      {t('productionMonitoring.loadingData')}
                     </div>
                   ) : (efficiencyData as any)?.efficiency ? (
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -875,7 +877,7 @@ export default function ProductionMonitoring() {
                           )}
                         </div>
                         <div className="text-sm text-gray-600">
-                          إجمالي الإنتاج
+                          {t('productionMonitoring.totalProduction')}
                         </div>
                       </div>
 
@@ -886,7 +888,7 @@ export default function ProductionMonitoring() {
                               .waste_percentage || 0,
                           )}
                         </div>
-                        <div className="text-sm text-gray-600">نسبة الهدر</div>
+                        <div className="text-sm text-gray-600">{t('productionMonitoring.wastePercentage')}</div>
                       </div>
 
                       <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -896,7 +898,7 @@ export default function ProductionMonitoring() {
                               0,
                           )}
                         </div>
-                        <div className="text-sm text-gray-600">نقاط الجودة</div>
+                        <div className="text-sm text-gray-600">{t('productionMonitoring.qualityScore')}</div>
                       </div>
 
                       <div className="text-center p-4 bg-purple-50 rounded-lg">
@@ -907,13 +909,13 @@ export default function ProductionMonitoring() {
                           )}
                         </div>
                         <div className="text-sm text-gray-600">
-                          استخدام المكائن
+                          {t('productionMonitoring.machineUtilization')}
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      لا توجد بيانات متاحة
+                      {t('productionMonitoring.noDataAvailable')}
                     </div>
                   )}
                 </CardContent>

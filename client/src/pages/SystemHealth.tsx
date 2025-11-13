@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -85,6 +86,7 @@ interface SystemOverview {
  * لوحة مراقبة سلامة النظام
  */
 export default function SystemHealth() {
+  const { t } = useTranslation();
   const [selectedTimeRange, setSelectedTimeRange] = useState("24h");
 
   // جلب نظرة عامة على النظام - Optimized polling
@@ -148,9 +150,9 @@ export default function SystemHealth() {
 
   // بيانات الرسم الدائري لحالة الفحوصات
   const healthStatusData = [
-    { name: "سليم", value: overview?.healthy_checks || 0, color: "#10B981" },
-    { name: "تحذير", value: overview?.warning_checks || 0, color: "#F59E0B" },
-    { name: "خطر", value: overview?.critical_checks || 0, color: "#EF4444" },
+    { name: t('systemHealth.healthy'), value: overview?.healthy_checks || 0, color: "#10B981" },
+    { name: t('systemHealth.warning'), value: overview?.warning_checks || 0, color: "#F59E0B" },
+    { name: t('systemHealth.critical'), value: overview?.critical_checks || 0, color: "#EF4444" },
   ];
 
   return (
@@ -159,16 +161,16 @@ export default function SystemHealth() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            مراقبة سلامة النظام
+            {t('systemHealth.title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mt-2">
-            مراقبة شاملة لأداء وسلامة النظام في الوقت الفعلي
+            {t('systemHealth.description')}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-sm">
             <Activity className="w-4 h-4 ml-1" />
-            مراقبة مباشرة
+            {t('systemHealth.liveMonitoring')}
           </Badge>
           {overview && (
             <Badge
@@ -182,10 +184,10 @@ export default function SystemHealth() {
             >
               <Shield className="w-4 h-4 ml-1" />
               {overview.overall_status === "healthy"
-                ? "النظام سليم"
+                ? t('systemHealth.systemHealthy')
                 : overview.overall_status === "warning"
-                  ? "تحذير"
-                  : "خطر"}
+                  ? t('systemHealth.warning')
+                  : t('systemHealth.critical')}
             </Badge>
           )}
         </div>
@@ -199,7 +201,7 @@ export default function SystemHealth() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                    فحوصات سليمة
+                    {t('systemHealth.healthyChecks')}
                   </p>
                   <p className="text-3xl font-bold text-green-900 dark:text-green-100">
                     {overview.healthy_checks}
@@ -215,7 +217,7 @@ export default function SystemHealth() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
-                    تحذيرات
+                    {t('systemHealth.warnings')}
                   </p>
                   <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
                     {overview.warning_checks}
@@ -231,7 +233,7 @@ export default function SystemHealth() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-red-700 dark:text-red-300">
-                    حالات خطرة
+                    {t('systemHealth.criticalChecks')}
                   </p>
                   <p className="text-3xl font-bold text-red-900 dark:text-red-100">
                     {overview.critical_checks}
@@ -247,7 +249,7 @@ export default function SystemHealth() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                    نسبة التشغيل
+                    {t('systemHealth.uptimePercent')}
                   </p>
                   <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
                     {overview.uptime_percent?.toFixed(1)}%
@@ -263,13 +265,13 @@ export default function SystemHealth() {
       <Tabs defaultValue="checks" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="checks" data-testid="tab-health-checks">
-            فحوصات السلامة
+            {t('systemHealth.healthChecks')}
           </TabsTrigger>
           <TabsTrigger value="performance" data-testid="tab-performance">
-            مؤشرات الأداء
+            {t('systemHealth.performanceMetrics')}
           </TabsTrigger>
           <TabsTrigger value="overview" data-testid="tab-overview">
-            نظرة عامة
+            {t('systemHealth.overview')}
           </TabsTrigger>
         </TabsList>
 
@@ -279,10 +281,10 @@ export default function SystemHealth() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                فحوصات السلامة ({healthChecks.length})
+                {t('systemHealth.healthChecks')} ({healthChecks.length})
               </CardTitle>
               <CardDescription>
-                جميع فحوصات سلامة النظام وحالتها الحالية
+                {t('systemHealth.allHealthChecks')}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -302,17 +304,7 @@ export default function SystemHealth() {
                               {check.check_name_ar}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-300">
-                              {check.check_type === "database"
-                                ? "قاعدة بيانات"
-                                : check.check_type === "api"
-                                  ? "واجهة برمجية"
-                                  : check.check_type === "memory"
-                                    ? "ذاكرة"
-                                    : check.check_type === "cpu"
-                                      ? "معالج"
-                                      : check.check_type === "disk"
-                                        ? "قرص صلب"
-                                        : "نظام"}
+                              {t(`systemHealth.checkType.${check.check_type}`, check.check_type)}
                             </p>
                           </div>
                         </div>
@@ -323,12 +315,12 @@ export default function SystemHealth() {
                               className={`font-semibold ${getStatusColor(check.status)}`}
                             >
                               {check.status === "healthy"
-                                ? "سليم"
+                                ? t('systemHealth.healthy')
                                 : check.status === "warning"
-                                  ? "تحذير"
+                                  ? t('systemHealth.warning')
                                   : check.status === "critical"
-                                    ? "خطر"
-                                    : "غير معروف"}
+                                    ? t('systemHealth.critical')
+                                    : check.status}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-300">
                               {check.check_duration_ms}ms
@@ -347,7 +339,7 @@ export default function SystemHealth() {
 
                           {check.is_critical && (
                             <Badge variant="destructive" className="text-xs">
-                              حرج
+                              {t('systemHealth.critical')}
                             </Badge>
                           )}
                         </div>
@@ -357,7 +349,7 @@ export default function SystemHealth() {
                       <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
                         <div>
                           <span className="text-gray-600 dark:text-gray-300">
-                            متوسط الاستجابة:{" "}
+                            {t('systemHealth.avgResponseTime')}:{" "}
                           </span>
                           <span className="font-medium">
                             {check.average_response_time}ms
@@ -365,7 +357,7 @@ export default function SystemHealth() {
                         </div>
                         <div>
                           <span className="text-gray-600 dark:text-gray-300">
-                            أخطاء 24س:{" "}
+                            {t('systemHealth.errors24h')}:{" "}
                           </span>
                           <span className="font-medium">
                             {check.error_count_24h}
@@ -373,7 +365,7 @@ export default function SystemHealth() {
                         </div>
                         <div>
                           <span className="text-gray-600 dark:text-gray-300">
-                            آخر فحص:{" "}
+                            {t('systemHealth.lastCheck')}:{" "}
                           </span>
                           <span className="font-medium">
                             {new Date(check.last_check_time).toLocaleTimeString(
@@ -398,7 +390,7 @@ export default function SystemHealth() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MemoryStick className="w-5 h-5" />
-                  استخدام الذاكرة
+                  {t('systemHealth.memoryUsage')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -408,8 +400,8 @@ export default function SystemHealth() {
                     <XAxis dataKey="time" />
                     <YAxis />
                     <Tooltip
-                      labelFormatter={(label) => `الوقت: ${label}`}
-                      formatter={(value) => [`${value}%`, "استخدام الذاكرة"]}
+                      labelFormatter={(label) => `${t('common.time')}: ${label}`}
+                      formatter={(value) => [`${value}%`, t('systemHealth.memoryUsage')]}
                     />
                     <Line
                       type="monotone"
@@ -428,7 +420,7 @@ export default function SystemHealth() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
-                  توزيع حالة الفحوصات
+                  {t('systemHealth.checkDistribution')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -462,7 +454,7 @@ export default function SystemHealth() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      متوسط زمن الاستجابة
+                      {t('systemHealth.avgResponseTime')}
                     </p>
                     <p className="text-2xl font-bold">
                       {healthChecks.reduce(
@@ -482,7 +474,7 @@ export default function SystemHealth() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      معدل النجاح
+                      {t('systemHealth.successRate')}
                     </p>
                     <p className="text-2xl font-bold text-green-600">
                       {(
@@ -504,7 +496,7 @@ export default function SystemHealth() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      إجمالي الأخطاء
+                      {t('systemHealth.totalErrors')}
                     </p>
                     <p className="text-2xl font-bold text-red-600">
                       {healthChecks.reduce(
@@ -525,12 +517,12 @@ export default function SystemHealth() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>معلومات النظام</CardTitle>
+                <CardTitle>{t('systemHealth.systemInfo')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-300">
-                    حالة النظام:
+                    {t('systemHealth.systemStatus')}:
                   </span>
                   <Badge
                     variant={
@@ -540,19 +532,19 @@ export default function SystemHealth() {
                     }
                   >
                     {overview?.overall_status === "healthy"
-                      ? "سليم"
-                      : "يحتاج انتباه"}
+                      ? t('systemHealth.healthy')
+                      : t('systemHealth.needsAttention')}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-300">
-                    إجمالي الفحوصات:
+                    {t('systemHealth.totalChecks')}:
                   </span>
                   <span className="font-medium">{overview?.total_checks}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-300">
-                    نسبة التشغيل:
+                    {t('systemHealth.uptime')}:
                   </span>
                   <span className="font-medium">
                     {overview?.uptime_percent?.toFixed(2)}%
@@ -560,12 +552,12 @@ export default function SystemHealth() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-300">
-                    آخر فحص:
+                    {t('systemHealth.lastCheck')}:
                   </span>
                   <span className="font-medium">
                     {overview?.last_check
                       ? new Date(overview.last_check).toLocaleString("ar")
-                      : "غير محدد"}
+                      : t('systemHealth.notSpecified')}
                   </span>
                 </div>
               </CardContent>
@@ -573,7 +565,7 @@ export default function SystemHealth() {
 
             <Card>
               <CardHeader>
-                <CardTitle>التوصيات</CardTitle>
+                <CardTitle>{t('systemHealth.recommendations')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -581,8 +573,7 @@ export default function SystemHealth() {
                     overview.critical_checks > 0 && (
                       <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
                         <p className="text-sm font-medium text-red-900 dark:text-red-100">
-                          ⚠️ يوجد {overview.critical_checks} فحص في حالة خطرة
-                          يحتاج انتباه فوري
+                          ⚠️ {t('systemHealth.criticalAlert', { count: overview.critical_checks })}
                         </p>
                       </div>
                     )}
@@ -590,7 +581,7 @@ export default function SystemHealth() {
                   {overview?.warning_checks && overview.warning_checks > 0 && (
                     <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
                       <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
-                        📋 يوجد {overview.warning_checks} فحص يحتاج مراجعة
+                        📋 {t('systemHealth.warningAlert', { count: overview.warning_checks })}
                       </p>
                     </div>
                   )}
@@ -598,7 +589,7 @@ export default function SystemHealth() {
                   {overview?.uptime_percent && overview.uptime_percent < 99 && (
                     <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
                       <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        💡 نسبة التشغيل يمكن تحسينها - راجع سجلات الأخطاء
+                        💡 {t('systemHealth.uptimeAlert')}
                       </p>
                     </div>
                   )}
@@ -606,7 +597,7 @@ export default function SystemHealth() {
                   {!overview?.critical_checks && !overview?.warning_checks && (
                     <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
                       <p className="text-sm font-medium text-green-900 dark:text-green-100">
-                        ✅ جميع الأنظمة تعمل بشكل طبيعي
+                        ✅ {t('systemHealth.excellentStatus')}
                       </p>
                     </div>
                   )}

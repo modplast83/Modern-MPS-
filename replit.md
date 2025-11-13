@@ -19,8 +19,8 @@ The system implements a **comprehensive multilingual interface** using **react-i
 - **Default Language**: Arabic (RTL) with automatic fallback
 - **Supported Languages**: Arabic (ar), English (en) - easily extensible to additional languages
 - **Translation Files**: 
-  - `client/src/i18n/locales/ar.json` (~1,800+ translation keys)
-  - `client/src/i18n/locales/en.json` (~1,800+ translation keys)
+  - `client/src/i18n/locales/ar.json` (~2,400+ translation keys)
+  - `client/src/i18n/locales/en.json` (~2,400+ translation keys)
 - **Configuration**: `client/src/i18n/config.ts` with i18next setup
 - **Language Switcher**: `client/src/components/LanguageSwitcher.tsx` in Header component
 
@@ -31,7 +31,7 @@ The system implements a **comprehensive multilingual interface** using **react-i
 - ✅ **Fallback System**: Graceful fallback to Arabic if translation key missing
 - ✅ **Type-Safe**: Full TypeScript integration with useTranslation() hook
 
-### Translation Coverage (85-90% Complete)
+### Translation Coverage (95-98% Complete)
 **Core System** (100%):
 - ✅ Sidebar navigation and Header
 - ✅ Dashboard (statistics, charts, recent activity)
@@ -56,12 +56,18 @@ The system implements a **comprehensive multilingual interface** using **react-i
 - ✅ Shared Components: NotificationCenter, ErrorBoundary, QueryErrorBoundary
 - ✅ Mobile Navigation and Interactive Charts
 
-**Utility Pages** (Partial):
-- ⏳ RollSearch, AlertsCenter, user-dashboard, VoiceAssistant (translation keys ready, implementation partial)
-- ⏳ WhatsApp setup pages and testing tools (low priority - can be deferred)
+**Utility Pages** (100%):
+- ✅ **System Health Monitoring**: SystemHealth.tsx (621 lines - comprehensive system diagnostics)
+- ✅ **Alerts Center**: AlertsCenter.tsx (652 lines - intelligent alert management)
+- ✅ **Roll Search**: RollSearch.tsx (advanced roll tracking and search)
+- ✅ **User Dashboard**: user-dashboard.tsx (1821 lines - attendance tracking with GPS verification)
+- ✅ **ML Analytics**: ml-analytics.tsx (machine learning analytics and predictions)
+- ✅ **Production Monitoring**: production-monitoring.tsx (real-time production monitoring)
+- ✅ **Not Found Page**: not-found.tsx (404 error page)
+- ⏳ VoiceAssistant, WhatsApp setup pages (low priority - deferred for future implementation)
 
 ### Translation Key Organization
-Translation keys are hierarchically organized by feature area:
+Translation keys are hierarchically organized by feature area (35+ categories):
 - `sidebar.*` - Navigation menu items
 - `header.*` - Header components and user menu
 - `common.*` - Shared UI elements (buttons, actions, status, units)
@@ -81,6 +87,13 @@ Translation keys are hierarchically organized by feature area:
 - `modals.*` - Dialog and modal content
 - `status.*` - Status labels and badges
 - `units.*` - Measurement units (kg, cm, %, etc.)
+- `systemHealth.*` - System monitoring and diagnostics
+- `alertsCenter.*` - Alert management and notifications
+- `rollSearch.*` - Roll search and tracking
+- `userDashboard.*` - User dashboard and attendance
+- `mlAnalytics.*` - Machine learning analytics
+- `productionMonitoring.*` - Production monitoring dashboard
+- `notFound.*` - 404 error page
 
 ### Usage Pattern
 ```typescript

@@ -58,6 +58,7 @@ import { useForm } from "react-hook-form";
 import { useToast } from "../hooks/use-toast";
 import { useAuth } from "../hooks/use-auth";
 import { formatNumber } from "../lib/formatNumber";
+import { useTranslation } from "react-i18next";
 
 // دالة حساب المسافة بين نقطتين جغرافيتين (Haversine formula)
 function calculateDistance(
@@ -129,6 +130,7 @@ interface UserRequest {
 }
 
 export default function UserDashboard() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -150,7 +152,7 @@ export default function UserDashboard() {
   // دالة لطلب الموقع الجغرافي
   const requestLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError("المتصفح لا يدعم تحديد الموقع الجغرافي");
+      setLocationError(t('userDashboard.browserNotSupported'));
       return;
     }
 
@@ -171,17 +173,17 @@ export default function UserDashboard() {
       },
       (error) => {
         setIsLoadingLocation(false);
-        let errorMessage = "لا يمكن الحصول على الموقع الحالي";
+        let errorMessage = t('userDashboard.locationError');
         
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = "تم رفض الإذن للوصول إلى الموقع. يرجى السماح بالوصول إلى الموقع من إعدادات المتصفح";
+            errorMessage = t('userDashboard.locationPermissionDenied');
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMessage = "معلومات الموقع غير متوفرة. تأكد من تفعيل خدمات الموقع في جهازك";
+            errorMessage = t('userDashboard.locationUnavailable');
             break;
           case error.TIMEOUT:
-            errorMessage = "انتهت مهلة طلب الموقع. يرجى المحاولة مرة أخرى";
+            errorMessage = t('userDashboard.locationTimeout');
             break;
         }
         
@@ -284,7 +286,7 @@ export default function UserDashboard() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "فشل في تسجيل الحضور");
+        throw new Error(errorData.message || t('userDashboard.attendanceError'));
       }
 
       return response.json();
@@ -294,11 +296,11 @@ export default function UserDashboard() {
       queryClient.invalidateQueries({
         queryKey: ["/api/attendance/daily-status", user?.id],
       });
-      toast({ title: "تم تسجيل الحضور بنجاح" });
+      toast({ title: t('userDashboard.attendanceRecorded') });
     },
     onError: (error: Error) => {
       toast({
-        title: "خطأ في التسجيل",
+        title: t('userDashboard.attendanceError'),
         description: error.message,
         variant: "destructive",
       });
@@ -460,7 +462,7 @@ export default function UserDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-requests"] });
-      toast({ title: "تم إرسال الطلب بنجاح" });
+      toast({ title: t('userDashboard.requestSubmitted') });
       requestForm.reset();
     },
   });
@@ -470,8 +472,8 @@ export default function UserDashboard() {
     // التحقق من وجود الموقع الحالي
     if (!currentLocation) {
       toast({
-        title: "خطأ في الموقع",
-        description: "يرجى السماح بالوصول إلى موقعك الجغرافي لتسجيل الحضور",
+        title: t('userDashboard.locationError'),
+        description: t('userDashboard.locationRequired'),
         variant: "destructive",
       });
       return;
@@ -480,8 +482,8 @@ export default function UserDashboard() {
     // انتظار تحميل المواقع
     if (isLoadingLocations) {
       toast({
-        title: "جاري التحميل",
-        description: "جاري تحميل مواقع المصانع، يرجى الانتظار...",
+        title: t('common.loading'),
+        description: t('userDashboard.loadingFactoryLocations'),
       });
       return;
     }
@@ -489,8 +491,8 @@ export default function UserDashboard() {
     // التحقق من وجود مواقع نشطة
     if (!activeLocations || activeLocations.length === 0) {
       toast({
-        title: "خطأ",
-        description: "لا توجد مواقع مصانع نشطة. يرجى التواصل مع الإدارة.",
+        title: t('common.error'),
+        description: t('userDashboard.noActiveFactoryLocations'),
         variant: "destructive",
       });
       return;
@@ -524,8 +526,12 @@ export default function UserDashboard() {
 
     if (!isWithinRange) {
       toast({
-        title: "خارج نطاق المصانع",
-        description: `أنت على بعد ${Math.round(closestDistance)} متر من أقرب موقع (${closestLocation?.name_ar}). يجب أن تكون داخل نطاق ${closestLocation?.allowed_radius} متر لتسجيل الحضور.`,
+        title: t('userDashboard.outsideRange'),
+        description: t('userDashboard.outsideRangeDescription', { 
+          distance: Math.round(closestDistance), 
+          locationName: closestLocation?.name_ar,
+          allowedRadius: closestLocation?.allowed_radius 
+        }),
         variant: "destructive",
       });
       return;
@@ -582,21 +588,21 @@ export default function UserDashboard() {
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                لوحة التحكم الشخصية
+                {t('userDashboard.title')}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
-                مرحباً {userData?.full_name || userData?.username}
+                {t('userDashboard.welcome', { name: userData?.full_name || userData?.username })}
               </p>
             </div>
 
             <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
-                <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
-                <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
-                <TabsTrigger value="attendance">الحضور</TabsTrigger>
-                <TabsTrigger value="violations">المخالفات</TabsTrigger>
-                <TabsTrigger value="requests">طلباتي</TabsTrigger>
-                <TabsTrigger value="location">الموقع</TabsTrigger>
+                <TabsTrigger value="overview">{t('userDashboard.overview')}</TabsTrigger>
+                <TabsTrigger value="profile">{t('userDashboard.profile')}</TabsTrigger>
+                <TabsTrigger value="attendance">{t('userDashboard.attendance')}</TabsTrigger>
+                <TabsTrigger value="violations">{t('userDashboard.violations')}</TabsTrigger>
+                <TabsTrigger value="requests">{t('userDashboard.requests')}</TabsTrigger>
+                <TabsTrigger value="location">{t('userDashboard.location')}</TabsTrigger>
               </TabsList>
 
               {/* Overview Tab */}
@@ -623,7 +629,7 @@ export default function UserDashboard() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-gray-600 dark:text-gray-300">
-                        الحالة الحالية
+                        {t('userDashboard.currentStatus')}
                       </p>
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
@@ -640,7 +646,7 @@ export default function UserDashboard() {
                                   : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
                         }`}
                       >
-                        {dailyAttendanceStatus?.currentStatus || "غائب"}
+                        {dailyAttendanceStatus?.currentStatus || t('hr.absent')}
                       </span>
                     </div>
                   </div>
@@ -650,7 +656,7 @@ export default function UserDashboard() {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        حالة الحضور اليوم
+                        {t('userDashboard.todayAttendanceStatus')}
                       </CardTitle>
                       <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -701,13 +707,13 @@ export default function UserDashboard() {
                                       (diff % (1000 * 60 * 60)) / (1000 * 60),
                                     );
 
-                                    return `${hours} ساعة ${minutes} دقيقة`;
+                                    return `${hours} ${t('userDashboard.hour')} ${minutes} ${t('userDashboard.minute')}`;
                                   })()}
                                 </span>
                               )}
                           </div>
                         ) : (
-                          <Badge variant="outline">لم يتم التسجيل</Badge>
+                          <Badge variant="outline">{t('userDashboard.notRegistered')}</Badge>
                         )}
                       </div>
                     </CardContent>
@@ -716,7 +722,7 @@ export default function UserDashboard() {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        عدد أيام الحضور
+                        {t('userDashboard.attendanceDaysCount')}
                       </CardTitle>
                       <Calendar className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -728,14 +734,14 @@ export default function UserDashboard() {
                           ).length || 0,
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">هذا الشهر</p>
+                      <p className="text-xs text-muted-foreground">{t('userDashboard.thisMonth')}</p>
                     </CardContent>
                   </Card>
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        المخالفات النشطة
+                        {t('userDashboard.activeViolations')}
                       </CardTitle>
                       <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -747,7 +753,7 @@ export default function UserDashboard() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        مخالفة معلقة
+                        {t('userDashboard.pendingViolation')}
                       </p>
                     </CardContent>
                   </Card>
@@ -755,7 +761,7 @@ export default function UserDashboard() {
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        الطلبات المعلقة
+                        {t('userDashboard.pendingRequests')}
                       </CardTitle>
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -767,7 +773,7 @@ export default function UserDashboard() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        في انتظار الرد
+                        {t('userDashboard.waitingForResponse')}
                       </p>
                     </CardContent>
                   </Card>
@@ -776,11 +782,11 @@ export default function UserDashboard() {
                 {/* Quick Actions */}
                 <Card>
                   <CardHeader>
-                    <CardTitle>عمليات الحضور السريعة</CardTitle>
+                    <CardTitle>{t('userDashboard.quickAttendanceActions')}</CardTitle>
                     <CardDescription>
-                      الحالة الحالية:{" "}
+                      {t('userDashboard.currentStatus')}:{" "}
                       {dailyAttendanceStatus?.currentStatus ||
-                        "لم يتم تسجيل الحضور"}
+                        t('userDashboard.notRegistered')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -796,8 +802,8 @@ export default function UserDashboard() {
                           }
                         >
                           {dailyAttendanceStatus?.hasCheckedIn
-                            ? "✓ تم الحضور"
-                            : "الحضور"}
+                            ? `✓ ${t('userDashboard.checkedIn')}`
+                            : t('userDashboard.checkIn')}
                         </Button>
                         <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
@@ -836,8 +842,8 @@ export default function UserDashboard() {
                           }
                         >
                           {dailyAttendanceStatus?.hasStartedLunch
-                            ? "✓ تم اخذ استراحة"
-                            : "بدء استراحة"}
+                            ? `✓ ${t('userDashboard.lunchStarted')}`
+                            : t('userDashboard.lunchBreakStart')}
                         </Button>
                         <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
@@ -878,8 +884,8 @@ export default function UserDashboard() {
                           }
                         >
                           {dailyAttendanceStatus?.hasEndedLunch
-                            ? "✓ تم انهاء الاستراحة"
-                            : "انهاء الاستراحة"}
+                            ? `✓ ${t('userDashboard.lunchEnded')}`
+                            : t('userDashboard.lunchBreakEnd')}
                         </Button>
                         <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
@@ -918,8 +924,8 @@ export default function UserDashboard() {
                           }
                         >
                           {dailyAttendanceStatus?.hasCheckedOut
-                            ? "✓ تم الانصراف"
-                            : "الانصراف"}
+                            ? `✓ ${t('userDashboard.checkedOut')}`
+                            : t('userDashboard.checkOut')}
                         </Button>
                         <div className="text-xs text-gray-500 mt-1 h-4 text-center">
                           {(() => {
@@ -949,7 +955,7 @@ export default function UserDashboard() {
 
                     {/* Status indicator with timestamps */}
                     <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <h4 className="font-semibold text-sm mb-2">سجل اليوم:</h4>
+                      <h4 className="font-semibold text-sm mb-2">{t('userDashboard.todayLog')}:</h4>
                       {attendanceRecords
                         ?.filter(
                           (record) =>
@@ -962,7 +968,7 @@ export default function UserDashboard() {
                             {record.check_in_time && (
                               <div className="flex items-center justify-between text-sm py-1">
                                 <span className="text-green-600">
-                                  ✓ تسجيل الحضور
+                                  ✓ {t('userDashboard.checkInRecorded')}
                                 </span>
                                 <span className="text-gray-600">
                                   {new Date(
@@ -978,7 +984,7 @@ export default function UserDashboard() {
                             {record.lunch_start_time && (
                               <div className="flex items-center justify-between text-sm py-1">
                                 <span className="text-yellow-600">
-                                  ✓ بداية الاستراحة
+                                  ✓ {t('userDashboard.breakStartRecorded')}
                                 </span>
                                 <span className="text-gray-600">
                                   {new Date(
@@ -994,7 +1000,7 @@ export default function UserDashboard() {
                             {record.lunch_end_time && (
                               <div className="flex items-center justify-between text-sm py-1">
                                 <span className="text-blue-600">
-                                  ✓ نهاية الاستراحة
+                                  ✓ {t('userDashboard.breakEndRecorded')}
                                 </span>
                                 <span className="text-gray-600">
                                   {new Date(
@@ -1010,7 +1016,7 @@ export default function UserDashboard() {
                             {record.check_out_time && (
                               <div className="flex items-center justify-between text-sm py-1">
                                 <span className="text-gray-600">
-                                  ✓ تسجيل الانصراف
+                                  ✓ {t('userDashboard.checkOutRecorded')}
                                 </span>
                                 <span className="text-gray-600">
                                   {new Date(
@@ -1030,18 +1036,18 @@ export default function UserDashboard() {
                       {dailyAttendanceStatus?.hasCheckedIn && (
                         <div className="mt-3 pt-3 border-t">
                           <h5 className="font-medium text-sm mb-2 text-blue-700 dark:text-blue-300">
-                            📊 ملخص ساعات العمل{" "}
-                            {dailyHours.isFriday ? "(يوم الجمعة)" : ""}:
+                            📊 {t('userDashboard.workHoursSummary')}{" "}
+                            {dailyHours.isFriday ? `(${t('userDashboard.friday')})` : ""}:
                           </h5>
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             {/* Working Hours */}
                             <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
                               <div className="flex items-center justify-between">
                                 <span className="text-green-700 dark:text-green-300">
-                                  ⏰ ساعات العمل
+                                  ⏰ {t('userDashboard.workingHours')}
                                 </span>
                                 <span className="font-medium text-green-800 dark:text-green-200">
-                                  {dailyHours.workingHours.toFixed(1)} ساعة
+                                  {dailyHours.workingHours.toFixed(1)} {t('userDashboard.hour')}
                                 </span>
                               </div>
                             </div>
@@ -1050,10 +1056,10 @@ export default function UserDashboard() {
                             <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
                               <div className="flex items-center justify-between">
                                 <span className="text-orange-700 dark:text-orange-300">
-                                  ⚡ ساعات إضافية
+                                  ⚡ {t('userDashboard.overtimeHours')}
                                 </span>
                                 <span className="font-medium text-orange-800 dark:text-orange-200">
-                                  {dailyHours.overtimeHours.toFixed(1)} ساعة
+                                  {dailyHours.overtimeHours.toFixed(1)} {t('userDashboard.hour')}
                                 </span>
                               </div>
                             </div>
@@ -1062,10 +1068,10 @@ export default function UserDashboard() {
                             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
                               <div className="flex items-center justify-between">
                                 <span className="text-yellow-700 dark:text-yellow-300">
-                                  ☕ وقت الاستراحة
+                                  ☕ {t('userDashboard.breakTime')}
                                 </span>
                                 <span className="font-medium text-yellow-800 dark:text-yellow-200">
-                                  {dailyHours.breakMinutes} دقيقة
+                                  {dailyHours.breakMinutes} {t('userDashboard.minute')}
                                 </span>
                               </div>
                             </div>
@@ -1075,10 +1081,10 @@ export default function UserDashboard() {
                               <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded">
                                 <div className="flex items-center justify-between">
                                   <span className="text-red-700 dark:text-red-300">
-                                    ⚠️ ساعات ناقصة
+                                    ⚠️ {t('userDashboard.deficitHours')}
                                   </span>
                                   <span className="font-medium text-red-800 dark:text-red-200">
-                                    {dailyHours.deficitHours.toFixed(1)} ساعة
+                                    {dailyHours.deficitHours.toFixed(1)} {t('userDashboard.hour')}
                                   </span>
                                 </div>
                               </div>
@@ -1088,7 +1094,7 @@ export default function UserDashboard() {
                           {/* Additional Info */}
                           <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
                             <div className="flex justify-between">
-                              <span>إجمالي الوقت:</span>
+                              <span>{t('userDashboard.totalTime')}:</span>
                               <span>
                                 {Math.floor(dailyHours.totalMinutes / 60)}:
                                 {(dailyHours.totalMinutes % 60)
@@ -1098,7 +1104,7 @@ export default function UserDashboard() {
                             </div>
                             {dailyHours.isFriday && (
                               <div className="text-orange-600 dark:text-orange-400 mt-1 font-medium">
-                                * يوم الجمعة - جميع الساعات تحسب إضافية
+                                * {t('userDashboard.fridayOvertimeNote')}
                               </div>
                             )}
                           </div>
@@ -1110,36 +1116,36 @@ export default function UserDashboard() {
                         {!dailyAttendanceStatus?.hasCheckedIn && (
                           <div className="flex items-center justify-between text-sm py-1">
                             <span className="text-gray-400">
-                              ⏳ تسجيل الحضور
+                              ⏳ {t('userDashboard.checkIn')}
                             </span>
-                            <span className="text-gray-400">لم يتم</span>
+                            <span className="text-gray-400">{t('userDashboard.notDone')}</span>
                           </div>
                         )}
                         {!dailyAttendanceStatus?.hasStartedLunch &&
                           dailyAttendanceStatus?.hasCheckedIn && (
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-gray-400">
-                                ⏳ بداية الاستراحة
+                                ⏳ {t('userDashboard.lunchBreakStart')}
                               </span>
-                              <span className="text-gray-400">لم يتم</span>
+                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                         {!dailyAttendanceStatus?.hasEndedLunch &&
                           dailyAttendanceStatus?.hasStartedLunch && (
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-gray-400">
-                                ⏳ نهاية الاستراحة
+                                ⏳ {t('userDashboard.lunchBreakEnd')}
                               </span>
-                              <span className="text-gray-400">لم يتم</span>
+                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                         {!dailyAttendanceStatus?.hasCheckedOut &&
                           dailyAttendanceStatus?.hasCheckedIn && (
                             <div className="flex items-center justify-between text-sm py-1">
                               <span className="text-gray-400">
-                                ⏳ تسجيل الانصراف
+                                ⏳ {t('userDashboard.checkOut')}
                               </span>
-                              <span className="text-gray-400">لم يتم</span>
+                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                       </div>
@@ -1157,9 +1163,9 @@ export default function UserDashboard() {
               <TabsContent value="attendance">
                 <Card>
                   <CardHeader>
-                    <CardTitle>سجل الحضور والانصراف التفصيلي</CardTitle>
+                    <CardTitle>{t('userDashboard.detailedAttendanceLog')}</CardTitle>
                     <CardDescription>
-                      عرض شامل لجميع تسجيلات الحضور مع الأوقات
+                      {t('userDashboard.comprehensiveAttendanceView')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -1200,7 +1206,7 @@ export default function UserDashboard() {
                             {record.check_in_time && (
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">
-                                  دخول
+                                  {t('userDashboard.checkInLabel')}
                                 </span>
                                 <span className="font-medium text-green-600">
                                   {new Date(
@@ -1217,7 +1223,7 @@ export default function UserDashboard() {
                             {record.lunch_start_time && (
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">
-                                  بداية استراحة
+                                  {t('userDashboard.breakStartLabel')}
                                 </span>
                                 <span className="font-medium text-yellow-600">
                                   {new Date(
@@ -1234,7 +1240,7 @@ export default function UserDashboard() {
                             {record.lunch_end_time && (
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">
-                                  نهاية استراحة
+                                  {t('userDashboard.breakEndLabel')}
                                 </span>
                                 <span className="font-medium text-blue-600">
                                   {new Date(
@@ -1251,7 +1257,7 @@ export default function UserDashboard() {
                             {record.check_out_time && (
                               <div className="flex flex-col">
                                 <span className="text-gray-500 text-xs">
-                                  خروج
+                                  {t('userDashboard.checkOutLabel')}
                                 </span>
                                 <span className="font-medium text-gray-600">
                                   {new Date(
@@ -1271,7 +1277,7 @@ export default function UserDashboard() {
                             <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                               <div className="flex justify-between items-center text-sm">
                                 <span className="text-gray-500">
-                                  إجمالي ساعات العمل:
+                                  {t('userDashboard.totalWorkHours')}:
                                 </span>
                                 <span className="font-medium text-blue-700 dark:text-blue-300">
                                   {(() => {
@@ -1289,7 +1295,7 @@ export default function UserDashboard() {
                                     const minutes = Math.floor(
                                       (diff % (1000 * 60 * 60)) / (1000 * 60),
                                     );
-                                    return `${hours} ساعة ${minutes} دقيقة`;
+                                    return `${hours} ${t('userDashboard.hour')} ${minutes} ${t('userDashboard.minute')}`;
                                   })()}
                                 </span>
                               </div>
@@ -1302,7 +1308,7 @@ export default function UserDashboard() {
                         attendanceRecords.length === 0) && (
                         <div className="text-center text-gray-500 py-8">
                           <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                          <p>لا توجد سجلات حضور مسجلة</p>
+                          <p>{t('userDashboard.noAttendanceRecords')}</p>
                         </div>
                       )}
                     </div>
@@ -1314,7 +1320,7 @@ export default function UserDashboard() {
               <TabsContent value="violations">
                 <Card>
                   <CardHeader>
-                    <CardTitle>المخالفات والجزاءات</CardTitle>
+                    <CardTitle>{t('userDashboard.violationsAndPenalties')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
@@ -1335,17 +1341,17 @@ export default function UserDashboard() {
                             {violation.description}
                           </p>
                           <p className="text-sm text-red-600 mb-2">
-                            <strong>الجزاء:</strong> {violation.penalty}
+                            <strong>{t('userDashboard.penalty')}:</strong> {violation.penalty}
                           </p>
                           <p className="text-xs text-gray-500">
-                            التاريخ:{" "}
+                            {t('common.date')}:{" "}
                             {new Date(violation.date).toLocaleDateString("ar")}
                           </p>
                         </div>
                       ))}
                       {(!violations || violations.length === 0) && (
                         <p className="text-center text-gray-500 py-8">
-                          لا توجد مخالفات مسجلة
+                          {t('userDashboard.noViolations')}
                         </p>
                       )}
                     </div>
@@ -1358,7 +1364,7 @@ export default function UserDashboard() {
                 <div className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>إرسال طلب جديد</CardTitle>
+                      <CardTitle>{t('userDashboard.submitNewRequest')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <Form {...requestForm}>
@@ -1373,25 +1379,25 @@ export default function UserDashboard() {
                             name="type"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>نوع الطلب</FormLabel>
+                                <FormLabel>{t('userDashboard.requestTypeLabel')}</FormLabel>
                                 <Select
                                   onValueChange={field.onChange}
                                   value={field.value || ""}
                                 >
                                   <FormControl>
                                     <SelectTrigger>
-                                      <SelectValue placeholder="اختر نوع الطلب" />
+                                      <SelectValue placeholder={t('userDashboard.selectRequestType')} />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="إجازة">
-                                      طلب إجازة
+                                      {t('userDashboard.leaveRequest')}
                                     </SelectItem>
                                     <SelectItem value="شكوى">
-                                      تقديم شكوى
+                                      {t('userDashboard.complaintRequest')}
                                     </SelectItem>
                                     <SelectItem value="طلب خاص">
-                                      طلب خاص
+                                      {t('userDashboard.specialRequest')}
                                     </SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -1404,10 +1410,10 @@ export default function UserDashboard() {
                             name="title"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>عنوان الطلب</FormLabel>
+                                <FormLabel>{t('userDashboard.requestTitleLabel')}</FormLabel>
                                 <FormControl>
                                   <Input
-                                    placeholder="أدخل عنوان الطلب"
+                                    placeholder={t('userDashboard.requestTitlePlaceholder')}
                                     {...field}
                                   />
                                 </FormControl>
@@ -1420,10 +1426,10 @@ export default function UserDashboard() {
                             name="description"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>تفاصيل الطلب</FormLabel>
+                                <FormLabel>{t('userDashboard.requestDescriptionLabel')}</FormLabel>
                                 <FormControl>
                                   <Textarea
-                                    placeholder="أدخل تفاصيل الطلب"
+                                    placeholder={t('userDashboard.requestDescriptionPlaceholder')}
                                     {...field}
                                   />
                                 </FormControl>
@@ -1436,8 +1442,8 @@ export default function UserDashboard() {
                             disabled={submitRequestMutation.isPending}
                           >
                             {submitRequestMutation.isPending
-                              ? "جاري الإرسال..."
-                              : "إرسال الطلب"}
+                              ? t('userDashboard.submitting')
+                              : t('userDashboard.submitRequest')}
                           </Button>
                         </form>
                       </Form>
@@ -1446,7 +1452,7 @@ export default function UserDashboard() {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>طلباتي السابقة</CardTitle>
+                      <CardTitle>{t('userDashboard.myPreviousRequests')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
@@ -1464,25 +1470,25 @@ export default function UserDashboard() {
                               </Badge>
                             </div>
                             <p className="text-sm text-gray-600 mb-2">
-                              <strong>النوع:</strong> {request.type}
+                              <strong>{t('common.type')}:</strong> {request.type}
                             </p>
                             <p className="text-gray-600 mb-2">
                               {request.description}
                             </p>
                             {request.response && (
                               <p className="text-sm text-blue-600 mb-2">
-                                <strong>الرد:</strong> {request.response}
+                                <strong>{t('userDashboard.requestResponse')}:</strong> {request.response}
                               </p>
                             )}
                             <p className="text-xs text-gray-500">
-                              التاريخ:{" "}
+                              {t('common.date')}:{" "}
                               {new Date(request.date).toLocaleDateString("ar")}
                             </p>
                           </div>
                         ))}
                         {(!userRequests || userRequests.length === 0) && (
                           <p className="text-center text-gray-500 py-8">
-                            لا توجد طلبات مرسلة
+                            {t('userDashboard.noRequests')}
                           </p>
                         )}
                       </div>
@@ -1495,9 +1501,9 @@ export default function UserDashboard() {
               <TabsContent value="location">
                 <Card>
                   <CardHeader>
-                    <CardTitle>الموقع الحالي</CardTitle>
+                    <CardTitle>{t('userDashboard.currentLocation')}</CardTitle>
                     <CardDescription>
-                      تحديد موقعك الحالي لتسجيل الحضور
+                      {t('userDashboard.determineLocationForAttendance')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -1507,10 +1513,10 @@ export default function UserDashboard() {
                           <MapPin className="h-12 w-12 text-blue-500 mx-auto mb-4" />
                         </div>
                         <p className="text-gray-600 dark:text-gray-400">
-                          جاري تحديد موقعك الحالي...
+                          {t('userDashboard.requestingLocation')}
                         </p>
                         <p className="text-sm text-gray-500 mt-2">
-                          يرجى السماح بالوصول إلى الموقع من المتصفح
+                          {t('userDashboard.allowLocation')}
                         </p>
                       </div>
                     ) : currentLocation ? (
@@ -1520,7 +1526,7 @@ export default function UserDashboard() {
                           <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                             <MapPin className="h-5 w-5" />
                             <span className="font-medium">
-                              تم تحديد الموقع بنجاح
+                              {t('userDashboard.locationReceived')}
                             </span>
                           </div>
                           <Button
@@ -1530,7 +1536,7 @@ export default function UserDashboard() {
                             disabled={isLoadingLocation}
                             data-testid="button-refresh-location-top"
                           >
-                            {isLoadingLocation ? "جاري التحديث..." : "تحديث الموقع"}
+                            {isLoadingLocation ? t('common.loading') : t('userDashboard.retryLocation')}
                           </Button>
                         </div>
 
@@ -1538,13 +1544,13 @@ export default function UserDashboard() {
                         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg space-y-3">
                           <h3 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
-                            معلومات GPS التفصيلية
+                            {t('userDashboard.detailedGPSInfo')}
                           </h3>
                           
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {/* Latitude */}
                             <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">خط العرض (Latitude)</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.latitude')}</p>
                               <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {currentLocation.lat.toFixed(8)}°
                               </p>
@@ -1552,7 +1558,7 @@ export default function UserDashboard() {
 
                             {/* Longitude */}
                             <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">خط الطول (Longitude)</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.longitude')}</p>
                               <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {currentLocation.lng.toFixed(8)}°
                               </p>
@@ -1560,26 +1566,26 @@ export default function UserDashboard() {
 
                             {/* Accuracy */}
                             <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">دقة GPS</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.gpsAccuracy')}</p>
                               <div className="flex items-center gap-2">
                                 <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
                                   {currentLocation.accuracy 
-                                    ? `±${Math.round(currentLocation.accuracy)} متر`
-                                    : "غير متاح"}
+                                    ? `±${Math.round(currentLocation.accuracy)} ${t('userDashboard.meters')}`
+                                    : t('common.notSpecified')}
                                 </p>
                                 {currentLocation.accuracy && currentLocation.accuracy > 100 && (
                                   <Badge variant="destructive" className="text-xs">
-                                    دقة منخفضة
+                                    {t('userDashboard.lowAccuracy')}
                                   </Badge>
                                 )}
                                 {currentLocation.accuracy && currentLocation.accuracy <= 20 && (
                                   <Badge className="bg-green-500 text-xs">
-                                    دقة عالية
+                                    {t('userDashboard.highAccuracy')}
                                   </Badge>
                                 )}
                                 {currentLocation.accuracy && currentLocation.accuracy > 20 && currentLocation.accuracy <= 100 && (
                                   <Badge variant="secondary" className="text-xs">
-                                    دقة متوسطة
+                                    {t('userDashboard.mediumAccuracy')}
                                   </Badge>
                                 )}
                               </div>
@@ -1587,7 +1593,7 @@ export default function UserDashboard() {
 
                             {/* Timestamp */}
                             <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">آخر تحديث</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.lastUpdate')}</p>
                               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 {currentLocation.timestamp 
                                   ? new Date(currentLocation.timestamp).toLocaleTimeString("ar-SA", {
@@ -1595,7 +1601,7 @@ export default function UserDashboard() {
                                       minute: "2-digit",
                                       second: "2-digit",
                                     })
-                                  : "غير متاح"}
+                                  : t('common.notSpecified')}
                               </p>
                             </div>
                           </div>
@@ -1604,8 +1610,7 @@ export default function UserDashboard() {
                           {currentLocation.accuracy && currentLocation.accuracy > 100 && (
                             <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded">
                               <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                                ⚠️ <strong>تحذير:</strong> دقة GPS منخفضة ({Math.round(currentLocation.accuracy)} متر). 
-                                حاول الانتقال إلى مكان مفتوح أو بالقرب من نافذة للحصول على قراءة أدق.
+                                ⚠️ <strong>{t('common.warning')}:</strong> {t('userDashboard.lowGPSAccuracyWarning', { accuracy: Math.round(currentLocation.accuracy) })}
                               </p>
                             </div>
                           )}
@@ -1616,10 +1621,10 @@ export default function UserDashboard() {
                           <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                             <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                               <h4 className="font-semibold text-gray-900 dark:text-gray-100">
-                                المسافة من مواقع المصانع
+                                {t('userDashboard.factoryLocationsDistance')}
                               </h4>
                               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                يتم حساب المسافات باستخدام معادلة Haversine
+                                {t('userDashboard.haversineCalculation')}
                               </p>
                             </div>
                             
@@ -1628,19 +1633,19 @@ export default function UserDashboard() {
                                 <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
                                   <tr>
                                     <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      اسم الموقع
+                                      {t('userDashboard.locationName')}
                                     </th>
                                     <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      النطاق المسموح
+                                      {t('userDashboard.allowedRange')}
                                     </th>
                                     <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      المسافة الفعلية
+                                      {t('userDashboard.actualDistance')}
                                     </th>
                                     <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      الفرق
+                                      {t('userDashboard.difference')}
                                     </th>
                                     <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
-                                      الحالة
+                                      {t('common.status')}
                                     </th>
                                   </tr>
                                 </thead>
@@ -1694,11 +1699,11 @@ export default function UserDashboard() {
                                         <td className="px-4 py-3 text-center">
                                           {isInRange ? (
                                             <Badge className="bg-green-500">
-                                              ✓ ضمن النطاق
+                                              ✓ {t('userDashboard.withinRange')}
                                             </Badge>
                                           ) : (
                                             <Badge variant="destructive">
-                                              ✗ خارج النطاق
+                                              ✗ {t('userDashboard.outsideRange')}
                                             </Badge>
                                           )}
                                         </td>
@@ -1738,14 +1743,14 @@ export default function UserDashboard() {
                                 return (
                                   <div className="text-sm">
                                     <p className="text-gray-700 dark:text-gray-300">
-                                      <strong>أقرب موقع:</strong> {closestLocation?.location.name_ar || closestLocation?.location.name} 
+                                      <strong>{t('userDashboard.closestLocation')}:</strong> {closestLocation?.location.name_ar || closestLocation?.location.name} 
                                       <span className="font-mono text-xs mr-2">
-                                        ({formatNumber(Math.round(closestLocation?.distance || 0))} متر)
+                                        ({formatNumber(Math.round(closestLocation?.distance || 0))} {t('userDashboard.meters')})
                                       </span>
                                     </p>
                                     {!isAnyInRange && closestLocation && (
                                       <p className="text-red-600 dark:text-red-400 text-xs mt-1">
-                                        ⚠️ أنت خارج نطاق جميع المواقع. تحتاج للاقتراب {formatNumber(Math.round(closestLocation.distance - closestLocation.location.allowed_radius))} متر إضافي.
+                                        ⚠️ {t('userDashboard.outsideAllLocations', { distance: formatNumber(Math.round(closestLocation.distance - closestLocation.location.allowed_radius)) })}
                                       </p>
                                     )}
                                   </div>
@@ -1766,15 +1771,15 @@ export default function UserDashboard() {
                             data-testid="button-checkin-location"
                           >
                             {dailyAttendanceStatus?.hasCheckedIn 
-                              ? "✓ تم تسجيل الحضور" 
-                              : "تسجيل الحضور"}
+                              ? `✓ ${t('userDashboard.checkedIn')}` 
+                              : t('userDashboard.checkIn')}
                           </Button>
                           <Button
                             onClick={requestLocation}
                             variant="outline"
                             data-testid="button-refresh-location"
                           >
-                            تحديث الموقع
+                            {t('userDashboard.retryLocation')}
                           </Button>
                         </div>
                       </div>
@@ -1782,15 +1787,15 @@ export default function UserDashboard() {
                       <div className="text-center py-8">
                         <MapPin className="h-12 w-12 text-red-400 mx-auto mb-4" />
                         <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
-                          {locationError || "لا يمكن الحصول على الموقع الحالي"}
+                          {locationError || t('userDashboard.locationError')}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                          للسماح بالوصول إلى الموقع:
+                          {t('userDashboard.allowLocationInstructions')}:
                         </p>
                         <ul className="text-xs text-gray-600 dark:text-gray-400 text-right mb-4 space-y-1">
-                          <li>• انقر على أيقونة القفل بجانب عنوان الموقع</li>
-                          <li>• اختر "السماح" للموقع الجغرافي</li>
-                          <li>• أعد تحميل الصفحة أو اضغط على زر "إعادة المحاولة"</li>
+                          <li>• {t('userDashboard.locationInstruction1')}</li>
+                          <li>• {t('userDashboard.locationInstruction2')}</li>
+                          <li>• {t('userDashboard.locationInstruction3')}</li>
                         </ul>
                         <Button
                           onClick={requestLocation}
@@ -1798,7 +1803,7 @@ export default function UserDashboard() {
                           className="mt-2"
                           data-testid="button-retry-location"
                         >
-                          إعادة المحاولة
+                          {t('userDashboard.retryLocation')}
                         </Button>
                       </div>
                     )}
