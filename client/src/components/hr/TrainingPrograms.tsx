@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -42,6 +43,7 @@ interface TrainingEnrollment {
 }
 
 export default function TrainingPrograms() {
+  const { t } = useTranslation();
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
 
   const { data: programs = [], isLoading: programsLoading } = useQuery<
@@ -102,7 +104,7 @@ export default function TrainingPrograms() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return "مكتمل";
+        return t('hr.completed', 'مكتمل');
       case "in_progress":
         return "قيد التنفيذ";
       case "not_started":
@@ -132,7 +134,7 @@ export default function TrainingPrograms() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            جاري تحميل البرامج التدريبية...
+            جاري تحميل ال{t('hr.trainingPrograms', 'برامج التدريب')}ية...
           </p>
         </div>
       </div>
@@ -148,7 +150,7 @@ export default function TrainingPrograms() {
             منصة التدريب الإلكتروني
           </h2>
           <p className="text-gray-600 dark:text-gray-300">
-            إدارة البرامج التدريبية وتتبع تقدم الموظفين
+            إدارة ال{t('hr.trainingPrograms', 'برامج التدريب')}ية وتتبع تقدم الموظفين
           </p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -164,7 +166,7 @@ export default function TrainingPrograms() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  إجمالي البرامج
+                  {t('hr.totalPrograms', 'إجمالي البرامج')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(programs.length)}
@@ -180,7 +182,7 @@ export default function TrainingPrograms() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  البرامج النشطة
+                  {t('hr.activePrograms', 'البرامج النشطة')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(programs.filter((p) => p.is_active).length)}
@@ -251,7 +253,7 @@ export default function TrainingPrograms() {
                   </Badge>
                 </div>
                 <Badge variant={program.is_active ? "default" : "secondary"}>
-                  {program.is_active ? "نشط" : "معطل"}
+                  {program.is_active ? t('common.active', 'نشط') : "معطل"}
                 </Badge>
               </div>
             </CardHeader>
@@ -299,7 +301,7 @@ export default function TrainingPrograms() {
                   className="flex-1"
                   onClick={() => setSelectedProgram(program.id)}
                 >
-                  عرض التفاصيل
+                  {t('common.viewDetails', 'عرض التفاصيل')}
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1">
                   تسجيل موظف
@@ -316,7 +318,7 @@ export default function TrainingPrograms() {
           <CardContent className="p-12 text-center">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              لا توجد برامج تدريبية
+              {t('hr.noTrainingPrograms', 'لا توجد برامج تدريبية')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               ابدأ بإنشاء برنامج تدريبي جديد لتطوير مهارات فريقك

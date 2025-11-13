@@ -1673,7 +1673,15 @@
     "loginSuccessful": "تم تسجيل الدخول بنجاح",
     "loginFailed": "خطأ في تسجيل الدخول",
     "connectionError": "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.",
-    "unexpectedError": "حدث خطأ غير متوقع"
+    "unexpectedError": "حدث خطأ غير متوقع",
+    "unauthorized": "غير مصرح",
+    "noPermission": "ليس لديك الصلاحيات اللازمة للوصول لهذه الصفحة",
+    "currentUser": "المستخدم الحالي:",
+    "role": "الدور:",
+    "notSpecified": "غير محدد",
+    "returnHome": "العودة للصفحة الرئيسية",
+    "logoutAndSwitch": "تسجيل الخروج وتغيير المستخدم",
+    "copyrightText": "جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ"
   },
   "status": {
     "waiting": "انتظار",

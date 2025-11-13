@@ -21,23 +21,25 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Factory } from "lucide-react";
-
-const loginSchema = z.object({
-  username: z
-    .string()
-    .min(1, "اسم المستخدم مطلوب")
-    .min(3, "اسم المستخدم يجب أن يكون 3 أحرف على الأقل"),
-  password: z
-    .string()
-    .min(1, "كلمة المرور مطلوبة")
-    .min(6, "كلمة المرور يجب أن تكون 6 أحرف على الأقل"),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+import { useTranslation } from "react-i18next";
 
 export default function Login() {
+  const { t } = useTranslation();
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
+
+  const loginSchema = z.object({
+    username: z
+      .string()
+      .min(1, t("login.usernameRequired"))
+      .min(3, t("login.usernameMinLength")),
+    password: z
+      .string()
+      .min(1, t("login.passwordRequired"))
+      .min(6, t("login.passwordMinLength")),
+  });
+
+  type LoginFormValues = z.infer<typeof loginSchema>;
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,27 +53,25 @@ export default function Login() {
     try {
       await login(values.username, values.password);
       toast({
-        title: "مرحباً بك",
-        description: "تم تسجيل الدخول بنجاح",
+        title: t("login.welcome"),
+        description: t("login.loginSuccessful"),
       });
     } catch (error) {
-      let errorMessage = "حدث خطأ غير متوقع";
+      let errorMessage = t("login.unexpectedError");
 
       if (error instanceof Error) {
         errorMessage = error.message;
       }
 
-      // If it's a network error, provide helpful message
       if (
         errorMessage.includes("Network error") ||
         errorMessage.includes("Failed to fetch")
       ) {
-        errorMessage =
-          "تعذر الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.";
+        errorMessage = t("login.connectionError");
       }
 
       toast({
-        title: "خطأ في تسجيل الدخول",
+        title: t("login.loginFailed"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -85,9 +85,9 @@ export default function Login() {
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
             <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
           </div>
-          <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
+          <CardTitle className="text-2xl font-bold">{t("login.title")}</CardTitle>
           <p className="text-muted-foreground">
-            نظام إدارة مصنع الأكياس البلاستيكية
+            {t("login.subtitle")}
           </p>
         </CardHeader>
         <CardContent>
@@ -98,10 +98,10 @@ export default function Login() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>اسم المستخدم</FormLabel>
+                    <FormLabel>{t("login.username")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="أدخل اسم المستخدم"
+                        placeholder={t("login.enterUsername")}
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-username"
@@ -118,11 +118,11 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>كلمة المرور</FormLabel>
+                    <FormLabel>{t("login.password")}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="أدخل كلمة المرور"
+                        placeholder={t("login.enterPassword")}
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-password"
@@ -140,7 +140,7 @@ export default function Login() {
                 disabled={isLoading}
                 data-testid="button-login"
               >
-                {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                {isLoading ? t("login.loggingIn") : t("login.login")}
               </Button>
             </form>
           </Form>
@@ -151,7 +151,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                أو
+                {t("login.or")}
               </span>
             </div>
           </div>
@@ -172,13 +172,13 @@ export default function Login() {
               >
                 <path d="M2 2v20h20V2H2zm18 18H4V4h16v16z"/>
               </svg>
-              تسجيل الدخول باستخدام Replit
+              {t("login.loginWithReplit")}
             </Button>
           </div>
 
           <div className="mt-6 pt-6 border-t">
             <p className="text-xs text-muted-foreground text-center">
-              جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ
+              {t("login.copyrightText")}
             </p>
           </div>
         </CardContent>

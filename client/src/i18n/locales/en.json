@@ -1458,7 +1458,15 @@
     "loginSuccessful": "Logged in successfully",
     "loginFailed": "Login error",
     "connectionError": "Unable to connect to server. Please check your internet connection and try again.",
-    "unexpectedError": "An unexpected error occurred"
+    "unexpectedError": "An unexpected error occurred",
+    "unauthorized": "Unauthorized",
+    "noPermission": "You do not have the necessary permissions to access this page",
+    "currentUser": "Current User:",
+    "role": "Role:",
+    "notSpecified": "Not specified",
+    "returnHome": "Return to Home",
+    "logoutAndSwitch": "Logout and Switch User",
+    "copyrightText": "All rights reserved to AbuKhalid - Developer and Implementer"
   },
   "status": {
     "waiting": "Waiting",
