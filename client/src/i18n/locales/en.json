@@ -17,11 +17,16 @@
     "settings": "Settings"
   },
   "header": {
+    "title": "MPBF Next",
+    "subtitle": "Plastic Bag Manufacturing Management System",
+    "aiAssistant": "AI Assistant",
+    "logoAlt": "Plastic Bag Factory Logo",
     "searchPlaceholder": "Search...",
     "notifications": "Notifications",
     "profile": "Profile",
     "logout": "Logout",
-    "language": "Language"
+    "language": "Language",
+    "user": "User"
   },
   "common": {
     "save": "Save",

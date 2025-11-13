@@ -18,18 +18,20 @@ export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
   useEffect(() => {
-    const currentLang = languages.find(lang => lang.code === i18n.language);
+    const normalizedLang = i18n.language.split('-')[0];
+    const currentLang = languages.find(lang => lang.code === normalizedLang);
     const direction = currentLang?.dir || 'rtl';
     
     document.documentElement.dir = direction;
-    document.documentElement.lang = i18n.language;
+    document.documentElement.lang = normalizedLang;
   }, [i18n.language]);
 
   const changeLanguage = (langCode: string) => {
     i18n.changeLanguage(langCode);
   };
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const normalizedCurrentLang = i18n.language.split('-')[0];
+  const currentLanguage = languages.find(lang => lang.code === normalizedCurrentLang) || languages[0];
 
   return (
     <DropdownMenu>
@@ -49,7 +51,7 @@ export function LanguageSwitcher() {
           <DropdownMenuItem
             key={lang.code}
             onClick={() => changeLanguage(lang.code)}
-            className={i18n.language === lang.code ? 'bg-accent' : ''}
+            className={normalizedCurrentLang === lang.code ? 'bg-accent' : ''}
             data-testid={`language-option-${lang.code}`}
           >
             {lang.name}

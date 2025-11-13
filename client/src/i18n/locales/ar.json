@@ -17,11 +17,16 @@
     "settings": "الإعدادات"
   },
   "header": {
+    "title": "MPBF Next",
+    "subtitle": "نظام إدارة مصنع الأكياس البلاستيكية",
+    "aiAssistant": "المساعد الذكي",
+    "logoAlt": "شعار مصنع الأكياس البلاستيكية",
     "searchPlaceholder": "بحث...",
     "notifications": "الإشعارات",
     "profile": "الملف الشخصي",
     "logout": "تسجيل الخروج",
-    "language": "اللغة"
+    "language": "اللغة",
+    "user": "مستخدم"
   },
   "common": {
     "save": "حفظ",

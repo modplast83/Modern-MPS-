@@ -6,10 +6,29 @@ This project is an advanced AI-powered order management system for plastic bag m
 
 ## User Preferences
 
-- Language: Arabic (RTL) with English fallback
+- Language: Arabic (RTL) as primary development language with multilingual support
 - Error handling: User-friendly messages in Arabic
 - Logging: Comprehensive server-side logging for debugging
 - Code style: Consistent TypeScript with proper type safety
+
+## Internationalization (i18n)
+
+The system implements a robust multilingual interface using **react-i18next**:
+
+- **Default Language**: Arabic (RTL)
+- **Supported Languages**: Arabic, English (easily extensible to other languages)
+- **Key Features**:
+  - Automatic RTL/LTR layout switching based on selected language
+  - Language preference persistence in localStorage
+  - Browser language detection with fallback to Arabic
+  - Regional code normalization (e.g., "en-US" → "en")
+  - Language switcher component in the header
+- **Implementation**:
+  - Translation files: `client/src/i18n/locales/ar.json` and `client/src/i18n/locales/en.json`
+  - Configuration: `client/src/i18n/config.ts`
+  - Usage: Components use `useTranslation()` hook and `t()` function for translations
+- **Structure**: Translation keys are organized by component/section (e.g., `sidebar.*`, `header.*`, `common.*`)
+- **Future Development**: When adding new features, always add translations to both ar.json and en.json to maintain consistency
 
 ## System Architecture
 
