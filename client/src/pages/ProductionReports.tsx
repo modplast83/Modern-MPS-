@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { format, subDays } from "date-fns";
 import {
   FileDown,
@@ -52,6 +53,7 @@ import { useToast } from "../hooks/use-toast";
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function ProductionReports() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [filters, setFilters] = useState({
     dateFrom: format(subDays(new Date(), 30), "yyyy-MM-dd"),
@@ -130,53 +132,53 @@ export default function ProductionReports() {
       // Summary sheet
       if (summary?.data) {
         const summaryData = [
-          ["إجمالي الطلبات", summary.data.totalOrders],
-          ["أوامر نشطة", summary.data.activeOrders],
-          ["أوامر مكتملة", summary.data.completedOrders],
-          ["الرولات المنتجة", summary.data.totalRolls],
-          ["الوزن الكلي (كجم)", summary.data.totalWeight],
-          ["متوسط وقت الإنتاج (ساعة)", summary.data.avgProductionTime?.toFixed(2)],
-          ["نسبة الهدر %", summary.data.wastePercentage?.toFixed(2)],
-          ["معدل الإنجاز %", summary.data.completionRate?.toFixed(2)],
+          [t('reports.totalOrders'), summary.data.totalOrders],
+          [t('production.activeOrdersCount'), summary.data.activeOrders],
+          [t('production.completedOrdersCount'), summary.data.completedOrders],
+          [t('reports.rollsProduced'), summary.data.totalRolls],
+          [t('reports.totalWeight') + ' (' + t('warehouse.kg') + ')', summary.data.totalWeight],
+          [t('reports.avgProductionTime') + ' (' + t('reports.hours') + ')', summary.data.avgProductionTime?.toFixed(2)],
+          [t('reports.wastePercentage') + ' %', summary.data.wastePercentage?.toFixed(2)],
+          [t('reports.completionRate') + ' %', summary.data.completionRate?.toFixed(2)],
         ];
         const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(workbook, summarySheet, "الملخص");
+        XLSX.utils.book_append_sheet(workbook, summarySheet, t('reports.summary'));
       }
 
       // Production by date sheet
       if (productionByDate?.data) {
         const dateSheet = XLSX.utils.json_to_sheet(productionByDate.data);
-        XLSX.utils.book_append_sheet(workbook, dateSheet, "الإنتاج اليومي");
+        XLSX.utils.book_append_sheet(workbook, dateSheet, t('reports.dailyProduction'));
       }
 
       // Production by product sheet
       if (productionByProduct?.data) {
         const productSheet = XLSX.utils.json_to_sheet(productionByProduct.data);
-        XLSX.utils.book_append_sheet(workbook, productSheet, "الإنتاج حسب المنتج");
+        XLSX.utils.book_append_sheet(workbook, productSheet, t('reports.productionByProduct'));
       }
 
       // Machine performance sheet
       if (machinePerformance?.data) {
         const machineSheet = XLSX.utils.json_to_sheet(machinePerformance.data);
-        XLSX.utils.book_append_sheet(workbook, machineSheet, "أداء المكائن");
+        XLSX.utils.book_append_sheet(workbook, machineSheet, t('reports.machinePerformance'));
       }
 
       // Operator performance sheet
       if (operatorPerformance?.data) {
         const operatorSheet = XLSX.utils.json_to_sheet(operatorPerformance.data);
-        XLSX.utils.book_append_sheet(workbook, operatorSheet, "أداء العمال");
+        XLSX.utils.book_append_sheet(workbook, operatorSheet, t('reports.operatorPerformance'));
       }
 
-      XLSX.writeFile(workbook, `تقرير_الإنتاج_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      XLSX.writeFile(workbook, `${t('reports.productionReport')}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
       toast({
-        title: "تم التصدير بنجاح",
-        description: "تم تصدير التقرير إلى ملف Excel",
+        title: t("toast.exportSuccess"),
+        description: t("toast.exportSuccessDesc"),
       });
     } catch (error) {
       console.error("Export error:", error);
       toast({
-        title: "خطأ في التصدير",
-        description: "حدث خطأ أثناء تصدير التقرير",
+        title: t("toast.exportError"),
+        description: t("toast.exportErrorDesc"),
         variant: "destructive",
       });
     }
@@ -201,17 +203,17 @@ export default function ProductionReports() {
     <div className="container mx-auto p-6 space-y-6 max-w-7xl">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold" data-testid="text-page-title">تقارير الإنتاج الشاملة</h1>
-          <p className="text-muted-foreground">تحليل شامل لأداء الإنتاج مع رسوم بيانية تفاعلية</p>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">{t("reports.comprehensiveProductionReports")}</h1>
+          <p className="text-muted-foreground">{t("reports.comprehensiveAnalysisDesc")}</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
-            تصدير Excel
+            {t('reports.exportToExcel')}
           </Button>
           <Button onClick={exportToPDF} variant="outline" data-testid="button-export-pdf">
             <FileText className="mr-2 h-4 w-4" />
-            طباعة PDF
+            {t('reports.exportToPDF')}
           </Button>
         </div>
       </div>
@@ -219,13 +221,13 @@ export default function ProductionReports() {
       {/* Filters Section */}
       <Card>
         <CardHeader>
-          <CardTitle>فلاتر التقرير</CardTitle>
-          <CardDescription>اختر المعايير لتخصيص التقرير</CardDescription>
+          <CardTitle>{t('reports.reportFilters')}</CardTitle>
+          <CardDescription>{t('reports.selectCriteriaDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="dateFrom">من تاريخ</Label>
+              <Label htmlFor="dateFrom">{t('reports.startDate')}</Label>
               <Input
                 id="dateFrom"
                 type="date"
@@ -236,7 +238,7 @@ export default function ProductionReports() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dateTo">إلى تاريخ</Label>
+              <Label htmlFor="dateTo">{t('reports.endDate')}</Label>
               <Input
                 id="dateTo"
                 type="date"

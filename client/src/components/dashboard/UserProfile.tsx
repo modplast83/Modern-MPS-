@@ -33,8 +33,10 @@ import {
   Phone,
   Globe,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 export default function UserProfile() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -123,14 +125,14 @@ export default function UserProfile() {
         queryKey: ["/api/settings/user", user?.id],
       });
       toast({
-        title: "تم حفظ الإعدادات بنجاح",
-        description: "تم حفظ تفضيلاتك الشخصية",
+        title: t('userProfile.settingsSaved'),
+        description: t('userProfile.preferencesUpdated'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في حفظ الإعدادات",
-        description: "حدث خطأ أثناء حفظ إعداداتك",
+        title: t('userProfile.settingsSaveError'),
+        description: t('userProfile.settingsSaveErrorDesc'),
         variant: "destructive",
       });
     },
@@ -146,21 +148,21 @@ export default function UserProfile() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="w-5 h-5" />
-            الملف الشخصي
+            {t('dashboard.userProfile')}
           </CardTitle>
           <CardDescription>
-            قم بتحديث معلوماتك الشخصية وتفضيلاتك
+            {t('userProfile.updateInfo')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Personal Information */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">المعلومات الشخصية</h4>
+            <h4 className="text-sm font-medium">{t('userProfile.personalInfo')}</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="displayName" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  الاسم المعروض
+                  {t('userProfile.displayName')}
                 </Label>
                 <Input
                   id="displayName"
@@ -177,7 +179,7 @@ export default function UserProfile() {
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  البريد الإلكتروني
+                  {t('userProfile.email')}
                 </Label>
                 <Input
                   id="email"
@@ -195,7 +197,7 @@ export default function UserProfile() {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  رقم الهاتف
+                  {t('userProfile.phone')}
                 </Label>
                 <Input
                   id="phone"
@@ -213,7 +215,7 @@ export default function UserProfile() {
               <div className="space-y-2">
                 <Label htmlFor="language" className="flex items-center gap-2">
                   <Globe className="w-4 h-4" />
-                  اللغة المفضلة
+                  {t('userProfile.preferredLanguage')}
                 </Label>
                 <Select
                   value={userSettings.language ?? "ar"}
@@ -240,7 +242,7 @@ export default function UserProfile() {
 
           {/* Appearance Settings */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">المظهر</h4>
+            <h4 className="text-sm font-medium">{t('userProfile.appearance')}</h4>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {userSettings.theme === "light" ? (
@@ -248,7 +250,7 @@ export default function UserProfile() {
                 ) : (
                   <Moon className="w-4 h-4" />
                 )}
-                <Label>الوضع الداكن</Label>
+                <Label>{t('userProfile.darkMode')}</Label>
               </div>
               <Switch
                 checked={userSettings.theme === "dark"}
@@ -264,7 +266,7 @@ export default function UserProfile() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Monitor className="w-4 h-4" />
-                <Label>العرض المدمج</Label>
+                <Label>{t('userProfile.compactView')}</Label>
               </div>
               <Switch
                 checked={userSettings.dashboard.compactView}
@@ -286,12 +288,12 @@ export default function UserProfile() {
 
           {/* Dashboard Settings */}
           <div className="space-y-4">
-            <h4 className="text-sm font-medium">إعدادات لوحة التحكم</h4>
+            <h4 className="text-sm font-medium">{t('userProfile.dashboardSettings')}</h4>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base">التحديث التلقائي</Label>
+                <Label className="text-base">{t('userProfile.autoRefresh')}</Label>
                 <p className="text-sm text-muted-foreground">
-                  تحديث البيانات تلقائياً
+                  {t('userProfile.autoRefreshDesc')}
                 </p>
               </div>
               <Switch
@@ -312,7 +314,7 @@ export default function UserProfile() {
             {userSettings.dashboard.autoRefresh && (
               <div className="space-y-2">
                 <Label htmlFor="refreshInterval">
-                  فترة التحديث (بالثواني)
+                  {t('userProfile.refreshInterval')}
                 </Label>
                 <Select
                   value={(
@@ -332,10 +334,10 @@ export default function UserProfile() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 ثانية</SelectItem>
-                    <SelectItem value="30">30 ثانية</SelectItem>
-                    <SelectItem value="60">دقيقة واحدة</SelectItem>
-                    <SelectItem value="300">5 دقائق</SelectItem>
+                    <SelectItem value="15">{t('userProfile.seconds', { count: 15 })}</SelectItem>
+                    <SelectItem value="30">{t('userProfile.seconds', { count: 30 })}</SelectItem>
+                    <SelectItem value="60">{t('userProfile.oneMinute')}</SelectItem>
+                    <SelectItem value="300">{t('userProfile.minutes', { count: 5 })}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -353,7 +355,7 @@ export default function UserProfile() {
               ) : (
                 <Save className="w-4 h-4 mr-2" />
               )}
-              حفظ التغييرات
+              {t('userProfile.saveChanges')}
             </Button>
           </div>
         </CardContent>

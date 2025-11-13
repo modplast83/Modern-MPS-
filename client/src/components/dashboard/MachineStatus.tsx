@@ -17,12 +17,14 @@ import {
   Gauge,
   Plus,
 } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface MachineStatusProps {
   onCreateRoll: () => void;
 }
 
 export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
+  const { t } = useTranslation();
   const { data: machines = [], isLoading } = useQuery({
     queryKey: ["/api/machines"],
   });
@@ -45,13 +47,13 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
   const getStatusText = (status: string) => {
     switch (status) {
       case "operational":
-        return "يعمل";
+        return t('machineStatus.operational');
       case "maintenance":
-        return "صيانة";
+        return t('machineStatus.maintenance');
       case "down":
-        return "متوقف";
+        return t('machineStatus.down');
       case "idle":
-        return "خامل";
+        return t('machineStatus.idle');
       default:
         return status;
     }
@@ -86,7 +88,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            حالة المكائن
+            {t('dashboard.machineStatus')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -126,27 +128,27 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            حالة المكائن
+            {t('dashboard.machineStatus')}
           </CardTitle>
           <Button size="sm" onClick={onCreateRoll}>
             <Plus className="w-4 h-4 mr-1" />
-            رول جديد
+            {t('machineStatus.newRoll')}
           </Button>
         </div>
 
         {/* Summary badges */}
         <div className="flex gap-2 mt-3">
           <Badge variant="default" className="bg-green-100 text-green-800">
-            {formatNumber(operationalMachines)} يعمل
+            {formatNumber(operationalMachines)} {t('machineStatus.operational')}
           </Badge>
           {maintenanceMachines > 0 && (
             <Badge variant="default" className="bg-yellow-100 text-yellow-800">
-              {formatNumber(maintenanceMachines)} صيانة
+              {formatNumber(maintenanceMachines)} {t('machineStatus.maintenance')}
             </Badge>
           )}
           {downMachines > 0 && (
             <Badge variant="destructive">
-              {formatNumber(downMachines)} متوقف
+              {formatNumber(downMachines)} {t('machineStatus.down')}
             </Badge>
           )}
         </div>
@@ -187,7 +189,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                           {machine.section_id && (
                             <div className="flex items-center gap-1">
                               <Activity className="w-3 h-3" />
-                              <span>قسم: {machine.section_id}</span>
+                              <span>{t('machineStatus.section')}: {machine.section_id}</span>
                             </div>
                           )}
                         </div>
@@ -197,10 +199,10 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                     {machine.production_rate && (
                       <div className="text-right">
                         <div className="text-sm font-medium text-gray-900">
-                          {machine.production_rate}/ساعة
+                          {machine.production_rate}/{t('machineStatus.perHour')}
                         </div>
                         <div className="text-xs text-gray-500">
-                          معدل الإنتاج
+                          {t('machineStatus.productionRate')}
                         </div>
                       </div>
                     )}
@@ -213,7 +215,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-1">
                           <Gauge className="w-3 h-3 text-blue-500" />
-                          <span>الكفاءة</span>
+                          <span>{t('machineStatus.efficiency')}</span>
                         </div>
                         <span className="font-medium">
                           {formatPercentage(
@@ -259,7 +261,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                               machine.speed ||
                                 Math.floor(Math.random() * 500 + 1000),
                             )}{" "}
-                            م/د
+                            {t('machineStatus.speedUnit')}
                           </span>
                         </div>
                       </div>
@@ -271,7 +273,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                     <div className="text-xs text-gray-600 bg-yellow-50 p-2 rounded">
                       <div className="flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3 text-yellow-600" />
-                        <span>صيانة مجدولة - متوقع الانتهاء خلال ساعتين</span>
+                        <span>{t('machineStatus.scheduledMaintenance')}</span>
                       </div>
                     </div>
                   )}
@@ -281,7 +283,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
                     <div className="text-xs text-gray-600 bg-red-50 p-2 rounded">
                       <div className="flex items-center gap-1">
                         <XCircle className="w-3 h-3 text-red-600" />
-                        <span>عطل - يتطلب تدخل فني</span>
+                        <span>{t('machineStatus.requiresTechnicalIntervention')}</span>
                       </div>
                     </div>
                   )}
@@ -291,9 +293,9 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
           ) : (
             <div className="p-8 text-center">
               <Settings className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 mb-2">لا توجد مكائن مسجلة</p>
+              <p className="text-gray-600 mb-2">{t('machineStatus.noMachines')}</p>
               <p className="text-sm text-gray-500">
-                أضف مكائن من صفحة التعريفات
+                {t('machineStatus.addMachinesFromDefinitions')}
               </p>
             </div>
           )}
