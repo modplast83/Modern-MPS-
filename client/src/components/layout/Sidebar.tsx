@@ -21,112 +21,98 @@ import {
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
 import { canAccessRoute } from "../../utils/roleUtils";
+import { useTranslation } from 'react-i18next';
 
 const modules = [
   {
-    name: "الرئيسية",
-    name_ar: "الرئيسية",
+    translationKey: "sidebar.home",
     icon: Home,
     path: "/",
     active: false,
   },
   {
-    name: "لوحة التحكم",
-    name_ar: "لوحة التحكم",
+    translationKey: "sidebar.dashboard",
     icon: LayoutDashboard,
     path: "/user-dashboard",
     active: false,
   },
   {
-    name: "الطلبات والإنتاج",
-    name_ar: "الطلبات والإنتاج",
+    translationKey: "sidebar.ordersProduction",
     icon: FileText,
     path: "/orders",
     active: false,
   },
   {
-    name: "لوحة عامل الفيلم",
-    name_ar: "لوحة عامل الفيلم",
+    translationKey: "sidebar.filmOperator",
     icon: Film,
     path: "/film-operator",
     active: false,
-    requiredSections: [3], // SEC03 - قسم الفيلم/البثق
+    requiredSections: [3],
   },
   {
-    name: "لوحة عامل الطباعة",
-    name_ar: "لوحة عامل الطباعة",
+    translationKey: "sidebar.printingOperator",
     icon: Printer,
     path: "/printing-operator",
     active: false,
-    requiredSections: [4], // مخصص لعاملي قسم الطباعة
+    requiredSections: [4],
   },
   {
-    name: "لوحة عامل التقطيع",
-    name_ar: "لوحة عامل التقطيع",
+    translationKey: "sidebar.cuttingOperator",
     icon: Scissors,
     path: "/cutting-operator",
     active: false,
-    requiredSections: [5], // مخصص لعاملي قسم التقطيع
+    requiredSections: [5],
   },
   {
-    name: "مراقبة الإنتاج",
-    name_ar: "مراقبة الإنتاج",
+    translationKey: "sidebar.productionMonitoring",
     icon: Monitor,
     path: "/production-monitoring",
     active: false,
   },
   {
-    name: "الجودة",
-    name_ar: "الجودة",
+    translationKey: "sidebar.quality",
     icon: ClipboardCheck,
     path: "/quality",
     active: false,
   },
   {
-    name: "الصيانة",
-    name_ar: "الصيانة",
+    translationKey: "sidebar.maintenance",
     icon: Wrench,
     path: "/maintenance",
     active: false,
   },
   {
-    name: "الموارد البشرية",
-    name_ar: "الموارد البشرية",
+    translationKey: "sidebar.hr",
     icon: Users,
     path: "/hr",
     active: false,
   },
   {
-    name: "المستودع",
-    name_ar: "المستودع",
+    translationKey: "sidebar.warehouse",
     icon: Warehouse,
     path: "/warehouse",
     active: false,
   },
   {
-    name: "التعريفات",
-    name_ar: "التعريفات",
+    translationKey: "sidebar.definitions",
     icon: Database,
     path: "/definitions",
     active: false,
   },
   {
-    name: "التقارير",
-    name_ar: "التقارير",
+    translationKey: "sidebar.reports",
     icon: BarChart3,
     path: "/reports",
     active: false,
   },
   {
-      name: "الأدوات",
-      name_ar: "الأدوات",
-      icon: Wrench,
-      path: "/tools",
-      active: false,
-    },
+    translationKey: "sidebar.tools",
+    icon: Wrench,
+    path: "/tools",
+    active: false,
+  },
   {
-    name: "الإعدادات",
-    name_ar: "الإعدادات",
+    translationKey: "sidebar.settings",
     icon: Settings,
     path: "/settings",
     active: false,
@@ -136,6 +122,7 @@ const modules = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Filter modules based on user permissions and sections
   const accessibleModules = modules.filter(module => {
@@ -169,14 +156,14 @@ export default function Sidebar() {
             const isActive = location === module.path;
 
             return (
-              <Link key={module.name} href={module.path}>
+              <Link key={module.translationKey} href={module.path}>
                 <div
                   className={isActive ? "nav-item nav-item-active" : "nav-item"}
                 >
                   <div className="w-full">
                     <div className="flex items-center space-x-3 space-x-reverse">
                       <Icon className="h-5 w-5" />
-                      <span className="font-medium">{module.name_ar}</span>
+                      <span className="font-medium">{t(module.translationKey)}</span>
                     </div>
                   </div>
                 </div>
