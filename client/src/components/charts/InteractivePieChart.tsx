@@ -7,6 +7,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { useTranslation } from "react-i18next";
 
 interface InteractivePieChartProps {
   data: any[];
@@ -37,7 +38,7 @@ const COLORS = [
   "#6b7280", // gray
 ];
 
-const CustomTooltip = ({ active, payload, formatValue }: any) => {
+const CustomTooltip = ({ active, payload, formatValue, t }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
@@ -47,11 +48,11 @@ const CustomTooltip = ({ active, payload, formatValue }: any) => {
       >
         <p className="font-medium text-gray-900">{data.name}</p>
         <p className="text-sm" style={{ color: data.fill }}>
-          {`القيمة: ${formatValue ? formatValue(data.value) : data.value}`}
+          {`${t('charts.value')}: ${formatValue ? formatValue(data.value) : data.value}`}
         </p>
         {data.payload.percentage && (
           <p className="text-sm text-gray-600">
-            {`النسبة: ${data.payload.percentage.toFixed(1)}%`}
+            {`${t('charts.percentage')}: ${data.payload.percentage.toFixed(1)}%`}
           </p>
         )}
       </div>
@@ -106,6 +107,8 @@ export function InteractivePieChart({
   innerRadius = 0,
   outerRadius = 80,
 }: InteractivePieChartProps) {
+  const { t } = useTranslation();
+  
   // Calculate percentages
   const total = data.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
   const dataWithPercentages = data.map((item) => ({
@@ -153,7 +156,7 @@ export function InteractivePieChart({
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip formatValue={formatValue} />} />
+            <Tooltip content={<CustomTooltip formatValue={formatValue} t={t} />} />
             {showLegend && (
               <Legend
                 verticalAlign="bottom"

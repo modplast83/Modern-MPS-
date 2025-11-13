@@ -89,7 +89,7 @@ export default function PerformanceReviews() {
       case "completed":
         return t('hr.completed', 'مكتمل');
       case "in_progress":
-        return t('hr.inReview', '{t('hr.inReview', 'قيد المراجعة')}');
+        return t('hr.inReview', 'قيد المراجعة');
       case "draft":
         return t('status.draft', 'مسودة');
       case "approved":
@@ -206,7 +206,7 @@ export default function PerformanceReviews() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('hr.totalReviews', 'إجمالي {t('hr.rating', 'التقييم')}ات')}
+                  {t('hr.totalReviews', 'إجمالي التقييمات')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(reviews.length)}
@@ -240,7 +240,7 @@ export default function PerformanceReviews() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('hr.completedReviews', '{t('hr.rating', 'التقييم')}ات المكتملة')}
+                  {t('hr.completedReviews', 'التقييمات المكتملة')}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(
@@ -280,7 +280,7 @@ export default function PerformanceReviews() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Star className="w-5 h-5" />
-            {t('hr.activePerformanceCriteria', 'معايير {t('hr.rating', 'التقييم')} النشطة')}
+            {t('hr.activePerformanceCriteria', 'معايير التقييم النشطة')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -318,7 +318,7 @@ export default function PerformanceReviews() {
                 {t('hr.noCriteriaDefined', 'لا توجد معايير تقييم محددة')}
               </p>
               <Button variant="outline" className="mt-2">
-                {t('hr.addPerformanceCriteria', 'إضافة معايير {t('hr.rating', 'التقييم')}')}
+                {t('hr.addPerformanceCriteria', 'إضافة معايير التقييم')}
               </Button>
             </div>
           )}
@@ -350,7 +350,7 @@ export default function PerformanceReviews() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-gray-600 dark:text-gray-400">
-                    {t('hr.reviewPeriod', 'فترة {t('hr.rating', 'التقييم')}')}
+                    {t('hr.reviewPeriod', 'فترة التقييم')}
                   </p>
                   <p className="font-medium">
                     {new Date(review.review_period_start).toLocaleDateString(
@@ -431,11 +431,11 @@ export default function PerformanceReviews() {
               {t('hr.noPerformanceReviews', 'لا توجد تقييمات أداء')}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">
-              ابدأ ب{t('hr.createReview', 'إنشاء تقييم')} أداء جديد لتتبع أداء فريقك
+              {t('hr.startByCreatingReview', 'ابدأ بإنشاء تقييم أداء جديد لتتبع أداء فريقك')}
             </p>
             <Button className="bg-green-600 hover:bg-green-700 text-white">
               <Plus className="w-4 h-4 ml-2" />
-              {t('hr.createReview', 'إنشاء تقييم')} جديد
+              {t('hr.createNewReview', 'إنشاء تقييم جديد')}
             </Button>
           </CardContent>
         </Card>
