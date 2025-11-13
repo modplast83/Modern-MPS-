@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../hooks/use-auth";
@@ -15,13 +16,13 @@ import { Skeleton } from "../components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Search, ClipboardCheck, Link2, BarChart3, Package } from "lucide-react";
 
-// استيراد كسول للصفحات
 const RollSearch = lazy(() => import("./RollSearch"));
 const ProductionOrdersManagement = lazy(() => import("./ProductionOrdersManagement"));
 const ProductionQueues = lazy(() => import("./ProductionQueues"));
 const ProductionReports = lazy(() => import("./ProductionReports"));
 
 export default function Orders() {
+  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   
   // الحصول على tab من query parameters
@@ -86,7 +87,7 @@ export default function Orders() {
     queryKey: ["/api/orders"],
     queryFn: async () => {
       const response = await fetch("/api/orders");
-      if (!response.ok) throw new Error("فشل في جلب الطلبات");
+      if (!response.ok) throw new Error(t("toast.fetchOrdersError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -98,7 +99,7 @@ export default function Orders() {
     queryKey: ["/api/production-orders"],
     queryFn: async () => {
       const response = await fetch("/api/production-orders");
-      if (!response.ok) throw new Error("فشل في جلب أوامر الإنتاج");
+      if (!response.ok) throw new Error(t("toast.fetchProductionOrdersError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -110,7 +111,7 @@ export default function Orders() {
     queryKey: ["/api/customers"],
     queryFn: async () => {
       const response = await fetch("/api/customers");
-      if (!response.ok) throw new Error("فشل في جلب العملاء");
+      if (!response.ok) throw new Error(t("toast.fetchCustomersError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -122,7 +123,7 @@ export default function Orders() {
     queryKey: ["/api/customer-products"],
     queryFn: async () => {
       const response = await fetch("/api/customer-products");
-      if (!response.ok) throw new Error("فشل في جلب منتجات العملاء");
+      if (!response.ok) throw new Error(t("toast.fetchCustomerProductsError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -134,7 +135,7 @@ export default function Orders() {
     queryKey: ["/api/users"],
     queryFn: async () => {
       const response = await fetch("/api/users");
-      if (!response.ok) throw new Error("فشل في جلب المستخدمين");
+      if (!response.ok) throw new Error(t("toast.fetchUsersError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -146,7 +147,7 @@ export default function Orders() {
     queryKey: ["/api/items"],
     queryFn: async () => {
       const response = await fetch("/api/items");
-      if (!response.ok) throw new Error("فشل في جلب العناصر");
+      if (!response.ok) throw new Error(t("toast.fetchItemsError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -158,7 +159,7 @@ export default function Orders() {
     queryKey: ["/api/categories"],
     queryFn: async () => {
       const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error("فشل في جلب الفئات");
+      if (!response.ok) throw new Error(t("toast.fetchCategoriesError"));
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -240,8 +241,8 @@ export default function Orders() {
       // Check if user is authenticated
       if (!user?.id) {
         toast({
-          title: "خطأ",
-          description: "يجب تسجيل الدخول لإنشاء طلب",
+          title: t("common.error"),
+          description: t("production.loginFirst"),
           variant: "destructive",
         });
         return;
@@ -328,8 +329,8 @@ export default function Orders() {
         setEditingOrder(null);
 
         toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث الطلب ${editingOrder.order_number} بنجاح`,
+          title: t("toast.orderUpdated"),
+          description: `${t("toast.orderUpdatedSuccess")} ${editingOrder.order_number}`,
         });
         return;
       }
@@ -337,8 +338,8 @@ export default function Orders() {
       // Creating new order - check if at least one production order is added
       if (productionOrdersData.length === 0) {
         toast({
-          title: "تحذير",
-          description: "يجب إضافة أمر إنتاج واحد على الأقل",
+          title: t("common.error"),
+          description: t("toast.atLeastOneProductionOrder"),
           variant: "destructive",
         });
         return;
@@ -355,9 +356,8 @@ export default function Orders() {
 
       if (invalidOrders.length > 0) {
         toast({
-          title: "خطأ في البيانات",
-          description:
-            "يرجى التأكد من اكتمال جميع أوامر الإنتاج (اختيار المنتج وإدخال الكمية)",
+          title: t("common.error"),
+          description: t("toast.completeAllProductionOrders"),
           variant: "destructive",
         });
         return;
@@ -465,19 +465,18 @@ export default function Orders() {
       setEditingOrder(null);
 
       toast({
-        title: "تم الحفظ بنجاح",
-        description: `تم إنشاء الطلب ${orderNumber} بنجاح مع ${validProductionOrders.length} أمر إنتاج`,
+        title: t("toast.orderCreated"),
+        description: `${t("toast.orderCreatedSuccess")} ${orderNumber} ${t("common.with")} ${validProductionOrders.length} ${t("production.productionOrders")}`,
       });
     } catch (error) {
-      console.error("خطأ في حفظ الطلب:", error);
+      console.error("Error saving order:", error);
       toast({
-        title: "خطأ",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "فشل في حفظ البيانات",
+          error instanceof Error ? error.message : t("toast.saveOrderFailed"),
         variant: "destructive",
       });
     } finally {
-      // إعادة تعيين حالة isCreatingOrder بغض النظر عن النجاح أو الفشل
       setIsCreatingOrder(false);
     }
   };
@@ -491,8 +490,8 @@ export default function Orders() {
   const handleEditOrder = (order: any) => {
     if (!isAdmin) {
       toast({
-        title: "غير مخول",
-        description: "صلاحيات المدير مطلوبة لتعديل الطلبات",
+        title: t("toast.unauthorized"),
+        description: t("toast.adminPermissionsRequired"),
         variant: "destructive",
       });
       return;
@@ -504,8 +503,8 @@ export default function Orders() {
   const handleDeleteOrder = async (order: any) => {
     if (!isAdmin) {
       toast({
-        title: "غير مخول",
-        description: "صلاحيات المدير مطلوبة لحذف الطلبات",
+        title: t("toast.unauthorized"),
+        description: t("toast.adminPermissionsRequired"),
         variant: "destructive",
       });
       return;
@@ -513,7 +512,7 @@ export default function Orders() {
 
     if (
       !confirm(
-        `هل أنت متأكد من حذف الطلب ${order.order_number}؟ هذا الإجراء لا يمكن التراجع عنه.`,
+        `${t("orders.confirmDelete")} ${order.order_number}؟ ${t("orders.deleteWarning")}`,
       )
     ) {
       return;
@@ -538,14 +537,14 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
 
       toast({
-        title: "تم الحذف بنجاح",
-        description: `تم حذف الطلب ${order.order_number}`,
+        title: t("toast.orderDeleted"),
+        description: `${t("toast.orderDeletedSuccess")} ${order.order_number}`,
       });
     } catch (error) {
       toast({
-        title: "خطأ",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "فشل في حذف الطلب",
+          error instanceof Error ? error.message : t("toast.deleteOrderFailed"),
         variant: "destructive",
       });
     }
@@ -575,14 +574,14 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
 
       toast({
-        title: "تم التحديث بنجاح",
-        description: `تم تحديث حالة الطلب ${order.order_number}`,
+        title: t("toast.orderUpdated"),
+        description: `${t("toast.orderStatusUpdated")} ${order.order_number}`,
       });
     } catch (error) {
       toast({
-        title: "خطأ",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "فشل في تحديث حالة الطلب",
+          error instanceof Error ? error.message : t("toast.updateOrderStatusFailed"),
         variant: "destructive",
       });
     }
@@ -592,8 +591,8 @@ export default function Orders() {
   const handleBulkDelete = async (orderIds: number[]) => {
     if (!isAdmin) {
       toast({
-        title: "غير مخول",
-        description: "صلاحيات المدير مطلوبة لحذف الطلبات",
+        title: t("toast.unauthorized"),
+        description: t("toast.adminPermissionsRequired"),
         variant: "destructive",
       });
       return;
@@ -616,14 +615,14 @@ export default function Orders() {
 
       if (failures.length > 0) {
         toast({
-          title: "تحذير",
-          description: `فشل حذف ${failures.length} من ${orderIds.length} طلب`,
+          title: t("common.error"),
+          description: `${t("toast.bulkDeleteFailed")} ${failures.length} ${t("common.of")} ${orderIds.length}`,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "تم الحذف بنجاح",
-          description: `تم حذف ${orderIds.length} طلب بنجاح`,
+          title: t("toast.orderDeleted"),
+          description: `${t("toast.bulkDeleteSuccess")} ${orderIds.length}`,
         });
       }
 
@@ -636,9 +635,9 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     } catch (error) {
       toast({
-        title: "خطأ",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "فشل في الحذف الجماعي",
+          error instanceof Error ? error.message : t("toast.bulkDeleteFailed"),
         variant: "destructive",
       });
     }
@@ -669,14 +668,14 @@ export default function Orders() {
 
       if (failures.length > 0) {
         toast({
-          title: "تحذير",
-          description: `فشل تحديث ${failures.length} من ${orderIds.length} طلب`,
+          title: t("common.error"),
+          description: `${t("toast.bulkUpdateFailed")} ${failures.length} ${t("common.of")} ${orderIds.length}`,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "تم التحديث بنجاح",
-          description: `تم تحديث حالة ${orderIds.length} طلب بنجاح`,
+          title: t("toast.orderUpdated"),
+          description: `${t("toast.bulkUpdateSuccess")} ${orderIds.length}`,
         });
       }
 
@@ -689,9 +688,9 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     } catch (error) {
       toast({
-        title: "خطأ",
+        title: t("common.error"),
         description:
-          error instanceof Error ? error.message : "فشل في التحديث الجماعي",
+          error instanceof Error ? error.message : t("toast.bulkUpdateFailed"),
         variant: "destructive",
       });
     }
@@ -715,14 +714,13 @@ export default function Orders() {
         <div className="flex">
           <Sidebar />
           <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="text-center">جاري التحميل...</div>
+            <div className="text-center">{t("common.loading")}</div>
           </main>
         </div>
       </div>
     );
   }
 
-  // Loading fallback للصفحات الكسولة
   const LoadingFallback = () => (
     <div className="space-y-4 p-6">
       <Skeleton className="h-12 w-full" />
@@ -741,43 +739,42 @@ export default function Orders() {
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الطلبات والإنتاج
+              {t("orders.title")}
             </h1>
             <p className="text-gray-600">
-              إنشاء ومتابعة الطلبات وأوامر الإنتاج والطوابير والتقارير
+              {t("orders.subtitle")}
             </p>
             {isAdmin && (
               <div className="mt-2 text-sm text-green-600 font-medium">
-                ✓ لديك صلاحيات المدير - يمكنك تعديل وحذف الطلبات
+                ✓ {t("orders.adminPermissions")}
               </div>
             )}
           </div>
 
-          {/* التبويبات الرئيسية */}
           <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
             <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
               <TabsTrigger value="orders" data-testid="tab-orders">
-                الطلبات
+                {t("sidebar.orders")}
               </TabsTrigger>
               <TabsTrigger value="production-orders" data-testid="tab-production-orders">
                 <ClipboardCheck className="h-4 w-4 ml-2" />
-                <span>أوامر الإنتاج</span>
+                <span>{t("sidebar.productionOrders")}</span>
               </TabsTrigger>
               <TabsTrigger value="rolls" data-testid="tab-rolls">
                 <Package className="h-4 w-4 ml-2" />
-                <span>الرولات</span>
+                <span>{t("orders.rolls")}</span>
               </TabsTrigger>
               <TabsTrigger value="production-queues" data-testid="tab-production-queues">
                 <Link2 className="h-4 w-4 ml-2" />
-                <span>طوابير الإنتاج</span>
+                <span>{t("sidebar.productionQueues")}</span>
               </TabsTrigger>
               <TabsTrigger value="roll-search" data-testid="tab-roll-search">
                 <Search className="h-4 w-4 ml-2" />
-                <span>البحث عن الرولات</span>
+                <span>{t("sidebar.rollSearch")}</span>
               </TabsTrigger>
               <TabsTrigger value="production-reports" data-testid="tab-production-reports">
                 <BarChart3 className="h-4 w-4 ml-2" />
-                <span>تقارير الإنتاج</span>
+                <span>{t("sidebar.productionReports")}</span>
               </TabsTrigger>
             </TabsList>
 

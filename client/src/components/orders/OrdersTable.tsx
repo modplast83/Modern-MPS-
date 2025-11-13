@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -59,6 +60,8 @@ export default function OrdersTable({
   onOrderSelect,
   onSelectAll,
 }: OrdersTableProps) {
+  const { t } = useTranslation();
+  
   // Check if all orders are selected
   const allOrdersSelected =
     orders.length > 0 &&
@@ -80,69 +83,69 @@ export default function OrdersTable({
 
   const getStatusBadge = (status: string) => {
     const statusMap: {
-      [key: string]: { label: string; variant: any; color: string };
+      [key: string]: { labelKey: string; variant: any; color: string };
     } = {
       waiting: {
-        label: "انتظار",
+        labelKey: "production.waiting",
         variant: "secondary",
         color: "bg-yellow-100 text-yellow-800",
       },
       pending: {
-        label: "معلق",
+        labelKey: "production.pending",
         variant: "secondary",
         color: "bg-yellow-100 text-yellow-800",
       },
       in_production: {
-        label: "قيد الإنتاج",
+        labelKey: "production.inProduction",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
       for_production: {
-        label: "للإنتاج",
+        labelKey: "production.forProduction",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
       paused: {
-        label: "معلق",
+        labelKey: "production.paused",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
       on_hold: {
-        label: "إيقاف مؤقت",
+        labelKey: "production.onHold",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
       completed: {
-        label: "مكتمل",
+        labelKey: "production.completed",
         variant: "default",
         color: "bg-green-100 text-green-800",
       },
       received: {
-        label: "مستلم",
+        labelKey: "production.received",
         variant: "default",
         color: "bg-purple-100 text-purple-800",
       },
       delivered: {
-        label: "تم التوصيل",
+        labelKey: "production.delivered",
         variant: "default",
         color: "bg-gray-100 text-gray-800",
       },
       cancelled: {
-        label: "ملغي",
+        labelKey: "production.cancelled",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
     };
 
     const statusInfo = statusMap[status] || {
-      label: status,
+      labelKey: null,
       variant: "outline",
       color: "bg-gray-100 text-gray-800",
     };
 
     return (
       <Badge className={statusInfo.color} data-testid={`status-${status}`}>
-        {statusInfo.label}
+        {statusInfo.labelKey ? t(statusInfo.labelKey) : status}
       </Badge>
     );
   };
@@ -187,15 +190,15 @@ export default function OrdersTable({
               />
             </TableHead>
           )}
-          <TableHead className="text-right">رقم الطلب</TableHead>
-          <TableHead className="text-right">العميل</TableHead>
-          <TableHead className="text-right">تاريخ الإنشاء</TableHead>
-          <TableHead className="text-right">المنشئ</TableHead>
-          <TableHead className="text-right">التسليم</TableHead>
-          <TableHead className="text-right">نسبة الإكمال</TableHead>
-          <TableHead className="text-right">ملاحظات</TableHead>
-          <TableHead className="text-center">الحالة</TableHead>
-          <TableHead className="text-center w-10 md:w-14">الإجراءات</TableHead>
+          <TableHead className="text-right">{t("orders.orderNumber")}</TableHead>
+          <TableHead className="text-right">{t("orders.customer")}</TableHead>
+          <TableHead className="text-right">{t("orders.createdAt")}</TableHead>
+          <TableHead className="text-right">{t("orders.creator")}</TableHead>
+          <TableHead className="text-right">{t("orders.delivery")}</TableHead>
+          <TableHead className="text-right">{t("orders.completionRate")}</TableHead>
+          <TableHead className="text-right">{t("orders.notes")}</TableHead>
+          <TableHead className="text-center">{t("orders.status")}</TableHead>
+          <TableHead className="text-center w-10 md:w-14">{t("orders.actions")}</TableHead>
           
         </TableRow>
       </TableHeader>
@@ -310,20 +313,20 @@ export default function OrdersTable({
                       <div className="font-medium">
                         {daysRemaining > 0 ? (
                           <span className="text-green-600">
-                            {daysRemaining} يوم متبقي
+                            {daysRemaining} {t("orders.day")} {t("orders.daysRemaining")}
                           </span>
                         ) : daysRemaining === 0 ? (
                           <span className="text-orange-600">
-                            يجب التسليم اليوم
+                            {t("orders.deliverToday")}
                           </span>
                         ) : (
                           <span className="text-red-600">
-                            متأخر {Math.abs(daysRemaining)} يوم
+                            {t("orders.late")} {Math.abs(daysRemaining)} {t("orders.day")}
                           </span>
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        التسليم: {format(deliveryDate, "dd/MM/yyyy")}
+                        {t("orders.deliveryDate")}: {format(deliveryDate, "dd/MM/yyyy")}
                       </div>
                     </>
                   ) : (
@@ -355,7 +358,7 @@ export default function OrdersTable({
                     size="sm"
                     className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1"
                     onClick={() => onViewOrder(order)}
-                    title="عرض"
+                    title={t("common.view")}
                     data-testid={`button-view-${order.id}`}
                   >
                     <Eye className="h-4 w-4" />
@@ -365,7 +368,7 @@ export default function OrdersTable({
                     size="sm"
                     className="text-green-600 border-green-600 hover:bg-green-50 p-1"
                     onClick={() => onPrintOrder(order)}
-                    title="طباعة"
+                    title={t("common.print")}
                     data-testid={`button-print-${order.id}`}
                   >
                     <FileText className="h-4 w-4" />
@@ -376,7 +379,7 @@ export default function OrdersTable({
                       size="sm"
                       className="text-purple-600 border-purple-600 hover:bg-purple-50 p-1"
                       onClick={() => onEditOrder(order)}
-                      title="تعديل"
+                      title={t("common.edit")}
                       data-testid={`button-edit-${order.id}`}
                     >
                       <Edit className="h-4 w-4" />
@@ -388,7 +391,7 @@ export default function OrdersTable({
                         variant="outline"
                         size="sm"
                         className="text-orange-600 border-orange-600 hover:bg-orange-50 p-1"
-                        title="تغيير الحالة"
+                        title={t("orders.changeStatus")}
                         data-testid={`button-status-${order.id}`}
                       >
                         <RefreshCw className="h-3 w-3" />
@@ -400,7 +403,7 @@ export default function OrdersTable({
                       >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                          إلى الإنتاج
+                          {t("production.forProduction")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -408,7 +411,7 @@ export default function OrdersTable({
                       >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                          إيقاف مؤقت
+                          {t("production.onHold")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -416,7 +419,7 @@ export default function OrdersTable({
                       >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                          في الانتظار
+                          {t("production.pending")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
@@ -424,7 +427,7 @@ export default function OrdersTable({
                       >
                         <div className="flex items-center w-full">
                           <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                          مكتمل
+                          {t("production.completed")}
                         </div>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -435,7 +438,7 @@ export default function OrdersTable({
                       size="sm"
                       className="text-red-600 border-red-600 hover:bg-red-50 p-1"
                       onClick={() => onDeleteOrder(order)}
-                      title="حذف"
+                      title={t("common.delete")}
                       data-testid={`button-delete-${order.id}`}
                     >
                       <Trash2 className="h-4 w-4" />

@@ -14,6 +14,7 @@ import { Plus, Trash2, RefreshCw, ChevronDown } from "lucide-react";
 import OrdersSearch from "./OrdersSearch";
 import OrdersTable from "./OrdersTable";
 import OrdersForm from "./OrdersForm";
+import { useTranslation } from 'react-i18next';
 
 interface OrdersTabsProps {
   orders: any[];
@@ -82,6 +83,8 @@ export default function OrdersTabs({
   currentUser,
   isAdmin = false,
 }: OrdersTabsProps) {
+  const { t } = useTranslation();
+  
   // Bulk selection state
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
 
@@ -109,14 +112,14 @@ export default function OrdersTabs({
   const handleBulkDelete = async () => {
     if (!onBulkDelete || selectedOrders.length === 0 || !isAdmin) return;
 
-    const confirmMessage = `هل أنت متأكد من حذف ${selectedOrders.length} طلب؟ هذا الإجراء لا يمكن التراجع عنه.`;
+    const confirmMessage = t('orders.bulk.confirmDelete', { count: selectedOrders.length });
     if (!confirm(confirmMessage)) return;
 
     try {
       await onBulkDelete(selectedOrders);
       setSelectedOrders([]);
     } catch (error) {
-      console.error("خطأ في الحذف الجماعي:", error);
+      console.error(t('orders.bulk.deleteError'), error);
     }
   };
 
@@ -127,22 +130,22 @@ export default function OrdersTabs({
       await onBulkStatusChange(selectedOrders, status);
       setSelectedOrders([]);
     } catch (error) {
-      console.error("خطأ في تغيير الحالة الجماعية:", error);
+      console.error(t('orders.bulk.statusChangeError'), error);
     }
   };
 
   return (
     <Tabs defaultValue="orders" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="orders">الطلبات</TabsTrigger>
-        <TabsTrigger value="production-orders">أوامر الإنتاج</TabsTrigger>
+        <TabsTrigger value="orders">{t('orders.orders')}</TabsTrigger>
+        <TabsTrigger value="production-orders">{t('orders.productionOrders')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="orders" className="space-y-4">
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>إدارة الطلبات</CardTitle>
+              <CardTitle>{t('orders.manageOrders')}</CardTitle>
               <div className="flex items-center space-x-2 space-x-reverse">
                 <OrdersSearch
                   searchTerm={searchTerm}
@@ -157,7 +160,7 @@ export default function OrdersTabs({
                   <DialogTrigger asChild>
                     <Button onClick={onAddOrder} data-testid="button-add-order">
                       <Plus className="h-4 w-4 mr-2" />
-                      إضافة طلب
+                      {t('orders.addOrder')}
                     </Button>
                   </DialogTrigger>
                 </Dialog>
@@ -171,7 +174,7 @@ export default function OrdersTabs({
                 <AlertDescription>
                   <div className="flex items-center justify-between">
                     <span className="font-medium">
-                      تم تحديد {selectedOrders.length} طلب
+                      {t('orders.bulk.selectedCount', { count: selectedOrders.length })}
                     </span>
                     <div className="flex items-center space-x-2 space-x-reverse">
                       <DropdownMenu>
@@ -183,7 +186,7 @@ export default function OrdersTabs({
                             data-testid="button-bulk-status-change"
                           >
                             <RefreshCw className="h-4 w-4 mr-1" />
-                            تغيير الحالة
+                            {t('orders.bulk.changeStatus')}
                             <ChevronDown className="h-3 w-3 mr-1" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -195,7 +198,7 @@ export default function OrdersTabs({
                           >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
-                              إلى الإنتاج
+                              {t('orders.status.for_production')}
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -203,7 +206,7 @@ export default function OrdersTabs({
                           >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-                              إيقاف مؤقت
+                              {t('orders.status.on_hold')}
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -211,7 +214,7 @@ export default function OrdersTabs({
                           >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
-                              في الانتظار
+                              {t('orders.status.pending')}
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -219,7 +222,7 @@ export default function OrdersTabs({
                           >
                             <div className="flex items-center w-full">
                               <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-                              مكتمل
+                              {t('orders.status.completed')}
                             </div>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -232,7 +235,7 @@ export default function OrdersTabs({
                           data-testid="button-bulk-delete"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
-                          حذف المحدد ({selectedOrders.length})
+                          {t('orders.bulk.deleteSelected', { count: selectedOrders.length })}
                         </Button>
                       )}
                       <Button
@@ -241,7 +244,7 @@ export default function OrdersTabs({
                         onClick={() => setSelectedOrders([])}
                         data-testid="button-clear-selection"
                       >
-                        إلغاء التحديد
+                        {t('orders.bulk.clearSelection')}
                       </Button>
                     </div>
                   </div>
@@ -284,7 +287,7 @@ export default function OrdersTabs({
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>أوامر الإنتاج</CardTitle>
+              <CardTitle>{t('orders.productionOrders')}</CardTitle>
               <OrdersSearch
                 searchTerm={productionSearchTerm}
                 setSearchTerm={setProductionSearchTerm}
@@ -298,8 +301,8 @@ export default function OrdersTabs({
             {filteredProductionOrders.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 {productionOrders.length === 0 
-                  ? "لا توجد أوامر إنتاج" 
-                  : "لا توجد نتائج مطابقة للبحث"}
+                  ? t('orders.noProductionOrders') 
+                  : t('common.noSearchResults')}
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -307,31 +310,31 @@ export default function OrdersTabs({
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        رقم أمر الإنتاج
+                        {t('orders.productionOrderNumber')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        رقم الطلب
+                        {t('orders.orderNumber')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        العميل
+                        {t('orders.customer')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        الفئة
+                        {t('common.category')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        المنتج
+                        {t('common.product')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        الكمية (كجم)
+                        {t('orders.quantityKg')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        نسبة الزيادة
+                        {t('orders.overrunPercentage')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        الكمية النهائية (كجم)
+                        {t('orders.finalQuantityKg')}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        الحالة
+                        {t('common.status')}
                       </th>
                     </tr>
                   </thead>
@@ -349,18 +352,18 @@ export default function OrdersTabs({
                             {po.production_order_number || po.id}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {order?.order_number || "غير محدد"}
+                            {order?.order_number || t('common.notSpecified')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {customer?.name_ar || customer?.name || "غير محدد"}
+                            {customer?.name_ar || customer?.name || t('common.notSpecified')}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-category-${po.id}`}>
-                            {category?.name_ar || category?.name || "غير محدد"}
+                            {category?.name_ar || category?.name || t('common.notSpecified')}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900" data-testid={`text-product-${po.id}`}>
                             <div className="text-right">
                               <div className="font-medium text-gray-900">
-                                {item?.name_ar || item?.name || "غير محدد"}
+                                {item?.name_ar || item?.name || t('common.notSpecified')}
                               </div>
                               {customerProduct?.size_caption && (
                                 <div className="text-xs text-gray-500 mt-0.5">
@@ -387,9 +390,9 @@ export default function OrdersTabs({
                               po.status === 'completed' ? 'bg-green-100 text-green-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {po.status === 'pending' ? 'معلق' :
-                               po.status === 'in_progress' ? 'قيد التنفيذ' :
-                               po.status === 'completed' ? 'مكتمل' :
+                              {po.status === 'pending' ? t('orders.status.pending') :
+                               po.status === 'in_progress' ? t('orders.status.in_progress') :
+                               po.status === 'completed' ? t('orders.status.completed') :
                                po.status}
                             </span>
                           </td>

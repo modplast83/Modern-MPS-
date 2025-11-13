@@ -35,6 +35,7 @@ import {
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import * as XLSX from "xlsx";
+import { useTranslation } from 'react-i18next';
 
 interface RollData {
   roll_id: number;
@@ -73,6 +74,7 @@ interface RollsTabProps {
 }
 
 export default function RollsTab({ customers = [], productionOrders = [] }: RollsTabProps) {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
@@ -86,7 +88,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
     queryKey: ["/api/rolls/search"],
     queryFn: async () => {
       const response = await fetch("/api/rolls/search?q=");
-      if (!response.ok) throw new Error("فشل في جلب الرولات");
+      if (!response.ok) throw new Error(t('production.rolls.fetchError'));
       return response.json();
     },
   });
@@ -139,11 +141,11 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
   // الترجمة
   const getStageNameAr = (stage: string) => {
     const stages: Record<string, string> = {
-      film: "فيلم",
-      printing: "طباعة",
-      cutting: "تقطيع",
-      done: "منتهي",
-      archived: "مؤرشف",
+      film: t('production.rolls.stages.film'),
+      printing: t('production.rolls.stages.printing'),
+      cutting: t('production.rolls.stages.cutting'),
+      done: t('production.rolls.stages.done'),
+      archived: t('production.rolls.stages.archived'),
     };
     return stages[stage] || stage;
   };
@@ -181,30 +183,30 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
   // تصدير إلى Excel
   const exportToExcel = () => {
     if (filteredRolls.length === 0) {
-      alert("لا توجد بيانات للتصدير");
+      alert(t('production.rolls.noDataToExport'));
       return;
     }
 
     const data = filteredRolls.map((roll) => ({
-      "رقم الرول": roll.roll_number,
-      "رقم أمر الإنتاج": roll.production_order_number,
-      "رقم الطلب": roll.order_number,
-      "العميل": roll.customer_name_ar || roll.customer_name,
-      "المنتج": roll.item_name_ar || roll.item_name || "-",
-      "المقاس": roll.size_caption || "-",
-      "المرحلة": getStageNameAr(roll.stage),
-      "الوزن (كجم)": roll.weight_kg,
-      "فيلم بواسطة": roll.created_by_name || "-",
-      "طبع بواسطة": roll.printed_by_name || "-",
-      "قطع بواسطة": roll.cut_by_name || "-",
-      "وزن التقطيع": roll.cut_weight_total_kg || "-",
-      "الهدر": roll.waste_kg || "-",
-      "تاريخ الإنشاء": format(new Date(roll.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
+      [t('production.rolls.rollNumber')]: roll.roll_number,
+      [t('orders.productionOrderNumber')]: roll.production_order_number,
+      [t('orders.orderNumber')]: roll.order_number,
+      [t('orders.customer')]: roll.customer_name_ar || roll.customer_name,
+      [t('common.product')]: roll.item_name_ar || roll.item_name || "-",
+      [t('production.rolls.size')]: roll.size_caption || "-",
+      [t('production.rolls.stage')]: getStageNameAr(roll.stage),
+      [t('production.rolls.weightKg')]: roll.weight_kg,
+      [t('production.rolls.filmBy')]: roll.created_by_name || "-",
+      [t('production.rolls.printedBy')]: roll.printed_by_name || "-",
+      [t('production.rolls.cutBy')]: roll.cut_by_name || "-",
+      [t('production.rolls.cutWeight')]: roll.cut_weight_total_kg || "-",
+      [t('production.rolls.waste')]: roll.waste_kg || "-",
+      [t('common.createdAt')]: format(new Date(roll.created_at), "yyyy-MM-dd HH:mm", { locale: ar }),
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "الرولات");
+    XLSX.utils.book_append_sheet(wb, ws, t('production.rolls.rolls'));
     XLSX.writeFile(wb, `rolls-${format(new Date(), "yyyy-MM-dd")}.xlsx`);
   };
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
+import { useTranslation } from 'react-i18next';
 import "../../print.css";
 
 interface OrderPrintTemplateProps {
@@ -19,6 +20,7 @@ export default function OrderPrintTemplate({
   items,
   onClose,
 }: OrderPrintTemplateProps) {
+  const { t } = useTranslation();
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function OrderPrintTemplate({
         });
         setQrCodeUrl(qrUrl);
       } catch (error) {
-        console.error("خطأ في إنشاء رمز QR:", error);
+        console.error(t('orders.print.qrCodeError'), error);
       }
     };
 
@@ -52,17 +54,17 @@ export default function OrderPrintTemplate({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [order, customer]);
+  }, [order, customer, t]);
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      waiting: "قيد الانتظار",
-      for_production: "جاهز للإنتاج",
-      in_production: "قيد الإنتاج",
-      completed: "مكتمل",
-      cancelled: "ملغي",
-      on_hold: "معلق",
-      pending: "معلق",
+      waiting: t('orders.status.waiting'),
+      for_production: t('orders.status.for_production'),
+      in_production: t('orders.status.in_production'),
+      completed: t('orders.status.completed'),
+      cancelled: t('orders.status.cancelled'),
+      on_hold: t('orders.status.on_hold'),
+      pending: t('orders.status.pending'),
     };
     return statusMap[status] || status;
   };
@@ -82,13 +84,13 @@ export default function OrderPrintTemplate({
       <div className="no-print fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div className="bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">معاينة طباعة الطلب</h2>
+            <h2 className="text-xl font-bold">{t('orders.print.preview')}</h2>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
               data-testid="button-close-print"
             >
-              إغلاق
+              {t('common.close')}
             </button>
           </div>
           <div className="border border-gray-300 p-6 bg-white">
@@ -101,6 +103,7 @@ export default function OrderPrintTemplate({
               qrCodeUrl={qrCodeUrl}
               totalQuantity={totalQuantity}
               getStatusText={getStatusText}
+              t={t}
             />
           </div>
         </div>
@@ -117,6 +120,7 @@ export default function OrderPrintTemplate({
           qrCodeUrl={qrCodeUrl}
           totalQuantity={totalQuantity}
           getStatusText={getStatusText}
+          t={t}
         />
       </div>
     </>
