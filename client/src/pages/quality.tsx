@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -13,6 +14,7 @@ import { CheckCircle2, XCircle, AlertTriangle, Clock } from "lucide-react";
 import { formatNumber, formatPercentage } from "../lib/formatNumber";
 
 export default function Quality() {
+  const { t } = useTranslation();
   const { data: qualityChecks, isLoading } = useQuery({
     queryKey: ["/api/quality-checks"],
   });
@@ -33,13 +35,13 @@ export default function Quality() {
   const getStatusText = (result: string) => {
     switch (result) {
       case "pass":
-        return "مُجتاز";
+        return t("quality.passed");
       case "fail":
-        return "راسب";
+        return t("quality.failed");
       case "warning":
-        return "تحذير";
+        return t("quality.warning");
       default:
-        return "قيد الانتظار";
+        return t("quality.pending");
     }
   };
 
@@ -54,10 +56,10 @@ export default function Quality() {
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الجودة
+              {t("quality.title")}
             </h1>
             <p className="text-gray-600">
-              مراقبة فحوصات الجودة ومعايير الإنتاج
+              {t("quality.qualityManagement")}
             </p>
           </div>
 
@@ -67,7 +69,7 @@ export default function Quality() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      إجمالي الفحوصات
+                      {t("quality.totalInspections")}
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
                       {formatNumber(
@@ -85,7 +87,7 @@ export default function Quality() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      فحوصات مُجتازة
+                      {t("quality.passedInspections")}
                     </p>
                     <p className="text-2xl font-bold text-green-600">
                       {formatNumber(
@@ -107,7 +109,7 @@ export default function Quality() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      فحوصات راسبة
+                      {t("quality.failedInspections")}
                     </p>
                     <p className="text-2xl font-bold text-red-600">
                       {formatNumber(
@@ -129,7 +131,7 @@ export default function Quality() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      معدل النجاح
+                      {t("quality.successRate")}
                     </p>
                     <p className="text-2xl font-bold text-blue-600">
                       {formatPercentage(
@@ -153,14 +155,14 @@ export default function Quality() {
 
           <Card>
             <CardHeader>
-              <CardTitle>فحوصات الجودة الأخيرة</CardTitle>
+              <CardTitle>{t("quality.latestChecks")}</CardTitle>
             </CardHeader>
             <CardContent>
               {isLoading ? (
                 <div className="text-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    جاري التحميل...
+                    {t("common.loading")}
                   </p>
                 </div>
               ) : (
@@ -169,22 +171,22 @@ export default function Quality() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          رقم الرولة
+                          {t("quality.rollNumber")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          نوع الفحص
+                          {t("quality.checkType")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          النتيجة
+                          {t("quality.result")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          الملاحظات
+                          {t("common.notes")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          المفتش
+                          {t("quality.inspector")}
                         </th>
                         <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          التاريخ
+                          {t("common.date")}
                         </th>
                       </tr>
                     </thead>
@@ -233,7 +235,7 @@ export default function Quality() {
                             colSpan={6}
                             className="px-6 py-4 text-center text-gray-500"
                           >
-                            لا توجد بيانات متاحة
+                            {t("common.noData")}
                           </td>
                         </tr>
                       )}

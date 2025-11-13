@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from 'react-i18next';
 import { useAuth } from "../hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
@@ -73,6 +74,7 @@ import LocationMapPicker from "../components/LocationMapPicker";
 import { Plus, Eye, EyeOff } from "lucide-react";
 
 export default function Settings() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -282,17 +284,17 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ["/api/database/stats"] });
       setSelectedFile(null);
       toast({
-        title: "تم استيراد البيانات بنجاح",
-        description: `تم استيراد ${data.count || data.importedRecords} سجل من أصل ${data.totalRows || data.count} سجل`,
+        title: t('settings.dataImportedSuccess'),
+        description: `${t('settings.recordsImported', { imported: data.count || data.importedRecords, total: data.totalRows || data.count })}`,
       });
     },
     onError: (error) => {
       toast({
-        title: "خطأ في استيراد البيانات",
+        title: t('settings.dataImportError'),
         description:
           error instanceof Error
             ? error.message
-            : "حدث خطأ أثناء استيراد البيانات",
+            : t('settings.importErrorOccurred'),
         variant: "destructive",
       });
     },
@@ -415,13 +417,13 @@ export default function Settings() {
       setImportStep(2);
 
       toast({
-        title: "تم تحليل الملف بنجاح",
-        description: `تم العثور على ${data.length} سجل و ${headers.length} عمود`,
+        title: t('settings.fileParsedSuccess'),
+        description: t('settings.foundRecordsColumns', { records: data.length, columns: headers.length }),
       });
     } catch (error) {
       toast({
-        title: "خطأ في تحليل الملف",
-        description: "تأكد من صحة تنسيق الملف",
+        title: t('settings.fileParseError'),
+        description: t('settings.checkFileFormat'),
         variant: "destructive",
       });
     }
@@ -449,15 +451,15 @@ export default function Settings() {
           await parseFileData(file);
         } else {
           toast({
-            title: "يرجى اختيار الجدول أولاً",
-            description: "اختر الجدول المراد استيراد البيانات إليه",
+            title: t('settings.selectTableFirst'),
+            description: t('settings.selectTableToImport'),
             variant: "destructive",
           });
         }
       } else {
         toast({
-          title: "نوع ملف غير مدعوم",
-          description: "يرجى اختيار ملف CSV أو JSON أو Excel",
+          title: t('settings.unsupportedFileType'),
+          description: t('settings.selectCSVJSONExcel'),
           variant: "destructive",
         });
       }
@@ -575,18 +577,18 @@ export default function Settings() {
       setImportStep(3);
 
       toast({
-        title: "اكتمل الاستيراد",
-        description: `تم استيراد ${results.successful} سجل بنجاح، ${results.failed} فشل`,
+        title: t('settings.importComplete'),
+        description: t('settings.recordsSuccessFailed', { success: results.successful, failed: results.failed }),
       });
     },
     onError: (error) => {
       setImportProgress((prev) => ({ ...prev, processing: false }));
       toast({
-        title: "خطأ في الاستيراد",
+        title: t('settings.importError'),
         description:
           error instanceof Error
             ? error.message
-            : "حدث خطأ أثناء استيراد البيانات",
+            : t('settings.importErrorOccurred'),
         variant: "destructive",
       });
     },
@@ -596,8 +598,8 @@ export default function Settings() {
   const handleStartImport = () => {
     if (!selectedFile || !selectedTable || fileData.length === 0) {
       toast({
-        title: "بيانات ناقصة",
-        description: "تأكد من اختيار الملف والجدول ووجود بيانات للاستيراد",
+        title: t('settings.missingData'),
+        description: t('settings.checkFileTableData'),
         variant: "destructive",
       });
       return;
@@ -623,8 +625,8 @@ export default function Settings() {
 
     if (validData.length === 0) {
       toast({
-        title: "لا توجد بيانات صالحة",
-        description: "تأكد من ربط الأعمدة بشكل صحيح",
+        title: t('settings.noValidData'),
+        description: t('settings.checkColumnMapping'),
         variant: "destructive",
       });
       return;
@@ -692,14 +694,14 @@ export default function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/database/stats"] });
       toast({
-        title: "تم إنشاء النسخة الاحتياطية",
-        description: "تم تحميل النسخة الاحتياطية لجميع الجداول والسجلات بنجاح",
+        title: t('settings.backupCreatedSuccess'),
+        description: t('settings.backupDownloadedSuccess'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في إنشاء النسخة الاحتياطية",
-        description: "حدث خطأ أثناء إنشاء النسخة الاحتياطية",
+        title: t('settings.backupCreationError'),
+        description: t('settings.backupErrorOccurred'),
         variant: "destructive",
       });
     },
@@ -751,14 +753,14 @@ export default function Settings() {
     },
     onSuccess: () => {
       toast({
-        title: "تم تحسين الجداول",
-        description: "تم تحسين جميع الجداول بنجاح",
+        title: t('settings.optimizeTables'),
+        description: t('settings.backupCreatedSuccess'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في تحسين الجداول",
-        description: "حدث خطأ أثناء تحسين الجداول",
+        title: t('settings.savingError'),
+        description: t('settings.saveErrorOccurred'),
         variant: "destructive",
       });
     },
@@ -772,14 +774,14 @@ export default function Settings() {
     },
     onSuccess: () => {
       toast({
-        title: "فحص التكامل",
-        description: "تم فحص تكامل قاعدة البيانات بنجاح",
+        title: t('settings.integrityCheck'),
+        description: t('settings.settingsSavedSuccess'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في فحص التكامل",
-        description: "حدث خطأ أثناء فحص تكامل قاعدة البيانات",
+        title: t('settings.savingError'),
+        description: t('settings.saveErrorOccurred'),
         variant: "destructive",
       });
     },
@@ -970,14 +972,14 @@ export default function Settings() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings/system"] });
       toast({
-        title: "تم الحفظ بنجاح",
-        description: "تم حفظ إعدادات النظام",
+        title: t('settings.savingSuccess'),
+        description: t('settings.systemSettingsSaved'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ إعدادات النظام",
+        title: t('settings.savingError'),
+        description: t('settings.systemSettingsSaveError'),
         variant: "destructive",
       });
     },
@@ -998,9 +1000,9 @@ export default function Settings() {
         <Sidebar />
         <main className="flex-1 lg:mr-64 p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">الإعدادات</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('settings.title')}</h1>
             <p className="text-gray-600">
-              إدارة إعدادات النظام والتفضيلات الشخصية
+              {t('settings.description')}
             </p>
           </div>
 
@@ -1008,31 +1010,31 @@ export default function Settings() {
             <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
-                الأدوار والصلاحيات
+                {t('settings.rolesAndPermissions')}
               </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center gap-2">
                 <Bell className="w-4 h-4" />
-                التنبيهات
+                {t('settings.alerts')}
               </TabsTrigger>
               <TabsTrigger value="system" className="flex items-center gap-2">
                 <SettingsIcon className="w-4 h-4" />
-                النظام
+                {t('settings.systemSettings')}
               </TabsTrigger>
               <TabsTrigger value="database" className="flex items-center gap-2">
                 <Database className="w-4 h-4" />
-                قاعدة البيانات
+                {t('settings.database')}
               </TabsTrigger>
               <TabsTrigger value="location" className="flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
-                موقع المصنع
+                {t('settings.factoryLocation')}
               </TabsTrigger>
               <TabsTrigger value="notification-center" className="flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
-                الإشعارات
+                {t('settings.notificationCenter')}
               </TabsTrigger>
               <TabsTrigger value="whatsapp-webhooks" className="flex items-center gap-2">
                 <Webhook className="w-4 h-4" />
-                Webhooks واتساب
+                {t('settings.whatsappWebhooks')}
               </TabsTrigger>
             </TabsList>
 
@@ -1041,10 +1043,10 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="w-5 h-5" />
-                    إدارة الأدوار والصلاحيات
+                    {t('settings.roleManagement')}
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    تحديد أدوار المستخدمين وصلاحياتهم في النظام
+                    {t('settings.roleManagementDesc')}
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -1058,7 +1060,7 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Bell className="w-5 h-5" />
-                    إعدادات التنبيهات
+                    {t('settings.notificationSettings')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -1066,10 +1068,10 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-base">
-                          تنبيهات البريد الإلكتروني
+                          {t('settings.emailNotifications')}
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                          تلقي تنبيهات عبر البريد الإلكتروني
+                          {t('settings.emailNotificationsDesc')}
                         </p>
                       </div>
                       <Switch
@@ -1089,10 +1091,10 @@ export default function Settings() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label className="text-base">
-                          تنبيهات الرسائل النصية
+                          {t('settings.smsNotifications')}
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                          تلقي تنبيهات عبر الرسائل النصية
+                          {t('settings.smsNotificationsDesc')}
                         </p>
                       </div>
                       <Switch
@@ -1111,9 +1113,9 @@ export default function Settings() {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-base">التنبيهات الفورية</Label>
+                        <Label className="text-base">{t('settings.instantNotifications')}</Label>
                         <p className="text-sm text-muted-foreground">
-                          تنبيهات داخل النظام
+                          {t('settings.instantNotificationsDesc')}
                         </p>
                       </div>
                       <Switch
@@ -1138,9 +1140,9 @@ export default function Settings() {
                           <VolumeX className="w-4 h-4" />
                         )}
                         <div>
-                          <Label className="text-base">الأصوات</Label>
+                          <Label className="text-base">{t('settings.soundNotifications')}</Label>
                           <p className="text-sm text-muted-foreground">
-                            تشغيل أصوات التنبيهات
+                            {t('settings.soundNotificationsDesc')}
                           </p>
                         </div>
                       </div>
@@ -1162,12 +1164,12 @@ export default function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium">إعدادات لوحة التحكم</h4>
+                    <h4 className="text-sm font-medium">{t('settings.dashboardSettings')}</h4>
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-base">التحديث التلقائي</Label>
+                        <Label className="text-base">{t('settings.autoRefresh')}</Label>
                         <p className="text-sm text-muted-foreground">
-                          تحديث البيانات تلقائياً
+                          {t('settings.autoRefreshDesc')}
                         </p>
                       </div>
                       <Switch
@@ -1187,7 +1189,7 @@ export default function Settings() {
                     {userSettings.dashboard.autoRefresh && (
                       <div className="space-y-2">
                         <Label htmlFor="refreshInterval">
-                          فترة التحديث (بالثواني)
+                          {t('settings.refreshInterval')}
                         </Label>
                         <Select
                           value={(
@@ -1207,10 +1209,10 @@ export default function Settings() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="15">15 ثانية</SelectItem>
-                            <SelectItem value="30">30 ثانية</SelectItem>
-                            <SelectItem value="60">دقيقة واحدة</SelectItem>
-                            <SelectItem value="300">5 دقائق</SelectItem>
+                            <SelectItem value="15">{t('settings.15seconds')}</SelectItem>
+                            <SelectItem value="30">{t('settings.30seconds')}</SelectItem>
+                            <SelectItem value="60">{t('settings.1minute')}</SelectItem>
+                            <SelectItem value="300">{t('settings.5minutes')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -1227,7 +1229,7 @@ export default function Settings() {
                       ) : (
                         <Save className="w-4 h-4 mr-2" />
                       )}
-                      حفظ التغييرات
+                      {t('settings.saveChanges')}
                     </Button>
                   </div>
                 </CardContent>
@@ -1239,13 +1241,13 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <SettingsIcon className="w-5 h-5" />
-                    إعدادات النظام العامة
+                    {t('settings.systemGeneralSettings')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">اسم الشركة</Label>
+                      <Label htmlFor="companyName">{t('settings.companyName')}</Label>
                       <Input
                         id="companyName"
                         value={systemSettings.companyName}
@@ -1258,7 +1260,7 @@ export default function Settings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">البلد</Label>
+                      <Label htmlFor="country">{t('settings.country')}</Label>
                       <Input
                         id="country"
                         value={systemSettings.country}
@@ -1267,7 +1269,7 @@ export default function Settings() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="region">المنطقة</Label>
+                      <Label htmlFor="region">{t('settings.region')}</Label>
                       <Select
                         value={systemSettings.region ?? "الرياض"}
                         onValueChange={(value) =>
@@ -1281,43 +1283,43 @@ export default function Settings() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="الرياض">الرياض</SelectItem>
-                          <SelectItem value="جدة">جدة</SelectItem>
-                          <SelectItem value="الدمام">الدمام</SelectItem>
+                          <SelectItem value="الرياض">{t('settings.riyadh')}</SelectItem>
+                          <SelectItem value="جدة">{t('settings.jeddah')}</SelectItem>
+                          <SelectItem value="الدمام">{t('settings.dammam')}</SelectItem>
                           <SelectItem value="مكة المكرمة">
-                            مكة المكرمة
+                            {t('settings.mecca')}
                           </SelectItem>
                           <SelectItem value="المدينة المنورة">
-                            المدينة المنورة
+                            {t('settings.medina')}
                           </SelectItem>
-                          <SelectItem value="تبوك">تبوك</SelectItem>
-                          <SelectItem value="أبها">أبها</SelectItem>
-                          <SelectItem value="حائل">حائل</SelectItem>
-                          <SelectItem value="الطائف">الطائف</SelectItem>
-                          <SelectItem value="الخبر">الخبر</SelectItem>
+                          <SelectItem value="تبوك">{t('settings.tabuk')}</SelectItem>
+                          <SelectItem value="أبها">{t('settings.abha')}</SelectItem>
+                          <SelectItem value="حائل">{t('settings.hail')}</SelectItem>
+                          <SelectItem value="الطائف">{t('settings.taif')}</SelectItem>
+                          <SelectItem value="الخبر">{t('settings.khobar')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="timezone">المنطقة الزمنية</Label>
+                      <Label htmlFor="timezone">{t('settings.timezone')}</Label>
                       <Input
                         id="timezone"
-                        value="الرياض (UTC+3)"
+                        value={t('settings.riyadhUTC')}
                         readOnly
                         className="bg-muted"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="currency">العملة</Label>
+                      <Label htmlFor="currency">{t('settings.currency')}</Label>
                       <Input
                         id="currency"
-                        value="ريال سعودي (SAR)"
+                        value={t('settings.saudiRiyal')}
                         readOnly
                         className="bg-muted"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="language">لغة النظام</Label>
+                      <Label htmlFor="language">{t('settings.systemLanguage')}</Label>
                       <Select
                         value={systemSettings.language ?? "ar"}
                         onValueChange={(value) =>
@@ -1331,8 +1333,8 @@ export default function Settings() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="ar">العربية</SelectItem>
-                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="ar">{t('settings.arabic')}</SelectItem>
+                          <SelectItem value="en">{t('settings.english')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -1341,10 +1343,10 @@ export default function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium">ساعات العمل</h4>
+                    <h4 className="text-sm font-medium">{t('settings.workingHours')}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="workStart">بداية العمل</Label>
+                        <Label htmlFor="workStart">{t('settings.workStart')}</Label>
                         <Input
                           id="workStart"
                           type="time"
@@ -1361,7 +1363,7 @@ export default function Settings() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="workEnd">نهاية العمل</Label>
+                        <Label htmlFor="workEnd">{t('settings.workEnd')}</Label>
                         <Input
                           id="workEnd"
                           type="time"
@@ -1383,7 +1385,7 @@ export default function Settings() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium">الورديات</h4>
+                    <h4 className="text-sm font-medium">{t('settings.shifts')}</h4>
                     <div className="space-y-2">
                       {systemSettings.shifts.map((shift) => (
                         <div
@@ -1393,10 +1395,10 @@ export default function Settings() {
                           <div>
                             <span className="font-medium">{shift.name}</span>
                             <p className="text-sm text-muted-foreground">
-                              من {shift.start} إلى {shift.end}
+                              {t('settings.from')} {shift.start} {t('settings.to')} {shift.end}
                             </p>
                           </div>
-                          <Badge variant="outline">نشطة</Badge>
+                          <Badge variant="outline">{t('settings.active')}</Badge>
                         </div>
                       ))}
                     </div>
@@ -1412,7 +1414,7 @@ export default function Settings() {
                       ) : (
                         <Save className="w-4 h-4 mr-2" />
                       )}
-                      حفظ إعدادات النظام
+                      {t('settings.saveSystemSettings')}
                     </Button>
                   </div>
                 </CardContent>
@@ -1424,7 +1426,7 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Database className="w-5 h-5" />
-                    إدارة قاعدة البيانات
+                    {t('settings.databaseManagement')}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
@@ -1432,7 +1434,7 @@ export default function Settings() {
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium flex items-center gap-2">
                       <Archive className="w-4 h-4" />
-                      النسخ الاحتياطية
+                      {t('settings.backup')}
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Card className="p-4">
@@ -1440,11 +1442,11 @@ export default function Settings() {
                           <div className="flex items-center gap-2">
                             <Download className="w-4 h-4 text-blue-500" />
                             <Label className="text-sm font-medium">
-                              إنشاء نسخة احتياطية
+                              {t('settings.createBackup')}
                             </Label>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            إنشاء نسخة احتياطية من قاعدة البيانات بالكامل
+                            {t('settings.createBackupDesc')}
                           </p>
                           <Button
                             className="w-full"
@@ -1457,7 +1459,7 @@ export default function Settings() {
                             ) : (
                               <Download className="w-4 h-4 mr-2" />
                             )}
-                            تصدير النسخة الاحتياطية
+                            {t('settings.exportBackup')}
                           </Button>
                         </div>
                       </Card>
@@ -1467,11 +1469,11 @@ export default function Settings() {
                           <div className="flex items-center gap-2">
                             <Upload className="w-4 h-4 text-green-500" />
                             <Label className="text-sm font-medium">
-                              استعادة النسخة الاحتياطية
+                              {t('settings.restoreBackup')}
                             </Label>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            استعادة قاعدة البيانات من نسخة احتياطية
+                            {t('settings.restoreBackupDesc')}
                           </p>
                           <input
                             type="file"
@@ -1494,11 +1496,11 @@ export default function Settings() {
                             ) : (
                               <Upload className="w-4 h-4 mr-2" />
                             )}
-                            {selectedBackupFile ? selectedBackupFile.name : "اختيار ملف واستعادة"}
+                            {selectedBackupFile ? selectedBackupFile.name : t('settings.selectFileRestore')}
                           </Button>
                           {selectedBackupFile && !restoreBackupMutation.isPending && (
                             <p className="text-xs text-green-600">
-                              تم اختيار: {selectedBackupFile.name}
+                              {t('settings.selected')}: {selectedBackupFile.name}
                             </p>
                           )}
                         </div>

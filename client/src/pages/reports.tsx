@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -65,6 +66,7 @@ import {
 } from "../components/charts";
 
 export default function Reports() {
+  const { t } = useTranslation();
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [reportType, setReportType] = useState("production");
@@ -173,27 +175,27 @@ export default function Reports() {
   const reportTypes = [
     {
       value: "production",
-      label: "تقارير الإنتاج",
+      label: t('reports.productionReports'),
       icon: <Package className="w-4 h-4" />,
     },
     {
       value: "quality",
-      label: "تقارير الجودة",
+      label: t('reports.qualityReports'),
       icon: <CheckCircle2 className="w-4 h-4" />,
     },
     {
       value: "maintenance",
-      label: "تقارير الصيانة",
+      label: t('reports.maintenanceReports'),
       icon: <Settings className="w-4 h-4" />,
     },
     {
       value: "hr",
-      label: "تقارير الموارد البشرية",
+      label: t('reports.hrReports'),
       icon: <Users className="w-4 h-4" />,
     },
     {
       value: "financial",
-      label: "التقارير المالية",
+      label: t('reports.financialReports'),
       icon: <BarChart3 className="w-4 h-4" />,
     },
   ];
@@ -283,9 +285,9 @@ export default function Reports() {
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              التقارير والتحليلات
+              {t('reports.title')}
             </h1>
-            <p className="text-gray-600">تقارير شاملة حول الأداء والإنتاجية</p>
+            <p className="text-gray-600">{t('reports.reportsManagement')}</p>
           </div>
 
           {/* Report Controls */}
@@ -293,14 +295,14 @@ export default function Reports() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Filter className="w-5 h-5" />
-                خيارات التقرير
+                {t('reports.reportOptions')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1 block">
-                    نوع التقرير
+                    {t('reports.reportType')}
                   </label>
                   <Select value={reportType} onValueChange={setReportType}>
                     <SelectTrigger>
@@ -324,7 +326,7 @@ export default function Reports() {
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1 block">
-                    الفترة الزمنية
+                    {t('reports.reportPeriod')}
                   </label>
                   <Select
                     value={selectedPeriod}
@@ -334,18 +336,18 @@ export default function Reports() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="week">هذا الأسبوع</SelectItem>
-                      <SelectItem value="month">هذا الشهر</SelectItem>
-                      <SelectItem value="quarter">هذا الربع</SelectItem>
-                      <SelectItem value="year">هذا العام</SelectItem>
-                      <SelectItem value="custom">فترة مخصصة</SelectItem>
+                      <SelectItem value="week">{t('reports.lastWeek')}</SelectItem>
+                      <SelectItem value="month">{t('reports.thisMonth')}</SelectItem>
+                      <SelectItem value="quarter">{t('reports.lastQuarter')}</SelectItem>
+                      <SelectItem value="year">{t('reports.thisYear')}</SelectItem>
+                      <SelectItem value="custom">{t('reports.customReport')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-gray-700 mb-1 block">
-                    من تاريخ
+                    {t('reports.startDate')}
                   </label>
                   <Popover>
                     <PopoverTrigger asChild>
@@ -356,7 +358,7 @@ export default function Reports() {
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateRange.from
                           ? format(dateRange.from, "PPP", { locale: ar })
-                          : "اختر التاريخ"}
+                          : t('reports.selectDateRange')}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -378,7 +380,7 @@ export default function Reports() {
                     className="flex-1"
                   >
                     <Download className="w-4 h-4 mr-2" />
-                    تصدير PDF
+                    {t('reports.exportToPDF')}
                   </Button>
                   <Button
                     variant="outline"
@@ -418,7 +420,7 @@ export default function Reports() {
                   data-testid="loading-production"
                 >
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-gray-600">جاري تحميل التقارير...</p>
+                  <p className="mt-2 text-gray-600">{t('common.loading')}</p>
                 </div>
               ) : (
                 <>

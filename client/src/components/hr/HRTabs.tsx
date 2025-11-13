@@ -4,16 +4,19 @@ import SimpleFieldTraining from "./SimpleFieldTraining.tsx";
 import PerformanceReviews from "./PerformanceReviews.tsx";
 import LeaveManagement from "./LeaveManagement.tsx";
 import AttendanceManagement from "./AttendanceManagement.tsx";
+import { useTranslation } from 'react-i18next';
 
 export default function HRTabs() {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6" dir="rtl">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          نظام الموارد البشرية المتقدم
+          {t('hr.title')}
         </h1>
         <p className="text-gray-600 dark:text-gray-300 mt-2">
-          إدارة شاملة للتدريب وتقييم الأداء والإجازات
+          {t('hr.description', 'إدارة شاملة للتدريب وتقييم الأداء والإجازات')}
         </p>
       </div>
 
@@ -24,28 +27,28 @@ export default function HRTabs() {
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Clock className="w-4 h-4" />
-            إدارة الحضور
+            {t('hr.attendance')}
           </TabsTrigger>
           <TabsTrigger
             value="training"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <GraduationCap className="w-4 h-4" />
-            التدريب الميداني
+            {t('hr.fieldTraining')}
           </TabsTrigger>
           <TabsTrigger
             value="performance"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Target className="w-4 h-4" />
-            تقييم الأداء
+            {t('hr.performance')}
           </TabsTrigger>
           <TabsTrigger
             value="leaves"
             className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
             <Calendar className="w-4 h-4" />
-            إدارة الطلبات
+            {t('hr.leaves')}
           </TabsTrigger>
         </TabsList>
 

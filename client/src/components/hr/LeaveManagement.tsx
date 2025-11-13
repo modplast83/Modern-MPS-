@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -50,6 +51,7 @@ interface UserRequest {
 }
 
 export default function LeaveManagement() {
+  const { t } = useTranslation();
   const [selectedRequest, setSelectedRequest] = useState<UserRequest | null>(
     null
   );
@@ -78,9 +80,9 @@ export default function LeaveManagement() {
     enabled: true,
     onError: (err: any) => {
       toast({
-        title: "خطأ",
+        title: t('common.error'),
         description:
-          err instanceof Error ? err.message : "فشل في تحميل طلبات المستخدمين",
+          err instanceof Error ? err.message : t('hr.failedToLoadRequests', 'فشل في تحميل طلبات المستخدمين'),
         variant: "destructive",
       });
     },
@@ -115,14 +117,14 @@ export default function LeaveManagement() {
       setApprovalComments("");
       setSelectedRequest(null);
       toast({
-        title: "تم تحديث الطلب بنجاح",
-        description: "تم حفظ قرار الموافقة/الرفض",
+        title: t('hr.requestUpdated', 'تم تحديث الطلب بنجاح'),
+        description: t('hr.approvalSaved', 'تم حفظ قرار الموافقة/الرفض'),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في تحديث الطلب",
-        description: "حدث خطأ أثناء تحديث حالة الطلب",
+        title: t('hr.updateRequestError', 'خطأ في تحديث الطلب'),
+        description: t('hr.updateRequestErrorDesc', 'حدث خطأ أثناء تحديث حالة الطلب'),
         variant: "destructive",
       });
     },

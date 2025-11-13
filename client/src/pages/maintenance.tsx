@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -116,6 +117,7 @@ const maintenanceRequestSchema = z.object({
 });
 
 export default function Maintenance() {
+  const { t } = useTranslation();
   const [currentTab, setCurrentTab] = useState("requests");
   const [selectedRequestId, setSelectedRequestId] = useState<number | null>(
     null,
@@ -170,11 +172,11 @@ export default function Maintenance() {
     onSuccess: (result) => {
       console.log("Maintenance action created successfully:", result);
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-actions"] });
-      toast({ title: "تم إنشاء إجراء الصيانة بنجاح" });
+      toast({ title: t("toast.successSaved") });
     },
     onError: (error) => {
       console.error("Failed to create maintenance action:", error);
-      toast({ title: "فشل في إنشاء إجراء الصيانة", variant: "destructive" });
+      toast({ title: t("errors.savingError"), variant: "destructive" });
     },
   });
 
@@ -186,10 +188,10 @@ export default function Maintenance() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/maintenance-reports"] });
-      toast({ title: "تم إنشاء بلاغ الصيانة بنجاح" });
+      toast({ title: t("toast.successSaved") });
     },
     onError: () => {
-      toast({ title: "فشل في إنشاء بلاغ الصيانة", variant: "destructive" });
+      toast({ title: t("errors.savingError"), variant: "destructive" });
     },
   });
 
@@ -203,11 +205,11 @@ export default function Maintenance() {
       queryClient.invalidateQueries({
         queryKey: ["/api/operator-negligence-reports"],
       });
-      toast({ title: "تم إنشاء بلاغ إهمال المشغل بنجاح" });
+      toast({ title: t("toast.successSaved") });
     },
     onError: () => {
       toast({
-        title: "فشل في إنشاء بلاغ إهمال المشغل",
+        title: t("errors.savingError"),
         variant: "destructive",
       });
     },
@@ -230,11 +232,11 @@ export default function Maintenance() {
         queryKey: ["/api/maintenance-requests"],
       });
       setIsRequestDialogOpen(false);
-      toast({ title: "تم إنشاء طلب الصيانة بنجاح" });
+      toast({ title: t("toast.successSaved") });
     },
     onError: (error) => {
       console.error("Error creating maintenance request:", error);
-      toast({ title: "فشل في إنشاء طلب الصيانة", variant: "destructive" });
+      toast({ title: t("errors.savingError"), variant: "destructive" });
     },
   });
 
@@ -256,13 +258,13 @@ export default function Maintenance() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "pending":
-        return "قيد الانتظار";
+        return t("production.pending");
       case "in_progress":
-        return "قيد التنفيذ";
+        return t("production.inProduction");
       case "completed":
-        return "مكتمل";
+        return t("production.completed");
       case "cancelled":
-        return "ملغي";
+        return t("production.cancelled");
       default:
         return status;
     }
@@ -284,11 +286,11 @@ export default function Maintenance() {
   const getPriorityText = (priority: string) => {
     switch (priority) {
       case "high":
-        return "عالية";
+        return t("production.high");
       case "medium":
-        return "متوسطة";
+        return t("production.medium");
       case "low":
-        return "منخفضة";
+        return t("production.low");
       default:
         return priority;
     }
@@ -305,10 +307,10 @@ export default function Maintenance() {
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الصيانة
+              {t("maintenance.title")}
             </h1>
             <p className="text-gray-600">
-              نظام متكامل لإدارة الصيانة وتتبع الأعطال
+              {t("maintenance.maintenanceManagement")}
             </p>
           </div>
 
@@ -318,7 +320,7 @@ export default function Maintenance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      إجمالي الطلبات
+                      {t("common.total")}
                     </p>
                     <p className="text-2xl font-bold text-gray-900">
                       {Array.isArray(maintenanceRequests)
@@ -336,7 +338,7 @@ export default function Maintenance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      قيد الانتظار
+                      {t("production.pending")}
                     </p>
                     <p className="text-2xl font-bold text-yellow-600">
                       {Array.isArray(maintenanceRequests)
@@ -356,7 +358,7 @@ export default function Maintenance() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">
-                      قيد التنفيذ
+                      {t("production.inProduction")}
                     </p>
                     <p className="text-2xl font-bold text-blue-600">
                       {Array.isArray(maintenanceRequests)
@@ -375,7 +377,7 @@ export default function Maintenance() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">مكتملة</p>
+                    <p className="text-sm font-medium text-gray-600">{t("production.completed")}</p>
                     <p className="text-2xl font-bold text-green-600">
                       {Array.isArray(maintenanceRequests)
                         ? maintenanceRequests.filter(
@@ -399,36 +401,36 @@ export default function Maintenance() {
             <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="requests" className="flex items-center gap-2">
                 <Wrench className="h-4 w-4" />
-                طلبات الصيانة
+                {t("maintenance.maintenanceTasks")}
               </TabsTrigger>
               <TabsTrigger value="actions" className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" />
-                إجراءات الصيانة
+                {t("common.actions")}
               </TabsTrigger>
               <TabsTrigger value="reports" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
-                بلاغات الصيانة
+                {t("reports.maintenanceReports")}
               </TabsTrigger>
               <TabsTrigger
                 value="negligence"
                 className="flex items-center gap-2"
               >
                 <AlertCircle className="h-4 w-4" />
-                بلاغات إهمال المشغلين
+                {t("maintenance.maintenanceTasks")}
               </TabsTrigger>
               <TabsTrigger
                 value="spare-parts"
                 className="flex items-center gap-2"
               >
                 <Users className="h-4 w-4" />
-                قطع الغيار
+                {t("maintenance.spareParts")}
               </TabsTrigger>
               <TabsTrigger
                 value="consumable-parts"
                 className="flex items-center gap-2"
               >
                 <Wrench className="h-4 w-4" />
-                قطع غيار استهلاكية
+                {t("maintenance.consumableParts")}
               </TabsTrigger>
             </TabsList>
 
@@ -437,7 +439,7 @@ export default function Maintenance() {
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
-                    <CardTitle>طلبات الصيانة</CardTitle>
+                    <CardTitle>{t("maintenance.maintenanceTasks")}</CardTitle>
                     <Dialog
                       open={isRequestDialogOpen}
                       onOpenChange={setIsRequestDialogOpen}
@@ -445,7 +447,7 @@ export default function Maintenance() {
                       <DialogTrigger asChild>
                         <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                           <Plus className="h-4 w-4 mr-2" />
-                          طلب صيانة جديد
+                          {t("common.add")}
                         </Button>
                       </DialogTrigger>
                       <MaintenanceRequestDialog
@@ -462,7 +464,7 @@ export default function Maintenance() {
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                       <p className="mt-2 text-sm text-muted-foreground">
-                        جاري التحميل...
+                        {t("common.loading")}
                       </p>
                     </div>
                   ) : (
@@ -471,28 +473,28 @@ export default function Maintenance() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              رقم الطلب
+                              {t("common.name")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              المعدة
+                              {t("maintenance.equipment")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              نوع المشكلة
+                              {t("common.type")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              مستوى الإلحاح
+                              {t("maintenance.taskPriority")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              الحالة
+                              {t("common.status")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              وصف المشكلة
+                              {t("common.description")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              المُكلف
+                              {t("maintenance.assignedTo")}
                             </th>
                             <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                              تاريخ الإبلاغ
+                              {t("common.date")}
                             </th>
                           </tr>
                         </thead>
@@ -522,7 +524,7 @@ export default function Maintenance() {
                               const assignedName = assignedUser
                                 ? assignedUser.full_name ||
                                   assignedUser.username
-                                : "غير محدد";
+                                : t("common.noData");
 
                               return (
                                 <tr
@@ -537,10 +539,10 @@ export default function Maintenance() {
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                     {request.issue_type === "mechanical"
-                                      ? "ميكانيكية"
+                                      ? t("maintenance.maintenanceType")
                                       : request.issue_type === "electrical"
-                                        ? "كهربائية"
-                                        : "أخرى"}
+                                        ? t("maintenance.maintenanceType")
+                                        : t("common.type")}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-center">
                                     <Badge
@@ -553,10 +555,10 @@ export default function Maintenance() {
                                       }
                                     >
                                       {request.urgency_level === "urgent"
-                                        ? "عاجل"
+                                        ? t("production.urgent")
                                         : request.urgency_level === "medium"
-                                          ? "متوسط"
-                                          : "عادي"}
+                                          ? t("production.medium")
+                                          : t("production.normal")}
                                     </Badge>
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -590,7 +592,7 @@ export default function Maintenance() {
                                 colSpan={8}
                                 className="px-6 py-4 text-center text-gray-500"
                               >
-                                لا توجد طلبات صيانة مسجلة
+                                {t("common.noData")}
                               </td>
                             </tr>
                           )}

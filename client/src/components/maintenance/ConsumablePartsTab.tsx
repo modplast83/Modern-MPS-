@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import {
@@ -80,6 +81,7 @@ export default function ConsumablePartsTab({
   consumableParts: propParts,
   isLoading: propLoading,
 }: ConsumablePartsTabProps) {
+  const { t } = useTranslation();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
@@ -141,13 +143,13 @@ export default function ConsumablePartsTab({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/consumable-parts"] });
-      toast({ title: "تم إضافة قطعة الغيار الاستهلاكية بنجاح" });
+      toast({ title: t("toast.successSaved") });
       setIsAddDialogOpen(false);
       addForm.reset();
     },
     onError: () => {
       toast({
-        title: "فشل في إضافة قطعة الغيار الاستهلاكية",
+        title: t("errors.savingError"),
         variant: "destructive",
       });
     },
@@ -167,13 +169,13 @@ export default function ConsumablePartsTab({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/consumable-parts"] });
-      toast({ title: "تم تحديث قطعة الغيار الاستهلاكية بنجاح" });
+      toast({ title: t("toast.successSaved") });
       setIsEditDialogOpen(false);
       setEditingPart(null);
     },
     onError: () => {
       toast({
-        title: "فشل في تحديث قطعة الغيار الاستهلاكية",
+        title: t("errors.savingError"),
         variant: "destructive",
       });
     },
@@ -186,11 +188,11 @@ export default function ConsumablePartsTab({
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/consumable-parts"] });
-      toast({ title: "تم حذف قطعة الغيار الاستهلاكية بنجاح" });
+      toast({ title: t("toast.successDeleted") });
     },
     onError: () => {
       toast({
-        title: "فشل في حذف قطعة الغيار الاستهلاكية",
+        title: t("errors.deletingError"),
         variant: "destructive",
       });
     },
@@ -223,13 +225,13 @@ export default function ConsumablePartsTab({
       queryClient.invalidateQueries({
         queryKey: ["/api/consumable-parts-transactions"],
       });
-      toast({ title: "تم تسجيل الحركة بنجاح" });
+      toast({ title: t("warehouse.movementRecorded") });
       setIsTransactionDialogOpen(false);
       transactionForm.reset();
     },
     onError: (error: any) => {
       toast({
-        title: "فشل في تسجيل الحركة",
+        title: t("errors.savingError"),
         description: error.message,
         variant: "destructive",
       });
@@ -291,13 +293,13 @@ export default function ConsumablePartsTab({
       case "active":
         return (
           <Badge variant="default" className="bg-green-100 text-green-800">
-            نشط
+            {t("common.active")}
           </Badge>
         );
       case "inactive":
-        return <Badge variant="secondary">غير نشط</Badge>;
+        return <Badge variant="secondary">{t("common.inactive")}</Badge>;
       case "maintenance":
-        return <Badge variant="destructive">صيانة</Badge>;
+        return <Badge variant="destructive">{t("maintenance.maintenance")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -305,7 +307,7 @@ export default function ConsumablePartsTab({
 
   const getQuantityStatus = (current: number, min?: number) => {
     if (min && current <= min) {
-      return <span className="text-red-600 font-semibold">منخفض</span>;
+      return <span className="text-red-600 font-semibold">{t("warehouse.lowStock")}</span>;
     }
     return <span className="text-green-600">{current}</span>;
   };
@@ -314,12 +316,12 @@ export default function ConsumablePartsTab({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>قطع الغيار الاستهلاكية</CardTitle>
+          <CardTitle>{t("maintenance.consumableParts")}</CardTitle>
           <div className="flex space-x-2 space-x-reverse">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="البحث في قطع الغيار..."
+                placeholder={t("common.search")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-64"
@@ -339,7 +341,7 @@ export default function ConsumablePartsTab({
                   data-testid="button-barcode"
                 >
                   <QrCode className="h-4 w-4 mr-2" />
-                  حركة باركود
+                  {t("warehouse.movementType")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -491,7 +493,7 @@ export default function ConsumablePartsTab({
                   data-testid="button-add"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  إضافة قطعة غيار
+                  {t("maintenance.addSparePart")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
