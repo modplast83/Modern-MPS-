@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useTranslation } from 'react-i18next';
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -42,6 +43,7 @@ interface ProductionOrderWithRolls {
 }
 
 export default function CuttingOperatorDashboard() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [processingRollIds, setProcessingRollIds] = useState<Set<number>>(new Set());
 
@@ -59,10 +61,10 @@ export default function CuttingOperatorDashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rolls/active-for-cutting"] });
-      toast({ title: "✓ تم بنجاح", description: "تم نقل الرول إلى مرحلة التقطيع", variant: "default" });
+      toast({ title: t('toast.successGeneric'), description: t('toast.rollCutDesc'), variant: "default" });
     },
     onError: (error: Error) => {
-      toast({ title: "خطأ", description: "فشل نقل الرول", variant: "destructive" });
+      toast({ title: t('errors.genericError'), description: t('toast.errorMoveToCutting'), variant: "destructive" });
     },
   });
 
@@ -96,7 +98,7 @@ export default function CuttingOperatorDashboard() {
             <div className="flex items-center justify-center h-96">
               <div className="text-center">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-gray-600 text-lg">جاري تحميل رولات التقطيع...</p>
+                <p className="text-gray-600 text-lg">{t('cuttingOperator.loadingRolls')}</p>
               </div>
             </div>
           </main>
@@ -115,38 +117,38 @@ export default function CuttingOperatorDashboard() {
 
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل التقطيع</h1>
-            <p className="text-gray-600 dark:text-gray-400">إدارة رولات التقطيع وإنهائها</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('cuttingOperator.title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400">{t('cuttingOperator.description')}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card data-testid="card-active-orders">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">الأوامر النشطة</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cuttingOperator.activeOrders')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="stat-active-orders">{stats.totalOrders}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t('filmOperator.productionOrder')}</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-rolls">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">إجمالي الرولات</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cuttingOperator.totalRolls')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="stat-total-rolls">{stats.totalRolls}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">رول</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t('cuttingOperator.roll')}</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-weight">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium">إجمالي الوزن</CardTitle>
+                <CardTitle className="text-sm font-medium">{t('cuttingOperator.totalWeight')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold" data-testid="stat-total-weight">{formatNumberAr(stats.totalWeight)}</div>
-                <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">{t('warehouse.kg')}</p>
               </CardContent>
             </Card>
           </div>
@@ -156,10 +158,10 @@ export default function CuttingOperatorDashboard() {
               <div className="text-center">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  لا توجد رولات في مرحلة التقطيع
+                  {t('cuttingOperator.noActiveRolls')}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400" data-testid="text-no-rolls">
-                  لا توجد رولات جاهزة للتقطيع حالياً
+                  {t('cuttingOperator.noRollsDesc')}
                 </p>
               </div>
             </Card>
@@ -182,12 +184,12 @@ export default function CuttingOperatorDashboard() {
                             {order.production_order_number}
                           </CardTitle>
                           <CardDescription data-testid={`text-order-ref-${order.production_order_id}`}>
-                            الطلب: {order.order_number}
+                            {t('orders.orderNumber')}: {order.order_number}
                           </CardDescription>
                         </div>
                         <Badge variant="secondary" className="bg-green-100 text-green-800">
                           <Scissors className="h-3 w-3 ml-1" />
-                          {order.total_rolls} رول
+                          {order.total_rolls} {t('cuttingOperator.roll')}
                         </Badge>
                       </div>
                     </CardHeader>
@@ -195,20 +197,20 @@ export default function CuttingOperatorDashboard() {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-gray-500 dark:text-gray-400">العميل</p>
+                          <p className="text-gray-500 dark:text-gray-400">{t('orders.customer')}</p>
                           <p className="font-medium" data-testid={`text-customer-${order.production_order_id}`}>{order.customer_name}</p>
                         </div>
                         <div>
-                          <p className="text-gray-500 dark:text-gray-400">المنتج</p>
+                          <p className="text-gray-500 dark:text-gray-400">{t('orders.product')}</p>
                           <p className="font-medium" data-testid={`text-product-${order.production_order_id}`}>{order.product_name}</p>
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">التقدم</span>
+                          <span className="text-gray-600 dark:text-gray-400">{t('filmOperator.progress')}</span>
                           <span className="font-medium" data-testid={`text-progress-${order.production_order_id}`}>
-                            {completedRolls} / {order.total_rolls} رول
+                            {completedRolls} / {order.total_rolls} {t('cuttingOperator.roll')}
                           </span>
                         </div>
                         <Progress value={progress} className="h-2" data-testid={`progress-bar-${order.production_order_id}`} />
@@ -216,12 +218,12 @@ export default function CuttingOperatorDashboard() {
 
                       <div className="flex items-center gap-2 text-sm">
                         <Package className="h-4 w-4 text-gray-400" />
-                        <span className="text-gray-600 dark:text-gray-400">الوزن الإجمالي:</span>
-                        <span className="font-medium">{formatNumberAr(order.total_weight)} كجم</span>
+                        <span className="text-gray-600 dark:text-gray-400">{t('production.totalWeight')}:</span>
+                        <span className="font-medium">{formatNumberAr(order.total_weight)} {t('warehouse.kg')}</span>
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">الرولات المتاحة:</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{t('cuttingOperator.rollsReadyForCutting')}:</p>
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {order.rolls.map((roll) => (
                             <div 
@@ -236,7 +238,7 @@ export default function CuttingOperatorDashboard() {
                                   </span>
                                 </div>
                                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                  الوزن: {formatNumberAr(Number(roll.weight_kg))} كجم
+                                  {t('production.weight')}: {formatNumberAr(Number(roll.weight_kg))} {t('warehouse.kg')}
                                 </div>
                               </div>
                               
@@ -252,7 +254,7 @@ export default function CuttingOperatorDashboard() {
                                 ) : (
                                   <>
                                     <Scissors className="h-4 w-4 ml-1" />
-                                    <span className="hidden sm:inline">قطع</span>
+                                    <span className="hidden sm:inline">{t('production.cutting')}</span>
                                   </>
                                 )}
                               </Button>
