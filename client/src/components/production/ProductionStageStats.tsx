@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Package, Weight, Clock, CheckCircle2 } from "lucide-react";
 
@@ -7,6 +8,8 @@ interface ProductionStageStatsProps {
 }
 
 export default function ProductionStageStats({ stage, data }: ProductionStageStatsProps) {
+  const { t } = useTranslation();
+
   const calculateStats = () => {
     let totalOrders = 0;
     let totalRolls = 0;
@@ -87,11 +90,11 @@ export default function ProductionStageStats({ stage, data }: ProductionStageSta
   const getStageName = () => {
     switch (stage) {
       case "film":
-        return "مرحلة الفيلم";
+        return t('production.filmStage');
       case "printing":
-        return "مرحلة الطباعة";
+        return t('production.printingStage');
       case "cutting":
-        return "مرحلة التقطيع";
+        return t('production.cuttingStage');
       default:
         return "";
     }
@@ -108,37 +111,37 @@ export default function ProductionStageStats({ stage, data }: ProductionStageSta
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalOrders}</div>
-          <p className="text-xs text-muted-foreground">طلب في الطابور</p>
+          <p className="text-xs text-muted-foreground">{t('production.productionQueue')}</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">عدد الرولات</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('orders.rolls')}</CardTitle>
           <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{stats.totalRolls}</div>
-          <p className="text-xs text-muted-foreground">رول في الطابور</p>
+          <p className="text-xs text-muted-foreground">{t('warehouse.roll')}</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">إجمالي الوزن</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('common.total')}</CardTitle>
           <Weight className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {stats.totalWeight.toFixed(2)}
           </div>
-          <p className="text-xs text-muted-foreground">كيلوجرام</p>
+          <p className="text-xs text-muted-foreground">{t('warehouse.kg')}</p>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">نسبة التقدم</CardTitle>
+          <CardTitle className="text-sm font-medium">{t('orders.completionRate')}</CardTitle>
           <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -146,7 +149,7 @@ export default function ProductionStageStats({ stage, data }: ProductionStageSta
             {stats.progressPercentage}%
           </div>
           <p className="text-xs text-muted-foreground">
-            {stats.completedRolls} / {stats.totalRolls} رول مكتمل
+            {stats.completedRolls} / {stats.totalRolls} {t('production.completed')}
           </p>
         </CardContent>
       </Card>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export default function ProductionOrderActivationModal({
   operators,
   isUpdating = false,
 }: ProductionOrderActivationModalProps) {
+  const { t } = useTranslation();
   const [selectedMachineId, setSelectedMachineId] = useState<string>("");
   const [selectedOperatorId, setSelectedOperatorId] = useState<string>("");
 
@@ -45,12 +47,9 @@ export default function ProductionOrderActivationModal({
     onConfirm(machineId, operatorId);
   };
 
-  // فلتر المكائن النشطة فقط
   const activeMachines = machines.filter(m => m.status === "active");
 
-  // فلتر العمال حسب الأقسام المناسبة
   const productionOperators = operators.filter(u => {
-    // يمكنك تعديل هذا الفلتر حسب هيكل البيانات
     return u.section_id && ['production', 'factory'].includes(u.section_id);
   });
 
@@ -59,7 +58,7 @@ export default function ProductionOrderActivationModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isUpdating ? "تحديث تخصيص أمر الإنتاج" : "تفعيل أمر الإنتاج"}
+            {isUpdating ? t('common.update') : t('production.activateOrder')}
           </DialogTitle>
         </DialogHeader>
 
@@ -68,36 +67,36 @@ export default function ProductionOrderActivationModal({
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-sm space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">رقم أمر الإنتاج:</span>
+                  <span className="text-gray-600">{t('production.productionOrderNumber')}:</span>
                   <span className="font-medium">{order.production_order_number}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">العميل:</span>
+                  <span className="text-gray-600">{t('orders.customer')}:</span>
                   <span className="font-medium">
                     {order.customer_name_ar || order.customer_name}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">المنتج:</span>
+                  <span className="text-gray-600">{t('orders.product')}:</span>
                   <span className="font-medium">{order.size_caption}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">الكمية:</span>
-                  <span className="font-medium">{order.quantity_kg} كجم</span>
+                  <span className="text-gray-600">{t('common.quantity')}:</span>
+                  <span className="font-medium">{order.quantity_kg} {t('warehouse.kg')}</span>
                 </div>
               </div>
             </div>
           )}
 
           <div>
-            <Label htmlFor="machine">الماكينة (اختياري)</Label>
+            <Label htmlFor="machine">{t('production.machine')} ({t('common.optional')})</Label>
             <Select value={selectedMachineId} onValueChange={setSelectedMachineId}>
               <SelectTrigger id="machine" data-testid="select-machine">
-                <SelectValue placeholder="اختر الماكينة..." />
+                <SelectValue placeholder={t('production.selectMachine')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none" data-testid="option-no-machine">
-                  بدون تخصيص
+                  {t('common.noData')}
                 </SelectItem>
                 {activeMachines.map((machine) => (
                   <SelectItem
@@ -119,20 +118,20 @@ export default function ProductionOrderActivationModal({
             </Select>
             {selectedMachineId && selectedMachineId !== "none" && (
               <p className="text-sm text-green-600 mt-1">
-                سيتم تخصيص الماكينة لهذا الأمر
+                {t('production.assignToMachine')}
               </p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="operator">العامل المسؤول (اختياري)</Label>
+            <Label htmlFor="operator">{t('production.operator')} ({t('common.optional')})</Label>
             <Select value={selectedOperatorId} onValueChange={setSelectedOperatorId}>
               <SelectTrigger id="operator" data-testid="select-operator">
-                <SelectValue placeholder="اختر العامل..." />
+                <SelectValue placeholder={t('common.select')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none" data-testid="option-no-operator">
-                  بدون تخصيص
+                  {t('common.noData')}
                 </SelectItem>
                 {productionOperators.map((operator) => (
                   <SelectItem
@@ -147,7 +146,7 @@ export default function ProductionOrderActivationModal({
             </Select>
             {selectedOperatorId && selectedOperatorId !== "none" && (
               <p className="text-sm text-green-600 mt-1">
-                سيتم تخصيص العامل لهذا الأمر
+                {t('production.assignToMachine')}
               </p>
             )}
           </div>
@@ -155,8 +154,7 @@ export default function ProductionOrderActivationModal({
           {!isUpdating && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
               <p className="text-sm text-yellow-800">
-                <strong>ملاحظة:</strong> سيتم تفعيل أمر الإنتاج وتغيير حالته إلى "نشط".
-                يمكنك تخصيص الماكينة والعامل الآن أو لاحقاً.
+                <strong>{t('common.notes')}:</strong> {t('production.activate')}
               </p>
             </div>
           )}
@@ -164,10 +162,10 @@ export default function ProductionOrderActivationModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            إلغاء
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleConfirm} data-testid="button-confirm-activation">
-            {isUpdating ? "تحديث التخصيص" : "تفعيل الأمر"}
+            {isUpdating ? t('common.update') : t('production.activate')}
           </Button>
         </DialogFooter>
       </DialogContent>

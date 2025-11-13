@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { useProductionSSE } from "../../hooks/use-production-sse";
 import { useAuth } from "../../hooks/use-auth";
@@ -26,61 +27,53 @@ const stages = [
   {
     id: "film",
     name: "Film Stage",
-    name_ar: "مرحلة الفيلم",
+    name_ar: "filmStage",
     key: "film",
     icon: Package,
   },
   {
     id: "printing",
     name: "Printing Stage",
-    name_ar: "مرحلة الطباعة",
+    name_ar: "printingStage",
     key: "printing",
     icon: Play,
   },
   {
     id: "cutting",
     name: "Cutting Stage",
-    name_ar: "مرحلة التقطيع",
+    name_ar: "cuttingStage",
     key: "cutting",
     icon: Scissors,
   },
 ];
 
 export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
+  const { t } = useTranslation();
   const [activeStage, setActiveStage] = useState<string>("film");
 
-  // Get current user information from auth context
   const { user: currentUser } = useAuth();
-
-  // Use SSE for real-time production updates instead of polling
   const { refreshProductionData } = useProductionSSE();
 
-  // Get sections to map section IDs to names
   const { data: sections = [] } = useQuery<Section[]>({
     queryKey: ["/api/sections"],
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 
-  // Filter stages based on user's role and section
   const visibleStages = useMemo(() => {
     if (!currentUser) return stages;
 
     const userRole = currentUser.role_id;
     const userSectionId = currentUser.section_id;
 
-    // Managers and Production Managers can see all tabs
     if (userRole === 1 || userRole === 2) {
-      // Manager, Production Manager
       return stages;
     }
 
-    // Get section information to match with production stages
     const userSection = sections.find(
       (section) => Number(section.id) === userSectionId || section.id === String(userSectionId),
     );
     const sectionName = userSection?.name?.toLowerCase();
 
-    // Map sections to stages
     if (sectionName?.includes("film") || sectionName?.includes("فيلم")) {
       return stages.filter((stage) => stage.key === "film");
     }
@@ -93,41 +86,39 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
       return stages.filter((stage) => stage.key === "cutting");
     }
 
-    // Default: show all stages if no specific section match
     return stages;
   }, [currentUser, sections]);
 
-  // Fetch production queues - Reduced polling for better performance
   const { data: filmQueue = [] } = useQuery<any[]>({
     queryKey: ["/api/production/film-queue"],
-    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: printingQueue = [] } = useQuery<any[]>({
     queryKey: ["/api/production/printing-queue"],
-    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: cuttingQueue = [] } = useQuery<any[]>({
     queryKey: ["/api/production/cutting-queue"],
-    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: groupedCuttingQueue = [] } = useQuery<any[]>({
     queryKey: ["/api/production/grouped-cutting-queue"],
-    refetchInterval: false, // Disabled polling - rely on manual refetch or SSE
-    staleTime: 5 * 60 * 1000, // 5 minutes - reduce server load
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    refetchOnWindowFocus: false, // Prevent unnecessary refetches
+    refetchInterval: false,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: hierarchicalOrders = [] } = useQuery<any[]>({
@@ -138,10 +129,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
     refetchOnWindowFocus: false,
   });
 
-  // Set default active stage based on visible stages
   const defaultStage = visibleStages.length > 0 ? visibleStages[0].id : "film";
 
-  // Update active stage if it's not visible anymore
   if (!visibleStages.some((stage) => stage.id === activeStage)) {
     setActiveStage(defaultStage);
   }
@@ -152,7 +141,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
         <CardHeader className="p-3 md:p-4 border-b">
           <div className="flex justify-between items-center">
             <CardTitle className="text-xl md:text-2xl">
-              إدارة الإنتاج
+              {t('production.productionManagement')}
             </CardTitle>
             <Button
               variant="outline"
@@ -162,7 +151,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               data-testid="button-refresh-production"
             >
               <RefreshCw className="h-5 w-5" />
-              <span className="hidden sm:inline">تحديث</span>
+              <span className="hidden sm:inline">{t('common.refresh')}</span>
             </Button>
           </div>
           <TabsList
@@ -192,8 +181,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                   data-testid={`tab-${stage.key}`}
                 >
                   <Icon className="h-5 w-5 md:h-6 md:w-6" />
-                  <span className="hidden sm:inline">{stage.name_ar}</span>
-                  <span className="sm:hidden">{stage.name_ar.split(' ')[1]}</span>
+                  <span className="hidden sm:inline">{t(`production.${stage.name_ar}`)}</span>
+                  <span className="sm:hidden">{t(`production.${stage.name_ar}`)}</span>
                   {queueCount > 0 && (
                     <Badge variant="secondary" className="text-xs md:text-sm">
                       {queueCount}
@@ -205,7 +194,6 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsList>
         </CardHeader>
 
-        {/* Film Stage - Hierarchical Orders View */}
         {visibleStages.some((stage) => stage.key === "film") && (
           <TabsContent value="film" className="mt-0">
             <CardContent className="p-2 md:p-4">
@@ -218,10 +206,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsContent>
         )}
 
-        {/* Printing Stage - Rolls Ready for Printing */}
         {visibleStages.some((stage) => stage.key === "printing") && (
           <TabsContent value="printing" className="mt-0">
-            {/* Check if user is specifically in printing section */}
             {(() => {
               const userSection = sections.find(
                 (section) => section.id === String(currentUser?.section_id)
@@ -230,12 +216,10 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                 userSection?.name?.toLowerCase().includes("print") || 
                 userSection?.name?.toLowerCase().includes("طباعة");
               
-              // Show dedicated dashboard for printing operators
               if (isPrintingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
                 return <PrintingOperatorDashboard />;
               }
               
-              // Show standard view for managers
               return (
                 <CardContent className="p-2 md:p-4">
                   <ProductionStageStats stage="printing" data={printingQueue} />
@@ -246,10 +230,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsContent>
         )}
 
-        {/* Cutting Stage - Printed Rolls Ready for Cutting */}
         {visibleStages.some((stage) => stage.key === "cutting") && (
           <TabsContent value="cutting" className="mt-0">
-            {/* Check if user is specifically in cutting section */}
             {(() => {
               const userSection = sections.find(
                 (section) => section.id === String(currentUser?.section_id)
@@ -258,12 +240,10 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                 userSection?.name?.toLowerCase().includes("cut") || 
                 userSection?.name?.toLowerCase().includes("تقطيع");
               
-              // Show dedicated dashboard for cutting operators
               if (isCuttingOperator && currentUser?.role_id !== 1 && currentUser?.role_id !== 2) {
                 return <CuttingOperatorDashboard />;
               }
               
-              // Show standard view for managers
               return (
                 <CardContent className="p-2 md:p-4">
                   <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />

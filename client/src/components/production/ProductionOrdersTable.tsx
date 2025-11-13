@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "../ui/button";
 import { Progress } from "../ui/progress";
@@ -18,6 +19,7 @@ export default function ProductionOrdersTable({
   stage,
   onCreateRoll,
 }: ProductionOrdersTableProps) {
+  const { t } = useTranslation();
   const { data: productionOrders = [], isLoading } = useQuery<
     ProductionOrderWithDetails[]
   >({
@@ -41,7 +43,7 @@ export default function ProductionOrdersTable({
     return (
       <div className="text-center py-8">
         <p className="text-muted-foreground">
-          لا توجد أوامر إنتاج في هذه المرحلة
+          {t('common.noData')}
         </p>
       </div>
     );
@@ -53,25 +55,25 @@ export default function ProductionOrdersTable({
         <thead className="bg-gray-50">
           <tr>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              رقم الأمر
+              {t('production.productionOrderNumber')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              العميل
+              {t('orders.customer')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              المنتج
+              {t('orders.product')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              الكمية المطلوبة
+              {t('common.quantity')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              الكمية المنتجة
+              {t('production.totalProduction')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              التقدم
+              {t('orders.completionRate')}
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-              الإجراءات
+              {t('common.actions')}
             </th>
           </tr>
         </thead>
@@ -92,13 +94,13 @@ export default function ProductionOrdersTable({
                   {order.production_order_number}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {order.customer_name_ar || order.customer_name || "غير محدد"}
+                  {order.customer_name_ar || order.customer_name || t('common.noData')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {(order as any).item_name_ar ||
                     (order as any).item_name ||
                     (order as any).size_caption ||
-                    "غير محدد"}
+                    t('common.noData')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {formatWeight(required)}
