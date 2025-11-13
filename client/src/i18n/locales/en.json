@@ -1,0 +1,43 @@
+{
+  "sidebar": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "ordersProduction": "Orders & Production",
+    "filmOperator": "Film Operator",
+    "printingOperator": "Printing Operator",
+    "cuttingOperator": "Cutting Operator",
+    "productionMonitoring": "Production Monitoring",
+    "quality": "Quality",
+    "maintenance": "Maintenance",
+    "hr": "Human Resources",
+    "warehouse": "Warehouse",
+    "definitions": "Definitions",
+    "reports": "Reports",
+    "tools": "Tools",
+    "settings": "Settings"
+  },
+  "header": {
+    "searchPlaceholder": "Search...",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "noData": "No data available",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "close": "Close"
+  }
+}

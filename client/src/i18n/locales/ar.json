@@ -1,0 +1,43 @@
+{
+  "sidebar": {
+    "home": "الرئيسية",
+    "dashboard": "لوحة التحكم",
+    "ordersProduction": "الطلبات والإنتاج",
+    "filmOperator": "لوحة عامل الفيلم",
+    "printingOperator": "لوحة عامل الطباعة",
+    "cuttingOperator": "لوحة عامل التقطيع",
+    "productionMonitoring": "مراقبة الإنتاج",
+    "quality": "الجودة",
+    "maintenance": "الصيانة",
+    "hr": "الموارد البشرية",
+    "warehouse": "المستودع",
+    "definitions": "التعريفات",
+    "reports": "التقارير",
+    "tools": "الأدوات",
+    "settings": "الإعدادات"
+  },
+  "header": {
+    "searchPlaceholder": "بحث...",
+    "notifications": "الإشعارات",
+    "profile": "الملف الشخصي",
+    "logout": "تسجيل الخروج",
+    "language": "اللغة"
+  },
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "search": "بحث",
+    "filter": "تصفية",
+    "export": "تصدير",
+    "import": "استيراد",
+    "loading": "جاري التحميل...",
+    "noData": "لا توجد بيانات",
+    "error": "خطأ",
+    "success": "نجح",
+    "confirm": "تأكيد",
+    "close": "إغلاق"
+  }
+}
