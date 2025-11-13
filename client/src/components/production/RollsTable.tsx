@@ -14,6 +14,7 @@ import {
 import { useToast } from "../../hooks/use-toast";
 import { useAuth } from "../../hooks/use-auth";
 import { apiRequest } from "../../lib/queryClient";
+import { useTranslation } from "react-i18next";
 import type { Roll } from "../../../../shared/schema";
 
 interface RollsTableProps {
@@ -29,12 +30,6 @@ interface RollWithDetails extends Roll {
   employee_name?: string;
 }
 
-const stageLabels = {
-  film: "مرحلة الفيلم",
-  printing: "مرحلة الطباعة",
-  cutting: "مرحلة التقطيع",
-};
-
 const nextStage = {
   film: "printing",
   printing: "cutting",
@@ -42,9 +37,16 @@ const nextStage = {
 };
 
 export default function RollsTable({ stage }: RollsTableProps) {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  const stageLabels = {
+    film: t("production.filmStage"),
+    printing: t("production.printingStage"),
+    cutting: t("production.cuttingStage"),
+  };
 
   const { data: rolls = [], isLoading } = useQuery<RollWithDetails[]>({
     queryKey: ["/api/rolls", stage],
@@ -82,16 +84,16 @@ export default function RollsTable({ stage }: RollsTableProps) {
       queryClient.refetchQueries({ queryKey: ["/api/rolls"], type: "active" });
 
       toast({
-        title: "تم تحديث الرول بنجاح",
+        title: t("production.rollUpdatedSuccess"),
         description: updates.stage
-          ? `تم نقل الرول إلى ${stageLabels[updates.stage as keyof typeof stageLabels]}`
-          : "تم تحديث بيانات الرول",
+          ? t("production.rollMovedToStage", { stage: stageLabels[updates.stage as keyof typeof stageLabels] })
+          : t("production.rollDataUpdated"),
       });
     },
     onError: () => {
       toast({
-        title: "خطأ في التحديث",
-        description: "فشل في تحديث الرول",
+        title: t("common.error"),
+        description: t("production.rollUpdateFailed"),
         variant: "destructive",
       });
     },
@@ -123,24 +125,22 @@ export default function RollsTable({ stage }: RollsTableProps) {
       const response = await fetch(`/api/rolls/${rollId}/label`);
       const labelData = await response.json();
 
-      // إنشاء نافذة طباعة جديدة
       const printWindow = window.open("", "_blank", "width=400,height=500");
       if (!printWindow) {
         toast({
-          title: "خطأ في فتح نافذة الطباعة",
-          description: "تأكد من السماح للنوافذ المنبثقة",
+          title: t("production.printWindowError"),
+          description: t("production.allowPopups"),
           variant: "destructive",
         });
         return;
       }
 
-      // HTML للليبل بمقاس 4" × 5"
       const labelHTML = `
         <!DOCTYPE html>
         <html dir="rtl">
         <head>
           <meta charset="UTF-8">
-          <title>ليبل الرول - ${labelData.roll_number}</title>
+          <title>${t("production.rollLabel")} - ${labelData.roll_number}</title>
           <style>
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
@@ -218,38 +218,38 @@ export default function RollsTable({ stage }: RollsTableProps) {
         </head>
         <body>
           <div class="header">
-            <div class="title">ليبل الرول</div>
+            <div class="title">${t("production.rollLabel")}</div>
             <div class="subtitle">${labelData.label_dimensions.width} × ${labelData.label_dimensions.height}</div>
           </div>
           
           <div class="content">
             <div class="info-section">
               <div class="info-row">
-                <span class="label">رقم الرول:</span>
+                <span class="label">${t("production.rollNumber")}:</span>
                 <span class="value">${labelData.roll_number}</span>
               </div>
               <div class="info-row">
-                <span class="label">أمر الإنتاج:</span>
+                <span class="label">${t("production.productionOrderNumber")}:</span>
                 <span class="value">${labelData.production_order_number}</span>
               </div>
               <div class="info-row">
-                <span class="label">العميل:</span>
+                <span class="label">${t("orders.customer")}:</span>
                 <span class="value">${labelData.customer_name}</span>
               </div>
               <div class="info-row">
-                <span class="label">الوزن:</span>
+                <span class="label">${t("production.rollWeight")}:</span>
                 <span class="value">${labelData.weight_kg}</span>
               </div>
               <div class="info-row">
-                <span class="label">المرحلة:</span>
+                <span class="label">${t("production.stage")}:</span>
                 <span class="value">${labelData.stage}</span>
               </div>
               <div class="info-row">
-                <span class="label">الماكينة:</span>
+                <span class="label">${t("production.machine")}:</span>
                 <span class="value">${labelData.machine_name}</span>
               </div>
               <div class="info-row">
-                <span class="label">تاريخ الإنتاج:</span>
+                <span class="label">${t("common.date")}:</span>
                 <span class="value">${labelData.created_at}</span>
               </div>
             </div>
@@ -260,7 +260,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
             <div class="qr-section">
               <img src="data:image/png;base64,${labelData.qr_png_base64}" 
                    alt="QR Code" class="qr-code" />
-              <div style="font-size: 8px; margin-top: 3px;">امسح للمعلومات</div>
+              <div style="font-size: 8px; margin-top: 3px;">${t("production.scanForInfo")}</div>
             </div>
             `
                 : ""
@@ -268,7 +268,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
           </div>
           
           <div class="footer">
-            تاريخ الطباعة: ${new Date().toLocaleDateString("ar")} | نظام إدارة الإنتاج
+            ${t("production.printDate")}: ${new Date().toLocaleDateString("ar")} | ${t("production.productionManagement")}
           </div>
         </body>
         </html>
@@ -277,19 +277,17 @@ export default function RollsTable({ stage }: RollsTableProps) {
       printWindow.document.write(labelHTML);
       printWindow.document.close();
 
-      // انتظار تحميل الصور ثم طباعة
       setTimeout(() => {
         printWindow.print();
         printWindow.close();
       }, 500);
 
       toast({
-        title: "تم إرسال الليبل للطباعة",
-        description: `ليبل الرول ${labelData.roll_number}`,
+        title: t("production.labelSentToPrint"),
+        description: t("production.labelFor", { rollNumber: labelData.roll_number }),
         variant: "default",
       });
       
-      // تحديث البيانات بعد الطباعة
       queryClient.invalidateQueries({ queryKey: ["/api/rolls"] });
       queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/production/hierarchical-orders"] });
@@ -299,8 +297,8 @@ export default function RollsTable({ stage }: RollsTableProps) {
     } catch (error) {
       console.error("Error printing label:", error);
       toast({
-        title: "خطأ في طباعة الليبل",
-        description: "حدث خطأ أثناء توليد الليبل للطباعة",
+        title: t("production.labelPrintError"),
+        description: t("production.labelGenerationError"),
         variant: "destructive",
       });
     }
@@ -323,13 +321,13 @@ export default function RollsTable({ stage }: RollsTableProps) {
   const getStatusText = (stage: string) => {
     switch (stage) {
       case "done":
-        return "مكتمل";
+        return t("production.completed");
       case "cutting":
-        return "مرحلة التقطيع";
+        return t("production.cuttingStage");
       case "printing":
-        return "مرحلة الطباعة";
+        return t("production.printingStage");
       case "film":
-        return "مرحلة الفيلم";
+        return t("production.filmStage");
       default:
         return stage;
     }
@@ -355,7 +353,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            الرولات - {stageLabels[stage as keyof typeof stageLabels]}
+            {t("orders.rolls")} - {stageLabels[stage as keyof typeof stageLabels]}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -383,13 +381,13 @@ export default function RollsTable({ stage }: RollsTableProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
-            الرولات - {stageLabels[stage as keyof typeof stageLabels]}
+            {t("orders.rolls")} - {stageLabels[stage as keyof typeof stageLabels]}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">لا توجد رولات في هذه المرحلة</p>
+            <p className="text-gray-500">{t("production.noRollsInStage")}</p>
           </div>
         </CardContent>
       </Card>
@@ -401,7 +399,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="w-5 h-5" />
-          الرولات - {stageLabels[stage as keyof typeof stageLabels]}
+          {t("orders.rolls")} - {stageLabels[stage as keyof typeof stageLabels]}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -410,25 +408,25 @@ export default function RollsTable({ stage }: RollsTableProps) {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  رقم الرول
+                  {t("production.rollNumber")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  أمر التشغيل
+                  {t("production.productionOrderNumber")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  الوزن (كجم)
+                  {t("production.rollWeight")} ({t("warehouse.kg")})
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  المكينة
+                  {t("production.machine")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  المسؤول/التوقيت
+                  {t("production.responsibleTiming")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  الحالة
+                  {t("common.status")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  الإجراءات
+                  {t("common.actions")}
                 </th>
               </tr>
             </thead>
@@ -436,27 +434,26 @@ export default function RollsTable({ stage }: RollsTableProps) {
               {rolls.map((roll) => (
                 <tr key={roll.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {roll.roll_number || "غير محدد"}
+                    {roll.roll_number || t("common.notSpecified")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {roll.production_order_number || "غير محدد"}
+                    {roll.production_order_number || t("common.notSpecified")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {roll.weight_kg
                       ? parseFloat(roll.weight_kg.toString()).toFixed(1)
-                      : "غير محدد"}
+                      : t("common.notSpecified")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {roll.machine_name_ar || roll.machine_name || "غير محدد"}
+                    {roll.machine_name_ar || roll.machine_name || t("common.notSpecified")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <div className="space-y-1">
-                      {/* إنتاج */}
                       <div className="flex items-center gap-1 text-xs">
                         <span className="font-medium text-blue-600">
-                          إنتاج:
+                          {t("production.production")}:
                         </span>
-                        <span>{`مستخدم ${roll.created_by || "غير محدد"}`}</span>
+                        <span>{t("common.user")} {roll.created_by || t("common.notSpecified")}</span>
                       </div>
                       <div className="text-xs text-gray-400">
                         {roll.created_at
@@ -464,13 +461,12 @@ export default function RollsTable({ stage }: RollsTableProps) {
                           : ""}
                       </div>
 
-                      {/* طباعة */}
                       {roll.printed_by && (
                         <div className="flex items-center gap-1 text-xs">
                           <span className="font-medium text-green-600">
-                            طباعة:
+                            {t("production.printing")}:
                           </span>
-                          <span>{`مستخدم ${roll.printed_by}`}</span>
+                          <span>{t("common.user")} {roll.printed_by}</span>
                         </div>
                       )}
                       {roll.printed_at && (
@@ -479,13 +475,12 @@ export default function RollsTable({ stage }: RollsTableProps) {
                         </div>
                       )}
 
-                      {/* قص */}
                       {roll.cut_by && (
                         <div className="flex items-center gap-1 text-xs">
                           <span className="font-medium text-purple-600">
-                            قص:
+                            {t("production.cutting")}:
                           </span>
-                          <span>{`مستخدم ${roll.cut_by}`}</span>
+                          <span>{t("common.user")} {roll.cut_by}</span>
                         </div>
                       )}
                       {roll.cut_completed_at && (
@@ -510,7 +505,6 @@ export default function RollsTable({ stage }: RollsTableProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2 space-x-reverse">
-                      {/* زر طباعة الليبل */}
                       <Button
                         size="sm"
                         variant="outline"
@@ -519,10 +513,9 @@ export default function RollsTable({ stage }: RollsTableProps) {
                         data-testid={`button-print-label-${roll.id}`}
                       >
                         <Tag className="w-3 h-3" />
-                        ليبل
+                        {t("production.label")}
                       </Button>
 
-                      {/* زر QR */}
                       <Button
                         size="sm"
                         variant="outline"
@@ -536,7 +529,6 @@ export default function RollsTable({ stage }: RollsTableProps) {
                         QR
                       </Button>
 
-                      {/* زر نقل المرحلة */}
                       {(roll.stage || "") !== "done" ? (
                         <Button
                           size="sm"
@@ -552,12 +544,12 @@ export default function RollsTable({ stage }: RollsTableProps) {
                           ] ? (
                             <>
                               <ArrowRight className="w-3 h-3" />
-                              نقل للمرحلة التالية
+                              {t("production.moveToNextStage")}
                             </>
                           ) : (
                             <>
                               <CheckCircle className="w-3 h-3" />
-                              إنهاء
+                              {t("production.finish")}
                             </>
                           )}
                         </Button>
@@ -566,7 +558,7 @@ export default function RollsTable({ stage }: RollsTableProps) {
                           variant="secondary"
                           className="bg-green-100 text-green-800"
                         >
-                          مكتمل
+                          {t("production.completed")}
                         </Badge>
                       )}
                     </div>

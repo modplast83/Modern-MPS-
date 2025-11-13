@@ -32,6 +32,7 @@ import { Beaker, Plus, Trash2, Eye } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { useAuth } from "../../hooks/use-auth";
+import { useTranslation } from "react-i18next";
 
 type Material = {
   id: string;

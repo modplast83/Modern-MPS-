@@ -28,21 +28,27 @@ import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import type { ProductionOrder, Machine } from "../../../../shared/schema";
 import { useRemainingQuantity } from "../../hooks/useRemainingQuantity";
+import { useTranslation } from 'react-i18next';
 
-const printingFormSchema = z.object({
-  production_order_id: z.number().min(1, "يرجى اختيار أمر الإنتاج"),
-  machine_id: z.number().int().positive("يرجى اختيار المكينة"),
-  ink_set_id: z.number().int().positive("يرجى اختيار طقم الأحبار"),
+const createPrintingFormSchema = (t: (key: string) => string) => z.object({
+  production_order_id: z.number().min(1, t('forms.selectProductionOrder')),
+  machine_id: z.number().int().positive(t('forms.selectMachine')),
+  ink_set_id: z.number().int().positive(t('forms.selectInkSet')),
   weight_kg: z
     .string()
-    .min(1, "يرجى إدخال الوزن")
+    .min(1, t('forms.enterWeight'))
     .refine((val) => {
       const num = Number.parseFloat(val.replace(",", "."));
       return !Number.isNaN(num) && num > 0;
-    }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
+    }, t('forms.weightMustBePositive')),
 });
 
-export type PrintingFormData = z.infer<typeof printingFormSchema>;
+export type PrintingFormData = {
+  production_order_id: number;
+  machine_id: number;
+  ink_set_id: number;
+  weight_kg: string;
+};
 
 interface Props {
   isOpen: boolean;
@@ -52,7 +58,10 @@ interface Props {
 
 export default function PrintingCreationModal({ isOpen, onClose, selectedProductionOrderId }: Props) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+
+  const printingFormSchema = useMemo(() => createPrintingFormSchema(t), [t]);
 
   const form = useForm<PrintingFormData>({
     resolver: zodResolver(printingFormSchema),
@@ -114,7 +123,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
       });
       if (!response.ok) {
         const err = await response.text();
-        throw new Error(err || "فشل الطلب");
+        throw new Error(err || t('toast.requestFailed'));
       }
       return response.json();
     },
@@ -122,18 +131,18 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
       ["/api/rolls", "/api/production-orders", "/api/production/printing-queue"].forEach((key) =>
         queryClient.invalidateQueries({ queryKey: [key] })
       );
-      toast({ title: "تم إنشاء مهمة الطباعة", description: "تمت الإضافة بنجاح" });
+      toast({ title: t('modals.printingJob.successTitle'), description: t('modals.printingJob.successDescription') });
       onClose();
       form.reset();
     },
     onError: (error: any) => {
       const msg = String(error?.message || "");
       toast({
-        title: "خطأ في إنشاء مهمة الطباعة",
+        title: t('modals.printingJob.errorTitle'),
         description: /REMAINING_QUANTITY_EXCEEDED/.test(msg)
-          ? "الوزن المطلوب يتجاوز المتبقي وفق تحقق الخادم. قم بتحديث الصفحة وحاول بقيمة أقل."
+          ? t('modals.printingJob.errorQuantityExceeded')
           : /Network error|Failed to fetch/i.test(msg)
-          ? "تعذر الاتصال بالخادم"
+          ? t('toast.networkError')
           : msg,
         variant: "destructive",
       });
@@ -143,7 +152,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
   const onSubmit = (data: PrintingFormData) => {
     const weightParsed = Number.parseFloat(data.weight_kg.replace(",", "."));
     if (remaining > 0 && weightParsed > remaining + 0.0001) {
-      toast({ title: "قيمة الوزن تتجاوز المتبقي", description: `المتبقي: ${remaining.toFixed(2)} كجم`, variant: "destructive" });
+      toast({ title: t('modals.printingJob.weightExceedsRemaining'), description: t('modals.printingJob.remainingLabel', { remaining: remaining.toFixed(2) }), variant: "destructive" });
       return;
     }
     createMutation.mutate(data);
@@ -153,8 +162,8 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md" aria-describedby="printing-creation-description">
         <DialogHeader>
-          <DialogTitle>إنشاء مهمة طباعة</DialogTitle>
-          <DialogDescription id="printing-creation-description">إضافة مهمة طباعة للرول/الطلب المحدد</DialogDescription>
+          <DialogTitle>{t('modals.printingJob.title')}</DialogTitle>
+          <DialogDescription id="printing-creation-description">{t('modals.printingJob.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -165,7 +174,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
                 name="production_order_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>أمر الإنتاج *</FormLabel>
+                    <FormLabel>{t('modals.printingJob.productionOrder')} *</FormLabel>
                     <ProductionOrderSelect value={field.value} onChange={field.onChange} loading={ordersLoading} orders={orders} />
                     <FormMessage />
                   </FormItem>
@@ -175,13 +184,13 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
 
             {selectedProductionOrderId && (
               <div className="space-y-2">
-                <Label>أمر الإنتاج المحدد</Label>
+                <Label>{t('modals.printingJob.selectedProductionOrder')}</Label>
                 <div className="p-3 bg-gray-50 rounded-md border">
                   <p className="font-medium text-sm">
                     {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
                   <p className="text-xs text-gray-600">
-                    {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || "غير محدد"} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || "غير محدد"}`}
+                    {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || t('common.notSpecified')} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || t('common.notSpecified')}`}
                   </p>
                 </div>
               </div>
@@ -192,11 +201,11 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
               name="weight_kg"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الوزن (كجم) *</FormLabel>
+                  <FormLabel>{t('modals.printingJob.weightKg')} *</FormLabel>
                   <FormControl>
                     <NumberInput value={field.value} onChange={field.onChange} placeholder="45.2" />
                   </FormControl>
-                  {selectedOrder && <p className="text-xs text-gray-600">المتبقي: <span className="font-medium">{remaining.toFixed(2)} كجم</span></p>}
+                  {selectedOrder && <p className="text-xs text-gray-600">{t('modals.printingJob.remaining')}: <span className="font-medium">{remaining.toFixed(2)} {t('units.kg')}</span></p>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -207,7 +216,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
               name="machine_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>المكينة *</FormLabel>
+                  <FormLabel>{t('modals.printingJob.machine')} *</FormLabel>
                   <MachineSelect value={field.value} onChange={field.onChange} loading={machinesLoading} machines={machines} sections={sections} sectionKeyword="printing" />
                   <FormMessage />
                 </FormItem>
@@ -219,18 +228,18 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
               name="ink_set_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>طقم الأحبار *</FormLabel>
+                  <FormLabel>{t('modals.printingJob.inkSet')} *</FormLabel>
                   {/* TODO: Replace with real Select when API is ready */}
-                  <NumberInput value={String(field.value ?? "")} onChange={(v: string) => field.onChange(Number.parseInt(v || "0", 10))} placeholder="معرّف الطقم" />
+                  <NumberInput value={String(field.value ?? "")} onChange={(v: string) => field.onChange(Number.parseInt(v || "0", 10))} placeholder={t('modals.printingJob.inkSetIdPlaceholder')} />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
             <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
-              <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>إلغاء</Button>
+              <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>{t('common.cancel')}</Button>
               <Button type="submit" className="btn-primary" disabled={createMutation.isPending || remaining === 0}>
-                {createMutation.isPending ? "جاري الإنشاء..." : remaining === 0 ? "اكتملت الكمية" : "إنشاء مهمة"}
+                {createMutation.isPending ? t('modals.printingJob.creating') : remaining === 0 ? t('modals.printingJob.quantityCompleted') : t('modals.printingJob.createTask')}
               </Button>
             </div>
           </form>
