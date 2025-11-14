@@ -1,6 +1,5 @@
 import {
   Home,
-  Cog,
   Warehouse,
   ClipboardCheck,
   Database,
@@ -10,7 +9,6 @@ import { Link, useLocation } from "wouter";
 
 const navItems = [
   { name: "الرئيسية", name_ar: "الرئيسية", icon: Home, path: "/" },
-  { name: "الإنتاج", name_ar: "الإنتاج", icon: Cog, path: "/production" },
   {
     name: "المستودع",
     name_ar: "المستودع",

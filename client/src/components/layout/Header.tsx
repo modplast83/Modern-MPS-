@@ -2,10 +2,8 @@ import { Bot } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAuth } from "../../hooks/use-auth";
 import { NotificationBell } from "../notifications/NotificationBell";
-import factoryLogo from "@/assets/factory-logo.svg";
 
-// Note: Using string path for asset
-const FactoryLogoHPNGWg = "/attached_assets/FactoryLogoHPNGWg.png";
+const FactoryLogoHPNGWg = "/attached_assets/FactoryLogoHPNGW.png";
 
 export default function Header() {
   const { user, logout } = useAuth();

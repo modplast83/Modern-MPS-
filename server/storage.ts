@@ -170,7 +170,7 @@ import {
 } from "@shared/schema";
 
 import { db, pool } from "./db";
-import { eq, desc, and, sql, sum, count, inArray, or } from "drizzle-orm";
+import { eq, desc, and, sql, sum, count, inArray, or, ne } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import bcrypt from "bcrypt";
 import {
@@ -7040,45 +7040,43 @@ export class DatabaseStorage implements IStorage {
         SELECT pg_size_pretty(pg_database_size(current_database())) as size
       `);
 
-      // Count total tables
-      const tableCount = await db.execute(sql`
-        SELECT COUNT(*) as count 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      // Get all table names dynamically (same approach as backup)
+      const tablesQuery = await db.execute(sql`
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public' 
+        AND tablename NOT LIKE 'pg_%' 
+        AND tablename NOT LIKE 'sql_%'
+        AND tablename != 'sessions'
+        ORDER BY tablename
       `);
 
-      // Get total records across all main tables
-      const recordCounts = await Promise.all([
-        db.select({ count: count() }).from(orders),
-        db.select({ count: count() }).from(customers),
-        db.select({ count: count() }).from(users),
-        db.select({ count: count() }).from(machines),
-        db.select({ count: count() }).from(locations),
-        db.select({ count: count() }).from(categories),
-        db.select({ count: count() }).from(items),
-      ]);
+      const allTables = tablesQuery.rows.map((row: any) => row.tablename);
+      const tableCount = allTables.length;
 
-      const totalRecords = recordCounts.reduce(
-        (sum, result) => sum + (result[0]?.count || 0),
-        0,
-      );
+      // Count total records across ALL tables dynamically
+      let totalRecords = 0;
+      
+      for (const tableName of allTables) {
+        try {
+          // Query table count using raw SQL (same as backup logic)
+          const countResult: any = await db.execute(sql.raw(`SELECT COUNT(*) as count FROM "${tableName}"`));
+          const rowCount = parseInt(countResult.rows[0]?.count || '0');
+          totalRecords += rowCount;
+        } catch (err) {
+          console.warn(`تخطي جدول ${tableName} في الإحصائيات:`, err);
+        }
+      }
 
       return {
-        tableCount: tableCount.rows[0]?.count || 0,
+        tableCount,
         totalRecords,
         databaseSize: dbSize.rows[0]?.size || "0 MB",
         lastBackup: new Date().toLocaleDateString("ar"),
       };
     } catch (error) {
       console.error("Error getting database stats:", error);
-      // Return mock data for development
-      return {
-        tableCount: 8,
-        totalRecords: 1247,
-        databaseSize: "45.2 MB",
-        lastBackup: "اليوم",
-        tableStats: [],
-      };
+      throw error;
     }
   }
 
@@ -7094,30 +7092,53 @@ export class DatabaseStorage implements IStorage {
         tables: {},
       };
 
-      // Export all major tables
-      const tableNames = [
-        "orders",
-        "customers",
-        "users",
-        "machines",
-        "locations",
-        "categories",
-      ];
+      // Get all table names from the database dynamically
+      const tablesQuery = await db.execute(sql`
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public' 
+        AND tablename NOT LIKE 'pg_%' 
+        AND tablename NOT LIKE 'sql_%'
+        AND tablename != 'sessions'
+        ORDER BY tablename
+      `);
 
-      for (const tableName of tableNames) {
+      const allTables = tablesQuery.rows.map((row: any) => row.tablename);
+      console.log(`بدء النسخ الاحتياطي لـ ${allTables.length} جدول...`);
+      
+      let backedUpTables = 0;
+      let failedTables: string[] = [];
+
+      for (const tableName of allTables) {
         try {
-          const tableData = await this.exportTableData(tableName, "json");
-          // tableData is string for JSON format, so we can parse it directly
-          backupData.tables[tableName] = JSON.parse(tableData as string);
+          // Query table data directly using raw SQL
+          const tableDataQuery = await db.execute(sql.raw(`SELECT * FROM "${tableName}"`));
+          backupData.tables[tableName] = tableDataQuery.rows;
+          backedUpTables++;
+          console.log(`✓ تم نسخ الجدول: ${tableName} (${backedUpTables}/${allTables.length}) - ${tableDataQuery.rows.length} سجل`);
         } catch (error) {
-          console.warn(`Failed to backup table ${tableName}:`, error);
+          console.warn(`⚠ تحذير: فشل نسخ الجدول ${tableName}:`, error);
+          failedTables.push(tableName);
           backupData.tables[tableName] = [];
         }
       }
 
+      // Add backup metadata
+      backupData.metadata = {
+        totalTables: allTables.length,
+        backedUpTables,
+        failedTables,
+        timestamp: timestamp.toISOString(),
+      };
+
       // Store backup data as JSON
       const backupJson = JSON.stringify(backupData, null, 2);
       const filename = `backup-${timestamp.toISOString().split("T")[0]}.json`;
+
+      console.log(`✓ تم إنشاء النسخة الاحتياطية بنجاح: ${backedUpTables}/${allTables.length} جدول`);
+      if (failedTables.length > 0) {
+        console.log(`⚠ فشل نسخ ${failedTables.length} جداول:`, failedTables.join(", "));
+      }
 
       // In production, this would be saved to file system or cloud storage
       // For now, return the backup data for download
@@ -7128,6 +7149,9 @@ export class DatabaseStorage implements IStorage {
         size: `${(backupJson.length / 1024 / 1024).toFixed(2)} MB`,
         timestamp,
         status: "completed",
+        tablesCount: backedUpTables,
+        totalTables: allTables.length,
+        failedTables,
       };
     } catch (error) {
       console.error("Error creating backup:", error);
@@ -11505,6 +11529,7 @@ export class DatabaseStorage implements IStorage {
             customer_id: orders.customer_id,
             customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
             product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+            order_status: orders.status,
           })
           .from(production_orders)
           .leftJoin(orders, eq(production_orders.order_id, orders.id))
@@ -11514,7 +11539,8 @@ export class DatabaseStorage implements IStorage {
           .where(
             and(
               inArray(production_orders.status, ["pending", "in_production"]),
-              eq(production_orders.film_completed, false)
+              eq(production_orders.film_completed, false),
+              ne(orders.status, "waiting")
             )
           )
           .orderBy(desc(production_orders.created_at));

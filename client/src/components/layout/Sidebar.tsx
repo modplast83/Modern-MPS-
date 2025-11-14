@@ -45,13 +45,6 @@ const modules = [
     active: false,
   },
   {
-    name: "الإنتاج",
-    name_ar: "الإنتاج",
-    icon: Cog,
-    path: "/production",
-    active: false,
-  },
-  {
     name: "لوحة عامل الفيلم",
     name_ar: "لوحة عامل الفيلم",
     icon: Film,
