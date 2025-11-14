@@ -38,8 +38,7 @@ export default function ProductionOrderActivationModal({
   isUpdating = false,
 }: ProductionOrderActivationModalProps) {
   const { t } = useTranslation();
-  const [selectedMachineId, setSelectedMachineId] = useState<string>("");
-  const [selectedOperatorId, setSelectedOperatorId] = useState<string>("");
+  const [selectedMachineId, setSelectedMachineId] = useState<string>{t('components.production.ProductionOrderActivationModal.("");_const_[selectedoperatorid,_setselectedoperatorid]_=_usestate')}<string>("");
 
   const handleConfirm = () => {
     const machineId = selectedMachineId || undefined;
@@ -62,27 +61,27 @@ export default function ProductionOrderActivationModal({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className={t("components.production.name.space_y_4")}>
           {order && (
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <div className="text-sm space-y-1">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('production.productionOrderNumber')}:</span>
-                  <span className="font-medium">{order.production_order_number}</span>
+            <div className={t("components.production.name.bg_gray_50_p_3_rounded_lg")}>
+              <div className={t("components.production.name.text_sm_space_y_1")}>
+                <div className={t("components.production.name.flex_justify_between")}>
+                  <span className={t("components.production.name.text_gray_600")}>{t('production.productionOrderNumber')}:</span>
+                  <span className={t("components.production.name.font_medium")}>{order.production_order_number}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('orders.customer')}:</span>
-                  <span className="font-medium">
+                <div className={t("components.production.name.flex_justify_between")}>
+                  <span className={t("components.production.name.text_gray_600")}>{t('orders.customer')}:</span>
+                  <span className={t("components.production.name.font_medium")}>
                     {order.customer_name_ar || order.customer_name}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('orders.product')}:</span>
-                  <span className="font-medium">{order.size_caption}</span>
+                <div className={t("components.production.name.flex_justify_between")}>
+                  <span className={t("components.production.name.text_gray_600")}>{t('orders.product')}:</span>
+                  <span className={t("components.production.name.font_medium")}>{order.size_caption}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('common.quantity')}:</span>
-                  <span className="font-medium">{order.quantity_kg} {t('warehouse.kg')}</span>
+                <div className={t("components.production.name.flex_justify_between")}>
+                  <span className={t("components.production.name.text_gray_600")}>{t('common.quantity')}:</span>
+                  <span className={t("components.production.name.font_medium")}>{order.quantity_kg} {t('warehouse.kg')}</span>
                 </div>
               </div>
             </div>
@@ -104,10 +103,10 @@ export default function ProductionOrderActivationModal({
                     value={machine.id}
                     data-testid={`option-machine-${machine.id}`}
                   >
-                    <div className="flex items-center gap-2">
+                    <div className={t("components.production.name.flex_items_center_gap_2")}>
                       {machine.name_ar || machine.name}
                       {machine.type && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className={t("components.production.name.text_xs")}>
                           {machine.type}
                         </Badge>
                       )}
@@ -117,7 +116,7 @@ export default function ProductionOrderActivationModal({
               </SelectContent>
             </Select>
             {selectedMachineId && selectedMachineId !== "none" && (
-              <p className="text-sm text-green-600 mt-1">
+              <p className={t("components.production.name.text_sm_text_green_600_mt_1")}>
                 {t('production.assignToMachine')}
               </p>
             )}
@@ -145,15 +144,15 @@ export default function ProductionOrderActivationModal({
               </SelectContent>
             </Select>
             {selectedOperatorId && selectedOperatorId !== "none" && (
-              <p className="text-sm text-green-600 mt-1">
+              <p className={t("components.production.name.text_sm_text_green_600_mt_1")}>
                 {t('production.assignToMachine')}
               </p>
             )}
           </div>
 
           {!isUpdating && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <p className="text-sm text-yellow-800">
+            <div className={t("components.production.name.bg_yellow_50_border_border_yellow_200_rounded_lg_p_3")}>
+              <p className={t("components.production.name.text_sm_text_yellow_800")}>
                 <strong>{t('common.notes')}:</strong> {t('production.activate')}
               </p>
             </div>

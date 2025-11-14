@@ -81,15 +81,9 @@ export default function GroupedPrintingQueue({
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-  const [expandedProductionOrders, setExpandedProductionOrders] = useState<
+  const [processingId, setProcessingId] = useState<number | null>{t('components.production.GroupedPrintingQueue.(null);_const_[expandedorders,_setexpandedorders]_=_usestate')}<Set<number>>{t('components.production.GroupedPrintingQueue.(new_set());_const_[expandedproductionorders,_setexpandedproductionorders]_=_usestate')}<
     Set<number>
-  >(new Set());
-  
-  // State for machine selection dialog
-  const [selectedRollForPrinting, setSelectedRollForPrinting] = useState<GroupedRoll | null>(null);
-  const [selectedPrintingMachine, setSelectedPrintingMachine] = useState<string>("");
+  >{t('components.production.GroupedPrintingQueue.(new_set());_//_state_for_machine_selection_dialog_const_[selectedrollforprinting,_setselectedrollforprinting]_=_usestate')}<GroupedRoll | null>{t('components.production.GroupedPrintingQueue.(null);_const_[selectedprintingmachine,_setselectedprintingmachine]_=_usestate')}<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Fetch machines
@@ -282,9 +276,9 @@ export default function GroupedPrintingQueue({
   if (groupedData.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <div className="text-gray-500">
-            <Play className="h-12 w-12 mx-auto mb-2 opacity-50" />
+        <CardContent className={t("components.production.groupedprintingqueue.name.p_6_text_center")}>
+          <div className={t("components.production.groupedprintingqueue.name.text_gray_500")}>
+            <Play className={t("components.production.groupedprintingqueue.name.h_12_w_12_mx_auto_mb_2_opacity_50")} />
             <p>{t("production.noRollsInPrintingQueue")}</p>
           </div>
         </CardContent>
@@ -294,47 +288,45 @@ export default function GroupedPrintingQueue({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className={t("components.production.groupedprintingqueue.name.space_y_4")}>
         {groupedData.map((orderGroup) => (
           <Card
             key={`order-${orderGroup.order_id}`}
-            className="border-l-4 border-l-blue-500"
+            className={t("components.production.groupedprintingqueue.name.border_l_4_border_l_blue_500")}
           >
             <Collapsible
               open={expandedOrders.has(orderGroup.order_id)}
               onOpenChange={() => toggleOrderExpanded(orderGroup.order_id)}
             >
-              <CollapsibleTrigger className="w-full">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 space-x-reverse">
+              <CollapsibleTrigger className={t("components.production.groupedprintingqueue.name.w_full")}>
+                <CardHeader className={t("components.production.groupedprintingqueue.name.pb_3")}>
+                  <div className={t("components.production.groupedprintingqueue.name.flex_items_center_justify_between")}>
+                    <div className={t("components.production.groupedprintingqueue.name.flex_items_center_space_x_3_space_x_reverse")}>
                       {expandedOrders.has(orderGroup.order_id) ? (
-                        <ChevronDown className="h-5 w-5" />
-                      ) : (
-                        <ChevronRight className="h-5 w-5" />
+                        <ChevronDown className={t("components.production.groupedprintingqueue.name.h_5_w_5")} />{t('components.production.GroupedPrintingQueue.)_:_(')}<ChevronRight className={t("components.production.groupedprintingqueue.name.h_5_w_5")} />
                       )}
-                      <div className="text-right">
-                        <CardTitle className="text-lg">
+                      <div className={t("components.production.groupedprintingqueue.name.text_right")}>
+                        <CardTitle className={t("components.production.groupedprintingqueue.name.text_lg")}>
                           {orderGroup.order_number} -{" "}
-                          <span className="font-bold text-blue-700">
+                          <span className={t("components.production.groupedprintingqueue.name.font_bold_text_blue_700")}>
                             {orderGroup.customer_name_ar}
                           </span>
                         </CardTitle>
-                        <p className="text-sm text-gray-600">
+                        <p className={t("components.production.groupedprintingqueue.name.text_sm_text_gray_600")}>
                           {orderGroup.item_name_ar}{" "}
                           {orderGroup.size_caption &&
                             `- ${orderGroup.size_caption}`}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-3 space-x-reverse">
-                      <div className="text-sm text-muted-foreground">
-                        <div className="w-20">
+                    <div className={t("components.production.groupedprintingqueue.name.flex_items_center_space_x_3_space_x_reverse")}>
+                      <div className={t("components.production.groupedprintingqueue.name.text_sm_text_muted_foreground")}>
+                        <div className={t("components.production.groupedprintingqueue.name.w_20")}>
                           <Progress
                             value={calculateOrderProgress(orderGroup)}
-                            className="h-2"
+                            className={t("components.production.groupedprintingqueue.name.h_2")}
                           />
-                          <span className="text-xs">
+                          <span className={t("components.production.groupedprintingqueue.name.text_xs")}>
                             {calculateOrderProgress(orderGroup)}%
                           </span>
                         </div>
@@ -351,12 +343,12 @@ export default function GroupedPrintingQueue({
               </CollapsibleTrigger>
 
               <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <div className="space-y-3">
+                <CardContent className={t("components.production.groupedprintingqueue.name.pt_0")}>
+                  <div className={t("components.production.groupedprintingqueue.name.space_y_3")}>
                     {orderGroup.production_orders.map((productionOrderGroup) => (
                       <Card
                         key={`production-${productionOrderGroup.production_order_id}`}
-                        className="bg-gray-50 border-l-2 border-l-orange-400"
+                        className={t("components.production.groupedprintingqueue.name.bg_gray_50_border_l_2_border_l_orange_400")}
                       >
                         <Collapsible
                           open={expandedProductionOrders.has(
@@ -368,31 +360,29 @@ export default function GroupedPrintingQueue({
                             )
                           }
                         >
-                          <CollapsibleTrigger className="w-full">
-                            <CardHeader className="pb-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-2 space-x-reverse">
+                          <CollapsibleTrigger className={t("components.production.groupedprintingqueue.name.w_full")}>
+                            <CardHeader className={t("components.production.groupedprintingqueue.name.pb_2")}>
+                              <div className={t("components.production.groupedprintingqueue.name.flex_items_center_justify_between")}>
+                                <div className={t("components.production.groupedprintingqueue.name.flex_items_center_space_x_2_space_x_reverse")}>
                                   {expandedProductionOrders.has(
                                     productionOrderGroup.production_order_id,
                                   ) ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronDown className={t("components.production.groupedprintingqueue.name.h_4_w_4")} />{t('components.production.GroupedPrintingQueue.)_:_(')}<ChevronRight className={t("components.production.groupedprintingqueue.name.h_4_w_4")} />
                                   )}
-                                  <span className="font-medium">
+                                  <span className={t("components.production.groupedprintingqueue.name.font_medium")}>
                                     {productionOrderGroup.production_order_number}
                                   </span>
                                 </div>
-                                <div className="flex items-center space-x-3 space-x-reverse">
-                                  <div className="text-sm text-muted-foreground">
-                                    <div className="w-16">
+                                <div className={t("components.production.groupedprintingqueue.name.flex_items_center_space_x_3_space_x_reverse")}>
+                                  <div className={t("components.production.groupedprintingqueue.name.text_sm_text_muted_foreground")}>
+                                    <div className={t("components.production.groupedprintingqueue.name.w_16")}>
                                       <Progress
                                         value={calculateProductionOrderProgress(
                                           productionOrderGroup,
                                         )}
-                                        className="h-2"
+                                        className={t("components.production.groupedprintingqueue.name.h_2")}
                                       />
-                                      <span className="text-xs">
+                                      <span className={t("components.production.groupedprintingqueue.name.text_xs")}>
                                         {calculateProductionOrderProgress(
                                           productionOrderGroup,
                                         )}
@@ -400,10 +390,10 @@ export default function GroupedPrintingQueue({
                                       </span>
                                     </div>
                                   </div>
-                                  <Badge variant="secondary" className="text-xs">
+                                  <Badge variant="secondary" className={t("components.production.groupedprintingqueue.name.text_xs")}>
                                     {productionOrderGroup.rolls_count} {t("production.roll")}
                                   </Badge>
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className={t("components.production.groupedprintingqueue.name.text_xs")}>
                                     {productionOrderGroup.total_weight.toFixed(2)}{" "}
                                     {t("warehouse.kg")}
                                   </Badge>
@@ -413,33 +403,31 @@ export default function GroupedPrintingQueue({
                           </CollapsibleTrigger>
 
                           <CollapsibleContent>
-                            <CardContent className="pt-0">
-                              <div className="mt-4 ml-6 space-y-2">
-                                <h5 className="text-sm font-medium text-gray-700 mb-2">
+                            <CardContent className={t("components.production.groupedprintingqueue.name.pt_0")}>
+                              <div className={t("components.production.groupedprintingqueue.name.mt_4_ml_6_space_y_2")}>
+                                <h5 className={t("components.production.groupedprintingqueue.name.text_sm_font_medium_text_gray_700_mb_2")}>
                                   {t("production.rolls")} ({productionOrderGroup.rolls_count})
                                 </h5>
                                 {productionOrderGroup.rolls.length === 0 ? (
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className={t("components.production.groupedprintingqueue.name.text_sm_text_muted_foreground")}>
                                     {t("production.noRollsYet")}
-                                  </p>
-                                ) : (
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  </p>{t('components.production.GroupedPrintingQueue.)_:_(')}<div className={t("components.production.groupedprintingqueue.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_2")}>
                                     {productionOrderGroup.rolls.map((roll) => (
                                       <div
                                         key={`roll-${roll.id}`}
-                                        className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                        className={t("components.production.groupedprintingqueue.name.border_rounded_p_3_bg_gray_50_hover_bg_gray_100_transition_colors")}
                                         data-testid={`roll-item-${roll.id}`}
                                       >
-                                        <div className="flex flex-col gap-2">
-                                          <div className="flex justify-between items-start">
-                                            <div className="flex-1">
-                                              <p className="font-medium text-sm">
+                                        <div className={t("components.production.groupedprintingqueue.name.flex_flex_col_gap_2")}>
+                                          <div className={t("components.production.groupedprintingqueue.name.flex_justify_between_items_start")}>
+                                            <div className={t("components.production.groupedprintingqueue.name.flex_1")}>
+                                              <p className={t("components.production.groupedprintingqueue.name.font_medium_text_sm")}>
                                                 {roll.roll_number}
                                               </p>
-                                              <p className="text-xs text-muted-foreground">
+                                              <p className={t("components.production.groupedprintingqueue.name.text_xs_text_muted_foreground")}>
                                                 {t("production.weight")}: {formatWeight(roll.weight_kg)}
                                               </p>
-                                              <p className="text-xs text-muted-foreground">
+                                              <p className={t("components.production.groupedprintingqueue.name.text_xs_text_muted_foreground")}>
                                                 {t("production.machine")}: {roll.machine_id}
                                               </p>
                                             </div>
@@ -455,16 +443,14 @@ export default function GroupedPrintingQueue({
                                               data-testid={`button-print-roll-${roll.id}`}
                                             >
                                               {processingId === roll.id ? (
-                                                <span className="text-xs">{t("common.processing")}</span>
-                                              ) : (
-                                                <Play className="h-3 w-3" />
+                                                <span className={t("components.production.groupedprintingqueue.name.text_xs")}>{t("common.processing")}</span>{t('components.production.GroupedPrintingQueue.)_:_(')}<Play className={t("components.production.groupedprintingqueue.name.h_3_w_3")} />
                                               )}
                                             </Button>
                                           </div>
                                           <Button
                                             variant="outline"
                                             size="sm"
-                                            className="w-full text-xs"
+                                            className={t("components.production.groupedprintingqueue.name.w_full_text_xs")}
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               printRollLabel({
@@ -484,7 +470,7 @@ export default function GroupedPrintingQueue({
                                             }}
                                             data-testid={`button-print-label-${roll.id}`}
                                           >
-                                            <Printer className="h-3 w-3 mr-1" />
+                                            <Printer className={t("components.production.groupedprintingqueue.name.h_3_w_3_mr_1")} />
                                             {t("production.printLabel")}
                                           </Button>
                                         </div>
@@ -508,7 +494,7 @@ export default function GroupedPrintingQueue({
 
       {/* Machine Selection Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md" dir="rtl">
+        <DialogContent className={t("components.production.groupedprintingqueue.name.max_w_md")} dir="rtl">
           <DialogHeader>
             <DialogTitle>{t("production.selectPrintingMachine")}</DialogTitle>
             <DialogDescription>
@@ -516,27 +502,25 @@ export default function GroupedPrintingQueue({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className={t("components.production.groupedprintingqueue.name.space_y_4_py_4")}>
             {selectedRollForPrinting && (
-              <div className="p-3 bg-gray-50 rounded-md border">
-                <p className="text-sm font-medium">{t("production.selectedRoll")}:</p>
-                <p className="text-sm text-gray-600">{selectedRollForPrinting.roll_number}</p>
-                <p className="text-xs text-gray-500">
+              <div className={t("components.production.groupedprintingqueue.name.p_3_bg_gray_50_rounded_md_border")}>
+                <p className={t("components.production.groupedprintingqueue.name.text_sm_font_medium")}>{t("production.selectedRoll")}:</p>
+                <p className={t("components.production.groupedprintingqueue.name.text_sm_text_gray_600")}>{selectedRollForPrinting.roll_number}</p>
+                <p className={t("components.production.groupedprintingqueue.name.text_xs_text_gray_500")}>
                   {t("production.weight")}: {formatWeight(selectedRollForPrinting.weight_kg)}
                 </p>
               </div>
             )}
 
-            <div className="space-y-2">
+            <div className={t("components.production.groupedprintingqueue.name.space_y_2")}>
               <Label htmlFor="printing-machine">{t("production.printingMachine")} *</Label>
               {printingMachines.length === 0 ? (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
+                <div className={t("components.production.groupedprintingqueue.name.p_3_bg_yellow_50_border_border_yellow_200_rounded_md")}>
+                  <p className={t("components.production.groupedprintingqueue.name.text_sm_text_yellow_800")}>
                     {t("production.noActivePrintingMachinesAvailable")}
                   </p>
-                </div>
-              ) : (
-                <Select value={selectedPrintingMachine} onValueChange={setSelectedPrintingMachine}>
+                </div>{t('components.production.GroupedPrintingQueue.)_:_(')}<Select value={selectedPrintingMachine} onValueChange={setSelectedPrintingMachine}>
                   <SelectTrigger id="printing-machine" data-testid="select-printing-machine">
                     <SelectValue placeholder={t("production.selectPrintingMachine")} />
                   </SelectTrigger>
@@ -552,7 +536,7 @@ export default function GroupedPrintingQueue({
             </div>
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className={t("components.production.groupedprintingqueue.name.gap_2")}>
             <Button
               variant="outline"
               onClick={() => {

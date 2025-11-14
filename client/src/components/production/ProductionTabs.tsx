@@ -136,22 +136,22 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
   }
 
   return (
-    <Card className="border-2 shadow-md">
+    <Card className={t("components.production.productiontabs.name.border_2_shadow_md")}>
       <Tabs value={activeStage} onValueChange={setActiveStage}>
-        <CardHeader className="p-3 md:p-4 border-b">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-xl md:text-2xl">
+        <CardHeader className={t("components.production.productiontabs.name.p_3_md_p_4_border_b")}>
+          <div className={t("components.production.productiontabs.name.flex_justify_between_items_center")}>
+            <CardTitle className={t("components.production.productiontabs.name.text_xl_md_text_2xl")}>
               {t('production.productionManagement')}
             </CardTitle>
             <Button
               variant="outline"
               size="default"
               onClick={refreshProductionData}
-              className="flex items-center gap-2 border-2"
+              className={t("components.production.productiontabs.name.flex_items_center_gap_2_border_2")}
               data-testid="button-refresh-production"
             >
-              <RefreshCw className="h-5 w-5" />
-              <span className="hidden sm:inline">{t('common.refresh')}</span>
+              <RefreshCw className={t("components.production.productiontabs.name.h_5_w_5")} />
+              <span className={t("components.production.productiontabs.name.hidden_sm_inline")}>{t('common.refresh')}</span>
             </Button>
           </div>
           <TabsList
@@ -177,14 +177,13 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
                 <TabsTrigger
                   key={stage.id}
                   value={stage.id}
-                  className="py-3 md:py-4 text-base md:text-lg font-semibold flex items-center justify-center gap-2"
+                  className={t("components.production.productiontabs.name.py_3_md_py_4_text_base_md_text_lg_font_semibold_flex_items_center_justify_center_gap_2")}
                   data-testid={`tab-${stage.key}`}
                 >
-                  <Icon className="h-5 w-5 md:h-6 md:w-6" />
-                  <span className="hidden sm:inline">{t(`production.${stage.name_ar}`)}</span>
-                  <span className="sm:hidden">{t(`production.${stage.name_ar}`)}</span>
-                  {queueCount > 0 && (
-                    <Badge variant="secondary" className="text-xs md:text-sm">
+                  <Icon className={t("components.production.productiontabs.name.h_5_w_5_md_h_6_md_w_6")} />
+                  <span className={t("components.production.productiontabs.name.hidden_sm_inline")}>{t(`production.${stage.name_ar}`)}</span>
+                  <span className={t("components.production.productiontabs.name.sm_hidden")}>{t(`production.${stage.name_ar}`)}</span>
+                  {queueCount >{t('components.production.ProductionTabs.0_&&_(')}<Badge variant="secondary" className={t("components.production.productiontabs.name.text_xs_md_text_sm")}>
                       {queueCount}
                     </Badge>
                   )}
@@ -194,9 +193,8 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsList>
         </CardHeader>
 
-        {visibleStages.some((stage) => stage.key === "film") && (
-          <TabsContent value="film" className="mt-0">
-            <CardContent className="p-2 md:p-4">
+        {visibleStages.some((stage) =>{t('components.production.ProductionTabs.stage.key_===_"film")_&&_(')}<TabsContent value="film" className={t("components.production.productiontabs.name.mt_0")}>
+            <CardContent className={t("components.production.productiontabs.name.p_2_md_p_4")}>
               <ProductionStageStats stage="film" data={hierarchicalOrders} />
               <HierarchicalOrdersView
                 stage="film"
@@ -206,8 +204,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsContent>
         )}
 
-        {visibleStages.some((stage) => stage.key === "printing") && (
-          <TabsContent value="printing" className="mt-0">
+        {visibleStages.some((stage) =>{t('components.production.ProductionTabs.stage.key_===_"printing")_&&_(')}<TabsContent value="printing" className={t("components.production.productiontabs.name.mt_0")}>
             {(() => {
               const userSection = sections.find(
                 (section) => section.id === String(currentUser?.section_id)
@@ -221,7 +218,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               }
               
               return (
-                <CardContent className="p-2 md:p-4">
+                <CardContent className={t("components.production.productiontabs.name.p_2_md_p_4")}>
                   <ProductionStageStats stage="printing" data={printingQueue} />
                   <GroupedPrintingQueue items={printingQueue} />
                 </CardContent>
@@ -230,8 +227,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
           </TabsContent>
         )}
 
-        {visibleStages.some((stage) => stage.key === "cutting") && (
-          <TabsContent value="cutting" className="mt-0">
+        {visibleStages.some((stage) =>{t('components.production.ProductionTabs.stage.key_===_"cutting")_&&_(')}<TabsContent value="cutting" className={t("components.production.productiontabs.name.mt_0")}>
             {(() => {
               const userSection = sections.find(
                 (section) => section.id === String(currentUser?.section_id)
@@ -245,7 +241,7 @@ export default function ProductionTabs({ onCreateRoll }: ProductionTabsProps) {
               }
               
               return (
-                <CardContent className="p-2 md:p-4">
+                <CardContent className={t("components.production.productiontabs.name.p_2_md_p_4")}>
                   <ProductionStageStats stage="cutting" data={groupedCuttingQueue} />
                   <GroupedCuttingQueue items={groupedCuttingQueue} />
                 </CardContent>

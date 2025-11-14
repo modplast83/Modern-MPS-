@@ -6,92 +6,67 @@ import { Shield, Users, Star } from "lucide-react";
 export default function SimpleFieldTraining() {
   const [selectedView, setSelectedView] = useState<
     "programs" | "enrollments" | "evaluations"
-  >("programs");
-
-  return (
-    <div className="space-y-6" dir="rtl">
+  >{t('components.hr.SimpleFieldTraining.("programs");_return_(')}<div className={t("components.hr.simplefieldtraining.name.space_y_6")} dir="rtl">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className={t("components.hr.simplefieldtraining.name.flex_items_center_justify_between")}>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            نظام التدريب الميداني
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300">
-            إدارة التدريبات العملية والميدانية مع التقييم وإصدار الشهادات
-          </p>
+          <h2 className={t("components.hr.simplefieldtraining.name.text_2xl_font_bold_text_gray_900_dark_text_white_mb_2")}>{t('components.hr.SimpleFieldTraining.نظام_التدريب_الميداني')}</h2>
+          <p className={t("components.hr.simplefieldtraining.name.text_gray_600_dark_text_gray_300")}>{t('components.hr.SimpleFieldTraining.إدارة_التدريبات_العملية_والميدانية_مع_التقييم_وإصدار_الشهادات')}</p>
         </div>
       </div>
 
       {/* View Tabs */}
-      <div className="flex gap-2 border-b">
+      <div className={t("components.hr.simplefieldtraining.name.flex_gap_2_border_b")}>
         <Button
           variant={selectedView === "programs" ? "default" : "ghost"}
           onClick={() => setSelectedView("programs")}
-          className="rounded-b-none"
+          className={t("components.hr.simplefieldtraining.name.rounded_b_none")}
           data-testid="tab-programs"
         >
-          <Shield className="w-4 h-4 ml-2" />
-          برامج التدريب
-        </Button>
+          <Shield className={t("components.hr.simplefieldtraining.name.w_4_h_4_ml_2")} />{t('components.hr.SimpleFieldTraining.برامج_التدريب')}</Button>
         <Button
           variant={selectedView === "enrollments" ? "default" : "ghost"}
           onClick={() => setSelectedView("enrollments")}
-          className="rounded-b-none"
+          className={t("components.hr.simplefieldtraining.name.rounded_b_none")}
           data-testid="tab-enrollments"
         >
-          <Users className="w-4 h-4 ml-2" />
-          التسجيلات
-        </Button>
+          <Users className={t("components.hr.simplefieldtraining.name.w_4_h_4_ml_2")} />{t('components.hr.SimpleFieldTraining.التسجيلات')}</Button>
         <Button
           variant={selectedView === "evaluations" ? "default" : "ghost"}
           onClick={() => setSelectedView("evaluations")}
-          className="rounded-b-none"
+          className={t("components.hr.simplefieldtraining.name.rounded_b_none")}
           data-testid="tab-evaluations"
         >
-          <Star className="w-4 h-4 ml-2" />
-          التقييمات
-        </Button>
+          <Star className={t("components.hr.simplefieldtraining.name.w_4_h_4_ml_2")} />{t('components.hr.SimpleFieldTraining.التقييمات')}</Button>
       </div>
 
       {/* Content based on selected view */}
       {selectedView === "programs" && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Shield className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              نظام التدريب الميداني
-            </h3>
-            <p className="text-gray-500 text-center">
-              تم تحويل النظام من التدريب الإلكتروني إلى التدريب الميداني بنجاح
-            </p>
+          <CardContent className={t("components.hr.simplefieldtraining.name.flex_flex_col_items_center_justify_center_p_8")}>
+            <Shield className={t("components.hr.simplefieldtraining.name.w_16_h_16_text_gray_400_mb_4")} />
+            <h3 className={t("components.hr.simplefieldtraining.name.text_lg_font_semibold_text_gray_600_mb_2")}>{t('components.hr.SimpleFieldTraining.نظام_التدريب_الميداني')}</h3>
+            <p className={t("components.hr.simplefieldtraining.name.text_gray_500_text_center")}>{t('components.hr.SimpleFieldTraining.تم_تحويل_النظام_من_التدريب_الإلكتروني_إلى_التدريب_الميداني_بنجاح')}</p>
           </CardContent>
         </Card>
       )}
 
       {selectedView === "enrollments" && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Users className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              إدارة التسجيلات
-            </h3>
-            <p className="text-gray-500 text-center">
-              تسجيل الموظفين في برامج التدريب الميداني
-            </p>
+          <CardContent className={t("components.hr.simplefieldtraining.name.flex_flex_col_items_center_justify_center_p_8")}>
+            <Users className={t("components.hr.simplefieldtraining.name.w_16_h_16_text_gray_400_mb_4")} />
+            <h3 className={t("components.hr.simplefieldtraining.name.text_lg_font_semibold_text_gray_600_mb_2")}>{t('components.hr.SimpleFieldTraining.إدارة_التسجيلات')}</h3>
+            <p className={t("components.hr.simplefieldtraining.name.text_gray_500_text_center")}>{t('components.hr.SimpleFieldTraining.تسجيل_الموظفين_في_برامج_التدريب_الميداني')}</p>
           </CardContent>
         </Card>
       )}
 
       {selectedView === "evaluations" && (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center p-8">
-            <Star className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-600 mb-2">
-              نظام التقييم
-            </h3>
-            <p className="text-gray-500 text-center">
-              تقييم التدريب مع معايير الفهم النظري والمهارات العملية والسلامة
-            </p>
+          <CardContent className={t("components.hr.simplefieldtraining.name.flex_flex_col_items_center_justify_center_p_8")}>
+            <Star className={t("components.hr.simplefieldtraining.name.w_16_h_16_text_gray_400_mb_4")} />
+            <h3 className={t("components.hr.simplefieldtraining.name.text_lg_font_semibold_text_gray_600_mb_2")}>{t('components.hr.SimpleFieldTraining.نظام_التقييم')}</h3>
+            <p className={t("components.hr.simplefieldtraining.name.text_gray_500_text_center")}>{t('components.hr.SimpleFieldTraining.تقييم_التدريب_مع_معايير_الفهم_النظري_والمهارات_العملية_والسلامة')}</p>
           </CardContent>
         </Card>
       )}

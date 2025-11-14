@@ -12,8 +12,8 @@ export default function Shortcuts() {
   ];
 
   return (
-    <div className="mb-6">
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+    <div className={t("components.dashboard.shortcuts.name.mb_6")}>
+      <div className={t("components.dashboard.shortcuts.name.flex_flex_col_sm_flex_row_gap_3_items_stretch")}>
         {items.map((it) => (
           <Link key={it.id} href={it.href}>
             <div
@@ -23,9 +23,9 @@ export default function Shortcuts() {
               aria-label={it.label}
               data-testid={`shortcut-${it.id}`}
             >
-              <it.Icon className="w-6 h-6" />
-              <span className="font-semibold">{it.label}</span>
-              <span className="ml-auto text-sm opacity-80">{t('shortcuts.shortcut')}</span>
+              <it.Icon className={t("components.dashboard.shortcuts.name.w_6_h_6")} />
+              <span className={t("components.dashboard.shortcuts.name.font_semibold")}>{it.label}</span>
+              <span className={t("components.dashboard.shortcuts.name.ml_auto_text_sm_opacity_80")}>{t('shortcuts.shortcut')}</span>
             </div>
           </Link>
         ))}

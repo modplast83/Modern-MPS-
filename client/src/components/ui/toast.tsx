@@ -8,8 +8,7 @@ import { cn } from "../../lib/utils";
 const ToastProvider = ToastPrimitives.Provider;
 
 const ToastViewport = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
+  React.ElementRef<typeof ToastPrimitives.Viewport>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Viewport>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Viewport
     ref={ref}
@@ -39,9 +38,7 @@ const toastVariants = cva(
 );
 
 const Toast = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
-    VariantProps<typeof toastVariants>
+  React.ElementRef<typeof ToastPrimitives.Root>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Root>{t('components.ui.toast.&_variantprops')}<typeof toastVariants>
 >(({ className, variant, ...props }, ref) => {
   return (
     <ToastPrimitives.Root
@@ -54,8 +51,7 @@ const Toast = React.forwardRef<
 Toast.displayName = ToastPrimitives.Root.displayName;
 
 const ToastAction = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Action>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
+  React.ElementRef<typeof ToastPrimitives.Action>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Action>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Action
     ref={ref}
@@ -64,13 +60,8 @@ const ToastAction = React.forwardRef<
       className,
     )}
     {...props}
-  />
-));
-ToastAction.displayName = ToastPrimitives.Action.displayName;
-
-const ToastClose = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Close>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
+  />{t('components.ui.toast.));_toastaction.displayname_=_toastprimitives.action.displayname;_const_toastclose_=_react.forwardref')}<
+  React.ElementRef<typeof ToastPrimitives.Close>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Close>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Close
     ref={ref}
@@ -81,38 +72,22 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
-  </ToastPrimitives.Close>
-));
-ToastClose.displayName = ToastPrimitives.Close.displayName;
-
-const ToastTitle = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
+    <X className={t("components.ui.toast.name.h_4_w_4")} />
+  </ToastPrimitives.Close>{t('components.ui.toast.));_toastclose.displayname_=_toastprimitives.close.displayname;_const_toasttitle_=_react.forwardref')}<
+  React.ElementRef<typeof ToastPrimitives.Title>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title
     ref={ref}
     className={cn("text-sm font-semibold", className)}
     {...props}
-  />
-));
-ToastTitle.displayName = ToastPrimitives.Title.displayName;
-
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
+  />{t('components.ui.toast.));_toasttitle.displayname_=_toastprimitives.title.displayname;_const_toastdescription_=_react.forwardref')}<
+  React.ElementRef<typeof ToastPrimitives.Description>{t('components.ui.toast.,_react.componentpropswithoutref')}<typeof ToastPrimitives.Description>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
     className={cn("text-sm opacity-90", className)}
     {...props}
-  />
-));
-ToastDescription.displayName = ToastPrimitives.Description.displayName;
-
-type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
-
-type ToastActionElement = React.ReactElement<typeof ToastAction>;
+  />{t('components.ui.toast.));_toastdescription.displayname_=_toastprimitives.description.displayname;_type_toastprops_=_react.componentpropswithoutref')}<typeof Toast>{t('components.ui.toast.;_type_toastactionelement_=_react.reactelement')}<typeof ToastAction>;
 
 export {
   type ToastProps,

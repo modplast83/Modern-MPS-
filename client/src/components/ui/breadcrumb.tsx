@@ -9,10 +9,7 @@ const Breadcrumb = React.forwardRef<
   React.ComponentPropsWithoutRef<"nav"> & {
     separator?: React.ReactNode;
   }
->(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />);
-Breadcrumb.displayName = "Breadcrumb";
-
-const BreadcrumbList = React.forwardRef<
+>(({ ...props }, ref) => <nav ref={ref} aria-label="{t('components.ui.breadcrumb.label.{t('components.ui.breadcrumb.aria-label.breadcrumb')}')}" {...props} />{t('components.ui.breadcrumb.);_breadcrumb.displayname_=_"breadcrumb";_const_breadcrumblist_=_react.forwardref')}<
   HTMLOListElement,
   React.ComponentPropsWithoutRef<"ol">
 >(({ className, ...props }, ref) => (
@@ -23,11 +20,7 @@ const BreadcrumbList = React.forwardRef<
       className,
     )}
     {...props}
-  />
-));
-BreadcrumbList.displayName = "BreadcrumbList";
-
-const BreadcrumbItem = React.forwardRef<
+  />{t('components.ui.breadcrumb.));_breadcrumblist.displayname_=_"breadcrumblist";_const_breadcrumbitem_=_react.forwardref')}<
   HTMLLIElement,
   React.ComponentPropsWithoutRef<"li">
 >(({ className, ...props }, ref) => (
@@ -35,11 +28,7 @@ const BreadcrumbItem = React.forwardRef<
     ref={ref}
     className={cn("inline-flex items-center gap-1.5", className)}
     {...props}
-  />
-));
-BreadcrumbItem.displayName = "BreadcrumbItem";
-
-const BreadcrumbLink = React.forwardRef<
+  />{t('components.ui.breadcrumb.));_breadcrumbitem.displayname_=_"breadcrumbitem";_const_breadcrumblink_=_react.forwardref')}<
   HTMLAnchorElement,
   React.ComponentPropsWithoutRef<"a"> & {
     asChild?: boolean;
@@ -55,7 +44,7 @@ const BreadcrumbLink = React.forwardRef<
     />
   );
 });
-BreadcrumbLink.displayName = "BreadcrumbLink";
+BreadcrumbLink.displayName={t("components.ui.breadcrumb.name.breadcrumblink")};
 
 const BreadcrumbPage = React.forwardRef<
   HTMLSpanElement,
@@ -70,7 +59,7 @@ const BreadcrumbPage = React.forwardRef<
     {...props}
   />
 ));
-BreadcrumbPage.displayName = "BreadcrumbPage";
+BreadcrumbPage.displayName={t("components.ui.breadcrumb.name.breadcrumbpage")};
 
 const BreadcrumbSeparator = ({
   children,
@@ -86,7 +75,7 @@ const BreadcrumbSeparator = ({
     {children ?? <ChevronRight />}
   </li>
 );
-BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
+BreadcrumbSeparator.displayName={t("components.ui.breadcrumb.name.breadcrumbseparator")};
 
 const BreadcrumbEllipsis = ({
   className,
@@ -98,11 +87,11 @@ const BreadcrumbEllipsis = ({
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
+    <MoreHorizontal className={t("components.ui.breadcrumb.name.h_4_w_4")} />
+    <span className={t("components.ui.breadcrumb.name.sr_only")}>{t('components.ui.breadcrumb.more')}</span>
   </span>
 );
-BreadcrumbEllipsis.displayName = "BreadcrumbElipssis";
+BreadcrumbEllipsis.displayName={t("components.ui.breadcrumb.name.breadcrumbelipssis")};
 
 export {
   Breadcrumb,

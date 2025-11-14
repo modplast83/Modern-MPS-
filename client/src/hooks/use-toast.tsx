@@ -17,10 +17,10 @@ type ToastContextShape = {
   toasts: ToastItem[];
 };
 
+// ⬅️ هذا هو الصحيح
 const ToastContext = createContext<ToastContextShape | undefined>(undefined);
 
 /**
- * ToastProvider
  * ضع <ToastProvider> في مستوى أعلى تطبيقك (App / _app)
  */
 export function ToastProvider({ children }: { children: React.ReactNode }) {
@@ -29,10 +29,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const toast = useCallback((opts: ToastOptions) => {
     const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     const duration = opts.duration ?? 4000;
+
     const item: ToastItem = { id, ...opts };
-    setToasts((s) => [...s, item]);
+    setToasts((prev) => [...prev, item]);
+
     setTimeout(() => {
-      setToasts((s) => s.filter((t) => t.id !== id));
+      setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
   }, []);
 

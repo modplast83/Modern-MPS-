@@ -12,46 +12,46 @@ export default function Header() {
   const { t } = useTranslation();
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center space-x-4 space-x-reverse">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg overflow-hidden">
+    <header className={t("components.layout.header.name.bg_white_shadow_sm_border_b_border_gray_200_sticky_top_0_z_50")}>
+      <div className={t("components.layout.header.name.flex_items_center_justify_between_px_4_py_3")}>
+        <div className={t("components.layout.header.name.flex_items_center_space_x_4_space_x_reverse")}>
+          <div className={t("components.layout.header.name.flex_items_center_justify_center_w_10_h_10_rounded_lg_overflow_hidden")}>
             <img
               src={FactoryLogoHPNGWg}
               alt={t('header.logoAlt')}
-              className="w-full h-full object-contain mt-[0px] mb-[0px] pt-[0px] pb-[0px]"
+              className={t("components.layout.header.name.w_full_h_full_object_contain_mt_0px_mb_0px_pt_0px_pb_0px_")}
             />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">{t('header.title')}</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className={t("components.layout.header.name.text_xl_font_bold_text_gray_900")}>{t('header.title')}</h1>
+            <p className={t("components.layout.header.name.text_sm_text_gray_600")}>
               {t('header.subtitle')}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="default" size="sm" className="btn-primary">
-            <Bot className="h-4 w-4 ml-2" />
-            <span className="hidden sm:inline">{t('header.aiAssistant')}</span>
+        <div className={t("components.layout.header.name.flex_items_center_space_x_3_space_x_reverse")}>
+          <Button variant="default" size="sm" className={t("components.layout.header.name.btn_primary")}>
+            <Bot className={t("components.layout.header.name.h_4_w_4_ml_2")} />
+            <span className={t("components.layout.header.name.hidden_sm_inline")}>{t('header.aiAssistant')}</span>
           </Button>
 
           <LanguageSwitcher />
 
           <NotificationBell />
 
-          <div className="flex items-center space-x-3 space-x-reverse">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium text-gray-900">
+          <div className={t("components.layout.header.name.flex_items_center_space_x_3_space_x_reverse")}>
+            <div className={t("components.layout.header.name.text_right_hidden_sm_block")}>
+              <p className={t("components.layout.header.name.text_sm_font_medium_text_gray_900")}>
                 {user?.display_name_ar || user?.display_name || user?.username}
               </p>
-              <p className="text-xs text-gray-600">
+              <p className={t("components.layout.header.name.text_xs_text_gray_600")}>
                 {user?.role_name_ar || user?.role_name || t('header.user')}
               </p>
             </div>
             <button
               onClick={logout}
-              className="h-8 w-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+              className={t("components.layout.header.name.h_8_w_8_bg_primary_rounded_full_flex_items_center_justify_center_text_primary_foreground_font_medium_text_sm_hover_bg_primary_90_transition_colors")}
             >
               {(
                 user?.display_name_ar ||

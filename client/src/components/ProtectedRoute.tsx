@@ -15,8 +15,8 @@ export default function ProtectedRoute({ children, path }: ProtectedRouteProps) 
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">{t("common.loading")}</div>
+      <div className={t("components.protectedroute.name.flex_items_center_justify_center_min_h_screen")}>
+        <div className={t("components.protectedroute.name.text_lg_text_gray_600")}>{t("common.loading")}</div>
       </div>
     );
   }
@@ -33,36 +33,36 @@ export default function ProtectedRoute({ children, path }: ProtectedRouteProps) 
     };
 
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-          <div className="text-6xl mb-4">🚫</div>
-          <div className="text-2xl font-bold text-red-600 mb-4">{t("login.unauthorized")}</div>
-          <div className="text-lg text-gray-600 mb-6">
+      <div className={t("components.protectedroute.name.flex_flex_col_items_center_justify_center_min_h_screen_bg_gray_50")}>
+        <div className={t("components.protectedroute.name.bg_white_p_8_rounded_lg_shadow_lg_max_w_md_w_full_text_center")}>
+          <div className={t("components.protectedroute.name.text_6xl_mb_4")}>{t('components.ProtectedRoute.🚫')}</div>
+          <div className={t("components.protectedroute.name.text_2xl_font_bold_text_red_600_mb_4")}>{t("login.unauthorized")}</div>
+          <div className={t("components.protectedroute.name.text_lg_text_gray_600_mb_6")}>
             {t("login.noPermission")}
           </div>
           
-          <div className="border-t pt-4 mb-4">
-            <p className="text-sm text-gray-500 mb-2">
+          <div className={t("components.protectedroute.name.border_t_pt_4_mb_4")}>
+            <p className={t("components.protectedroute.name.text_sm_text_gray_500_mb_2")}>
               {t("login.currentUser")} <strong>{user.display_name_ar || user.display_name || user.username}</strong>
             </p>
-            <p className="text-sm text-gray-500">
+            <p className={t("components.protectedroute.name.text_sm_text_gray_500")}>
               {t("login.role")} <strong>{user.role_name_ar || user.role_name || t("login.notSpecified")}</strong>
             </p>
           </div>
           
-          <div className="flex flex-col gap-3">
+          <div className={t("components.protectedroute.name.flex_flex_col_gap_3")}>
             <a
               href="/"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className={t("components.protectedroute.name.px_4_py_2_bg_blue_600_text_white_rounded_lg_hover_bg_blue_700_transition_colors")}
             >
               {t("login.returnHome")}
             </a>
             
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
+              className={t("components.protectedroute.name.px_4_py_2_bg_gray_600_text_white_rounded_lg_hover_bg_gray_700_transition_colors_flex_items_center_justify_center_gap_2")}
             >
-              <LogOut className="h-4 w-4" />
+              <LogOut className={t("components.protectedroute.name.h_4_w_4")} />
               {t("login.logoutAndSwitch")}
             </button>
           </div>

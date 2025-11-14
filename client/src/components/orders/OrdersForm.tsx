@@ -100,9 +100,7 @@ export default function OrdersForm({
 }: OrdersFormProps) {
   const { t } = useTranslation();
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
-  const [productionOrdersInForm, setProductionOrdersInForm] = useState<ProdOrderInForm[]>([]);
-  const [quantityPreviews, setQuantityPreviews] = useState<Record<string, any>>({});
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>{t('components.orders.OrdersForm.("");_const_[productionordersinform,_setproductionordersinform]_=_usestate')}<ProdOrderInForm[]>{t('components.orders.OrdersForm.([]);_const_[quantitypreviews,_setquantitypreviews]_=_usestate')}<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderForm = useForm({
@@ -331,32 +329,32 @@ export default function OrdersForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className={t("components.orders.ordersform.name.max_w_3xl_max_h_85vh_overflow_y_auto")}>
         <DialogHeader>
-          <DialogTitle className="text-xl">
+          <DialogTitle className={t("components.orders.ordersform.name.text_xl")}>
             {editingOrder ? t('orders.editOrder') : t('orders.addNewOrder')}
           </DialogTitle>
-          <DialogDescription className="text-sm">
+          <DialogDescription className={t("components.orders.ordersform.name.text_sm")}>
             {editingOrder ? t('orders.editOrderDetails') : t('orders.addNewOrderDescription')}
           </DialogDescription>
         </DialogHeader>
         <Form {...orderForm}>
-          <form onSubmit={orderForm.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={orderForm.handleSubmit(handleSubmit)} className={t("components.orders.ordersform.name.space_y_4")}>
             {/* Customer Selection with Search */}
             <FormField
               control={orderForm.control}
-              name="customer_id"
+              name="{t('components.orders.OrdersForm.name.customer_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('orders.customer')}</FormLabel>
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <div className={t("components.orders.ordersform.name.space_y_2")}>
+                    <div className={t("components.orders.ordersform.name.relative")}>
+                      <Search className={t("components.orders.ordersform.name.absolute_left_3_top_1_2_transform_translate_y_1_2_h_4_w_4_text_gray_400")} />
                       <Input
                         placeholder={t('orders.searchCustomerPlaceholder')}
                         value={customerSearchTerm}
                         onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                        className="pl-10"
+                        className={t("components.orders.ordersform.name.pl_10")}
                         data-testid="input-search-customers"
                       />
                     </div>
@@ -391,9 +389,9 @@ export default function OrdersForm({
             />
 
             {/* Production Orders Section */}
-            <div className="border-t pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold">{t('orders.productionOrders')}</h3>
+            <div className={t("components.orders.ordersform.name.border_t_pt_4")}>
+              <div className={t("components.orders.ordersform.name.flex_items_center_justify_between_mb_3")}>
+                <h3 className={t("components.orders.ordersform.name.text_base_font_semibold")}>{t('orders.productionOrders')}</h3>
                 <Button
                   type="button"
                   onClick={addProductionOrder}
@@ -401,26 +399,26 @@ export default function OrdersForm({
                   size="sm"
                   data-testid="button-add-production-order"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className={t("components.orders.ordersform.name.h_4_w_4_mr_2")} />
                   {t('orders.addProductionOrder')}
                 </Button>
               </div>
 
               {productionOrdersInForm.length === 0 && (
-                <div className="text-center py-6 text-sm text-gray-500">
+                <div className={t("components.orders.ordersform.name.text_center_py_6_text_sm_text_gray_500")}>
                   {t('orders.validation.atLeastOneProductionOrder')}
                 </div>
               )}
 
-              <div className="space-y-3">
+              <div className={t("components.orders.ordersform.name.space_y_3")}>
                 {productionOrdersInForm.map((prodOrder, index) => (
                   <div
                     key={prodOrder.uid}
-                    className="p-3 border rounded-lg bg-gray-50"
+                    className={t("components.orders.ordersform.name.p_3_border_rounded_lg_bg_gray_50")}
                     data-testid={`production-order-${index}`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-medium">{t('orders.productionOrderNumber', { number: index + 1 })}</h4>
+                    <div className={t("components.orders.ordersform.name.flex_items_center_justify_between_mb_2")}>
+                      <h4 className={t("components.orders.ordersform.name.text_sm_font_medium")}>{t('orders.productionOrderNumber', { number: index + 1 })}</h4>
                       <Button
                         type="button"
                         onClick={() => removeProductionOrder(index)}
@@ -428,20 +426,20 @@ export default function OrdersForm({
                         size="sm"
                         data-testid={`button-remove-production-order-${index}`}
                       >
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className={t("components.orders.ordersform.name.h_4_w_4_text_red_500")} />
                       </Button>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="col-span-2">
-                        <label className="text-sm font-medium text-gray-700">{t('orders.customerProduct')}</label>
+                    <div className={t("components.orders.ordersform.name.grid_grid_cols_3_gap_3")}>
+                      <div className={t("components.orders.ordersform.name.col_span_2")}>
+                        <label className={t("components.orders.ordersform.name.text_sm_font_medium_text_gray_700")}>{t('orders.customerProduct')}</label>
                         <Select
                           onValueChange={(value) =>
                             updateProductionOrder(index, "customer_product_id", parseInt(value, 10))
                           }
                           value={prodOrder.customer_product_id?.toString() || ""}
                         >
-                          <SelectTrigger className="h-auto min-h-[50px] w-full" data-testid={`select-product-${index}`}>
+                          <SelectTrigger className={t("components.orders.ordersform.name.h_auto_min_h_50px_w_full")} data-testid={`select-product-${index}`}>
                             <SelectValue placeholder={t('orders.selectProduct')}>
                               {prodOrder.customer_product_id &&
                                 (() => {
@@ -457,21 +455,19 @@ export default function OrdersForm({
                                       selectedProduct.master_batch_id ? getMasterBatchArabicName(selectedProduct.master_batch_id, t) : null,
                                       selectedProduct.raw_material,
                                     ].filter(Boolean);
-                                    return <div className="text-right text-sm">{parts.join(" - ")}</div>;
+                                    return <div className={t("components.orders.ordersform.name.text_right_text_sm")}>{parts.join(" - ")}</div>;
                                   }
                                   return t('orders.selectProduct');
                                 })()}
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent className="max-w-[750px] w-[750px]">
+                          <SelectContent className={t("components.orders.ordersform.name.max_w_750px_w_750px_")}>
                             {filteredCustomerProducts.map((product: any) => (
-                              <SelectItem key={product.id} value={String(product.id)} className="h-auto min-h-[70px] py-2">
-                                <div className="w-full text-right py-1 min-w-[650px]">
-                                  <div className="font-semibold text-gray-900 mb-1 text-sm leading-relaxed">
+                              <SelectItem key={product.id} value={String(product.id)} className={t("components.orders.ordersform.name.h_auto_min_h_70px_py_2")}>
+                                <div className={t("components.orders.ordersform.name.w_full_text_right_py_1_min_w_650px_")}>
+                                  <div className={t("components.orders.ordersform.name.font_semibold_text_gray_900_mb_1_text_sm_leading_relaxed")}>
                                     {(() => {
-                                      const item = items.find((it: any) => it.id === product.item_id);
-                                      return (
-                                        <>
+                                      const item = items.find((it: any) =>{t('components.orders.OrdersForm.it.id_===_product.item_id);_return_(')}<>
                                           <div>{item?.name_ar || item?.name || t('orders.productNotSpecified')}</div>
                                           {product?.size_caption && <div>{product.size_caption}</div>}
                                           {product.cutting_length_cm && <div>{t('orders.cuttingLength')}: {product.cutting_length_cm} {t('common.cm')}</div>}
@@ -479,57 +475,57 @@ export default function OrdersForm({
                                       );
                                     })()}
                                   </div>
-                                  <div className="grid grid-cols-2 gap-6 text-sm text-gray-600">
-                                    <div className="space-y-2">
+                                  <div className={t("components.orders.ordersform.name.grid_grid_cols_2_gap_6_text_sm_text_gray_600")}>
+                                    <div className={t("components.orders.ordersform.name.space_y_2")}>
                                       {product.thickness && (
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium text-gray-700">{t('orders.thickness')}:</span>
-                                          <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">
+                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.thickness')}:</span>
+                                          <span className={t("components.orders.ordersform.name.text_blue_600_font_semibold_bg_blue_50_px_2_py_0_5_rounded")}>
                                             {product.thickness} {t('orders.micron')}
                                           </span>
                                         </div>
                                       )}
                                       {product.master_batch_id && (
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium text-gray-700">{t('orders.masterBatch')}:</span>
-                                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded">
+                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.masterBatch')}:</span>
+                                          <span className={t("components.orders.ordersform.name.text_purple_600_font_semibold_bg_purple_50_px_2_py_0_5_rounded")}>
                                             {getMasterBatchArabicName(product.master_batch_id, t)}
                                           </span>
                                         </div>
                                       )}
                                       {product.raw_material && (
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-medium text-gray-700">{t('orders.rawMaterial')}:</span>
-                                          <span className="text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded">
+                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.rawMaterial')}:</span>
+                                          <span className={t("components.orders.ordersform.name.text_green_600_font_semibold_bg_green_50_px_2_py_0_5_rounded")}>
                                             {product.raw_material}
                                           </span>
                                         </div>
                                       )}
                                     </div>
-                                    <div className="space-y-2">
+                                    <div className={t("components.orders.ordersform.name.space_y_2")}>
                                       {product.width && (
                                         <div>
-                                          <span className="font-medium text-gray-700">{t('orders.width')}:</span>{" "}
-                                          <span className="text-orange-600 font-medium">{product.width} {t('common.cm')}</span>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.width')}:</span>{" "}
+                                          <span className={t("components.orders.ordersform.name.text_orange_600_font_medium")}>{product.width} {t('common.cm')}</span>
                                         </div>
                                       )}
                                       {product.punching && (
                                         <div>
-                                          <span className="font-medium text-gray-700">{t('orders.punching')}:</span>{" "}
-                                          <span className="text-teal-600 font-medium">{product.punching}</span>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.punching')}:</span>{" "}
+                                          <span className={t("components.orders.ordersform.name.text_teal_600_font_medium")}>{product.punching}</span>
                                         </div>
                                       )}
                                       {product.cutting_unit && (
                                         <div>
-                                          <span className="font-medium text-gray-700">{t('orders.cuttingUnit')}:</span>{" "}
-                                          <span className="text-indigo-600 font-medium">{product.cutting_unit}</span>
+                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.cuttingUnit')}:</span>{" "}
+                                          <span className={t("components.orders.ordersform.name.text_indigo_600_font_medium")}>{product.cutting_unit}</span>
                                         </div>
                                       )}
                                     </div>
                                   </div>
                                   {product.notes && (
-                                    <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded p-2">
-                                      <span className="font-medium">{t('common.notes')}:</span> {product.notes}
+                                    <div className={t("components.orders.ordersform.name.mt_2_text_xs_text_gray_500_bg_gray_50_rounded_p_2")}>
+                                      <span className={t("components.orders.ordersform.name.font_medium")}>{t('common.notes')}:</span> {product.notes}
                                     </div>
                                   )}
                                 </div>
@@ -540,7 +536,7 @@ export default function OrdersForm({
                       </div>
 
                       <div>
-                        <label className="text-sm font-medium text-gray-700">{t('orders.baseQuantityKg')}</label>
+                        <label className={t("components.orders.ordersform.name.text_sm_font_medium_text_gray_700")}>{t('orders.baseQuantityKg')}</label>
                         <Input
                           type="number"
                           placeholder={t('common.quantity')}
@@ -549,19 +545,19 @@ export default function OrdersForm({
                             const num = Number.parseFloat(e.target.value);
                             updateProductionOrder(index, "quantity_kg", Number.isNaN(num) ? null : num);
                           }}
-                          className="w-full"
+                          className={t("components.orders.ordersform.name.w_full")}
                           data-testid={`input-base-quantity-${index}`}
                         />
                         {quantityPreviews[prodOrder.uid] && (
-                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
-                            <div className="text-xs font-medium text-blue-800 mb-1">{t('orders.preview')}:</div>
-                            <div className="text-xs space-y-1">
-                              <div className="text-blue-700">
-                                <span className="font-medium">{t('orders.overrunPercentage')}:</span>{" "}
+                          <div className={t("components.orders.ordersform.name.mt_2_p_2_bg_blue_50_rounded_border_border_blue_200")}>
+                            <div className={t("components.orders.ordersform.name.text_xs_font_medium_text_blue_800_mb_1")}>{t('orders.preview')}:</div>
+                            <div className={t("components.orders.ordersform.name.text_xs_space_y_1")}>
+                              <div className={t("components.orders.ordersform.name.text_blue_700")}>
+                                <span className={t("components.orders.ordersform.name.font_medium")}>{t('orders.overrunPercentage')}:</span>{" "}
                                 {formatPercentage(quantityPreviews[prodOrder.uid].overrun_percentage)}
                               </div>
-                              <div className="text-blue-700">
-                                <span className="font-medium">{t('orders.finalQuantity')}:</span>{" "}
+                              <div className={t("components.orders.ordersform.name.text_blue_700")}>
+                                <span className={t("components.orders.ordersform.name.font_medium")}>{t('orders.finalQuantity')}:</span>{" "}
                                 {formatWeight(quantityPreviews[prodOrder.uid].final_quantity_kg)}
                               </div>
                             </div>
@@ -575,11 +571,11 @@ export default function OrdersForm({
             </div>
 
             {/* Delivery Days & Notes Section */}
-            <div className="border-t pt-4">
-              <div className="grid grid-cols-3 gap-4">
+            <div className={t("components.orders.ordersform.name.border_t_pt_4")}>
+              <div className={t("components.orders.ordersform.name.grid_grid_cols_3_gap_4")}>
                 <FormField
                   control={orderForm.control}
-                  name="delivery_days"
+                  name="{t('components.orders.OrdersForm.name.delivery_days')}"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('orders.deliveryDays')}</FormLabel>
@@ -598,15 +594,15 @@ export default function OrdersForm({
 
                 <FormField
                   control={orderForm.control}
-                  name="notes"
+                  name="{t('components.orders.OrdersForm.name.notes')}"
                   render={({ field }) => (
-                    <FormItem className="col-span-2">
+                    <FormItem className={t("components.orders.ordersform.name.col_span_2")}>
                       <FormLabel>{t('common.notes')}</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
                           placeholder={t('orders.notesPlaceholder')}
-                          className="min-h-[40px] resize-none"
+                          className={t("components.orders.ordersform.name.min_h_40px_resize_none")}
                           data-testid="textarea-notes"
                         />
                       </FormControl>
@@ -618,7 +614,7 @@ export default function OrdersForm({
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end space-x-2 space-x-reverse pt-3 border-t">
+            <div className={t("components.orders.ordersform.name.flex_justify_end_space_x_2_space_x_reverse_pt_3_border_t")}>
               <Button
                 type="button"
                 variant="outline"

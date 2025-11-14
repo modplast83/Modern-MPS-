@@ -20,8 +20,8 @@ export default function MobileNav() {
   const { t } = useTranslation();
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40">
-      <div className="flex justify-around py-1">
+    <div className={t("components.layout.mobilenav.name.lg_hidden_fixed_bottom_0_left_0_right_0_bg_white_border_t_border_gray_200_z_40")}>
+      <div className={t("components.layout.mobilenav.name.flex_justify_around_py_1")}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location === item.path;
@@ -34,8 +34,8 @@ export default function MobileNav() {
                 }`}
                 data-testid={`button-nav-${item.key}`}
               >
-                <Icon className="h-5 w-5 mb-1" />
-                <span className="text-xs leading-tight">{t(`mobileNav.${item.key}`)}</span>
+                <Icon className={t("components.layout.mobilenav.name.h_5_w_5_mb_1")} />
+                <span className={t("components.layout.mobilenav.name.text_xs_leading_tight")}>{t(`mobileNav.${item.key}`)}</span>
               </button>
             </Link>
           );

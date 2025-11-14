@@ -25,8 +25,7 @@ export default function HierarchicalOrdersView({
 }: HierarchicalOrdersViewProps) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-  const [expandedProductionOrders, setExpandedProductionOrders] = useState<
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>{t('components.production.HierarchicalOrdersView.(new_set());_const_[expandedproductionorders,_setexpandedproductionorders]_=_usestate')}<
     Set<number>
   >(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,32 +107,32 @@ export default function HierarchicalOrdersView({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className={t("components.production.hierarchicalordersview.name.space_y_4")}>
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-24 bg-muted animate-pulse rounded"></div>
+          <div key={i} className={t("components.production.hierarchicalordersview.name.h_24_bg_muted_animate_pulse_rounded")}></div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className={t("components.production.hierarchicalordersview.name.space_y_4")}>
       {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+      <div className={t("components.production.hierarchicalordersview.name.relative")}>
+        <Search className={t("components.production.hierarchicalordersview.name.absolute_left_3_top_1_2_transform_translate_y_1_2_text_muted_foreground_h_4_w_4")} />
         <Input
           placeholder={t("production.searchOrdersProductionOrdersRollsOrCustomers")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className={t("components.production.hierarchicalordersview.name.pl_10")}
           data-testid="input-search-orders"
         />
       </div>
 
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">
+        <div className={t("components.production.hierarchicalordersview.name.text_center_py_8")}>
+          <p className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
             {searchTerm
               ? t("common.noSearchResults")
               : t("production.noOrdersInProduction")}
@@ -141,10 +140,10 @@ export default function HierarchicalOrdersView({
         </div>
       ) : (
         filteredOrders.map((order) => (
-          <Card key={order.id} className="border-l-4 border-l-blue-500">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+          <Card key={order.id} className={t("components.production.hierarchicalordersview.name.border_l_4_border_l_blue_500")}>
+            <CardHeader className={t("components.production.hierarchicalordersview.name.pb_3")}>
+              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_justify_between")}>
+                <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_3")}>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -152,16 +151,14 @@ export default function HierarchicalOrdersView({
                     data-testid={`button-expand-order-${order.id}`}
                   >
                     {expandedOrders.has(order.id) ? (
-                      <ChevronDown className="h-4 w-4" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronDown className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />{t('components.production.HierarchicalOrdersView.)_:_(')}<ChevronRight className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
                     )}
                   </Button>
                   <div>
-                    <CardTitle className="text-lg">
+                    <CardTitle className={t("components.production.hierarchicalordersview.name.text_lg")}>
                       {order.order_number}
                     </CardTitle>
-                    <p className="text-base font-bold text-blue-700">
+                    <p className={t("components.production.hierarchicalordersview.name.text_base_font_bold_text_blue_700")}>
                       {t("common.customer")}:{" "}
                       {order.customer_name_ar ||
                         order.customer_name ||
@@ -169,7 +166,7 @@ export default function HierarchicalOrdersView({
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_2")}>
                   <Badge variant="outline">
                     {order.production_orders?.length || 0} {t("production.productionOrders")}
                   </Badge>
@@ -194,10 +191,9 @@ export default function HierarchicalOrdersView({
             </CardHeader>
 
             {expandedOrders.has(order.id) && (
-              <CardContent className="pt-0">
+              <CardContent className={t("components.production.hierarchicalordersview.name.pt_0")}>
                 {order.production_orders &&
-                order.production_orders.length > 0 ? (
-                  <div className="space-y-3">
+                order.production_orders.length >{t('components.production.HierarchicalOrdersView.0_?_(')}<div className={t("components.production.hierarchicalordersview.name.space_y_3")}>
                     {order.production_orders.map((productionOrder: any) => {
                       const required =
                         parseFloat(productionOrder.quantity_kg) || 0;
@@ -209,18 +205,13 @@ export default function HierarchicalOrdersView({
                           )
                         : 0;
                       const progress =
-                        required > 0
-                          ? Math.round((produced / required) * 100)
-                          : 0;
-
-                      return (
-                        <Card
+                        required >{t('components.production.HierarchicalOrdersView.0_?_math.round((produced_/_required)_*_100)_:_0;_return_(')}<Card
                           key={productionOrder.id}
-                          className="border border-gray-200 ml-6"
+                          className={t("components.production.hierarchicalordersview.name.border_border_gray_200_ml_6")}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
+                          <CardContent className={t("components.production.hierarchicalordersview.name.p_4")}>
+                            <div className={t("components.production.hierarchicalordersview.name.flex_items_center_justify_between")}>
+                              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_3")}>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -234,66 +225,64 @@ export default function HierarchicalOrdersView({
                                   {expandedProductionOrders.has(
                                     productionOrder.id,
                                   ) ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
+                                    <ChevronDown className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />{t('components.production.HierarchicalOrdersView.)_:_(')}<ChevronRight className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
                                   )}
                                 </Button>
                                 <div>
-                                  <h4 className="font-medium">
+                                  <h4 className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                     {productionOrder.production_order_number}
                                   </h4>
-                                  <p className="text-sm text-muted-foreground">
+                                  <p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground")}>
                                     {productionOrder.item_name_ar ||
                                       productionOrder.item_name ||
                                       t("common.notSpecified")}
                                   </p>
-                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
+                                  <div className={t("components.production.hierarchicalordersview.name.grid_grid_cols_2_gap_x_4_gap_y_1_mt_2_text_xs")}>
                                     {productionOrder.size_caption && (
                                       <div>
-                                        <span className="font-medium">
+                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                           {t("production.size")}:{" "}
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                           {productionOrder.size_caption}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.thickness && (
                                       <div>
-                                        <span className="font-medium">
+                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                           {t("production.thickness")}:{" "}
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                           {productionOrder.thickness}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.raw_material && (
                                       <div>
-                                        <span className="font-medium">
+                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                           {t("production.rawMaterial")}:{" "}
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                           {productionOrder.raw_material}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.master_batch_id && (
                                       <div>
-                                        <span className="font-medium">
+                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                           {t("production.masterBatchColor")}:{" "}
                                         </span>
-                                        <span className="text-muted-foreground">
+                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                           {productionOrder.master_batch_id}
                                         </span>
                                       </div>
                                     )}
                                     <div>
-                                      <span className="font-medium">
+                                      <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
                                         {t("production.printing")}:{" "}
                                       </span>
-                                      <span className="text-muted-foreground">
+                                      <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                         {productionOrder.is_printed
                                           ? t("common.yes")
                                           : t("common.no")}
@@ -302,17 +291,17 @@ export default function HierarchicalOrdersView({
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-sm">
-                                  <span className="text-muted-foreground">
+                              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_4")}>
+                                <div className={t("components.production.hierarchicalordersview.name.text_sm")}>
+                                  <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
                                     {t("production.quantity")}:{" "}
                                   </span>
                                   {formatWeight(produced)} /{" "}
                                   {formatWeight(required)}
                                 </div>
-                                <div className="w-24">
-                                  <Progress value={progress} className="h-2" />
-                                  <span className="text-xs text-muted-foreground">
+                                <div className={t("components.production.hierarchicalordersview.name.w_24")}>
+                                  <Progress value={progress} className={t("components.production.hierarchicalordersview.name.h_2")} />
+                                  <span className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
                                     {formatPercentage(progress)}
                                   </span>
                                 </div>
@@ -324,36 +313,34 @@ export default function HierarchicalOrdersView({
                                   }
                                   data-testid={`button-create-roll-${productionOrder.id}`}
                                 >
-                                  <Plus className="h-4 w-4" />
+                                  <Plus className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
                                 </Button>
                               </div>
                             </div>
 
                             {expandedProductionOrders.has(productionOrder.id) &&
                               productionOrder.rolls && (
-                                <div className="mt-4 ml-6 space-y-2">
-                                  <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                <div className={t("components.production.hierarchicalordersview.name.mt_4_ml_6_space_y_2")}>
+                                  <h5 className={t("components.production.hierarchicalordersview.name.text_sm_font_medium_text_gray_700_mb_2")}>
                                     {t("production.rolls")} ({productionOrder.rolls.length})
                                   </h5>
                                   {productionOrder.rolls.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground">
+                                    <p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground")}>
                                       {t("production.noRollsYet")}
-                                    </p>
-                                  ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                    </p>{t('components.production.HierarchicalOrdersView.)_:_(')}<div className={t("components.production.hierarchicalordersview.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_2")}>
                                       {productionOrder.rolls.map(
                                         (roll: any) => (
                                           <div
                                             key={roll.id}
-                                            className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                            className={t("components.production.hierarchicalordersview.name.border_rounded_p_3_bg_gray_50_hover_bg_gray_100_transition_colors")}
                                             data-testid={`roll-item-${roll.id}`}
                                           >
-                                            <div className="flex justify-between items-start mb-2">
-                                              <div className="flex-1">
-                                                <p className="font-medium text-sm">
+                                            <div className={t("components.production.hierarchicalordersview.name.flex_justify_between_items_start_mb_2")}>
+                                              <div className={t("components.production.hierarchicalordersview.name.flex_1")}>
+                                                <p className={t("components.production.hierarchicalordersview.name.font_medium_text_sm")}>
                                                   {roll.roll_number}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
                                                   {t("production.weight")}:{" "}
                                                   {formatWeight(
                                                     parseFloat(
@@ -361,7 +348,7 @@ export default function HierarchicalOrdersView({
                                                     ) || 0,
                                                   )}
                                                 </p>
-                                                <p className="text-xs text-muted-foreground">
+                                                <p className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
                                                   {t("production.stage")}:{" "}
                                                   {roll.stage === "film"
                                                     ? t("production.film")
@@ -378,7 +365,7 @@ export default function HierarchicalOrdersView({
                                                     ? "default"
                                                     : "secondary"
                                                 }
-                                                className="text-xs"
+                                                className={t("components.production.hierarchicalordersview.name.text_xs")}
                                               >
                                                 {roll.stage === "done"
                                                   ? t("common.completed")
@@ -394,7 +381,7 @@ export default function HierarchicalOrdersView({
                                             <Button
                                               variant="outline"
                                               size="sm"
-                                              className="w-full text-xs"
+                                              className={t("components.production.hierarchicalordersview.name.w_full_text_xs")}
                                               onClick={() => printRollLabel({
                                                 roll: roll,
                                                 productionOrder: productionOrder,
@@ -402,7 +389,7 @@ export default function HierarchicalOrdersView({
                                               })}
                                               data-testid={`button-print-label-${roll.id}`}
                                             >
-                                              <Printer className="h-3 w-3 mr-1" />
+                                              <Printer className={t("components.production.hierarchicalordersview.name.h_3_w_3_mr_1")} />
                                               {t("production.printLabel")}
                                             </Button>
                                           </div>
@@ -416,9 +403,7 @@ export default function HierarchicalOrdersView({
                         </Card>
                       );
                     })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground ml-6">
+                  </div>{t('components.production.HierarchicalOrdersView.)_:_(')}<p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground_ml_6")}>
                     {t("production.noProductionOrdersForThisOrder")}
                   </p>
                 )}

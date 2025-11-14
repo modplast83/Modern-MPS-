@@ -39,20 +39,20 @@ export function Notification({
     <Alert
       className={`fixed top-4 left-4 right-4 lg:left-auto lg:right-4 lg:w-96 z-50 ${colorMap[type]}`}
     >
-      <div className="flex items-center">
-        <Icon className="h-4 w-4 flex-shrink-0" />
-        <div className="mr-3 flex-1">
-          {title && <p className="font-medium text-sm">{title}</p>}
-          <AlertDescription className="text-sm">{message}</AlertDescription>
+      <div className={t("components.ui.notification.name.flex_items_center")}>
+        <Icon className={t("components.ui.notification.name.h_4_w_4_flex_shrink_0")} />
+        <div className={t("components.ui.notification.name.mr_3_flex_1")}>
+          {title && <p className={t("components.ui.notification.name.font_medium_text_sm")}>{title}</p>}
+          <AlertDescription className={t("components.ui.notification.name.text_sm")}>{message}</AlertDescription>
         </div>
         {onClose && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="mr-auto p-1 h-auto"
+            className={t("components.ui.notification.name.mr_auto_p_1_h_auto")}
           >
-            <X className="h-4 w-4" />
+            <X className={t("components.ui.notification.name.h_4_w_4")} />
           </Button>
         )}
       </div>

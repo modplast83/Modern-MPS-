@@ -61,9 +61,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const printingFormSchema = useMemo(() => createPrintingFormSchema(t), [t]);
-
-  const form = useForm<PrintingFormData>({
+  const printingFormSchema = useMemo(() =>{t('components.modals.PrintingCreationModal.createprintingformschema(t),_[t]);_const_form_=_useform')}<PrintingFormData>({
     resolver: zodResolver(printingFormSchema),
     defaultValues: {
       production_order_id: selectedProductionOrderId,
@@ -160,18 +158,18 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md" aria-describedby="printing-creation-description">
+      <DialogContent className={t("components.modals.printingcreationmodal.name.max_w_md")} aria-describedby="printing-creation-description">
         <DialogHeader>
           <DialogTitle>{t('modals.printingJob.title')}</DialogTitle>
           <DialogDescription id="printing-creation-description">{t('modals.printingJob.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.modals.printingcreationmodal.name.space_y_4")}>
             {!selectedProductionOrderId && (
               <FormField
                 control={form.control}
-                name="production_order_id"
+                name="{t('components.modals.PrintingCreationModal.name.production_order_id')}"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('modals.printingJob.productionOrder')} *</FormLabel>
@@ -183,13 +181,13 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
             )}
 
             {selectedProductionOrderId && (
-              <div className="space-y-2">
+              <div className={t("components.modals.printingcreationmodal.name.space_y_2")}>
                 <Label>{t('modals.printingJob.selectedProductionOrder')}</Label>
-                <div className="p-3 bg-gray-50 rounded-md border">
-                  <p className="font-medium text-sm">
+                <div className={t("components.modals.printingcreationmodal.name.p_3_bg_gray_50_rounded_md_border")}>
+                  <p className={t("components.modals.printingcreationmodal.name.font_medium_text_sm")}>
                     {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className={t("components.modals.printingcreationmodal.name.text_xs_text_gray_600")}>
                     {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || t('common.notSpecified')} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || t('common.notSpecified')}`}
                   </p>
                 </div>
@@ -198,14 +196,14 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
 
             <FormField
               control={form.control}
-              name="weight_kg"
+              name="{t('components.modals.PrintingCreationModal.name.weight_kg')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.printingJob.weightKg')} *</FormLabel>
                   <FormControl>
-                    <NumberInput value={field.value} onChange={field.onChange} placeholder="45.2" />
+                    <NumberInput value={field.value} onChange={field.onChange} placeholder="{t('components.modals.PrintingCreationModal.placeholder.45.2')}" />
                   </FormControl>
-                  {selectedOrder && <p className="text-xs text-gray-600">{t('modals.printingJob.remaining')}: <span className="font-medium">{remaining.toFixed(2)} {t('units.kg')}</span></p>}
+                  {selectedOrder && <p className={t("components.modals.printingcreationmodal.name.text_xs_text_gray_600")}>{t('modals.printingJob.remaining')}: <span className={t("components.modals.printingcreationmodal.name.font_medium")}>{remaining.toFixed(2)} {t('units.kg')}</span></p>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -213,7 +211,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
 
             <FormField
               control={form.control}
-              name="machine_id"
+              name="{t('components.modals.PrintingCreationModal.name.machine_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.printingJob.machine')} *</FormLabel>
@@ -225,7 +223,7 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
 
             <FormField
               control={form.control}
-              name="ink_set_id"
+              name="{t('components.modals.PrintingCreationModal.name.ink_set_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.printingJob.inkSet')} *</FormLabel>
@@ -236,9 +234,9 @@ export default function PrintingCreationModal({ isOpen, onClose, selectedProduct
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
+            <div className={t("components.modals.printingcreationmodal.name.flex_justify_end_gap_3_pt_4_rtl_space_x_reverse")}>
               <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>{t('common.cancel')}</Button>
-              <Button type="submit" className="btn-primary" disabled={createMutation.isPending || remaining === 0}>
+              <Button type="submit" className={t("components.modals.printingcreationmodal.name.btn_primary")} disabled={createMutation.isPending || remaining === 0}>
                 {createMutation.isPending ? t('modals.printingJob.creating') : remaining === 0 ? t('modals.printingJob.quantityCompleted') : t('modals.printingJob.createTask')}
               </Button>
             </div>

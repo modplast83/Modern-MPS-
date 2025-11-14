@@ -177,32 +177,28 @@ export default function QuickNotes() {
   const userNotes = notes.filter(
     (note) => note.assigned_to === user?.id || note.created_by === user?.id
   );
-  const unreadNotes = userNotes.filter((note) => !note.is_read);
-
-  return (
-    <Card className="shadow-lg" data-testid="card-quick-notes">
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <div className="flex items-center gap-2">
-          <AlertCircle className="w-5 h-5 text-blue-600" />
-          <CardTitle className="text-lg font-bold">{t('quickNotes.title')}</CardTitle>
-          {unreadNotes.length > 0 && (
-            <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+  const unreadNotes = userNotes.filter((note) =>{t('components.dashboard.QuickNotes.!note.is_read);_return_(')}<Card className={t("components.dashboard.quicknotes.name.shadow_lg")} data-testid="card-quick-notes">
+      <CardHeader className={t("components.dashboard.quicknotes.name.flex_flex_row_items_center_justify_between_pb_3")}>
+        <div className={t("components.dashboard.quicknotes.name.flex_items_center_gap_2")}>
+          <AlertCircle className={t("components.dashboard.quicknotes.name.w_5_h_5_text_blue_600")} />
+          <CardTitle className={t("components.dashboard.quicknotes.name.text_lg_font_bold")}>{t('quickNotes.title')}</CardTitle>
+          {unreadNotes.length >{t('components.dashboard.QuickNotes.0_&&_(')}<span className={t("components.dashboard.quicknotes.name.bg_red_500_text_white_text_xs_font_bold_px_2_py_1_rounded_full")}>
               {unreadNotes.length}
             </span>
           )}
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" className="gap-2" data-testid="button-add-note">
-              <Plus className="w-4 h-4" />
+            <Button size="sm" className={t("components.dashboard.quicknotes.name.gap_2")} data-testid="button-add-note">
+              <Plus className={t("components.dashboard.quicknotes.name.w_4_h_4")} />
               {t('quickNotes.addNote')}
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className={t("components.dashboard.quicknotes.name.sm_max_w_500px_")}>
             <DialogHeader>
               <DialogTitle>{t('quickNotes.newNote')}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className={t("components.dashboard.quicknotes.name.space_y_4_py_4")}>
               <div>
                 <Label>{t('quickNotes.noteType')}</Label>
                 <Select
@@ -217,8 +213,8 @@ export default function QuickNotes() {
                   <SelectContent>
                     {Object.entries(noteTypeConfig).map(([key, config]) => (
                       <SelectItem key={key} value={key}>
-                        <div className="flex items-center gap-2">
-                          <config.icon className="w-4 h-4" />
+                        <div className={t("components.dashboard.quicknotes.name.flex_items_center_gap_2")}>
+                          <config.icon className={t("components.dashboard.quicknotes.name.w_4_h_4")} />
                           {t(`quickNotes.types.${config.key}`)}
                         </div>
                       </SelectItem>
@@ -277,12 +273,12 @@ export default function QuickNotes() {
                     setNewNote({ ...newNote, content: e.target.value })
                   }
                   placeholder={t('quickNotes.placeholder')}
-                  className="min-h-[100px]"
+                  className={t("components.dashboard.quicknotes.name.min_h_100px_")}
                   data-testid="textarea-note-content"
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className={t("components.dashboard.quicknotes.name.flex_justify_end_gap_2")}>
                 <Button
                   variant="outline"
                   onClick={() => setIsModalOpen(false)}
@@ -303,11 +299,9 @@ export default function QuickNotes() {
         </Dialog>
       </CardHeader>
 
-      <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
+      <CardContent className={t("components.dashboard.quicknotes.name.space_y_3_max_h_500px_overflow_y_auto")}>
         {isLoading ? (
-          <div className="text-center py-4 text-gray-500">{t('quickNotes.loading')}</div>
-        ) : userNotes.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className={t("components.dashboard.quicknotes.name.text_center_py_4_text_gray_500")}>{t('quickNotes.loading')}</div>{t('components.dashboard.QuickNotes.)_:_usernotes.length_===_0_?_(')}<div className={t("components.dashboard.quicknotes.name.text_center_py_8_text_gray_500")}>
             {t('quickNotes.noNotes')}
           </div>
         ) : (
@@ -322,25 +316,25 @@ export default function QuickNotes() {
                 className={`p-4 rounded-lg border-2 ${priorityStyle.color} ${!note.is_read ? "ring-2 ring-blue-400" : ""}`}
                 data-testid={`note-${note.id}`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                <div className={t("components.dashboard.quicknotes.name.flex_items_start_justify_between_gap_3")}>
+                  <div className={t("components.dashboard.quicknotes.name.flex_1")}>
+                    <div className={t("components.dashboard.quicknotes.name.flex_items_center_gap_2_mb_2")}>
                       <div className={`p-2 rounded-lg ${typeConfig.color}`}>
-                        <Icon className="w-4 h-4" />
+                        <Icon className={t("components.dashboard.quicknotes.name.w_4_h_4")} />
                       </div>
-                      <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-100">
+                      <span className={t("components.dashboard.quicknotes.name.text_xs_font_semibold_px_2_py_1_rounded_bg_gray_100")}>
                         {t(`quickNotes.types.${typeConfig.key}`)}
                       </span>
                       {!note.is_read && (
-                        <span className="text-xs font-bold text-blue-600">
+                        <span className={t("components.dashboard.quicknotes.name.text_xs_font_bold_text_blue_600")}>
                           {t('quickNotes.new')}
                         </span>
                       )}
                     </div>
-                    <p className="font-bold text-gray-900 mb-2 whitespace-pre-wrap">
+                    <p className={t("components.dashboard.quicknotes.name.font_bold_text_gray_900_mb_2_whitespace_pre_wrap")}>
                       {note.content}
                     </p>
-                    <div className="flex items-center gap-3 text-xs text-gray-600">
+                    <div className={t("components.dashboard.quicknotes.name.flex_items_center_gap_3_text_xs_text_gray_600")}>
                       <span>{t('quickNotes.from')}: {note.creator_name}</span>
                       <span>•</span>
                       <span>{t('quickNotes.to')}: {note.assignee_name}</span>
@@ -351,18 +345,17 @@ export default function QuickNotes() {
                           locale: ar,
                         })}
                       </span>
-                      {note.attachments && note.attachments.length > 0 && (
-                        <>
+                      {note.attachments && note.attachments.length >{t('components.dashboard.QuickNotes.0_&&_(')}<>
                           <span>•</span>
-                          <span className="flex items-center gap-1">
-                            <Paperclip className="w-3 h-3" />
+                          <span className={t("components.dashboard.quicknotes.name.flex_items_center_gap_1")}>
+                            <Paperclip className={t("components.dashboard.quicknotes.name.w_3_h_3")} />
                             {note.attachments.length}
                           </span>
                         </>
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className={t("components.dashboard.quicknotes.name.flex_gap_1")}>
                     {!note.is_read && note.assigned_to === user?.id && (
                       <Button
                         size="sm"
@@ -370,7 +363,7 @@ export default function QuickNotes() {
                         onClick={() => markAsReadMutation.mutate(note.id)}
                         data-testid={`button-mark-read-${note.id}`}
                       >
-                        <Eye className="w-4 h-4" />
+                        <Eye className={t("components.dashboard.quicknotes.name.w_4_h_4")} />
                       </Button>
                     )}
                     {(note.created_by === user?.id || user?.role_id === 1) && (
@@ -380,7 +373,7 @@ export default function QuickNotes() {
                         onClick={() => deleteNoteMutation.mutate(note.id)}
                         data-testid={`button-delete-${note.id}`}
                       >
-                        <Trash2 className="w-4 h-4 text-red-600" />
+                        <Trash2 className={t("components.dashboard.quicknotes.name.w_4_h_4_text_red_600")} />
                       </Button>
                     )}
                   </div>

@@ -43,15 +43,15 @@ const CustomTooltip = ({ active, payload, formatValue, t }: any) => {
     const data = payload[0];
     return (
       <div
-        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
+        className={t("components.charts.interactivepiechart.name.bg_white_p_3_border_border_gray_300_rounded_lg_shadow_lg")}
         dir="rtl"
       >
-        <p className="font-medium text-gray-900">{data.name}</p>
-        <p className="text-sm" style={{ color: data.fill }}>
+        <p className={t("components.charts.interactivepiechart.name.font_medium_text_gray_900")}>{data.name}</p>
+        <p className={t("components.charts.interactivepiechart.name.text_sm")} style={{ color: data.fill }}>
           {`${t('charts.value')}: ${formatValue ? formatValue(data.value) : data.value}`}
         </p>
         {data.payload.percentage && (
-          <p className="text-sm text-gray-600">
+          <p className={t("components.charts.interactivepiechart.name.text_sm_text_gray_600")}>
             {`${t('charts.percentage')}: ${data.payload.percentage.toFixed(1)}%`}
           </p>
         )}
@@ -120,14 +120,14 @@ export function InteractivePieChart({
     <Card className={`${className}`} data-testid="chart-interactive-pie">
       <CardHeader>
         <CardTitle
-          className="text-lg font-semibold text-gray-900"
+          className={t("components.charts.interactivepiechart.name.text_lg_font_semibold_text_gray_900")}
           data-testid="text-chart-title"
         >
           {title}
         </CardTitle>
         {description && (
           <p
-            className="text-sm text-gray-600"
+            className={t("components.charts.interactivepiechart.name.text_sm_text_gray_600")}
             data-testid="text-chart-description"
           >
             {description}
@@ -163,7 +163,7 @@ export function InteractivePieChart({
                 height={36}
                 iconType="circle"
                 formatter={(value) => (
-                  <span className="text-sm text-gray-700">{value}</span>
+                  <span className={t("components.charts.interactivepiechart.name.text_sm_text_gray_700")}>{value}</span>
                 )}
               />
             )}

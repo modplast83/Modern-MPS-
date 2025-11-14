@@ -347,11 +347,7 @@ export default function Orders() {
 
       // Validate that all production orders have complete data
       const invalidOrders = productionOrdersData.filter(
-        (order) =>
-          !order.customer_product_id ||
-          order.customer_product_id === "" ||
-          !order.quantity_kg ||
-          order.quantity_kg <= 0,
+        (order) => !order.customer_product_id || order.customer_product_id === "" || !order.quantity_kg || order.quantity_kg <= 0,
       );
 
       if (invalidOrders.length > 0) {
@@ -709,12 +705,12 @@ export default function Orders() {
 
   if (ordersLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className={t("pages.orders.name.min_h_screen_bg_gray_50")}>
         <Header />
-        <div className="flex">
+        <div className={t("pages.orders.name.flex")}>
           <Sidebar />
-          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="text-center">{t("common.loading")}</div>
+          <main className={t("pages.orders.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+            <div className={t("pages.orders.name.text_center")}>{t("common.loading")}</div>
           </main>
         </div>
       </div>
@@ -722,58 +718,54 @@ export default function Orders() {
   }
 
   const LoadingFallback = () => (
-    <div className="space-y-4 p-6">
-      <Skeleton className="h-12 w-full" />
-      <Skeleton className="h-64 w-full" />
-      <Skeleton className="h-64 w-full" />
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.orders.name.space_y_4_p_6")}>
+      <Skeleton className={t("pages.orders.name.h_12_w_full")} />
+      <Skeleton className={t("pages.orders.name.h_64_w_full")} />
+      <Skeleton className={t("pages.orders.name.h_64_w_full")} />
+    </div>{t('pages.orders.);_return_(')}<div className={t("pages.orders.name.min_h_screen_bg_gray_50")}>
       <Header />
 
-      <div className="flex">
+      <div className={t("pages.orders.name.flex")}>
         <Sidebar />
 
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <main className={t("pages.orders.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+          <div className={t("pages.orders.name.mb_6")}>
+            <h1 className={t("pages.orders.name.text_2xl_font_bold_text_gray_900_mb_2")}>
               {t("orders.title")}
             </h1>
-            <p className="text-gray-600">
+            <p className={t("pages.orders.name.text_gray_600")}>
               {t("orders.subtitle")}
             </p>
             {isAdmin && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
+              <div className={t("pages.orders.name.mt_2_text_sm_text_green_600_font_medium")}>
                 ✓ {t("orders.adminPermissions")}
               </div>
             )}
           </div>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className={t("pages.orders.name.space_y_6")} dir="rtl">
+            <TabsList className={t("pages.orders.name.grid_w_full_grid_cols_3_md_grid_cols_6_lg_w_auto_lg_inline_grid")}>
               <TabsTrigger value="orders" data-testid="tab-orders">
                 {t("sidebar.orders")}
               </TabsTrigger>
               <TabsTrigger value="production-orders" data-testid="tab-production-orders">
-                <ClipboardCheck className="h-4 w-4 ml-2" />
+                <ClipboardCheck className={t("pages.orders.name.h_4_w_4_ml_2")} />
                 <span>{t("sidebar.productionOrders")}</span>
               </TabsTrigger>
               <TabsTrigger value="rolls" data-testid="tab-rolls">
-                <Package className="h-4 w-4 ml-2" />
+                <Package className={t("pages.orders.name.h_4_w_4_ml_2")} />
                 <span>{t("orders.rolls")}</span>
               </TabsTrigger>
               <TabsTrigger value="production-queues" data-testid="tab-production-queues">
-                <Link2 className="h-4 w-4 ml-2" />
+                <Link2 className={t("pages.orders.name.h_4_w_4_ml_2")} />
                 <span>{t("sidebar.productionQueues")}</span>
               </TabsTrigger>
               <TabsTrigger value="roll-search" data-testid="tab-roll-search">
-                <Search className="h-4 w-4 ml-2" />
+                <Search className={t("pages.orders.name.h_4_w_4_ml_2")} />
                 <span>{t("sidebar.rollSearch")}</span>
               </TabsTrigger>
               <TabsTrigger value="production-reports" data-testid="tab-production-reports">
-                <BarChart3 className="h-4 w-4 ml-2" />
+                <BarChart3 className={t("pages.orders.name.h_4_w_4_ml_2")} />
                 <span>{t("sidebar.productionReports")}</span>
               </TabsTrigger>
             </TabsList>
@@ -783,7 +775,7 @@ export default function Orders() {
               {!ordersLoading && (
                 <>
                   <OrdersStats orders={orders} productionOrders={productionOrders} />
-                  <div className="mt-6">
+                  <div className={t("pages.orders.name.mt_6")}>
                     <OrdersTabs
                       orders={orders}
                       productionOrders={productionOrders}
@@ -825,7 +817,7 @@ export default function Orders() {
             {/* محتوى أوامر الإنتاج */}
             <TabsContent value="production-orders">
               <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
+                <div className={t("pages.orders.name.embedded_page_wrapper")}>
                   <ProductionOrdersManagement />
                 </div>
               </Suspense>
@@ -842,7 +834,7 @@ export default function Orders() {
             {/* محتوى طوابير الإنتاج */}
             <TabsContent value="production-queues">
               <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
+                <div className={t("pages.orders.name.embedded_page_wrapper")}>
                   <ProductionQueues />
                 </div>
               </Suspense>
@@ -851,7 +843,7 @@ export default function Orders() {
             {/* محتوى البحث عن الرولات */}
             <TabsContent value="roll-search">
               <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
+                <div className={t("pages.orders.name.embedded_page_wrapper")}>
                   <RollSearch />
                 </div>
               </Suspense>
@@ -860,7 +852,7 @@ export default function Orders() {
             {/* محتوى تقارير الإنتاج */}
             <TabsContent value="production-reports">
               <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
+                <div className={t("pages.orders.name.embedded_page_wrapper")}>
                   <ProductionReports />
                 </div>
               </Suspense>

@@ -55,36 +55,36 @@ export default function ProductionOrderFilters({
     filters.dateTo;
 
   return (
-    <Card className="p-4 mb-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="h-5 w-5 text-gray-600" />
-        <h3 className="font-semibold">{t('filters.searchFilters')}</h3>
+    <Card className={t("components.production.productionorderfilters.name.p_4_mb_4")}>
+      <div className={t("components.production.productionorderfilters.name.flex_items_center_gap_2_mb_4")}>
+        <Filter className={t("components.production.productionorderfilters.name.h_5_w_5_text_gray_600")} />
+        <h3 className={t("components.production.productionorderfilters.name.font_semibold")}>{t('filters.searchFilters')}</h3>
         {hasActiveFilters && (
           <Button
             size="sm"
             variant="ghost"
             onClick={handleReset}
-            className="mr-auto"
+            className={t("components.production.productionorderfilters.name.mr_auto")}
             data-testid="button-reset-filters"
           >
-            <X className="h-4 w-4 ml-1" />
+            <X className={t("components.production.productionorderfilters.name.h_4_w_4_ml_1")} />
             {t('filters.clearFilters')}
           </Button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className={t("components.production.productionorderfilters.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_5_gap_4")}>
         {/* البحث النصي */}
         <div>
           <Label htmlFor="search">{t('filters.search')}</Label>
-          <div className="relative">
-            <Search className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+          <div className={t("components.production.productionorderfilters.name.relative")}>
+            <Search className={t("components.production.productionorderfilters.name.absolute_right_3_top_2_5_h_4_w_4_text_gray_400")} />
             <Input
               id="search"
               placeholder={t('filters.searchPlaceholder')}
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
-              className="pr-9"
+              className={t("components.production.productionorderfilters.name.pr_9")}
               data-testid="input-search"
             />
           </div>
@@ -105,26 +105,26 @@ export default function ProductionOrderFilters({
                 {t('filters.allStatuses')}
               </SelectItem>
               <SelectItem value="pending" data-testid="option-status-pending">
-                <div className="flex items-center gap-2">
-                  <span className="text-yellow-600">⏳</span>
+                <div className={t("components.production.productionorderfilters.name.flex_items_center_gap_2")}>
+                  <span className={t("components.production.productionorderfilters.name.text_yellow_600")}>⏳</span>
                   {t('production.pending')}
                 </div>
               </SelectItem>
               <SelectItem value="active" data-testid="option-status-active">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">▶️</span>
+                <div className={t("components.production.productionorderfilters.name.flex_items_center_gap_2")}>
+                  <span className={t("components.production.productionorderfilters.name.text_green_600")}>{t('components.production.ProductionOrderFilters.▶️')}</span>
                   {t('filters.active')}
                 </div>
               </SelectItem>
               <SelectItem value="completed" data-testid="option-status-completed">
-                <div className="flex items-center gap-2">
-                  <span className="text-gray-600">✅</span>
+                <div className={t("components.production.productionorderfilters.name.flex_items_center_gap_2")}>
+                  <span className={t("components.production.productionorderfilters.name.text_gray_600")}>✅</span>
                   {t('production.completed')}
                 </div>
               </SelectItem>
               <SelectItem value="cancelled" data-testid="option-status-cancelled">
-                <div className="flex items-center gap-2">
-                  <span className="text-red-600">❌</span>
+                <div className={t("components.production.productionorderfilters.name.flex_items_center_gap_2")}>
+                  <span className={t("components.production.productionorderfilters.name.text_red_600")}>❌</span>
                   {t('filters.cancelled')}
                 </div>
               </SelectItem>

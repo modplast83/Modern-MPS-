@@ -10,8 +10,7 @@ type WSMessage =
 
 export function useRealtime(wsUrl?: string) {
   const qc = useQueryClient();
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectRef = useRef<number>(0);
+  const wsRef = useRef<WebSocket | null>{t('hooks.useRealtime.(null);_const_reconnectref_=_useref')}<number>(0);
   const shouldReconnect = useRef(true);
 
   useEffect(() => {

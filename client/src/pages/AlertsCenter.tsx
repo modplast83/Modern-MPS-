@@ -88,8 +88,7 @@ interface AlertStats {
   active_alerts: number;
   critical_alerts: number;
   resolved_today: number;
-  by_type: Record<string, number>;
-  by_severity: Record<string, number>;
+  by_type: Record<string, number>{t('pages.AlertsCenter.;_by_severity:_record')}<string, number>;
 }
 
 interface HealthStatus {
@@ -106,9 +105,7 @@ interface HealthStatus {
 export default function AlertsCenter() {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<string>("all");
-  const [filterSeverity, setFilterSeverity] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("active");
+  const [filterType, setFilterType] = useState<string>{t('pages.AlertsCenter.("all");_const_[filterseverity,_setfilterseverity]_=_usestate')}<string>{t('pages.AlertsCenter.("all");_const_[filterstatus,_setfilterstatus]_=_usestate')}<string>("active");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -248,19 +245,19 @@ export default function AlertsCenter() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
-      <div className="flex items-center justify-between">
+    <div className={t("pages.alertscenter.name.container_mx_auto_p_6_space_y_6")} dir="rtl">
+      <div className={t("pages.alertscenter.name.flex_items_center_justify_between")}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className={t("pages.alertscenter.name.text_3xl_font_bold_text_gray_900_dark_text_white")}>
             {t('sidebar.alerts')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <p className={t("pages.alertscenter.name.text_gray_600_dark_text_gray_300_mt_2")}>
             {t('systemHealth.overallStatus')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-sm">
-            <Activity className="w-4 h-4 ml-1" />
+        <div className={t("pages.alertscenter.name.flex_items_center_gap_2")}>
+          <Badge variant="outline" className={t("pages.alertscenter.name.text_sm")}>
+            <Activity className={t("pages.alertscenter.name.w_4_h_4_ml_1")} />
             {t('common.active')}
           </Badge>
         </div>
@@ -268,16 +265,16 @@ export default function AlertsCenter() {
 
       {/* ملخص حالة النظام */}
       {healthStatus && (
-        <Card className="border-2">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
+        <Card className={t("pages.alertscenter.name.border_2")}>
+          <CardHeader className={t("pages.alertscenter.name.pb_3")}>
+            <CardTitle className={t("pages.alertscenter.name.flex_items_center_gap_2")}>
+              <Shield className={t("pages.alertscenter.name.w_5_h_5")} />
               {t('systemHealth.overallStatus')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
+            <div className={t("pages.alertscenter.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+              <div className={t("pages.alertscenter.name.text_center")}>
                 <div
                   className={`text-2xl font-bold ${
                     healthStatus.overall_status === "healthy"
@@ -293,31 +290,31 @@ export default function AlertsCenter() {
                       ? t('systemHealth.warning')
                       : t('systemHealth.critical')}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={t("pages.alertscenter.name.text_sm_text_gray_600_dark_text_gray_300")}>
                   {t('systemHealth.overallStatus')}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
+              <div className={t("pages.alertscenter.name.text_center")}>
+                <div className={t("pages.alertscenter.name.text_2xl_font_bold_text_green_600")}>
                   {healthStatus.healthy_checks}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={t("pages.alertscenter.name.text_sm_text_gray_600_dark_text_gray_300")}>
                   {t('systemHealth.healthyChecks')}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-600">
+              <div className={t("pages.alertscenter.name.text_center")}>
+                <div className={t("pages.alertscenter.name.text_2xl_font_bold_text_yellow_600")}>
                   {healthStatus.warning_checks}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={t("pages.alertscenter.name.text_sm_text_gray_600_dark_text_gray_300")}>
                   {t('systemHealth.warningChecks')}
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
+              <div className={t("pages.alertscenter.name.text_center")}>
+                <div className={t("pages.alertscenter.name.text_2xl_font_bold_text_red_600")}>
                   {healthStatus.critical_checks}
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">
+                <div className={t("pages.alertscenter.name.text_sm_text_gray_600_dark_text_gray_300")}>
                   {t('systemHealth.criticalChecks')}
                 </div>
               </div>
@@ -328,65 +325,65 @@ export default function AlertsCenter() {
 
       {/* إحصائيات التحذيرات */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={t("pages.alertscenter.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className={t("pages.alertscenter.name.p_6")}>
+              <div className={t("pages.alertscenter.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <p className={t("pages.alertscenter.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                     {t('alertsCenter.totalAlerts')}
                   </p>
-                  <p className="text-2xl font-bold">{stats.total_alerts}</p>
+                  <p className={t("pages.alertscenter.name.text_2xl_font_bold")}>{stats.total_alerts}</p>
                 </div>
-                <Bell className="w-8 h-8 text-blue-600" />
+                <Bell className={t("pages.alertscenter.name.w_8_h_8_text_blue_600")} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className={t("pages.alertscenter.name.p_6")}>
+              <div className={t("pages.alertscenter.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <p className={t("pages.alertscenter.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                     {t('alertsCenter.activeAlerts')}
                   </p>
-                  <p className="text-2xl font-bold text-orange-600">
+                  <p className={t("pages.alertscenter.name.text_2xl_font_bold_text_orange_600")}>
                     {stats.active_alerts}
                   </p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-orange-600" />
+                <AlertTriangle className={t("pages.alertscenter.name.w_8_h_8_text_orange_600")} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className={t("pages.alertscenter.name.p_6")}>
+              <div className={t("pages.alertscenter.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <p className={t("pages.alertscenter.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                     {t('alertsCenter.criticalAlerts')}
                   </p>
-                  <p className="text-2xl font-bold text-red-600">
+                  <p className={t("pages.alertscenter.name.text_2xl_font_bold_text_red_600")}>
                     {stats.critical_alerts}
                   </p>
                 </div>
-                <AlertCircle className="w-8 h-8 text-red-600" />
+                <AlertCircle className={t("pages.alertscenter.name.w_8_h_8_text_red_600")} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+            <CardContent className={t("pages.alertscenter.name.p_6")}>
+              <div className={t("pages.alertscenter.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  <p className={t("pages.alertscenter.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                     {t('alertsCenter.resolvedToday')}
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className={t("pages.alertscenter.name.text_2xl_font_bold_text_green_600")}>
                     {stats.resolved_today}
                   </p>
                 </div>
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
+                <CheckCircle2 className={t("pages.alertscenter.name.w_8_h_8_text_green_600")} />
               </div>
             </CardContent>
           </Card>
@@ -395,16 +392,16 @@ export default function AlertsCenter() {
 
       {/* الفلاتر والبحث */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <CardContent className={t("pages.alertscenter.name.p_6")}>
+          <div className={t("pages.alertscenter.name.flex_flex_col_md_flex_row_gap_4")}>
+            <div className={t("pages.alertscenter.name.flex_1")}>
+              <div className={t("pages.alertscenter.name.relative")}>
+                <Search className={t("pages.alertscenter.name.absolute_right_3_top_1_2_transform_translate_y_1_2_text_gray_400_w_4_h_4")} />
                 <Input
                   placeholder={t('alertsCenter.searchAlerts')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
+                  className={t("pages.alertscenter.name.pr_10")}
                   data-testid="input-search-alerts"
                 />
               </div>
@@ -412,7 +409,7 @@ export default function AlertsCenter() {
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger
-                className="w-40"
+                className={t("pages.alertscenter.name.w_40")}
                 data-testid="select-filter-status"
               >
                 <SelectValue />
@@ -426,7 +423,7 @@ export default function AlertsCenter() {
             </Select>
 
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-40" data-testid="select-filter-type">
+              <SelectTrigger className={t("pages.alertscenter.name.w_40")} data-testid="select-filter-type">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -442,7 +439,7 @@ export default function AlertsCenter() {
 
             <Select value={filterSeverity} onValueChange={setFilterSeverity}>
               <SelectTrigger
-                className="w-40"
+                className={t("pages.alertscenter.name.w_40")}
                 data-testid="select-filter-severity"
               >
                 <SelectValue />
@@ -462,34 +459,30 @@ export default function AlertsCenter() {
       {/* قائمة التحذيرات */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5" />
+          <CardTitle className={t("pages.alertscenter.name.flex_items_center_gap_2")}>
+            <AlertTriangle className={t("pages.alertscenter.name.w_5_h_5")} />
             {t('sidebar.alerts')} ({filteredAlerts.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[600px]">
+          <ScrollArea className={t("pages.alertscenter.name.h_600px_")}>
             {alertsLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className={t("pages.alertscenter.name.flex_items_center_justify_center_h_32")}>
+                <div className={t("pages.alertscenter.name.text_center")}>
+                  <div className={t("pages.alertscenter.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
+                  <p className={t("pages.alertscenter.name.mt_2_text_sm_text_gray_600_dark_text_gray_300")}>
                     {t('alertsCenter.loading')}
                   </p>
                 </div>
-              </div>
-            ) : filteredAlerts.length === 0 ? (
-              <div className="text-center py-8">
-                <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              </div>{t('pages.AlertsCenter.)_:_filteredalerts.length_===_0_?_(')}<div className={t("pages.alertscenter.name.text_center_py_8")}>
+                <CheckCircle2 className={t("pages.alertscenter.name.w_16_h_16_text_green_600_mx_auto_mb_4")} />
+                <h3 className={t("pages.alertscenter.name.text_lg_font_medium_text_gray_900_dark_text_white_mb_2")}>
                   {t('alertsCenter.noAlertsFound')}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className={t("pages.alertscenter.name.text_gray_600_dark_text_gray_300")}>
                   {t('alertsCenter.noActiveAlerts')}
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
+              </div>{t('pages.AlertsCenter.)_:_(')}<div className={t("pages.alertscenter.name.space_y_4")}>
                 {filteredAlerts.map((alert: SystemAlert) => {
                   const TypeIcon = getTypeIcon(alert.type);
                   const StatusIcon = getStatusIcon(alert.status);
@@ -507,16 +500,16 @@ export default function AlertsCenter() {
                               : "border-r-blue-500"
                       }`}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-3 flex-1">
-                            <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                              <TypeIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                      <CardContent className={t("pages.alertscenter.name.p_4")}>
+                        <div className={t("pages.alertscenter.name.flex_items_start_justify_between")}>
+                          <div className={t("pages.alertscenter.name.flex_items_start_gap_3_flex_1")}>
+                            <div className={t("pages.alertscenter.name.p_2_rounded_lg_bg_gray_100_dark_bg_gray_800")}>
+                              <TypeIcon className={t("pages.alertscenter.name.w_5_h_5_text_gray_700_dark_text_gray_300")} />
                             </div>
 
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-gray-900 dark:text-white">
+                            <div className={t("pages.alertscenter.name.flex_1")}>
+                              <div className={t("pages.alertscenter.name.flex_items_center_gap_2_mb_2")}>
+                                <h3 className={t("pages.alertscenter.name.font_semibold_text_gray_900_dark_text_white")}>
                                   {alert.title_ar}
                                 </h3>
                                 <Badge
@@ -547,13 +540,13 @@ export default function AlertsCenter() {
                                 </Badge>
                               </div>
 
-                              <p className="text-gray-600 dark:text-gray-300 mb-3">
+                              <p className={t("pages.alertscenter.name.text_gray_600_dark_text_gray_300_mb_3")}>
                                 {alert.message_ar}
                               </p>
 
-                              <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                                <div className="flex items-center gap-1">
-                                  <StatusIcon className="w-4 h-4" />
+                              <div className={t("pages.alertscenter.name.flex_items_center_gap_4_text_sm_text_gray_500_dark_text_gray_400")}>
+                                <div className={t("pages.alertscenter.name.flex_items_center_gap_1")}>
+                                  <StatusIcon className={t("pages.alertscenter.name.w_4_h_4")} />
                                   {alert.status === "active"
                                     ? t('alertsCenter.activeStatus')
                                     : alert.status === "resolved"
@@ -562,8 +555,8 @@ export default function AlertsCenter() {
                                         ? t('alertsCenter.dismissedStatus')
                                         : alert.status}
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock className="w-4 h-4" />
+                                <div className={t("pages.alertscenter.name.flex_items_center_gap_1")}>
+                                  <Clock className={t("pages.alertscenter.name.w_4_h_4")} />
                                   {formatDistanceToNow(
                                     new Date(alert.created_at),
                                     {
@@ -572,28 +565,26 @@ export default function AlertsCenter() {
                                     },
                                   )}
                                 </div>
-                                {alert.occurrences > 1 && (
-                                  <div className="flex items-center gap-1">
-                                    <TrendingUp className="w-4 h-4" />
+                                {alert.occurrences >{t('pages.AlertsCenter.1_&&_(')}<div className={t("pages.alertscenter.name.flex_items_center_gap_1")}>
+                                    <TrendingUp className={t("pages.alertscenter.name.w_4_h_4")} />
                                     {alert.occurrences} {t('common.times')}
                                   </div>
                                 )}
                               </div>
 
                               {alert.suggested_actions &&
-                                alert.suggested_actions.length > 0 && (
-                                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+                                alert.suggested_actions.length >{t('pages.AlertsCenter.0_&&_(')}<div className={t("pages.alertscenter.name.mt_3_p_3_bg_blue_50_dark_bg_blue_950_20_rounded_lg")}>
+                                    <p className={t("pages.alertscenter.name.text_sm_font_medium_text_blue_900_dark_text_blue_100_mb_2")}>
                                       {t('alertsCenter.suggestedActions')}:
                                     </p>
-                                    <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                                    <ul className={t("pages.alertscenter.name.text_sm_text_blue_800_dark_text_blue_200_space_y_1")}>
                                       {alert.suggested_actions.map(
                                         (action, index) => (
                                           <li
                                             key={index}
-                                            className="flex items-center gap-2"
+                                            className={t("pages.alertscenter.name.flex_items_center_gap_2")}
                                           >
-                                            <ChevronRight className="w-3 h-3" />
+                                            <ChevronRight className={t("pages.alertscenter.name.w_3_h_3")} />
                                             {action.description ||
                                               action.action}
                                           </li>
@@ -606,7 +597,7 @@ export default function AlertsCenter() {
                           </div>
 
                           {alert.status === "active" && (
-                            <div className="flex gap-2">
+                            <div className={t("pages.alertscenter.name.flex_gap_2")}>
                               <Button
                                 size="sm"
                                 onClick={() =>
@@ -617,7 +608,7 @@ export default function AlertsCenter() {
                                 disabled={resolveAlertMutation.isPending}
                                 data-testid={`button-resolve-${alert.id}`}
                               >
-                                <CheckCircle2 className="w-4 h-4 ml-1" />
+                                <CheckCircle2 className={t("pages.alertscenter.name.w_4_h_4_ml_1")} />
                                 {t('alertsCenter.resolveAlert')}
                               </Button>
                               <Button
@@ -629,7 +620,7 @@ export default function AlertsCenter() {
                                 disabled={dismissAlertMutation.isPending}
                                 data-testid={`button-dismiss-${alert.id}`}
                               >
-                                <XCircle className="w-4 h-4 ml-1" />
+                                <XCircle className={t("pages.alertscenter.name.w_4_h_4_ml_1")} />
                                 {t('alertsCenter.dismissAlert')}
                               </Button>
                             </div>

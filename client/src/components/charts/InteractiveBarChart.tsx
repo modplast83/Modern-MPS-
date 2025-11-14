@@ -27,12 +27,12 @@ const CustomTooltip = ({ active, payload, label, formatValue }: any) => {
   if (active && payload && payload.length) {
     return (
       <div
-        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
+        className={t("components.charts.interactivebarchart.name.bg_white_p_3_border_border_gray_300_rounded_lg_shadow_lg")}
         dir="rtl"
       >
-        <p className="font-medium text-gray-900">{`${label}`}</p>
+        <p className={t("components.charts.interactivebarchart.name.font_medium_text_gray_900")}>{`${label}`}</p>
         {payload.map((entry: any, index: number) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
+          <p key={index} className={t("components.charts.interactivebarchart.name.text_sm")} style={{ color: entry.color }}>
             {`${entry.name}: ${formatValue ? formatValue(entry.value) : entry.value}`}
           </p>
         ))}
@@ -58,14 +58,14 @@ export function InteractiveBarChart({
     <Card className={`${className}`} data-testid="chart-interactive-bar">
       <CardHeader>
         <CardTitle
-          className="text-lg font-semibold text-gray-900"
+          className={t("components.charts.interactivebarchart.name.text_lg_font_semibold_text_gray_900")}
           data-testid="text-chart-title"
         >
           {title}
         </CardTitle>
         {description && (
           <p
-            className="text-sm text-gray-600"
+            className={t("components.charts.interactivebarchart.name.text_sm_text_gray_600")}
             data-testid="text-chart-description"
           >
             {description}

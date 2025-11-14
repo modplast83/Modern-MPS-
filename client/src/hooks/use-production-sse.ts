@@ -11,8 +11,7 @@ interface ProductionSSEEvent {
 export function useProductionSSE() {
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const eventSourceRef = useRef<EventSource | null>{t('hooks.use-production-sse.(null);_const_reconnecttimeoutref_=_useref')}<NodeJS.Timeout | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;

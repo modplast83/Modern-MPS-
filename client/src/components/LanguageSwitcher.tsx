@@ -31,19 +31,16 @@ export function LanguageSwitcher() {
   };
 
   const normalizedCurrentLang = i18n.language.split('-')[0];
-  const currentLanguage = languages.find(lang => lang.code === normalizedCurrentLang) || languages[0];
-
-  return (
-    <DropdownMenu>
+  const currentLanguage = languages.find(lang =>{t('components.LanguageSwitcher.lang.code_===_normalizedcurrentlang)_||_languages[0];_return_(')}<DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
           size="sm"
-          className="gap-2"
+          className={t("components.languageswitcher.name.gap_2")}
           data-testid="language-switcher-button"
         >
-          <Languages className="h-4 w-4" />
-          <span className="hidden sm:inline">{currentLanguage.name}</span>
+          <Languages className={t("components.languageswitcher.name.h_4_w_4")} />
+          <span className={t("components.languageswitcher.name.hidden_sm_inline")}>{currentLanguage.name}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

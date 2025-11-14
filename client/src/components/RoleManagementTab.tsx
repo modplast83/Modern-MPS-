@@ -44,8 +44,7 @@ export default function RoleManagementTab() {
     permissions: [] as string[],
   });
 
-  const [editingRole, setEditingRole] = useState<any | null>(null);
-  const [viewingRole, setViewingRole] = useState<any | null>(null);
+  const [editingRole, setEditingRole] = useState<any | null>{t('components.RoleManagementTab.(null);_const_[viewingrole,_setviewingrole]_=_usestate')}<any | null>(null);
 
   // Use permissions from centralized registry
   const availablePermissions = PERMISSIONS;
@@ -224,20 +223,20 @@ export default function RoleManagementTab() {
   };
 
   const PermissionsEditor = ({ permissions, isEditing }: { permissions: string[], isEditing: boolean }) => (
-    <Accordion type="multiple" className="w-full">
+    <Accordion type="multiple" className={t("components.rolemanagementtab.name.w_full")}>
       {PERMISSION_CATEGORIES.map((category) => {
         const categoryPermissions = availablePermissions.filter(p => p.category === category);
         if (categoryPermissions.length === 0) return null;
         
         const counts = getCategoryPermissionCount(category, permissions);
         const allSelected = counts.selected === counts.total;
-        const someSelected = counts.selected > 0 && counts.selected < counts.total;
+        const someSelected = counts.selected >{t('components.RoleManagementTab.0_&&_counts.selected')}< counts.total;
 
         return (
           <AccordionItem key={category} value={category}>
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3 w-full">
-                <div className="flex items-center gap-2">
+            <AccordionTrigger className={t("components.rolemanagementtab.name.hover_no_underline")}>
+              <div className={t("components.rolemanagementtab.name.flex_items_center_gap_3_w_full")}>
+                <div className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
                   <Checkbox
                     checked={allSelected}
                     ref={(el) => {
@@ -254,19 +253,19 @@ export default function RoleManagementTab() {
                     onClick={(e) => e.stopPropagation()}
                     data-testid={`checkbox-category-${category}`}
                   />
-                  <span className="font-medium">{category}</span>
+                  <span className={t("components.rolemanagementtab.name.font_medium")}>{category}</span>
                 </div>
-                <Badge variant={counts.selected > 0 ? "default" : "outline"} className="mr-auto">
+                <Badge variant={counts.selected > 0 ? "default" : "outline"} className={t("components.rolemanagementtab.name.mr_auto")}>
                   {counts.selected} / {counts.total}
                 </Badge>
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2 pr-6">
+              <div className={t("components.rolemanagementtab.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_3_pt_2_pr_6")}>
                 {categoryPermissions.map((permission) => (
                   <div
                     key={permission.id}
-                    className="flex items-start space-x-2 space-x-reverse p-2 rounded-md hover:bg-muted/50 transition-colors"
+                    className={t("components.rolemanagementtab.name.flex_items_start_space_x_2_space_x_reverse_p_2_rounded_md_hover_bg_muted_50_transition_colors")}
                   >
                     <Checkbox
                       id={`${isEditing ? 'edit' : 'new'}-${permission.id}`}
@@ -276,15 +275,15 @@ export default function RoleManagementTab() {
                       }
                       data-testid={`checkbox-permission-${permission.id}`}
                     />
-                    <div className="flex-1 space-y-1">
+                    <div className={t("components.rolemanagementtab.name.flex_1_space_y_1")}>
                       <label
                         htmlFor={`${isEditing ? 'edit' : 'new'}-${permission.id}`}
-                        className="text-sm font-medium leading-none cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        className={t("components.rolemanagementtab.name.text_sm_font_medium_leading_none_cursor_pointer_peer_disabled_cursor_not_allowed_peer_disabled_opacity_70")}
                       >
                         {permission.name_ar}
                       </label>
                       {permission.description && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className={t("components.rolemanagementtab.name.text_xs_text_muted_foreground")}>
                           {permission.description}
                         </p>
                       )}
@@ -300,35 +299,35 @@ export default function RoleManagementTab() {
   );
 
   if (isLoading) {
-    return <div className="text-center py-8">جاري تحميل الأدوار...</div>;
+    return <div className={t("components.rolemanagementtab.name.text_center_py_8")}>{t('components.RoleManagementTab.جاري_تحميل_الأدوار...')}</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className={t("components.rolemanagementtab.name.space_y_6")}>
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={t("components.rolemanagementtab.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">إجمالي الأدوار</CardTitle>
+          <CardHeader className={t("components.rolemanagementtab.name.pb_3")}>
+            <CardTitle className={t("components.rolemanagementtab.name.text_sm_font_medium")}>{t('components.RoleManagementTab.إجمالي_الأدوار')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{roles.length}</div>
+            <div className={t("components.rolemanagementtab.name.text_2xl_font_bold")}>{roles.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">إجمالي الصلاحيات</CardTitle>
+          <CardHeader className={t("components.rolemanagementtab.name.pb_3")}>
+            <CardTitle className={t("components.rolemanagementtab.name.text_sm_font_medium")}>{t('components.RoleManagementTab.إجمالي_الصلاحيات')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{PERMISSIONS.length}</div>
+            <div className={t("components.rolemanagementtab.name.text_2xl_font_bold")}>{PERMISSIONS.length}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">فئات الصلاحيات</CardTitle>
+          <CardHeader className={t("components.rolemanagementtab.name.pb_3")}>
+            <CardTitle className={t("components.rolemanagementtab.name.text_sm_font_medium")}>{t('components.RoleManagementTab.فئات_الصلاحيات')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{PERMISSION_CATEGORIES.length}</div>
+            <div className={t("components.rolemanagementtab.name.text_2xl_font_bold")}>{PERMISSION_CATEGORIES.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -336,46 +335,42 @@ export default function RoleManagementTab() {
       {/* Add New Role Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            إضافة دور جديد
-          </CardTitle>
-          <CardDescription>
-            قم بإنشاء دور جديد وتحديد صلاحياته من القائمة المنظمة أدناه
-          </CardDescription>
+          <CardTitle className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
+            <Plus className={t("components.rolemanagementtab.name.w_5_h_5")} />{t('components.RoleManagementTab.إضافة_دور_جديد')}</CardTitle>
+          <CardDescription>{t('components.RoleManagementTab.قم_بإنشاء_دور_جديد_وتحديد_صلاحياته_من_القائمة_المنظمة_أدناه')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="roleName">اسم الدور (بالإنجليزية)</Label>
+        <CardContent className={t("components.rolemanagementtab.name.space_y_6")}>
+          <div className={t("components.rolemanagementtab.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+            <div className={t("components.rolemanagementtab.name.space_y_2")}>
+              <Label htmlFor="roleName">{t('components.RoleManagementTab.اسم_الدور_(بالإنجليزية)')}</Label>
               <Input
                 id="roleName"
                 value={newRole.name}
                 onChange={(e) =>
                   setNewRole({ ...newRole, name: e.target.value })
                 }
-                placeholder="admin, manager, operator..."
+                placeholder="{t('components.RoleManagementTab.placeholder.admin,_manager,_operator...')}"
                 data-testid="input-role-name"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="roleNameAr">اسم الدور (بالعربية)</Label>
+            <div className={t("components.rolemanagementtab.name.space_y_2")}>
+              <Label htmlFor="roleNameAr">{t('components.RoleManagementTab.اسم_الدور_(بالعربية)')}</Label>
               <Input
                 id="roleNameAr"
                 value={newRole.name_ar}
                 onChange={(e) =>
                   setNewRole({ ...newRole, name_ar: e.target.value })
                 }
-                placeholder="مدير، مشرف، مشغل..."
+                placeholder="{t('components.RoleManagementTab.placeholder.مدير،_مشرف،_مشغل...')}"
                 data-testid="input-role-name-ar"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className={t("components.rolemanagementtab.name.space_y_2")}>
+            <div className={t("components.rolemanagementtab.name.flex_items_center_justify_between")}>
               <Label>الصلاحيات ({newRole.permissions.length} محددة)</Label>
-              <div className="flex gap-2">
+              <div className={t("components.rolemanagementtab.name.flex_gap_2")}>
                 <Button
                   type="button"
                   size="sm"
@@ -387,9 +382,7 @@ export default function RoleManagementTab() {
                     })
                   }
                   data-testid="button-select-all-new"
-                >
-                  تحديد الكل
-                </Button>
+                >{t('components.RoleManagementTab.تحديد_الكل')}</Button>
                 <Button
                   type="button"
                   size="sm"
@@ -401,31 +394,23 @@ export default function RoleManagementTab() {
                     })
                   }
                   data-testid="button-clear-all-new"
-                >
-                  إلغاء تحديد الكل
-                </Button>
+                >{t('components.RoleManagementTab.إلغاء_تحديد_الكل')}</Button>
               </div>
             </div>
             <PermissionsEditor permissions={newRole.permissions} isEditing={false} />
           </div>
 
-          <div className="flex justify-end">
+          <div className={t("components.rolemanagementtab.name.flex_justify_end")}>
             <Button
               onClick={handleCreateRole}
               disabled={createRoleMutation.isPending}
-              className="flex items-center gap-2"
+              className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}
               data-testid="button-create-role"
             >
               {createRoleMutation.isPending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  جاري الإضافة...
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  إضافة الدور
-                </>
+                  <div className={t("components.rolemanagementtab.name.w_4_h_4_border_2_border_white_border_t_transparent_rounded_full_animate_spin")} />{t('components.RoleManagementTab.جاري_الإضافة...')}</>{t('components.RoleManagementTab.)_:_(')}<>
+                  <Plus className={t("components.rolemanagementtab.name.w_4_h_4")} />{t('components.RoleManagementTab.إضافة_الدور')}</>
               )}
             </Button>
           </div>
@@ -435,23 +420,19 @@ export default function RoleManagementTab() {
       {/* Existing Roles Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            الأدوار الموجودة
-          </CardTitle>
-          <CardDescription>
-            عرض وإدارة جميع الأدوار المعرفة في النظام
-          </CardDescription>
+          <CardTitle className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
+            <Shield className={t("components.rolemanagementtab.name.w_5_h_5")} />{t('components.RoleManagementTab.الأدوار_الموجودة')}</CardTitle>
+          <CardDescription>{t('components.RoleManagementTab.عرض_وإدارة_جميع_الأدوار_المعرفة_في_النظام')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>الرقم</TableHead>
-                <TableHead>اسم الدور</TableHead>
-                <TableHead>الاسم بالعربية</TableHead>
-                <TableHead>الصلاحيات</TableHead>
-                <TableHead>الإجراءات</TableHead>
+                <TableHead>{t('components.RoleManagementTab.الرقم')}</TableHead>
+                <TableHead>{t('components.RoleManagementTab.اسم_الدور')}</TableHead>
+                <TableHead>{t('components.RoleManagementTab.الاسم_بالعربية')}</TableHead>
+                <TableHead>{t('components.RoleManagementTab.الصلاحيات')}</TableHead>
+                <TableHead>{t('components.RoleManagementTab.الإجراءات')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -462,10 +443,10 @@ export default function RoleManagementTab() {
                     <Badge variant="outline">{role.name}</Badge>
                   </TableCell>
                   <TableCell>
-                    <span className="font-medium">{role.name_ar}</span>
+                    <span className={t("components.rolemanagementtab.name.font_medium")}>{role.name_ar}</span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
                       <Badge variant="secondary">
                         {role.permissions?.length || 0} صلاحية
                       </Badge>
@@ -475,35 +456,29 @@ export default function RoleManagementTab() {
                             size="sm"
                             variant="ghost"
                             onClick={() => setViewingRole(role)}
-                            className="h-8 px-2 text-xs"
+                            className={t("components.rolemanagementtab.name.h_8_px_2_text_xs")}
                             data-testid={`button-view-permissions-${role.id}`}
-                          >
-                            عرض التفاصيل
-                          </Button>
+                          >{t('components.RoleManagementTab.عرض_التفاصيل')}</Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                        <DialogContent className={t("components.rolemanagementtab.name.max_w_4xl_max_h_80vh_overflow_y_auto")}>
                           <DialogHeader>
                             <DialogTitle>صلاحيات الدور: {role.name_ar}</DialogTitle>
                             <DialogDescription>
                               عرض جميع الصلاحيات المخصصة لهذا الدور ({role.permissions?.length || 0} صلاحية)
                             </DialogDescription>
                           </DialogHeader>
-                          <div className="space-y-4 mt-4">
+                          <div className={t("components.rolemanagementtab.name.space_y_4_mt_4")}>
                             {PERMISSION_CATEGORIES.map((category) => {
                               const categoryPerms = availablePermissions
-                                .filter(p => p.category === category && role.permissions?.includes(p.id));
-                              if (categoryPerms.length === 0) return null;
-                              
-                              return (
-                                <div key={category} className="space-y-2">
-                                  <div className="flex items-center gap-2">
-                                    <h4 className="font-medium">{category}</h4>
+                                .filter(p =>{t('components.RoleManagementTab.p.category_===_category_&&_role.permissions?.includes(p.id));_if_(categoryperms.length_===_0)_return_null;_return_(')}<div key={category} className={t("components.rolemanagementtab.name.space_y_2")}>
+                                  <div className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
+                                    <h4 className={t("components.rolemanagementtab.name.font_medium")}>{category}</h4>
                                     <Badge variant="outline">{categoryPerms.length}</Badge>
                                   </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pr-4">
+                                  <div className={t("components.rolemanagementtab.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_2_pr_4")}>
                                     {categoryPerms.map((perm) => (
-                                      <div key={perm.id} className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
-                                        <Check className="w-4 h-4 text-green-600" />
+                                      <div key={perm.id} className={t("components.rolemanagementtab.name.flex_items_center_gap_2_text_sm_p_2_bg_muted_50_rounded")}>
+                                        <Check className={t("components.rolemanagementtab.name.w_4_h_4_text_green_600")} />
                                         <span>{perm.name_ar}</span>
                                       </div>
                                     ))}
@@ -517,17 +492,15 @@ export default function RoleManagementTab() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => setEditingRole({ ...role })}
-                        className="flex items-center gap-1"
+                        className={t("components.rolemanagementtab.name.flex_items_center_gap_1")}
                         data-testid={`button-edit-role-${role.id}`}
                       >
-                        <Edit className="w-3 h-3" />
-                        تعديل
-                      </Button>
+                        <Edit className={t("components.rolemanagementtab.name.w_3_h_3")} />{t('components.RoleManagementTab.تعديل')}</Button>
                       <Button
                         size="sm"
                         variant="destructive"
@@ -537,12 +510,10 @@ export default function RoleManagementTab() {
                           }
                         }}
                         disabled={deleteRoleMutation.isPending}
-                        className="flex items-center gap-1"
+                        className={t("components.rolemanagementtab.name.flex_items_center_gap_1")}
                         data-testid={`button-delete-role-${role.id}`}
                       >
-                        <Trash2 className="w-3 h-3" />
-                        حذف
-                      </Button>
+                        <Trash2 className={t("components.rolemanagementtab.name.w_3_h_3")} />{t('components.RoleManagementTab.حذف')}</Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -551,20 +522,18 @@ export default function RoleManagementTab() {
           </Table>
 
           {(roles as any[]).length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              لا توجد أدوار محددة في النظام
-            </div>
+            <div className={t("components.rolemanagementtab.name.text_center_py_8_text_muted_foreground")}>{t('components.RoleManagementTab.لا_توجد_أدوار_محددة_في_النظام')}</div>
           )}
         </CardContent>
       </Card>
 
       {/* Edit Role Dialog */}
       {editingRole && (
-        <Card className="border-2 border-primary">
+        <Card className={t("components.rolemanagementtab.name.border_2_border_primary")}>
           <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5" />
+            <CardTitle className={t("components.rolemanagementtab.name.flex_items_center_justify_between")}>
+              <div className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}>
+                <Shield className={t("components.rolemanagementtab.name.w_5_h_5")} />
                 تعديل الدور: {editingRole.name_ar}
               </div>
               <Button
@@ -573,17 +542,15 @@ export default function RoleManagementTab() {
                 onClick={() => setEditingRole(null)}
                 data-testid="button-cancel-edit"
               >
-                <X className="w-4 h-4" />
+                <X className={t("components.rolemanagementtab.name.w_4_h_4")} />
               </Button>
             </CardTitle>
-            <CardDescription>
-              قم بتعديل بيانات الدور وصلاحياته
-            </CardDescription>
+            <CardDescription>{t('components.RoleManagementTab.قم_بتعديل_بيانات_الدور_وصلاحياته')}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="editRoleName">اسم الدور (بالإنجليزية)</Label>
+          <CardContent className={t("components.rolemanagementtab.name.space_y_6")}>
+            <div className={t("components.rolemanagementtab.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+              <div className={t("components.rolemanagementtab.name.space_y_2")}>
+                <Label htmlFor="editRoleName">{t('components.RoleManagementTab.اسم_الدور_(بالإنجليزية)')}</Label>
                 <Input
                   id="editRoleName"
                   value={editingRole.name}
@@ -596,8 +563,8 @@ export default function RoleManagementTab() {
                   data-testid="input-edit-role-name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="editRoleNameAr">اسم الدور (بالعربية)</Label>
+              <div className={t("components.rolemanagementtab.name.space_y_2")}>
+                <Label htmlFor="editRoleNameAr">{t('components.RoleManagementTab.اسم_الدور_(بالعربية)')}</Label>
                 <Input
                   id="editRoleNameAr"
                   value={editingRole.name_ar}
@@ -612,10 +579,10 @@ export default function RoleManagementTab() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
+            <div className={t("components.rolemanagementtab.name.space_y_2")}>
+              <div className={t("components.rolemanagementtab.name.flex_items_center_justify_between")}>
                 <Label>الصلاحيات ({editingRole.permissions?.length || 0} محددة)</Label>
-                <div className="flex gap-2">
+                <div className={t("components.rolemanagementtab.name.flex_gap_2")}>
                   <Button
                     type="button"
                     size="sm"
@@ -627,9 +594,7 @@ export default function RoleManagementTab() {
                       })
                     }
                     data-testid="button-select-all-edit"
-                  >
-                    تحديد الكل
-                  </Button>
+                  >{t('components.RoleManagementTab.تحديد_الكل')}</Button>
                   <Button
                     type="button"
                     size="sm"
@@ -641,38 +606,28 @@ export default function RoleManagementTab() {
                       })
                     }
                     data-testid="button-clear-all-edit"
-                  >
-                    إلغاء تحديد الكل
-                  </Button>
+                  >{t('components.RoleManagementTab.إلغاء_تحديد_الكل')}</Button>
                 </div>
               </div>
               <PermissionsEditor permissions={editingRole.permissions || []} isEditing={true} />
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className={t("components.rolemanagementtab.name.flex_justify_end_gap_2")}>
               <Button
                 variant="outline"
                 onClick={() => setEditingRole(null)}
                 data-testid="button-cancel-edit-bottom"
-              >
-                إلغاء
-              </Button>
+              >{t('components.RoleManagementTab.إلغاء')}</Button>
               <Button
                 onClick={handleUpdateRole}
                 disabled={updateRoleMutation.isPending}
-                className="flex items-center gap-2"
+                className={t("components.rolemanagementtab.name.flex_items_center_gap_2")}
                 data-testid="button-save-role"
               >
                 {updateRoleMutation.isPending ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    جاري الحفظ...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4" />
-                    حفظ التغييرات
-                  </>
+                    <div className={t("components.rolemanagementtab.name.w_4_h_4_border_2_border_white_border_t_transparent_rounded_full_animate_spin")} />{t('components.RoleManagementTab.جاري_الحفظ...')}</>{t('components.RoleManagementTab.)_:_(')}<>
+                    <Check className={t("components.rolemanagementtab.name.w_4_h_4")} />{t('components.RoleManagementTab.حفظ_التغييرات')}</>
                 )}
               </Button>
             </div>

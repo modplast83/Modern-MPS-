@@ -99,9 +99,7 @@ export const useSpeechRecognition = (
   const [finalTranscript, setFinalTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [confidence, setConfidence] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [error, setError] = useState<string | null>{t('hooks.use-speech-recognition.(null);_const_recognitionref_=_useref')}<SpeechRecognition | null>(null);
   const isManualStopRef = useRef(false);
 
   // Check for browser support

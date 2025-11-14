@@ -154,7 +154,7 @@ export default function OrderProgress() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={t("components.production.orderprogress.name.space_y_6")}>
       {/* Job Order Selection */}
       <Card>
         <CardHeader>
@@ -186,7 +186,7 @@ export default function OrderProgress() {
 
       {/* Progress Display */}
       {selectedProductionOrderId && progress && (
-        <div className="space-y-4">
+        <div className={t("components.production.orderprogress.name.space_y_4")}>
           {/* Progress Summary */}
           <Card>
             <CardHeader>
@@ -195,17 +195,17 @@ export default function OrderProgress() {
                 {progress.production_order?.production_order_number}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <Package className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                  <p className="text-sm text-gray-600">{t('production.film')}</p>
-                  <p className="font-bold text-lg">
+            <CardContent className={t("components.production.orderprogress.name.space_y_4")}>
+              <div className={t("components.production.orderprogress.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+                <div className={t("components.production.orderprogress.name.text_center")}>
+                  <Package className={t("components.production.orderprogress.name.h_8_w_8_mx_auto_mb_2_text_blue_500")} />
+                  <p className={t("components.production.orderprogress.name.text_sm_text_gray_600")}>{t('production.film')}</p>
+                  <p className={t("components.production.orderprogress.name.font_bold_text_lg")}>
                     {progress.progress?.film_weight?.toFixed(2) || 0} {t('common.kg')}
                   </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className={t("components.production.orderprogress.name.w_full_bg_gray_200_rounded_full_h_2_mt_2")}>
                     <div
-                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                      className={t("components.production.orderprogress.name.bg_blue_500_h_2_rounded_full_transition_all_duration_300")}
                       style={{
                         width: `${Math.min(progress.progress?.film_percentage || 0, 100)}%`,
                       }}
@@ -213,15 +213,15 @@ export default function OrderProgress() {
                   </div>
                 </div>
 
-                <div className="text-center">
-                  <Play className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                  <p className="text-sm text-gray-600">{t('production.printing')}</p>
-                  <p className="font-bold text-lg">
+                <div className={t("components.production.orderprogress.name.text_center")}>
+                  <Play className={t("components.production.orderprogress.name.h_8_w_8_mx_auto_mb_2_text_green_500")} />
+                  <p className={t("components.production.orderprogress.name.text_sm_text_gray_600")}>{t('production.printing')}</p>
+                  <p className={t("components.production.orderprogress.name.font_bold_text_lg")}>
                     {progress.progress?.printed_weight?.toFixed(2) || 0} {t('common.kg')}
                   </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className={t("components.production.orderprogress.name.w_full_bg_gray_200_rounded_full_h_2_mt_2")}>
                     <div
-                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      className={t("components.production.orderprogress.name.bg_green_500_h_2_rounded_full_transition_all_duration_300")}
                       style={{
                         width: `${Math.min(progress.progress?.printed_percentage || 0, 100)}%`,
                       }}
@@ -229,15 +229,15 @@ export default function OrderProgress() {
                   </div>
                 </div>
 
-                <div className="text-center">
-                  <Scissors className="h-8 w-8 mx-auto mb-2 text-orange-500" />
-                  <p className="text-sm text-gray-600">{t('production.cutting')}</p>
-                  <p className="font-bold text-lg">
+                <div className={t("components.production.orderprogress.name.text_center")}>
+                  <Scissors className={t("components.production.orderprogress.name.h_8_w_8_mx_auto_mb_2_text_orange_500")} />
+                  <p className={t("components.production.orderprogress.name.text_sm_text_gray_600")}>{t('production.cutting')}</p>
+                  <p className={t("components.production.orderprogress.name.font_bold_text_lg")}>
                     {progress.progress?.cut_weight?.toFixed(2) || 0} {t('common.kg')}
                   </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className={t("components.production.orderprogress.name.w_full_bg_gray_200_rounded_full_h_2_mt_2")}>
                     <div
-                      className="bg-orange-500 h-2 rounded-full transition-all duration-300"
+                      className={t("components.production.orderprogress.name.bg_orange_500_h_2_rounded_full_transition_all_duration_300")}
                       style={{
                         width: `${Math.min(progress.progress?.cut_percentage || 0, 100)}%`,
                       }}
@@ -245,15 +245,15 @@ export default function OrderProgress() {
                   </div>
                 </div>
 
-                <div className="text-center">
-                  <Archive className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                  <p className="text-sm text-gray-600">{t('orderProgress.warehouse')}</p>
-                  <p className="font-bold text-lg">
+                <div className={t("components.production.orderprogress.name.text_center")}>
+                  <Archive className={t("components.production.orderprogress.name.h_8_w_8_mx_auto_mb_2_text_purple_500")} />
+                  <p className={t("components.production.orderprogress.name.text_sm_text_gray_600")}>{t('orderProgress.warehouse')}</p>
+                  <p className={t("components.production.orderprogress.name.font_bold_text_lg")}>
                     {progress.progress?.warehouse_weight?.toFixed(2) || 0} {t('common.kg')}
                   </p>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className={t("components.production.orderprogress.name.w_full_bg_gray_200_rounded_full_h_2_mt_2")}>
                     <div
-                      className="bg-purple-500 h-2 rounded-full transition-all duration-300"
+                      className={t("components.production.orderprogress.name.bg_purple_500_h_2_rounded_full_transition_all_duration_300")}
                       style={{
                         width: `${Math.min(progress.progress?.warehouse_percentage || 0, 100)}%`,
                       }}
@@ -267,7 +267,7 @@ export default function OrderProgress() {
           {/* Rolls Details */}
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className={t("components.production.orderprogress.name.flex_items_center_justify_between")}>
                 <CardTitle>{t('orderProgress.rolls')}</CardTitle>
                 <Dialog
                   open={warehouseDialogOpen}
@@ -282,19 +282,19 @@ export default function OrderProgress() {
                         })
                       }
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className={t("components.production.orderprogress.name.h_4_w_4_mr_2")} />
                       {t('orderProgress.warehouseReceipt')}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="max-w-md">
+                  <DialogContent className={t("components.production.orderprogress.name.max_w_md")}>
                     <DialogHeader>
                       <DialogTitle>{t('orderProgress.registerWarehouseReceipt')}</DialogTitle>
                       <DialogDescription>
                         {t('orderProgress.registerWarehouseReceiptDesc')}
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
+                    <div className={t("components.production.orderprogress.name.space_y_4")}>
+                      <div className={t("components.production.orderprogress.name.space_y_2")}>
                         <Label>{t('orderProgress.receivedWeight')} *</Label>
                         <Input
                           type="number"
@@ -306,13 +306,13 @@ export default function OrderProgress() {
                               received_weight_kg: e.target.value,
                             })
                           }
-                          placeholder="45.2"
-                          className="text-right"
+                          placeholder="{t('components.production.OrderProgress.placeholder.45.2')}"
+                          className={t("components.production.orderprogress.name.text_right")}
                           data-testid="input-received-weight"
                         />
                       </div>
 
-                      <div className="flex justify-end space-x-3 space-x-reverse pt-4">
+                      <div className={t("components.production.orderprogress.name.flex_justify_end_space_x_3_space_x_reverse_pt_4")}>
                         <Button
                           type="button"
                           variant="outline"
@@ -337,28 +337,28 @@ export default function OrderProgress() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className={t("components.production.orderprogress.name.space_y_3")}>
                 {progress.rolls?.map((roll: any) => (
                   <div
                     key={roll.id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
+                    className={t("components.production.orderprogress.name.flex_items_center_justify_between_p_3_border_rounded_lg")}
                   >
-                    <div className="flex items-center space-x-3 space-x-reverse">
-                      <QrCode className="h-5 w-5 text-gray-400" />
+                    <div className={t("components.production.orderprogress.name.flex_items_center_space_x_3_space_x_reverse")}>
+                      <QrCode className={t("components.production.orderprogress.name.h_5_w_5_text_gray_400")} />
                       <div>
                         <p
-                          className="font-medium"
+                          className={t("components.production.orderprogress.name.font_medium")}
                           data-testid={`text-roll-${roll.id}`}
                         >
                           {roll.roll_number}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className={t("components.production.orderprogress.name.text_sm_text_gray_500")}>
                           {roll.weight_kg?.toFixed(2)} {t('common.kg')} - {roll.machine_id}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 space-x-reverse">
+                    <div className={t("components.production.orderprogress.name.flex_items_center_space_x_2_space_x_reverse")}>
                       <Badge
                         variant={
                           roll.stage === "film"
@@ -376,7 +376,7 @@ export default function OrderProgress() {
                       </Badge>
 
                       {roll.printed_at && (
-                        <span className="text-xs text-gray-400">
+                        <span className={t("components.production.orderprogress.name.text_xs_text_gray_400")}>
                           {t('orderProgress.printedOn')}:{" "}
                           {new Date(roll.printed_at).toLocaleDateString("ar")}
                         </span>
@@ -389,25 +389,24 @@ export default function OrderProgress() {
           </Card>
 
           {/* Warehouse Receipts */}
-          {progress.warehouse_receipts?.length > 0 && (
-            <Card>
+          {progress.warehouse_receipts?.length >{t('components.production.OrderProgress.0_&&_(')}<Card>
               <CardHeader>
                 <CardTitle>{t('orderProgress.warehouseReceipts')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className={t("components.production.orderprogress.name.space_y_3")}>
                   {progress.warehouse_receipts.map((receipt: any) => (
                     <div
                       key={receipt.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      className={t("components.production.orderprogress.name.flex_items_center_justify_between_p_3_border_rounded_lg")}
                     >
                       <div>
-                        <p className="font-medium">{t('orderProgress.receipt')} #{receipt.id}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className={t("components.production.orderprogress.name.font_medium")}>{t('orderProgress.receipt')} #{receipt.id}</p>
+                        <p className={t("components.production.orderprogress.name.text_sm_text_gray_500")}>
                           {receipt.received_weight_kg?.toFixed(2)} {t('common.kg')}
                         </p>
                       </div>
-                      <div className="text-xs text-gray-400">
+                      <div className={t("components.production.orderprogress.name.text_xs_text_gray_400")}>
                         {new Date(receipt.created_at).toLocaleDateString("ar")}
                       </div>
                     </div>
@@ -421,9 +420,9 @@ export default function OrderProgress() {
 
       {progressLoading && (
         <Card>
-          <CardContent className="p-6 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-gray-500">{t('orderProgress.loadingProgress')}</p>
+          <CardContent className={t("components.production.orderprogress.name.p_6_text_center")}>
+            <div className={t("components.production.orderprogress.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
+            <p className={t("components.production.orderprogress.name.mt_2_text_sm_text_gray_500")}>{t('orderProgress.loadingProgress')}</p>
           </CardContent>
         </Card>
       )}

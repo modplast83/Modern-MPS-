@@ -40,7 +40,6 @@ export default function Login() {
   });
 
   type LoginFormValues = z.infer<typeof loginSchema>;
-
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -79,30 +78,30 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
+    <div className={t("pages.login.name.min_h_screen_bg_gray_50_flex_items_center_justify_center_p_4")}>
+      <Card className={t("pages.login.name.w_full_max_w_md")}>
+        <CardHeader className={t("pages.login.name.text_center")}>
+          <div className={t("pages.login.name.mx_auto_bg_primary_text_primary_foreground_p_3_rounded_full_w_fit_mb_4")}>
+            <img src="/FactoryLogoHPNGWg.png" alt="{t('pages.login.alt.logo')}" className={t("pages.login.name.w_34_h_34")} />
           </div>
-          <CardTitle className="text-2xl font-bold">{t("login.title")}</CardTitle>
-          <p className="text-muted-foreground">
+          <CardTitle className={t("pages.login.name.text_2xl_font_bold")}>{t("login.title")}</CardTitle>
+          <p className={t("pages.login.name.text_muted_foreground")}>
             {t("login.subtitle")}
           </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className={t("pages.login.name.space_y_4")}>
               <FormField
                 control={form.control}
-                name="username"
+                name="{t('pages.login.name.username')}"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("login.username")}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t("login.enterUsername")}
-                        className="text-right"
+                        className={t("pages.login.name.text_right")}
                         disabled={isLoading}
                         data-testid="input-username"
                         {...field}
@@ -115,7 +114,7 @@ export default function Login() {
 
               <FormField
                 control={form.control}
-                name="password"
+                name="{t('pages.login.name.password')}"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t("login.password")}</FormLabel>
@@ -123,7 +122,7 @@ export default function Login() {
                       <Input
                         type="password"
                         placeholder={t("login.enterPassword")}
-                        className="text-right"
+                        className={t("pages.login.name.text_right")}
                         disabled={isLoading}
                         data-testid="input-password"
                         {...field}
@@ -136,7 +135,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full btn-primary"
+                className={t("pages.login.name.w_full_btn_primary")}
                 disabled={isLoading}
                 data-testid="button-login"
               >
@@ -145,28 +144,28 @@ export default function Login() {
             </form>
           </Form>
 
-          <div className="mt-4 relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
+          <div className={t("pages.login.name.mt_4_relative")}>
+            <div className={t("pages.login.name.absolute_inset_0_flex_items_center")}>
+              <span className={t("pages.login.name.w_full_border_t")} />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+            <div className={t("pages.login.name.relative_flex_justify_center_text_xs_uppercase")}>
+              <span className={t("pages.login.name.bg_background_px_2_text_muted_foreground")}>
                 {t("login.or")}
               </span>
             </div>
           </div>
 
-          <div className="mt-4">
+          <div className={t("pages.login.name.mt_4")}>
             <Button
               variant="outline"
-              className="w-full"
+              className={t("pages.login.name.w_full")}
               onClick={() => {
                 window.location.href = "/api/login-replit";
               }}
               data-testid="button-login-replit"
             >
               <svg 
-                className="w-5 h-5 mr-2" 
+                className={t("pages.login.name.w_5_h_5_mr_2")} 
                 viewBox="0 0 24 24" 
                 fill="currentColor"
               >
@@ -176,8 +175,8 @@ export default function Login() {
             </Button>
           </div>
 
-          <div className="mt-6 pt-6 border-t">
-            <p className="text-xs text-muted-foreground text-center">
+          <div className={t("pages.login.name.mt_6_pt_6_border_t")}>
+            <p className={t("pages.login.name.text_xs_text_muted_foreground_text_center")}>
               {t("login.copyrightText")}
             </p>
           </div>

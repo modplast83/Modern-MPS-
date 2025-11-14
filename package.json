@@ -9,6 +9,9 @@
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
   "i18n:extract": "i18next \"client/src/**/*.{js,jsx,ts,tsx}\" --config i18next-parser.config.cjs",
+  "i18n:auto": "node scripts/auto-i18n.js",
+  "i18n:auto": "node scripts/auto-i18n-advanced.js",
+  "i18n:v2": "node scripts/auto-i18n-v2.js",
 
     "db:push": "drizzle-kit push",
     "dev:full": "npm ci && npm run lint && npm run check && npm run build && npm start",

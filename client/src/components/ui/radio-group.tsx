@@ -5,8 +5,7 @@ import { Circle } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const RadioGroup = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
+  React.ElementRef<typeof RadioGroupPrimitive.Root>{t('components.ui.radio-group.,_react.componentpropswithoutref')}<typeof RadioGroupPrimitive.Root>
 >(({ className, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Root
@@ -19,8 +18,7 @@ const RadioGroup = React.forwardRef<
 RadioGroup.displayName = RadioGroupPrimitive.Root.displayName;
 
 const RadioGroupItem = React.forwardRef<
-  React.ElementRef<typeof RadioGroupPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
+  React.ElementRef<typeof RadioGroupPrimitive.Item>{t('components.ui.radio-group.,_react.componentpropswithoutref')}<typeof RadioGroupPrimitive.Item>
 >(({ className, ...props }, ref) => {
   return (
     <RadioGroupPrimitive.Item
@@ -31,8 +29,8 @@ const RadioGroupItem = React.forwardRef<
       )}
       {...props}
     >
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <Circle className="h-2.5 w-2.5 fill-current text-current" />
+      <RadioGroupPrimitive.Indicator className={t("components.ui.radio-group.name.flex_items_center_justify_center")}>
+        <Circle className={t("components.ui.radio-group.name.h_2_5_w_2_5_fill_current_text_current")} />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );

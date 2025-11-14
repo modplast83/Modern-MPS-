@@ -12,31 +12,15 @@ const Drawer = ({
   <DrawerPrimitive.Root
     shouldScaleBackground={shouldScaleBackground}
     {...props}
-  />
-);
-Drawer.displayName = "Drawer";
-
-const DrawerTrigger = DrawerPrimitive.Trigger;
-
-const DrawerPortal = DrawerPrimitive.Portal;
-
-const DrawerClose = DrawerPrimitive.Close;
-
-const DrawerOverlay = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Overlay>
+  />{t('components.ui.drawer.);_drawer.displayname_=_"drawer";_const_drawertrigger_=_drawerprimitive.trigger;_const_drawerportal_=_drawerprimitive.portal;_const_drawerclose_=_drawerprimitive.close;_const_draweroverlay_=_react.forwardref')}<
+  React.ElementRef<typeof DrawerPrimitive.Overlay>{t('components.ui.drawer.,_react.componentpropswithoutref')}<typeof DrawerPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
     className={cn("fixed inset-0 z-50 bg-black/80", className)}
     {...props}
-  />
-));
-DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
-
-const DrawerContent = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
+  />{t('components.ui.drawer.));_draweroverlay.displayname_=_drawerprimitive.overlay.displayname;_const_drawercontent_=_react.forwardref')}<
+  React.ElementRef<typeof DrawerPrimitive.Content>{t('components.ui.drawer.,_react.componentpropswithoutref')}<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
   // Check if children includes a DrawerDescription component
   const hasDrawerDescription = React.Children.toArray(children).some(
@@ -69,20 +53,18 @@ const DrawerContent = React.forwardRef<
         {...(descriptionId && { "aria-describedby": descriptionId })}
         {...props}
       >
-        <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
+        <div className={t("components.ui.drawer.name.mx_auto_mt_4_h_2_w_100px_rounded_full_bg_muted")} />
         {children}
 
         {/* Hidden description for accessibility only when needed */}
         {needsFallback && (
-          <span id={descriptionId} className="sr-only">
-            Drawer content
-          </span>
+          <span id={descriptionId} className={t("components.ui.drawer.name.sr_only")}>{t('components.ui.drawer.drawer_content')}</span>
         )}
       </DrawerPrimitive.Content>
     </DrawerPortal>
   );
 });
-DrawerContent.displayName = "DrawerContent";
+DrawerContent.displayName={t("components.ui.drawer.name.drawercontent")};
 
 const DrawerHeader = ({
   className,
@@ -93,7 +75,7 @@ const DrawerHeader = ({
     {...props}
   />
 );
-DrawerHeader.displayName = "DrawerHeader";
+DrawerHeader.displayName={t("components.ui.drawer.name.drawerheader")};
 
 const DrawerFooter = ({
   className,
@@ -102,13 +84,8 @@ const DrawerFooter = ({
   <div
     className={cn("mt-auto flex flex-col gap-2 p-4", className)}
     {...props}
-  />
-);
-DrawerFooter.displayName = "DrawerFooter";
-
-const DrawerTitle = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Title>
+  />{t('components.ui.drawer.);_drawerfooter.displayname_=_"drawerfooter";_const_drawertitle_=_react.forwardref')}<
+  React.ElementRef<typeof DrawerPrimitive.Title>{t('components.ui.drawer.,_react.componentpropswithoutref')}<typeof DrawerPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Title
     ref={ref}
@@ -117,13 +94,8 @@ const DrawerTitle = React.forwardRef<
       className,
     )}
     {...props}
-  />
-));
-DrawerTitle.displayName = DrawerPrimitive.Title.displayName;
-
-const DrawerDescription = React.forwardRef<
-  React.ElementRef<typeof DrawerPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Description>
+  />{t('components.ui.drawer.));_drawertitle.displayname_=_drawerprimitive.title.displayname;_const_drawerdescription_=_react.forwardref')}<
+  React.ElementRef<typeof DrawerPrimitive.Description>{t('components.ui.drawer.,_react.componentpropswithoutref')}<typeof DrawerPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Description
     ref={ref}

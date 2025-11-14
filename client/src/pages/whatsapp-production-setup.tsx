@@ -153,9 +153,7 @@ export default function WhatsAppProductionSetup() {
 
   const getStepIcon = (stepId: string) => {
     return completedSteps.includes(stepId) ? (
-      <CheckCircle className="h-5 w-5 text-green-600" />
-    ) : (
-      <div className="h-5 w-5 border-2 border-gray-300 rounded-full" />
+      <CheckCircle className={t("pages.name.h_5_w_5_text_green_600")} />{t('pages.whatsapp-production-setup.)_:_(')}<div className={t("pages.name.h_5_w_5_border_2_border_gray_300_rounded_full")} />
     );
   };
 
@@ -164,32 +162,26 @@ export default function WhatsAppProductionSetup() {
   const progressPercentage = (completedCount / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4" dir="rtl">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className={t("pages.name.min_h_screen_bg_gray_50_p_4")} dir="rtl">
+      <div className={t("pages.name.max_w_4xl_mx_auto_space_y_6")}>
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🚀 إعداد WhatsApp Production Mode
-          </h1>
-          <p className="text-gray-600">
-            دليل شامل لتفعيل WhatsApp Business في وضع الإنتاج
-          </p>
+        <div className={t("pages.name.text_center")}>
+          <h1 className={t("pages.name.text_3xl_font_bold_text_gray_900_mb_2")}>{t('pages.whatsapp-production-setup.🚀_إعداد_whatsapp_production_mode')}</h1>
+          <p className={t("pages.name.text_gray_600")}>{t('pages.whatsapp-production-setup.دليل_شامل_لتفعيل_whatsapp_business_في_وضع_الإنتاج')}</p>
         </div>
 
         {/* Progress */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                التقدم الإجمالي
-              </span>
-              <span className="text-sm text-gray-500">
+          <CardContent className={t("pages.name.pt_6")}>
+            <div className={t("pages.name.flex_items_center_justify_between_mb_2")}>
+              <span className={t("pages.name.text_sm_font_medium_text_gray_700")}>{t('pages.whatsapp-production-setup.التقدم_الإجمالي')}</span>
+              <span className={t("pages.name.text_sm_text_gray_500")}>
                 {completedCount} من {totalSteps}
               </span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className={t("pages.name.w_full_bg_gray_200_rounded_full_h_2")}>
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className={t("pages.name.bg_blue_600_h_2_rounded_full_transition_all_duration_300")}
                 style={{ width: `${progressPercentage}%` }}
               />
             </div>
@@ -199,20 +191,16 @@ export default function WhatsAppProductionSetup() {
         {/* Account Information */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              معلومات الحساب
-            </CardTitle>
+            <CardTitle className={t("pages.name.flex_items_center_gap_2")}>
+              <Settings className={t("pages.name.h_5_w_5")} />{t('pages.whatsapp-production-setup.معلومات_الحساب')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Business Account ID:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="font-mono">
+            <div className={t("pages.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+              <div className={t("pages.name.space_y_3")}>
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.business_account_id:')}</span>
+                  <div className={t("pages.name.flex_items_center_gap_2")}>
+                    <Badge variant="outline" className={t("pages.name.font_mono")}>
                       {accountInfo.businessAccountId}
                     </Badge>
                     <Button
@@ -222,17 +210,15 @@ export default function WhatsAppProductionSetup() {
                         copyToClipboard(accountInfo.businessAccountId)
                       }
                     >
-                      <Copy className="h-3 w-3" />
+                      <Copy className={t("pages.name.h_3_w_3")} />
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    Business Manager ID:
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="font-mono">
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.business_manager_id:')}</span>
+                  <div className={t("pages.name.flex_items_center_gap_2")}>
+                    <Badge variant="outline" className={t("pages.name.font_mono")}>
                       {accountInfo.businessManagerId}
                     </Badge>
                     <Button
@@ -242,38 +228,36 @@ export default function WhatsAppProductionSetup() {
                         copyToClipboard(accountInfo.businessManagerId)
                       }
                     >
-                      <Copy className="h-3 w-3" />
+                      <Copy className={t("pages.name.h_3_w_3")} />
                     </Button>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">
-                    WhatsApp Number:
-                  </span>
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.whatsapp_number:')}</span>
                   <Badge variant="outline">{accountInfo.whatsappNumber}</Badge>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Display Name:</span>
+              <div className={t("pages.name.space_y_3")}>
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.display_name:')}</span>
                   <Badge variant="outline">{accountInfo.displayName}</Badge>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Twilio Account:</span>
-                  <Badge variant="outline" className="font-mono text-xs">
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.twilio_account:')}</span>
+                  <Badge variant="outline" className={t("pages.name.font_mono_text_xs")}>
                     {accountInfo.twilioAccountSid}
                   </Badge>
                 </div>
 
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Webhook URL:</span>
-                  <div className="flex items-center gap-2">
+                <div className={t("pages.name.flex_justify_between_items_center")}>
+                  <span className={t("pages.name.text_sm_text_gray_600")}>{t('pages.whatsapp-production-setup.webhook_url:')}</span>
+                  <div className={t("pages.name.flex_items_center_gap_2")}>
                     <Badge
                       variant="outline"
-                      className="text-xs max-w-[200px] truncate"
+                      className={t("pages.name.text_xs_max_w_200px_truncate")}
                     >
                       {webhookUrl}
                     </Badge>
@@ -282,7 +266,7 @@ export default function WhatsAppProductionSetup() {
                       variant="ghost"
                       onClick={() => copyToClipboard(webhookUrl)}
                     >
-                      <Copy className="h-3 w-3" />
+                      <Copy className={t("pages.name.h_3_w_3")} />
                     </Button>
                   </div>
                 </div>
@@ -293,40 +277,37 @@ export default function WhatsAppProductionSetup() {
 
         {/* Important Notice */}
         <Alert>
-          <Shield className="h-4 w-4" />
+          <Shield className={t("pages.name.h_4_w_4")} />
           <AlertDescription>
-            <strong>مهم:</strong> في Production Mode، يجب الحصول على موافقة Meta
-            على جميع قوالب الرسائل قبل الإرسال. عملية الموافقة قد تستغرق 24-48
-            ساعة.
-          </AlertDescription>
+            <strong>{t('pages.whatsapp-production-setup.مهم:')}</strong>{t('pages.whatsapp-production-setup.في_production_mode،_يجب_الحصول_على_موافقة_meta_على_جميع_قوالب_الرسائل_قبل_الإرسال._عملية_الموافقة_قد_تستغرق_24-48_ساعة.')}</AlertDescription>
         </Alert>
 
         {/* Setup Steps */}
-        <div className="space-y-4">
+        <div className={t("pages.name.space_y_4")}>
           {productionSteps.map((step, index) => (
             <Card
               key={step.id}
               className={`${step.important ? "border-blue-200 bg-blue-50" : ""}`}
             >
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-3">
+                <div className={t("pages.name.flex_items_center_justify_between")}>
+                  <CardTitle className={t("pages.name.flex_items_center_gap_3")}>
                     <button
                       onClick={() => toggleStep(step.id)}
-                      className="flex-shrink-0"
+                      className={t("pages.name.flex_shrink_0")}
                     >
                       {getStepIcon(step.id)}
                     </button>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className={t("pages.name.flex_items_center_gap_2")}>
                         <span>
                           الخطوة {index + 1}: {step.title}
                         </span>
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className={t("pages.name.text_xs")}>
                           {step.category}
                         </Badge>
                       </div>
-                      <CardDescription className="mt-1">
+                      <CardDescription className={t("pages.name.mt_1")}>
                         {step.description}
                       </CardDescription>
                     </div>
@@ -335,16 +316,16 @@ export default function WhatsAppProductionSetup() {
               </CardHeader>
 
               <CardContent>
-                <div className="space-y-2">
+                <div className={t("pages.name.space_y_2")}>
                   {step.steps.map((stepText, stepIndex) => (
                     <div
                       key={stepIndex}
-                      className="flex items-start gap-3 text-sm"
+                      className={t("pages.name.flex_items_start_gap_3_text_sm")}
                     >
-                      <span className="text-blue-500 mt-1 flex-shrink-0">
+                      <span className={t("pages.name.text_blue_500_mt_1_flex_shrink_0")}>
                         {stepIndex + 1}.
                       </span>
-                      <span className="text-gray-700">{stepText}</span>
+                      <span className={t("pages.name.text_gray_700")}>{stepText}</span>
                     </div>
                   ))}
                 </div>
@@ -353,24 +334,22 @@ export default function WhatsAppProductionSetup() {
                 {step.id === "message-templates" &&
                   "templates" in step &&
                   step.templates && (
-                    <div className="mt-4 space-y-3">
-                      <h4 className="font-medium text-gray-900">
-                        قوالب الرسائل المقترحة:
-                      </h4>
+                    <div className={t("pages.name.mt_4_space_y_3")}>
+                      <h4 className={t("pages.name.font_medium_text_gray_900")}>{t('pages.whatsapp-production-setup.قوالب_الرسائل_المقترحة:')}</h4>
                       {step.templates.map((template, templateIndex) => (
                         <div
                           key={templateIndex}
-                          className="bg-white p-3 rounded border"
+                          className={t("pages.name.bg_white_p_3_rounded_border")}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-sm">
+                          <div className={t("pages.name.flex_items_center_justify_between_mb_2")}>
+                            <span className={t("pages.name.font_medium_text_sm")}>
                               {template.name}
                             </span>
-                            <Badge variant="outline" className="text-xs">
+                            <Badge variant="outline" className={t("pages.name.text_xs")}>
                               {template.language === "ar" ? "عربي" : "إنجليزي"}
                             </Badge>
                           </div>
-                          <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded font-mono">
+                          <div className={t("pages.name.text_sm_text_gray_600_bg_gray_50_p_2_rounded_font_mono")}>
                             {template.content}
                           </div>
                         </div>
@@ -385,16 +364,14 @@ export default function WhatsAppProductionSetup() {
         {/* Quick Links */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5" />
-              روابط سريعة
-            </CardTitle>
+            <CardTitle className={t("pages.name.flex_items_center_gap_2")}>
+              <ExternalLink className={t("pages.name.h_5_w_5")} />{t('pages.whatsapp-production-setup.روابط_سريعة')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className={t("pages.name.grid_grid_cols_1_md_grid_cols_2_gap_3")}>
               <Button
                 variant="outline"
-                className="h-auto p-4 justify-start"
+                className={t("pages.name.h_auto_p_4_justify_start")}
                 asChild
               >
                 <a
@@ -402,19 +379,17 @@ export default function WhatsAppProductionSetup() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-right">
-                    <div className="font-medium">Meta Business Manager</div>
-                    <div className="text-sm text-gray-500">
-                      إدارة WhatsApp Business Account
-                    </div>
+                  <div className={t("pages.name.text_right")}>
+                    <div className={t("pages.name.font_medium")}>{t('pages.whatsapp-production-setup.meta_business_manager')}</div>
+                    <div className={t("pages.name.text_sm_text_gray_500")}>{t('pages.whatsapp-production-setup.إدارة_whatsapp_business_account')}</div>
                   </div>
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className={t("pages.name.h_4_w_4_mr_2")} />
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto p-4 justify-start"
+                className={t("pages.name.h_auto_p_4_justify_start")}
                 asChild
               >
                 <a
@@ -422,19 +397,17 @@ export default function WhatsAppProductionSetup() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-right">
-                    <div className="font-medium">Twilio WhatsApp Console</div>
-                    <div className="text-sm text-gray-500">
-                      إدارة أرقام WhatsApp
-                    </div>
+                  <div className={t("pages.name.text_right")}>
+                    <div className={t("pages.name.font_medium")}>{t('pages.whatsapp-production-setup.twilio_whatsapp_console')}</div>
+                    <div className={t("pages.name.text_sm_text_gray_500")}>{t('pages.whatsapp-production-setup.إدارة_أرقام_whatsapp')}</div>
                   </div>
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className={t("pages.name.h_4_w_4_mr_2")} />
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto p-4 justify-start"
+                className={t("pages.name.h_auto_p_4_justify_start")}
                 asChild
               >
                 <a
@@ -442,19 +415,17 @@ export default function WhatsAppProductionSetup() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-right">
-                    <div className="font-medium">Message Templates</div>
-                    <div className="text-sm text-gray-500">
-                      إدارة قوالب الرسائل
-                    </div>
+                  <div className={t("pages.name.text_right")}>
+                    <div className={t("pages.name.font_medium")}>{t('pages.whatsapp-production-setup.message_templates')}</div>
+                    <div className={t("pages.name.text_sm_text_gray_500")}>{t('pages.whatsapp-production-setup.إدارة_قوالب_الرسائل')}</div>
                   </div>
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className={t("pages.name.h_4_w_4_mr_2")} />
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto p-4 justify-start"
+                className={t("pages.name.h_auto_p_4_justify_start")}
                 asChild
               >
                 <a
@@ -462,13 +433,11 @@ export default function WhatsAppProductionSetup() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className="text-right">
-                    <div className="font-medium">Business Verification</div>
-                    <div className="text-sm text-gray-500">
-                      التحقق من الأعمال
-                    </div>
+                  <div className={t("pages.name.text_right")}>
+                    <div className={t("pages.name.font_medium")}>{t('pages.whatsapp-production-setup.business_verification')}</div>
+                    <div className={t("pages.name.text_sm_text_gray_500")}>{t('pages.whatsapp-production-setup.التحقق_من_الأعمال')}</div>
                   </div>
-                  <ArrowRight className="h-4 w-4 mr-2" />
+                  <ArrowRight className={t("pages.name.h_4_w_4_mr_2")} />
                 </a>
               </Button>
             </div>
@@ -477,21 +446,17 @@ export default function WhatsAppProductionSetup() {
 
         {/* Next Steps */}
         {completedCount === totalSteps && (
-          <Card className="border-green-200 bg-green-50">
+          <Card className={t("pages.name.border_green_200_bg_green_50")}>
             <CardHeader>
-              <CardTitle className="text-green-700">
-                🎉 إعداد Production مكتمل!
-              </CardTitle>
+              <CardTitle className={t("pages.name.text_green_700")}>{t('pages.whatsapp-production-setup.🎉_إعداد_production_مكتمل!')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-green-700 mb-3">
-                أحسنت! أكملت جميع خطوات إعداد Production Mode.
-              </p>
-              <div className="space-y-2 text-sm text-green-600">
-                <p>• يمكنك الآن إرسال رسائل إلى أي رقم WhatsApp مُسجل</p>
-                <p>• تأكد من استخدام القوالب المُوافق عليها فقط</p>
-                <p>• راقب Message Limits و Quality Rating</p>
-                <p>• اختبر النظام مع أرقام حقيقية</p>
+              <p className={t("pages.name.text_green_700_mb_3")}>{t('pages.whatsapp-production-setup.أحسنت!_أكملت_جميع_خطوات_إعداد_production_mode.')}</p>
+              <div className={t("pages.name.space_y_2_text_sm_text_green_600")}>
+                <p>{t('pages.whatsapp-production-setup.•_يمكنك_الآن_إرسال_رسائل_إلى_أي_رقم_whatsapp_مُسجل')}</p>
+                <p>{t('pages.whatsapp-production-setup.•_تأكد_من_استخدام_القوالب_المُوافق_عليها_فقط')}</p>
+                <p>{t('pages.whatsapp-production-setup.•_راقب_message_limits_و_quality_rating')}</p>
+                <p>{t('pages.whatsapp-production-setup.•_اختبر_النظام_مع_أرقام_حقيقية')}</p>
               </div>
             </CardContent>
           </Card>

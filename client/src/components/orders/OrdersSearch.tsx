@@ -28,19 +28,19 @@ export default function OrdersSearch({
   const isProduction = type === 'production';
   
   return (
-    <div className="flex space-x-2 space-x-reverse">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <div className={t("components.orders.orderssearch.name.flex_space_x_2_space_x_reverse")}>
+      <div className={t("components.orders.orderssearch.name.relative")}>
+        <Search className={t("components.orders.orderssearch.name.absolute_left_3_top_1_2_transform_translate_y_1_2_h_4_w_4_text_gray_400")} />
         <Input
           placeholder={isProduction ? t("orders.searchProductionOrders") : t("orders.searchPlaceholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 w-64"
+          className={t("components.orders.orderssearch.name.pl_10_w_64")}
           data-testid={isProduction ? "input-search-production" : "input-search-orders"}
         />
       </div>
       <Select value={statusFilter || ""} onValueChange={setStatusFilter}>
-        <SelectTrigger className="w-48" data-testid="select-status-filter">
+        <SelectTrigger className={t("components.orders.orderssearch.name.w_48")} data-testid="select-status-filter">
           <SelectValue placeholder={t("orders.filterByStatus")} />
         </SelectTrigger>
         <SelectContent>
@@ -50,9 +50,7 @@ export default function OrdersSearch({
               <SelectItem value="pending">{t("production.pending")}</SelectItem>
               <SelectItem value="in_progress">{t("production.inProduction")}</SelectItem>
               <SelectItem value="completed">{t("production.completed")}</SelectItem>
-            </>
-          ) : (
-            <>
+            </>{t('components.orders.OrdersSearch.)_:_(')}<>
               <SelectItem value="all">{t("orders.allOrders")}</SelectItem>
               <SelectItem value="waiting">{t("production.waiting")}</SelectItem>
               <SelectItem value="in_production">{t("production.inProduction")}</SelectItem>

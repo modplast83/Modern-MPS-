@@ -22,14 +22,14 @@ export default function Production() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.production.name.min_h_screen_bg_gray_50")}>
       <Header />
 
-      <div className="flex">
+      <div className={t("pages.production.name.flex")}>
         <Sidebar />
         <MobileNav />
 
-        <main className="flex-1 lg:mr-64 p-2 md:p-4 pb-20 lg:pb-4">
+        <main className={t("pages.production.name.flex_1_lg_mr_64_p_2_md_p_4_pb_20_lg_pb_4")}>
           <ProductionTabs onCreateRoll={handleCreateRoll} />
         </main>
       </div>

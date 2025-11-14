@@ -183,13 +183,7 @@ export default function WhatsAppTemplateTest() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "sent":
-        return <CheckCircle className="h-4 w-4 text-green-600" />;
-      case "delivered":
-        return <CheckCircle className="h-4 w-4 text-blue-600" />;
-      case "failed":
-        return <XCircle className="h-4 w-4 text-red-600" />;
-      default:
-        return <MessageSquare className="h-4 w-4 text-yellow-600" />;
+        return <CheckCircle className={t("pages.whatsapp-template-test.name.h_4_w_4_text_green_600")} />{t('pages.whatsapp-template-test.;_case_"delivered":_return')}<CheckCircle className={t("pages.whatsapp-template-test.name.h_4_w_4_text_blue_600")} />{t('pages.whatsapp-template-test.;_case_"failed":_return')}<XCircle className={t("pages.whatsapp-template-test.name.h_4_w_4_text_red_600")} />{t('pages.whatsapp-template-test.;_default:_return')}<MessageSquare className={t("pages.whatsapp-template-test.name.h_4_w_4_text_yellow_600")} />;
     }
   };
 
@@ -207,51 +201,43 @@ export default function WhatsAppTemplateTest() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4" dir="rtl">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className={t("pages.whatsapp-template-test.name.min_h_screen_bg_gray_50_p_4")} dir="rtl">
+      <div className={t("pages.whatsapp-template-test.name.max_w_6xl_mx_auto_space_y_6")}>
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            ✨ اختبار قوالب WhatsApp المُوافقة
-          </h1>
-          <p className="text-gray-600">
-            اختبار إرسال رسائل WhatsApp باستخدام القوالب المُوافق عليها من Meta
-          </p>
+        <div className={t("pages.whatsapp-template-test.name.text_center")}>
+          <h1 className={t("pages.whatsapp-template-test.name.text_3xl_font_bold_text_gray_900_mb_2")}>{t('pages.whatsapp-template-test.✨_اختبار_قوالب_whatsapp_المُوافقة')}</h1>
+          <p className={t("pages.whatsapp-template-test.name.text_gray_600")}>{t('pages.whatsapp-template-test.اختبار_إرسال_رسائل_whatsapp_باستخدام_القوالب_المُوافق_عليها_من_meta')}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={t("pages.whatsapp-template-test.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
           {/* نموذج الإرسال */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5" />
-                إرسال رسالة بقالب مُوافق
-              </CardTitle>
-              <CardDescription>
-                استخدام القوالب المُوافق عليها من Meta لإرسال الرسائل
-              </CardDescription>
+              <CardTitle className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
+                <Sparkles className={t("pages.whatsapp-template-test.name.h_5_w_5")} />{t('pages.whatsapp-template-test.إرسال_رسالة_بقالب_مُوافق')}</CardTitle>
+              <CardDescription>{t('pages.whatsapp-template-test.استخدام_القوالب_المُوافق_عليها_من_meta_لإرسال_الرسائل')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className={t("pages.whatsapp-template-test.name.space_y_4")}>
               <div>
-                <Label htmlFor="phone">رقم الهاتف</Label>
+                <Label htmlFor="phone">{t('pages.whatsapp-template-test.رقم_الهاتف')}</Label>
                 <Input
                   id="phone"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+966501234567"
+                  placeholder="{t('pages.whatsapp-template-test.placeholder.+966501234567')}"
                   dir="ltr"
                   data-testid="input-phone"
                 />
               </div>
 
               <div>
-                <Label htmlFor="template">القالب</Label>
+                <Label htmlFor="template">{t('pages.whatsapp-template-test.القالب')}</Label>
                 <Select
                   value={selectedTemplate}
                   onValueChange={setSelectedTemplate}
                 >
                   <SelectTrigger data-testid="select-template">
-                    <SelectValue placeholder="اختر القالب" />
+                    <SelectValue placeholder="{t('pages.whatsapp-template-test.placeholder.اختر_القالب')}" />
                   </SelectTrigger>
                   <SelectContent>
                     {approvedTemplates
@@ -267,9 +253,9 @@ export default function WhatsAppTemplateTest() {
                           key={template.id}
                           value={template.id.toString()}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
                             <span>{template.name}</span>
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className={t("pages.whatsapp-template-test.name.text_xs")}>
                               {template.language}
                             </Badge>
                           </div>
@@ -281,10 +267,10 @@ export default function WhatsAppTemplateTest() {
 
               {/* متغيرات القالب */}
               <div>
-                <Label>متغيرات القالب</Label>
-                <div className="space-y-2">
+                <Label>{t('pages.whatsapp-template-test.متغيرات_القالب')}</Label>
+                <div className={t("pages.whatsapp-template-test.name.space_y_2")}>
                   {templateVariables.map((variable, index) => (
-                    <div key={index} className="flex items-center gap-2">
+                    <div key={index} className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
                       <Input
                         value={variable}
                         onChange={(e) => updateVariable(index, e.target.value)}
@@ -297,9 +283,7 @@ export default function WhatsAppTemplateTest() {
                         size="sm"
                         onClick={() => removeVariable(index)}
                         data-testid={`button-remove-variable-${index}`}
-                      >
-                        حذف
-                      </Button>
+                      >{t('pages.whatsapp-template-test.حذف')}</Button>
                     </div>
                   ))}
                   <Button
@@ -308,13 +292,11 @@ export default function WhatsAppTemplateTest() {
                     size="sm"
                     onClick={addVariable}
                     data-testid="button-add-variable"
-                  >
-                    إضافة متغير
-                  </Button>
+                  >{t('pages.whatsapp-template-test.إضافة_متغير')}</Button>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className={t("pages.whatsapp-template-test.name.flex_items_center_space_x_2")}>
                 <input
                   type="checkbox"
                   id="useTemplate"
@@ -322,27 +304,19 @@ export default function WhatsAppTemplateTest() {
                   onChange={(e) => setUseTemplate(e.target.checked)}
                   data-testid="checkbox-use-template"
                 />
-                <Label htmlFor="useTemplate" className="text-sm">
-                  استخدام القالب المُوافق عليه (Production Mode)
-                </Label>
+                <Label htmlFor="useTemplate" className={t("pages.whatsapp-template-test.name.text_sm")}>{t('pages.whatsapp-template-test.استخدام_القالب_المُوافق_عليه_(production_mode)')}</Label>
               </div>
 
               <Button
                 onClick={handleSendTest}
                 disabled={sendTemplateMessage.isPending}
-                className="w-full"
+                className={t("pages.whatsapp-template-test.name.w_full")}
                 data-testid="button-send-template"
               >
                 {sendTemplateMessage.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    جاري الإرسال...
-                  </>
-                ) : (
-                  <>
-                    <Send className="mr-2 h-4 w-4" />
-                    إرسال رسالة بالقالب
-                  </>
+                    <Loader2 className={t("pages.whatsapp-template-test.name.mr_2_h_4_w_4_animate_spin")} />{t('pages.whatsapp-template-test.جاري_الإرسال...')}</>{t('pages.whatsapp-template-test.)_:_(')}<>
+                    <Send className={t("pages.whatsapp-template-test.name.mr_2_h_4_w_4")} />{t('pages.whatsapp-template-test.إرسال_رسالة_بالقالب')}</>
                 )}
               </Button>
             </CardContent>
@@ -351,17 +325,14 @@ export default function WhatsAppTemplateTest() {
           {/* تفاصيل القالب المُختار */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                تفاصيل القالب
-              </CardTitle>
+              <CardTitle className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
+                <MessageSquare className={t("pages.whatsapp-template-test.name.h_5_w_5")} />{t('pages.whatsapp-template-test.تفاصيل_القالب')}</CardTitle>
             </CardHeader>
             <CardContent>
-              {approvedTemplates.find((t) => t.id === selectedTemplate) && (
-                <div className="space-y-4">
+              {approvedTemplates.find((t) =>{t('pages.whatsapp-template-test.t.id_===_selectedtemplate)_&&_(')}<div className={t("pages.whatsapp-template-test.name.space_y_4")}>
                   <div>
-                    <Label className="text-sm font-medium">اسم القالب:</Label>
-                    <p className="text-sm text-gray-600 font-mono">
+                    <Label className={t("pages.whatsapp-template-test.name.text_sm_font_medium")}>{t('pages.whatsapp-template-test.اسم_القالب:')}</Label>
+                    <p className={t("pages.whatsapp-template-test.name.text_sm_text_gray_600_font_mono")}>
                       {
                         approvedTemplates.find((t) => t.id === selectedTemplate)
                           ?.name
@@ -370,14 +341,14 @@ export default function WhatsAppTemplateTest() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">معرف القالب:</Label>
-                    <p className="text-xs text-gray-500 font-mono break-all">
+                    <Label className={t("pages.whatsapp-template-test.name.text_sm_font_medium")}>{t('pages.whatsapp-template-test.معرف_القالب:')}</Label>
+                    <p className={t("pages.whatsapp-template-test.name.text_xs_text_gray_500_font_mono_break_all")}>
                       {selectedTemplate}
                     </p>
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">اللغة:</Label>
+                    <Label className={t("pages.whatsapp-template-test.name.text_sm_font_medium")}>{t('pages.whatsapp-template-test.اللغة:')}</Label>
                     <Badge variant="outline">
                       {
                         approvedTemplates.find((t) => t.id === selectedTemplate)
@@ -387,8 +358,8 @@ export default function WhatsAppTemplateTest() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">المتغيرات:</Label>
-                    <div className="text-sm text-gray-600">
+                    <Label className={t("pages.whatsapp-template-test.name.text_sm_font_medium")}>{t('pages.whatsapp-template-test.المتغيرات:')}</Label>
+                    <div className={t("pages.whatsapp-template-test.name.text_sm_text_gray_600")}>
                       {approvedTemplates
                         .find((t) => t.id === selectedTemplate)
                         ?.variables.join(", ")}
@@ -396,8 +367,8 @@ export default function WhatsAppTemplateTest() {
                   </div>
 
                   <div>
-                    <Label className="text-sm font-medium">مثال:</Label>
-                    <div className="bg-gray-50 p-3 rounded text-sm font-mono">
+                    <Label className={t("pages.whatsapp-template-test.name.text_sm_font_medium")}>{t('pages.whatsapp-template-test.مثال:')}</Label>
+                    <div className={t("pages.whatsapp-template-test.name.bg_gray_50_p_3_rounded_text_sm_font_mono")}>
                       {
                         approvedTemplates.find((t) => t.id === selectedTemplate)
                           ?.example
@@ -405,12 +376,9 @@ export default function WhatsAppTemplateTest() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-50 p-3 rounded">
-                    <p className="text-xs text-blue-700">
-                      <strong>حالة القالب:</strong> مُوافق عليه من Meta ✅
-                      <br />
-                      يمكن استخدامه لإرسال رسائل إلى أي رقم WhatsApp مُسجل
-                    </p>
+                  <div className={t("pages.whatsapp-template-test.name.bg_blue_50_p_3_rounded")}>
+                    <p className={t("pages.whatsapp-template-test.name.text_xs_text_blue_700")}>
+                      <strong>{t('pages.whatsapp-template-test.حالة_القالب:')}</strong>{t('pages.whatsapp-template-test.مُوافق_عليه_من_meta_✅')}<br />{t('pages.whatsapp-template-test.يمكن_استخدامه_لإرسال_رسائل_إلى_أي_رقم_whatsapp_مُسجل')}</p>
                   </div>
                 </div>
               )}
@@ -419,58 +387,53 @@ export default function WhatsAppTemplateTest() {
         </div>
 
         {/* سجل النتائج */}
-        {testResults.length > 0 && (
-          <Card>
+        {testResults.length >{t('pages.whatsapp-template-test.0_&&_(')}<Card>
             <CardHeader>
-              <CardTitle>📋 سجل اختبارات القوالب</CardTitle>
-              <CardDescription>
-                نتائج الرسائل المُرسلة باستخدام القوالب
-              </CardDescription>
+              <CardTitle>{t('pages.whatsapp-template-test.📋_سجل_اختبارات_القوالب')}</CardTitle>
+              <CardDescription>{t('pages.whatsapp-template-test.نتائج_الرسائل_المُرسلة_باستخدام_القوالب')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className={t("pages.whatsapp-template-test.name.space_y_3")}>
                 {testResults.map((result, index) => (
                   <div
                     key={index}
-                    className="border rounded-lg p-3 bg-white"
+                    className={t("pages.whatsapp-template-test.name.border_rounded_lg_p_3_bg_white")}
                     data-testid={`template-result-${index}`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
+                    <div className={t("pages.whatsapp-template-test.name.flex_items_center_justify_between_mb_2")}>
+                      <div className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
                         {getStatusIcon(result.status)}
-                        <span className="font-medium">{result.phone}</span>
+                        <span className={t("pages.whatsapp-template-test.name.font_medium")}>{result.phone}</span>
                         <Badge className={getStatusColor(result.status)}>
                           {result.status}
                         </Badge>
                         {result.useTemplate && (
-                          <Badge variant="outline" className="text-xs">
-                            قالب
-                          </Badge>
+                          <Badge variant="outline" className={t("pages.whatsapp-template-test.name.text_xs")}>{t('pages.whatsapp-template-test.قالب')}</Badge>
                         )}
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className={t("pages.whatsapp-template-test.name.text_sm_text_gray_500")}>
                         {result.timestamp.toLocaleTimeString("ar")}
                       </span>
                     </div>
 
-                    <div className="space-y-1 text-sm">
+                    <div className={t("pages.whatsapp-template-test.name.space_y_1_text_sm")}>
                       <p>
-                        <strong>القالب:</strong> {result.template}
+                        <strong>{t('pages.whatsapp-template-test.القالب:')}</strong> {result.template}
                       </p>
                       <p>
-                        <strong>المتغيرات:</strong>{" "}
+                        <strong>{t('pages.whatsapp-template-test.المتغيرات:')}</strong>{" "}
                         {result.variables?.join(", ") || "لا يوجد"}
                       </p>
                     </div>
 
                     {result.messageId && (
-                      <p className="text-xs text-gray-500 mt-2">
+                      <p className={t("pages.whatsapp-template-test.name.text_xs_text_gray_500_mt_2")}>
                         Message ID: {result.messageId}
                       </p>
                     )}
 
                     {result.error && (
-                      <p className="text-xs text-red-600 mt-2">
+                      <p className={t("pages.whatsapp-template-test.name.text_xs_text_red_600_mt_2")}>
                         خطأ: {result.error}
                       </p>
                     )}
@@ -482,41 +445,40 @@ export default function WhatsAppTemplateTest() {
         )}
 
         {/* الإشعارات الأخيرة */}
-        {notificationsList && notificationsList.length > 0 && (
-          <Card>
+        {notificationsList && notificationsList.length >{t('pages.whatsapp-template-test.0_&&_(')}<Card>
             <CardHeader>
-              <CardTitle>📬 آخر الإشعارات</CardTitle>
-              <CardDescription>آخر الرسائل المُرسلة عبر النظام</CardDescription>
+              <CardTitle>{t('pages.whatsapp-template-test.📬_آخر_الإشعارات')}</CardTitle>
+              <CardDescription>{t('pages.whatsapp-template-test.آخر_الرسائل_المُرسلة_عبر_النظام')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className={t("pages.whatsapp-template-test.name.space_y_3")}>
                 {notificationsList.slice(0, 5).map((notification: any) => (
                   <div
                     key={notification.id}
-                    className="border rounded-lg p-3 bg-white"
+                    className={t("pages.whatsapp-template-test.name.border_rounded_lg_p_3_bg_white")}
                     data-testid={`notification-${notification.id}`}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="font-medium">
+                    <div className={t("pages.whatsapp-template-test.name.flex_items_center_justify_between_mb_2")}>
+                      <div className={t("pages.whatsapp-template-test.name.flex_items_center_gap_2")}>
+                        <MessageSquare className={t("pages.whatsapp-template-test.name.h_4_w_4")} />
+                        <span className={t("pages.whatsapp-template-test.name.font_medium")}>
                           {notification.title}
                         </span>
                         <Badge className={getStatusColor(notification.status)}>
                           {notification.status}
                         </Badge>
                       </div>
-                      <span className="text-sm text-gray-500">
+                      <span className={t("pages.whatsapp-template-test.name.text_sm_text_gray_500")}>
                         {new Date(notification.created_at).toLocaleString("ar")}
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-700 mb-1">
+                    <p className={t("pages.whatsapp-template-test.name.text_sm_text_gray_700_mb_1")}>
                       {notification.message}
                     </p>
 
                     {notification.phone_number && (
-                      <p className="text-xs text-gray-500">
+                      <p className={t("pages.whatsapp-template-test.name.text_xs_text_gray_500")}>
                         إلى: {notification.phone_number}
                       </p>
                     )}

@@ -34,7 +34,7 @@ export function IconWithTooltip({
             {icon}
           </span>
         </TooltipTrigger>
-        <TooltipContent side={side} className="text-sm">
+        <TooltipContent side={side} className={t("components.ui.icon-with-tooltip.name.text_sm")}>
           {tooltip}
         </TooltipContent>
       </Tooltip>

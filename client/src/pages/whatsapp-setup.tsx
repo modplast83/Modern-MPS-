@@ -61,108 +61,85 @@ export default function WhatsAppSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.whatsapp-setup.name.min_h_screen_bg_gray_50")}>
       <Header />
-      <div className="flex">
+      <div className={t("pages.whatsapp-setup.name.flex")}>
         <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إعداد WhatsApp Business API
-            </h1>
-            <p className="text-gray-600">
-              ضبط إعدادات الواتس اب للأعمال وربطها بـ Meta Business
-            </p>
+        <main className={t("pages.whatsapp-setup.name.flex_1_lg_mr_64_p_6")}>
+          <div className={t("pages.whatsapp-setup.name.mb_6")}>
+            <h1 className={t("pages.whatsapp-setup.name.text_2xl_font_bold_text_gray_900_mb_2")}>{t('pages.whatsapp-setup.إعداد_whatsapp_business_api')}</h1>
+            <p className={t("pages.whatsapp-setup.name.text_gray_600")}>{t('pages.whatsapp-setup.ضبط_إعدادات_الواتس_اب_للأعمال_وربطها_بـ_meta_business')}</p>
           </div>
 
-          <Tabs defaultValue="meta" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="meta">شهادة Meta</TabsTrigger>
-              <TabsTrigger value="twilio">إعدادات Twilio</TabsTrigger>
-              <TabsTrigger value="test">اختبار الاتصال</TabsTrigger>
+          <Tabs defaultValue="meta" className={t("pages.whatsapp-setup.name.space_y_6")}>
+            <TabsList className={t("pages.whatsapp-setup.name.grid_w_full_grid_cols_3")}>
+              <TabsTrigger value="meta">{t('pages.whatsapp-setup.شهادة_meta')}</TabsTrigger>
+              <TabsTrigger value="twilio">{t('pages.whatsapp-setup.إعدادات_twilio')}</TabsTrigger>
+              <TabsTrigger value="test">{t('pages.whatsapp-setup.اختبار_الاتصال')}</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="meta" className="space-y-4">
+            <TabsContent value="meta" className={t("pages.whatsapp-setup.name.space_y_4")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    شهادة الملكية من Meta
-                  </CardTitle>
-                  <CardDescription>
-                    شهادة التحقق من ملكية رقم الهاتف المعتمدة من Meta Business
-                  </CardDescription>
+                  <CardTitle className={t("pages.whatsapp-setup.name.flex_items_center_gap_2")}>
+                    <CheckCircle className={t("pages.whatsapp-setup.name.h_5_w_5_text_green_600")} />{t('pages.whatsapp-setup.شهادة_الملكية_من_meta')}</CardTitle>
+                  <CardDescription>{t('pages.whatsapp-setup.شهادة_التحقق_من_ملكية_رقم_الهاتف_المعتمدة_من_meta_business')}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className={t("pages.whatsapp-setup.name.space_y_4")}>
                   <div>
-                    <Label htmlFor="displayName">اسم العرض المعتمد</Label>
+                    <Label htmlFor="displayName">{t('pages.whatsapp-setup.اسم_العرض_المعتمد')}</Label>
                     <Input
                       id="displayName"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="mt-1"
+                      className={t("pages.whatsapp-setup.name.mt_1")}
                       readOnly
                     />
-                    <p className="text-sm text-green-600 mt-1">
-                      ✓ معتمد من Meta
-                    </p>
+                    <p className={t("pages.whatsapp-setup.name.text_sm_text_green_600_mt_1")}>{t('pages.whatsapp-setup.✓_معتمد_من_meta')}</p>
                   </div>
 
                   <div>
-                    <Label htmlFor="certificate">شهادة الملكية</Label>
-                    <div className="relative">
+                    <Label htmlFor="certificate">{t('pages.whatsapp-setup.شهادة_الملكية')}</Label>
+                    <div className={t("pages.whatsapp-setup.name.relative")}>
                       <Textarea
                         id="certificate"
                         value={certificate}
                         onChange={(e) => setCertificate(e.target.value)}
-                        className="mt-1 min-h-[120px] font-mono text-sm"
+                        className={t("pages.whatsapp-setup.name.mt_1_min_h_120px_font_mono_text_sm")}
                         dir="ltr"
                       />
                       <Button
                         size="sm"
                         variant="outline"
-                        className="absolute top-2 left-2"
+                        className={t("pages.whatsapp-setup.name.absolute_top_2_left_2")}
                         onClick={() => copyToClipboard(certificate)}
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className={t("pages.whatsapp-setup.name.h_4_w_4")} />
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
-                      هذه الشهادة تؤكد ملكيتك لرقم الهاتف في WhatsApp Business
-                      API
-                    </p>
+                    <p className={t("pages.whatsapp-setup.name.text_sm_text_gray_600_mt_1")}>{t('pages.whatsapp-setup.هذه_الشهادة_تؤكد_ملكيتك_لرقم_الهاتف_في_whatsapp_business_api')}</p>
                   </div>
 
                   <Alert>
-                    <AlertCircle className="h-4 w-4" />
+                    <AlertCircle className={t("pages.whatsapp-setup.name.h_4_w_4")} />
                     <AlertDescription>
-                      <strong>خطوات مهمة:</strong>
-                      <br />
-                      1. احفظ هذه الشهادة في مكان آمن
-                      <br />
-                      2. استخدمها لتأكيد ملكية الرقم في لوحة تحكم Twilio
-                      <br />
-                      3. تأكد من أن اسم العرض يطابق اسم شركتك المسجل
-                    </AlertDescription>
+                      <strong>{t('pages.whatsapp-setup.خطوات_مهمة:')}</strong>
+                      <br />{t('pages.whatsapp-setup.1._احفظ_هذه_الشهادة_في_مكان_آمن')}<br />{t('pages.whatsapp-setup.2._استخدمها_لتأكيد_ملكية_الرقم_في_لوحة_تحكم_twilio')}<br />{t('pages.whatsapp-setup.3._تأكد_من_أن_اسم_العرض_يطابق_اسم_شركتك_المسجل')}</AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="twilio" className="space-y-4">
+            <TabsContent value="twilio" className={t("pages.whatsapp-setup.name.space_y_4")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-blue-600" />
-                    إعدادات Twilio WhatsApp
-                  </CardTitle>
-                  <CardDescription>
-                    ضبط معلومات حساب Twilio لإرسال رسائل WhatsApp
-                  </CardDescription>
+                  <CardTitle className={t("pages.whatsapp-setup.name.flex_items_center_gap_2")}>
+                    <Settings className={t("pages.whatsapp-setup.name.h_5_w_5_text_blue_600")} />{t('pages.whatsapp-setup.إعدادات_twilio_whatsapp')}</CardTitle>
+                  <CardDescription>{t('pages.whatsapp-setup.ضبط_معلومات_حساب_twilio_لإرسال_رسائل_whatsapp')}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className={t("pages.whatsapp-setup.name.space_y_4")}>
                   <div>
-                    <Label htmlFor="accountSid">Account SID</Label>
+                    <Label htmlFor="accountSid">{t('pages.whatsapp-setup.account_sid')}</Label>
                     <Input
                       id="accountSid"
                       value={twilioSettings.accountSid}
@@ -172,14 +149,14 @@ export default function WhatsAppSetup() {
                           accountSid: e.target.value,
                         }))
                       }
-                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      className="mt-1"
+                      placeholder="{t('pages.whatsapp-setup.placeholder.acxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')}"
+                      className={t("pages.whatsapp-setup.name.mt_1")}
                       dir="ltr"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="authToken">Auth Token</Label>
+                    <Label htmlFor="authToken">{t('pages.whatsapp-setup.auth_token')}</Label>
                     <Input
                       id="authToken"
                       type="password"
@@ -190,14 +167,14 @@ export default function WhatsAppSetup() {
                           authToken: e.target.value,
                         }))
                       }
-                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      className="mt-1"
+                      placeholder="{t('pages.whatsapp-setup.placeholder.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx')}"
+                      className={t("pages.whatsapp-setup.name.mt_1")}
                       dir="ltr"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="twilioPhone">رقم WhatsApp في Twilio</Label>
+                    <Label htmlFor="twilioPhone">{t('pages.whatsapp-setup.رقم_whatsapp_في_twilio')}</Label>
                     <Input
                       id="twilioPhone"
                       value={twilioSettings.phoneNumber}
@@ -207,86 +184,75 @@ export default function WhatsAppSetup() {
                           phoneNumber: e.target.value,
                         }))
                       }
-                      placeholder="whatsapp:+1234567890"
-                      className="mt-1"
+                      placeholder="{t('pages.whatsapp-setup.placeholder.whatsapp:+1234567890')}"
+                      className={t("pages.whatsapp-setup.name.mt_1")}
                       dir="ltr"
                     />
-                    <p className="text-sm text-gray-600 mt-1">
-                      يجب أن يبدأ بـ "whatsapp:" متبوعاً برقم الهاتف
-                    </p>
+                    <p className={t("pages.whatsapp-setup.name.text_sm_text_gray_600_mt_1")}>{t('pages.whatsapp-setup.يجب_أن_يبدأ_بـ_"whatsapp:"_متبوعاً_برقم_الهاتف')}</p>
                   </div>
 
-                  <Button onClick={saveTwilioSettings} className="w-full">
-                    حفظ إعدادات Twilio
-                  </Button>
+                  <Button onClick={saveTwilioSettings} className={t("pages.whatsapp-setup.name.w_full")}>{t('pages.whatsapp-setup.حفظ_إعدادات_twilio')}</Button>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>متطلبات التكامل</CardTitle>
+                  <CardTitle>{t('pages.whatsapp-setup.متطلبات_التكامل')}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>حساب Twilio مفعل</span>
+                  <div className={t("pages.whatsapp-setup.name.space_y_3")}>
+                    <div className={t("pages.whatsapp-setup.name.flex_items_center_gap_3")}>
+                      <CheckCircle className={t("pages.whatsapp-setup.name.h_5_w_5_text_green_600")} />
+                      <span>{t('pages.whatsapp-setup.حساب_twilio_مفعل')}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <span>شهادة Meta معتمدة</span>
+                    <div className={t("pages.whatsapp-setup.name.flex_items_center_gap_3")}>
+                      <CheckCircle className={t("pages.whatsapp-setup.name.h_5_w_5_text_green_600")} />
+                      <span>{t('pages.whatsapp-setup.شهادة_meta_معتمدة')}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <AlertCircle className="h-5 w-5 text-orange-500" />
-                      <span>ربط رقم الهاتف في Twilio Console</span>
+                    <div className={t("pages.whatsapp-setup.name.flex_items_center_gap_3")}>
+                      <AlertCircle className={t("pages.whatsapp-setup.name.h_5_w_5_text_orange_500")} />
+                      <span>{t('pages.whatsapp-setup.ربط_رقم_الهاتف_في_twilio_console')}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <AlertCircle className="h-5 w-5 text-orange-500" />
-                      <span>تفعيل WhatsApp Business API</span>
+                    <div className={t("pages.whatsapp-setup.name.flex_items_center_gap_3")}>
+                      <AlertCircle className={t("pages.whatsapp-setup.name.h_5_w_5_text_orange_500")} />
+                      <span>{t('pages.whatsapp-setup.تفعيل_whatsapp_business_api')}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="test" className="space-y-4">
+            <TabsContent value="test" className={t("pages.whatsapp-setup.name.space_y_4")}>
               <Card>
                 <CardHeader>
-                  <CardTitle>اختبار إرسال الرسائل</CardTitle>
-                  <CardDescription>
-                    تأكد من أن النظام يمكنه إرسال رسائل WhatsApp بنجاح
-                  </CardDescription>
+                  <CardTitle>{t('pages.whatsapp-setup.اختبار_إرسال_الرسائل')}</CardTitle>
+                  <CardDescription>{t('pages.whatsapp-setup.تأكد_من_أن_النظام_يمكنه_إرسال_رسائل_whatsapp_بنجاح')}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className={t("pages.whatsapp-setup.name.space_y_4")}>
                   <div>
-                    <Label htmlFor="testPhone">رقم الهاتف للاختبار</Label>
+                    <Label htmlFor="testPhone">{t('pages.whatsapp-setup.رقم_الهاتف_للاختبار')}</Label>
                     <Input
                       id="testPhone"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+966501234567"
-                      className="mt-1"
+                      placeholder="{t('pages.whatsapp-setup.placeholder.+966501234567')}"
+                      className={t("pages.whatsapp-setup.name.mt_1")}
                       dir="ltr"
                     />
                   </div>
 
                   <Button
-                    className="w-full"
+                    className={t("pages.whatsapp-setup.name.w_full")}
                     onClick={() => {
                       toast({
                         title: "جاري الإرسال...",
                         description: "جاري إرسال رسالة اختبار",
                       });
                     }}
-                  >
-                    إرسال رسالة اختبار
-                  </Button>
+                  >{t('pages.whatsapp-setup.إرسال_رسالة_اختبار')}</Button>
 
                   <Alert>
-                    <AlertDescription>
-                      ستصل رسالة اختبار إلى الرقم المحدد خلال ثوان. تأكد من أن
-                      الرقم مسجل في WhatsApp.
-                    </AlertDescription>
+                    <AlertDescription>{t('pages.whatsapp-setup.ستصل_رسالة_اختبار_إلى_الرقم_المحدد_خلال_ثوان._تأكد_من_أن_الرقم_مسجل_في_whatsapp.')}</AlertDescription>
                   </Alert>
                 </CardContent>
               </Card>

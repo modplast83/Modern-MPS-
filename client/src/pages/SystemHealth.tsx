@@ -156,20 +156,20 @@ export default function SystemHealth() {
   ];
 
   return (
-    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+    <div className={t("pages.systemhealth.name.container_mx_auto_p_6_space_y_6")} dir="rtl">
       {/* رأس الصفحة */}
-      <div className="flex items-center justify-between">
+      <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className={t("pages.systemhealth.name.text_3xl_font_bold_text_gray_900_dark_text_white")}>
             {t('systemHealth.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">
+          <p className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300_mt_2")}>
             {t('systemHealth.description')}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-sm">
-            <Activity className="w-4 h-4 ml-1" />
+        <div className={t("pages.systemhealth.name.flex_items_center_gap_2")}>
+          <Badge variant="outline" className={t("pages.systemhealth.name.text_sm")}>
+            <Activity className={t("pages.systemhealth.name.w_4_h_4_ml_1")} />
             {t('systemHealth.liveMonitoring')}
           </Badge>
           {overview && (
@@ -182,7 +182,7 @@ export default function SystemHealth() {
                     : "destructive"
               }
             >
-              <Shield className="w-4 h-4 ml-1" />
+              <Shield className={t("pages.systemhealth.name.w_4_h_4_ml_1")} />
               {overview.overall_status === "healthy"
                 ? t('systemHealth.systemHealthy')
                 : overview.overall_status === "warning"
@@ -195,75 +195,75 @@ export default function SystemHealth() {
 
       {/* نظرة عامة على الحالة */}
       {overview && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+        <div className={t("pages.systemhealth.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+          <Card className={t("pages.systemhealth.name.bg_gradient_to_br_from_green_50_to_green_100_dark_from_green_950_dark_to_green_900")}>
+            <CardContent className={t("pages.systemhealth.name.p_6")}>
+              <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-green-700 dark:text-green-300">
+                  <p className={t("pages.systemhealth.name.text_sm_font_medium_text_green_700_dark_text_green_300")}>
                     {t('systemHealth.healthyChecks')}
                   </p>
-                  <p className="text-3xl font-bold text-green-900 dark:text-green-100">
+                  <p className={t("pages.systemhealth.name.text_3xl_font_bold_text_green_900_dark_text_green_100")}>
                     {overview.healthy_checks}
                   </p>
                 </div>
-                <CheckCircle2 className="w-10 h-10 text-green-600" />
+                <CheckCircle2 className={t("pages.systemhealth.name.w_10_h_10_text_green_600")} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card className={t("pages.systemhealth.name.bg_gradient_to_br_from_yellow_50_to_yellow_100_dark_from_yellow_950_dark_to_yellow_900")}>
+            <CardContent className={t("pages.systemhealth.name.p_6")}>
+              <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                  <p className={t("pages.systemhealth.name.text_sm_font_medium_text_yellow_700_dark_text_yellow_300")}>
                     {t('systemHealth.warnings')}
                   </p>
-                  <p className="text-3xl font-bold text-yellow-900 dark:text-yellow-100">
+                  <p className={t("pages.systemhealth.name.text_3xl_font_bold_text_yellow_900_dark_text_yellow_100")}>
                     {overview.warning_checks}
                   </p>
                 </div>
-                <AlertTriangle className="w-10 h-10 text-yellow-600" />
+                <AlertTriangle className={t("pages.systemhealth.name.w_10_h_10_text_yellow_600")} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card className={t("pages.systemhealth.name.bg_gradient_to_br_from_red_50_to_red_100_dark_from_red_950_dark_to_red_900")}>
+            <CardContent className={t("pages.systemhealth.name.p_6")}>
+              <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-red-700 dark:text-red-300">
+                  <p className={t("pages.systemhealth.name.text_sm_font_medium_text_red_700_dark_text_red_300")}>
                     {t('systemHealth.criticalChecks')}
                   </p>
-                  <p className="text-3xl font-bold text-red-900 dark:text-red-100">
+                  <p className={t("pages.systemhealth.name.text_3xl_font_bold_text_red_900_dark_text_red_100")}>
                     {overview.critical_checks}
                   </p>
                 </div>
-                <AlertTriangle className="w-10 h-10 text-red-600" />
+                <AlertTriangle className={t("pages.systemhealth.name.w_10_h_10_text_red_600")} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
+          <Card className={t("pages.systemhealth.name.bg_gradient_to_br_from_blue_50_to_blue_100_dark_from_blue_950_dark_to_blue_900")}>
+            <CardContent className={t("pages.systemhealth.name.p_6")}>
+              <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                 <div>
-                  <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  <p className={t("pages.systemhealth.name.text_sm_font_medium_text_blue_700_dark_text_blue_300")}>
                     {t('systemHealth.uptimePercent')}
                   </p>
-                  <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                  <p className={t("pages.systemhealth.name.text_3xl_font_bold_text_blue_900_dark_text_blue_100")}>
                     {overview.uptime_percent?.toFixed(1)}%
                   </p>
                 </div>
-                <Zap className="w-10 h-10 text-blue-600" />
+                <Zap className={t("pages.systemhealth.name.w_10_h_10_text_blue_600")} />
               </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      <Tabs defaultValue="checks" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="checks" className={t("pages.systemhealth.name.w_full")}>
+        <TabsList className={t("pages.systemhealth.name.grid_w_full_grid_cols_3")}>
           <TabsTrigger value="checks" data-testid="tab-health-checks">
             {t('systemHealth.healthChecks')}
           </TabsTrigger>
@@ -276,11 +276,11 @@ export default function SystemHealth() {
         </TabsList>
 
         {/* تبويب فحوصات السلامة */}
-        <TabsContent value="checks" className="space-y-4">
+        <TabsContent value="checks" className={t("pages.systemhealth.name.space_y_4")}>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
+              <CardTitle className={t("pages.systemhealth.name.flex_items_center_gap_2")}>
+                <Database className={t("pages.systemhealth.name.w_5_h_5")} />
                 {t('systemHealth.healthChecks')} ({healthChecks.length})
               </CardTitle>
               <CardDescription>
@@ -288,29 +288,29 @@ export default function SystemHealth() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className={t("pages.systemhealth.name.space_y_4")}>
                 {healthChecks.map((check) => {
                   const TypeIcon = getTypeIcon(check.check_type);
 
                   return (
-                    <Card key={check.id} className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800">
-                            <TypeIcon className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+                    <Card key={check.id} className={t("pages.systemhealth.name.p_4")}>
+                      <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
+                        <div className={t("pages.systemhealth.name.flex_items_center_gap_3")}>
+                          <div className={t("pages.systemhealth.name.p_2_rounded_lg_bg_gray_100_dark_bg_gray_800")}>
+                            <TypeIcon className={t("pages.systemhealth.name.w_5_h_5_text_gray_700_dark_text_gray_300")} />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-gray-900 dark:text-white">
+                            <h3 className={t("pages.systemhealth.name.font_semibold_text_gray_900_dark_text_white")}>
                               {check.check_name_ar}
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">
+                            <p className={t("pages.systemhealth.name.text_sm_text_gray_600_dark_text_gray_300")}>
                               {t(`systemHealth.checkType.${check.check_type}`, check.check_type)}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
+                        <div className={t("pages.systemhealth.name.flex_items_center_gap_4")}>
+                          <div className={t("pages.systemhealth.name.text_right")}>
                             <div
                               className={`font-semibold ${getStatusColor(check.status)}`}
                             >
@@ -322,23 +322,23 @@ export default function SystemHealth() {
                                     ? t('systemHealth.critical')
                                     : check.status}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <div className={t("pages.systemhealth.name.text_sm_text_gray_600_dark_text_gray_300")}>
                               {check.check_duration_ms}ms
                             </div>
                           </div>
 
-                          <div className="w-20">
+                          <div className={t("pages.systemhealth.name.w_20")}>
                             <Progress
                               value={check.success_rate_24h}
-                              className="h-2"
+                              className={t("pages.systemhealth.name.h_2")}
                             />
-                            <div className="text-xs text-center mt-1 text-gray-600 dark:text-gray-300">
+                            <div className={t("pages.systemhealth.name.text_xs_text_center_mt_1_text_gray_600_dark_text_gray_300")}>
                               {check.success_rate_24h?.toFixed(1)}%
                             </div>
                           </div>
 
                           {check.is_critical && (
-                            <Badge variant="destructive" className="text-xs">
+                            <Badge variant="destructive" className={t("pages.systemhealth.name.text_xs")}>
                               {t('systemHealth.critical')}
                             </Badge>
                           )}
@@ -346,28 +346,28 @@ export default function SystemHealth() {
                       </div>
 
                       {/* تفاصيل إضافية */}
-                      <div className="mt-3 pt-3 border-t grid grid-cols-3 gap-4 text-sm">
+                      <div className={t("pages.systemhealth.name.mt_3_pt_3_border_t_grid_grid_cols_3_gap_4_text_sm")}>
                         <div>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                             {t('systemHealth.avgResponseTime')}:{" "}
                           </span>
-                          <span className="font-medium">
+                          <span className={t("pages.systemhealth.name.font_medium")}>
                             {check.average_response_time}ms
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                             {t('systemHealth.errors24h')}:{" "}
                           </span>
-                          <span className="font-medium">
+                          <span className={t("pages.systemhealth.name.font_medium")}>
                             {check.error_count_24h}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                             {t('systemHealth.lastCheck')}:{" "}
                           </span>
-                          <span className="font-medium">
+                          <span className={t("pages.systemhealth.name.font_medium")}>
                             {new Date(check.last_check_time).toLocaleTimeString(
                               "ar",
                             )}
@@ -383,13 +383,13 @@ export default function SystemHealth() {
         </TabsContent>
 
         {/* تبويب مؤشرات الأداء */}
-        <TabsContent value="performance" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="performance" className={t("pages.systemhealth.name.space_y_4")}>
+          <div className={t("pages.systemhealth.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
             {/* رسم بياني لاستخدام الذاكرة */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MemoryStick className="w-5 h-5" />
+                <CardTitle className={t("pages.systemhealth.name.flex_items_center_gap_2")}>
+                  <MemoryStick className={t("pages.systemhealth.name.w_5_h_5")} />
                   {t('systemHealth.memoryUsage')}
                 </CardTitle>
               </CardHeader>
@@ -418,8 +418,8 @@ export default function SystemHealth() {
             {/* رسم دائري لحالة الفحوصات */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
+                <CardTitle className={t("pages.systemhealth.name.flex_items_center_gap_2")}>
+                  <Activity className={t("pages.systemhealth.name.w_5_h_5")} />
                   {t('systemHealth.checkDistribution')}
                 </CardTitle>
               </CardHeader>
@@ -448,15 +448,15 @@ export default function SystemHealth() {
           </div>
 
           {/* إحصائيات سريعة */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={t("pages.systemhealth.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.systemhealth.name.p_6")}>
+                <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <p className={t("pages.systemhealth.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                       {t('systemHealth.avgResponseTime')}
                     </p>
-                    <p className="text-2xl font-bold">
+                    <p className={t("pages.systemhealth.name.text_2xl_font_bold")}>
                       {healthChecks.reduce(
                         (acc, check) => acc + check.average_response_time,
                         0,
@@ -464,19 +464,19 @@ export default function SystemHealth() {
                       ms
                     </p>
                   </div>
-                  <Clock className="w-8 h-8 text-blue-600" />
+                  <Clock className={t("pages.systemhealth.name.w_8_h_8_text_blue_600")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.systemhealth.name.p_6")}>
+                <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <p className={t("pages.systemhealth.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                       {t('systemHealth.successRate')}
                     </p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className={t("pages.systemhealth.name.text_2xl_font_bold_text_green_600")}>
                       {(
                         healthChecks.reduce(
                           (acc, check) => acc + check.success_rate_24h,
@@ -486,26 +486,26 @@ export default function SystemHealth() {
                       %
                     </p>
                   </div>
-                  <TrendingUp className="w-8 h-8 text-green-600" />
+                  <TrendingUp className={t("pages.systemhealth.name.w_8_h_8_text_green_600")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.systemhealth.name.p_6")}>
+                <div className={t("pages.systemhealth.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    <p className={t("pages.systemhealth.name.text_sm_font_medium_text_gray_600_dark_text_gray_300")}>
                       {t('systemHealth.totalErrors')}
                     </p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className={t("pages.systemhealth.name.text_2xl_font_bold_text_red_600")}>
                       {healthChecks.reduce(
                         (acc, check) => acc + check.error_count_24h,
                         0,
                       )}
                     </p>
                   </div>
-                  <TrendingDown className="w-8 h-8 text-red-600" />
+                  <TrendingDown className={t("pages.systemhealth.name.w_8_h_8_text_red_600")} />
                 </div>
               </CardContent>
             </Card>
@@ -513,15 +513,15 @@ export default function SystemHealth() {
         </TabsContent>
 
         {/* تبويب النظرة العامة */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="overview" className={t("pages.systemhealth.name.space_y_4")}>
+          <div className={t("pages.systemhealth.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
             <Card>
               <CardHeader>
                 <CardTitle>{t('systemHealth.systemInfo')}</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
+              <CardContent className={t("pages.systemhealth.name.space_y_4")}>
+                <div className={t("pages.systemhealth.name.flex_justify_between")}>
+                  <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                     {t('systemHealth.systemStatus')}:
                   </span>
                   <Badge
@@ -536,25 +536,25 @@ export default function SystemHealth() {
                       : t('systemHealth.needsAttention')}
                   </Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
+                <div className={t("pages.systemhealth.name.flex_justify_between")}>
+                  <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                     {t('systemHealth.totalChecks')}:
                   </span>
-                  <span className="font-medium">{overview?.total_checks}</span>
+                  <span className={t("pages.systemhealth.name.font_medium")}>{overview?.total_checks}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
+                <div className={t("pages.systemhealth.name.flex_justify_between")}>
+                  <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                     {t('systemHealth.uptime')}:
                   </span>
-                  <span className="font-medium">
+                  <span className={t("pages.systemhealth.name.font_medium")}>
                     {overview?.uptime_percent?.toFixed(2)}%
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-300">
+                <div className={t("pages.systemhealth.name.flex_justify_between")}>
+                  <span className={t("pages.systemhealth.name.text_gray_600_dark_text_gray_300")}>
                     {t('systemHealth.lastCheck')}:
                   </span>
-                  <span className="font-medium">
+                  <span className={t("pages.systemhealth.name.font_medium")}>
                     {overview?.last_check
                       ? new Date(overview.last_check).toLocaleString("ar")
                       : t('systemHealth.notSpecified')}
@@ -568,35 +568,33 @@ export default function SystemHealth() {
                 <CardTitle>{t('systemHealth.recommendations')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className={t("pages.systemhealth.name.space_y_3")}>
                   {overview?.critical_checks &&
-                    overview.critical_checks > 0 && (
-                      <div className="p-3 bg-red-50 dark:bg-red-950/20 rounded-lg">
-                        <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                    overview.critical_checks >{t('pages.SystemHealth.0_&&_(')}<div className={t("pages.systemhealth.name.p_3_bg_red_50_dark_bg_red_950_20_rounded_lg")}>
+                        <p className={t("pages.systemhealth.name.text_sm_font_medium_text_red_900_dark_text_red_100")}>
                           ⚠️ {t('systemHealth.criticalAlert', { count: overview.critical_checks })}
                         </p>
                       </div>
                     )}
 
-                  {overview?.warning_checks && overview.warning_checks > 0 && (
-                    <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-                      <p className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
+                  {overview?.warning_checks && overview.warning_checks >{t('pages.SystemHealth.0_&&_(')}<div className={t("pages.systemhealth.name.p_3_bg_yellow_50_dark_bg_yellow_950_20_rounded_lg")}>
+                      <p className={t("pages.systemhealth.name.text_sm_font_medium_text_yellow_900_dark_text_yellow_100")}>
                         📋 {t('systemHealth.warningAlert', { count: overview.warning_checks })}
                       </p>
                     </div>
                   )}
 
                   {overview?.uptime_percent && overview.uptime_percent < 99 && (
-                    <div className="p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    <div className={t("pages.systemhealth.name.p_3_bg_blue_50_dark_bg_blue_950_20_rounded_lg")}>
+                      <p className={t("pages.systemhealth.name.text_sm_font_medium_text_blue_900_dark_text_blue_100")}>
                         💡 {t('systemHealth.uptimeAlert')}
                       </p>
                     </div>
                   )}
 
                   {!overview?.critical_checks && !overview?.warning_checks && (
-                    <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-                      <p className="text-sm font-medium text-green-900 dark:text-green-100">
+                    <div className={t("pages.systemhealth.name.p_3_bg_green_50_dark_bg_green_950_20_rounded_lg")}>
+                      <p className={t("pages.systemhealth.name.text_sm_font_medium_text_green_900_dark_text_green_100")}>
                         ✅ {t('systemHealth.excellentStatus')}
                       </p>
                     </div>

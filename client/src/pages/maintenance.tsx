@@ -119,11 +119,7 @@ const maintenanceRequestSchema = z.object({
 export default function Maintenance() {
   const { t } = useTranslation();
   const [currentTab, setCurrentTab] = useState("requests");
-  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(
-    null,
-  );
-  const [isRequestDialogOpen, setIsRequestDialogOpen] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>{t('pages.maintenance.(_null,_);_const_[isrequestdialogopen,_setisrequestdialogopen]_=_usestate(false);_const_[selectedaction,_setselectedaction]_=_usestate')}<any>(null);
   const [isActionViewDialogOpen, setIsActionViewDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -297,50 +293,50 @@ export default function Maintenance() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.maintenance.name.min_h_screen_bg_gray_50")}>
       <Header />
 
-      <div className="flex">
+      <div className={t("pages.maintenance.name.flex")}>
         <Sidebar />
         <MobileNav />
 
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <main className={t("pages.maintenance.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+          <div className={t("pages.maintenance.name.mb_6")}>
+            <h1 className={t("pages.maintenance.name.text_2xl_font_bold_text_gray_900_mb_2")}>
               {t("maintenance.title")}
             </h1>
-            <p className="text-gray-600">
+            <p className={t("pages.maintenance.name.text_gray_600")}>
               {t("maintenance.maintenanceManagement")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className={t("pages.maintenance.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.maintenance.name.p_6")}>
+                <div className={t("pages.maintenance.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.maintenance.name.text_sm_font_medium_text_gray_600")}>
                       {t("common.total")}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className={t("pages.maintenance.name.text_2xl_font_bold_text_gray_900")}>
                       {Array.isArray(maintenanceRequests)
                         ? maintenanceRequests.length
                         : 0}
                     </p>
                   </div>
-                  <Wrench className="w-8 h-8 text-blue-500" />
+                  <Wrench className={t("pages.maintenance.name.w_8_h_8_text_blue_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.maintenance.name.p_6")}>
+                <div className={t("pages.maintenance.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.maintenance.name.text_sm_font_medium_text_gray_600")}>
                       {t("production.pending")}
                     </p>
-                    <p className="text-2xl font-bold text-yellow-600">
+                    <p className={t("pages.maintenance.name.text_2xl_font_bold_text_yellow_600")}>
                       {Array.isArray(maintenanceRequests)
                         ? maintenanceRequests.filter(
                             (r: any) => r.status === "pending",
@@ -348,19 +344,19 @@ export default function Maintenance() {
                         : 0}
                     </p>
                   </div>
-                  <Clock className="w-8 h-8 text-yellow-500" />
+                  <Clock className={t("pages.maintenance.name.w_8_h_8_text_yellow_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.maintenance.name.p_6")}>
+                <div className={t("pages.maintenance.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.maintenance.name.text_sm_font_medium_text_gray_600")}>
                       {t("production.inProduction")}
                     </p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className={t("pages.maintenance.name.text_2xl_font_bold_text_blue_600")}>
                       {Array.isArray(maintenanceRequests)
                         ? maintenanceRequests.filter(
                             (r: any) => r.status === "in_progress",
@@ -368,17 +364,17 @@ export default function Maintenance() {
                         : 0}
                     </p>
                   </div>
-                  <AlertTriangle className="w-8 h-8 text-blue-500" />
+                  <AlertTriangle className={t("pages.maintenance.name.w_8_h_8_text_blue_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.maintenance.name.p_6")}>
+                <div className={t("pages.maintenance.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{t("production.completed")}</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className={t("pages.maintenance.name.text_sm_font_medium_text_gray_600")}>{t("production.completed")}</p>
+                    <p className={t("pages.maintenance.name.text_2xl_font_bold_text_green_600")}>
                       {Array.isArray(maintenanceRequests)
                         ? maintenanceRequests.filter(
                             (r: any) => r.status === "completed",
@@ -386,7 +382,7 @@ export default function Maintenance() {
                         : 0}
                     </p>
                   </div>
-                  <CheckCircle className="w-8 h-8 text-green-500" />
+                  <CheckCircle className={t("pages.maintenance.name.w_8_h_8_text_green_500")} />
                 </div>
               </CardContent>
             </Card>
@@ -396,40 +392,40 @@ export default function Maintenance() {
           <Tabs
             value={currentTab}
             onValueChange={setCurrentTab}
-            className="w-full"
+            className={t("pages.maintenance.name.w_full")}
           >
-            <TabsList className="grid w-full grid-cols-6 mb-6">
-              <TabsTrigger value="requests" className="flex items-center gap-2">
-                <Wrench className="h-4 w-4" />
+            <TabsList className={t("pages.maintenance.name.grid_w_full_grid_cols_6_mb_6")}>
+              <TabsTrigger value="requests" className={t("pages.maintenance.name.flex_items_center_gap_2")}>
+                <Wrench className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("maintenance.maintenanceTasks")}
               </TabsTrigger>
-              <TabsTrigger value="actions" className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
+              <TabsTrigger value="actions" className={t("pages.maintenance.name.flex_items_center_gap_2")}>
+                <CheckCircle className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("common.actions")}
               </TabsTrigger>
-              <TabsTrigger value="reports" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
+              <TabsTrigger value="reports" className={t("pages.maintenance.name.flex_items_center_gap_2")}>
+                <FileText className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("reports.maintenanceReports")}
               </TabsTrigger>
               <TabsTrigger
                 value="negligence"
-                className="flex items-center gap-2"
+                className={t("pages.maintenance.name.flex_items_center_gap_2")}
               >
-                <AlertCircle className="h-4 w-4" />
+                <AlertCircle className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("maintenance.maintenanceTasks")}
               </TabsTrigger>
               <TabsTrigger
                 value="spare-parts"
-                className="flex items-center gap-2"
+                className={t("pages.maintenance.name.flex_items_center_gap_2")}
               >
-                <Users className="h-4 w-4" />
+                <Users className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("maintenance.spareParts")}
               </TabsTrigger>
               <TabsTrigger
                 value="consumable-parts"
-                className="flex items-center gap-2"
+                className={t("pages.maintenance.name.flex_items_center_gap_2")}
               >
-                <Wrench className="h-4 w-4" />
+                <Wrench className={t("pages.maintenance.name.h_4_w_4")} />
                 {t("maintenance.consumableParts")}
               </TabsTrigger>
             </TabsList>
@@ -438,15 +434,15 @@ export default function Maintenance() {
             <TabsContent value="requests">
               <Card>
                 <CardHeader>
-                  <div className="flex justify-between items-center">
+                  <div className={t("pages.maintenance.name.flex_justify_between_items_center")}>
                     <CardTitle>{t("maintenance.maintenanceTasks")}</CardTitle>
                     <Dialog
                       open={isRequestDialogOpen}
                       onOpenChange={setIsRequestDialogOpen}
                     >
                       <DialogTrigger asChild>
-                        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                          <Plus className="h-4 w-4 mr-2" />
+                        <Button className={t("pages.maintenance.name.bg_blue_600_hover_bg_blue_700_text_white")}>
+                          <Plus className={t("pages.maintenance.name.h_4_w_4_mr_2")} />
                           {t("common.add")}
                         </Button>
                       </DialogTrigger>
@@ -461,44 +457,42 @@ export default function Maintenance() {
                 </CardHeader>
                 <CardContent>
                   {loadingRequests ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="mt-2 text-sm text-muted-foreground">
+                    <div className={t("pages.maintenance.name.text_center_py_8")}>
+                      <div className={t("pages.maintenance.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
+                      <p className={t("pages.maintenance.name.mt_2_text_sm_text_muted_foreground")}>
                         {t("common.loading")}
                       </p>
-                    </div>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    </div>{t('pages.maintenance.)_:_(')}<div className={t("pages.maintenance.name.overflow_x_auto")}>
+                      <table className={t("pages.maintenance.name.min_w_full_divide_y_divide_gray_200")}>
+                        <thead className={t("pages.maintenance.name.bg_gray_50")}>
                           <tr>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("common.name")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("maintenance.equipment")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("common.type")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("maintenance.taskPriority")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("common.status")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("common.description")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("maintenance.assignedTo")}
                             </th>
-                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>
                               {t("common.date")}
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className={t("pages.maintenance.name.bg_white_divide_y_divide_gray_200")}>
                           {Array.isArray(maintenanceRequests) &&
                           maintenanceRequests.length > 0 ? (
                             maintenanceRequests.map((request: any) => {
@@ -516,35 +510,24 @@ export default function Maintenance() {
                               const assignedUser =
                                 Array.isArray(users) && request.assigned_to
                                   ? users.find(
-                                      (u: any) =>
-                                        u.id.toString() ===
-                                        request.assigned_to.toString(),
-                                    )
-                                  : null;
-                              const assignedName = assignedUser
-                                ? assignedUser.full_name ||
-                                  assignedUser.username
-                                : t("common.noData");
-
-                              return (
-                                <tr
+                                      (u: any) =>{t('pages.maintenance.u.id.tostring()_===_request.assigned_to.tostring(),_)_:_null;_const_assignedname_=_assigneduser_?_assigneduser.full_name_||_assigneduser.username_:_t("common.nodata");_return_(')}<tr
                                   key={request.id}
-                                  className="hover:bg-gray-50"
+                                  className={t("pages.maintenance.name.hover_bg_gray_50")}
                                 >
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
                                     {request.request_number}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                                     {machineName}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                                     {request.issue_type === "mechanical"
                                       ? t("maintenance.maintenanceType")
                                       : request.issue_type === "electrical"
                                         ? t("maintenance.maintenanceType")
                                         : t("common.type")}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_center")}>
                                     <Badge
                                       variant={
                                         request.urgency_level === "urgent"
@@ -561,20 +544,20 @@ export default function Maintenance() {
                                           : t("production.normal")}
                                     </Badge>
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_center")}>
                                     <span
                                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}
                                     >
                                       {getStatusText(request.status)}
                                     </span>
                                   </td>
-                                  <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_text_sm_text_gray_500_max_w_xs_truncate_text_center")}>
                                     {request.description}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                                     {assignedName}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                  <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                                     {new Date(
                                       request.date_reported,
                                     ).toLocaleDateString("en-US", {
@@ -590,7 +573,7 @@ export default function Maintenance() {
                             <tr>
                               <td
                                 colSpan={8}
-                                className="px-6 py-4 text-center text-gray-500"
+                                className={t("pages.maintenance.name.px_6_py_4_text_center_text_gray_500")}
                               >
                                 {t("common.noData")}
                               </td>
@@ -661,12 +644,10 @@ export default function Maintenance() {
         open={isActionViewDialogOpen}
         onOpenChange={setIsActionViewDialogOpen}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className={t("pages.maintenance.name.max_w_2xl")}>
           <DialogHeader>
-            <DialogTitle>تفاصيل إجراء الصيانة</DialogTitle>
-            <DialogDescription>
-              عرض تفاصيل إجراء الصيانة المحدد
-            </DialogDescription>
+            <DialogTitle>{t('pages.maintenance.تفاصيل_إجراء_الصيانة')}</DialogTitle>
+            <DialogDescription>{t('pages.maintenance.عرض_تفاصيل_إجراء_الصيانة_المحدد')}</DialogDescription>
           </DialogHeader>
           {selectedAction &&
             (() => {
@@ -677,49 +658,36 @@ export default function Maintenance() {
                 : null;
               const maintenanceRequest = Array.isArray(maintenanceRequests)
                 ? maintenanceRequests.find(
-                    (r: any) => r.id === selectedAction.maintenance_request_id,
-                  )
-                : null;
-
-              return (
-                <div className="space-y-6">
+                    (r: any) =>{t('pages.maintenance.r.id_===_selectedaction.maintenance_request_id,_)_:_null;_return_(')}<div className={t("pages.maintenance.name.space_y_6")}>
                   {/* Basic Information */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        رقم الإجراء
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.رقم_الإجراء')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_font_mono_bg_gray_50_p_2_rounded")}>
                         {selectedAction.action_number}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        رقم طلب الصيانة
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 font-mono bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.رقم_طلب_الصيانة')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_font_mono_bg_gray_50_p_2_rounded")}>
                         {maintenanceRequest?.request_number ||
                           selectedAction.maintenance_request_id}
                       </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        نوع الإجراء
-                      </label>
-                      <div className="mt-1">
-                        <Badge variant="outline" className="text-sm">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.نوع_الإجراء')}</label>
+                      <div className={t("pages.maintenance.name.mt_1")}>
+                        <Badge variant="outline" className={t("pages.maintenance.name.text_sm")}>
                           {selectedAction.action_type}
                         </Badge>
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        المنفذ
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.المنفذ')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_2_rounded")}>
                         {performedByUser
                           ? performedByUser.display_name_ar ||
                             performedByUser.display_name ||
@@ -731,10 +699,8 @@ export default function Maintenance() {
 
                   {/* Description */}
                   <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      وصف الإجراء
-                    </label>
-                    <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-3 rounded min-h-[60px]">
+                    <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.وصف_الإجراء')}</label>
+                    <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_3_rounded_min_h_60px_")}>
                       {selectedAction.description || "لا يوجد وصف"}
                     </p>
                   </div>
@@ -742,42 +708,34 @@ export default function Maintenance() {
                   {/* Technical Reports */}
                   {selectedAction.text_report && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        التقرير النصي
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-blue-50 p-3 rounded min-h-[60px] border border-blue-200">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.التقرير_النصي')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_blue_50_p_3_rounded_min_h_60px_border_border_blue_200")}>
                         {selectedAction.text_report}
                       </p>
                     </div>
                   )}
 
                   {/* Spare Parts and Machining Requests */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        طلب قطع غيار
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.طلب_قطع_غيار')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_2_rounded")}>
                         {selectedAction.spare_parts_request || "لا يوجد"}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        طلب مخرطة
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.طلب_مخرطة')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_2_rounded")}>
                         {selectedAction.machining_request || "لا يوجد"}
                       </p>
                     </div>
                   </div>
 
                   {/* Management Actions */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        يتطلب إجراء إداري
-                      </label>
-                      <div className="mt-1">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.يتطلب_إجراء_إداري')}</label>
+                      <div className={t("pages.maintenance.name.mt_1")}>
                         <Badge
                           variant={
                             selectedAction.requires_management_action
@@ -792,10 +750,8 @@ export default function Maintenance() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        تم إشعار الإدارة
-                      </label>
-                      <div className="mt-1">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.تم_إشعار_الإدارة')}</label>
+                      <div className={t("pages.maintenance.name.mt_1")}>
                         <Badge
                           variant={
                             selectedAction.management_notified
@@ -810,12 +766,10 @@ export default function Maintenance() {
                   </div>
 
                   {/* Date Information */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        تاريخ التنفيذ
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.تاريخ_التنفيذ')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_2_rounded")}>
                         {selectedAction.performed_at
                           ? new Date(
                               selectedAction.performed_at,
@@ -824,10 +778,8 @@ export default function Maintenance() {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        تاريخ الإنشاء
-                      </label>
-                      <p className="text-sm text-gray-900 mt-1 bg-gray-50 p-2 rounded">
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.تاريخ_الإنشاء')}</label>
+                      <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1_bg_gray_50_p_2_rounded")}>
                         {selectedAction.created_at
                           ? new Date(
                               selectedAction.created_at,
@@ -840,20 +792,18 @@ export default function Maintenance() {
                   {/* Machine Information */}
                   {maintenanceRequest && (
                     <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        معلومات الماكينة
-                      </label>
-                      <div className="mt-1 bg-blue-50 p-3 rounded border border-blue-200">
-                        <p className="text-sm">
-                          <strong>معرف الماكينة:</strong>{" "}
+                      <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.معلومات_الماكينة')}</label>
+                      <div className={t("pages.maintenance.name.mt_1_bg_blue_50_p_3_rounded_border_border_blue_200")}>
+                        <p className={t("pages.maintenance.name.text_sm")}>
+                          <strong>{t('pages.maintenance.معرف_الماكينة:')}</strong>{" "}
                           {maintenanceRequest.machine_id}
                         </p>
-                        <p className="text-sm">
-                          <strong>نوع المشكلة:</strong>{" "}
+                        <p className={t("pages.maintenance.name.text_sm")}>
+                          <strong>{t('pages.maintenance.نوع_المشكلة:')}</strong>{" "}
                           {maintenanceRequest.issue_type}
                         </p>
-                        <p className="text-sm">
-                          <strong>مستوى الأولوية:</strong>{" "}
+                        <p className={t("pages.maintenance.name.text_sm")}>
+                          <strong>{t('pages.maintenance.مستوى_الأولوية:')}</strong>{" "}
                           {maintenanceRequest.urgency_level}
                         </p>
                       </div>
@@ -933,34 +883,30 @@ function MaintenanceActionsTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>إجراءات الصيانة</span>
+        <CardTitle className={t("pages.maintenance.name.flex_items_center_justify_between")}>
+          <span>{t('pages.maintenance.إجراءات_الصيانة')}</span>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة إجراء جديد
-              </Button>
+                <Plus className={t("pages.maintenance.name.h_4_w_4_ml_2")} />{t('pages.maintenance.إضافة_إجراء_جديد')}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className={t("pages.maintenance.name.max_w_4xl")}>
               <DialogHeader>
-                <DialogTitle>إضافة إجراء صيانة جديد</DialogTitle>
-                <DialogDescription>
-                  تسجيل إجراء صيانة جديد مع تحديد المعدات والمنفذ
-                </DialogDescription>
+                <DialogTitle>{t('pages.maintenance.إضافة_إجراء_صيانة_جديد')}</DialogTitle>
+                <DialogDescription>{t('pages.maintenance.تسجيل_إجراء_صيانة_جديد_مع_تحديد_المعدات_والمنفذ')}</DialogDescription>
               </DialogHeader>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
+                  className={t("pages.maintenance.name.space_y_4")}
                 >
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="maintenance_request_id"
+                      name="{t('pages.maintenance.name.maintenance_request_id')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>طلب الصيانة</FormLabel>
+                          <FormLabel>{t('pages.maintenance.طلب_الصيانة')}</FormLabel>
                           <Select
                             onValueChange={(value) =>
                               field.onChange(parseInt(value))
@@ -968,7 +914,7 @@ function MaintenanceActionsTab({
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر طلب الصيانة" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_طلب_الصيانة')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -991,32 +937,22 @@ function MaintenanceActionsTab({
 
                     <FormField
                       control={form.control}
-                      name="action_type"
+                      name="{t('pages.maintenance.name.action_type')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>نوع الإجراء</FormLabel>
+                          <FormLabel>{t('pages.maintenance.نوع_الإجراء')}</FormLabel>
                           <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر نوع الإجراء" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_نوع_الإجراء')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="فحص مبدئي">
-                                فحص مبدئي
-                              </SelectItem>
-                              <SelectItem value="تغيير قطعة غيار">
-                                تغيير قطعة غيار
-                              </SelectItem>
-                              <SelectItem value="إصلاح مكانيكي">
-                                إصلاح مكانيكي
-                              </SelectItem>
-                              <SelectItem value="إصلاح كهربائي">
-                                إصلاح كهربائي
-                              </SelectItem>
-                              <SelectItem value="إيقاف الماكينة">
-                                إيقاف الماكينة
-                              </SelectItem>
+                              <SelectItem value="فحص مبدئي">{t('pages.maintenance.فحص_مبدئي')}</SelectItem>
+                              <SelectItem value="تغيير قطعة غيار">{t('pages.maintenance.تغيير_قطعة_غيار')}</SelectItem>
+                              <SelectItem value="إصلاح مكانيكي">{t('pages.maintenance.إصلاح_مكانيكي')}</SelectItem>
+                              <SelectItem value="إصلاح كهربائي">{t('pages.maintenance.إصلاح_كهربائي')}</SelectItem>
+                              <SelectItem value="إيقاف الماكينة">{t('pages.maintenance.إيقاف_الماكينة')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1027,27 +963,25 @@ function MaintenanceActionsTab({
 
                   <FormField
                     control={form.control}
-                    name="performed_by"
+                    name="{t('pages.maintenance.name.performed_by')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>المنفذ</FormLabel>
+                        <FormLabel>{t('pages.maintenance.المنفذ')}</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             value={user?.id ? user.id.toString() : ""}
                             type="hidden"
-                            className="hidden"
+                            className={t("pages.maintenance.name.hidden")}
                           />
                         </FormControl>
-                        <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded border">
-                          <div className="font-medium text-sm">
+                        <div className={t("pages.maintenance.name.p_3_bg_gray_100_dark_bg_gray_800_rounded_border")}>
+                          <div className={t("pages.maintenance.name.font_medium_text_sm")}>
                             {user
                               ? `${user.display_name || user.username} (${user.id})`
                               : "جاري التحميل..."}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">
-                            سيتم تسجيل الإجراء باسم المستخدم الحالي
-                          </div>
+                          <div className={t("pages.maintenance.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('pages.maintenance.سيتم_تسجيل_الإجراء_باسم_المستخدم_الحالي')}</div>
                         </div>
                         <FormMessage />
                       </FormItem>
@@ -1056,14 +990,14 @@ function MaintenanceActionsTab({
 
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="{t('pages.maintenance.name.description')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>وصف الإجراء</FormLabel>
+                        <FormLabel>{t('pages.maintenance.وصف_الإجراء')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="اكتب وصفاً مفصلاً للإجراء المتخذ"
+                            placeholder="{t('pages.maintenance.placeholder.اكتب_وصفاً_مفصلاً_للإجراء_المتخذ')}"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1071,17 +1005,17 @@ function MaintenanceActionsTab({
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="text_report"
+                      name="{t('pages.maintenance.name.text_report')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>التقرير النصي</FormLabel>
+                          <FormLabel>{t('pages.maintenance.التقرير_النصي')}</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
-                              placeholder="تقرير مفصل عن العملية"
+                              placeholder="{t('pages.maintenance.placeholder.تقرير_مفصل_عن_العملية')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1091,17 +1025,17 @@ function MaintenanceActionsTab({
 
                     <FormField
                       control={form.control}
-                      name="spare_parts_request"
+                      name="{t('pages.maintenance.name.spare_parts_request')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>طلب قطع غيار</FormLabel>
+                          <FormLabel>{t('pages.maintenance.طلب_قطع_غيار')}</FormLabel>
                           <FormControl>
                             <Select
                               value={field.value}
                               onValueChange={field.onChange}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر قطعة الغيار المطلوبة" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_قطعة_الغيار_المطلوبة')}" />
                               </SelectTrigger>
                               <SelectContent>
                                 {Array.isArray(spareParts) &&
@@ -1120,12 +1054,7 @@ function MaintenanceActionsTab({
                                       >
                                         {part.part_name} ({part.code}) -{" "}
                                         {part.machine_name}
-                                      </SelectItem>
-                                    ))
-                                ) : (
-                                  <SelectItem value="no_parts">
-                                    لا توجد قطع غيار متاحة
-                                  </SelectItem>
+                                      </SelectItem>{t('pages.maintenance.))_)_:_(')}<SelectItem value="no_parts">{t('pages.maintenance.لا_توجد_قطع_غيار_متاحة')}</SelectItem>
                                 )}
                               </SelectContent>
                             </Select>
@@ -1136,17 +1065,17 @@ function MaintenanceActionsTab({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="machining_request"
+                      name="{t('pages.maintenance.name.machining_request')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>طلب مخرطة</FormLabel>
+                          <FormLabel>{t('pages.maintenance.طلب_مخرطة')}</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
-                              placeholder="تفاصيل طلب المخرطة إن وجد"
+                              placeholder="{t('pages.maintenance.placeholder.تفاصيل_طلب_المخرطة_إن_وجد')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1156,14 +1085,14 @@ function MaintenanceActionsTab({
 
                     <FormField
                       control={form.control}
-                      name="operator_negligence_report"
+                      name="{t('pages.maintenance.name.operator_negligence_report')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>تبليغ إهمال المشغل</FormLabel>
+                          <FormLabel>{t('pages.maintenance.تبليغ_إهمال_المشغل')}</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
-                              placeholder="تقرير عن إهمال المشغل إن وجد"
+                              placeholder="{t('pages.maintenance.placeholder.تقرير_عن_إهمال_المشغل_إن_وجد')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1172,22 +1101,22 @@ function MaintenanceActionsTab({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="requires_management_action"
+                      name="{t('pages.maintenance.name.requires_management_action')}"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className={t("pages.maintenance.name.flex_flex_row_items_center_space_x_3_space_y_0")}>
                           <FormControl>
                             <input
                               type="checkbox"
                               checked={field.value}
                               onChange={field.onChange}
-                              className="h-4 w-4"
+                              className={t("pages.maintenance.name.h_4_w_4")}
                             />
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>يحتاج موافقة إدارية</FormLabel>
+                          <div className={t("pages.maintenance.name.space_y_1_leading_none")}>
+                            <FormLabel>{t('pages.maintenance.يحتاج_موافقة_إدارية')}</FormLabel>
                           </div>
                         </FormItem>
                       )}
@@ -1195,34 +1124,32 @@ function MaintenanceActionsTab({
 
                     <FormField
                       control={form.control}
-                      name="management_notified"
+                      name="{t('pages.maintenance.name.management_notified')}"
                       render={({ field }) => (
-                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormItem className={t("pages.maintenance.name.flex_flex_row_items_center_space_x_3_space_y_0")}>
                           <FormControl>
                             <input
                               type="checkbox"
                               checked={field.value}
                               onChange={field.onChange}
-                              className="h-4 w-4"
+                              className={t("pages.maintenance.name.h_4_w_4")}
                             />
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>تم إبلاغ الإدارة</FormLabel>
+                          <div className={t("pages.maintenance.name.space_y_1_leading_none")}>
+                            <FormLabel>{t('pages.maintenance.تم_إبلاغ_الإدارة')}</FormLabel>
                           </div>
                         </FormItem>
                       )}
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2">
+                  <div className={t("pages.maintenance.name.flex_justify_end_gap_2")}>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >
-                      إلغاء
-                    </Button>
-                    <Button type="submit">حفظ الإجراء</Button>
+                    >{t('pages.maintenance.إلغاء')}</Button>
+                    <Button type="submit">{t('pages.maintenance.حفظ_الإجراء')}</Button>
                   </div>
                 </form>
               </Form>
@@ -1232,47 +1159,24 @@ function MaintenanceActionsTab({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              جاري التحميل...
-            </p>
+          <div className={t("pages.maintenance.name.text_center_py_8")}>
+            <div className={t("pages.maintenance.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
+            <p className={t("pages.maintenance.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.maintenance.جاري_التحميل...')}</p>
           </div>
-        ) : Array.isArray(actions) && actions.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300 text-sm">
-              <thead className="bg-gray-50">
+        ) : Array.isArray(actions) && actions.length >{t('pages.maintenance.0_?_(')}<div className={t("pages.maintenance.name.overflow_x_auto")}>
+            <table className={t("pages.maintenance.name.w_full_border_collapse_border_border_gray_300_text_sm")}>
+              <thead className={t("pages.maintenance.name.bg_gray_50")}>
                 <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    رقم الإجراء
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    رقم طلب الصيانة
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    نوع الإجراء
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    الوصف
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    المنفذ
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    طلب قطع غيار
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    طلب مخرطة
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    موافقة إدارية
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    تاريخ التنفيذ
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-center font-semibold">
-                    الإجراءات
-                  </th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.رقم_الإجراء')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.رقم_طلب_الصيانة')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.نوع_الإجراء')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.الوصف')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.المنفذ')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.طلب_قطع_غيار')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.طلب_مخرطة')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.موافقة_إدارية')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.تاريخ_التنفيذ')}</th>
+                  <th className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_semibold")}>{t('pages.maintenance.الإجراءات')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1299,17 +1203,17 @@ function MaintenanceActionsTab({
                           إجراء صيانة رقم: ${action.action_number}
                         </h2>
                         <div style="margin: 20px 0;">
-                          <p><strong>رقم طلب الصيانة:</strong> ${maintenanceRequest?.request_number || action.maintenance_request_id}</p>
-                          <p><strong>نوع الإجراء:</strong> ${action.action_type}</p>
-                          <p><strong>الوصف:</strong> ${action.description || "-"}</p>
-                          <p><strong>المنفذ:</strong> ${performedByUser ? performedByUser.full_name || performedByUser.username : action.performed_by}</p>
-                          <p><strong>طلب قطع غيار:</strong> ${action.spare_parts_request || "-"}</p>
-                          <p><strong>طلب مخرطة:</strong> ${action.machining_request || "-"}</p>
-                          <p><strong>تقرير إهمال المشغل:</strong> ${action.operator_negligence_report || "-"}</p>
-                          <p><strong>تقرير نصي:</strong> ${action.text_report || "-"}</p>
-                          <p><strong>موافقة إدارية مطلوبة:</strong> ${action.requires_management_action ? "نعم" : "لا"}</p>
-                          <p><strong>تاريخ التنفيذ:</strong> ${new Date(action.action_date).toLocaleDateString("ar")}</p>
-                          <p><strong>وقت التنفيذ:</strong> ${new Date(action.action_date).toLocaleTimeString("ar")}</p>
+                          <p><strong>{t('pages.maintenance.رقم_طلب_الصيانة:')}</strong> ${maintenanceRequest?.request_number || action.maintenance_request_id}</p>
+                          <p><strong>{t('pages.maintenance.نوع_الإجراء:')}</strong> ${action.action_type}</p>
+                          <p><strong>{t('pages.maintenance.الوصف:')}</strong> ${action.description || "-"}</p>
+                          <p><strong>{t('pages.maintenance.المنفذ:')}</strong> ${performedByUser ? performedByUser.full_name || performedByUser.username : action.performed_by}</p>
+                          <p><strong>{t('pages.maintenance.طلب_قطع_غيار:')}</strong> ${action.spare_parts_request || "-"}</p>
+                          <p><strong>{t('pages.maintenance.طلب_مخرطة:')}</strong> ${action.machining_request || "-"}</p>
+                          <p><strong>{t('pages.maintenance.تقرير_إهمال_المشغل:')}</strong> ${action.operator_negligence_report || "-"}</p>
+                          <p><strong>{t('pages.maintenance.تقرير_نصي:')}</strong> ${action.text_report || "-"}</p>
+                          <p><strong>{t('pages.maintenance.موافقة_إدارية_مطلوبة:')}</strong> ${action.requires_management_action ? "نعم" : "لا"}</p>
+                          <p><strong>{t('pages.maintenance.تاريخ_التنفيذ:')}</strong> ${new Date(action.action_date).toLocaleDateString("ar")}</p>
+                          <p><strong>{t('pages.maintenance.وقت_التنفيذ:')}</strong> ${new Date(action.action_date).toLocaleTimeString("ar")}</p>
                         </div>
                       </div>
                     `;
@@ -1353,45 +1257,43 @@ function MaintenanceActionsTab({
                   };
 
                   return (
-                    <tr key={action.id} className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2 text-center font-medium text-blue-600">
+                    <tr key={action.id} className={t("pages.maintenance.name.hover_bg_gray_50")}>
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_medium_text_blue_600")}>
                         {action.action_number}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center font-medium text-green-600">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center_font_medium_text_green_600")}>
                         {maintenanceRequest?.request_number ||
                           `MO${action.maintenance_request_id.toString().padStart(3, "0")}`}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center")}>
                         <Badge
                           variant="outline"
-                          className="bg-blue-50 text-blue-700"
+                          className={t("pages.maintenance.name.bg_blue_50_text_blue_700")}
                         >
                           {action.action_type}
                         </Badge>
                       </td>
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2")}>
                         {action.description || "-"}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center")}>
                         {performedByUser
                           ? performedByUser.full_name ||
                             performedByUser.username
                           : action.performed_by}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2")}>
                         {action.spare_parts_request || "-"}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2")}>
                         {action.machining_request || "-"}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center")}>
                         {action.requires_management_action ? (
-                          <Badge variant="destructive">مطلوب</Badge>
-                        ) : (
-                          <Badge variant="secondary">غير مطلوب</Badge>
+                          <Badge variant="destructive">{t('pages.maintenance.مطلوب')}</Badge>{t('pages.maintenance.)_:_(')}<Badge variant="secondary">{t('pages.maintenance.غير_مطلوب')}</Badge>
                         )}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center")}>
                         {new Date(action.action_date).toLocaleDateString(
                           "en-US",
                           {
@@ -1401,7 +1303,7 @@ function MaintenanceActionsTab({
                           },
                         )}
                         <br />
-                        <span className="text-xs text-gray-500">
+                        <span className={t("pages.maintenance.name.text_xs_text_gray_500")}>
                           {new Date(action.action_date).toLocaleTimeString(
                             "en-US",
                             {
@@ -1412,43 +1314,43 @@ function MaintenanceActionsTab({
                           )}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        <div className="flex justify-center gap-1">
+                      <td className={t("pages.maintenance.name.border_border_gray_300_px_4_py_2_text_center")}>
+                        <div className={t("pages.maintenance.name.flex_justify_center_gap_1")}>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200 h-8 w-8 p-0"
+                            className={t("pages.maintenance.name.bg_blue_50_text_blue_600_hover_bg_blue_100_border_blue_200_h_8_w_8_p_0")}
                             onClick={handleView}
-                            title="عرض"
+                            title="{t('pages.maintenance.title.{t('pages.maintenance.title.عرض')}')}"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className={t("pages.maintenance.name.h_4_w_4")} />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-green-50 text-green-600 hover:bg-green-100 border-green-200 h-8 w-8 p-0"
+                            className={t("pages.maintenance.name.bg_green_50_text_green_600_hover_bg_green_100_border_green_200_h_8_w_8_p_0")}
                             onClick={handlePrint}
-                            title="طباعة"
+                            title="{t('pages.maintenance.title.{t('pages.maintenance.title.طباعة')}')}"
                           >
-                            <Printer className="h-4 w-4" />
+                            <Printer className={t("pages.maintenance.name.h_4_w_4")} />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-yellow-50 text-yellow-600 hover:bg-yellow-100 border-yellow-200 h-8 w-8 p-0"
+                            className={t("pages.maintenance.name.bg_yellow_50_text_yellow_600_hover_bg_yellow_100_border_yellow_200_h_8_w_8_p_0")}
                             onClick={handleEdit}
-                            title="تعديل"
+                            title="{t('pages.maintenance.title.{t('pages.maintenance.title.تعديل')}')}"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className={t("pages.maintenance.name.h_4_w_4")} />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            className="bg-red-50 text-red-600 hover:bg-red-100 border-red-200 h-8 w-8 p-0"
+                            className={t("pages.maintenance.name.bg_red_50_text_red_600_hover_bg_red_100_border_red_200_h_8_w_8_p_0")}
                             onClick={handleDelete}
-                            title="حذف"
+                            title="{t('pages.maintenance.title.{t('pages.maintenance.title.حذف')}')}"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className={t("pages.maintenance.name.h_4_w_4")} />
                           </Button>
                         </div>
                       </td>
@@ -1457,11 +1359,9 @@ function MaintenanceActionsTab({
                 })}
               </tbody>
             </table>
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>لا توجد إجراءات صيانة مسجلة</p>
+          </div>{t('pages.maintenance.)_:_(')}<div className={t("pages.maintenance.name.text_center_py_8_text_gray_500")}>
+            <CheckCircle className={t("pages.maintenance.name.h_12_w_12_mx_auto_mb_4_opacity_50")} />
+            <p>{t('pages.maintenance.لا_توجد_إجراءات_صيانة_مسجلة')}</p>
           </div>
         )}
       </CardContent>
@@ -1526,54 +1426,42 @@ function MaintenanceReportsTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>بلاغات الصيانة</span>
+        <CardTitle className={t("pages.maintenance.name.flex_items_center_justify_between")}>
+          <span>{t('pages.maintenance.بلاغات_الصيانة')}</span>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة بلاغ جديد
-              </Button>
+                <Plus className={t("pages.maintenance.name.h_4_w_4_ml_2")} />{t('pages.maintenance.إضافة_بلاغ_جديد')}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className={t("pages.maintenance.name.max_w_4xl")}>
               <DialogHeader>
-                <DialogTitle>إضافة بلاغ صيانة جديد</DialogTitle>
+                <DialogTitle>{t('pages.maintenance.إضافة_بلاغ_صيانة_جديد')}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
+                  className={t("pages.maintenance.name.space_y_4")}
                 >
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="report_type"
+                      name="{t('pages.maintenance.name.report_type')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>نوع البلاغ</FormLabel>
+                          <FormLabel>{t('pages.maintenance.نوع_البلاغ')}</FormLabel>
                           <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر نوع البلاغ" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_نوع_البلاغ')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="breakdown">
-                                عطل في الماكينة
-                              </SelectItem>
-                              <SelectItem value="malfunction">
-                                خلل في الأداء
-                              </SelectItem>
-                              <SelectItem value="safety">مشكلة أمان</SelectItem>
-                              <SelectItem value="quality">
-                                مشكلة جودة
-                              </SelectItem>
-                              <SelectItem value="preventive">
-                                صيانة وقائية مطلوبة
-                              </SelectItem>
-                              <SelectItem value="spare_parts">
-                                طلب قطع غيار
-                              </SelectItem>
+                              <SelectItem value="breakdown">{t('pages.maintenance.عطل_في_الماكينة')}</SelectItem>
+                              <SelectItem value="malfunction">{t('pages.maintenance.خلل_في_الأداء')}</SelectItem>
+                              <SelectItem value="safety">{t('pages.maintenance.مشكلة_أمان')}</SelectItem>
+                              <SelectItem value="quality">{t('pages.maintenance.مشكلة_جودة')}</SelectItem>
+                              <SelectItem value="preventive">{t('pages.maintenance.صيانة_وقائية_مطلوبة')}</SelectItem>
+                              <SelectItem value="spare_parts">{t('pages.maintenance.طلب_قطع_غيار')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1583,21 +1471,21 @@ function MaintenanceReportsTab({
 
                     <FormField
                       control={form.control}
-                      name="severity"
+                      name="{t('pages.maintenance.name.severity')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>شدة المشكلة</FormLabel>
+                          <FormLabel>{t('pages.maintenance.شدة_المشكلة')}</FormLabel>
                           <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر شدة المشكلة" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_شدة_المشكلة')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="low">منخفضة</SelectItem>
-                              <SelectItem value="medium">متوسطة</SelectItem>
-                              <SelectItem value="high">عالية</SelectItem>
-                              <SelectItem value="critical">حرجة</SelectItem>
+                              <SelectItem value="low">{t('pages.maintenance.منخفضة')}</SelectItem>
+                              <SelectItem value="medium">{t('pages.maintenance.متوسطة')}</SelectItem>
+                              <SelectItem value="high">{t('pages.maintenance.عالية')}</SelectItem>
+                              <SelectItem value="critical">{t('pages.maintenance.حرجة')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1608,12 +1496,12 @@ function MaintenanceReportsTab({
 
                   <FormField
                     control={form.control}
-                    name="title"
+                    name="{t('pages.maintenance.name.title')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>عنوان البلاغ</FormLabel>
+                        <FormLabel>{t('pages.maintenance.عنوان_البلاغ')}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="عنوان مختصر للمشكلة" />
+                          <Input {...field} placeholder="{t('pages.maintenance.placeholder.عنوان_مختصر_للمشكلة')}" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1622,14 +1510,14 @@ function MaintenanceReportsTab({
 
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="{t('pages.maintenance.name.description')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>وصف المشكلة</FormLabel>
+                        <FormLabel>{t('pages.maintenance.وصف_المشكلة')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="وصف مفصل للمشكلة والأعراض"
+                            placeholder="{t('pages.maintenance.placeholder.وصف_مفصل_للمشكلة_والأعراض')}"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1637,17 +1525,17 @@ function MaintenanceReportsTab({
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="machine_id"
+                      name="{t('pages.maintenance.name.machine_id')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الماكينة (اختياري)</FormLabel>
+                          <FormLabel>{t('pages.maintenance.الماكينة_(اختياري)')}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="رقم أو اسم الماكينة"
+                              placeholder="{t('pages.maintenance.placeholder.رقم_أو_اسم_الماكينة')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1657,10 +1545,10 @@ function MaintenanceReportsTab({
 
                     <FormField
                       control={form.control}
-                      name="estimated_repair_time"
+                      name="{t('pages.maintenance.name.estimated_repair_time')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الوقت المتوقع للإصلاح (ساعات)</FormLabel>
+                          <FormLabel>{t('pages.maintenance.الوقت_المتوقع_للإصلاح_(ساعات)')}</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
@@ -1677,15 +1565,13 @@ function MaintenanceReportsTab({
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2">
+                  <div className={t("pages.maintenance.name.flex_justify_end_gap_2")}>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >
-                      إلغاء
-                    </Button>
-                    <Button type="submit">إرسال البلاغ</Button>
+                    >{t('pages.maintenance.إلغاء')}</Button>
+                    <Button type="submit">{t('pages.maintenance.إرسال_البلاغ')}</Button>
                   </div>
                 </form>
               </Form>
@@ -1695,21 +1581,18 @@ function MaintenanceReportsTab({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              جاري التحميل...
-            </p>
+          <div className={t("pages.maintenance.name.text_center_py_8")}>
+            <div className={t("pages.maintenance.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
+            <p className={t("pages.maintenance.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.maintenance.جاري_التحميل...')}</p>
           </div>
-        ) : Array.isArray(reports) && reports.length > 0 ? (
-          <div className="space-y-4">
+        ) : Array.isArray(reports) && reports.length >{t('pages.maintenance.0_?_(')}<div className={t("pages.maintenance.name.space_y_4")}>
             {reports.map((report: any) => (
-              <div key={report.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">
+              <div key={report.id} className={t("pages.maintenance.name.border_rounded_lg_p_4")}>
+                <div className={t("pages.maintenance.name.flex_justify_between_items_start_mb_2")}>
+                  <h3 className={t("pages.maintenance.name.font_semibold")}>
                     {report.report_number} - {report.title}
                   </h3>
-                  <div className="flex gap-2">
+                  <div className={t("pages.maintenance.name.flex_gap_2")}>
                     <Badge
                       variant={
                         report.severity === "critical"
@@ -1722,16 +1605,16 @@ function MaintenanceReportsTab({
                     <Badge>{report.status}</Badge>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className={t("pages.maintenance.name.text_sm_text_gray_600_mb_2")}>
                   {report.description}
                 </p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4_text_sm")}>
                   <div>
-                    <span className="font-medium">نوع البلاغ: </span>
+                    <span className={t("pages.maintenance.name.font_medium")}>{t('pages.maintenance.نوع_البلاغ:')}</span>
                     {report.report_type}
                   </div>
                   <div>
-                    <span className="font-medium">تاريخ الإبلاغ: </span>
+                    <span className={t("pages.maintenance.name.font_medium")}>{t('pages.maintenance.تاريخ_الإبلاغ:')}</span>
                     {new Date(report.created_at).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "2-digit",
@@ -1741,11 +1624,9 @@ function MaintenanceReportsTab({
                 </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>لا توجد بلاغات صيانة</p>
+          </div>{t('pages.maintenance.)_:_(')}<div className={t("pages.maintenance.name.text_center_py_8_text_gray_500")}>
+            <FileText className={t("pages.maintenance.name.h_12_w_12_mx_auto_mb_4_opacity_50")} />
+            <p>{t('pages.maintenance.لا_توجد_بلاغات_صيانة')}</p>
           </div>
         )}
       </CardContent>
@@ -1811,35 +1692,33 @@ function OperatorNegligenceTab({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>بلاغات إهمال المشغلين</span>
+        <CardTitle className={t("pages.maintenance.name.flex_items_center_justify_between")}>
+          <span>{t('pages.maintenance.بلاغات_إهمال_المشغلين')}</span>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
-                <Plus className="h-4 w-4 ml-2" />
-                إضافة بلاغ إهمال
-              </Button>
+                <Plus className={t("pages.maintenance.name.h_4_w_4_ml_2")} />{t('pages.maintenance.إضافة_بلاغ_إهمال')}</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl">
+            <DialogContent className={t("pages.maintenance.name.max_w_4xl")}>
               <DialogHeader>
-                <DialogTitle>إضافة بلاغ إهمال مشغل</DialogTitle>
+                <DialogTitle>{t('pages.maintenance.إضافة_بلاغ_إهمال_مشغل')}</DialogTitle>
               </DialogHeader>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
+                  className={t("pages.maintenance.name.space_y_4")}
                 >
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="operator_id"
+                      name="{t('pages.maintenance.name.operator_id')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>معرف المشغل</FormLabel>
+                          <FormLabel>{t('pages.maintenance.معرف_المشغل')}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="رقم المشغل أو كود التعريف"
+                              placeholder="{t('pages.maintenance.placeholder.رقم_المشغل_أو_كود_التعريف')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1849,14 +1728,14 @@ function OperatorNegligenceTab({
 
                     <FormField
                       control={form.control}
-                      name="operator_name"
+                      name="{t('pages.maintenance.name.operator_name')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>اسم المشغل</FormLabel>
+                          <FormLabel>{t('pages.maintenance.اسم_المشغل')}</FormLabel>
                           <FormControl>
                             <Input
                               {...field}
-                              placeholder="الاسم الكامل للمشغل"
+                              placeholder="{t('pages.maintenance.placeholder.الاسم_الكامل_للمشغل')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1865,13 +1744,13 @@ function OperatorNegligenceTab({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="incident_date"
+                      name="{t('pages.maintenance.name.incident_date')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>تاريخ الحادث</FormLabel>
+                          <FormLabel>{t('pages.maintenance.تاريخ_الحادث')}</FormLabel>
                           <FormControl>
                             <Input type="date" {...field} />
                           </FormControl>
@@ -1882,35 +1761,23 @@ function OperatorNegligenceTab({
 
                     <FormField
                       control={form.control}
-                      name="incident_type"
+                      name="{t('pages.maintenance.name.incident_type')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>نوع الإهمال</FormLabel>
+                          <FormLabel>{t('pages.maintenance.نوع_الإهمال')}</FormLabel>
                           <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر نوع الإهمال" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_نوع_الإهمال')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="safety_violation">
-                                مخالفة قواعد الأمان
-                              </SelectItem>
-                              <SelectItem value="equipment_misuse">
-                                سوء استخدام المعدات
-                              </SelectItem>
-                              <SelectItem value="procedure_violation">
-                                عدم اتباع الإجراءات
-                              </SelectItem>
-                              <SelectItem value="quality_negligence">
-                                إهمال الجودة
-                              </SelectItem>
-                              <SelectItem value="time_violation">
-                                مخالفة الوقت
-                              </SelectItem>
-                              <SelectItem value="maintenance_neglect">
-                                إهمال الصيانة
-                              </SelectItem>
+                              <SelectItem value="safety_violation">{t('pages.maintenance.مخالفة_قواعد_الأمان')}</SelectItem>
+                              <SelectItem value="equipment_misuse">{t('pages.maintenance.سوء_استخدام_المعدات')}</SelectItem>
+                              <SelectItem value="procedure_violation">{t('pages.maintenance.عدم_اتباع_الإجراءات')}</SelectItem>
+                              <SelectItem value="quality_negligence">{t('pages.maintenance.إهمال_الجودة')}</SelectItem>
+                              <SelectItem value="time_violation">{t('pages.maintenance.مخالفة_الوقت')}</SelectItem>
+                              <SelectItem value="maintenance_neglect">{t('pages.maintenance.إهمال_الصيانة')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1921,14 +1788,14 @@ function OperatorNegligenceTab({
 
                   <FormField
                     control={form.control}
-                    name="description"
+                    name="{t('pages.maintenance.name.description')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>وصف الحادث</FormLabel>
+                        <FormLabel>{t('pages.maintenance.وصف_الحادث')}</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="وصف مفصل لما حدث والظروف المحيطة"
+                            placeholder="{t('pages.maintenance.placeholder.وصف_مفصل_لما_حدث_والظروف_المحيطة')}"
                           />
                         </FormControl>
                         <FormMessage />
@@ -1936,24 +1803,24 @@ function OperatorNegligenceTab({
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                     <FormField
                       control={form.control}
-                      name="severity"
+                      name="{t('pages.maintenance.name.severity')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>درجة خطورة الإهمال</FormLabel>
+                          <FormLabel>{t('pages.maintenance.درجة_خطورة_الإهمال')}</FormLabel>
                           <Select onValueChange={field.onChange}>
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue placeholder="اختر درجة الخطورة" />
+                                <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_درجة_الخطورة')}" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="low">منخفضة</SelectItem>
-                              <SelectItem value="medium">متوسطة</SelectItem>
-                              <SelectItem value="high">عالية</SelectItem>
-                              <SelectItem value="critical">حرجة</SelectItem>
+                              <SelectItem value="low">{t('pages.maintenance.منخفضة')}</SelectItem>
+                              <SelectItem value="medium">{t('pages.maintenance.متوسطة')}</SelectItem>
+                              <SelectItem value="high">{t('pages.maintenance.عالية')}</SelectItem>
+                              <SelectItem value="critical">{t('pages.maintenance.حرجة')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -1963,14 +1830,14 @@ function OperatorNegligenceTab({
 
                     <FormField
                       control={form.control}
-                      name="immediate_actions_taken"
+                      name="{t('pages.maintenance.name.immediate_actions_taken')}"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>الإجراءات المتخذة فوراً</FormLabel>
+                          <FormLabel>{t('pages.maintenance.الإجراءات_المتخذة_فوراً')}</FormLabel>
                           <FormControl>
                             <Textarea
                               {...field}
-                              placeholder="ما تم اتخاذه من إجراءات فورية"
+                              placeholder="{t('pages.maintenance.placeholder.ما_تم_اتخاذه_من_إجراءات_فورية')}"
                             />
                           </FormControl>
                           <FormMessage />
@@ -1979,15 +1846,13 @@ function OperatorNegligenceTab({
                     />
                   </div>
 
-                  <div className="flex justify-end gap-2">
+                  <div className={t("pages.maintenance.name.flex_justify_end_gap_2")}>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >
-                      إلغاء
-                    </Button>
-                    <Button type="submit">إرسال البلاغ</Button>
+                    >{t('pages.maintenance.إلغاء')}</Button>
+                    <Button type="submit">{t('pages.maintenance.إرسال_البلاغ')}</Button>
                   </div>
                 </form>
               </Form>
@@ -1997,21 +1862,18 @@ function OperatorNegligenceTab({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              جاري التحميل...
-            </p>
+          <div className={t("pages.maintenance.name.text_center_py_8")}>
+            <div className={t("pages.maintenance.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
+            <p className={t("pages.maintenance.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.maintenance.جاري_التحميل...')}</p>
           </div>
-        ) : Array.isArray(reports) && reports.length > 0 ? (
-          <div className="space-y-4">
+        ) : Array.isArray(reports) && reports.length >{t('pages.maintenance.0_?_(')}<div className={t("pages.maintenance.name.space_y_4")}>
             {reports.map((report: any) => (
-              <div key={report.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold">
+              <div key={report.id} className={t("pages.maintenance.name.border_rounded_lg_p_4")}>
+                <div className={t("pages.maintenance.name.flex_justify_between_items_start_mb_2")}>
+                  <h3 className={t("pages.maintenance.name.font_semibold")}>
                     {report.report_number} - {report.operator_name}
                   </h3>
-                  <div className="flex gap-2">
+                  <div className={t("pages.maintenance.name.flex_gap_2")}>
                     <Badge
                       variant={
                         report.severity === "critical"
@@ -2024,26 +1886,24 @@ function OperatorNegligenceTab({
                     <Badge>{report.status}</Badge>
                   </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className={t("pages.maintenance.name.text_sm_text_gray_600_mb_2")}>
                   {report.description}
                 </p>
-                <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4_text_sm")}>
                   <div>
-                    <span className="font-medium">نوع الإهمال: </span>
+                    <span className={t("pages.maintenance.name.font_medium")}>{t('pages.maintenance.نوع_الإهمال:')}</span>
                     {report.incident_type}
                   </div>
                   <div>
-                    <span className="font-medium">تاريخ الحادث: </span>
+                    <span className={t("pages.maintenance.name.font_medium")}>{t('pages.maintenance.تاريخ_الحادث:')}</span>
                     {new Date(report.incident_date).toLocaleDateString("ar")}
                   </div>
                 </div>
               </div>
             ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>لا توجد بلاغات إهمال مسجلة</p>
+          </div>{t('pages.maintenance.)_:_(')}<div className={t("pages.maintenance.name.text_center_py_8_text_gray_500")}>
+            <Users className={t("pages.maintenance.name.h_12_w_12_mx_auto_mb_4_opacity_50")} />
+            <p>{t('pages.maintenance.لا_توجد_بلاغات_إهمال_مسجلة')}</p>
           </div>
         )}
       </CardContent>
@@ -2081,35 +1941,33 @@ function MaintenanceRequestDialog({
 
   return (
     <DialogContent
-      className="sm:max-w-[600px]"
+      className={t("pages.maintenance.name.sm_max_w_600px_")}
       aria-describedby="maintenance-request-description"
     >
       <DialogHeader>
-        <DialogTitle>طلب صيانة جديد</DialogTitle>
+        <DialogTitle>{t('pages.maintenance.طلب_صيانة_جديد')}</DialogTitle>
         <p
           id="maintenance-request-description"
-          className="text-sm text-gray-600"
-        >
-          أنشئ طلب صيانة جديد للمعدات التي تحتاج إلى إصلاح أو صيانة
-        </p>
+          className={t("pages.maintenance.name.text_sm_text_gray_600")}
+        >{t('pages.maintenance.أنشئ_طلب_صيانة_جديد_للمعدات_التي_تحتاج_إلى_إصلاح_أو_صيانة')}</p>
       </DialogHeader>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={form.handleSubmit(handleSubmit)} className={t("pages.maintenance.name.space_y_4")}>
+          <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
             <FormField
               control={form.control}
-              name="machine_id"
+              name="{t('pages.maintenance.name.machine_id')}"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>المعدة</FormLabel>
+                  <FormLabel>{t('pages.maintenance.المعدة')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر المعدة" />
+                        <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_المعدة')}" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -2139,23 +1997,23 @@ function MaintenanceRequestDialog({
 
             <FormField
               control={form.control}
-              name="issue_type"
+              name="{t('pages.maintenance.name.issue_type')}"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>نوع المشكلة</FormLabel>
+                  <FormLabel>{t('pages.maintenance.نوع_المشكلة')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر نوع المشكلة" />
+                        <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_نوع_المشكلة')}" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="mechanical">ميكانيكية</SelectItem>
-                      <SelectItem value="electrical">كهربائية</SelectItem>
-                      <SelectItem value="other">أخرى</SelectItem>
+                      <SelectItem value="mechanical">{t('pages.maintenance.ميكانيكية')}</SelectItem>
+                      <SelectItem value="electrical">{t('pages.maintenance.كهربائية')}</SelectItem>
+                      <SelectItem value="other">{t('pages.maintenance.أخرى')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -2164,26 +2022,26 @@ function MaintenanceRequestDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
             <FormField
               control={form.control}
-              name="urgency_level"
+              name="{t('pages.maintenance.name.urgency_level')}"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>مستوى الإلحاح</FormLabel>
+                  <FormLabel>{t('pages.maintenance.مستوى_الإلحاح')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     value={field.value || ""}
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="اختر مستوى الإلحاح" />
+                        <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_مستوى_الإلحاح')}" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="normal">عادي</SelectItem>
-                      <SelectItem value="medium">متوسط</SelectItem>
-                      <SelectItem value="urgent">عاجل</SelectItem>
+                      <SelectItem value="normal">{t('pages.maintenance.عادي')}</SelectItem>
+                      <SelectItem value="medium">{t('pages.maintenance.متوسط')}</SelectItem>
+                      <SelectItem value="urgent">{t('pages.maintenance.عاجل')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -2194,21 +2052,21 @@ function MaintenanceRequestDialog({
 
           <FormField
             control={form.control}
-            name="assigned_to"
+            name="{t('pages.maintenance.name.assigned_to')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>المكلف بالإصلاح (اختياري)</FormLabel>
+                <FormLabel>{t('pages.maintenance.المكلف_بالإصلاح_(اختياري)')}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   value={field.value || ""}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="اختر الفني" />
+                      <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_الفني')}" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="none">بدون تكليف</SelectItem>
+                    <SelectItem value="none">{t('pages.maintenance.بدون_تكليف')}</SelectItem>
                     {Array.isArray(users) &&
                       users
                         .filter((user: any) => user.role === "technician")
@@ -2226,14 +2084,14 @@ function MaintenanceRequestDialog({
 
           <FormField
             control={form.control}
-            name="description"
+            name="{t('pages.maintenance.name.description')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>وصف المشكلة</FormLabel>
+                <FormLabel>{t('pages.maintenance.وصف_المشكلة')}</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="اشرح المشكلة أو نوع الصيانة المطلوبة..."
-                    className="min-h-[100px]"
+                    placeholder="{t('pages.maintenance.placeholder.اشرح_المشكلة_أو_نوع_الصيانة_المطلوبة...')}"
+                    className={t("pages.maintenance.name.min_h_100px_")}
                     {...field}
                   />
                 </FormControl>
@@ -2242,11 +2100,11 @@ function MaintenanceRequestDialog({
             )}
           />
 
-          <div className="flex justify-end gap-2">
+          <div className={t("pages.maintenance.name.flex_justify_end_gap_2")}>
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className={t("pages.maintenance.name.bg_blue_600_hover_bg_blue_700_text_white")}
             >
               {isLoading ? "جاري الإنشاء..." : "إنشاء الطلب"}
             </Button>
@@ -2265,11 +2123,7 @@ function SparePartsTab({
   spareParts: any[];
   isLoading: boolean;
 }) {
-  const [selectedPart, setSelectedPart] = useState<any>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [partToDelete, setPartToDelete] = useState<any>(null);
+  const [selectedPart, setSelectedPart] = useState<any>{t('pages.maintenance.(null);_const_[iscreatedialogopen,_setiscreatedialogopen]_=_usestate(false);_const_[isviewdialogopen,_setisviewdialogopen]_=_usestate(false);_const_[iseditdialogopen,_setiseditdialogopen]_=_usestate(false);_const_[parttodelete,_setparttodelete]_=_usestate')}<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -2345,31 +2199,25 @@ function SparePartsTab({
   };
 
   return (
-    <div className="space-y-6">
+    <div className={t("pages.maintenance.name.space_y_6")}>
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">
-          إدارة قطع الغيار
-        </h3>
+      <div className={t("pages.maintenance.name.flex_justify_between_items_center")}>
+        <h3 className={t("pages.maintenance.name.text_lg_font_semibold_text_gray_900")}>{t('pages.maintenance.إدارة_قطع_الغيار')}</h3>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Plus className="h-4 w-4 ml-2" />
-              إضافة قطعة غيار جديدة
-            </Button>
+            <Button className={t("pages.maintenance.name.bg_blue_600_hover_bg_blue_700_text_white")}>
+              <Plus className={t("pages.maintenance.name.h_4_w_4_ml_2")} />{t('pages.maintenance.إضافة_قطعة_غيار_جديدة')}</Button>
           </DialogTrigger>
           <DialogContent
-            className="max-w-md"
+            className={t("pages.maintenance.name.max_w_md")}
             aria-describedby="spare-part-dialog-description"
           >
             <DialogHeader>
-              <DialogTitle>إضافة قطعة غيار جديدة</DialogTitle>
+              <DialogTitle>{t('pages.maintenance.إضافة_قطعة_غيار_جديدة')}</DialogTitle>
               <div
                 id="spare-part-dialog-description"
-                className="text-sm text-gray-600"
-              >
-                أضف قطعة غيار جديدة إلى المخزون
-              </div>
+                className={t("pages.maintenance.name.text_sm_text_gray_600")}
+              >{t('pages.maintenance.أضف_قطعة_غيار_جديدة_إلى_المخزون')}</div>
             </DialogHeader>
             <SparePartForm
               onSubmit={createSparePartMutation.mutate}
@@ -2381,100 +2229,79 @@ function SparePartsTab({
 
       {/* Spare Parts Table */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className={t("pages.maintenance.name.p_0")}>
           {isLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-500">جاري التحميل...</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className={t("pages.maintenance.name.p_8_text_center")}>
+              <div className={t("pages.maintenance.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
+              <p className={t("pages.maintenance.name.mt_2_text_gray_500")}>{t('pages.maintenance.جاري_التحميل...')}</p>
+            </div>{t('pages.maintenance.)_:_(')}<div className={t("pages.maintenance.name.overflow_x_auto")}>
+              <table className={t("pages.maintenance.name.min_w_full_divide_y_divide_gray_200")}>
+                <thead className={t("pages.maintenance.name.bg_gray_50")}>
                   <tr>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      رقم القطعة
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      اسم الماكينة
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      اسم القطعة
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      الكود
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      الرقم التسلسلي
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      المواصفات
-                    </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                      الإجراءات
-                    </th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.رقم_القطعة')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.اسم_الماكينة')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.اسم_القطعة')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.الكود')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.الرقم_التسلسلي')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.المواصفات')}</th>
+                    <th className={t("pages.maintenance.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.maintenance.الإجراءات')}</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className={t("pages.maintenance.name.bg_white_divide_y_divide_gray_200")}>
                   {Array.isArray(spareParts) && spareParts.length > 0 ? (
                     spareParts.map((part: any) => (
-                      <tr key={part.part_id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
+                      <tr key={part.part_id} className={t("pages.maintenance.name.hover_bg_gray_50")}>
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
                           {part.part_id}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                           {part.machine_name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                           {part.part_name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                           {part.code}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
                           {part.serial_number}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate text-center">
+                        <td className={t("pages.maintenance.name.px_6_py_4_text_sm_text_gray_500_max_w_xs_truncate_text_center")}>
                           {part.specifications}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                          <div className="flex justify-center gap-2">
+                        <td className={t("pages.maintenance.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                          <div className={t("pages.maintenance.name.flex_justify_center_gap_2")}>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0"
+                              className={t("pages.maintenance.name.h_8_w_8_p_0")}
                               onClick={() => handleView(part)}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className={t("pages.maintenance.name.h_4_w_4")} />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0"
+                              className={t("pages.maintenance.name.h_8_w_8_p_0")}
                               onClick={() => handleEdit(part)}
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className={t("pages.maintenance.name.h_4_w_4")} />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-8 w-8 p-0 text-red-600"
+                              className={t("pages.maintenance.name.h_8_w_8_p_0_text_red_600")}
                               onClick={() => handleDelete(part)}
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className={t("pages.maintenance.name.h_4_w_4")} />
                             </Button>
                           </div>
                         </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
+                      </tr>{t('pages.maintenance.))_)_:_(')}<tr>
                       <td
                         colSpan={7}
-                        className="px-6 py-4 text-center text-gray-500"
-                      >
-                        لا توجد قطع غيار مسجلة
-                      </td>
+                        className={t("pages.maintenance.name.px_6_py_4_text_center_text_gray_500")}
+                      >{t('pages.maintenance.لا_توجد_قطع_غيار_مسجلة')}</td>
                     </tr>
                   )}
                 </tbody>
@@ -2487,69 +2314,55 @@ function SparePartsTab({
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent
-          className="max-w-md"
+          className={t("pages.maintenance.name.max_w_md")}
           aria-describedby="view-spare-part-dialog-description"
         >
           <DialogHeader>
-            <DialogTitle>تفاصيل قطعة الغيار</DialogTitle>
+            <DialogTitle>{t('pages.maintenance.تفاصيل_قطعة_الغيار')}</DialogTitle>
             <div
               id="view-spare-part-dialog-description"
-              className="text-sm text-gray-600"
-            >
-              عرض تفاصيل قطعة الغيار المحددة
-            </div>
+              className={t("pages.maintenance.name.text_sm_text_gray_600")}
+            >{t('pages.maintenance.عرض_تفاصيل_قطعة_الغيار_المحددة')}</div>
           </DialogHeader>
           {selectedPart && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className={t("pages.maintenance.name.space_y_4")}>
+              <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    رقم القطعة
-                  </label>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.رقم_القطعة')}</label>
+                  <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                     {selectedPart.part_id}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    الكود
-                  </label>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.الكود')}</label>
+                  <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                     {selectedPart.code}
                   </p>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  اسم الماكينة
-                </label>
-                <p className="text-sm text-gray-900 mt-1">
+                <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.اسم_الماكينة')}</label>
+                <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                   {selectedPart.machine_name}
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    اسم القطعة
-                  </label>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.اسم_القطعة')}</label>
+                  <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                     {selectedPart.part_name}
                   </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    الرقم التسلسلي
-                  </label>
-                  <p className="text-sm text-gray-900 mt-1">
+                  <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.الرقم_التسلسلي')}</label>
+                  <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                     {selectedPart.serial_number}
                   </p>
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  المواصفات
-                </label>
-                <p className="text-sm text-gray-900 mt-1">
+                <label className={t("pages.maintenance.name.text_sm_font_medium_text_gray_700")}>{t('pages.maintenance.المواصفات')}</label>
+                <p className={t("pages.maintenance.name.text_sm_text_gray_900_mt_1")}>
                   {selectedPart.specifications}
                 </p>
               </div>
@@ -2561,17 +2374,15 @@ function SparePartsTab({
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent
-          className="max-w-md"
+          className={t("pages.maintenance.name.max_w_md")}
           aria-describedby="edit-spare-part-dialog-description"
         >
           <DialogHeader>
-            <DialogTitle>تعديل قطعة الغيار</DialogTitle>
+            <DialogTitle>{t('pages.maintenance.تعديل_قطعة_الغيار')}</DialogTitle>
             <div
               id="edit-spare-part-dialog-description"
-              className="text-sm text-gray-600"
-            >
-              تعديل بيانات قطعة الغيار
-            </div>
+              className={t("pages.maintenance.name.text_sm_text_gray_600")}
+            >{t('pages.maintenance.تعديل_بيانات_قطعة_الغيار')}</div>
           </DialogHeader>
           {selectedPart && (
             <SparePartEditForm
@@ -2588,28 +2399,23 @@ function SparePartsTab({
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!partToDelete} onOpenChange={() => setPartToDelete(null)}>
         <DialogContent
-          className="max-w-md"
+          className={t("pages.maintenance.name.max_w_md")}
           aria-describedby="delete-spare-part-dialog-description"
         >
           <DialogHeader>
-            <DialogTitle>تأكيد الحذف</DialogTitle>
+            <DialogTitle>{t('pages.maintenance.تأكيد_الحذف')}</DialogTitle>
             <div
               id="delete-spare-part-dialog-description"
-              className="text-sm text-gray-600"
-            >
-              هل أنت متأكد من حذف قطعة الغيار؟
-            </div>
+              className={t("pages.maintenance.name.text_sm_text_gray_600")}
+            >{t('pages.maintenance.هل_أنت_متأكد_من_حذف_قطعة_الغيار؟')}</div>
           </DialogHeader>
           {partToDelete && (
-            <div className="space-y-4">
-              <p className="text-sm text-gray-700">
-                سيتم حذف قطعة الغيار <strong>{partToDelete.part_id}</strong> -{" "}
+            <div className={t("pages.maintenance.name.space_y_4")}>
+              <p className={t("pages.maintenance.name.text_sm_text_gray_700")}>{t('pages.maintenance.سيتم_حذف_قطعة_الغيار')}<strong>{partToDelete.part_id}</strong> -{" "}
                 {partToDelete.part_name} نهائياً.
               </p>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setPartToDelete(null)}>
-                  إلغاء
-                </Button>
+              <div className={t("pages.maintenance.name.flex_justify_end_gap_2")}>
+                <Button variant="outline" onClick={() => setPartToDelete(null)}>{t('pages.maintenance.إلغاء')}</Button>
                 <Button
                   variant="destructive"
                   onClick={confirmDelete}
@@ -2679,16 +2485,16 @@ function SparePartForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className={t("pages.maintenance.name.space_y_4")}>
+        <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
           <FormField
             control={form.control}
-            name="part_id"
+            name="{t('pages.maintenance.name.part_id')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>رقم القطعة (تلقائي)</FormLabel>
+                <FormLabel>{t('pages.maintenance.رقم_القطعة_(تلقائي)')}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled className="bg-gray-100" />
+                  <Input {...field} disabled className={t("pages.maintenance.name.bg_gray_100")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2697,12 +2503,12 @@ function SparePartForm({
 
           <FormField
             control={form.control}
-            name="code"
+            name="{t('pages.maintenance.name.code')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الكود</FormLabel>
+                <FormLabel>{t('pages.maintenance.الكود')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="A8908" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.a8908')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2712,14 +2518,14 @@ function SparePartForm({
 
         <FormField
           control={form.control}
-          name="machine_name"
+          name="{t('pages.maintenance.name.machine_name')}"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>اسم الماكينة</FormLabel>
+              <FormLabel>{t('pages.maintenance.اسم_الماكينة')}</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر الماكينة" />
+                    <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_الماكينة')}" />
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
@@ -2731,12 +2537,7 @@ function SparePartForm({
                           }
                         >
                           {machine.name_ar || machine.name} ({machine.id})
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no_machines">
-                        لا توجد ماكينات متاحة
-                      </SelectItem>
+                        </SelectItem>{t('pages.maintenance.))_)_:_(')}<SelectItem value="no_machines">{t('pages.maintenance.لا_توجد_ماكينات_متاحة')}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -2746,15 +2547,15 @@ function SparePartForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
           <FormField
             control={form.control}
-            name="part_name"
+            name="{t('pages.maintenance.name.part_name')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>اسم القطعة</FormLabel>
+                <FormLabel>{t('pages.maintenance.اسم_القطعة')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="ماطور" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.ماطور')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2763,12 +2564,12 @@ function SparePartForm({
 
           <FormField
             control={form.control}
-            name="serial_number"
+            name="{t('pages.maintenance.name.serial_number')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الرقم التسلسلي</FormLabel>
+                <FormLabel>{t('pages.maintenance.الرقم_التسلسلي')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="E5SH973798" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.e5sh973798')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2778,23 +2579,23 @@ function SparePartForm({
 
         <FormField
           control={form.control}
-          name="specifications"
+          name="{t('pages.maintenance.name.specifications')}"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>المواصفات</FormLabel>
+              <FormLabel>{t('pages.maintenance.المواصفات')}</FormLabel>
               <FormControl>
-                <Textarea placeholder="قوة 380 فولت و 10 امبير" {...field} />
+                <Textarea placeholder="{t('pages.maintenance.placeholder.قوة_380_فولت_و_10_امبير')}" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className={t("pages.maintenance.name.flex_justify_end_gap_2_pt_4")}>
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className={t("pages.maintenance.name.bg_blue_600_hover_bg_blue_700_text_white")}
           >
             {isLoading ? "جاري الحفظ..." : "حفظ"}
           </Button>
@@ -2833,16 +2634,16 @@ function SparePartEditForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className={t("pages.maintenance.name.space_y_4")}>
+        <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
           <FormField
             control={form.control}
-            name="part_id"
+            name="{t('pages.maintenance.name.part_id')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>رقم القطعة</FormLabel>
+                <FormLabel>{t('pages.maintenance.رقم_القطعة')}</FormLabel>
                 <FormControl>
-                  <Input {...field} disabled className="bg-gray-100" />
+                  <Input {...field} disabled className={t("pages.maintenance.name.bg_gray_100")} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2851,12 +2652,12 @@ function SparePartEditForm({
 
           <FormField
             control={form.control}
-            name="code"
+            name="{t('pages.maintenance.name.code')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الكود</FormLabel>
+                <FormLabel>{t('pages.maintenance.الكود')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="A8908" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.a8908')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2866,14 +2667,14 @@ function SparePartEditForm({
 
         <FormField
           control={form.control}
-          name="machine_name"
+          name="{t('pages.maintenance.name.machine_name')}"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>اسم الماكينة</FormLabel>
+              <FormLabel>{t('pages.maintenance.اسم_الماكينة')}</FormLabel>
               <FormControl>
                 <Select onValueChange={field.onChange} value={field.value}>
                   <SelectTrigger>
-                    <SelectValue placeholder="اختر الماكينة" />
+                    <SelectValue placeholder="{t('pages.maintenance.placeholder.اختر_الماكينة')}" />
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(machines) && machines.length > 0 ? (
@@ -2885,12 +2686,7 @@ function SparePartEditForm({
                           }
                         >
                           {machine.name_ar || machine.name} ({machine.id})
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no_machines">
-                        لا توجد ماكينات متاحة
-                      </SelectItem>
+                        </SelectItem>{t('pages.maintenance.))_)_:_(')}<SelectItem value="no_machines">{t('pages.maintenance.لا_توجد_ماكينات_متاحة')}</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -2900,15 +2696,15 @@ function SparePartEditForm({
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className={t("pages.maintenance.name.grid_grid_cols_2_gap_4")}>
           <FormField
             control={form.control}
-            name="part_name"
+            name="{t('pages.maintenance.name.part_name')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>اسم القطعة</FormLabel>
+                <FormLabel>{t('pages.maintenance.اسم_القطعة')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="ماطور" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.ماطور')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2917,12 +2713,12 @@ function SparePartEditForm({
 
           <FormField
             control={form.control}
-            name="serial_number"
+            name="{t('pages.maintenance.name.serial_number')}"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>الرقم التسلسلي</FormLabel>
+                <FormLabel>{t('pages.maintenance.الرقم_التسلسلي')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="E5SH973798" {...field} />
+                  <Input placeholder="{t('pages.maintenance.placeholder.e5sh973798')}" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -2932,23 +2728,23 @@ function SparePartEditForm({
 
         <FormField
           control={form.control}
-          name="specifications"
+          name="{t('pages.maintenance.name.specifications')}"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>المواصفات</FormLabel>
+              <FormLabel>{t('pages.maintenance.المواصفات')}</FormLabel>
               <FormControl>
-                <Textarea placeholder="قوة 380 فولت و 10 امبير" {...field} />
+                <Textarea placeholder="{t('pages.maintenance.placeholder.قوة_380_فولت_و_10_امبير')}" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <div className="flex justify-end gap-2 pt-4">
+        <div className={t("pages.maintenance.name.flex_justify_end_gap_2_pt_4")}>
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className={t("pages.maintenance.name.bg_blue_600_hover_bg_blue_700_text_white")}
           >
             {isLoading ? "جاري التحديث..." : "تحديث"}
           </Button>

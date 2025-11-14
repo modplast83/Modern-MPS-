@@ -74,26 +74,21 @@ export default function OrderPrintTemplate({
   );
 
   const totalQuantity = orderProductionOrders.reduce(
-    (sum: number, po: any) => sum + parseFloat(po.quantity_kg || 0),
-    0
-  );
-
-  return (
-    <>
+    (sum: number, po: any) =>{t('components.orders.OrderPrintTemplate.sum_+_parsefloat(po.quantity_kg_||_0),_0_);_return_(')}<>
       {/* Preview on screen */}
-      <div className="no-print fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">{t('orders.print.preview')}</h2>
+      <div className={t("components.orders.orderprinttemplate.name.no_print_fixed_inset_0_bg_black_bg_opacity_50_z_50_flex_items_center_justify_center")}>
+        <div className={t("components.orders.orderprinttemplate.name.bg_white_rounded_lg_p_4_max_w_4xl_max_h_90vh_overflow_y_auto")}>
+          <div className={t("components.orders.orderprinttemplate.name.flex_justify_between_items_center_mb_4")}>
+            <h2 className={t("components.orders.orderprinttemplate.name.text_xl_font_bold")}>{t('orders.print.preview')}</h2>
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              className={t("components.orders.orderprinttemplate.name.px_4_py_2_bg_gray_500_text_white_rounded_hover_bg_gray_600")}
               data-testid="button-close-print"
             >
               {t('common.close')}
             </button>
           </div>
-          <div className="border border-gray-300 p-6 bg-white">
+          <div className={t("components.orders.orderprinttemplate.name.border_border_gray_300_p_6_bg_white")}>
             <PrintContent
               order={order}
               customer={customer}
@@ -110,7 +105,7 @@ export default function OrderPrintTemplate({
       </div>
 
       {/* Actual print content */}
-      <div className="print-container">
+      <div className={t("components.orders.orderprinttemplate.name.print_container")}>
         <PrintContent
           order={order}
           customer={customer}
@@ -140,69 +135,69 @@ function PrintContent({
   return (
     <>
       {/* Header */}
-      <div className="print-header">
+      <div className={t("components.orders.orderprinttemplate.name.print_header")}>
         <div>
-          <h1 className="print-title">طلب عميل</h1>
-          <p className="print-subtitle">Order Form</p>
+          <h1 className={t("components.orders.orderprinttemplate.name.print_title")}>{t('components.orders.OrderPrintTemplate.طلب_عميل')}</h1>
+          <p className={t("components.orders.orderprinttemplate.name.print_subtitle")}>{t('components.orders.OrderPrintTemplate.order_form')}</p>
         </div>
         {qrCodeUrl && (
           <img
             src={qrCodeUrl}
-            alt="QR Code"
-            className="print-qr"
+            alt="{t('components.orders.OrderPrintTemplate.alt.qr_code')}"
+            className={t("components.orders.orderprinttemplate.name.print_qr")}
           />
         )}
       </div>
 
       {/* Document Info */}
-      <div className="print-info">
-        <div className="print-info-item">
-          <span className="print-info-label">رقم الطلب:</span>
-          <span className="print-info-value">{order.order_number}</span>
+      <div className={t("components.orders.orderprinttemplate.name.print_info")}>
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.رقم_الطلب:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>{order.order_number}</span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ الإصدار:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.تاريخ_الإصدار:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {format(new Date(), "dd/MM/yyyy - HH:mm")}
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">العميل:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.العميل:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {customer?.name_ar || customer?.name || "غير محدد"}
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">رمز العميل:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.رمز_العميل:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {customer?.id || "غير محدد"}
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ الطلب:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.تاريخ_الطلب:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {order.created_at
               ? format(new Date(order.created_at), "dd/MM/yyyy")
               : "غير محدد"}
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ التسليم المتوقع:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.تاريخ_التسليم_المتوقع:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {order.delivery_date
               ? format(new Date(order.delivery_date), "dd/MM/yyyy")
               : "غير محدد"}
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">مدة التسليم:</span>
-          <span className="print-info-value">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.مدة_التسليم:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_value")}>
             {order.delivery_days || "غير محدد"} يوم
           </span>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">الحالة:</span>
-          <span className="print-badge print-badge-info">
+        <div className={t("components.orders.orderprinttemplate.name.print_info_item")}>
+          <span className={t("components.orders.orderprinttemplate.name.print_info_label")}>{t('components.orders.OrderPrintTemplate.الحالة:')}</span>
+          <span className={t("components.orders.orderprinttemplate.name.print_badge_print_badge_info")}>
             {getStatusText(order.status)}
           </span>
         </div>
@@ -210,20 +205,20 @@ function PrintContent({
 
       {/* Customer Info */}
       {customer && (
-        <div className="print-section">
-          <h3 className="print-section-title">معلومات العميل</h3>
-          <div className="print-grid-2">
+        <div className={t("components.orders.orderprinttemplate.name.print_section")}>
+          <h3 className={t("components.orders.orderprinttemplate.name.print_section_title")}>{t('components.orders.OrderPrintTemplate.معلومات_العميل')}</h3>
+          <div className={t("components.orders.orderprinttemplate.name.print_grid_2")}>
             <div>
-              <strong>العنوان:</strong> {customer.address || "غير محدد"}
+              <strong>{t('components.orders.OrderPrintTemplate.العنوان:')}</strong> {customer.address || "غير محدد"}
             </div>
             <div>
-              <strong>المدينة:</strong> {customer.city || "غير محدد"}
+              <strong>{t('components.orders.OrderPrintTemplate.المدينة:')}</strong> {customer.city || "غير محدد"}
             </div>
             <div>
-              <strong>الهاتف:</strong> {customer.phone || "غير محدد"}
+              <strong>{t('components.orders.OrderPrintTemplate.الهاتف:')}</strong> {customer.phone || "غير محدد"}
             </div>
             <div>
-              <strong>الرقم الضريبي:</strong>{" "}
+              <strong>{t('components.orders.OrderPrintTemplate.الرقم_الضريبي:')}</strong>{" "}
               {customer.tax_number || "غير محدد"}
             </div>
           </div>
@@ -231,20 +226,20 @@ function PrintContent({
       )}
 
       {/* Production Orders Table */}
-      <div className="print-section avoid-page-break">
-        <h3 className="print-section-title">
+      <div className={t("components.orders.orderprinttemplate.name.print_section_avoid_page_break")}>
+        <h3 className={t("components.orders.orderprinttemplate.name.print_section_title")}>
           أوامر الإنتاج ({orderProductionOrders.length})
         </h3>
-        <table className="print-table">
+        <table className={t("components.orders.orderprinttemplate.name.print_table")}>
           <thead>
             <tr>
               <th>#</th>
-              <th>رقم أمر الإنتاج</th>
-              <th>المنتج</th>
-              <th>المقاس</th>
-              <th>الكمية (كجم)</th>
-              <th>الحالة</th>
-              <th>الملاحظات</th>
+              <th>{t('components.orders.OrderPrintTemplate.رقم_أمر_الإنتاج')}</th>
+              <th>{t('components.orders.OrderPrintTemplate.المنتج')}</th>
+              <th>{t('components.orders.OrderPrintTemplate.المقاس')}</th>
+              <th>{t('components.orders.OrderPrintTemplate.الكمية_(كجم)')}</th>
+              <th>{t('components.orders.OrderPrintTemplate.الحالة')}</th>
+              <th>{t('components.orders.OrderPrintTemplate.الملاحظات')}</th>
             </tr>
           </thead>
           <tbody>
@@ -253,18 +248,14 @@ function PrintContent({
                 (cp: any) => cp.id === po.customer_product_id
               );
               const item = items.find(
-                (i: any) => i.id === customerProduct?.item_id
-              );
-
-              return (
-                <tr key={po.id}>
+                (i: any) =>{t('components.orders.OrderPrintTemplate.i.id_===_customerproduct?.item_id_);_return_(')}<tr key={po.id}>
                   <td>{index + 1}</td>
                   <td>{po.production_order_number}</td>
                   <td>{item?.name_ar || item?.name || "غير محدد"}</td>
                   <td>{customerProduct?.size_caption || "غير محدد"}</td>
                   <td>{parseFloat(po.quantity_kg || 0).toFixed(2)}</td>
                   <td>
-                    <span className="print-badge print-badge-info">
+                    <span className={t("components.orders.orderprinttemplate.name.print_badge_print_badge_info")}>
                       {getStatusText(po.status)}
                     </span>
                   </td>
@@ -276,7 +267,7 @@ function PrintContent({
           <tfoot>
             <tr>
               <td colSpan={4} style={{ textAlign: "left" }}>
-                <strong>المجموع الكلي:</strong>
+                <strong>{t('components.orders.OrderPrintTemplate.المجموع_الكلي:')}</strong>
               </td>
               <td colSpan={3}>
                 <strong>{totalQuantity.toFixed(2)} كجم</strong>
@@ -287,18 +278,11 @@ function PrintContent({
       </div>
 
       {/* Product Specifications */}
-      {orderProductionOrders.length > 0 && (
-        <div className="print-section avoid-page-break">
-          <h3 className="print-section-title">مواصفات المنتجات</h3>
+      {orderProductionOrders.length >{t('components.orders.OrderPrintTemplate.0_&&_(')}<div className={t("components.orders.orderprinttemplate.name.print_section_avoid_page_break")}>
+          <h3 className={t("components.orders.orderprinttemplate.name.print_section_title")}>{t('components.orders.OrderPrintTemplate.مواصفات_المنتجات')}</h3>
           {orderProductionOrders.map((po: any, index: number) => {
             const customerProduct = customerProducts.find(
-              (cp: any) => cp.id === po.customer_product_id
-            );
-
-            if (!customerProduct) return null;
-
-            return (
-              <div
+              (cp: any) =>{t('components.orders.OrderPrintTemplate.cp.id_===_po.customer_product_id_);_if_(!customerproduct)_return_null;_return_(')}<div
                 key={po.id}
                 style={{
                   marginBottom: "15px",
@@ -310,53 +294,53 @@ function PrintContent({
                 <h4 style={{ marginBottom: "8px", fontWeight: "bold" }}>
                   {index + 1}. {customerProduct.size_caption || "منتج"}
                 </h4>
-                <div className="print-grid-3">
+                <div className={t("components.orders.orderprinttemplate.name.print_grid_3")}>
                   <div>
-                    <strong>العرض:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.العرض:')}</strong>{" "}
                     {customerProduct.width || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الكشة اليمنى:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.الكشة_اليمنى:')}</strong>{" "}
                     {customerProduct.right_facing || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الكشة اليسرى:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.الكشة_اليسرى:')}</strong>{" "}
                     {customerProduct.left_facing || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>السماكة:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.السماكة:')}</strong>{" "}
                     {customerProduct.thickness || "غير محدد"} مايكرون
                   </div>
                   <div>
-                    <strong>طول القص:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.طول_القص:')}</strong>{" "}
                     {customerProduct.cutting_length_cm || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>اسطوانة الطباعة:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.اسطوانة_الطباعة:')}</strong>{" "}
                     {customerProduct.printing_cylinder || "غير محدد"}
                   </div>
                   <div>
-                    <strong>الخامة:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.الخامة:')}</strong>{" "}
                     {customerProduct.raw_material || "غير محدد"}
                   </div>
                   <div>
-                    <strong>اللون:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.اللون:')}</strong>{" "}
                     {customerProduct.master_batch_id || "غير محدد"}
                   </div>
                   <div>
-                    <strong>الطباعة:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.الطباعة:')}</strong>{" "}
                     {customerProduct.is_printed ? "نعم" : "لا"}
                   </div>
                   <div>
-                    <strong>الثقب:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.الثقب:')}</strong>{" "}
                     {customerProduct.punching || "غير محدد"}
                   </div>
                   <div>
-                    <strong>وحدة القطع:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.وحدة_القطع:')}</strong>{" "}
                     {customerProduct.cutting_unit || "غير محدد"}
                   </div>
                   <div>
-                    <strong>وزن الوحدة:</strong>{" "}
+                    <strong>{t('components.orders.OrderPrintTemplate.وزن_الوحدة:')}</strong>{" "}
                     {customerProduct.unit_weight_kg || "غير محدد"} كجم
                   </div>
                 </div>
@@ -368,35 +352,35 @@ function PrintContent({
 
       {/* Notes */}
       {order.notes && (
-        <div className="print-notes avoid-page-break">
-          <div className="print-notes-title">ملاحظات وتعليمات:</div>
-          <div className="print-notes-content">{order.notes}</div>
+        <div className={t("components.orders.orderprinttemplate.name.print_notes_avoid_page_break")}>
+          <div className={t("components.orders.orderprinttemplate.name.print_notes_title")}>{t('components.orders.OrderPrintTemplate.ملاحظات_وتعليمات:')}</div>
+          <div className={t("components.orders.orderprinttemplate.name.print_notes_content")}>{order.notes}</div>
         </div>
       )}
 
       {/* Signatures */}
-      <div className="print-signatures">
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">المُعد</div>
+      <div className={t("components.orders.orderprinttemplate.name.print_signatures")}>
+        <div className={t("components.orders.orderprinttemplate.name.print_signature")}>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_line")}></div>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_label")}>{t('components.orders.OrderPrintTemplate.المُعد')}</div>
         </div>
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">المدير الفني</div>
+        <div className={t("components.orders.orderprinttemplate.name.print_signature")}>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_line")}></div>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_label")}>{t('components.orders.OrderPrintTemplate.المدير_الفني')}</div>
         </div>
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">الإدارة</div>
+        <div className={t("components.orders.orderprinttemplate.name.print_signature")}>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_line")}></div>
+          <div className={t("components.orders.orderprinttemplate.name.print_signature_label")}>{t('components.orders.OrderPrintTemplate.الإدارة')}</div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="print-footer">
+      <div className={t("components.orders.orderprinttemplate.name.print_footer")}>
         <p>
           هذا المستند تم إنشاؤه إلكترونياً بتاريخ{" "}
           {format(new Date(), "dd/MM/yyyy - HH:mm")}
         </p>
-        <p>نظام إدارة الإنتاج - Factory IQ</p>
+        <p>{t('components.orders.OrderPrintTemplate.نظام_إدارة_الإنتاج_-_factory_iq')}</p>
       </div>
     </>
   );

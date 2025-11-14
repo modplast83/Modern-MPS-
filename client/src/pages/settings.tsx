@@ -229,18 +229,7 @@ export default function Settings() {
   }, [databaseStatsData]);
 
   // Backup restore state
-  const backupFileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedBackupFile, setSelectedBackupFile] = useState<File | null>(null);
-  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
-  const [pendingBackupData, setPendingBackupData] = useState<any>(null);
-
-  // Enhanced file import state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [dragActive, setDragActive] = useState(false);
-  const [importStep, setImportStep] = useState(1); // 1: Upload, 2: Preview & Map, 3: Import
-  const [fileData, setFileData] = useState<any[]>([]);
-  const [fileHeaders, setFileHeaders] = useState<string[]>([]);
-  const [columnMapping, setColumnMapping] = useState<{ [key: string]: string }>(
+  const backupFileInputRef = useRef<HTMLInputElement>{t('pages.settings.(null);_const_[selectedbackupfile,_setselectedbackupfile]_=_usestate')}<File | null>{t('pages.settings.(null);_const_[showrestoreconfirm,_setshowrestoreconfirm]_=_usestate(false);_const_[pendingbackupdata,_setpendingbackupdata]_=_usestate')}<any>{t('pages.settings.(null);_//_enhanced_file_import_state_const_[selectedfile,_setselectedfile]_=_usestate')}<File | null>{t('pages.settings.(null);_const_[dragactive,_setdragactive]_=_usestate(false);_const_[importstep,_setimportstep]_=_usestate(1);_//_1:_upload,_2:_preview_&_map,_3:_import_const_[filedata,_setfiledata]_=_usestate')}<any[]>{t('pages.settings.([]);_const_[fileheaders,_setfileheaders]_=_usestate')}<string[]>{t('pages.settings.([]);_const_[columnmapping,_setcolumnmapping]_=_usestate')}<{ [key: string]: string }>(
     {},
   );
   const [importOptions, setImportOptions] = useState({
@@ -679,7 +668,7 @@ export default function Settings() {
 
       const blob = await response.blob();
       const contentDisposition = response.headers.get("Content-Disposition");
-      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filenameMatch = contentDisposition?.match(/filename="{t('pages.settings.name.(.+)')}"/);
       const filename = filenameMatch ? filenameMatch[1] : `backup-${new Date().toISOString().split("T")[0]}.json`;
       
       const url = window.URL.createObjectURL(blob);
@@ -994,58 +983,58 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.settings.name.min_h_screen_bg_gray_50")}>
       <Header />
-      <div className="flex">
+      <div className={t("pages.settings.name.flex")}>
         <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('settings.title')}</h1>
-            <p className="text-gray-600">
+        <main className={t("pages.settings.name.flex_1_lg_mr_64_p_6")}>
+          <div className={t("pages.settings.name.mb_6")}>
+            <h1 className={t("pages.settings.name.text_2xl_font_bold_text_gray_900_mb_2")}>{t('settings.title')}</h1>
+            <p className={t("pages.settings.name.text_gray_600")}>
               {t('settings.description')}
             </p>
           </div>
 
-          <Tabs defaultValue="roles" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
-              <TabsTrigger value="roles" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
+          <Tabs defaultValue="roles" className={t("pages.settings.name.space_y_6")}>
+            <TabsList className={t("pages.settings.name.grid_w_full_grid_cols_4_md_grid_cols_7")}>
+              <TabsTrigger value="roles" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <Shield className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.rolesAndPermissions')}
               </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center gap-2">
-                <Bell className="w-4 h-4" />
+              <TabsTrigger value="notifications" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <Bell className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.alerts')}
               </TabsTrigger>
-              <TabsTrigger value="system" className="flex items-center gap-2">
-                <SettingsIcon className="w-4 h-4" />
+              <TabsTrigger value="system" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <SettingsIcon className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.systemSettings')}
               </TabsTrigger>
-              <TabsTrigger value="database" className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
+              <TabsTrigger value="database" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <Database className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.database')}
               </TabsTrigger>
-              <TabsTrigger value="location" className="flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+              <TabsTrigger value="location" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <MapPin className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.factoryLocation')}
               </TabsTrigger>
-              <TabsTrigger value="notification-center" className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
+              <TabsTrigger value="notification-center" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <MessageSquare className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.notificationCenter')}
               </TabsTrigger>
-              <TabsTrigger value="whatsapp-webhooks" className="flex items-center gap-2">
-                <Webhook className="w-4 h-4" />
+              <TabsTrigger value="whatsapp-webhooks" className={t("pages.settings.name.flex_items_center_gap_2")}>
+                <Webhook className={t("pages.settings.name.w_4_h_4")} />
                 {t('settings.whatsappWebhooks')}
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="roles" className="space-y-6">
+            <TabsContent value="roles" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
+                  <CardTitle className={t("pages.settings.name.flex_items_center_gap_2")}>
+                    <Shield className={t("pages.settings.name.w_5_h_5")} />
                     {t('settings.roleManagement')}
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                     {t('settings.roleManagementDesc')}
                   </p>
                 </CardHeader>
@@ -1055,22 +1044,22 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="notifications" className="space-y-6">
+            <TabsContent value="notifications" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="w-5 h-5" />
+                  <CardTitle className={t("pages.settings.name.flex_items_center_gap_2")}>
+                    <Bell className={t("pages.settings.name.w_5_h_5")} />
                     {t('settings.notificationSettings')}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                <CardContent className={t("pages.settings.name.space_y_4")}>
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
                       <div>
-                        <Label className="text-base">
+                        <Label className={t("pages.settings.name.text_base")}>
                           {t('settings.emailNotifications')}
                         </Label>
-                        <p className="text-sm text-muted-foreground">
+                        <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                           {t('settings.emailNotificationsDesc')}
                         </p>
                       </div>
@@ -1088,12 +1077,12 @@ export default function Settings() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
                       <div>
-                        <Label className="text-base">
+                        <Label className={t("pages.settings.name.text_base")}>
                           {t('settings.smsNotifications')}
                         </Label>
-                        <p className="text-sm text-muted-foreground">
+                        <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                           {t('settings.smsNotificationsDesc')}
                         </p>
                       </div>
@@ -1111,10 +1100,10 @@ export default function Settings() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
                       <div>
-                        <Label className="text-base">{t('settings.instantNotifications')}</Label>
-                        <p className="text-sm text-muted-foreground">
+                        <Label className={t("pages.settings.name.text_base")}>{t('settings.instantNotifications')}</Label>
+                        <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                           {t('settings.instantNotificationsDesc')}
                         </p>
                       </div>
@@ -1132,16 +1121,14 @@ export default function Settings() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
+                      <div className={t("pages.settings.name.flex_items_center_gap_2")}>
                         {userSettings.notifications.sound ? (
-                          <Volume2 className="w-4 h-4" />
-                        ) : (
-                          <VolumeX className="w-4 h-4" />
+                          <Volume2 className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.)_:_(')}<VolumeX className={t("pages.settings.name.w_4_h_4")} />
                         )}
                         <div>
-                          <Label className="text-base">{t('settings.soundNotifications')}</Label>
-                          <p className="text-sm text-muted-foreground">
+                          <Label className={t("pages.settings.name.text_base")}>{t('settings.soundNotifications')}</Label>
+                          <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                             {t('settings.soundNotificationsDesc')}
                           </p>
                         </div>
@@ -1163,12 +1150,12 @@ export default function Settings() {
 
                   <Separator />
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">{t('settings.dashboardSettings')}</h4>
-                    <div className="flex items-center justify-between">
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium")}>{t('settings.dashboardSettings')}</h4>
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
                       <div>
-                        <Label className="text-base">{t('settings.autoRefresh')}</Label>
-                        <p className="text-sm text-muted-foreground">
+                        <Label className={t("pages.settings.name.text_base")}>{t('settings.autoRefresh')}</Label>
+                        <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                           {t('settings.autoRefreshDesc')}
                         </p>
                       </div>
@@ -1187,7 +1174,7 @@ export default function Settings() {
                     </div>
 
                     {userSettings.dashboard.autoRefresh && (
-                      <div className="space-y-2">
+                      <div className={t("pages.settings.name.space_y_2")}>
                         <Label htmlFor="refreshInterval">
                           {t('settings.refreshInterval')}
                         </Label>
@@ -1219,15 +1206,13 @@ export default function Settings() {
                     )}
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className={t("pages.settings.name.flex_justify_end")}>
                     <Button
                       onClick={handleSaveUserSettings}
                       disabled={saveUserSettingsMutation.isPending}
                     >
                       {saveUserSettingsMutation.isPending ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
+                        <RefreshCw className={t("pages.settings.name.w_4_h_4_mr_2_animate_spin")} />{t('pages.settings.)_:_(')}<Save className={t("pages.settings.name.w_4_h_4_mr_2")} />
                       )}
                       {t('settings.saveChanges')}
                     </Button>
@@ -1236,17 +1221,17 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="system" className="space-y-6">
+            <TabsContent value="system" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <SettingsIcon className="w-5 h-5" />
+                  <CardTitle className={t("pages.settings.name.flex_items_center_gap_2")}>
+                    <SettingsIcon className={t("pages.settings.name.w_5_h_5")} />
                     {t('settings.systemGeneralSettings')}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                <CardContent className={t("pages.settings.name.space_y_4")}>
+                  <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="companyName">{t('settings.companyName')}</Label>
                       <Input
                         id="companyName"
@@ -1259,16 +1244,16 @@ export default function Settings() {
                         }
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="country">{t('settings.country')}</Label>
                       <Input
                         id="country"
                         value={systemSettings.country}
                         readOnly
-                        className="bg-muted"
+                        className={t("pages.settings.name.bg_muted")}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="region">{t('settings.region')}</Label>
                       <Select
                         value={systemSettings.region ?? "الرياض"}
@@ -1300,25 +1285,25 @@ export default function Settings() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="timezone">{t('settings.timezone')}</Label>
                       <Input
                         id="timezone"
                         value={t('settings.riyadhUTC')}
                         readOnly
-                        className="bg-muted"
+                        className={t("pages.settings.name.bg_muted")}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="currency">{t('settings.currency')}</Label>
                       <Input
                         id="currency"
                         value={t('settings.saudiRiyal')}
                         readOnly
-                        className="bg-muted"
+                        className={t("pages.settings.name.bg_muted")}
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className={t("pages.settings.name.space_y_2")}>
                       <Label htmlFor="language">{t('settings.systemLanguage')}</Label>
                       <Select
                         value={systemSettings.language ?? "ar"}
@@ -1342,10 +1327,10 @@ export default function Settings() {
 
                   <Separator />
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">{t('settings.workingHours')}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium")}>{t('settings.workingHours')}</h4>
+                    <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+                      <div className={t("pages.settings.name.space_y_2")}>
                         <Label htmlFor="workStart">{t('settings.workStart')}</Label>
                         <Input
                           id="workStart"
@@ -1362,7 +1347,7 @@ export default function Settings() {
                           }
                         />
                       </div>
-                      <div className="space-y-2">
+                      <div className={t("pages.settings.name.space_y_2")}>
                         <Label htmlFor="workEnd">{t('settings.workEnd')}</Label>
                         <Input
                           id="workEnd"
@@ -1384,17 +1369,17 @@ export default function Settings() {
 
                   <Separator />
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">{t('settings.shifts')}</h4>
-                    <div className="space-y-2">
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium")}>{t('settings.shifts')}</h4>
+                    <div className={t("pages.settings.name.space_y_2")}>
                       {systemSettings.shifts.map((shift) => (
                         <div
                           key={shift.id}
-                          className="flex items-center justify-between p-3 border rounded-lg"
+                          className={t("pages.settings.name.flex_items_center_justify_between_p_3_border_rounded_lg")}
                         >
                           <div>
-                            <span className="font-medium">{shift.name}</span>
-                            <p className="text-sm text-muted-foreground">
+                            <span className={t("pages.settings.name.font_medium")}>{shift.name}</span>
+                            <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>
                               {t('settings.from')} {shift.start} {t('settings.to')} {shift.end}
                             </p>
                           </div>
@@ -1404,15 +1389,13 @@ export default function Settings() {
                     </div>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className={t("pages.settings.name.flex_justify_end")}>
                     <Button
                       onClick={handleSaveSystemSettings}
                       disabled={saveSystemSettingsMutation.isPending}
                     >
                       {saveSystemSettingsMutation.isPending ? (
-                        <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
+                        <RefreshCw className={t("pages.settings.name.w_4_h_4_mr_2_animate_spin")} />{t('pages.settings.)_:_(')}<Save className={t("pages.settings.name.w_4_h_4_mr_2")} />
                       )}
                       {t('settings.saveSystemSettings')}
                     </Button>
@@ -1421,58 +1404,56 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="database" className="space-y-6">
+            <TabsContent value="database" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Database className="w-5 h-5" />
+                  <CardTitle className={t("pages.settings.name.flex_items_center_gap_2")}>
+                    <Database className={t("pages.settings.name.w_5_h_5")} />
                     {t('settings.databaseManagement')}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className={t("pages.settings.name.space_y_6")}>
                   {/* Backup Section */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium flex items-center gap-2">
-                      <Archive className="w-4 h-4" />
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium_flex_items_center_gap_2")}>
+                      <Archive className={t("pages.settings.name.w_4_h_4")} />
                       {t('settings.backup')}
                     </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Card className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Download className="w-4 h-4 text-blue-500" />
-                            <Label className="text-sm font-medium">
+                    <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+                      <Card className={t("pages.settings.name.p_4")}>
+                        <div className={t("pages.settings.name.space_y_3")}>
+                          <div className={t("pages.settings.name.flex_items_center_gap_2")}>
+                            <Download className={t("pages.settings.name.w_4_h_4_text_blue_500")} />
+                            <Label className={t("pages.settings.name.text_sm_font_medium")}>
                               {t('settings.createBackup')}
                             </Label>
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={t("pages.settings.name.text_xs_text_muted_foreground")}>
                             {t('settings.createBackupDesc')}
                           </p>
                           <Button
-                            className="w-full"
+                            className={t("pages.settings.name.w_full")}
                             size="sm"
                             disabled={createBackupMutation.isPending}
                             onClick={() => createBackupMutation.mutate()}
                           >
                             {createBackupMutation.isPending ? (
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Download className="w-4 h-4 mr-2" />
+                              <RefreshCw className={t("pages.settings.name.w_4_h_4_mr_2_animate_spin")} />{t('pages.settings.)_:_(')}<Download className={t("pages.settings.name.w_4_h_4_mr_2")} />
                             )}
                             {t('settings.exportBackup')}
                           </Button>
                         </div>
                       </Card>
 
-                      <Card className="p-4">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <Upload className="w-4 h-4 text-green-500" />
-                            <Label className="text-sm font-medium">
+                      <Card className={t("pages.settings.name.p_4")}>
+                        <div className={t("pages.settings.name.space_y_3")}>
+                          <div className={t("pages.settings.name.flex_items_center_gap_2")}>
+                            <Upload className={t("pages.settings.name.w_4_h_4_text_green_500")} />
+                            <Label className={t("pages.settings.name.text_sm_font_medium")}>
                               {t('settings.restoreBackup')}
                             </Label>
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={t("pages.settings.name.text_xs_text_muted_foreground")}>
                             {t('settings.restoreBackupDesc')}
                           </p>
                           <input
@@ -1480,26 +1461,24 @@ export default function Settings() {
                             ref={backupFileInputRef}
                             onChange={handleBackupFileSelect}
                             accept=".json"
-                            className="hidden"
+                            className={t("pages.settings.name.hidden")}
                             data-testid="input-backup-file"
                           />
                           <Button
                             variant="outline"
-                            className="w-full"
+                            className={t("pages.settings.name.w_full")}
                             size="sm"
                             onClick={() => backupFileInputRef.current?.click()}
                             disabled={restoreBackupMutation.isPending}
                             data-testid="button-restore-backup"
                           >
                             {restoreBackupMutation.isPending ? (
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <Upload className="w-4 h-4 mr-2" />
+                              <RefreshCw className={t("pages.settings.name.w_4_h_4_mr_2_animate_spin")} />{t('pages.settings.)_:_(')}<Upload className={t("pages.settings.name.w_4_h_4_mr_2")} />
                             )}
                             {selectedBackupFile ? selectedBackupFile.name : t('settings.selectFileRestore')}
                           </Button>
                           {selectedBackupFile && !restoreBackupMutation.isPending && (
-                            <p className="text-xs text-green-600">
+                            <p className={t("pages.settings.name.text_xs_text_green_600")}>
                               {t('settings.selected')}: {selectedBackupFile.name}
                             </p>
                           )}
@@ -1511,82 +1490,55 @@ export default function Settings() {
                   <Separator />
 
                   {/* Enhanced Import/Export Tables */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-sm font-medium flex items-center gap-2">
-                        <HardDrive className="w-4 h-4" />
-                        استيراد وتصدير الجداول المحسن
-                      </h4>
-                      {importStep > 1 && (
-                        <Button
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
+                      <h4 className={t("pages.settings.name.text_sm_font_medium_flex_items_center_gap_2")}>
+                        <HardDrive className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.استيراد_وتصدير_الجداول_المحسن')}</h4>
+                      {importStep >{t('pages.settings.1_&&_(')}<Button
                           variant="outline"
                           size="sm"
                           onClick={resetImport}
-                        >
-                          إعادة تعيين
-                        </Button>
+                        >{t('pages.settings.إعادة_تعيين')}</Button>
                       )}
                     </div>
 
                     {/* Export Section */}
-                    <Card className="p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Download className="w-4 h-4 text-blue-500" />
-                          <Label className="text-sm font-medium">
-                            تصدير البيانات
-                          </Label>
+                    <Card className={t("pages.settings.name.p_4")}>
+                      <div className={t("pages.settings.name.space_y_4")}>
+                        <div className={t("pages.settings.name.flex_items_center_gap_2_mb_3")}>
+                          <Download className={t("pages.settings.name.w_4_h_4_text_blue_500")} />
+                          <Label className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.تصدير_البيانات')}</Label>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>اختر الجدول للتصدير</Label>
+                        <div className={t("pages.settings.name.space_y_2")}>
+                          <Label>{t('pages.settings.اختر_الجدول_للتصدير')}</Label>
                           <Select
                             value={selectedTable}
                             onValueChange={handleTableChange}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="اختر جدول للتصدير أو الاستيراد" />
+                              <SelectValue placeholder="{t('pages.settings.placeholder.اختر_جدول_للتصدير_أو_الاستيراد')}" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="customers">
-                                العملاء (Customers)
-                              </SelectItem>
-                              <SelectItem value="categories">
-                                الفئات (Categories)
-                              </SelectItem>
-                              <SelectItem value="sections">
-                                الأقسام (Sections)
-                              </SelectItem>
-                              <SelectItem value="items">
-                                الأصناف (Items)
-                              </SelectItem>
-                              <SelectItem value="customer_products">
-                                منتجات العملاء (Customer Products)
-                              </SelectItem>
-                              <SelectItem value="users">
-                                المستخدمين (Users)
-                              </SelectItem>
-                              <SelectItem value="machines">
-                                الماكينات (Machines)
-                              </SelectItem>
-                              <SelectItem value="locations">
-                                المواقع (Locations)
-                              </SelectItem>
-                              <SelectItem value="orders">
-                                الطلبات (Orders)
-                              </SelectItem>
-                              <SelectItem value="production_orders">
-                                أوامر الإنتاج (Production Orders)
-                              </SelectItem>
+                              <SelectItem value="customers">{t('pages.settings.العملاء_(customers)')}</SelectItem>
+                              <SelectItem value="categories">{t('pages.settings.الفئات_(categories)')}</SelectItem>
+                              <SelectItem value="sections">{t('pages.settings.الأقسام_(sections)')}</SelectItem>
+                              <SelectItem value="items">{t('pages.settings.الأصناف_(items)')}</SelectItem>
+                              <SelectItem value="customer_products">{t('pages.settings.منتجات_العملاء_(customer_products)')}</SelectItem>
+                              <SelectItem value="users">{t('pages.settings.المستخدمين_(users)')}</SelectItem>
+                              <SelectItem value="machines">{t('pages.settings.الماكينات_(machines)')}</SelectItem>
+                              <SelectItem value="locations">{t('pages.settings.المواقع_(locations)')}</SelectItem>
+                              <SelectItem value="orders">{t('pages.settings.الطلبات_(orders)')}</SelectItem>
+                              <SelectItem value="production_orders">{t('pages.settings.أوامر_الإنتاج_(production_orders)')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_3_gap_3")}>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2"
+                            className={t("pages.settings.name.flex_items_center_gap_2")}
                             disabled={
                               !selectedTable || exportTableMutation.isPending
                             }
@@ -1598,13 +1550,11 @@ export default function Settings() {
                               })
                             }
                           >
-                            <Download className="w-4 h-4" />
-                            تصدير CSV
-                          </Button>
+                            <Download className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.تصدير_csv')}</Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2"
+                            className={t("pages.settings.name.flex_items_center_gap_2")}
                             disabled={
                               !selectedTable || exportTableMutation.isPending
                             }
@@ -1616,13 +1566,11 @@ export default function Settings() {
                               })
                             }
                           >
-                            <Download className="w-4 h-4" />
-                            تصدير JSON
-                          </Button>
+                            <Download className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.تصدير_json')}</Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2"
+                            className={t("pages.settings.name.flex_items_center_gap_2")}
                             disabled={
                               !selectedTable || exportTableMutation.isPending
                             }
@@ -1634,29 +1582,25 @@ export default function Settings() {
                               })
                             }
                           >
-                            <Download className="w-4 h-4" />
-                            تصدير Excel
-                          </Button>
+                            <Download className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.تصدير_excel')}</Button>
                         </div>
                       </div>
                     </Card>
 
                     {/* Import Section */}
-                    <Card className="p-4">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Upload className="w-4 h-4 text-green-500" />
-                          <Label className="text-sm font-medium">
-                            استيراد البيانات المتقدم
-                          </Label>
-                          <Badge variant="outline" className="text-xs">
+                    <Card className={t("pages.settings.name.p_4")}>
+                      <div className={t("pages.settings.name.space_y_4")}>
+                        <div className={t("pages.settings.name.flex_items_center_gap_2_mb_3")}>
+                          <Upload className={t("pages.settings.name.w_4_h_4_text_green_500")} />
+                          <Label className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.استيراد_البيانات_المتقدم')}</Label>
+                          <Badge variant="outline" className={t("pages.settings.name.text_xs")}>
                             الخطوة {importStep} من 3
                           </Badge>
                         </div>
 
                         {/* Step 1: File Upload */}
                         {importStep === 1 && (
-                          <div className="space-y-4">
+                          <div className={t("pages.settings.name.space_y_4")}>
                             <div
                               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                                 dragActive
@@ -1668,17 +1612,17 @@ export default function Settings() {
                               onDragOver={handleDrag}
                               onDrop={handleDrop}
                             >
-                              <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                              <Upload className={t("pages.settings.name.w_8_h_8_mx_auto_text_gray_400_mb_2")} />
                               {selectedFile ? (
-                                <div className="space-y-2">
-                                  <p className="text-sm text-green-600 font-medium">
+                                <div className={t("pages.settings.name.space_y_2")}>
+                                  <p className={t("pages.settings.name.text_sm_text_green_600_font_medium")}>
                                     تم اختيار الملف: {selectedFile.name}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className={t("pages.settings.name.text_xs_text_gray_500")}>
                                     الحجم:{" "}
                                     {(selectedFile.size / 1024).toFixed(1)} KB
                                   </p>
-                                  <div className="flex gap-2 justify-center">
+                                  <div className={t("pages.settings.name.flex_gap_2_justify_center")}>
                                     <Button
                                       size="sm"
                                       onClick={() =>
@@ -1687,33 +1631,21 @@ export default function Settings() {
                                       }
                                       disabled={!selectedTable}
                                     >
-                                      <Upload className="w-4 h-4 mr-2" />
-                                      تحليل البيانات
-                                    </Button>
+                                      <Upload className={t("pages.settings.name.w_4_h_4_mr_2")} />{t('pages.settings.تحليل_البيانات')}</Button>
                                     <Button
                                       variant="outline"
                                       size="sm"
                                       onClick={() => setSelectedFile(null)}
-                                    >
-                                      إلغاء
-                                    </Button>
+                                    >{t('pages.settings.إلغاء')}</Button>
                                   </div>
-                                </div>
-                              ) : (
-                                <>
-                                  <p className="text-sm text-gray-600 mb-2">
-                                    اسحب وأفلت ملف البيانات هنا أو انقر للتصفح
-                                  </p>
-                                  <p className="text-xs text-gray-500">
-                                    صيغ مدعومة: CSV, JSON, Excel (.xlsx)
-                                  </p>
-                                  <p className="text-xs text-blue-600 mt-1">
-                                    يدعم حتى 5000+ سجل مع معالجة الدفعات
-                                  </p>
+                                </div>{t('pages.settings.)_:_(')}<>
+                                  <p className={t("pages.settings.name.text_sm_text_gray_600_mb_2")}>{t('pages.settings.اسحب_وأفلت_ملف_البيانات_هنا_أو_انقر_للتصفح')}</p>
+                                  <p className={t("pages.settings.name.text_xs_text_gray_500")}>{t('pages.settings.صيغ_مدعومة:_csv,_json,_excel_(.xlsx)')}</p>
+                                  <p className={t("pages.settings.name.text_xs_text_blue_600_mt_1")}>{t('pages.settings.يدعم_حتى_5000+_سجل_مع_معالجة_الدفعات')}</p>
                                   <input
                                     type="file"
                                     id="fileInput"
-                                    className="hidden"
+                                    className={t("pages.settings.name.hidden")}
                                     accept=".csv,.json,.xlsx"
                                     onChange={(e) =>
                                       handleFileUpload(e.target.files)
@@ -1722,54 +1654,45 @@ export default function Settings() {
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    className="mt-3"
+                                    className={t("pages.settings.name.mt_3")}
                                     onClick={() =>
                                       document
                                         .getElementById("fileInput")
                                         ?.click()
                                     }
-                                  >
-                                    اختيار ملف
-                                  </Button>
+                                  >{t('pages.settings.اختيار_ملف')}</Button>
                                 </>
                               )}
                             </div>
 
                             {!selectedTable && (
-                              <div className="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <p className="text-sm text-yellow-700">
-                                  يرجى اختيار الجدول أولاً من قسم التصدير أعلاه
-                                </p>
+                              <div className={t("pages.settings.name.text_center_p_3_bg_yellow_50_border_border_yellow_200_rounded_lg")}>
+                                <p className={t("pages.settings.name.text_sm_text_yellow_700")}>{t('pages.settings.يرجى_اختيار_الجدول_أولاً_من_قسم_التصدير_أعلاه')}</p>
                               </div>
                             )}
                           </div>
                         )}
 
                         {/* Step 2: Data Preview & Column Mapping */}
-                        {importStep === 2 && fileData.length > 0 && (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h5 className="text-sm font-medium">
-                                معاينة البيانات وربط الأعمدة
-                              </h5>
+                        {importStep === 2 && fileData.length >{t('pages.settings.0_&&_(')}<div className={t("pages.settings.name.space_y_4")}>
+                            <div className={t("pages.settings.name.flex_items_center_justify_between")}>
+                              <h5 className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.معاينة_البيانات_وربط_الأعمدة')}</h5>
                               <Badge variant="secondary">
                                 {fileData.length} سجل
                               </Badge>
                             </div>
 
                             {/* Column Mapping */}
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium">
-                                ربط أعمدة الملف مع أعمدة الجدول
-                              </Label>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-48 overflow-y-auto p-3 border rounded-lg bg-gray-50">
+                            <div className={t("pages.settings.name.space_y_3")}>
+                              <Label className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.ربط_أعمدة_الملف_مع_أعمدة_الجدول')}</Label>
+                              <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_2_gap_3_max_h_48_overflow_y_auto_p_3_border_rounded_lg_bg_gray_50")}>
                                 {getTableSchema(selectedTable).map(
                                   (dbColumn) => (
                                     <div
                                       key={dbColumn}
-                                      className="flex items-center gap-2 text-sm"
+                                      className={t("pages.settings.name.flex_items_center_gap_2_text_sm")}
                                     >
-                                      <Label className="w-24 text-right font-medium">
+                                      <Label className={t("pages.settings.name.w_24_text_right_font_medium")}>
                                         {dbColumn}:
                                       </Label>
                                       <Select
@@ -1781,13 +1704,11 @@ export default function Settings() {
                                           }))
                                         }
                                       >
-                                        <SelectTrigger className="h-8 text-xs">
-                                          <SelectValue placeholder="اختر عمود" />
+                                        <SelectTrigger className={t("pages.settings.name.h_8_text_xs")}>
+                                          <SelectValue placeholder="{t('pages.settings.placeholder.اختر_عمود')}" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                          <SelectItem value="none">
-                                            -- لا شيء --
-                                          </SelectItem>
+                                          <SelectItem value="none">{t('pages.settings.--_لا_شيء_--')}</SelectItem>
                                           {fileHeaders.map((header) => (
                                             <SelectItem
                                               key={header}
@@ -1805,13 +1726,11 @@ export default function Settings() {
                             </div>
 
                             {/* Import Options */}
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium">
-                                خيارات الاستيراد
-                              </Label>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-3 border rounded-lg bg-gray-50">
-                                <div className="space-y-2">
-                                  <Label className="text-xs">حجم الدفعة</Label>
+                            <div className={t("pages.settings.name.space_y_3")}>
+                              <Label className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.خيارات_الاستيراد')}</Label>
+                              <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_2_gap_4_p_3_border_rounded_lg_bg_gray_50")}>
+                                <div className={t("pages.settings.name.space_y_2")}>
+                                  <Label className={t("pages.settings.name.text_xs")}>{t('pages.settings.حجم_الدفعة')}</Label>
                                   <Select
                                     value={importOptions.batchSize.toString()}
                                     onValueChange={(value) =>
@@ -1821,25 +1740,19 @@ export default function Settings() {
                                       }))
                                     }
                                   >
-                                    <SelectTrigger className="h-8">
+                                    <SelectTrigger className={t("pages.settings.name.h_8")}>
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="500">
-                                        500 سجل
-                                      </SelectItem>
-                                      <SelectItem value="1000">
-                                        1000 سجل
-                                      </SelectItem>
-                                      <SelectItem value="2000">
-                                        2000 سجل
-                                      </SelectItem>
+                                      <SelectItem value="500">{t('pages.settings.500_سجل')}</SelectItem>
+                                      <SelectItem value="1000">{t('pages.settings.1000_سجل')}</SelectItem>
+                                      <SelectItem value="2000">{t('pages.settings.2000_سجل')}</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
 
-                                <div className="space-y-2">
-                                  <div className="flex items-center gap-2">
+                                <div className={t("pages.settings.name.space_y_2")}>
+                                  <div className={t("pages.settings.name.flex_items_center_gap_2")}>
                                     <Switch
                                       checked={importOptions.updateExisting}
                                       onCheckedChange={(checked) =>
@@ -1849,11 +1762,9 @@ export default function Settings() {
                                         }))
                                       }
                                     />
-                                    <Label className="text-xs">
-                                      تحديث البيانات الموجودة
-                                    </Label>
+                                    <Label className={t("pages.settings.name.text_xs")}>{t('pages.settings.تحديث_البيانات_الموجودة')}</Label>
                                   </div>
-                                  <div className="flex items-center gap-2">
+                                  <div className={t("pages.settings.name.flex_items_center_gap_2")}>
                                     <Switch
                                       checked={importOptions.continueOnError}
                                       onCheckedChange={(checked) =>
@@ -1863,29 +1774,25 @@ export default function Settings() {
                                         }))
                                       }
                                     />
-                                    <Label className="text-xs">
-                                      المتابعة عند حدوث خطأ
-                                    </Label>
+                                    <Label className={t("pages.settings.name.text_xs")}>{t('pages.settings.المتابعة_عند_حدوث_خطأ')}</Label>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
                             {/* Data Preview */}
-                            <div className="space-y-2">
-                              <Label className="text-sm font-medium">
-                                معاينة البيانات (أول 5 سجلات)
-                              </Label>
-                              <div className="overflow-x-auto border rounded-lg">
-                                <table className="w-full text-xs">
-                                  <thead className="bg-gray-100">
+                            <div className={t("pages.settings.name.space_y_2")}>
+                              <Label className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.معاينة_البيانات_(أول_5_سجلات)')}</Label>
+                              <div className={t("pages.settings.name.overflow_x_auto_border_rounded_lg")}>
+                                <table className={t("pages.settings.name.w_full_text_xs")}>
+                                  <thead className={t("pages.settings.name.bg_gray_100")}>
                                     <tr>
                                       {fileHeaders
                                         .slice(0, 5)
                                         .map((header, index) => (
                                           <th
                                             key={index}
-                                            className="p-2 text-right border"
+                                            className={t("pages.settings.name.p_2_text_right_border")}
                                           >
                                             {header}
                                           </th>
@@ -1896,14 +1803,14 @@ export default function Settings() {
                                     {fileData.slice(0, 5).map((row, index) => (
                                       <tr
                                         key={index}
-                                        className="hover:bg-gray-50"
+                                        className={t("pages.settings.name.hover_bg_gray_50")}
                                       >
                                         {fileHeaders
                                           .slice(0, 5)
                                           .map((header, colIndex) => (
                                             <td
                                               key={colIndex}
-                                              className="p-2 border"
+                                              className={t("pages.settings.name.p_2_border")}
                                             >
                                               {row[header] || ""}
                                             </td>
@@ -1915,27 +1822,21 @@ export default function Settings() {
                               </div>
                             </div>
 
-                            <div className="flex gap-2 justify-end">
+                            <div className={t("pages.settings.name.flex_gap_2_justify_end")}>
                               <Button
                                 variant="outline"
                                 onClick={() => setImportStep(1)}
-                              >
-                                العودة
-                              </Button>
-                              <Button onClick={handleStartImport}>
-                                بدء الاستيراد
-                              </Button>
+                              >{t('pages.settings.العودة')}</Button>
+                              <Button onClick={handleStartImport}>{t('pages.settings.بدء_الاستيراد')}</Button>
                             </div>
                           </div>
                         )}
 
                         {/* Step 3: Import Progress & Results */}
                         {importStep === 3 && (
-                          <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <h5 className="text-sm font-medium">
-                                نتائج الاستيراد
-                              </h5>
+                          <div className={t("pages.settings.name.space_y_4")}>
+                            <div className={t("pages.settings.name.flex_items_center_justify_between")}>
+                              <h5 className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.نتائج_الاستيراد')}</h5>
                               <Badge
                                 variant={
                                   importProgress.processing
@@ -1950,38 +1851,35 @@ export default function Settings() {
                             </div>
 
                             {importProgress.processing && (
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                  <span>التقدم</span>
+                              <div className={t("pages.settings.name.space_y_2")}>
+                                <div className={t("pages.settings.name.flex_justify_between_text_sm")}>
+                                  <span>{t('pages.settings.التقدم')}</span>
                                   <span>
                                     {importProgress.current} /{" "}
                                     {importProgress.total}
                                   </span>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div className={t("pages.settings.name.w_full_bg_gray_200_rounded_full_h_2")}>
                                   <div
-                                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                    className={t("pages.settings.name.bg_blue_600_h_2_rounded_full_transition_all_duration_300")}
                                     style={{
                                       width: `${importProgress.percentage}%`,
                                     }}
                                   ></div>
                                 </div>
-                                <div className="text-center text-sm text-gray-600">
+                                <div className={t("pages.settings.name.text_center_text_sm_text_gray_600")}>
                                   {importProgress.percentage}% مكتمل
                                 </div>
                               </div>
                             )}
 
-                            {importProgress.errors.length > 0 && (
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium text-red-600">
-                                  الأخطاء
-                                </Label>
-                                <div className="max-h-32 overflow-y-auto p-3 bg-red-50 border border-red-200 rounded-lg">
+                            {importProgress.errors.length >{t('pages.settings.0_&&_(')}<div className={t("pages.settings.name.space_y_2")}>
+                                <Label className={t("pages.settings.name.text_sm_font_medium_text_red_600")}>{t('pages.settings.الأخطاء')}</Label>
+                                <div className={t("pages.settings.name.max_h_32_overflow_y_auto_p_3_bg_red_50_border_border_red_200_rounded_lg")}>
                                   {importProgress.errors.map((error, index) => (
                                     <p
                                       key={index}
-                                      className="text-xs text-red-700 mb-1"
+                                      className={t("pages.settings.name.text_xs_text_red_700_mb_1")}
                                     >
                                       {error}
                                     </p>
@@ -1990,17 +1888,14 @@ export default function Settings() {
                               </div>
                             )}
 
-                            {importProgress.warnings.length > 0 && (
-                              <div className="space-y-2">
-                                <Label className="text-sm font-medium text-yellow-600">
-                                  التحذيرات
-                                </Label>
-                                <div className="max-h-32 overflow-y-auto p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            {importProgress.warnings.length >{t('pages.settings.0_&&_(')}<div className={t("pages.settings.name.space_y_2")}>
+                                <Label className={t("pages.settings.name.text_sm_font_medium_text_yellow_600")}>{t('pages.settings.التحذيرات')}</Label>
+                                <div className={t("pages.settings.name.max_h_32_overflow_y_auto_p_3_bg_yellow_50_border_border_yellow_200_rounded_lg")}>
                                   {importProgress.warnings.map(
                                     (warning, index) => (
                                       <p
                                         key={index}
-                                        className="text-xs text-yellow-700 mb-1"
+                                        className={t("pages.settings.name.text_xs_text_yellow_700_mb_1")}
                                       >
                                         {warning}
                                       </p>
@@ -2010,10 +1905,8 @@ export default function Settings() {
                               </div>
                             )}
 
-                            <div className="flex gap-2 justify-end">
-                              <Button variant="outline" onClick={resetImport}>
-                                استيراد جديد
-                              </Button>
+                            <div className={t("pages.settings.name.flex_gap_2_justify_end")}>
+                              <Button variant="outline" onClick={resetImport}>{t('pages.settings.استيراد_جديد')}</Button>
                             </div>
                           </div>
                         )}
@@ -2024,51 +1917,41 @@ export default function Settings() {
                   <Separator />
 
                   {/* Database Statistics */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium flex items-center gap-2">
-                      <HardDrive className="w-4 h-4" />
-                      إحصائيات قاعدة البيانات
-                    </h4>
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium_flex_items_center_gap_2")}>
+                      <HardDrive className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.إحصائيات_قاعدة_البيانات')}</h4>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <Card className="p-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-blue-600">
+                    <div className={t("pages.settings.name.grid_grid_cols_2_md_grid_cols_4_gap_4")}>
+                      <Card className={t("pages.settings.name.p_3")}>
+                        <div className={t("pages.settings.name.text_center")}>
+                          <div className={t("pages.settings.name.text_2xl_font_bold_text_blue_600")}>
                             {databaseStats.tableCount}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            عدد الجداول
-                          </div>
+                          <div className={t("pages.settings.name.text_xs_text_muted_foreground")}>{t('pages.settings.عدد_الجداول')}</div>
                         </div>
                       </Card>
-                      <Card className="p-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-600">
+                      <Card className={t("pages.settings.name.p_3")}>
+                        <div className={t("pages.settings.name.text_center")}>
+                          <div className={t("pages.settings.name.text_2xl_font_bold_text_green_600")}>
                             {databaseStats.totalRecords.toLocaleString("ar-SA")}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            إجمالي السجلات
-                          </div>
+                          <div className={t("pages.settings.name.text_xs_text_muted_foreground")}>{t('pages.settings.إجمالي_السجلات')}</div>
                         </div>
                       </Card>
-                      <Card className="p-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-orange-600">
+                      <Card className={t("pages.settings.name.p_3")}>
+                        <div className={t("pages.settings.name.text_center")}>
+                          <div className={t("pages.settings.name.text_2xl_font_bold_text_orange_600")}>
                             {databaseStats.databaseSize}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            حجم قاعدة البيانات
-                          </div>
+                          <div className={t("pages.settings.name.text_xs_text_muted_foreground")}>{t('pages.settings.حجم_قاعدة_البيانات')}</div>
                         </div>
                       </Card>
-                      <Card className="p-3">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-purple-600">
+                      <Card className={t("pages.settings.name.p_3")}>
+                        <div className={t("pages.settings.name.text_center")}>
+                          <div className={t("pages.settings.name.text_2xl_font_bold_text_purple_600")}>
                             {databaseStats.lastBackup}
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            آخر نسخة احتياطية
-                          </div>
+                          <div className={t("pages.settings.name.text_xs_text_muted_foreground")}>{t('pages.settings.آخر_نسخة_احتياطية')}</div>
                         </div>
                       </Card>
                     </div>
@@ -2077,142 +1960,118 @@ export default function Settings() {
                   <Separator />
 
                   {/* Maintenance Operations */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium flex items-center gap-2">
-                      <SettingsIcon className="w-4 h-4" />
-                      عمليات الصيانة
-                    </h4>
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium_flex_items_center_gap_2")}>
+                      <SettingsIcon className={t("pages.settings.name.w_4_h_4")} />{t('pages.settings.عمليات_الصيانة')}</h4>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className={t("pages.settings.name.grid_grid_cols_1_md_grid_cols_3_gap_3")}>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className={t("pages.settings.name.flex_items_center_gap_2")}
                         disabled={optimizeTablesMutation.isPending}
                         onClick={() => optimizeTablesMutation.mutate()}
                       >
                         {optimizeTablesMutation.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <RefreshCw className="w-4 h-4" />
+                          <RefreshCw className={t("pages.settings.name.w_4_h_4_animate_spin")} />{t('pages.settings.)_:_(')}<RefreshCw className={t("pages.settings.name.w_4_h_4")} />
                         )}
                         تحسين الجداول
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className={t("pages.settings.name.flex_items_center_gap_2")}
                         disabled={integrityCheckMutation.isPending}
                         onClick={() => integrityCheckMutation.mutate()}
                       >
                         {integrityCheckMutation.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Database className="w-4 h-4" />
+                          <RefreshCw className={t("pages.settings.name.w_4_h_4_animate_spin")} />{t('pages.settings.)_:_(')}<Database className={t("pages.settings.name.w_4_h_4")} />
                         )}
                         فحص التكامل
                       </Button>
                       <Button
                         variant="destructive"
                         size="sm"
-                        className="flex items-center gap-2"
+                        className={t("pages.settings.name.flex_items_center_gap_2")}
                         disabled={cleanupDataMutation.isPending}
                         onClick={() => cleanupDataMutation.mutate()}
                       >
                         {cleanupDataMutation.isPending ? (
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
+                          <RefreshCw className={t("pages.settings.name.w_4_h_4_animate_spin")} />{t('pages.settings.)_:_(')}<Trash2 className={t("pages.settings.name.w_4_h_4")} />
                         )}
                         تنظيف البيانات القديمة
                       </Button>
                     </div>
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className={t("pages.settings.name.flex_justify_end")}>
                     <Button>
-                      <Save className="w-4 h-4 mr-2" />
-                      حفظ إعدادات قاعدة البيانات
-                    </Button>
+                      <Save className={t("pages.settings.name.w_4_h_4_mr_2")} />{t('pages.settings.حفظ_إعدادات_قاعدة_البيانات')}</Button>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="security" className="space-y-6">
+            <TabsContent value="security" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    الأمان والخصوصية
-                  </CardTitle>
+                  <CardTitle className={t("pages.settings.name.flex_items_center_gap_2")}>
+                    <Shield className={t("pages.settings.name.w_5_h_5")} />{t('pages.settings.الأمان_والخصوصية')}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-4">
+                <CardContent className={t("pages.settings.name.space_y_4")}>
+                  <div className={t("pages.settings.name.space_y_4")}>
                     <div>
-                      <h4 className="text-sm font-medium mb-2">
-                        تغيير كلمة المرور
-                      </h4>
-                      <div className="space-y-2">
-                        <Label htmlFor="currentPassword">
-                          كلمة المرور الحالية
-                        </Label>
+                      <h4 className={t("pages.settings.name.text_sm_font_medium_mb_2")}>{t('pages.settings.تغيير_كلمة_المرور')}</h4>
+                      <div className={t("pages.settings.name.space_y_2")}>
+                        <Label htmlFor="currentPassword">{t('pages.settings.كلمة_المرور_الحالية')}</Label>
                         <Input
                           id="currentPassword"
                           type="password"
-                          placeholder="أدخل كلمة المرور الحالية"
+                          placeholder="{t('pages.settings.placeholder.أدخل_كلمة_المرور_الحالية')}"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="newPassword">كلمة المرور الجديدة</Label>
+                      <div className={t("pages.settings.name.space_y_2")}>
+                        <Label htmlFor="newPassword">{t('pages.settings.كلمة_المرور_الجديدة')}</Label>
                         <Input
                           id="newPassword"
                           type="password"
-                          placeholder="أدخل كلمة المرور الجديدة"
+                          placeholder="{t('pages.settings.placeholder.أدخل_كلمة_المرور_الجديدة')}"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="confirmPassword">
-                          تأكيد كلمة المرور
-                        </Label>
+                      <div className={t("pages.settings.name.space_y_2")}>
+                        <Label htmlFor="confirmPassword">{t('pages.settings.تأكيد_كلمة_المرور')}</Label>
                         <Input
                           id="confirmPassword"
                           type="password"
-                          placeholder="أعد إدخال كلمة المرور"
+                          placeholder="{t('pages.settings.placeholder.أعد_إدخال_كلمة_المرور')}"
                         />
                       </div>
-                      <Button className="mt-2">تحديث كلمة المرور</Button>
+                      <Button className={t("pages.settings.name.mt_2")}>{t('pages.settings.تحديث_كلمة_المرور')}</Button>
                     </div>
                   </div>
 
                   <Separator />
 
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-medium">إعدادات الجلسة</h4>
-                    <div className="flex items-center justify-between">
+                  <div className={t("pages.settings.name.space_y_4")}>
+                    <h4 className={t("pages.settings.name.text_sm_font_medium")}>{t('pages.settings.إعدادات_الجلسة')}</h4>
+                    <div className={t("pages.settings.name.flex_items_center_justify_between")}>
                       <div>
-                        <Label className="text-base">
-                          انتهاء صلاحية الجلسة التلقائي
-                        </Label>
-                        <p className="text-sm text-muted-foreground">
-                          تسجيل الخروج التلقائي عند عدم النشاط
-                        </p>
+                        <Label className={t("pages.settings.name.text_base")}>{t('pages.settings.انتهاء_صلاحية_الجلسة_التلقائي')}</Label>
+                        <p className={t("pages.settings.name.text_sm_text_muted_foreground")}>{t('pages.settings.تسجيل_الخروج_التلقائي_عند_عدم_النشاط')}</p>
                       </div>
                       <Switch defaultChecked />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="sessionTimeout">
-                        مدة انتهاء الصلاحية
-                      </Label>
+                    <div className={t("pages.settings.name.space_y_2")}>
+                      <Label htmlFor="sessionTimeout">{t('pages.settings.مدة_انتهاء_الصلاحية')}</Label>
                       <Select defaultValue="30">
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="15">15 دقيقة</SelectItem>
-                          <SelectItem value="30">30 دقيقة</SelectItem>
-                          <SelectItem value="60">ساعة واحدة</SelectItem>
-                          <SelectItem value="120">ساعتان</SelectItem>
+                          <SelectItem value="15">{t('pages.settings.15_دقيقة')}</SelectItem>
+                          <SelectItem value="30">{t('pages.settings.30_دقيقة')}</SelectItem>
+                          <SelectItem value="60">{t('pages.settings.ساعة_واحدة')}</SelectItem>
+                          <SelectItem value="120">{t('pages.settings.ساعتان')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -2221,25 +2080,23 @@ export default function Settings() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="notification-center" className="space-y-6">
+            <TabsContent value="notification-center" className={t("pages.settings.name.space_y_6")}>
               <NotificationCenter />
             </TabsContent>
 
-            <TabsContent value="location" className="space-y-6">
+            <TabsContent value="location" className={t("pages.settings.name.space_y_6")}>
               <Card>
                 <CardHeader>
-                  <CardTitle>إعدادات موقع المصنع</CardTitle>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    حدد الموقع الجغرافي للمصنع والنطاق المسموح لتسجيل الحضور
-                  </p>
+                  <CardTitle>{t('pages.settings.إعدادات_موقع_المصنع')}</CardTitle>
+                  <p className={t("pages.settings.name.text_sm_text_gray_600_dark_text_gray_400")}>{t('pages.settings.حدد_الموقع_الجغرافي_للمصنع_والنطاق_المسموح_لتسجيل_الحضور')}</p>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className={t("pages.settings.name.space_y_6")}>
                   <LocationSettingsForm />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="whatsapp-webhooks" className="space-y-6">
+            <TabsContent value="whatsapp-webhooks" className={t("pages.settings.name.space_y_6")}>
               <WhatsAppWebhooksTab />
             </TabsContent>
           </Tabs>
@@ -2250,20 +2107,18 @@ export default function Settings() {
       <AlertDialog open={showRestoreConfirm} onOpenChange={setShowRestoreConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد استعادة النسخة الاحتياطية</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>هل أنت متأكد من استعادة هذه النسخة الاحتياطية؟</p>
-              <p className="font-semibold text-red-600">
-                تحذير: سيتم استبدال جميع البيانات الحالية بالبيانات من النسخة الاحتياطية.
-              </p>
+            <AlertDialogTitle>{t('pages.settings.تأكيد_استعادة_النسخة_الاحتياطية')}</AlertDialogTitle>
+            <AlertDialogDescription className={t("pages.settings.name.space_y_2")}>
+              <p>{t('pages.settings.هل_أنت_متأكد_من_استعادة_هذه_النسخة_الاحتياطية؟')}</p>
+              <p className={t("pages.settings.name.font_semibold_text_red_600")}>{t('pages.settings.تحذير:_سيتم_استبدال_جميع_البيانات_الحالية_بالبيانات_من_النسخة_الاحتياطية.')}</p>
               {pendingBackupData?.metadata && (
-                <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-800 rounded text-sm">
+                <div className={t("pages.settings.name.mt_2_p_2_bg_gray_100_dark_bg_gray_800_rounded_text_sm")}>
                   <p>الملف: {selectedBackupFile?.name}</p>
                   <p>عدد الجداول: {pendingBackupData.metadata.totalTables}</p>
                   <p>التاريخ: {new Date(pendingBackupData.metadata.timestamp).toLocaleString('ar-SA')}</p>
                 </div>
               )}
-              <p className="text-sm mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
+              <p className={t("pages.settings.name.text_sm_mt_2")}>{t('pages.settings.هذا_الإجراء_لا_يمكن_التراجع_عنه.')}</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -2271,13 +2126,11 @@ export default function Settings() {
               setShowRestoreConfirm(false);
               setSelectedBackupFile(null);
               setPendingBackupData(null);
-            }}>
-              إلغاء
-            </AlertDialogCancel>
+            }}>{t('pages.settings.إلغاء')}</AlertDialogCancel>
             <AlertDialogAction 
               onClick={confirmRestore}
               disabled={restoreBackupMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
+              className={t("pages.settings.name.bg_red_600_hover_bg_red_700")}
             >
               {restoreBackupMutation.isPending ? "جاري الاستعادة..." : "استعادة النسخة"}
             </AlertDialogAction>
@@ -2418,47 +2271,46 @@ function LocationSettingsForm() {
   };
 
   if (isLoading) {
-    return <div>جاري التحميل...</div>;
+    return <div>{t('pages.settings.جاري_التحميل...')}</div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className={t("pages.settings.name.space_y_6")}>
       {/* List of locations */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">مواقع المصانع</h3>
+      <div className={t("pages.settings.name.space_y_4")}>
+        <div className={t("pages.settings.name.flex_justify_between_items_center")}>
+          <h3 className={t("pages.settings.name.text_lg_font_semibold")}>{t('pages.settings.مواقع_المصانع')}</h3>
           <Button onClick={() => setShowForm(!showForm)} data-testid="button-add-location">
-            <Plus className="w-4 h-4 ml-2" />
+            <Plus className={t("pages.settings.name.w_4_h_4_ml_2")} />
             {showForm ? "إلغاء" : "إضافة موقع جديد"}
           </Button>
         </div>
 
-        {locations && locations.length > 0 ? (
-          <div className="grid gap-4">
+        {locations && locations.length >{t('pages.settings.0_?_(')}<div className={t("pages.settings.name.grid_gap_4")}>
             {locations.map((location: any) => (
               <Card key={location.id} className={!location.is_active ? "opacity-50" : ""}>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold">{location.name_ar}</h4>
+                <CardContent className={t("pages.settings.name.pt_6")}>
+                  <div className={t("pages.settings.name.flex_justify_between_items_start")}>
+                    <div className={t("pages.settings.name.flex_1")}>
+                      <div className={t("pages.settings.name.flex_items_center_gap_2_mb_2")}>
+                        <h4 className={t("pages.settings.name.font_semibold")}>{location.name_ar}</h4>
                         <Badge variant={location.is_active ? "default" : "secondary"}>
                           {location.is_active ? "نشط" : "غير نشط"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <p className={t("pages.settings.name.text_sm_text_gray_600_dark_text_gray_400_mb_2")}>
                         {location.description || location.name}
                       </p>
-                      <div className="text-sm space-y-1">
+                      <div className={t("pages.settings.name.text_sm_space_y_1")}>
                         <p>
-                          <strong>الإحداثيات:</strong> {location.latitude}, {location.longitude}
+                          <strong>{t('pages.settings.الإحداثيات:')}</strong> {location.latitude}, {location.longitude}
                         </p>
                         <p>
-                          <strong>النطاق:</strong> {location.allowed_radius} متر
+                          <strong>{t('pages.settings.النطاق:')}</strong> {location.allowed_radius} متر
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className={t("pages.settings.name.flex_gap_2")}>
                       <Button
                         variant="outline"
                         size="sm"
@@ -2468,32 +2320,28 @@ function LocationSettingsForm() {
                         })}
                         data-testid={`button-toggle-${location.id}`}
                       >
-                        {location.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {location.is_active ? <EyeOff className={t("pages.settings.name.w_4_h_4")} /> : <Eye className={t("pages.settings.name.w_4_h_4")} />}
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(location)}
                         data-testid={`button-edit-${location.id}`}
-                      >
-                        تعديل
-                      </Button>
+                      >{t('pages.settings.تعديل')}</Button>
                       <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => deleteMutation.mutate(location.id)}
                         data-testid={`button-delete-${location.id}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className={t("pages.settings.name.w_4_h_4")} />
                       </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
-        ) : (
-          <p className="text-center text-gray-500 py-8">لا توجد مواقع مضافة بعد</p>
+          </div>{t('pages.settings.)_:_(')}<p className={t("pages.settings.name.text_center_text_gray_500_py_8")}>{t('pages.settings.لا_توجد_مواقع_مضافة_بعد')}</p>
         )}
       </div>
 
@@ -2503,43 +2351,43 @@ function LocationSettingsForm() {
           <CardHeader>
             <CardTitle>{editingLocation ? "تعديل الموقع" : "إضافة موقع جديد"}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="name-en">الاسم (English)</Label>
+          <CardContent className={t("pages.settings.name.space_y_6")}>
+            <div className={t("pages.settings.name.grid_gap_4_md_grid_cols_2")}>
+              <div className={t("pages.settings.name.space_y_2")}>
+                <Label htmlFor="name-en">{t('pages.settings.الاسم_(english)')}</Label>
                 <Input
                   id="name-en"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Main Factory"
+                  placeholder="{t('pages.settings.placeholder.main_factory')}"
                   data-testid="input-name-en"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="name-ar">الاسم (عربي)</Label>
+              <div className={t("pages.settings.name.space_y_2")}>
+                <Label htmlFor="name-ar">{t('pages.settings.الاسم_(عربي)')}</Label>
                 <Input
                   id="name-ar"
                   value={nameAr}
                   onChange={(e) => setNameAr(e.target.value)}
-                  placeholder="المصنع الرئيسي"
+                  placeholder="{t('pages.settings.placeholder.المصنع_الرئيسي')}"
                   data-testid="input-name-ar"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">الوصف (اختياري)</Label>
+            <div className={t("pages.settings.name.space_y_2")}>
+              <Label htmlFor="description">{t('pages.settings.الوصف_(اختياري)')}</Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="وصف الموقع..."
+                placeholder="{t('pages.settings.placeholder.وصف_الموقع...')}"
                 data-testid="input-description"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>اختر الموقع من الخريطة</Label>
+            <div className={t("pages.settings.name.space_y_2")}>
+              <Label>{t('pages.settings.اختر_الموقع_من_الخريطة')}</Label>
               <LocationMapPicker
                 latitude={latitude}
                 longitude={longitude}
@@ -2550,14 +2398,12 @@ function LocationSettingsForm() {
                 }}
                 editable={true}
               />
-              <p className="text-xs text-gray-500">
-                انقر على الخريطة لتحديد الموقع
-              </p>
+              <p className={t("pages.settings.name.text_xs_text_gray_500")}>{t('pages.settings.انقر_على_الخريطة_لتحديد_الموقع')}</p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="lat">دائرة العرض</Label>
+            <div className={t("pages.settings.name.grid_gap_4_md_grid_cols_3")}>
+              <div className={t("pages.settings.name.space_y_2")}>
+                <Label htmlFor="lat">{t('pages.settings.دائرة_العرض')}</Label>
                 <Input
                   id="lat"
                   type="number"
@@ -2567,8 +2413,8 @@ function LocationSettingsForm() {
                   data-testid="input-lat"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lng">خط الطول</Label>
+              <div className={t("pages.settings.name.space_y_2")}>
+                <Label htmlFor="lng">{t('pages.settings.خط_الطول')}</Label>
                 <Input
                   id="lng"
                   type="number"
@@ -2578,8 +2424,8 @@ function LocationSettingsForm() {
                   data-testid="input-lng"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="radius">النطاق (متر)</Label>
+              <div className={t("pages.settings.name.space_y_2")}>
+                <Label htmlFor="radius">{t('pages.settings.النطاق_(متر)')}</Label>
                 <Input
                   id="radius"
                   type="number"
@@ -2590,23 +2436,21 @@ function LocationSettingsForm() {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className={t("pages.settings.name.flex_gap_2")}>
               <Button
                 onClick={handleSubmit}
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="flex-1"
+                className={t("pages.settings.name.flex_1")}
                 data-testid="button-submit-location"
               >
-                <Save className="w-4 h-4 ml-2" />
+                <Save className={t("pages.settings.name.w_4_h_4_ml_2")} />
                 {editingLocation ? "تحديث الموقع" : "إضافة الموقع"}
               </Button>
               <Button
                 variant="outline"
                 onClick={resetForm}
                 data-testid="button-cancel-form"
-              >
-                إلغاء
-              </Button>
+              >{t('pages.settings.إلغاء')}</Button>
             </div>
           </CardContent>
         </Card>

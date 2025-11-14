@@ -97,12 +97,7 @@ export default function GroupedCuttingQueue({
     s => s.name_ar?.includes("تقطيع") || s.name?.toLowerCase().includes("cutting")
   );
   
-  const cuttingMachines = machines.filter(m => 
-    m.status === "active" && 
-    (m.type === "cutting" || m.section_id === cuttingSection?.id)
-  );
-
-  const form = useForm<CutFormData>({
+  const cuttingMachines = machines.filter(m =>{t('components.production.GroupedCuttingQueue.m.status_===_"active"_&&_(m.type_===_"cutting"_||_m.section_id_===_cuttingsection?.id)_);_const_form_=_useform')}<CutFormData>({
     resolver: zodResolver(cutFormSchema),
     defaultValues: {
       cut_weight_kg: 0,
@@ -223,10 +218,10 @@ export default function GroupedCuttingQueue({
   if (items.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <div className="text-gray-500">
-            <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>لا توجد رولات جاهزة للتقطيع</p>
+        <CardContent className={t("components.production.groupedcuttingqueue.name.p_6_text_center")}>
+          <div className={t("components.production.groupedcuttingqueue.name.text_gray_500")}>
+            <Clock className={t("components.production.groupedcuttingqueue.name.h_12_w_12_mx_auto_mb_2_opacity_50")} />
+            <p>{t('components.production.GroupedCuttingQueue.لا_توجد_رولات_جاهزة_للتقطيع')}</p>
           </div>
         </CardContent>
       </Card>
@@ -234,18 +229,18 @@ export default function GroupedCuttingQueue({
   }
 
   return (
-    <div className="space-y-4">
+    <div className={t("components.production.groupedcuttingqueue.name.space_y_4")}>
       {items.map((order) => (
-        <Card key={order.id} className="border-l-4 border-l-blue-500">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Package className="h-5 w-5 text-blue-600" />
+        <Card key={order.id} className={t("components.production.groupedcuttingqueue.name.border_l_4_border_l_blue_500")}>
+          <CardHeader className={t("components.production.groupedcuttingqueue.name.pb_3")}>
+            <div className={t("components.production.groupedcuttingqueue.name.flex_items_center_justify_between")}>
+              <div className={t("components.production.groupedcuttingqueue.name.flex_items_center_gap_3")}>
+                <Package className={t("components.production.groupedcuttingqueue.name.h_5_w_5_text_blue_600")} />
                 <div>
-                  <CardTitle className="text-lg">
+                  <CardTitle className={t("components.production.groupedcuttingqueue.name.text_lg")}>
                     طلب رقم: {order.order_number}
                   </CardTitle>
-                  <p className="text-base font-bold text-blue-700">
+                  <p className={t("components.production.groupedcuttingqueue.name.text_base_font_bold_text_blue_700")}>
                     العميل:{" "}
                     {order.customer_name_ar ||
                       order.customer_name ||
@@ -253,14 +248,14 @@ export default function GroupedCuttingQueue({
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="text-sm text-muted-foreground">
-                  <div className="w-20">
+              <div className={t("components.production.groupedcuttingqueue.name.flex_items_center_gap_3")}>
+                <div className={t("components.production.groupedcuttingqueue.name.text_sm_text_muted_foreground")}>
+                  <div className={t("components.production.groupedcuttingqueue.name.w_20")}>
                     <Progress
                       value={calculateOrderProgress(order)}
-                      className="h-2"
+                      className={t("components.production.groupedcuttingqueue.name.h_2")}
                     />
-                    <span className="text-xs">
+                    <span className={t("components.production.groupedcuttingqueue.name.text_xs")}>
                       {calculateOrderProgress(order)}%
                     </span>
                   </div>
@@ -279,9 +274,7 @@ export default function GroupedCuttingQueue({
                   data-testid={`button-expand-order-${order.id}`}
                 >
                   {expandedOrders[order.id] ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronUp className={t("components.production.groupedcuttingqueue.name.h_4_w_4")} />{t('components.production.GroupedCuttingQueue.)_:_(')}<ChevronDown className={t("components.production.groupedcuttingqueue.name.h_4_w_4")} />
                   )}
                 </Button>
               </div>
@@ -290,61 +283,61 @@ export default function GroupedCuttingQueue({
 
           <Collapsible open={expandedOrders[order.id]}>
             <CollapsibleContent>
-              <CardContent className="pt-0">
-                <div className="space-y-4">
+              <CardContent className={t("components.production.groupedcuttingqueue.name.pt_0")}>
+                <div className={t("components.production.groupedcuttingqueue.name.space_y_4")}>
                   {order.production_orders?.map((productionOrder: any) => (
                     <Card
                       key={productionOrder.id}
-                      className="bg-gray-50 border-l-2 border-l-green-400"
+                      className={t("components.production.groupedcuttingqueue.name.bg_gray_50_border_l_2_border_l_green_400")}
                     >
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
+                      <CardHeader className={t("components.production.groupedcuttingqueue.name.pb_2")}>
+                        <div className={t("components.production.groupedcuttingqueue.name.flex_items_center_justify_between")}>
                           <div>
-                            <h4 className="font-medium text-base">
+                            <h4 className={t("components.production.groupedcuttingqueue.name.font_medium_text_base")}>
                               {productionOrder.production_order_number}
                             </h4>
-                            <p className="text-sm text-muted-foreground">
+                            <p className={t("components.production.groupedcuttingqueue.name.text_sm_text_muted_foreground")}>
                               {productionOrder.item_name_ar ||
                                 productionOrder.item_name ||
                                 "غير محدد"}
                             </p>
-                            <div className="grid grid-cols-3 gap-x-4 gap-y-1 mt-2 text-xs">
+                            <div className={t("components.production.groupedcuttingqueue.name.grid_grid_cols_3_gap_x_4_gap_y_1_mt_2_text_xs")}>
                               {productionOrder.size_caption && (
                                 <div>
-                                  <span className="font-medium">المقاس: </span>
-                                  <span className="text-muted-foreground">
+                                  <span className={t("components.production.groupedcuttingqueue.name.font_medium")}>{t('components.production.GroupedCuttingQueue.المقاس:')}</span>
+                                  <span className={t("components.production.groupedcuttingqueue.name.text_muted_foreground")}>
                                     {productionOrder.size_caption}
                                   </span>
                                 </div>
                               )}
                               {productionOrder.thickness && (
                                 <div>
-                                  <span className="font-medium">السماكة: </span>
-                                  <span className="text-muted-foreground">
+                                  <span className={t("components.production.groupedcuttingqueue.name.font_medium")}>{t('components.production.GroupedCuttingQueue.السماكة:')}</span>
+                                  <span className={t("components.production.groupedcuttingqueue.name.text_muted_foreground")}>
                                     {productionOrder.thickness}
                                   </span>
                                 </div>
                               )}
                               {productionOrder.raw_material && (
                                 <div>
-                                  <span className="font-medium">الخامة: </span>
-                                  <span className="text-muted-foreground">
+                                  <span className={t("components.production.groupedcuttingqueue.name.font_medium")}>{t('components.production.GroupedCuttingQueue.الخامة:')}</span>
+                                  <span className={t("components.production.groupedcuttingqueue.name.text_muted_foreground")}>
                                     {productionOrder.raw_material}
                                   </span>
                                 </div>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            <div className="text-sm text-muted-foreground">
-                              <div className="w-16">
+                          <div className={t("components.production.groupedcuttingqueue.name.flex_items_center_gap_3")}>
+                            <div className={t("components.production.groupedcuttingqueue.name.text_sm_text_muted_foreground")}>
+                              <div className={t("components.production.groupedcuttingqueue.name.w_16")}>
                                 <Progress
                                   value={calculateProductionOrderProgress(
                                     productionOrder,
                                   )}
-                                  className="h-2"
+                                  className={t("components.production.groupedcuttingqueue.name.h_2")}
                                 />
-                                <span className="text-xs">
+                                <span className={t("components.production.groupedcuttingqueue.name.text_xs")}>
                                   {calculateProductionOrderProgress(
                                     productionOrder,
                                   )}
@@ -366,9 +359,7 @@ export default function GroupedCuttingQueue({
                               data-testid={`button-expand-production-${productionOrder.id}`}
                             >
                               {expandedProductionOrders[productionOrder.id] ? (
-                                <ChevronUp className="h-4 w-4" />
-                              ) : (
-                                <ChevronDown className="h-4 w-4" />
+                                <ChevronUp className={t("components.production.groupedcuttingqueue.name.h_4_w_4")} />{t('components.production.GroupedCuttingQueue.)_:_(')}<ChevronDown className={t("components.production.groupedcuttingqueue.name.h_4_w_4")} />
                               )}
                             </Button>
                           </div>
@@ -379,38 +370,33 @@ export default function GroupedCuttingQueue({
                         open={expandedProductionOrders[productionOrder.id]}
                       >
                         <CollapsibleContent>
-                          <CardContent className="pt-0">
-                            <div className="mt-4 ml-6 space-y-2">
-                              <h5 className="text-sm font-medium text-gray-700 mb-2">
+                          <CardContent className={t("components.production.groupedcuttingqueue.name.pt_0")}>
+                            <div className={t("components.production.groupedcuttingqueue.name.mt_4_ml_6_space_y_2")}>
+                              <h5 className={t("components.production.groupedcuttingqueue.name.text_sm_font_medium_text_gray_700_mb_2")}>
                                 الرولات ({productionOrder.rolls?.length || 0})
                               </h5>
                               {!productionOrder.rolls || productionOrder.rolls.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
-                                  لا توجد رولات بعد
-                                </p>
-                              ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                <p className={t("components.production.groupedcuttingqueue.name.text_sm_text_muted_foreground")}>{t('components.production.GroupedCuttingQueue.لا_توجد_رولات_بعد')}</p>{t('components.production.GroupedCuttingQueue.)_:_(')}<div className={t("components.production.groupedcuttingqueue.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_2")}>
                                   {productionOrder.rolls.map((roll: any) => (
                                     <div
                                       key={roll.id}
-                                      className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                      className={t("components.production.groupedcuttingqueue.name.border_rounded_p_3_bg_gray_50_hover_bg_gray_100_transition_colors")}
                                       data-testid={`roll-item-${roll.id}`}
                                     >
-                                      <div className="flex flex-col gap-2">
-                                        <div className="flex justify-between items-start">
-                                          <div className="flex-1">
-                                            <p className="font-medium text-sm">
+                                      <div className={t("components.production.groupedcuttingqueue.name.flex_flex_col_gap_2")}>
+                                        <div className={t("components.production.groupedcuttingqueue.name.flex_justify_between_items_start")}>
+                                          <div className={t("components.production.groupedcuttingqueue.name.flex_1")}>
+                                            <p className={t("components.production.groupedcuttingqueue.name.font_medium_text_sm")}>
                                               {roll.roll_number}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className={t("components.production.groupedcuttingqueue.name.text_xs_text_muted_foreground")}>
                                               الوزن: {formatWeight(safeParseFloat(roll.weight_kg, 0))}
                                             </p>
-                                            {roll.cut_weight_total_kg > 0 && (
-                                              <div className="text-xs space-y-1 mt-1">
-                                                <p className="text-green-600">
+                                            {roll.cut_weight_total_kg >{t('components.production.GroupedCuttingQueue.0_&&_(')}<div className={t("components.production.groupedcuttingqueue.name.text_xs_space_y_1_mt_1")}>
+                                                <p className={t("components.production.groupedcuttingqueue.name.text_green_600")}>
                                                   الوزن الصافي: {formatWeight(safeParseFloat(roll.cut_weight_total_kg, 0))}
                                                 </p>
-                                                <p className="text-red-600">
+                                                <p className={t("components.production.groupedcuttingqueue.name.text_red_600")}>
                                                   الهدر: {formatWeight(safeParseFloat(roll.waste_kg, 0))}
                                                 </p>
                                               </div>
@@ -423,13 +409,13 @@ export default function GroupedCuttingQueue({
                                             variant="default"
                                             data-testid={`button-cut-${roll.id}`}
                                           >
-                                            <Scissors className="h-3 w-3" />
+                                            <Scissors className={t("components.production.groupedcuttingqueue.name.h_3_w_3")} />
                                           </Button>
                                         </div>
                                         <Button
                                           variant="outline"
                                           size="sm"
-                                          className="w-full text-xs"
+                                          className={t("components.production.groupedcuttingqueue.name.w_full_text_xs")}
                                           onClick={() => {
                                             printRollLabel({
                                               roll: roll,
@@ -448,9 +434,7 @@ export default function GroupedCuttingQueue({
                                           }}
                                           data-testid={`button-print-label-${roll.id}`}
                                         >
-                                          <Printer className="h-3 w-3 mr-1" />
-                                          طباعة ملصق
-                                        </Button>
+                                          <Printer className={t("components.production.groupedcuttingqueue.name.h_3_w_3_mr_1")} />{t('components.production.GroupedCuttingQueue.طباعة_ملصق')}</Button>
                                       </div>
                                     </div>
                                   ))}
@@ -471,19 +455,17 @@ export default function GroupedCuttingQueue({
 
       {/* Dialog for cutting input */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className={t("components.production.groupedcuttingqueue.name.max_w_md")}>
           <DialogHeader>
-            <DialogTitle>تقطيع الرول</DialogTitle>
-            <DialogDescription>
-              إدخال بيانات تقطيع الرول وتحديد الكميات المطلوبة
-            </DialogDescription>
+            <DialogTitle>{t('components.production.GroupedCuttingQueue.تقطيع_الرول')}</DialogTitle>
+            <DialogDescription>{t('components.production.GroupedCuttingQueue.إدخال_بيانات_تقطيع_الرول_وتحديد_الكميات_المطلوبة')}</DialogDescription>
           </DialogHeader>
 
           {selectedRoll && (
-            <div className="space-y-4">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <p className="font-medium">{selectedRoll.roll_number}</p>
-                <p className="text-sm text-gray-500">
+            <div className={t("components.production.groupedcuttingqueue.name.space_y_4")}>
+              <div className={t("components.production.groupedcuttingqueue.name.p_3_bg_gray_50_rounded_lg")}>
+                <p className={t("components.production.groupedcuttingqueue.name.font_medium")}>{selectedRoll.roll_number}</p>
+                <p className={t("components.production.groupedcuttingqueue.name.text_sm_text_gray_500")}>
                   الوزن الأصلي:{" "}
                   {formatNumberAr(safeParseFloat(selectedRoll.weight_kg, 0), 2)} كجم
                 </p>
@@ -492,28 +474,26 @@ export default function GroupedCuttingQueue({
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(handleCutSubmit)}
-                  className="space-y-4"
+                  className={t("components.production.groupedcuttingqueue.name.space_y_4")}
                 >
                   <FormField
                     control={form.control}
-                    name="cutting_machine_id"
+                    name="{t('components.production.GroupedCuttingQueue.name.cutting_machine_id')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>ماكينة القطع *</FormLabel>
+                        <FormLabel>{t('components.production.GroupedCuttingQueue.ماكينة_القطع_*')}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger data-testid="select-cutting-machine">
-                              <SelectValue placeholder="اختر ماكينة القطع" />
+                              <SelectValue placeholder="{t('components.production.GroupedCuttingQueue.placeholder.اختر_ماكينة_القطع')}" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             {cuttingMachines.length === 0 ? (
-                              <div className="p-2 text-sm text-muted-foreground text-center">
-                                لا توجد ماكينات قطع نشطة
-                              </div>
+                              <div className={t("components.production.groupedcuttingqueue.name.p_2_text_sm_text_muted_foreground_text_center")}>{t('components.production.GroupedCuttingQueue.لا_توجد_ماكينات_قطع_نشطة')}</div>
                             ) : (
                               cuttingMachines.map((machine) => (
                                 <SelectItem
@@ -534,15 +514,15 @@ export default function GroupedCuttingQueue({
                   
                   <FormField
                     control={form.control}
-                    name="cut_weight_kg"
+                    name="{t('components.production.GroupedCuttingQueue.name.cut_weight_kg')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الوزن الصافي المقطع (كجم)</FormLabel>
+                        <FormLabel>{t('components.production.GroupedCuttingQueue.الوزن_الصافي_المقطع_(كجم)')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             step="0.01"
-                            placeholder="أدخل الوزن الصافي"
+                            placeholder="{t('components.production.GroupedCuttingQueue.placeholder.أدخل_الوزن_الصافي')}"
                             {...field}
                             data-testid="input-cut-weight"
                           />
@@ -554,14 +534,14 @@ export default function GroupedCuttingQueue({
 
                   <FormField
                     control={form.control}
-                    name="pieces_count"
+                    name="{t('components.production.GroupedCuttingQueue.name.pieces_count')}"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>عدد القطع (اختياري)</FormLabel>
+                        <FormLabel>{t('components.production.GroupedCuttingQueue.عدد_القطع_(اختياري)')}</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="أدخل عدد القطع"
+                            placeholder="{t('components.production.GroupedCuttingQueue.placeholder.أدخل_عدد_القطع')}"
                             {...field}
                             data-testid="input-pieces-count"
                           />
@@ -571,10 +551,9 @@ export default function GroupedCuttingQueue({
                     )}
                   />
 
-                  {form.watch("cut_weight_kg") > 0 && selectedRoll && (
-                    <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                      <p className="text-sm">
-                        <span className="font-medium">الهدر المحسوب: </span>
+                  {form.watch("cut_weight_kg") >{t('components.production.GroupedCuttingQueue.0_&&_selectedroll_&&_(')}<div className={t("components.production.groupedcuttingqueue.name.p_3_bg_yellow_50_rounded_lg_border_border_yellow_200")}>
+                      <p className={t("components.production.groupedcuttingqueue.name.text_sm")}>
+                        <span className={t("components.production.groupedcuttingqueue.name.font_medium")}>{t('components.production.GroupedCuttingQueue.الهدر_المحسوب:')}</span>
                         <span
                           className={
                             calculateWaste(
@@ -595,15 +574,13 @@ export default function GroupedCuttingQueue({
                     </div>
                   )}
 
-                  <div className="flex justify-end space-x-2 space-x-reverse">
+                  <div className={t("components.production.groupedcuttingqueue.name.flex_justify_end_space_x_2_space_x_reverse")}>
                     <Button
                       type="button"
                       variant="outline"
                       onClick={() => setDialogOpen(false)}
                       data-testid="button-cancel-cut"
-                    >
-                      إلغاء
-                    </Button>
+                    >{t('components.production.GroupedCuttingQueue.إلغاء')}</Button>
                     <Button
                       type="submit"
                       disabled={cutMutation.isPending}

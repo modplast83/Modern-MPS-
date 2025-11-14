@@ -74,9 +74,7 @@ export default function RollCreationModalEnhanced({
   const { t } = useTranslation();
   const [lastProductionTime, setLastProductionTime] = useState<number | null>(null);
 
-  const rollFormSchema = useMemo(() => createRollFormSchema(t), [t]);
-
-  const form = useForm<RollFormData>({
+  const rollFormSchema = useMemo(() =>{t('components.modals.RollCreationModalEnhanced.createrollformschema(t),_[t]);_const_form_=_useform')}<RollFormData>({
     resolver: zodResolver(rollFormSchema),
     defaultValues: {
       weight_kg: "",
@@ -204,14 +202,14 @@ export default function RollCreationModalEnhanced({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]" dir="rtl">
+      <DialogContent className={t("components.modals.name.sm_max_w_500px_")} dir="rtl">
         <DialogHeader>
           <DialogTitle>
             {isFinalRoll ? t('modals.rollCreation.titleFinal') : t('modals.rollCreation.title')}
           </DialogTitle>
           <DialogDescription>
             {productionOrderData && (
-              <div className="mt-2 space-y-1 text-sm">
+              <div className={t("components.modals.name.mt_2_space_y_1_text_sm")}>
                 <p>{t('modals.rollCreation.productionOrder')}: {productionOrderData.production_order_number}</p>
                 <p>{t('modals.rollCreation.product')}: {productionOrderData.product_name}</p>
                 <p>{t('modals.rollCreation.customer')}: {productionOrderData.customer_name}</p>
@@ -221,38 +219,38 @@ export default function RollCreationModalEnhanced({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className={t("components.modals.name.space_y_4")}>
             {/* Suggested Roll Number */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-              <p className="text-sm text-blue-900 dark:text-blue-100">
+            <div className={t("components.modals.name.bg_blue_50_dark_bg_blue_900_20_p_3_rounded_lg")}>
+              <p className={t("components.modals.name.text_sm_text_blue_900_dark_text_blue_100")}>
                 {t('modals.rollCreation.suggestedRollNumber')}: <strong>{suggestedRollNumber}</strong>
               </p>
             </div>
 
             {/* Production Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Package className="h-4 w-4 text-gray-600" />
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{t('modals.rollCreation.remainingQuantity')}</p>
+            <div className={t("components.modals.name.grid_grid_cols_2_gap_4")}>
+              <div className={t("components.modals.name.bg_gray_50_dark_bg_gray_800_p_3_rounded_lg")}>
+                <div className={t("components.modals.name.flex_items_center_gap_2")}>
+                  <Package className={t("components.modals.name.h_4_w_4_text_gray_600")} />
+                  <p className={t("components.modals.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('modals.rollCreation.remainingQuantity')}</p>
                 </div>
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <p className={t("components.modals.name.text_lg_font_bold_text_gray_900_dark_text_gray_100")}>
                   {formatNumberAr(remainingQuantity)} {t('units.kg')}
                 </p>
                 {remainingQuantity < 50 && (
-                  <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3" />
+                  <p className={t("components.modals.name.text_xs_text_orange_600_dark_text_orange_400_mt_1_flex_items_center_gap_1")}>
+                    <AlertTriangle className={t("components.modals.name.h_3_w_3")} />
                     {t('modals.rollCreation.nearingCompletion')}
                   </p>
                 )}
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-gray-600" />
-                  <p className="text-xs text-gray-600 dark:text-gray-400">{t('modals.rollCreation.avgProductionTime')}</p>
+              <div className={t("components.modals.name.bg_gray_50_dark_bg_gray_800_p_3_rounded_lg")}>
+                <div className={t("components.modals.name.flex_items_center_gap_2")}>
+                  <Clock className={t("components.modals.name.h_4_w_4_text_gray_600")} />
+                  <p className={t("components.modals.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('modals.rollCreation.avgProductionTime')}</p>
                 </div>
-                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                <p className={t("components.modals.name.text_lg_font_bold_text_gray_900_dark_text_gray_100")}>
                   {averageProductionTime ? `${averageProductionTime} ${t('forms.minute')}` : t('modals.rollCreation.notAvailable')}
                 </p>
               </div>
@@ -261,7 +259,7 @@ export default function RollCreationModalEnhanced({
             {/* Weight Input */}
             <FormField
               control={form.control}
-              name="weight_kg"
+              name="{t('components.modals.RollCreationModalEnhanced.name.weight_kg')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.rollCreation.weightKg')}</FormLabel>
@@ -271,7 +269,7 @@ export default function RollCreationModalEnhanced({
                       type="number"
                       step="0.01"
                       placeholder={t('modals.rollCreation.enterWeight')}
-                      className="text-right"
+                      className={t("components.modals.name.text_right")}
                       data-testid="input-weight"
                     />
                   </FormControl>
@@ -283,7 +281,7 @@ export default function RollCreationModalEnhanced({
             {/* Machine Selection */}
             <FormField
               control={form.control}
-              name="film_machine_id"
+              name="{t('components.modals.RollCreationModalEnhanced.name.film_machine_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.rollCreation.filmMachine')}</FormLabel>
@@ -311,12 +309,11 @@ export default function RollCreationModalEnhanced({
             />
 
             {/* Final Roll Checkbox */}
-            {!isFinalRoll && productionOrderData?.rolls_count > 0 && (
-              <FormField
+            {!isFinalRoll && productionOrderData?.rolls_count >{t('components.modals.RollCreationModalEnhanced.0_&&_(')}<FormField
                 control={form.control}
-                name="is_final_roll"
+                name="{t('components.modals.RollCreationModalEnhanced.name.is_final_roll')}"
                 render={({ field }) => (
-                  <FormItem className="flex items-center space-x-2 space-y-0 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                  <FormItem className={t("components.modals.name.flex_items_center_space_x_2_space_y_0_bg_yellow_50_dark_bg_yellow_900_20_p_3_rounded_lg")}>
                     <FormControl>
                       <Checkbox
                         checked={field.value}
@@ -324,11 +321,11 @@ export default function RollCreationModalEnhanced({
                         data-testid="checkbox-final-roll"
                       />
                     </FormControl>
-                    <div className="space-y-1 leading-none mr-2">
-                      <FormLabel className="cursor-pointer">
+                    <div className={t("components.modals.name.space_y_1_leading_none_mr_2")}>
+                      <FormLabel className={t("components.modals.name.cursor_pointer")}>
                         {t('modals.rollCreation.isFinalRoll')}
                       </FormLabel>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                      <p className={t("components.modals.name.text_xs_text_gray_600_dark_text_gray_400")}>
                         {t('modals.rollCreation.finalRollNote')}
                       </p>
                     </div>
@@ -339,13 +336,13 @@ export default function RollCreationModalEnhanced({
 
             {/* Warning for final roll */}
             {(form.watch("is_final_roll") || isFinalRoll) && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-3 rounded-lg">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
-                  <div className="text-sm text-amber-900 dark:text-amber-100">
-                    <p className="font-semibold">{t('modals.rollCreation.finalRollWarning')}</p>
+              <div className={t("components.modals.name.bg_amber_50_dark_bg_amber_900_20_border_border_amber_200_dark_border_amber_800_p_3_rounded_lg")}>
+                <div className={t("components.modals.name.flex_items_start_gap_2")}>
+                  <AlertTriangle className={t("components.modals.name.h_4_w_4_text_amber_600_dark_text_amber_400_mt_0_5")} />
+                  <div className={t("components.modals.name.text_sm_text_amber_900_dark_text_amber_100")}>
+                    <p className={t("components.modals.name.font_semibold")}>{t('modals.rollCreation.finalRollWarning')}</p>
                     <p>{t('modals.rollCreation.finalRollWarningText')}</p>
-                    <ul className="list-disc list-inside mt-1 space-y-1">
+                    <ul className={t("components.modals.name.list_disc_list_inside_mt_1_space_y_1")}>
                       <li>{t('modals.rollCreation.filmStageWillClose')}</li>
                       <li>{t('modals.rollCreation.noMoreRolls')}</li>
                       <li>{t('modals.rollCreation.productionTimeCalculated')}</li>
@@ -356,7 +353,7 @@ export default function RollCreationModalEnhanced({
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between">
+            <div className={t("components.modals.name.flex_justify_between")}>
               <Button
                 type="button"
                 variant="outline"
@@ -373,7 +370,7 @@ export default function RollCreationModalEnhanced({
               >
                 {createRollMutation.isPending ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></div>
+                    <div className={t("components.modals.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_ml_2")}></div>
                     {t('modals.rollCreation.creating')}
                   </>
                 ) : (

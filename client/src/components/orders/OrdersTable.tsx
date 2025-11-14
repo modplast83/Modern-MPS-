@@ -67,7 +67,7 @@ export default function OrdersTable({
     orders.length > 0 &&
     orders.every((order: any) => selectedOrders.includes(order.id));
   const someOrdersSelected =
-    selectedOrders.length > 0 && selectedOrders.length < orders.length;
+    selectedOrders.length >{t('components.orders.OrdersTable.0_&&_selectedorders.length')}< orders.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (onSelectAll) {
@@ -176,7 +176,7 @@ export default function OrdersTable({
       <TableHeader>
         <TableRow>
           {onOrderSelect && onSelectAll && (
-            <TableHead className="w-12">
+            <TableHead className={t("components.orders.orderstable.name.w_12")}>
               <Checkbox
                 checked={
                   allOrdersSelected
@@ -190,15 +190,15 @@ export default function OrdersTable({
               />
             </TableHead>
           )}
-          <TableHead className="text-right">{t("orders.orderNumber")}</TableHead>
-          <TableHead className="text-right">{t("orders.customer")}</TableHead>
-          <TableHead className="text-right">{t("orders.createdAt")}</TableHead>
-          <TableHead className="text-right">{t("orders.creator")}</TableHead>
-          <TableHead className="text-right">{t("orders.delivery")}</TableHead>
-          <TableHead className="text-right">{t("orders.completionRate")}</TableHead>
-          <TableHead className="text-right">{t("orders.notes")}</TableHead>
-          <TableHead className="text-center">{t("orders.status")}</TableHead>
-          <TableHead className="text-center w-10 md:w-14">{t("orders.actions")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.orderNumber")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.customer")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.createdAt")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.creator")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.delivery")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.completionRate")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.notes")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_center")}>{t("orders.status")}</TableHead>
+          <TableHead className={t("components.orders.orderstable.name.text_center_w_10_md_w_14")}>{t("orders.actions")}</TableHead>
           
         </TableRow>
       </TableHeader>
@@ -282,17 +282,17 @@ export default function OrdersTable({
                 </TableCell>
               )}
               <TableCell
-                className="font-medium"
+                className={t("components.orders.orderstable.name.font_medium")}
                 data-testid={`order-number-${order.id}`}
               >
                 {order.order_number}
               </TableCell>
               <TableCell data-testid={`customer-${order.id}`}>
-                <div className="text-right">
-                  <div className="font-medium">
+                <div className={t("components.orders.orderstable.name.text_right")}>
+                  <div className={t("components.orders.orderstable.name.font_medium")}>
                     {customer?.name_ar || customer?.name}
                   </div>
-                  <div className="text-sm text-gray-500">{customer?.id}</div>
+                  <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>{customer?.id}</div>
                 </div>
               </TableCell>
               <TableCell data-testid={`created-date-${order.id}`}>
@@ -301,31 +301,26 @@ export default function OrdersTable({
                   : "-"}
               </TableCell>
               <TableCell data-testid={`created-by-${order.id}`}>
-                <div className="text-right">
-                  <div className="font-medium">{user?.display_name_ar || user?.display_name || user?.username || '-'}</div>
-                  <div className="text-sm text-gray-500">#{user?.id}</div>
+                <div className={t("components.orders.orderstable.name.text_right")}>
+                  <div className={t("components.orders.orderstable.name.font_medium")}>{user?.display_name_ar || user?.display_name || user?.username || '-'}</div>
+                  <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>#{user?.id}</div>
                 </div>
               </TableCell>
               <TableCell data-testid={`delivery-${order.id}`}>
-                <div className="text-right">
+                <div className={t("components.orders.orderstable.name.text_right")}>
                   {deliveryDate && daysRemaining !== null ? (
                     <>
-                      <div className="font-medium">
-                        {daysRemaining > 0 ? (
-                          <span className="text-green-600">
+                      <div className={t("components.orders.orderstable.name.font_medium")}>
+                        {daysRemaining >{t('components.orders.OrdersTable.0_?_(')}<span className={t("components.orders.orderstable.name.text_green_600")}>
                             {daysRemaining} {t("orders.day")} {t("orders.daysRemaining")}
-                          </span>
-                        ) : daysRemaining === 0 ? (
-                          <span className="text-orange-600">
+                          </span>{t('components.orders.OrdersTable.)_:_daysremaining_===_0_?_(')}<span className={t("components.orders.orderstable.name.text_orange_600")}>
                             {t("orders.deliverToday")}
-                          </span>
-                        ) : (
-                          <span className="text-red-600">
+                          </span>{t('components.orders.OrdersTable.)_:_(')}<span className={t("components.orders.orderstable.name.text_red_600")}>
                             {t("orders.late")} {Math.abs(daysRemaining)} {t("orders.day")}
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>
                         {t("orders.deliveryDate")}: {format(deliveryDate, "dd/MM/yyyy")}
                       </div>
                     </>
@@ -335,54 +330,51 @@ export default function OrdersTable({
                 </div>
               </TableCell>
               <TableCell data-testid={`production-progress-${order.id}`}>
-                {orderProductionOrders.length > 0 ? (
-                  <ProductionProgress
+                {orderProductionOrders.length >{t('components.orders.OrdersTable.0_?_(')}<ProductionProgress
                     filmPercentage={avgFilmPercentage}
                     printingPercentage={avgPrintingPercentage}
                     cuttingPercentage={avgCuttingPercentage}
-                  />
-                ) : (
-                  <div className="text-gray-400 text-center">-</div>
+                  />{t('components.orders.OrdersTable.)_:_(')}<div className={t("components.orders.orderstable.name.text_gray_400_text_center")}>-</div>
                 )}
               </TableCell>
               <TableCell data-testid={`notes-${order.id}`}>
                 {order.notes || "-"}
               </TableCell>
-              <TableCell className="text-center">
+              <TableCell className={t("components.orders.orderstable.name.text_center")}>
                 {getStatusBadge(order.status || "pending")}
               </TableCell>
               <TableCell>
-                <div className="grid grid-cols-3 gap-1">
+                <div className={t("components.orders.orderstable.name.grid_grid_cols_3_gap_1")}>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1"
+                    className={t("components.orders.orderstable.name.text_blue_600_border_blue_600_hover_bg_blue_50_p_1")}
                     onClick={() => onViewOrder(order)}
                     title={t("common.view")}
                     data-testid={`button-view-${order.id}`}
                   >
-                    <Eye className="h-4 w-4" />
+                    <Eye className={t("components.orders.orderstable.name.h_4_w_4")} />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-green-600 border-green-600 hover:bg-green-50 p-1"
+                    className={t("components.orders.orderstable.name.text_green_600_border_green_600_hover_bg_green_50_p_1")}
                     onClick={() => onPrintOrder(order)}
                     title={t("common.print")}
                     data-testid={`button-print-${order.id}`}
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className={t("components.orders.orderstable.name.h_4_w_4")} />
                   </Button>
                   {isAdmin && onEditOrder && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-purple-600 border-purple-600 hover:bg-purple-50 p-1"
+                      className={t("components.orders.orderstable.name.text_purple_600_border_purple_600_hover_bg_purple_50_p_1")}
                       onClick={() => onEditOrder(order)}
                       title={t("common.edit")}
                       data-testid={`button-edit-${order.id}`}
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className={t("components.orders.orderstable.name.h_4_w_4")} />
                     </Button>
                   )}
                   <DropdownMenu>
@@ -390,43 +382,43 @@ export default function OrdersTable({
                       <Button
                         variant="outline"
                         size="sm"
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50 p-1"
+                        className={t("components.orders.orderstable.name.text_orange_600_border_orange_600_hover_bg_orange_50_p_1")}
                         title={t("orders.changeStatus")}
                         data-testid={`button-status-${order.id}`}
                       >
-                        <RefreshCw className="h-3 w-3" />
+                        <RefreshCw className={t("components.orders.orderstable.name.h_3_w_3")} />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuContent align="end" className={t("components.orders.orderstable.name.w_48")}>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "for_production")}
                       >
-                        <div className="flex items-center w-full">
-                          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
+                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_blue_500_rounded_full_mr_2")}></div>
                           {t("production.forProduction")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "on_hold")}
                       >
-                        <div className="flex items-center w-full">
-                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
+                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_red_500_rounded_full_mr_2")}></div>
                           {t("production.onHold")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "pending")}
                       >
-                        <div className="flex items-center w-full">
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
+                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_yellow_500_rounded_full_mr_2")}></div>
                           {t("production.pending")}
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "completed")}
                       >
-                        <div className="flex items-center w-full">
-                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
+                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_green_500_rounded_full_mr_2")}></div>
                           {t("production.completed")}
                         </div>
                       </DropdownMenuItem>
@@ -436,12 +428,12 @@ export default function OrdersTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-red-600 border-red-600 hover:bg-red-50 p-1"
+                      className={t("components.orders.orderstable.name.text_red_600_border_red_600_hover_bg_red_50_p_1")}
                       onClick={() => onDeleteOrder(order)}
                       title={t("common.delete")}
                       data-testid={`button-delete-${order.id}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className={t("components.orders.orderstable.name.h_4_w_4")} />
                     </Button>
                   )}
                 </div>

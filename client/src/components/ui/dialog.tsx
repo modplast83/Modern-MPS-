@@ -11,8 +11,7 @@ const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
 
 const DialogOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+  React.ElementRef<typeof DialogPrimitive.Overlay>{t('components.ui.dialog.,_react.componentpropswithoutref')}<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
@@ -23,13 +22,8 @@ const DialogOverlay = React.forwardRef<
       className,
     )}
     {...props}
-  />
-));
-DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
-
-const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  />{t('components.ui.dialog.));_dialogoverlay.displayname_=_dialogprimitive.overlay.displayname;_const_dialogcontent_=_react.forwardref')}<
+  React.ElementRef<typeof DialogPrimitive.Content>{t('components.ui.dialog.,_react.componentpropswithoutref')}<typeof DialogPrimitive.Content> & {
     hideCloseButton?: boolean;
   }
 >(({ className, children, hideCloseButton = false, ...props }, ref) => {
@@ -76,17 +70,17 @@ const DialogContent = React.forwardRef<
         {children}
         {!hideCloseButton && (
           <DialogPrimitive.Close
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-            aria-label="Close"
+            className={t("components.ui.dialog.name.absolute_right_4_top_4_rounded_sm_opacity_70_ring_offset_background_transition_opacity_hover_opacity_100_focus_outline_none_focus_ring_2_focus_ring_ring_focus_ring_offset_2_disabled_pointer_events_none")}
+            aria-label="{t('components.ui.dialog.label.{t('components.ui.dialog.aria-label.close')}')}"
           >
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <X className={t("components.ui.dialog.name.h_4_w_4")} />
+            <span className={t("components.ui.dialog.name.sr_only")}>{t('components.ui.dialog.close')}</span>
           </DialogPrimitive.Close>
         )}
 
         {/* Provide fallback DialogDescription only when none exists */}
         {!hasDescription && (
-          <DialogDescription className="sr-only">نافذة حوار</DialogDescription>
+          <DialogDescription className={t("components.ui.dialog.name.sr_only")}>{t('components.ui.dialog.نافذة_حوار')}</DialogDescription>
         )}
       </DialogPrimitive.Content>
     </DialogPortal>
@@ -106,7 +100,7 @@ const DialogHeader = ({
     {...props}
   />
 );
-DialogHeader.displayName = "DialogHeader";
+DialogHeader.displayName={t("components.ui.dialog.name.dialogheader")};
 
 const DialogFooter = ({
   className,
@@ -118,13 +112,8 @@ const DialogFooter = ({
       className,
     )}
     {...props}
-  />
-);
-DialogFooter.displayName = "DialogFooter";
-
-const DialogTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+  />{t('components.ui.dialog.);_dialogfooter.displayname_=_"dialogfooter";_const_dialogtitle_=_react.forwardref')}<
+  React.ElementRef<typeof DialogPrimitive.Title>{t('components.ui.dialog.,_react.componentpropswithoutref')}<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
@@ -133,13 +122,8 @@ const DialogTitle = React.forwardRef<
       className,
     )}
     {...props}
-  />
-));
-DialogTitle.displayName = DialogPrimitive.Title.displayName;
-
-const DialogDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+  />{t('components.ui.dialog.));_dialogtitle.displayname_=_dialogprimitive.title.displayname;_const_dialogdescription_=_react.forwardref')}<
+  React.ElementRef<typeof DialogPrimitive.Description>{t('components.ui.dialog.,_react.componentpropswithoutref')}<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}

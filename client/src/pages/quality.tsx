@@ -46,50 +46,50 @@ export default function Quality() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={t("pages.quality.name.min_h_screen_bg_gray_50")}>
       <Header />
 
-      <div className="flex">
+      <div className={t("pages.quality.name.flex")}>
         <Sidebar />
         <MobileNav />
 
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <main className={t("pages.quality.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+          <div className={t("pages.quality.name.mb_6")}>
+            <h1 className={t("pages.quality.name.text_2xl_font_bold_text_gray_900_mb_2")}>
               {t("quality.title")}
             </h1>
-            <p className="text-gray-600">
+            <p className={t("pages.quality.name.text_gray_600")}>
               {t("quality.qualityManagement")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className={t("pages.quality.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.quality.name.p_6")}>
+                <div className={t("pages.quality.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.quality.name.text_sm_font_medium_text_gray_600")}>
                       {t("quality.totalInspections")}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className={t("pages.quality.name.text_2xl_font_bold_text_gray_900")}>
                       {formatNumber(
                         Array.isArray(qualityChecks) ? qualityChecks.length : 0,
                       )}
                     </p>
                   </div>
-                  <CheckCircle2 className="w-8 h-8 text-blue-500" />
+                  <CheckCircle2 className={t("pages.quality.name.w_8_h_8_text_blue_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.quality.name.p_6")}>
+                <div className={t("pages.quality.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.quality.name.text_sm_font_medium_text_gray_600")}>
                       {t("quality.passedInspections")}
                     </p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className={t("pages.quality.name.text_2xl_font_bold_text_green_600")}>
                       {formatNumber(
                         Array.isArray(qualityChecks)
                           ? qualityChecks.filter(
@@ -99,19 +99,19 @@ export default function Quality() {
                       )}
                     </p>
                   </div>
-                  <CheckCircle2 className="w-8 h-8 text-green-500" />
+                  <CheckCircle2 className={t("pages.quality.name.w_8_h_8_text_green_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.quality.name.p_6")}>
+                <div className={t("pages.quality.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.quality.name.text_sm_font_medium_text_gray_600")}>
                       {t("quality.failedInspections")}
                     </p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className={t("pages.quality.name.text_2xl_font_bold_text_red_600")}>
                       {formatNumber(
                         Array.isArray(qualityChecks)
                           ? qualityChecks.filter(
@@ -121,19 +121,19 @@ export default function Quality() {
                       )}
                     </p>
                   </div>
-                  <XCircle className="w-8 h-8 text-red-500" />
+                  <XCircle className={t("pages.quality.name.w_8_h_8_text_red_500")} />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
+              <CardContent className={t("pages.quality.name.p_6")}>
+                <div className={t("pages.quality.name.flex_items_center_justify_between")}>
                   <div>
-                    <p className="text-sm font-medium text-gray-600">
+                    <p className={t("pages.quality.name.text_sm_font_medium_text_gray_600")}>
                       {t("quality.successRate")}
                     </p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className={t("pages.quality.name.text_2xl_font_bold_text_blue_600")}>
                       {formatPercentage(
                         Array.isArray(qualityChecks) && qualityChecks.length > 0
                           ? Math.round(
@@ -147,7 +147,7 @@ export default function Quality() {
                       )}
                     </p>
                   </div>
-                  <AlertTriangle className="w-8 h-8 text-blue-500" />
+                  <AlertTriangle className={t("pages.quality.name.w_8_h_8_text_blue_500")} />
                 </div>
               </CardContent>
             </Card>
@@ -167,41 +167,41 @@ export default function Quality() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                  <table className={t("pages.quality.name.min_w_full_divide_y_divide_gray_200")}>
+                    <thead className={t("pages.quality.name.bg_gray_50")}>
                       <tr>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("quality.rollNumber")}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("quality.checkType")}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("quality.result")}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("common.notes")}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("quality.inspector")}
                         </th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                        <th className={t("pages.quality.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase")}>
                           {t("common.date")}
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className={t("pages.quality.name.bg_white_divide_y_divide_gray_200")}>
                       {Array.isArray(qualityChecks) ? (
                         qualityChecks.map((check: any) => (
-                          <tr key={check.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <tr key={check.id} className={t("pages.quality.name.hover_bg_gray_50")}>
+                            <td className={t("pages.quality.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900")}>
                               {check.roll_number}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className={t("pages.quality.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500")}>
                               {check.check_type}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
+                            <td className={t("pages.quality.name.px_6_py_4_whitespace_nowrap")}>
+                              <div className={t("pages.quality.name.flex_items_center_gap_2")}>
                                 {getStatusIcon(check.result)}
                                 <Badge
                                   variant={
@@ -216,10 +216,10 @@ export default function Quality() {
                                 </Badge>
                               </div>
                             </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                            <td className={t("pages.quality.name.px_6_py_4_text_sm_text_gray_500_max_w_xs_truncate")}>
                               {check.notes || "-"}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className={t("pages.quality.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500")}>
                               {check.inspector_name}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

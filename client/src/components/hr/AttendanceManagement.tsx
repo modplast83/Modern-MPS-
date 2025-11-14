@@ -75,9 +75,7 @@ export default function AttendanceManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const attendanceSchema = useMemo(() => createAttendanceSchema(t), [t]);
-
-  const form = useForm<z.infer<ReturnType<typeof createAttendanceSchema>>>({
+  const attendanceSchema = useMemo(() =>{t('components.hr.AttendanceManagement.createattendanceschema(t),_[t]);_const_form_=_useform')}<z.infer<ReturnType<typeof createAttendanceSchema>>>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
       user_id: 0,
@@ -227,7 +225,7 @@ export default function AttendanceManagement() {
       <div
         className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
       >
-        <IconComponent className="h-4 w-4" />
+        <IconComponent className={t("components.hr.attendancemanagement.name.h_4_w_4")} />
         {statusInfo.label}
       </div>
     );
@@ -275,18 +273,18 @@ export default function AttendanceManagement() {
     attendanceMutation.isPending || Number(userIdWatched) <= 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className={t("components.hr.attendancemanagement.name.space_y_6")}>
+      <div className={t("components.hr.attendancemanagement.name.flex_justify_between_items_center")}>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('hr.attendance')}</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_gray_900")}>{t('hr.attendance')}</h2>
+          <p className={t("components.hr.attendancemanagement.name.text_gray_600_mt_1")}>
             {t('hr.attendanceManagement', 'متابعة حضور الموظفين وحالاتهم اليومية')}
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleAdd}>
-              <Clock className="h-4 w-4 mr-2" />
+              <Clock className={t("components.hr.attendancemanagement.name.h_4_w_4_mr_2")} />
               {t('hr.recordAttendance')}
             </Button>
           </DialogTrigger>
@@ -302,10 +300,10 @@ export default function AttendanceManagement() {
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.hr.attendancemanagement.name.space_y_4")}>
                 <FormField
                   control={form.control}
-                  name="user_id"
+                  name="{t('components.hr.AttendanceManagement.name.user_id')}"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('hr.employeeName')}</FormLabel>
@@ -336,7 +334,7 @@ export default function AttendanceManagement() {
 
                 <FormField
                   control={form.control}
-                  name="status"
+                  name="{t('components.hr.AttendanceManagement.name.status')}"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('hr.status')}</FormLabel>
@@ -362,7 +360,7 @@ export default function AttendanceManagement() {
 
                 <FormField
                   control={form.control}
-                  name="notes"
+                  name="{t('components.hr.AttendanceManagement.name.notes')}"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>{t('common.notes')}</FormLabel>
@@ -377,10 +375,10 @@ export default function AttendanceManagement() {
                   )}
                 />
 
-                <div className="flex gap-4 pt-4">
+                <div className={t("components.hr.attendancemanagement.name.flex_gap_4_pt_4")}>
                   <Button
                     type="submit"
-                    className="flex-1"
+                    className={t("components.hr.attendancemanagement.name.flex_1")}
                     disabled={isSubmitDisabled}
                   >
                     {attendanceMutation.isPending ? t('common.saving') : t('common.save')}
@@ -389,7 +387,7 @@ export default function AttendanceManagement() {
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
-                    className="flex-1"
+                    className={t("components.hr.attendancemanagement.name.flex_1")}
                   >
                     {t('common.cancel')}
                   </Button>
@@ -401,14 +399,14 @@ export default function AttendanceManagement() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className={t("components.hr.attendancemanagement.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserCheck className="h-8 w-8 text-green-600" />
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">{t('hr.presentCount', 'الحاضرون')}</p>
-                <p className="text-2xl font-bold text-green-600">
+          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
+            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
+              <UserCheck className={t("components.hr.attendancemanagement.name.h_8_w_8_text_green_600")} />
+              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
+                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.presentCount', 'الحاضرون')}</p>
+                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_green_600")}>
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) => u.attendance.status === t('hr.present')
@@ -421,12 +419,12 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <UserX className="h-8 w-8 text-red-600" />
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">{t('hr.absentCount', 'الغائبون')}</p>
-                <p className="text-2xl font-bold text-red-600">
+          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
+            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
+              <UserX className={t("components.hr.attendancemanagement.name.h_8_w_8_text_red_600")} />
+              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
+                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.absentCount', 'الغائبون')}</p>
+                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_red_600")}>
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) => u.attendance.status === t('hr.absent')
@@ -439,12 +437,12 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Coffee className="h-8 w-8 text-orange-600" />
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">{t('hr.breakCount', 'استراحة الغداء')}</p>
-                <p className="text-2xl font-bold text-orange-600">
+          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
+            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
+              <Coffee className={t("components.hr.attendancemanagement.name.h_8_w_8_text_orange_600")} />
+              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
+                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.breakCount', 'استراحة الغداء')}</p>
+                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_orange_600")}>
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) =>
@@ -458,12 +456,12 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <LogOut className="h-8 w-8 text-gray-600" />
-              <div className="mr-4">
-                <p className="text-sm font-medium text-gray-600">{t('hr.checkOutCount', 'المغادرون')}</p>
-                <p className="text-2xl font-bold text-gray-600">
+          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
+            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
+              <LogOut className={t("components.hr.attendancemanagement.name.h_8_w_8_text_gray_600")} />
+              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
+                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.checkOutCount', 'المغادرون')}</p>
+                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_gray_600")}>
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) => u.attendance.status === t('hr.checkOut')
@@ -485,48 +483,46 @@ export default function AttendanceManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="text-center">{t('hr.employeeName')}</TableHead>
-                <TableHead className="text-center">{t('common.user')}</TableHead>
-                <TableHead className="text-center">{t('hr.status')}</TableHead>
-                <TableHead className="text-center">{t('common.notes')}</TableHead>
-                <TableHead className="text-center">{t('hr.lastUpdate', 'آخر تحديث')}</TableHead>
-                <TableHead className="text-center">{t('common.actions')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.employeeName')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.user')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.status')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.notes')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.lastUpdate', 'آخر تحديث')}</TableHead>
+                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {attendanceLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={6} className={t("components.hr.attendancemanagement.name.text_center_py_8")}>
                     {t('common.loading')}
                   </TableCell>
-                </TableRow>
-              ) : attendanceSummary.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                </TableRow>{t('components.hr.AttendanceManagement.)_:_attendancesummary.length_===_0_?_(')}<TableRow>
+                  <TableCell colSpan={6} className={t("components.hr.attendancemanagement.name.text_center_py_8")}>
                     {t('common.noData')}
                   </TableCell>
                 </TableRow>
               ) : (
                 attendanceSummary.map((user: AttendanceSummaryItem) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium text-center">
+                    <TableCell className={t("components.hr.attendancemanagement.name.font_medium_text_center")}>
                       {user.display_name_ar || user.display_name || user.username}
                     </TableCell>
-                    <TableCell className="text-center text-gray-500">
+                    <TableCell className={t("components.hr.attendancemanagement.name.text_center_text_gray_500")}>
                       {user.username}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
                       {getStatusBadge(user.attendance.status)}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
                       {user.attendance.notes || "-"}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
                       {user.attendance.updated_at
                         ? format(new Date(user.attendance.updated_at), "HH:mm")
                         : "-"}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
                       <Button
                         variant="outline"
                         size="sm"
@@ -543,7 +539,7 @@ export default function AttendanceManagement() {
                         }
                         data-testid={`button-edit-attendance-${user.id}`}
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className={t("components.hr.attendancemanagement.name.h_4_w_4")} />
                       </Button>
                     </TableCell>
                   </TableRow>

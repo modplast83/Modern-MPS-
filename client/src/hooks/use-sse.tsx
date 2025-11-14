@@ -52,8 +52,7 @@ export function useSSE(eventHandlers?: SSEEventHandlers) {
     lastMessage: null,
   });
 
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const eventSourceRef = useRef<EventSource | null>{t('hooks.use-sse.(null);_const_reconnecttimeoutref_=_useref')}<NodeJS.Timeout | null>(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 10;
   const baseReconnectDelay = 1000; // 1 second

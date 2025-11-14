@@ -10,61 +10,61 @@ export default function HRTabs() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-6" dir="rtl">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+    <div className={t("components.hr.hrtabs.name.space_y_6")} dir="rtl">
+      <div className={t("components.hr.hrtabs.name.text_center")}>
+        <h1 className={t("components.hr.hrtabs.name.text_3xl_font_bold_text_gray_900_dark_text_white")}>
           {t('hr.title')}
         </h1>
-        <p className="text-gray-600 dark:text-gray-300 mt-2">
+        <p className={t("components.hr.hrtabs.name.text_gray_600_dark_text_gray_300_mt_2")}>
           {t('hr.description', 'إدارة شاملة للتدريب وتقييم الأداء والإجازات')}
         </p>
       </div>
 
-      <Tabs defaultValue="attendance" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
+      <Tabs defaultValue="attendance" className={t("components.hr.hrtabs.name.w_full")}>
+        <TabsList className={t("components.hr.hrtabs.name.grid_w_full_grid_cols_4_bg_gray_100_dark_bg_gray_800")}>
           <TabsTrigger
             value="attendance"
-            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
           >
-            <Clock className="w-4 h-4" />
+            <Clock className={t("components.hr.hrtabs.name.w_4_h_4")} />
             {t('hr.attendance')}
           </TabsTrigger>
           <TabsTrigger
             value="training"
-            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
           >
-            <GraduationCap className="w-4 h-4" />
+            <GraduationCap className={t("components.hr.hrtabs.name.w_4_h_4")} />
             {t('hr.fieldTraining')}
           </TabsTrigger>
           <TabsTrigger
             value="performance"
-            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
           >
-            <Target className="w-4 h-4" />
+            <Target className={t("components.hr.hrtabs.name.w_4_h_4")} />
             {t('hr.performance')}
           </TabsTrigger>
           <TabsTrigger
             value="leaves"
-            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
+            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
           >
-            <Calendar className="w-4 h-4" />
+            <Calendar className={t("components.hr.hrtabs.name.w_4_h_4")} />
             {t('hr.leaves')}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="attendance" className="space-y-4">
+        <TabsContent value="attendance" className={t("components.hr.hrtabs.name.space_y_4")}>
           <AttendanceManagement />
         </TabsContent>
 
-        <TabsContent value="training" className="space-y-4">
+        <TabsContent value="training" className={t("components.hr.hrtabs.name.space_y_4")}>
           <SimpleFieldTraining />
         </TabsContent>
 
-        <TabsContent value="performance" className="space-y-4">
+        <TabsContent value="performance" className={t("components.hr.hrtabs.name.space_y_4")}>
           <PerformanceReviews />
         </TabsContent>
 
-        <TabsContent value="leaves" className="space-y-4">
+        <TabsContent value="leaves" className={t("components.hr.hrtabs.name.space_y_4")}>
           <LeaveManagement />
         </TabsContent>
       </Tabs>

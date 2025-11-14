@@ -19,7 +19,7 @@ const Form = FormProvider;
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TName extends FieldPath<TFieldValues>{t('components.ui.form.=_fieldpath')}<TFieldValues>,
 > = {
   name: TName;
 };
@@ -30,7 +30,7 @@ const FormFieldContext = React.createContext<FormFieldContextValue>(
 
 const FormField = <
   TFieldValues extends FieldValues = FieldValues,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
+  TName extends FieldPath<TFieldValues>{t('components.ui.form.=_fieldpath')}<TFieldValues>,
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
@@ -84,11 +84,10 @@ const FormItem = React.forwardRef<
     </FormItemContext.Provider>
   );
 });
-FormItem.displayName = "FormItem";
+FormItem.displayName={t("components.ui.form.name.formitem")};
 
 const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
+  React.ElementRef<typeof LabelPrimitive.Root>{t('components.ui.form.,_react.componentpropswithoutref')}<typeof LabelPrimitive.Root>
 >(({ className, ...props }, ref) => {
   const { error, formItemId } = useFormField();
 
@@ -101,11 +100,10 @@ const FormLabel = React.forwardRef<
     />
   );
 });
-FormLabel.displayName = "FormLabel";
+FormLabel.displayName={t("components.ui.form.name.formlabel")};
 
 const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
+  React.ElementRef<typeof Slot>{t('components.ui.form.,_react.componentpropswithoutref')}<typeof Slot>
 >(({ ...props }, ref) => {
   const { error, formItemId, formDescriptionId, formMessageId } =
     useFormField();
@@ -124,7 +122,7 @@ const FormControl = React.forwardRef<
     />
   );
 });
-FormControl.displayName = "FormControl";
+FormControl.displayName={t("components.ui.form.name.formcontrol")};
 
 const FormDescription = React.forwardRef<
   HTMLParagraphElement,
@@ -141,7 +139,7 @@ const FormDescription = React.forwardRef<
     />
   );
 });
-FormDescription.displayName = "FormDescription";
+FormDescription.displayName={t("components.ui.form.name.formdescription")};
 
 const FormMessage = React.forwardRef<
   HTMLParagraphElement,
@@ -165,7 +163,7 @@ const FormMessage = React.forwardRef<
     </p>
   );
 });
-FormMessage.displayName = "FormMessage";
+FormMessage.displayName={t("components.ui.form.name.formmessage")};
 
 export {
   useFormField,

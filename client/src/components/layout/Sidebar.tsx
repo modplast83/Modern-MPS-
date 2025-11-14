@@ -148,9 +148,9 @@ export default function Sidebar() {
   });
 
   return (
-    <aside className="fixed right-0 top-16 bottom-0 bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block z-10 overflow-y-auto">
-      <nav className="p-4">
-        <div className="space-y-2">
+    <aside className={t("components.layout.sidebar.name.fixed_right_0_top_16_bottom_0_bg_white_shadow_sm_border_l_border_gray_200_w_64_hidden_lg_block_z_10_overflow_y_auto")}>
+      <nav className={t("components.layout.sidebar.name.p_4")}>
+        <div className={t("components.layout.sidebar.name.space_y_2")}>
           {accessibleModules.map((module) => {
             const Icon = module.icon;
             const isActive = location === module.path;
@@ -160,10 +160,10 @@ export default function Sidebar() {
                 <div
                   className={isActive ? "nav-item nav-item-active" : "nav-item"}
                 >
-                  <div className="w-full">
-                    <div className="flex items-center space-x-3 space-x-reverse">
-                      <Icon className="h-5 w-5" />
-                      <span className="font-medium">{t(module.translationKey)}</span>
+                  <div className={t("components.layout.sidebar.name.w_full")}>
+                    <div className={t("components.layout.sidebar.name.flex_items_center_space_x_3_space_x_reverse")}>
+                      <Icon className={t("components.layout.sidebar.name.h_5_w_5")} />
+                      <span className={t("components.layout.sidebar.name.font_medium")}>{t(module.translationKey)}</span>
                     </div>
                   </div>
                 </div>

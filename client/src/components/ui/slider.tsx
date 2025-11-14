@@ -4,8 +4,7 @@ import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../../lib/utils";
 
 const Slider = React.forwardRef<
-  React.ElementRef<typeof SliderPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
+  React.ElementRef<typeof SliderPrimitive.Root>{t('components.ui.slider.,_react.componentpropswithoutref')}<typeof SliderPrimitive.Root>
 >(({ className, ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
@@ -15,10 +14,10 @@ const Slider = React.forwardRef<
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
-      <SliderPrimitive.Range className="absolute h-full bg-primary" />
+    <SliderPrimitive.Track className={t("components.ui.slider.name.relative_h_2_w_full_grow_overflow_hidden_rounded_full_bg_secondary")}>
+      <SliderPrimitive.Range className={t("components.ui.slider.name.absolute_h_full_bg_primary")} />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb className={t("components.ui.slider.name.block_h_5_w_5_rounded_full_border_2_border_primary_bg_background_ring_offset_background_transition_colors_focus_visible_outline_none_focus_visible_ring_2_focus_visible_ring_ring_focus_visible_ring_offset_2_disabled_pointer_events_none_disabled_opacity_50")} />
   </SliderPrimitive.Root>
 ));
 Slider.displayName = SliderPrimitive.Root.displayName;

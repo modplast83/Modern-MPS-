@@ -190,7 +190,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
         <div class="label-container">
           <!-- Header -->
           <div class="header">
-            <div class="company-name">نظام إدارة إنتاج الأكياس البلاستيكية</div>
+            <div class="company-name">{t('components.production.RollLabelPrint.نظام_إدارة_إنتاج_الأكياس_البلاستيكية')}</div>
             <div class="roll-number">${roll.roll_number}</div>
           </div>
           
@@ -198,9 +198,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
           ${roll.qr_png_base64 || roll.qr_code_text ? `
             <div class="qr-section">
               ${roll.qr_png_base64 ? `
-                <img src="data:image/png;base64,${roll.qr_png_base64}" class="qr-image" alt="QR Code">
-              ` : roll.qr_code_text ? `
-                <div style="font-family: monospace; font-size: 9pt; font-weight: bold;">
+                <img src="data:image/png;base64,${roll.qr_png_base64}" class="qr-image" alt="{t('components.production.RollLabelPrint.alt.qr_code')}">{t('components.production.RollLabelPrint.`_:_roll.qr_code_text_?_`')}<div style="font-family: monospace; font-size: 9pt; font-weight: bold;">
                   ${roll.qr_code_text}
                 </div>
               ` : ''}
@@ -212,7 +210,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <!-- Customer Name -->
             ${order && (order.customer_name_ar || order.customer_name) ? `
               <div class="info-box full">
-                <div class="info-label">العميل</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.العميل')}</div>
                 <div class="info-value">${order.customer_name_ar || order.customer_name}</div>
               </div>
             ` : ''}
@@ -221,13 +219,13 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <div class="info-row">
               ${productionOrder ? `
                 <div class="info-box">
-                  <div class="info-label">أمر الإنتاج</div>
+                  <div class="info-label">{t('components.production.RollLabelPrint.أمر_الإنتاج')}</div>
                   <div class="info-value">${productionOrder.production_order_number}</div>
                 </div>
               ` : ''}
               
               <div class="info-box">
-                <div class="info-label">رقم الرول</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.رقم_الرول')}</div>
                 <div class="info-value">#${roll.roll_seq}</div>
               </div>
             </div>
@@ -235,7 +233,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <!-- Category Name -->
             ${productionOrder && productionOrder.category_name ? `
               <div class="info-box full">
-                <div class="info-label">الفئة</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.الفئة')}</div>
                 <div class="info-value">${productionOrder.category_name}</div>
               </div>
             ` : ''}
@@ -243,7 +241,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <!-- Product Name -->
             ${productionOrder && (productionOrder.item_name_ar || productionOrder.item_name) ? `
               <div class="info-box full">
-                <div class="info-label">اسم الصنف</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.اسم_الصنف')}</div>
                 <div class="info-value">${productionOrder.item_name_ar || productionOrder.item_name}</div>
               </div>
             ` : ''}
@@ -252,14 +250,14 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <div class="info-row">
               ${productionOrder && productionOrder.size_caption ? `
                 <div class="info-box">
-                  <div class="info-label">المقاس</div>
+                  <div class="info-label">{t('components.production.RollLabelPrint.المقاس')}</div>
                   <div class="info-value">${productionOrder.size_caption}</div>
                 </div>
               ` : ''}
               
               ${productionOrder && productionOrder.thickness ? `
                 <div class="info-box">
-                  <div class="info-label">السماكة</div>
+                  <div class="info-label">{t('components.production.RollLabelPrint.السماكة')}</div>
                   <div class="info-value">${productionOrder.thickness} مم</div>
                 </div>
               ` : ''}
@@ -267,14 +265,14 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             
             <!-- Weight (Highlighted) -->
             <div class="info-box highlight full">
-              <div class="info-label">الوزن الكلي</div>
+              <div class="info-label">{t('components.production.RollLabelPrint.الوزن_الكلي')}</div>
               <div class="info-value">${roll.weight_kg != null ? parseFloat(String(roll.weight_kg)).toFixed(2) : '0.00'} كجم</div>
             </div>
             
             <!-- Machine Information - Compact -->
             ${roll.film_machine_name || roll.machine_id ? `
               <div class="info-box full">
-                <div class="info-label">ماكينة الفيلم</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.ماكينة_الفيلم')}</div>
                 <div class="info-value">${roll.film_machine_name || roll.machine_id}</div>
               </div>
             ` : ''}
@@ -282,11 +280,11 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <!-- Operators Section - Compact Display -->
             ${roll.created_by_name || roll.printed_by_name || roll.cut_by_name ? `
               <div class="info-box full">
-                <div class="info-label">العاملين</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.العاملين')}</div>
                 <div class="info-value" style="font-size: 7.5pt; line-height: 1.2;">
-                  ${roll.created_by_name ? `<div>▪ فيلم: <strong>${roll.created_by_name}</strong></div>` : ''}
-                  ${roll.printed_by_name ? `<div>▪ طباعة: <strong>${roll.printed_by_name}</strong></div>` : ''}
-                  ${roll.cut_by_name ? `<div>▪ قص: <strong>${roll.cut_by_name}</strong></div>` : ''}
+                  ${roll.created_by_name ? `<div>{t('components.production.RollLabelPrint.▪_فيلم:')}<strong>${roll.created_by_name}</strong></div>` : ''}
+                  ${roll.printed_by_name ? `<div>{t('components.production.RollLabelPrint.▪_طباعة:')}<strong>${roll.printed_by_name}</strong></div>` : ''}
+                  ${roll.cut_by_name ? `<div>{t('components.production.RollLabelPrint.▪_قص:')}<strong>${roll.cut_by_name}</strong></div>` : ''}
                 </div>
               </div>
             ` : ''}
@@ -294,7 +292,7 @@ export function printRollLabel({ roll, productionOrder, order }: RollLabelPrintP
             <!-- Creation Date -->
             ${roll.created_at ? `
               <div class="info-box full">
-                <div class="info-label">تاريخ الإنتاج</div>
+                <div class="info-label">{t('components.production.RollLabelPrint.تاريخ_الإنتاج')}</div>
                 <div class="info-value">${format(new Date(roll.created_at), 'dd/MM/yyyy - HH:mm')}</div>
               </div>
             ` : ''}
@@ -335,7 +333,7 @@ export default function RollLabelButton({ roll, productionOrder, order, children
   return (
     <button
       onClick={() => printRollLabel({ roll, productionOrder, order })}
-      className="inline-flex items-center"
+      className={t("components.production.rolllabelprint.name.inline_flex_items_center")}
     >
       {children}
     </button>

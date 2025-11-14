@@ -35,10 +35,7 @@ export default function ProductionQueue({
   const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [processingId, setProcessingId] = useState<number | null>(null);
-  const [printingModalOpen, setPrintingModalOpen] = useState(false);
-  const [selectedRollId, setSelectedRollId] = useState<number | null>(null);
-  const [selectedPrintingMachine, setSelectedPrintingMachine] = useState<string>("");
+  const [processingId, setProcessingId] = useState<number | null>{t('components.production.ProductionQueue.(null);_const_[printingmodalopen,_setprintingmodalopen]_=_usestate(false);_const_[selectedrollid,_setselectedrollid]_=_usestate')}<number | null>{t('components.production.ProductionQueue.(null);_const_[selectedprintingmachine,_setselectedprintingmachine]_=_usestate')}<string>("");
 
   // Fetch machines for printing selection
   const { data: machines = [] } = useQuery<Machine[]>({
@@ -179,7 +176,7 @@ export default function ProductionQueue({
           size="sm"
           data-testid={`button-print-${item.id}`}
         >
-          <Play className="h-4 w-4 mr-1" />
+          <Play className={t("components.production.productionqueue.name.h_4_w_4_mr_1")} />
           {isProcessing ? t('common.loading') : t('common.print')}
         </Button>
       );
@@ -191,7 +188,7 @@ export default function ProductionQueue({
           size="sm"
           data-testid={`button-cut-${item.id}`}
         >
-          <Scissors className="h-4 w-4 mr-1" />
+          <Scissors className={t("components.production.productionqueue.name.h_4_w_4_mr_1")} />
           {isProcessing ? t('common.loading') : t('common.cut')}
         </Button>
       );
@@ -202,9 +199,9 @@ export default function ProductionQueue({
   if (items.length === 0) {
     return (
       <Card>
-        <CardContent className="p-6 text-center">
-          <div className="text-gray-500">
-            <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+        <CardContent className={t("components.production.productionqueue.name.p_6_text_center")}>
+          <div className={t("components.production.productionqueue.name.text_gray_500")}>
+            <Clock className={t("components.production.productionqueue.name.h_12_w_12_mx_auto_mb_2_opacity_50")} />
             <p>{t('common.noData')}</p>
           </div>
         </CardContent>
@@ -214,34 +211,34 @@ export default function ProductionQueue({
 
   return (
     <>
-      <div className="space-y-4">
+      <div className={t("components.production.productionqueue.name.space_y_4")}>
         {items.map((item) => (
           <Card key={item.id}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 space-x-reverse">
-                  <QrCode className="h-6 w-6 text-gray-400" />
+            <CardContent className={t("components.production.productionqueue.name.p_4")}>
+              <div className={t("components.production.productionqueue.name.flex_items_center_justify_between")}>
+                <div className={t("components.production.productionqueue.name.flex_items_center_space_x_4_space_x_reverse")}>
+                  <QrCode className={t("components.production.productionqueue.name.h_6_w_6_text_gray_400")} />
                   <div>
                     <p
-                      className="font-medium"
+                      className={t("components.production.productionqueue.name.font_medium")}
                       data-testid={`text-roll-number-${item.id}`}
                     >
                       {item.roll_number || `${t('warehouse.roll')} ${item.id}`}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className={t("components.production.productionqueue.name.text_sm_text_gray_500")}>
                       {t('production.rollWeight')}:{" "}
                       {parseFloat(item.weight_kg || item.weight || 0).toFixed(2)}{" "}
                       {t('warehouse.kg')}
                     </p>
                     {item.film_machine_id && (
-                      <p className="text-xs text-gray-400">
+                      <p className={t("components.production.productionqueue.name.text_xs_text_gray_400")}>
                         {t('production.filmMachine')}: {item.film_machine_id}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-2 space-x-reverse">
+                <div className={t("components.production.productionqueue.name.flex_items_center_space_x_2_space_x_reverse")}>
                   {getStatusBadge(item)}
                   {getActionButton(item)}
                 </div>
@@ -253,7 +250,7 @@ export default function ProductionQueue({
 
       {/* Printing Machine Selection Modal */}
       <Dialog open={printingModalOpen} onOpenChange={setPrintingModalOpen}>
-        <DialogContent className="max-w-md" aria-describedby="printing-machine-description">
+        <DialogContent className={t("components.production.productionqueue.name.max_w_md")} aria-describedby="printing-machine-description">
           <DialogHeader>
             <DialogTitle>{t('production.selectPrintingMachine')}</DialogTitle>
             <DialogDescription id="printing-machine-description">
@@ -261,8 +258,8 @@ export default function ProductionQueue({
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
+          <div className={t("components.production.productionqueue.name.space_y_4_py_4")}>
+            <div className={t("components.production.productionqueue.name.space_y_2")}>
               <Label htmlFor="printing-machine">{t('production.printingMachine')} *</Label>
               <Select
                 value={selectedPrintingMachine}
@@ -277,24 +274,21 @@ export default function ProductionQueue({
                     printingMachines.map((machine) => (
                       <SelectItem key={machine.id} value={machine.id}>
                         {machine.name_ar || machine.name} - {machine.id}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="none" disabled>
+                      </SelectItem>{t('components.production.ProductionQueue.))_)_:_(')}<SelectItem value="none" disabled>
                       {t('common.noData')}
                     </SelectItem>
                   )}
                 </SelectContent>
               </Select>
               {printingMachines.length === 0 && (
-                <p className="text-sm text-amber-600">
+                <p className={t("components.production.productionqueue.name.text_sm_text_amber_600")}>
                   {t('common.noData')}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 space-x-reverse">
+          <div className={t("components.production.productionqueue.name.flex_justify_end_space_x_2_space_x_reverse")}>
             <Button
               variant="outline"
               onClick={() => {

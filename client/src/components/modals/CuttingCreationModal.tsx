@@ -61,9 +61,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const cuttingFormSchema = useMemo(() => createCuttingFormSchema(t), [t]);
-
-  const form = useForm<CuttingFormData>({
+  const cuttingFormSchema = useMemo(() =>{t('components.modals.CuttingCreationModal.createcuttingformschema(t),_[t]);_const_form_=_useform')}<CuttingFormData>({
     resolver: zodResolver(cuttingFormSchema),
     defaultValues: {
       production_order_id: selectedProductionOrderId,
@@ -160,18 +158,18 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md" aria-describedby="cutting-creation-description">
+      <DialogContent className={t("components.modals.cuttingcreationmodal.name.max_w_md")} aria-describedby="cutting-creation-description">
         <DialogHeader>
           <DialogTitle>{t('modals.cuttingJob.title')}</DialogTitle>
           <DialogDescription id="cutting-creation-description">{t('modals.cuttingJob.description')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.modals.cuttingcreationmodal.name.space_y_4")}>
             {!selectedProductionOrderId && (
               <FormField
                 control={form.control}
-                name="production_order_id"
+                name="{t('components.modals.CuttingCreationModal.name.production_order_id')}"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>{t('modals.cuttingJob.productionOrder')} *</FormLabel>
@@ -183,13 +181,13 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
             )}
 
             {selectedProductionOrderId && (
-              <div className="space-y-2">
+              <div className={t("components.modals.cuttingcreationmodal.name.space_y_2")}>
                 <Label>{t('modals.cuttingJob.selectedProductionOrder')}</Label>
-                <div className="p-3 bg-gray-50 rounded-md border">
-                  <p className="font-medium text-sm">
+                <div className={t("components.modals.cuttingcreationmodal.name.p_3_bg_gray_50_rounded_md_border")}>
+                  <p className={t("components.modals.cuttingcreationmodal.name.font_medium_text_sm")}>
                     {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className={t("components.modals.cuttingcreationmodal.name.text_xs_text_gray_600")}>
                     {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || t('common.notSpecified')} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || t('common.notSpecified')}`}
                   </p>
                 </div>
@@ -198,14 +196,14 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="weight_kg"
+              name="{t('components.modals.CuttingCreationModal.name.weight_kg')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.cuttingJob.weightKg')} *</FormLabel>
                   <FormControl>
-                    <NumberInput value={field.value} onChange={field.onChange} placeholder="45.2" />
+                    <NumberInput value={field.value} onChange={field.onChange} placeholder="{t('components.modals.CuttingCreationModal.placeholder.45.2')}" />
                   </FormControl>
-                  {selectedOrder && <p className="text-xs text-gray-600">{t('modals.cuttingJob.remaining')}: <span className="font-medium">{remaining.toFixed(2)} {t('units.kg')}</span></p>}
+                  {selectedOrder && <p className={t("components.modals.cuttingcreationmodal.name.text_xs_text_gray_600")}>{t('modals.cuttingJob.remaining')}: <span className={t("components.modals.cuttingcreationmodal.name.font_medium")}>{remaining.toFixed(2)} {t('units.kg')}</span></p>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -213,7 +211,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="machine_id"
+              name="{t('components.modals.CuttingCreationModal.name.machine_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.cuttingJob.machine')} *</FormLabel>
@@ -225,7 +223,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="blade_setup_id"
+              name="{t('components.modals.CuttingCreationModal.name.blade_setup_id')}"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t('modals.cuttingJob.bladeSetup')} *</FormLabel>
@@ -236,9 +234,9 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
               )}
             />
 
-            <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
+            <div className={t("components.modals.cuttingcreationmodal.name.flex_justify_end_gap_3_pt_4_rtl_space_x_reverse")}>
               <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>{t('common.cancel')}</Button>
-              <Button type="submit" className="btn-primary" disabled={createMutation.isPending || remaining === 0}>
+              <Button type="submit" className={t("components.modals.cuttingcreationmodal.name.btn_primary")} disabled={createMutation.isPending || remaining === 0}>
                 {createMutation.isPending ? t('modals.cuttingJob.creating') : remaining === 0 ? t('modals.cuttingJob.quantityCompleted') : t('modals.cuttingJob.createTask')}
               </Button>
             </div>

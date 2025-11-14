@@ -101,54 +101,54 @@ export default function ProductionStageStats({ stage, data }: ProductionStageSta
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div className={t("components.production.productionstagestats.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
+        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>
             {getStageName()}
           </CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+          <Package className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalOrders}</div>
-          <p className="text-xs text-muted-foreground">{t('production.productionQueue')}</p>
+          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>{stats.totalOrders}</div>
+          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('production.productionQueue')}</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('orders.rolls')}</CardTitle>
-          <Package className="h-4 w-4 text-muted-foreground" />
+        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('orders.rolls')}</CardTitle>
+          <Package className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.totalRolls}</div>
-          <p className="text-xs text-muted-foreground">{t('warehouse.roll')}</p>
+          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>{stats.totalRolls}</div>
+          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('warehouse.roll')}</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('common.total')}</CardTitle>
-          <Weight className="h-4 w-4 text-muted-foreground" />
+        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('common.total')}</CardTitle>
+          <Weight className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>
             {stats.totalWeight.toFixed(2)}
           </div>
-          <p className="text-xs text-muted-foreground">{t('warehouse.kg')}</p>
+          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('warehouse.kg')}</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">{t('orders.completionRate')}</CardTitle>
-          <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('orders.completionRate')}</CardTitle>
+          <CheckCircle2 className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">
+          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>
             {stats.progressPercentage}%
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>
             {stats.completedRolls} / {stats.totalRolls} {t('production.completed')}
           </p>
         </CardContent>

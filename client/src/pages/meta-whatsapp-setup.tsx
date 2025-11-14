@@ -171,13 +171,7 @@ export default function MetaWhatsAppSetup() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
-      case "required":
-        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
-      case "optional":
-        return <Settings className="h-5 w-5 text-gray-400" />;
-      default:
-        return <Settings className="h-5 w-5 text-gray-400" />;
+        return <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600")} />{t('pages.meta-whatsapp-setup.;_case_"required":_return')}<AlertTriangle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_yellow_600")} />{t('pages.meta-whatsapp-setup.;_case_"optional":_return')}<Settings className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_gray_400")} />{t('pages.meta-whatsapp-setup.;_default:_return')}<Settings className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_gray_400")} />;
     }
   };
 
@@ -195,44 +189,37 @@ export default function MetaWhatsAppSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4" dir="rtl">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className={t("pages.meta-whatsapp-setup.name.min_h_screen_bg_gray_50_p_4")} dir="rtl">
+      <div className={t("pages.meta-whatsapp-setup.name.max_w_6xl_mx_auto_space_y_6")}>
         {/* Header */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🚀 إعداد Meta WhatsApp Business API
-          </h1>
-          <p className="text-gray-600">
-            إعداد وتكوين Meta WhatsApp Business API للاستخدام المباشر
-          </p>
+        <div className={t("pages.meta-whatsapp-setup.name.text_center")}>
+          <h1 className={t("pages.meta-whatsapp-setup.name.text_3xl_font_bold_text_gray_900_mb_2")}>{t('pages.meta-whatsapp-setup.🚀_إعداد_meta_whatsapp_business_api')}</h1>
+          <p className={t("pages.meta-whatsapp-setup.name.text_gray_600")}>{t('pages.meta-whatsapp-setup.إعداد_وتكوين_meta_whatsapp_business_api_للاستخدام_المباشر')}</p>
         </div>
 
         {/* Important Notice */}
         <Alert>
-          <AlertTriangle className="h-4 w-4" />
+          <AlertTriangle className={t("pages.meta-whatsapp-setup.name.h_4_w_4")} />
           <AlertDescription>
-            <strong>مهم:</strong> استخدام Meta WhatsApp API مباشرة يوفر تحكم
-            أكبر وتكلفة أقل من Twilio، ولكن يتطلب إعداد تقني أكثر تفصيلاً. تأكد
-            من إكمال جميع الخطوات بعناية.
-          </AlertDescription>
+            <strong>{t('pages.meta-whatsapp-setup.مهم:')}</strong>{t('pages.meta-whatsapp-setup.استخدام_meta_whatsapp_api_مباشرة_يوفر_تحكم_أكبر_وتكلفة_أقل_من_twilio،_ولكن_يتطلب_إعداد_تقني_أكثر_تفصيلاً._تأكد_من_إكمال_جميع_الخطوات_بعناية.')}</AlertDescription>
         </Alert>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className={t("pages.meta-whatsapp-setup.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
           {/* Setup Steps */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">خطوات الإعداد</h2>
+          <div className={t("pages.meta-whatsapp-setup.name.space_y_4")}>
+            <h2 className={t("pages.meta-whatsapp-setup.name.text_2xl_font_bold_text_gray_900")}>{t('pages.meta-whatsapp-setup.خطوات_الإعداد')}</h2>
 
             {setupSteps.map((step, index) => (
-              <Card key={step.id} className="relative">
+              <Card key={step.id} className={t("pages.meta-whatsapp-setup.name.relative")}>
                 <CardHeader>
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                  <CardTitle className={t("pages.meta-whatsapp-setup.name.flex_items_center_justify_between")}>
+                    <div className={t("pages.meta-whatsapp-setup.name.flex_items_center_gap_3")}>
+                      <span className={t("pages.meta-whatsapp-setup.name.bg_blue_600_text_white_rounded_full_w_8_h_8_flex_items_center_justify_center_text_sm_font_bold")}>
                         {index + 1}
                       </span>
                       <span>{step.title}</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className={t("pages.meta-whatsapp-setup.name.flex_items_center_gap_2")}>
                       {getStatusIcon(step.status)}
                       <Badge className={getStatusColor(step.status)}>
                         {step.status === "completed"
@@ -246,13 +233,13 @@ export default function MetaWhatsAppSetup() {
                   <CardDescription>{step.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className={t("pages.meta-whatsapp-setup.name.space_y_2")}>
                     {step.details.map((detail, detailIndex) => (
                       <div
                         key={detailIndex}
-                        className="flex items-start gap-2 text-sm"
+                        className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_2_text_sm")}
                       >
-                        <span className="text-blue-500 mt-1">•</span>
+                        <span className={t("pages.meta-whatsapp-setup.name.text_blue_500_mt_1")}>•</span>
                         <span
                           className={
                             step.status === "completed"
@@ -271,33 +258,29 @@ export default function MetaWhatsAppSetup() {
           </div>
 
           {/* Configuration & Testing */}
-          <div className="space-y-6">
+          <div className={t("pages.meta-whatsapp-setup.name.space_y_6")}>
             {/* Required Secrets */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  المتغيرات المطلوبة
-                </CardTitle>
-                <CardDescription>
-                  إضافة هذه المتغيرات في Replit Secrets
-                </CardDescription>
+                <CardTitle className={t("pages.meta-whatsapp-setup.name.flex_items_center_gap_2")}>
+                  <Key className={t("pages.meta-whatsapp-setup.name.h_5_w_5")} />{t('pages.meta-whatsapp-setup.المتغيرات_المطلوبة')}</CardTitle>
+                <CardDescription>{t('pages.meta-whatsapp-setup.إضافة_هذه_المتغيرات_في_replit_secrets')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className={t("pages.meta-whatsapp-setup.name.space_y_4")}>
                 {requiredSecrets.map((secret) => (
-                  <div key={secret.name} className="border rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-sm">{secret.name}</span>
+                  <div key={secret.name} className={t("pages.meta-whatsapp-setup.name.border_rounded_lg_p_3")}>
+                    <div className={t("pages.meta-whatsapp-setup.name.flex_items_center_justify_between_mb_2")}>
+                      <span className={t("pages.meta-whatsapp-setup.name.font_medium_text_sm")}>{secret.name}</span>
                       <Badge
                         variant={secret.required ? "destructive" : "secondary"}
                       >
                         {secret.required ? "مطلوب" : "اختياري"}
                       </Badge>
                     </div>
-                    <p className="text-xs text-gray-600 mb-2">
+                    <p className={t("pages.meta-whatsapp-setup.name.text_xs_text_gray_600_mb_2")}>
                       {secret.description}
                     </p>
-                    <code className="text-xs bg-gray-100 p-1 rounded block">
+                    <code className={t("pages.meta-whatsapp-setup.name.text_xs_bg_gray_100_p_1_rounded_block")}>
                       {secret.example}
                     </code>
                   </div>
@@ -308,39 +291,35 @@ export default function MetaWhatsAppSetup() {
             {/* Test Section */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5" />
-                  اختبار Meta API
-                </CardTitle>
-                <CardDescription>
-                  اختبار إرسال رسالة عبر Meta WhatsApp API
-                </CardDescription>
+                <CardTitle className={t("pages.meta-whatsapp-setup.name.flex_items_center_gap_2")}>
+                  <Send className={t("pages.meta-whatsapp-setup.name.h_5_w_5")} />{t('pages.meta-whatsapp-setup.اختبار_meta_api')}</CardTitle>
+                <CardDescription>{t('pages.meta-whatsapp-setup.اختبار_إرسال_رسالة_عبر_meta_whatsapp_api')}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className={t("pages.meta-whatsapp-setup.name.space_y_4")}>
                 <div>
-                  <Label htmlFor="testPhone">رقم الهاتف</Label>
+                  <Label htmlFor="testPhone">{t('pages.meta-whatsapp-setup.رقم_الهاتف')}</Label>
                   <Input
                     id="testPhone"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="+966501234567"
+                    placeholder="{t('pages.meta-whatsapp-setup.placeholder.+966501234567')}"
                     dir="ltr"
                     data-testid="input-phone"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="testMessage">الرسالة</Label>
+                  <Label htmlFor="testMessage">{t('pages.meta-whatsapp-setup.الرسالة')}</Label>
                   <Input
                     id="testMessage"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="رسالة اختبار"
+                    placeholder="{t('pages.meta-whatsapp-setup.placeholder.رسالة_اختبار')}"
                     data-testid="input-message"
                   />
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className={t("pages.meta-whatsapp-setup.name.flex_items_center_space_x_2")}>
                   <input
                     type="checkbox"
                     id="useTemplate"
@@ -348,20 +327,18 @@ export default function MetaWhatsAppSetup() {
                     onChange={(e) => setUseTemplate(e.target.checked)}
                     data-testid="checkbox-template"
                   />
-                  <Label htmlFor="useTemplate" className="text-sm">
-                    استخدام القالب المُوافق عليه
-                  </Label>
+                  <Label htmlFor="useTemplate" className={t("pages.meta-whatsapp-setup.name.text_sm")}>{t('pages.meta-whatsapp-setup.استخدام_القالب_المُوافق_عليه')}</Label>
                 </div>
 
                 {useTemplate && (
                   <div>
-                    <Label htmlFor="templateName">اسم القالب</Label>
+                    <Label htmlFor="templateName">{t('pages.meta-whatsapp-setup.اسم_القالب')}</Label>
                     <Input
                       id="templateName"
                       value={templateName}
                       onChange={(e) => setTemplateName(e.target.value)}
-                      placeholder="welcome_hxc4485f514cb7d4536026fc56250f75e7"
-                      className="font-mono text-xs"
+                      placeholder="{t('pages.meta-whatsapp-setup.placeholder.welcome_hxc4485f514cb7d4536026fc56250f75e7')}"
+                      className={t("pages.meta-whatsapp-setup.name.font_mono_text_xs")}
                       data-testid="input-template-name"
                     />
                   </div>
@@ -377,19 +354,13 @@ export default function MetaWhatsAppSetup() {
                     })
                   }
                   disabled={testMetaAPI.isPending}
-                  className="w-full"
+                  className={t("pages.meta-whatsapp-setup.name.w_full")}
                   data-testid="button-test-meta"
                 >
                   {testMetaAPI.isPending ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      جاري الإرسال...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="mr-2 h-4 w-4" />
-                      اختبار Meta API
-                    </>
+                      <Loader2 className={t("pages.meta-whatsapp-setup.name.mr_2_h_4_w_4_animate_spin")} />{t('pages.meta-whatsapp-setup.جاري_الإرسال...')}</>{t('pages.meta-whatsapp-setup.)_:_(')}<>
+                      <Send className={t("pages.meta-whatsapp-setup.name.mr_2_h_4_w_4")} />{t('pages.meta-whatsapp-setup.اختبار_meta_api')}</>
                   )}
                 </Button>
               </CardContent>
@@ -398,16 +369,14 @@ export default function MetaWhatsAppSetup() {
             {/* Quick Links */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ExternalLink className="h-5 w-5" />
-                  روابط مفيدة
-                </CardTitle>
+                <CardTitle className={t("pages.meta-whatsapp-setup.name.flex_items_center_gap_2")}>
+                  <ExternalLink className={t("pages.meta-whatsapp-setup.name.h_5_w_5")} />{t('pages.meta-whatsapp-setup.روابط_مفيدة')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className={t("pages.meta-whatsapp-setup.name.space_y_3")}>
                   <Button
                     variant="outline"
-                    className="w-full justify-start h-auto p-4"
+                    className={t("pages.meta-whatsapp-setup.name.w_full_justify_start_h_auto_p_4")}
                     asChild
                   >
                     <a
@@ -415,18 +384,16 @@ export default function MetaWhatsAppSetup() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <div className="text-right">
-                        <div className="font-medium">Meta for Developers</div>
-                        <div className="text-sm text-gray-500">
-                          إنشاء تطبيق Meta جديد
-                        </div>
+                      <div className={t("pages.meta-whatsapp-setup.name.text_right")}>
+                        <div className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.meta_for_developers')}</div>
+                        <div className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_500")}>{t('pages.meta-whatsapp-setup.إنشاء_تطبيق_meta_جديد')}</div>
                       </div>
                     </a>
                   </Button>
 
                   <Button
                     variant="outline"
-                    className="w-full justify-start h-auto p-4"
+                    className={t("pages.meta-whatsapp-setup.name.w_full_justify_start_h_auto_p_4")}
                     asChild
                   >
                     <a
@@ -434,18 +401,16 @@ export default function MetaWhatsAppSetup() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <div className="text-right">
-                        <div className="font-medium">Meta Business Manager</div>
-                        <div className="text-sm text-gray-500">
-                          إدارة الحسابات التجارية
-                        </div>
+                      <div className={t("pages.meta-whatsapp-setup.name.text_right")}>
+                        <div className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.meta_business_manager')}</div>
+                        <div className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_500")}>{t('pages.meta-whatsapp-setup.إدارة_الحسابات_التجارية')}</div>
                       </div>
                     </a>
                   </Button>
 
                   <Button
                     variant="outline"
-                    className="w-full justify-start h-auto p-4"
+                    className={t("pages.meta-whatsapp-setup.name.w_full_justify_start_h_auto_p_4")}
                     asChild
                   >
                     <a
@@ -453,20 +418,16 @@ export default function MetaWhatsAppSetup() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <div className="text-right">
-                        <div className="font-medium">
-                          WhatsApp Cloud API Guide
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          دليل البدء السريع
-                        </div>
+                      <div className={t("pages.meta-whatsapp-setup.name.text_right")}>
+                        <div className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.whatsapp_cloud_api_guide')}</div>
+                        <div className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_500")}>{t('pages.meta-whatsapp-setup.دليل_البدء_السريع')}</div>
                       </div>
                     </a>
                   </Button>
 
                   <Button
                     variant="outline"
-                    className="w-full justify-start h-auto p-4"
+                    className={t("pages.meta-whatsapp-setup.name.w_full_justify_start_h_auto_p_4")}
                     asChild
                   >
                     <a
@@ -474,11 +435,9 @@ export default function MetaWhatsAppSetup() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <div className="text-right">
-                        <div className="font-medium">Webhook Configuration</div>
-                        <div className="text-sm text-gray-500">
-                          إعداد Webhooks
-                        </div>
+                      <div className={t("pages.meta-whatsapp-setup.name.text_right")}>
+                        <div className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.webhook_configuration')}</div>
+                        <div className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_500")}>{t('pages.meta-whatsapp-setup.إعداد_webhooks')}</div>
                       </div>
                     </a>
                   </Button>
@@ -491,65 +450,55 @@ export default function MetaWhatsAppSetup() {
         {/* Benefits */}
         <Card>
           <CardHeader>
-            <CardTitle>🎯 مزايا استخدام Meta API مباشرة</CardTitle>
+            <CardTitle>{t('pages.meta-whatsapp-setup.🎯_مزايا_استخدام_meta_api_مباشرة')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+            <div className={t("pages.meta-whatsapp-setup.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_4")}>
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">تكلفة أقل</h4>
-                  <p className="text-sm text-gray-600">
-                    لا توجد رسوم وسطاء، فقط رسوم Meta
-                  </p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.تكلفة_أقل')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.لا_توجد_رسوم_وسطاء،_فقط_رسوم_meta')}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">تحكم كامل</h4>
-                  <p className="text-sm text-gray-600">
-                    إدارة مباشرة للقوالب والإعدادات
-                  </p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.تحكم_كامل')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.إدارة_مباشرة_للقوالب_والإعدادات')}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">ميزات متقدمة</h4>
-                  <p className="text-sm text-gray-600">
-                    وصول لجميع ميزات WhatsApp Business
-                  </p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.ميزات_متقدمة')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.وصول_لجميع_ميزات_whatsapp_business')}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">استقرار أعلى</h4>
-                  <p className="text-sm text-gray-600">
-                    اتصال مباشر بدون وسطاء
-                  </p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.استقرار_أعلى')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.اتصال_مباشر_بدون_وسطاء')}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">تحديثات فورية</h4>
-                  <p className="text-sm text-gray-600">
-                    الحصول على آخر التحديثات مباشرة
-                  </p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.تحديثات_فورية')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.الحصول_على_آخر_التحديثات_مباشرة')}</p>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
+              <div className={t("pages.meta-whatsapp-setup.name.flex_items_start_gap_3")}>
+                <CheckCircle className={t("pages.meta-whatsapp-setup.name.h_5_w_5_text_green_600_mt_1")} />
                 <div>
-                  <h4 className="font-medium">دعم أفضل</h4>
-                  <p className="text-sm text-gray-600">دعم مباشر من Meta</p>
+                  <h4 className={t("pages.meta-whatsapp-setup.name.font_medium")}>{t('pages.meta-whatsapp-setup.دعم_أفضل')}</h4>
+                  <p className={t("pages.meta-whatsapp-setup.name.text_sm_text_gray_600")}>{t('pages.meta-whatsapp-setup.دعم_مباشر_من_meta')}</p>
                 </div>
               </div>
             </div>

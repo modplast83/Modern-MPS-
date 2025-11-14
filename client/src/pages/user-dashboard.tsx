@@ -139,9 +139,7 @@ export default function UserDashboard() {
     lng: number;
     accuracy?: number;
     timestamp?: number;
-  } | null>(null);
-  const [locationError, setLocationError] = useState<string>("");
-  const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
+  } | null>{t('pages.user-dashboard.(null);_const_[locationerror,_setlocationerror]_=_usestate')}<string>{t('pages.user-dashboard.("");_const_[isloadinglocation,_setisloadinglocation]_=_usestate')}<boolean>(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // جلب مواقع المصانع النشطة من قاعدة البيانات
@@ -577,26 +575,26 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className={t("pages.user-dashboard.name.min_h_screen_bg_gray_50_dark_bg_gray_900")}>
       <Header />
 
-      <div className="flex">
+      <div className={t("pages.user-dashboard.name.flex")}>
         <Sidebar />
         <MobileNav />
 
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <main className={t("pages.user-dashboard.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+          <div className={t("pages.user-dashboard.name.max_w_7xl_mx_auto")}>
+            <div className={t("pages.user-dashboard.name.mb_6")}>
+              <h1 className={t("pages.user-dashboard.name.text_3xl_font_bold_text_gray_900_dark_text_white_mb_2")}>
                 {t('userDashboard.title')}
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className={t("pages.user-dashboard.name.text_gray_600_dark_text_gray_400")}>
                 {t('userDashboard.welcome', { name: userData?.full_name || userData?.username })}
               </p>
             </div>
 
-            <Tabs defaultValue="overview" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
+            <Tabs defaultValue="overview" className={t("pages.user-dashboard.name.space_y_6")}>
+              <TabsList className={t("pages.user-dashboard.name.grid_w_full_grid_cols_2_md_grid_cols_6")}>
                 <TabsTrigger value="overview">{t('userDashboard.overview')}</TabsTrigger>
                 <TabsTrigger value="profile">{t('userDashboard.profile')}</TabsTrigger>
                 <TabsTrigger value="attendance">{t('userDashboard.attendance')}</TabsTrigger>
@@ -606,12 +604,12 @@ export default function UserDashboard() {
               </TabsList>
 
               {/* Overview Tab */}
-              <TabsContent value="overview" className="space-y-6">
+              <TabsContent value="overview" className={t("pages.user-dashboard.name.space_y_6")}>
                 {/* Current Date Display */}
-                <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border">
-                  <div className="flex items-center justify-between">
+                <div className={t("pages.user-dashboard.name.mb_6_p_4_bg_gradient_to_r_from_blue_50_to_indigo_50_dark_from_blue_900_20_dark_to_indigo_900_20_rounded_lg_border")}>
+                  <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
                     <div>
-                      <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
+                      <h2 className={t("pages.user-dashboard.name.text_xl_font_bold_text_blue_900_dark_text_blue_100")}>
                         {new Date().toLocaleDateString("en-US", {
                           weekday: "long",
                           year: "numeric",
@@ -619,7 +617,7 @@ export default function UserDashboard() {
                           day: "numeric",
                         })}
                       </h2>
-                      <p className="text-sm text-blue-600 dark:text-blue-300">
+                      <p className={t("pages.user-dashboard.name.text_sm_text_blue_600_dark_text_blue_300")}>
                         {new Date().toLocaleTimeString("en-US", {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -627,8 +625,8 @@ export default function UserDashboard() {
                         })}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                    <div className={t("pages.user-dashboard.name.text_right")}>
+                      <p className={t("pages.user-dashboard.name.text_sm_text_gray_600_dark_text_gray_300")}>
                         {t('userDashboard.currentStatus')}
                       </p>
                       <span
@@ -652,18 +650,18 @@ export default function UserDashboard() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className={t("pages.user-dashboard.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_6")}>
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                    <CardHeader className={t("pages.user-dashboard.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+                      <CardTitle className={t("pages.user-dashboard.name.text_sm_font_medium")}>
                         {t('userDashboard.todayAttendanceStatus')}
                       </CardTitle>
-                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                      <CheckCircle className={t("pages.user-dashboard.name.h_4_w_4_text_muted_foreground")} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className={t("pages.user-dashboard.name.text_2xl_font_bold")}>
                         {dailyAttendanceStatus?.currentStatus ? (
-                          <div className="flex flex-col gap-2">
+                          <div className={t("pages.user-dashboard.name.flex_flex_col_gap_2")}>
                             <Badge
                               className={getStatusColor(
                                 dailyAttendanceStatus.currentStatus,
@@ -678,7 +676,7 @@ export default function UserDashboard() {
                               dailyAttendanceStatus.currentStatus ===
                                 "مغادر") &&
                               dailyAttendanceStatus.hasCheckedIn && (
-                                <span className="text-sm text-gray-600 dark:text-gray-300">
+                                <span className={t("pages.user-dashboard.name.text_sm_text_gray_600_dark_text_gray_300")}>
                                   {(() => {
                                     const todayRecord = attendanceRecords?.find(
                                       (record) =>
@@ -711,68 +709,66 @@ export default function UserDashboard() {
                                   })()}
                                 </span>
                               )}
-                          </div>
-                        ) : (
-                          <Badge variant="outline">{t('userDashboard.notRegistered')}</Badge>
+                          </div>{t('pages.user-dashboard.)_:_(')}<Badge variant="outline">{t('userDashboard.notRegistered')}</Badge>
                         )}
                       </div>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                    <CardHeader className={t("pages.user-dashboard.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+                      <CardTitle className={t("pages.user-dashboard.name.text_sm_font_medium")}>
                         {t('userDashboard.attendanceDaysCount')}
                       </CardTitle>
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className={t("pages.user-dashboard.name.h_4_w_4_text_muted_foreground")} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className={t("pages.user-dashboard.name.text_2xl_font_bold")}>
                         {formatNumber(
                           attendanceRecords?.filter(
                             (r) => r.check_in_time !== null,
                           ).length || 0,
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{t('userDashboard.thisMonth')}</p>
+                      <p className={t("pages.user-dashboard.name.text_xs_text_muted_foreground")}>{t('userDashboard.thisMonth')}</p>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                    <CardHeader className={t("pages.user-dashboard.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+                      <CardTitle className={t("pages.user-dashboard.name.text_sm_font_medium")}>
                         {t('userDashboard.activeViolations')}
                       </CardTitle>
-                      <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                      <AlertTriangle className={t("pages.user-dashboard.name.h_4_w_4_text_muted_foreground")} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className={t("pages.user-dashboard.name.text_2xl_font_bold")}>
                         {formatNumber(
                           violations?.filter((v) => v.status === "معلق")
                             .length || 0,
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className={t("pages.user-dashboard.name.text_xs_text_muted_foreground")}>
                         {t('userDashboard.pendingViolation')}
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                    <CardHeader className={t("pages.user-dashboard.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
+                      <CardTitle className={t("pages.user-dashboard.name.text_sm_font_medium")}>
                         {t('userDashboard.pendingRequests')}
                       </CardTitle>
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <FileText className={t("pages.user-dashboard.name.h_4_w_4_text_muted_foreground")} />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
+                      <div className={t("pages.user-dashboard.name.text_2xl_font_bold")}>
                         {formatNumber(
                           userRequests?.filter((r) => r.status === "معلق")
                             .length || 0,
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className={t("pages.user-dashboard.name.text_xs_text_muted_foreground")}>
                         {t('userDashboard.waitingForResponse')}
                       </p>
                     </CardContent>
@@ -790,12 +786,12 @@ export default function UserDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className={t("pages.user-dashboard.name.grid_grid_cols_2_md_grid_cols_4_gap_4")}>
                       {/* Check In Button */}
-                      <div className="flex flex-col items-center">
+                      <div className={t("pages.user-dashboard.name.flex_flex_col_items_center")}>
                         <Button
                           onClick={() => handleAttendanceAction("حاضر")}
-                          className="bg-green-600 hover:bg-green-700 w-full"
+                          className={t("pages.user-dashboard.name.bg_green_600_hover_bg_green_700_w_full")}
                           disabled={
                             dailyAttendanceStatus?.hasCheckedIn ||
                             attendanceMutation.isPending
@@ -805,7 +801,7 @@ export default function UserDashboard() {
                             ? `✓ ${t('userDashboard.checkedIn')}`
                             : t('userDashboard.checkIn')}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
+                        <div className={t("pages.user-dashboard.name.text_xs_text_gray_500_mt_1_h_4_text_center")}>
                           {(() => {
                             const todayRecords = attendanceRecords?.filter(
                               (record) =>
@@ -831,10 +827,10 @@ export default function UserDashboard() {
                       </div>
 
                       {/* Lunch Start Button */}
-                      <div className="flex flex-col items-center">
+                      <div className={t("pages.user-dashboard.name.flex_flex_col_items_center")}>
                         <Button
                           onClick={() => handleAttendanceAction("في الاستراحة")}
-                          className="bg-yellow-600 hover:bg-yellow-700 w-full"
+                          className={t("pages.user-dashboard.name.bg_yellow_600_hover_bg_yellow_700_w_full")}
                           disabled={
                             !dailyAttendanceStatus?.hasCheckedIn ||
                             dailyAttendanceStatus?.hasStartedLunch ||
@@ -845,7 +841,7 @@ export default function UserDashboard() {
                             ? `✓ ${t('userDashboard.lunchStarted')}`
                             : t('userDashboard.lunchBreakStart')}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
+                        <div className={t("pages.user-dashboard.name.text_xs_text_gray_500_mt_1_h_4_text_center")}>
                           {(() => {
                             const todayRecords = attendanceRecords?.filter(
                               (record) =>
@@ -871,12 +867,12 @@ export default function UserDashboard() {
                       </div>
 
                       {/* Lunch End Button */}
-                      <div className="flex flex-col items-center">
+                      <div className={t("pages.user-dashboard.name.flex_flex_col_items_center")}>
                         <Button
                           onClick={() =>
                             handleAttendanceAction("يعمل", "end_lunch")
                           }
-                          className="bg-blue-600 hover:bg-blue-700 w-full"
+                          className={t("pages.user-dashboard.name.bg_blue_600_hover_bg_blue_700_w_full")}
                           disabled={
                             !dailyAttendanceStatus?.hasStartedLunch ||
                             dailyAttendanceStatus?.hasEndedLunch ||
@@ -887,7 +883,7 @@ export default function UserDashboard() {
                             ? `✓ ${t('userDashboard.lunchEnded')}`
                             : t('userDashboard.lunchBreakEnd')}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
+                        <div className={t("pages.user-dashboard.name.text_xs_text_gray_500_mt_1_h_4_text_center")}>
                           {(() => {
                             const todayRecords = attendanceRecords?.filter(
                               (record) =>
@@ -913,10 +909,10 @@ export default function UserDashboard() {
                       </div>
 
                       {/* Check Out Button */}
-                      <div className="flex flex-col items-center">
+                      <div className={t("pages.user-dashboard.name.flex_flex_col_items_center")}>
                         <Button
                           onClick={() => handleAttendanceAction("مغادر")}
-                          className="bg-gray-600 hover:bg-gray-700 w-full"
+                          className={t("pages.user-dashboard.name.bg_gray_600_hover_bg_gray_700_w_full")}
                           disabled={
                             !dailyAttendanceStatus?.hasCheckedIn ||
                             dailyAttendanceStatus?.hasCheckedOut ||
@@ -927,7 +923,7 @@ export default function UserDashboard() {
                             ? `✓ ${t('userDashboard.checkedOut')}`
                             : t('userDashboard.checkOut')}
                         </Button>
-                        <div className="text-xs text-gray-500 mt-1 h-4 text-center">
+                        <div className={t("pages.user-dashboard.name.text_xs_text_gray_500_mt_1_h_4_text_center")}>
                           {(() => {
                             const todayRecords = attendanceRecords?.filter(
                               (record) =>
@@ -954,8 +950,8 @@ export default function UserDashboard() {
                     </div>
 
                     {/* Status indicator with timestamps */}
-                    <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <h4 className="font-semibold text-sm mb-2">{t('userDashboard.todayLog')}:</h4>
+                    <div className={t("pages.user-dashboard.name.mt_4_p_3_bg_gray_50_dark_bg_gray_800_rounded_lg")}>
+                      <h4 className={t("pages.user-dashboard.name.font_semibold_text_sm_mb_2")}>{t('userDashboard.todayLog')}:</h4>
                       {attendanceRecords
                         ?.filter(
                           (record) =>
@@ -964,13 +960,13 @@ export default function UserDashboard() {
                             record.user_id === user?.id,
                         )
                         .map((record, index) => (
-                          <div key={record.id} className="mb-2 last:mb-0">
+                          <div key={record.id} className={t("pages.user-dashboard.name.mb_2_last_mb_0")}>
                             {record.check_in_time && (
-                              <div className="flex items-center justify-between text-sm py-1">
-                                <span className="text-green-600">
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                                <span className={t("pages.user-dashboard.name.text_green_600")}>
                                   ✓ {t('userDashboard.checkInRecorded')}
                                 </span>
-                                <span className="text-gray-600">
+                                <span className={t("pages.user-dashboard.name.text_gray_600")}>
                                   {new Date(
                                     record.check_in_time,
                                   ).toLocaleTimeString("en-US", {
@@ -982,11 +978,11 @@ export default function UserDashboard() {
                               </div>
                             )}
                             {record.lunch_start_time && (
-                              <div className="flex items-center justify-between text-sm py-1">
-                                <span className="text-yellow-600">
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                                <span className={t("pages.user-dashboard.name.text_yellow_600")}>
                                   ✓ {t('userDashboard.breakStartRecorded')}
                                 </span>
-                                <span className="text-gray-600">
+                                <span className={t("pages.user-dashboard.name.text_gray_600")}>
                                   {new Date(
                                     record.lunch_start_time,
                                   ).toLocaleTimeString("en-US", {
@@ -998,11 +994,11 @@ export default function UserDashboard() {
                               </div>
                             )}
                             {record.lunch_end_time && (
-                              <div className="flex items-center justify-between text-sm py-1">
-                                <span className="text-blue-600">
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                                <span className={t("pages.user-dashboard.name.text_blue_600")}>
                                   ✓ {t('userDashboard.breakEndRecorded')}
                                 </span>
-                                <span className="text-gray-600">
+                                <span className={t("pages.user-dashboard.name.text_gray_600")}>
                                   {new Date(
                                     record.lunch_end_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1014,11 +1010,11 @@ export default function UserDashboard() {
                               </div>
                             )}
                             {record.check_out_time && (
-                              <div className="flex items-center justify-between text-sm py-1">
-                                <span className="text-gray-600">
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_600")}>
                                   ✓ {t('userDashboard.checkOutRecorded')}
                                 </span>
-                                <span className="text-gray-600">
+                                <span className={t("pages.user-dashboard.name.text_gray_600")}>
                                   {new Date(
                                     record.check_out_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1034,56 +1030,55 @@ export default function UserDashboard() {
 
                       {/* Working Hours Summary */}
                       {dailyAttendanceStatus?.hasCheckedIn && (
-                        <div className="mt-3 pt-3 border-t">
-                          <h5 className="font-medium text-sm mb-2 text-blue-700 dark:text-blue-300">
+                        <div className={t("pages.user-dashboard.name.mt_3_pt_3_border_t")}>
+                          <h5 className={t("pages.user-dashboard.name.font_medium_text_sm_mb_2_text_blue_700_dark_text_blue_300")}>
                             📊 {t('userDashboard.workHoursSummary')}{" "}
                             {dailyHours.isFriday ? `(${t('userDashboard.friday')})` : ""}:
                           </h5>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className={t("pages.user-dashboard.name.grid_grid_cols_2_gap_2_text_xs")}>
                             {/* Working Hours */}
-                            <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                              <div className="flex items-center justify-between">
-                                <span className="text-green-700 dark:text-green-300">
+                            <div className={t("pages.user-dashboard.name.bg_green_50_dark_bg_green_900_20_p_2_rounded")}>
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
+                                <span className={t("pages.user-dashboard.name.text_green_700_dark_text_green_300")}>
                                   ⏰ {t('userDashboard.workingHours')}
                                 </span>
-                                <span className="font-medium text-green-800 dark:text-green-200">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_green_800_dark_text_green_200")}>
                                   {dailyHours.workingHours.toFixed(1)} {t('userDashboard.hour')}
                                 </span>
                               </div>
                             </div>
 
                             {/* Overtime Hours */}
-                            <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
-                              <div className="flex items-center justify-between">
-                                <span className="text-orange-700 dark:text-orange-300">
+                            <div className={t("pages.user-dashboard.name.bg_orange_50_dark_bg_orange_900_20_p_2_rounded")}>
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
+                                <span className={t("pages.user-dashboard.name.text_orange_700_dark_text_orange_300")}>
                                   ⚡ {t('userDashboard.overtimeHours')}
                                 </span>
-                                <span className="font-medium text-orange-800 dark:text-orange-200">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_orange_800_dark_text_orange_200")}>
                                   {dailyHours.overtimeHours.toFixed(1)} {t('userDashboard.hour')}
                                 </span>
                               </div>
                             </div>
 
                             {/* Break Time */}
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-2 rounded">
-                              <div className="flex items-center justify-between">
-                                <span className="text-yellow-700 dark:text-yellow-300">
+                            <div className={t("pages.user-dashboard.name.bg_yellow_50_dark_bg_yellow_900_20_p_2_rounded")}>
+                              <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
+                                <span className={t("pages.user-dashboard.name.text_yellow_700_dark_text_yellow_300")}>
                                   ☕ {t('userDashboard.breakTime')}
                                 </span>
-                                <span className="font-medium text-yellow-800 dark:text-yellow-200">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_yellow_800_dark_text_yellow_200")}>
                                   {dailyHours.breakMinutes} {t('userDashboard.minute')}
                                 </span>
                               </div>
                             </div>
 
                             {/* Deficit Hours (if any) */}
-                            {dailyHours.deficitHours > 0 && (
-                              <div className="bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-red-700 dark:text-red-300">
+                            {dailyHours.deficitHours >{t('pages.user-dashboard.0_&&_(')}<div className={t("pages.user-dashboard.name.bg_red_50_dark_bg_red_900_20_p_2_rounded")}>
+                                <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
+                                  <span className={t("pages.user-dashboard.name.text_red_700_dark_text_red_300")}>
                                     ⚠️ {t('userDashboard.deficitHours')}
                                   </span>
-                                  <span className="font-medium text-red-800 dark:text-red-200">
+                                  <span className={t("pages.user-dashboard.name.font_medium_text_red_800_dark_text_red_200")}>
                                     {dailyHours.deficitHours.toFixed(1)} {t('userDashboard.hour')}
                                   </span>
                                 </div>
@@ -1092,8 +1087,8 @@ export default function UserDashboard() {
                           </div>
 
                           {/* Additional Info */}
-                          <div className="mt-2 text-xs text-gray-600 dark:text-gray-400">
-                            <div className="flex justify-between">
+                          <div className={t("pages.user-dashboard.name.mt_2_text_xs_text_gray_600_dark_text_gray_400")}>
+                            <div className={t("pages.user-dashboard.name.flex_justify_between")}>
                               <span>{t('userDashboard.totalTime')}:</span>
                               <span>
                                 {Math.floor(dailyHours.totalMinutes / 60)}:
@@ -1103,7 +1098,7 @@ export default function UserDashboard() {
                               </span>
                             </div>
                             {dailyHours.isFriday && (
-                              <div className="text-orange-600 dark:text-orange-400 mt-1 font-medium">
+                              <div className={t("pages.user-dashboard.name.text_orange_600_dark_text_orange_400_mt_1_font_medium")}>
                                 * {t('userDashboard.fridayOvertimeNote')}
                               </div>
                             )}
@@ -1112,40 +1107,40 @@ export default function UserDashboard() {
                       )}
 
                       {/* Status indicators for missing actions */}
-                      <div className="mt-2 pt-2 border-t">
+                      <div className={t("pages.user-dashboard.name.mt_2_pt_2_border_t")}>
                         {!dailyAttendanceStatus?.hasCheckedIn && (
-                          <div className="flex items-center justify-between text-sm py-1">
-                            <span className="text-gray-400">
+                          <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                            <span className={t("pages.user-dashboard.name.text_gray_400")}>
                               ⏳ {t('userDashboard.checkIn')}
                             </span>
-                            <span className="text-gray-400">{t('userDashboard.notDone')}</span>
+                            <span className={t("pages.user-dashboard.name.text_gray_400")}>{t('userDashboard.notDone')}</span>
                           </div>
                         )}
                         {!dailyAttendanceStatus?.hasStartedLunch &&
                           dailyAttendanceStatus?.hasCheckedIn && (
-                            <div className="flex items-center justify-between text-sm py-1">
-                              <span className="text-gray-400">
+                            <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>
                                 ⏳ {t('userDashboard.lunchBreakStart')}
                               </span>
-                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                         {!dailyAttendanceStatus?.hasEndedLunch &&
                           dailyAttendanceStatus?.hasStartedLunch && (
-                            <div className="flex items-center justify-between text-sm py-1">
-                              <span className="text-gray-400">
+                            <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>
                                 ⏳ {t('userDashboard.lunchBreakEnd')}
                               </span>
-                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                         {!dailyAttendanceStatus?.hasCheckedOut &&
                           dailyAttendanceStatus?.hasCheckedIn && (
-                            <div className="flex items-center justify-between text-sm py-1">
-                              <span className="text-gray-400">
+                            <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_text_sm_py_1")}>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>
                                 ⏳ {t('userDashboard.checkOut')}
                               </span>
-                              <span className="text-gray-400">{t('userDashboard.notDone')}</span>
+                              <span className={t("pages.user-dashboard.name.text_gray_400")}>{t('userDashboard.notDone')}</span>
                             </div>
                           )}
                       </div>
@@ -1169,21 +1164,21 @@ export default function UserDashboard() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className={t("pages.user-dashboard.name.space_y_4")}>
                       {attendanceRecords?.slice(0, 15).map((record) => (
                         <div
                           key={record.id}
-                          className="p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm"
+                          className={t("pages.user-dashboard.name.p_4_border_rounded_lg_bg_white_dark_bg_gray_800_shadow_sm")}
                         >
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-3">
+                          <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_mb_3")}>
+                            <div className={t("pages.user-dashboard.name.flex_items_center_gap_3")}>
                               <Badge
                                 className={getStatusColor(record.status)}
                                 variant="outline"
                               >
                                 {record.status}
                               </Badge>
-                              <span className="font-medium text-gray-700 dark:text-gray-300">
+                              <span className={t("pages.user-dashboard.name.font_medium_text_gray_700_dark_text_gray_300")}>
                                 {new Date(record.date).toLocaleDateString(
                                   "en-US",
                                   {
@@ -1196,19 +1191,19 @@ export default function UserDashboard() {
                               </span>
                             </div>
                             {record.notes && (
-                              <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                              <span className={t("pages.user-dashboard.name.text_xs_text_gray_500_bg_gray_100_dark_bg_gray_700_px_2_py_1_rounded")}>
                                 {record.notes}
                               </span>
                             )}
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                          <div className={t("pages.user-dashboard.name.grid_grid_cols_2_md_grid_cols_4_gap_3_text_sm")}>
                             {record.check_in_time && (
-                              <div className="flex flex-col">
-                                <span className="text-gray-500 text-xs">
+                              <div className={t("pages.user-dashboard.name.flex_flex_col")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_500_text_xs")}>
                                   {t('userDashboard.checkInLabel')}
                                 </span>
-                                <span className="font-medium text-green-600">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_green_600")}>
                                   {new Date(
                                     record.check_in_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1221,11 +1216,11 @@ export default function UserDashboard() {
                             )}
 
                             {record.lunch_start_time && (
-                              <div className="flex flex-col">
-                                <span className="text-gray-500 text-xs">
+                              <div className={t("pages.user-dashboard.name.flex_flex_col")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_500_text_xs")}>
                                   {t('userDashboard.breakStartLabel')}
                                 </span>
-                                <span className="font-medium text-yellow-600">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_yellow_600")}>
                                   {new Date(
                                     record.lunch_start_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1238,11 +1233,11 @@ export default function UserDashboard() {
                             )}
 
                             {record.lunch_end_time && (
-                              <div className="flex flex-col">
-                                <span className="text-gray-500 text-xs">
+                              <div className={t("pages.user-dashboard.name.flex_flex_col")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_500_text_xs")}>
                                   {t('userDashboard.breakEndLabel')}
                                 </span>
-                                <span className="font-medium text-blue-600">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_blue_600")}>
                                   {new Date(
                                     record.lunch_end_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1255,11 +1250,11 @@ export default function UserDashboard() {
                             )}
 
                             {record.check_out_time && (
-                              <div className="flex flex-col">
-                                <span className="text-gray-500 text-xs">
+                              <div className={t("pages.user-dashboard.name.flex_flex_col")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_500_text_xs")}>
                                   {t('userDashboard.checkOutLabel')}
                                 </span>
-                                <span className="font-medium text-gray-600">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_gray_600")}>
                                   {new Date(
                                     record.check_out_time,
                                   ).toLocaleTimeString("en-US", {
@@ -1274,12 +1269,12 @@ export default function UserDashboard() {
 
                           {/* Calculate working hours if both check-in and check-out exist */}
                           {record.check_in_time && record.check_out_time && (
-                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-gray-500">
+                            <div className={t("pages.user-dashboard.name.mt_3_pt_3_border_t_border_gray_200_dark_border_gray_600")}>
+                              <div className={t("pages.user-dashboard.name.flex_justify_between_items_center_text_sm")}>
+                                <span className={t("pages.user-dashboard.name.text_gray_500")}>
                                   {t('userDashboard.totalWorkHours')}:
                                 </span>
-                                <span className="font-medium text-blue-700 dark:text-blue-300">
+                                <span className={t("pages.user-dashboard.name.font_medium_text_blue_700_dark_text_blue_300")}>
                                   {(() => {
                                     const checkIn = new Date(
                                       record.check_in_time!,
@@ -1306,8 +1301,8 @@ export default function UserDashboard() {
 
                       {(!attendanceRecords ||
                         attendanceRecords.length === 0) && (
-                        <div className="text-center text-gray-500 py-8">
-                          <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <div className={t("pages.user-dashboard.name.text_center_text_gray_500_py_8")}>
+                          <Calendar className={t("pages.user-dashboard.name.h_12_w_12_mx_auto_mb_4_opacity_50")} />
                           <p>{t('userDashboard.noAttendanceRecords')}</p>
                         </div>
                       )}
@@ -1323,34 +1318,34 @@ export default function UserDashboard() {
                     <CardTitle>{t('userDashboard.violationsAndPenalties')}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className={t("pages.user-dashboard.name.space_y_4")}>
                       {violations?.map((violation) => (
                         <div
                           key={violation.id}
-                          className="p-4 border rounded-lg"
+                          className={t("pages.user-dashboard.name.p_4_border_rounded_lg")}
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <h3 className="font-medium">{violation.type}</h3>
+                          <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_mb_2")}>
+                            <h3 className={t("pages.user-dashboard.name.font_medium")}>{violation.type}</h3>
                             <Badge
                               variant={getStatusBadgeVariant(violation.status)}
                             >
                               {violation.status}
                             </Badge>
                           </div>
-                          <p className="text-gray-600 mb-2">
+                          <p className={t("pages.user-dashboard.name.text_gray_600_mb_2")}>
                             {violation.description}
                           </p>
-                          <p className="text-sm text-red-600 mb-2">
+                          <p className={t("pages.user-dashboard.name.text_sm_text_red_600_mb_2")}>
                             <strong>{t('userDashboard.penalty')}:</strong> {violation.penalty}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className={t("pages.user-dashboard.name.text_xs_text_gray_500")}>
                             {t('common.date')}:{" "}
                             {new Date(violation.date).toLocaleDateString("ar")}
                           </p>
                         </div>
                       ))}
                       {(!violations || violations.length === 0) && (
-                        <p className="text-center text-gray-500 py-8">
+                        <p className={t("pages.user-dashboard.name.text_center_text_gray_500_py_8")}>
                           {t('userDashboard.noViolations')}
                         </p>
                       )}
@@ -1361,7 +1356,7 @@ export default function UserDashboard() {
 
               {/* Requests Tab */}
               <TabsContent value="requests">
-                <div className="space-y-6">
+                <div className={t("pages.user-dashboard.name.space_y_6")}>
                   <Card>
                     <CardHeader>
                       <CardTitle>{t('userDashboard.submitNewRequest')}</CardTitle>
@@ -1372,11 +1367,11 @@ export default function UserDashboard() {
                           onSubmit={requestForm.handleSubmit((data) =>
                             submitRequestMutation.mutate(data),
                           )}
-                          className="space-y-4"
+                          className={t("pages.user-dashboard.name.space_y_4")}
                         >
                           <FormField
                             control={requestForm.control}
-                            name="type"
+                            name="{t('pages.user-dashboard.name.type')}"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>{t('userDashboard.requestTypeLabel')}</FormLabel>
@@ -1407,7 +1402,7 @@ export default function UserDashboard() {
                           />
                           <FormField
                             control={requestForm.control}
-                            name="title"
+                            name="{t('pages.user-dashboard.name.title')}"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>{t('userDashboard.requestTitleLabel')}</FormLabel>
@@ -1423,7 +1418,7 @@ export default function UserDashboard() {
                           />
                           <FormField
                             control={requestForm.control}
-                            name="description"
+                            name="{t('pages.user-dashboard.name.description')}"
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>{t('userDashboard.requestDescriptionLabel')}</FormLabel>
@@ -1455,39 +1450,39 @@ export default function UserDashboard() {
                       <CardTitle>{t('userDashboard.myPreviousRequests')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
+                      <div className={t("pages.user-dashboard.name.space_y_4")}>
                         {userRequests?.map((request) => (
                           <div
                             key={request.id}
-                            className="p-4 border rounded-lg"
+                            className={t("pages.user-dashboard.name.p_4_border_rounded_lg")}
                           >
-                            <div className="flex items-center justify-between mb-2">
-                              <h3 className="font-medium">{request.title}</h3>
+                            <div className={t("pages.user-dashboard.name.flex_items_center_justify_between_mb_2")}>
+                              <h3 className={t("pages.user-dashboard.name.font_medium")}>{request.title}</h3>
                               <Badge
                                 variant={getStatusBadgeVariant(request.status)}
                               >
                                 {request.status}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className={t("pages.user-dashboard.name.text_sm_text_gray_600_mb_2")}>
                               <strong>{t('common.type')}:</strong> {request.type}
                             </p>
-                            <p className="text-gray-600 mb-2">
+                            <p className={t("pages.user-dashboard.name.text_gray_600_mb_2")}>
                               {request.description}
                             </p>
                             {request.response && (
-                              <p className="text-sm text-blue-600 mb-2">
+                              <p className={t("pages.user-dashboard.name.text_sm_text_blue_600_mb_2")}>
                                 <strong>{t('userDashboard.requestResponse')}:</strong> {request.response}
                               </p>
                             )}
-                            <p className="text-xs text-gray-500">
+                            <p className={t("pages.user-dashboard.name.text_xs_text_gray_500")}>
                               {t('common.date')}:{" "}
                               {new Date(request.date).toLocaleDateString("ar")}
                             </p>
                           </div>
                         ))}
                         {(!userRequests || userRequests.length === 0) && (
-                          <p className="text-center text-gray-500 py-8">
+                          <p className={t("pages.user-dashboard.name.text_center_text_gray_500_py_8")}>
                             {t('userDashboard.noRequests')}
                           </p>
                         )}
@@ -1508,24 +1503,22 @@ export default function UserDashboard() {
                   </CardHeader>
                   <CardContent>
                     {isLoadingLocation ? (
-                      <div className="text-center py-8">
-                        <div className="animate-pulse">
-                          <MapPin className="h-12 w-12 text-blue-500 mx-auto mb-4" />
+                      <div className={t("pages.user-dashboard.name.text_center_py_8")}>
+                        <div className={t("pages.user-dashboard.name.animate_pulse")}>
+                          <MapPin className={t("pages.user-dashboard.name.h_12_w_12_text_blue_500_mx_auto_mb_4")} />
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className={t("pages.user-dashboard.name.text_gray_600_dark_text_gray_400")}>
                           {t('userDashboard.requestingLocation')}
                         </p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <p className={t("pages.user-dashboard.name.text_sm_text_gray_500_mt_2")}>
                           {t('userDashboard.allowLocation')}
                         </p>
-                      </div>
-                    ) : currentLocation ? (
-                      <div className="space-y-6">
+                      </div>{t('pages.user-dashboard.)_:_currentlocation_?_(')}<div className={t("pages.user-dashboard.name.space_y_6")}>
                         {/* GPS Status Header */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                            <MapPin className="h-5 w-5" />
-                            <span className="font-medium">
+                        <div className={t("pages.user-dashboard.name.flex_items_center_justify_between")}>
+                          <div className={t("pages.user-dashboard.name.flex_items_center_gap_2_text_green_600_dark_text_green_400")}>
+                            <MapPin className={t("pages.user-dashboard.name.h_5_w_5")} />
+                            <span className={t("pages.user-dashboard.name.font_medium")}>
                               {t('userDashboard.locationReceived')}
                             </span>
                           </div>
@@ -1541,50 +1534,49 @@ export default function UserDashboard() {
                         </div>
 
                         {/* GPS Diagnostics Card */}
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 p-4 rounded-lg space-y-3">
-                          <h3 className="font-semibold text-blue-900 dark:text-blue-100 flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
+                        <div className={t("pages.user-dashboard.name.bg_gradient_to_br_from_blue_50_to_indigo_50_dark_from_blue_900_20_dark_to_indigo_900_20_border_border_blue_200_dark_border_blue_800_p_4_rounded_lg_space_y_3")}>
+                          <h3 className={t("pages.user-dashboard.name.font_semibold_text_blue_900_dark_text_blue_100_flex_items_center_gap_2")}>
+                            <MapPin className={t("pages.user-dashboard.name.h_4_w_4")} />
                             {t('userDashboard.detailedGPSInfo')}
                           </h3>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className={t("pages.user-dashboard.name.grid_grid_cols_1_md_grid_cols_2_gap_3")}>
                             {/* Latitude */}
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.latitude')}</p>
-                              <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <div className={t("pages.user-dashboard.name.bg_white_dark_bg_gray_800_p_3_rounded_border_border_blue_100_dark_border_blue_900")}>
+                              <p className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_mb_1")}>{t('userDashboard.latitude')}</p>
+                              <p className={t("pages.user-dashboard.name.font_mono_text_sm_font_semibold_text_gray_900_dark_text_gray_100")}>
                                 {currentLocation.lat.toFixed(8)}°
                               </p>
                             </div>
 
                             {/* Longitude */}
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.longitude')}</p>
-                              <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <div className={t("pages.user-dashboard.name.bg_white_dark_bg_gray_800_p_3_rounded_border_border_blue_100_dark_border_blue_900")}>
+                              <p className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_mb_1")}>{t('userDashboard.longitude')}</p>
+                              <p className={t("pages.user-dashboard.name.font_mono_text_sm_font_semibold_text_gray_900_dark_text_gray_100")}>
                                 {currentLocation.lng.toFixed(8)}°
                               </p>
                             </div>
 
                             {/* Accuracy */}
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.gpsAccuracy')}</p>
-                              <div className="flex items-center gap-2">
-                                <p className="font-mono text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <div className={t("pages.user-dashboard.name.bg_white_dark_bg_gray_800_p_3_rounded_border_border_blue_100_dark_border_blue_900")}>
+                              <p className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_mb_1")}>{t('userDashboard.gpsAccuracy')}</p>
+                              <div className={t("pages.user-dashboard.name.flex_items_center_gap_2")}>
+                                <p className={t("pages.user-dashboard.name.font_mono_text_sm_font_semibold_text_gray_900_dark_text_gray_100")}>
                                   {currentLocation.accuracy 
                                     ? `±${Math.round(currentLocation.accuracy)} ${t('userDashboard.meters')}`
                                     : t('common.notSpecified')}
                                 </p>
-                                {currentLocation.accuracy && currentLocation.accuracy > 100 && (
-                                  <Badge variant="destructive" className="text-xs">
+                                {currentLocation.accuracy && currentLocation.accuracy >{t('pages.user-dashboard.100_&&_(')}<Badge variant="destructive" className={t("pages.user-dashboard.name.text_xs")}>
                                     {t('userDashboard.lowAccuracy')}
                                   </Badge>
                                 )}
                                 {currentLocation.accuracy && currentLocation.accuracy <= 20 && (
-                                  <Badge className="bg-green-500 text-xs">
+                                  <Badge className={t("pages.user-dashboard.name.bg_green_500_text_xs")}>
                                     {t('userDashboard.highAccuracy')}
                                   </Badge>
                                 )}
-                                {currentLocation.accuracy && currentLocation.accuracy > 20 && currentLocation.accuracy <= 100 && (
-                                  <Badge variant="secondary" className="text-xs">
+                                {currentLocation.accuracy && currentLocation.accuracy >{t('pages.user-dashboard.20_&&_currentlocation.accuracy')}<= 100 && (
+                                  <Badge variant="secondary" className={t("pages.user-dashboard.name.text_xs")}>
                                     {t('userDashboard.mediumAccuracy')}
                                   </Badge>
                                 )}
@@ -1592,9 +1584,9 @@ export default function UserDashboard() {
                             </div>
 
                             {/* Timestamp */}
-                            <div className="bg-white dark:bg-gray-800 p-3 rounded border border-blue-100 dark:border-blue-900">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{t('userDashboard.lastUpdate')}</p>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            <div className={t("pages.user-dashboard.name.bg_white_dark_bg_gray_800_p_3_rounded_border_border_blue_100_dark_border_blue_900")}>
+                              <p className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_mb_1")}>{t('userDashboard.lastUpdate')}</p>
+                              <p className={t("pages.user-dashboard.name.text_sm_font_semibold_text_gray_900_dark_text_gray_100")}>
                                 {currentLocation.timestamp 
                                   ? new Date(currentLocation.timestamp).toLocaleTimeString("ar-SA", {
                                       hour: "2-digit",
@@ -1607,49 +1599,46 @@ export default function UserDashboard() {
                           </div>
 
                           {/* GPS Quality Warning */}
-                          {currentLocation.accuracy && currentLocation.accuracy > 100 && (
-                            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 rounded">
-                              <p className="text-xs text-yellow-800 dark:text-yellow-200">
-                                ⚠️ <strong>{t('common.warning')}:</strong> {t('userDashboard.lowGPSAccuracyWarning', { accuracy: Math.round(currentLocation.accuracy) })}
+                          {currentLocation.accuracy && currentLocation.accuracy >{t('pages.user-dashboard.100_&&_(')}<div className={t("pages.user-dashboard.name.bg_yellow_50_dark_bg_yellow_900_20_border_border_yellow_200_dark_border_yellow_800_p_3_rounded")}>
+                              <p className={t("pages.user-dashboard.name.text_xs_text_yellow_800_dark_text_yellow_200")}>{t('pages.user-dashboard.⚠️')}<strong>{t('common.warning')}:</strong> {t('userDashboard.lowGPSAccuracyWarning', { accuracy: Math.round(currentLocation.accuracy) })}
                               </p>
                             </div>
                           )}
                         </div>
                         
                         {/* Factory Locations Distance Table */}
-                        {activeLocations && activeLocations.length > 0 && (
-                          <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                        {activeLocations && activeLocations.length >{t('pages.user-dashboard.0_&&_(')}<div className={t("pages.user-dashboard.name.bg_white_dark_bg_gray_800_border_border_gray_200_dark_border_gray_700_rounded_lg_overflow_hidden")}>
+                            <div className={t("pages.user-dashboard.name.bg_gray_50_dark_bg_gray_900_px_4_py_3_border_b_border_gray_200_dark_border_gray_700")}>
+                              <h4 className={t("pages.user-dashboard.name.font_semibold_text_gray_900_dark_text_gray_100")}>
                                 {t('userDashboard.factoryLocationsDistance')}
                               </h4>
-                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              <p className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_mt_1")}>
                                 {t('userDashboard.haversineCalculation')}
                               </p>
                             </div>
                             
-                            <div className="overflow-x-auto">
-                              <table className="w-full">
-                                <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+                            <div className={t("pages.user-dashboard.name.overflow_x_auto")}>
+                              <table className={t("pages.user-dashboard.name.w_full")}>
+                                <thead className={t("pages.user-dashboard.name.bg_gray_50_dark_bg_gray_900_border_b_border_gray_200_dark_border_gray_700")}>
                                   <tr>
-                                    <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    <th className={t("pages.user-dashboard.name.px_4_py_2_text_right_text_xs_font_medium_text_gray_500_dark_text_gray_400")}>
                                       {t('userDashboard.locationName')}
                                     </th>
-                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    <th className={t("pages.user-dashboard.name.px_4_py_2_text_center_text_xs_font_medium_text_gray_500_dark_text_gray_400")}>
                                       {t('userDashboard.allowedRange')}
                                     </th>
-                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    <th className={t("pages.user-dashboard.name.px_4_py_2_text_center_text_xs_font_medium_text_gray_500_dark_text_gray_400")}>
                                       {t('userDashboard.actualDistance')}
                                     </th>
-                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    <th className={t("pages.user-dashboard.name.px_4_py_2_text_center_text_xs_font_medium_text_gray_500_dark_text_gray_400")}>
                                       {t('userDashboard.difference')}
                                     </th>
-                                    <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    <th className={t("pages.user-dashboard.name.px_4_py_2_text_center_text_xs_font_medium_text_gray_500_dark_text_gray_400")}>
                                       {t('common.status')}
                                     </th>
                                   </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody className={t("pages.user-dashboard.name.divide_y_divide_gray_200_dark_divide_gray_700")}>
                                   {activeLocations.map((location) => {
                                     const distance = calculateDistance(
                                       currentLocation.lat,
@@ -1669,25 +1658,25 @@ export default function UserDashboard() {
                                             : 'bg-red-50 dark:bg-red-900/10'
                                         }`}
                                       >
-                                        <td className="px-4 py-3">
-                                          <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        <td className={t("pages.user-dashboard.name.px_4_py_3")}>
+                                          <div className={t("pages.user-dashboard.name.text_sm_font_medium_text_gray_900_dark_text_gray_100")}>
                                             {location.name_ar || location.name}
                                           </div>
-                                          <div className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                                          <div className={t("pages.user-dashboard.name.text_xs_text_gray_500_dark_text_gray_400_font_mono")}>
                                             {parseFloat(location.latitude).toFixed(6)}°, {parseFloat(location.longitude).toFixed(6)}°
                                           </div>
                                         </td>
-                                        <td className="px-4 py-3 text-center">
-                                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        <td className={t("pages.user-dashboard.name.px_4_py_3_text_center")}>
+                                          <span className={t("pages.user-dashboard.name.text_sm_font_semibold_text_gray_700_dark_text_gray_300")}>
                                             {formatNumber(location.allowed_radius)} م
                                           </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center">
-                                          <span className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                        <td className={t("pages.user-dashboard.name.px_4_py_3_text_center")}>
+                                          <span className={t("pages.user-dashboard.name.text_sm_font_bold_text_gray_900_dark_text_gray_100")}>
                                             {formatNumber(Math.round(distance))} م
                                           </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center">
+                                        <td className={t("pages.user-dashboard.name.px_4_py_3_text_center")}>
                                           <span className={`text-sm font-semibold ${
                                             isInRange 
                                               ? 'text-green-600 dark:text-green-400'
@@ -1696,13 +1685,11 @@ export default function UserDashboard() {
                                             {isInRange ? '-' : '+'}{formatNumber(Math.round(difference))} م
                                           </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center">
+                                        <td className={t("pages.user-dashboard.name.px_4_py_3_text_center")}>
                                           {isInRange ? (
-                                            <Badge className="bg-green-500">
+                                            <Badge className={t("pages.user-dashboard.name.bg_green_500")}>
                                               ✓ {t('userDashboard.withinRange')}
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="destructive">
+                                            </Badge>{t('pages.user-dashboard.)_:_(')}<Badge variant="destructive">
                                               ✗ {t('userDashboard.outsideRange')}
                                             </Badge>
                                           )}
@@ -1715,7 +1702,7 @@ export default function UserDashboard() {
                             </div>
 
                             {/* Summary Card */}
-                            <div className="bg-gray-50 dark:bg-gray-900 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className={t("pages.user-dashboard.name.bg_gray_50_dark_bg_gray_900_px_4_py_3_border_t_border_gray_200_dark_border_gray_700")}>
                               {(() => {
                                 const closestLocation = activeLocations.reduce((closest, location) => {
                                   const distance = calculateDistance(
@@ -1741,15 +1728,15 @@ export default function UserDashboard() {
                                 });
 
                                 return (
-                                  <div className="text-sm">
-                                    <p className="text-gray-700 dark:text-gray-300">
+                                  <div className={t("pages.user-dashboard.name.text_sm")}>
+                                    <p className={t("pages.user-dashboard.name.text_gray_700_dark_text_gray_300")}>
                                       <strong>{t('userDashboard.closestLocation')}:</strong> {closestLocation?.location.name_ar || closestLocation?.location.name} 
-                                      <span className="font-mono text-xs mr-2">
+                                      <span className={t("pages.user-dashboard.name.font_mono_text_xs_mr_2")}>
                                         ({formatNumber(Math.round(closestLocation?.distance || 0))} {t('userDashboard.meters')})
                                       </span>
                                     </p>
                                     {!isAnyInRange && closestLocation && (
-                                      <p className="text-red-600 dark:text-red-400 text-xs mt-1">
+                                      <p className={t("pages.user-dashboard.name.text_red_600_dark_text_red_400_text_xs_mt_1")}>
                                         ⚠️ {t('userDashboard.outsideAllLocations', { distance: formatNumber(Math.round(closestLocation.distance - closestLocation.location.allowed_radius)) })}
                                       </p>
                                     )}
@@ -1760,10 +1747,10 @@ export default function UserDashboard() {
                           </div>
                         )}
                         
-                        <div className="flex gap-2">
+                        <div className={t("pages.user-dashboard.name.flex_gap_2")}>
                           <Button
                             onClick={() => handleAttendanceAction("حاضر")}
-                            className="flex-1"
+                            className={t("pages.user-dashboard.name.flex_1")}
                             disabled={
                               !dailyAttendanceStatus || 
                               dailyAttendanceStatus.hasCheckedIn
@@ -1782,17 +1769,15 @@ export default function UserDashboard() {
                             {t('userDashboard.retryLocation')}
                           </Button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-8">
-                        <MapPin className="h-12 w-12 text-red-400 mx-auto mb-4" />
-                        <p className="text-red-600 dark:text-red-400 mb-2 font-medium">
+                      </div>{t('pages.user-dashboard.)_:_(')}<div className={t("pages.user-dashboard.name.text_center_py_8")}>
+                        <MapPin className={t("pages.user-dashboard.name.h_12_w_12_text_red_400_mx_auto_mb_4")} />
+                        <p className={t("pages.user-dashboard.name.text_red_600_dark_text_red_400_mb_2_font_medium")}>
                           {locationError || t('userDashboard.locationError')}
                         </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        <p className={t("pages.user-dashboard.name.text_sm_text_gray_500_dark_text_gray_400_mb_4")}>
                           {t('userDashboard.allowLocationInstructions')}:
                         </p>
-                        <ul className="text-xs text-gray-600 dark:text-gray-400 text-right mb-4 space-y-1">
+                        <ul className={t("pages.user-dashboard.name.text_xs_text_gray_600_dark_text_gray_400_text_right_mb_4_space_y_1")}>
                           <li>• {t('userDashboard.locationInstruction1')}</li>
                           <li>• {t('userDashboard.locationInstruction2')}</li>
                           <li>• {t('userDashboard.locationInstruction3')}</li>
@@ -1800,7 +1785,7 @@ export default function UserDashboard() {
                         <Button
                           onClick={requestLocation}
                           variant="default"
-                          className="mt-2"
+                          className={t("pages.user-dashboard.name.mt_2")}
                           data-testid="button-retry-location"
                         >
                           {t('userDashboard.retryLocation')}

@@ -48,7 +48,7 @@ export default function LocationMapPicker({
   };
 
   return (
-    <div className="w-full h-[400px] rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700">
+    <div className={t("components.locationmappicker.name.w_full_h_400px_rounded_lg_overflow_hidden_border_border_gray_300_dark_border_gray_700")}>
       <MapContainer
         center={position}
         zoom={13}
@@ -56,7 +56,7 @@ export default function LocationMapPicker({
         scrollWheelZoom={true}
       >
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">{t('components.LocationMapPicker.openstreetmap')}</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         

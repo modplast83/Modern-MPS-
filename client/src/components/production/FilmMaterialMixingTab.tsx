@@ -62,8 +62,7 @@ type BatchDetail = {
     material_name?: string;
     material_name_ar?: string;
     percentage: string;
-  }>;
-  ingredients?: Array<{
+  }>{t('components.production.FilmMaterialMixingTab.;_ingredients?:_array')}<{
     item_id: string;
     item_name?: string;
     item_name_ar?: string;
@@ -107,8 +106,7 @@ export default function FilmMaterialMixingTab() {
   const [productionOrderId, setProductionOrderId] = useState("");
   const [machineId, setMachineId] = useState("");
   const [screw, setScrew] = useState("A");
-  const [materials, setMaterials] = useState<Material[]>([]);
-  const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
+  const [materials, setMaterials] = useState<Material[]>{t('components.production.FilmMaterialMixingTab.([]);_const_[selectedbatch,_setselectedbatch]_=_usestate')}<BatchDetail | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   // Fetch data - get in_production and pending production orders
@@ -259,7 +257,7 @@ export default function FilmMaterialMixingTab() {
       toast({ title: t("common.error"), description: t("production.atLeastOneMaterial"), variant: "destructive" });
       return;
     }
-    if (materials.some(m => !m.item_id || !m.weight_kg || parseFloat(m.weight_kg) <= 0)) {
+    if (materials.some(m =>{t('components.production.FilmMaterialMixingTab.!m.item_id_||_!m.weight_kg_||_parsefloat(m.weight_kg)')}<= 0)) {
       toast({ title: t("common.error"), description: t("production.validateMaterialData"), variant: "destructive" });
       return;
     }
@@ -289,33 +287,31 @@ export default function FilmMaterialMixingTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={t("components.production.filmmaterialmixingtab.name.space_y_6")}>
       {/* Create New Batch Card */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Beaker className="h-5 w-5" />
+          <CardTitle className={t("components.production.filmmaterialmixingtab.name.flex_items_center_gap_2")}>
+            <Beaker className={t("components.production.filmmaterialmixingtab.name.h_5_w_5")} />
             {t("production.createNewBatch")}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className={t("components.production.filmmaterialmixingtab.name.space_y_4")}>
           {/* Production Order & Machine Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
+          <div className={t("components.production.filmmaterialmixingtab.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
+            <div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
               <Label>{t("production.productionOrder")}</Label>
               {ordersLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <Select value={productionOrderId} onValueChange={setProductionOrderId}>
+                <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_10_w_full")} />{t('components.production.FilmMaterialMixingTab.)_:_(')}<Select value={productionOrderId} onValueChange={setProductionOrderId}>
                   <SelectTrigger data-testid="select-production-order">
                     <SelectValue placeholder={t("production.selectProductionOrder")} />
                   </SelectTrigger>
                   <SelectContent>
                     {productionOrders.map((order: any) => (
                       <SelectItem key={order.id} value={order.id.toString()}>
-                        <div className="flex flex-col gap-1">
-                          <div className="font-semibold">{order.production_order_number}</div>
-                          <div className="text-sm text-gray-600">
+                        <div className={t("components.production.filmmaterialmixingtab.name.flex_flex_col_gap_1")}>
+                          <div className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>{order.production_order_number}</div>
+                          <div className={t("components.production.filmmaterialmixingtab.name.text_sm_text_gray_600")}>
                             {order.item_name_ar || order.item_name} | 
                             {' '}{order.raw_material}
                             {order.master_batch_id && ` | ${getMasterBatchColor(order.master_batch_id)}`} | 
@@ -330,12 +326,10 @@ export default function FilmMaterialMixingTab() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
               <Label>{t("production.filmMachine")}</Label>
               {machinesLoading ? (
-                <Skeleton className="h-10 w-full" />
-              ) : (
-                <Select value={machineId} onValueChange={setMachineId}>
+                <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_10_w_full")} />{t('components.production.FilmMaterialMixingTab.)_:_(')}<Select value={machineId} onValueChange={setMachineId}>
                   <SelectTrigger data-testid="select-machine">
                     <SelectValue placeholder={t("production.selectMachine")} />
                   </SelectTrigger>
@@ -350,15 +344,15 @@ export default function FilmMaterialMixingTab() {
               )}
             </div>
 
-            <div className="space-y-2">
+            <div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
               <Label>{t("production.screw")}</Label>
               <RadioGroup value={screw} onValueChange={setScrew}>
-                <div className="flex gap-4">
-                  <div className="flex items-center space-x-2 space-x-reverse">
+                <div className={t("components.production.filmmaterialmixingtab.name.flex_gap_4")}>
+                  <div className={t("components.production.filmmaterialmixingtab.name.flex_items_center_space_x_2_space_x_reverse")}>
                     <RadioGroupItem value="A" id="screw-a" data-testid="radio-screw-a" />
                     <Label htmlFor="screw-a">A</Label>
                   </div>
-                  <div className="flex items-center space-x-2 space-x-reverse">
+                  <div className={t("components.production.filmmaterialmixingtab.name.flex_items_center_space_x_2_space_x_reverse")}>
                     <RadioGroupItem value="B" id="screw-b" data-testid="radio-screw-b" />
                     <Label htmlFor="screw-b">B</Label>
                   </div>
@@ -368,9 +362,9 @@ export default function FilmMaterialMixingTab() {
           </div>
 
           {/* Materials Section */}
-          <div className="border rounded-lg p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <Label className="text-lg font-semibold">{t("production.rawMaterials")}</Label>
+          <div className={t("components.production.filmmaterialmixingtab.name.border_rounded_lg_p_4_space_y_3")}>
+            <div className={t("components.production.filmmaterialmixingtab.name.flex_justify_between_items_center")}>
+              <Label className={t("components.production.filmmaterialmixingtab.name.text_lg_font_semibold")}>{t("production.rawMaterials")}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -378,29 +372,25 @@ export default function FilmMaterialMixingTab() {
                 onClick={addMaterial}
                 data-testid="button-add-material"
               >
-                <Plus className="h-4 w-4 ml-2" />
+                <Plus className={t("components.production.filmmaterialmixingtab.name.h_4_w_4_ml_2")} />
                 {t("production.addMaterial")}
               </Button>
             </div>
 
             {materials.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
+              <p className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground_text_center_py_4")}>
                 {t("production.noMaterialsAddToStart")}
-              </p>
-            ) : (
-              <div className="space-y-2">
+              </p>{t('components.production.FilmMaterialMixingTab.)_:_(')}<div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
                 {materials.map((material, index) => (
                   <div
                     key={material.id}
-                    className="grid grid-cols-12 gap-2 items-end"
+                    className={t("components.production.filmmaterialmixingtab.name.grid_grid_cols_12_gap_2_items_end")}
                     data-testid={`material-row-${index}`}
                   >
-                    <div className="col-span-5 space-y-1">
-                      <Label className="text-xs">{t("production.material")}</Label>
+                    <div className={t("components.production.filmmaterialmixingtab.name.col_span_5_space_y_1")}>
+                      <Label className={t("components.production.filmmaterialmixingtab.name.text_xs")}>{t("production.material")}</Label>
                       {itemsLoading ? (
-                        <Skeleton className="h-10 w-full" />
-                      ) : (
-                        <Select
+                        <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_10_w_full")} />{t('components.production.FilmMaterialMixingTab.)_:_(')}<Select
                           value={material.item_id}
                           onValueChange={(val) => updateMaterialItem(material.id, val)}
                         >
@@ -418,31 +408,31 @@ export default function FilmMaterialMixingTab() {
                       )}
                     </div>
 
-                    <div className="col-span-3 space-y-1">
-                      <Label className="text-xs">{t("production.weightKg")}</Label>
+                    <div className={t("components.production.filmmaterialmixingtab.name.col_span_3_space_y_1")}>
+                      <Label className={t("components.production.filmmaterialmixingtab.name.text_xs")}>{t("production.weightKg")}</Label>
                       <Input
                         type="number"
                         step="0.01"
                         min="0"
                         value={material.weight_kg}
                         onChange={(e) => updateMaterialWeight(material.id, e.target.value)}
-                        placeholder="0.00"
+                        placeholder="{t('components.production.FilmMaterialMixingTab.placeholder.0.00')}"
                         data-testid={`input-weight-${index}`}
                       />
                     </div>
 
-                    <div className="col-span-3 space-y-1">
-                      <Label className="text-xs">{t("production.percentage")}</Label>
+                    <div className={t("components.production.filmmaterialmixingtab.name.col_span_3_space_y_1")}>
+                      <Label className={t("components.production.filmmaterialmixingtab.name.text_xs")}>{t("production.percentage")}</Label>
                       <Input
                         type="text"
                         value={material.percentage.toFixed(2) + "%"}
                         disabled
-                        className="bg-gray-100 dark:bg-gray-800"
+                        className={t("components.production.filmmaterialmixingtab.name.bg_gray_100_dark_bg_gray_800")}
                         data-testid={`text-percentage-${index}`}
                       />
                     </div>
 
-                    <div className="col-span-1">
+                    <div className={t("components.production.filmmaterialmixingtab.name.col_span_1")}>
                       <Button
                         type="button"
                         variant="destructive"
@@ -450,7 +440,7 @@ export default function FilmMaterialMixingTab() {
                         onClick={() => removeMaterial(material.id)}
                         data-testid={`button-remove-${index}`}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className={t("components.production.filmmaterialmixingtab.name.h_4_w_4")} />
                       </Button>
                     </div>
                   </div>
@@ -459,9 +449,8 @@ export default function FilmMaterialMixingTab() {
             )}
 
             {/* Total Weight */}
-            {materials.length > 0 && (
-              <div className="pt-3 border-t">
-                <div className="flex justify-between items-center text-lg font-semibold">
+            {materials.length >{t('components.production.FilmMaterialMixingTab.0_&&_(')}<div className={t("components.production.filmmaterialmixingtab.name.pt_3_border_t")}>
+                <div className={t("components.production.filmmaterialmixingtab.name.flex_justify_between_items_center_text_lg_font_semibold")}>
                   <span>{t("production.totalWeight")}:</span>
                   <span data-testid="text-total-weight">{totalWeight.toFixed(2)} {t("warehouse.kg")}</span>
                 </div>
@@ -473,7 +462,7 @@ export default function FilmMaterialMixingTab() {
           <Button
             onClick={handleSave}
             disabled={createBatchMutation.isPending}
-            className="w-full"
+            className={t("components.production.filmmaterialmixingtab.name.w_full")}
             data-testid="button-save-batch"
           >
             {createBatchMutation.isPending ? t("common.saving") : t("production.saveBatch")}
@@ -488,41 +477,35 @@ export default function FilmMaterialMixingTab() {
         </CardHeader>
         <CardContent>
           {batchesLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : batches.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">
+            <div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
+              <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_12_w_full")} />
+              <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_12_w_full")} />
+              <Skeleton className={t("components.production.filmmaterialmixingtab.name.h_12_w_full")} />
+            </div>{t('components.production.FilmMaterialMixingTab.)_:_batches.length_===_0_?_(')}<p className={t("components.production.filmmaterialmixingtab.name.text_center_text_muted_foreground_py_8")}>
               {t("production.noBatchesRecorded")}
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
+            </p>{t('components.production.FilmMaterialMixingTab.)_:_(')}<div className={t("components.production.filmmaterialmixingtab.name.overflow_x_auto")}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">{t("production.batchNumber")}</TableHead>
-                    <TableHead className="text-right">{t("production.productionOrder")}</TableHead>
-                    <TableHead className="text-right">{t("production.machine")}</TableHead>
-                    <TableHead className="text-right">{t("production.screw")}</TableHead>
-                    <TableHead className="text-right">{t("production.totalWeight")}</TableHead>
-                    <TableHead className="text-right">{t("common.date")}</TableHead>
-                    <TableHead className="text-right">{t("production.operator")}</TableHead>
-                    <TableHead className="text-right">{t("production.mixture")}</TableHead>
-                    <TableHead className="text-right">{t("common.actions")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.batchNumber")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.productionOrder")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.machine")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.screw")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.totalWeight")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("common.date")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.operator")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.mixture")}</TableHead>
+                    <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("common.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {batches.map((batch) => {
-                    const operator = users.find((u: any) => u.id === batch.operator_id);
-                    return (
-                      <TableRow
+                    const operator = users.find((u: any) =>{t('components.production.FilmMaterialMixingTab.u.id_===_batch.operator_id);_return_(')}<TableRow
                         key={batch.id}
-                        className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                        className={t("components.production.filmmaterialmixingtab.name.cursor_pointer_hover_bg_gray_50_dark_hover_bg_gray_800")}
                         data-testid={`row-batch-${batch.id}`}
                       >
-                        <TableCell className="font-medium">
+                        <TableCell className={t("components.production.filmmaterialmixingtab.name.font_medium")}>
                           {batch.batch_number}
                         </TableCell>
                         <TableCell>
@@ -542,16 +525,13 @@ export default function FilmMaterialMixingTab() {
                           {operator?.display_name_ar || operator?.display_name || "-"}
                         </TableCell>
                         <TableCell>
-                          <div className="text-sm space-y-0.5">
+                          <div className={t("components.production.filmmaterialmixingtab.name.text_sm_space_y_0_5")}>
                             {batch.composition && batch.composition.length > 0 ? (
                               batch.composition.map((comp: any, idx: number) => (
-                                <div key={idx} className="text-xs">
-                                  <span className="font-medium">{comp.material_name_ar || comp.material_name}</span>
-                                  <span className="text-muted-foreground"> ({comp.percentage})</span>
-                                </div>
-                              ))
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
+                                <div key={idx} className={t("components.production.filmmaterialmixingtab.name.text_xs")}>
+                                  <span className={t("components.production.filmmaterialmixingtab.name.font_medium")}>{comp.material_name_ar || comp.material_name}</span>
+                                  <span className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}> ({comp.percentage})</span>
+                                </div>{t('components.production.FilmMaterialMixingTab.))_)_:_(')}<span className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>-</span>
                             )}
                           </div>
                         </TableCell>
@@ -562,7 +542,7 @@ export default function FilmMaterialMixingTab() {
                             onClick={() => viewBatchDetails(batch)}
                             data-testid={`button-view-${batch.id}`}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className={t("components.production.filmmaterialmixingtab.name.h_4_w_4")} />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -577,54 +557,53 @@ export default function FilmMaterialMixingTab() {
 
       {/* Batch Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl" dir="rtl">
+        <DialogContent className={t("components.production.filmmaterialmixingtab.name.max_w_2xl")} dir="rtl">
           <DialogHeader>
             <DialogTitle>{t("production.batchDetails")}</DialogTitle>
           </DialogHeader>
           {selectedBatch && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className={t("components.production.filmmaterialmixingtab.name.space_y_4")}>
+              <div className={t("components.production.filmmaterialmixingtab.name.grid_grid_cols_2_gap_4")}>
                 <div>
-                  <Label className="text-muted-foreground">{t("production.batchNumber")}</Label>
-                  <p className="font-semibold">{selectedBatch.batch_number}</p>
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("production.batchNumber")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>{selectedBatch.batch_number}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("production.productionOrder")}</Label>
-                  <p className="font-semibold">
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("production.productionOrder")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>
                     {selectedBatch.production_order_number || `PO-${selectedBatch.production_order_id}`}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("production.machine")}</Label>
-                  <p className="font-semibold">
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("production.machine")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>
                     {selectedBatch.machine_name_ar || selectedBatch.machine_name || selectedBatch.machine_id}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("production.screw")}</Label>
-                  <p className="font-semibold">{selectedBatch.screw_assignment}</p>
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("production.screw")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>{selectedBatch.screw_assignment}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("production.totalWeight")}</Label>
-                  <p className="font-semibold">{parseFloat(selectedBatch.total_weight_kg).toFixed(2)} {t("warehouse.kg")}</p>
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("production.totalWeight")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>{parseFloat(selectedBatch.total_weight_kg).toFixed(2)} {t("warehouse.kg")}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">{t("common.date")}</Label>
-                  <p className="font-semibold">
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("common.date")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_semibold")}>
                     {new Date(selectedBatch.created_at).toLocaleString("ar-EG")}
                   </p>
                 </div>
               </div>
 
-              {selectedBatch.ingredients && selectedBatch.ingredients.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-lg font-semibold">{t("production.ingredients")}</Label>
+              {selectedBatch.ingredients && selectedBatch.ingredients.length >{t('components.production.FilmMaterialMixingTab.0_&&_(')}<div className={t("components.production.filmmaterialmixingtab.name.space_y_2")}>
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_lg_font_semibold")}>{t("production.ingredients")}</Label>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-right">{t("production.material")}</TableHead>
-                        <TableHead className="text-right">{t("production.weightKg")}</TableHead>
-                        <TableHead className="text-right">{t("production.percentage")}</TableHead>
+                        <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.material")}</TableHead>
+                        <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.weightKg")}</TableHead>
+                        <TableHead className={t("components.production.filmmaterialmixingtab.name.text_right")}>{t("production.percentage")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -642,8 +621,8 @@ export default function FilmMaterialMixingTab() {
 
               {selectedBatch.notes && (
                 <div>
-                  <Label className="text-muted-foreground">{t("common.notes")}</Label>
-                  <p className="font-medium">{selectedBatch.notes}</p>
+                  <Label className={t("components.production.filmmaterialmixingtab.name.text_muted_foreground")}>{t("common.notes")}</Label>
+                  <p className={t("components.production.filmmaterialmixingtab.name.font_medium")}>{selectedBatch.notes}</p>
                 </div>
               )}
             </div>

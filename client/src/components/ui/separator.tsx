@@ -4,8 +4,7 @@ import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { cn } from "../../lib/utils";
 
 const Separator = React.forwardRef<
-  React.ElementRef<typeof SeparatorPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root>
+  React.ElementRef<typeof SeparatorPrimitive.Root>{t('components.ui.separator.,_react.componentpropswithoutref')}<typeof SeparatorPrimitive.Root>
 >(
   (
     { className, orientation = "horizontal", decorative = true, ...props },

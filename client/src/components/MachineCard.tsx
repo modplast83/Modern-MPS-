@@ -30,10 +30,7 @@ const statusColor = (s: string) => {
 
 const statusIcon = (s: string) => {
   switch (s) {
-    case "active": return <CheckCircle className="w-4 h-4 text-green-500" />;
-    case "maintenance": return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
-    case "down": return <XCircle className="w-4 h-4 text-red-500" />;
-    default: return <Timer className="w-4 h-4 text-gray-400" />;
+    case "active": return <CheckCircle className={t("components.machinecard.name.w_4_h_4_text_green_500")} />{t('components.MachineCard.;_case_"maintenance":_return')}<AlertTriangle className={t("components.machinecard.name.w_4_h_4_text_yellow_500")} />{t('components.MachineCard.;_case_"down":_return')}<XCircle className={t("components.machinecard.name.w_4_h_4_text_red_500")} />{t('components.MachineCard.;_default:_return')}<Timer className={t("components.machinecard.name.w_4_h_4_text_gray_400")} />;
   }
 };
 
@@ -66,51 +63,51 @@ export default function MachineCard({ machine }: { machine: Machine }) {
 
   return (
     <div className={`p-3 rounded-lg border ${statusColor(status)}`}>
-      <div className="flex items-center justify-between mb-2">
+      <div className={t("components.machinecard.name.flex_items_center_justify_between_mb_2")}>
         <div>
-          <div className="font-medium">{machine_name}</div>
-          <div className="text-xs text-gray-500">{getStatusText(status)}</div>
+          <div className={t("components.machinecard.name.font_medium")}>{machine_name}</div>
+          <div className={t("components.machinecard.name.text_xs_text_gray_500")}>{getStatusText(status)}</div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className={t("components.machinecard.name.flex_items_center_gap_2")}>
           {statusIcon(status)}
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className={t("components.machinecard.name.flex_items_center_justify_between")}>
         <div>
-          <div className="text-xs text-gray-600">{t('machineCard.utilization')}</div>
-          <div className="text-lg font-bold">{Math.round(utilization * 100)}%</div>
+          <div className={t("components.machinecard.name.text_xs_text_gray_600")}>{t('machineCard.utilization')}</div>
+          <div className={t("components.machinecard.name.text_lg_font_bold")}>{Math.round(utilization * 100)}%</div>
         </div>
 
-        <div className="text-right">
-          <div className="text-xs text-gray-600">OEE</div>
-          <div className="text-lg font-bold">{oeePct}%</div>
+        <div className={t("components.machinecard.name.text_right")}>
+          <div className={t("components.machinecard.name.text_xs_text_gray_600")}>{t('components.MachineCard.oee')}</div>
+          <div className={t("components.machinecard.name.text_lg_font_bold")}>{oeePct}%</div>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className={t("components.machinecard.name.mt_3_flex_items_center_justify_between")}>
         <div style={{ width: 90 }}>
           <Sparkline data={last24hUtilization} />
         </div>
 
-        <div className="text-xs text-gray-500 text-right">
+        <div className={t("components.machinecard.name.text_xs_text_gray_500_text_right")}>
           <div>{t('machineCard.currentRolls')}: <strong>{current_rolls}</strong></div>
           <div>{t('machineCard.lastDowntime')}: <strong>{lastDowntime ? new Date(lastDowntime).toLocaleString() : "-"}</strong></div>
         </div>
       </div>
 
-      <div className="mt-3 text-xs text-gray-600 grid grid-cols-3 gap-2">
-        <div className="text-center">
-          <div className="font-semibold">{pct(computed.availability)}%</div>
-          <div className="text-[11px] text-gray-500">{t('machineCard.availability')}</div>
+      <div className={t("components.machinecard.name.mt_3_text_xs_text_gray_600_grid_grid_cols_3_gap_2")}>
+        <div className={t("components.machinecard.name.text_center")}>
+          <div className={t("components.machinecard.name.font_semibold")}>{pct(computed.availability)}%</div>
+          <div className={t("components.machinecard.name.text_11px_text_gray_500")}>{t('machineCard.availability')}</div>
         </div>
-        <div className="text-center">
-          <div className="font-semibold">{pct(computed.performance)}%</div>
-          <div className="text-[11px] text-gray-500">{t('machineCard.performance')}</div>
+        <div className={t("components.machinecard.name.text_center")}>
+          <div className={t("components.machinecard.name.font_semibold")}>{pct(computed.performance)}%</div>
+          <div className={t("components.machinecard.name.text_11px_text_gray_500")}>{t('machineCard.performance')}</div>
         </div>
-        <div className="text-center">
-          <div className="font-semibold">{pct(computed.quality)}%</div>
-          <div className="text-[11px] text-gray-500">{t('machineCard.quality')}</div>
+        <div className={t("components.machinecard.name.text_center")}>
+          <div className={t("components.machinecard.name.font_semibold")}>{pct(computed.quality)}%</div>
+          <div className={t("components.machinecard.name.text_11px_text_gray_500")}>{t('machineCard.quality')}</div>
         </div>
       </div>
     </div>

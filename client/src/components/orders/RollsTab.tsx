@@ -79,8 +79,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
   const [stageFilter, setStageFilter] = useState("all");
   const [customerFilter, setCustomerFilter] = useState("all");
   const [productionOrderFilter, setProductionOrderFilter] = useState("all");
-  const [startDate, setStartDate] = useState<Date | undefined>();
-  const [endDate, setEndDate] = useState<Date | undefined>();
+  const [startDate, setStartDate] = useState<Date | undefined>{t('components.orders.RollsTab.();_const_[enddate,_setenddate]_=_usestate')}<Date | undefined>();
   const [showFilters, setShowFilters] = useState(false);
 
   // جلب الرولات
@@ -117,8 +116,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
 
       // فلتر التاريخ
       const rollDate = new Date(roll.created_at);
-      const matchesStartDate = !startDate || rollDate >= startDate;
-      const matchesEndDate = !endDate || rollDate <= endDate;
+      const matchesStartDate = !startDate || rollDate >{t('components.orders.RollsTab.=_startdate;_const_matchesenddate_=_!enddate_||_rolldate')}<= endDate;
 
       return matchesSearch && matchesStage && matchesCustomer && 
              matchesProductionOrder && matchesStartDate && matchesEndDate;
@@ -177,7 +175,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
       archived: Package,
     };
     const Icon = icons[stage] || Package;
-    return <Icon className="h-4 w-4" />;
+    return <Icon className={t("components.orders.rollstab.name.h_4_w_4")} />;
   };
 
   // تصدير إلى Excel
@@ -221,146 +219,132 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
   };
 
   return (
-    <div className="space-y-4">
+    <div className={t("components.orders.rollstab.name.space_y_4")}>
       {/* الإحصائيات السريعة */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className={t("components.orders.rollstab.name.grid_grid_cols_2_md_grid_cols_6_gap_4")}>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">الإجمالي</CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600")}>{t('components.orders.RollsTab.الإجمالي')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatNumber(stats.total)}</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_2xl_font_bold")}>{formatNumber(stats.total)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-1">
-              <Film className="h-4 w-4" />
-              فيلم
-            </CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600_flex_items_center_gap_1")}>
+              <Film className={t("components.orders.rollstab.name.h_4_w_4")} />{t('components.orders.RollsTab.فيلم')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatNumber(stats.byStage.film)}</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_2xl_font_bold")}>{formatNumber(stats.byStage.film)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-1">
-              <PrinterIcon className="h-4 w-4" />
-              طباعة
-            </CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600_flex_items_center_gap_1")}>
+              <PrinterIcon className={t("components.orders.rollstab.name.h_4_w_4")} />{t('components.orders.RollsTab.طباعة')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatNumber(stats.byStage.printing)}</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_2xl_font_bold")}>{formatNumber(stats.byStage.printing)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-1">
-              <Scissors className="h-4 w-4" />
-              تقطيع
-            </CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600_flex_items_center_gap_1")}>
+              <Scissors className={t("components.orders.rollstab.name.h_4_w_4")} />{t('components.orders.RollsTab.تقطيع')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatNumber(stats.byStage.cutting)}</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_2xl_font_bold")}>{formatNumber(stats.byStage.cutting)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-1">
-              <CheckCircle className="h-4 w-4" />
-              منتهي
-            </CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600_flex_items_center_gap_1")}>
+              <CheckCircle className={t("components.orders.rollstab.name.h_4_w_4")} />{t('components.orders.RollsTab.منتهي')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-2xl font-bold">{formatNumber(stats.byStage.done)}</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_2xl_font_bold")}>{formatNumber(stats.byStage.done)}</div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">إجمالي الوزن</CardTitle>
+          <CardHeader className={t("components.orders.rollstab.name.p_4_pb_2")}>
+            <CardTitle className={t("components.orders.rollstab.name.text_sm_font_medium_text_gray_600")}>{t('components.orders.RollsTab.إجمالي_الوزن')}</CardTitle>
           </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="text-xl font-bold">{stats.totalWeight.toFixed(2)} كجم</div>
+          <CardContent className={t("components.orders.rollstab.name.p_4_pt_0")}>
+            <div className={t("components.orders.rollstab.name.text_xl_font_bold")}>{stats.totalWeight.toFixed(2)} كجم</div>
           </CardContent>
         </Card>
       </div>
 
       {/* شريط البحث والفلاتر */}
       <Card>
-        <CardContent className="p-4">
-          <div className="space-y-4">
+        <CardContent className={t("components.orders.rollstab.name.p_4")}>
+          <div className={t("components.orders.rollstab.name.space_y_4")}>
             {/* صف البحث والأزرار */}
-            <div className="flex flex-col md:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
+            <div className={t("components.orders.rollstab.name.flex_flex_col_md_flex_row_gap_3")}>
+              <div className={t("components.orders.rollstab.name.flex_1_relative")}>
+                <Search className={t("components.orders.rollstab.name.absolute_right_3_top_3_h_4_w_4_text_gray_400")} />
                 <Input
-                  placeholder="ابحث برقم الرول، أمر الإنتاج، الطلب، العميل، أو المنتج..."
+                  placeholder="{t('components.orders.RollsTab.placeholder.ابحث_برقم_الرول،_أمر_الإنتاج،_الطلب،_العميل،_أو_المنتج...')}"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-9"
+                  className={t("components.orders.rollstab.name.pr_9")}
                   data-testid="input-search-rolls"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className={t("components.orders.rollstab.name.flex_gap_2")}>
                 <Button
                   variant="outline"
                   onClick={() => setShowFilters(!showFilters)}
                   data-testid="button-toggle-filters"
                 >
-                  <Filter className="h-4 w-4 ml-2" />
-                  الفلاتر
-                </Button>
+                  <Filter className={t("components.orders.rollstab.name.h_4_w_4_ml_2")} />{t('components.orders.RollsTab.الفلاتر')}</Button>
                 <Button
                   variant="outline"
                   onClick={() => refetch()}
                   data-testid="button-refresh-rolls"
                 >
-                  <RefreshCw className="h-4 w-4 ml-2" />
-                  تحديث
-                </Button>
+                  <RefreshCw className={t("components.orders.rollstab.name.h_4_w_4_ml_2")} />{t('components.orders.RollsTab.تحديث')}</Button>
                 <Button
                   variant="outline"
                   onClick={exportToExcel}
                   disabled={filteredRolls.length === 0}
                   data-testid="button-export-rolls"
                 >
-                  <Download className="h-4 w-4 ml-2" />
-                  تصدير
-                </Button>
+                  <Download className={t("components.orders.rollstab.name.h_4_w_4_ml_2")} />{t('components.orders.RollsTab.تصدير')}</Button>
               </div>
             </div>
 
             {/* الفلاتر المتقدمة */}
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className={t("components.orders.rollstab.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4_p_4_bg_gray_50_rounded_lg")}>
                 {/* فلتر المرحلة */}
-                <div className="space-y-2">
-                  <Label>المرحلة</Label>
+                <div className={t("components.orders.rollstab.name.space_y_2")}>
+                  <Label>{t('components.orders.RollsTab.المرحلة')}</Label>
                   <Select value={stageFilter} onValueChange={setStageFilter}>
                     <SelectTrigger data-testid="select-stage-filter">
-                      <SelectValue placeholder="كل المراحل" />
+                      <SelectValue placeholder="{t('components.orders.RollsTab.placeholder.كل_المراحل')}" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">كل المراحل</SelectItem>
-                      <SelectItem value="film">فيلم</SelectItem>
-                      <SelectItem value="printing">طباعة</SelectItem>
-                      <SelectItem value="cutting">تقطيع</SelectItem>
-                      <SelectItem value="done">منتهي</SelectItem>
-                      <SelectItem value="archived">مؤرشف</SelectItem>
+                      <SelectItem value="all">{t('components.orders.RollsTab.كل_المراحل')}</SelectItem>
+                      <SelectItem value="film">{t('components.orders.RollsTab.فيلم')}</SelectItem>
+                      <SelectItem value="printing">{t('components.orders.RollsTab.طباعة')}</SelectItem>
+                      <SelectItem value="cutting">{t('components.orders.RollsTab.تقطيع')}</SelectItem>
+                      <SelectItem value="done">{t('components.orders.RollsTab.منتهي')}</SelectItem>
+                      <SelectItem value="archived">{t('components.orders.RollsTab.مؤرشف')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* فلتر العميل */}
-                <div className="space-y-2">
-                  <Label>العميل</Label>
+                <div className={t("components.orders.rollstab.name.space_y_2")}>
+                  <Label>{t('components.orders.RollsTab.العميل')}</Label>
                   <Select value={customerFilter} onValueChange={setCustomerFilter}>
                     <SelectTrigger data-testid="select-customer-filter">
-                      <SelectValue placeholder="كل العملاء" />
+                      <SelectValue placeholder="{t('components.orders.RollsTab.placeholder.كل_العملاء')}" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">كل العملاء</SelectItem>
+                      <SelectItem value="all">{t('components.orders.RollsTab.كل_العملاء')}</SelectItem>
                       {customers.map((customer: any) => (
                         <SelectItem key={customer.id} value={customer.id}>
                           {customer.name_ar || customer.name}
@@ -371,14 +355,14 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                 </div>
 
                 {/* فلتر أمر الإنتاج */}
-                <div className="space-y-2">
-                  <Label>أمر الإنتاج</Label>
+                <div className={t("components.orders.rollstab.name.space_y_2")}>
+                  <Label>{t('components.orders.RollsTab.أمر_الإنتاج')}</Label>
                   <Select value={productionOrderFilter} onValueChange={setProductionOrderFilter}>
                     <SelectTrigger data-testid="select-production-order-filter">
-                      <SelectValue placeholder="كل أوامر الإنتاج" />
+                      <SelectValue placeholder="{t('components.orders.RollsTab.placeholder.كل_أوامر_الإنتاج')}" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">كل أوامر الإنتاج</SelectItem>
+                      <SelectItem value="all">{t('components.orders.RollsTab.كل_أوامر_الإنتاج')}</SelectItem>
                       {productionOrders.slice(0, 50).map((po: any) => (
                         <SelectItem key={po.id} value={po.id.toString()}>
                           {po.production_order_number}
@@ -389,9 +373,9 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                 </div>
 
                 {/* فلتر التاريخ */}
-                <div className="space-y-2">
-                  <Label>التاريخ</Label>
-                  <div className="flex gap-2">
+                <div className={t("components.orders.rollstab.name.space_y_2")}>
+                  <Label>{t('components.orders.RollsTab.التاريخ')}</Label>
+                  <div className={t("components.orders.rollstab.name.flex_gap_2")}>
                     <Popover>
                       <PopoverTrigger asChild>
                         <Button
@@ -402,11 +386,11 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                           )}
                           data-testid="button-start-date"
                         >
-                          <CalendarIcon className="ml-2 h-4 w-4" />
+                          <CalendarIcon className={t("components.orders.rollstab.name.ml_2_h_4_w_4")} />
                           {startDate ? format(startDate, "dd/MM/yyyy") : "من"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className={t("components.orders.rollstab.name.w_auto_p_0")} align="start">
                         <Calendar
                           mode="single"
                           selected={startDate}
@@ -425,11 +409,11 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                           )}
                           data-testid="button-end-date"
                         >
-                          <CalendarIcon className="ml-2 h-4 w-4" />
+                          <CalendarIcon className={t("components.orders.rollstab.name.ml_2_h_4_w_4")} />
                           {endDate ? format(endDate, "dd/MM/yyyy") : "إلى"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className={t("components.orders.rollstab.name.w_auto_p_0")} align="start">
                         <Calendar
                           mode="single"
                           selected={endDate}
@@ -442,16 +426,14 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                 </div>
 
                 {/* زر مسح الفلاتر */}
-                <div className="md:col-span-2 lg:col-span-4 flex justify-end">
+                <div className={t("components.orders.rollstab.name.md_col_span_2_lg_col_span_4_flex_justify_end")}>
                   <Button
                     variant="ghost"
                     onClick={clearFilters}
-                    className="text-sm"
+                    className={t("components.orders.rollstab.name.text_sm")}
                     data-testid="button-clear-filters"
                   >
-                    <X className="h-4 w-4 ml-2" />
-                    مسح الفلاتر
-                  </Button>
+                    <X className={t("components.orders.rollstab.name.h_4_w_4_ml_2")} />{t('components.orders.RollsTab.مسح_الفلاتر')}</Button>
                 </div>
               </div>
             )}
@@ -461,41 +443,37 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
 
       {/* الجدول */}
       <Card>
-        <CardContent className="p-0">
+        <CardContent className={t("components.orders.rollstab.name.p_0")}>
           {isLoading ? (
-            <div className="p-8 space-y-4">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-            </div>
-          ) : filteredRolls.length === 0 ? (
-            <div className="p-12 text-center text-gray-500">
-              <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-medium">لا توجد رولات</p>
-              <p className="text-sm mt-1">جرب تغيير معايير البحث أو الفلاتر</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
+            <div className={t("components.orders.rollstab.name.p_8_space_y_4")}>
+              <Skeleton className={t("components.orders.rollstab.name.h_12_w_full")} />
+              <Skeleton className={t("components.orders.rollstab.name.h_12_w_full")} />
+              <Skeleton className={t("components.orders.rollstab.name.h_12_w_full")} />
+            </div>{t('components.orders.RollsTab.)_:_filteredrolls.length_===_0_?_(')}<div className={t("components.orders.rollstab.name.p_12_text_center_text_gray_500")}>
+              <Package className={t("components.orders.rollstab.name.h_12_w_12_mx_auto_mb_4_text_gray_300")} />
+              <p className={t("components.orders.rollstab.name.text_lg_font_medium")}>{t('components.orders.RollsTab.لا_توجد_رولات')}</p>
+              <p className={t("components.orders.rollstab.name.text_sm_mt_1")}>{t('components.orders.RollsTab.جرب_تغيير_معايير_البحث_أو_الفلاتر')}</p>
+            </div>{t('components.orders.RollsTab.)_:_(')}<div className={t("components.orders.rollstab.name.overflow_x_auto")}>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-right">رقم الرول</TableHead>
-                    <TableHead className="text-right">المرحلة</TableHead>
-                    <TableHead className="text-right">أمر الإنتاج</TableHead>
-                    <TableHead className="text-right">رقم الطلب</TableHead>
-                    <TableHead className="text-right">العميل</TableHead>
-                    <TableHead className="text-right">المنتج</TableHead>
-                    <TableHead className="text-right">الوزن (كجم)</TableHead>
-                    <TableHead className="text-right">فيلم بواسطة</TableHead>
-                    <TableHead className="text-right">طبع بواسطة</TableHead>
-                    <TableHead className="text-right">قطع بواسطة</TableHead>
-                    <TableHead className="text-right">تاريخ الإنشاء</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.رقم_الرول')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.المرحلة')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.أمر_الإنتاج')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.رقم_الطلب')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.العميل')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.المنتج')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.الوزن_(كجم)')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.فيلم_بواسطة')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.طبع_بواسطة')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.قطع_بواسطة')}</TableHead>
+                    <TableHead className={t("components.orders.rollstab.name.text_right")}>{t('components.orders.RollsTab.تاريخ_الإنشاء')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredRolls.map((roll) => (
                     <TableRow key={roll.roll_id} data-testid={`row-roll-${roll.roll_id}`}>
-                      <TableCell className="font-medium" data-testid={`text-roll-number-${roll.roll_id}`}>
+                      <TableCell className={t("components.orders.rollstab.name.font_medium")} data-testid={`text-roll-number-${roll.roll_id}`}>
                         {roll.roll_number}
                       </TableCell>
                       <TableCell>
@@ -519,22 +497,22 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
                       </TableCell>
                       <TableCell data-testid={`text-item-${roll.roll_id}`}>
                         <div>
-                          <div className="font-medium">{roll.item_name_ar || roll.item_name || "-"}</div>
+                          <div className={t("components.orders.rollstab.name.font_medium")}>{roll.item_name_ar || roll.item_name || "-"}</div>
                           {roll.size_caption && (
-                            <div className="text-xs text-gray-500">{roll.size_caption}</div>
+                            <div className={t("components.orders.rollstab.name.text_xs_text_gray_500")}>{roll.size_caption}</div>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-medium" data-testid={`text-weight-${roll.roll_id}`}>
+                      <TableCell className={t("components.orders.rollstab.name.font_medium")} data-testid={`text-weight-${roll.roll_id}`}>
                         {parseFloat(roll.weight_kg).toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-sm" data-testid={`text-created-by-${roll.roll_id}`}>
+                      <TableCell className={t("components.orders.rollstab.name.text_sm")} data-testid={`text-created-by-${roll.roll_id}`}>
                         {roll.created_by_name || "-"}
                       </TableCell>
-                      <TableCell className="text-sm" data-testid={`text-printed-by-${roll.roll_id}`}>
+                      <TableCell className={t("components.orders.rollstab.name.text_sm")} data-testid={`text-printed-by-${roll.roll_id}`}>
                         {roll.printed_by_name || "-"}
                       </TableCell>
-                      <TableCell className="text-sm" data-testid={`text-cut-by-${roll.roll_id}`}>
+                      <TableCell className={t("components.orders.rollstab.name.text_sm")} data-testid={`text-cut-by-${roll.roll_id}`}>
                         {roll.cut_by_name || "-"}
                       </TableCell>
                       <TableCell data-testid={`text-created-at-${roll.roll_id}`}>
@@ -550,8 +528,7 @@ export default function RollsTab({ customers = [], productionOrders = [] }: Roll
       </Card>
 
       {/* معلومات النتائج */}
-      {!isLoading && filteredRolls.length > 0 && (
-        <div className="text-sm text-gray-500 text-center">
+      {!isLoading && filteredRolls.length >{t('components.orders.RollsTab.0_&&_(')}<div className={t("components.orders.rollstab.name.text_sm_text_gray_500_text_center")}>
           عرض {formatNumber(filteredRolls.length)} من {formatNumber(rolls.length)} رول
         </div>
       )}

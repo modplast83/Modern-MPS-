@@ -143,25 +143,25 @@ export default function UserProfile() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={t("components.dashboard.userprofile.name.space_y_6")}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
+          <CardTitle className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+            <User className={t("components.dashboard.userprofile.name.w_5_h_5")} />
             {t('dashboard.userProfile')}
           </CardTitle>
           <CardDescription>
             {t('userProfile.updateInfo')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className={t("components.dashboard.userprofile.name.space_y_6")}>
           {/* Personal Information */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium">{t('userProfile.personalInfo')}</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName" className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
+          <div className={t("components.dashboard.userprofile.name.space_y_4")}>
+            <h4 className={t("components.dashboard.userprofile.name.text_sm_font_medium")}>{t('userProfile.personalInfo')}</h4>
+            <div className={t("components.dashboard.userprofile.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+              <div className={t("components.dashboard.userprofile.name.space_y_2")}>
+                <Label htmlFor="displayName" className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+                  <User className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                   {t('userProfile.displayName')}
                 </Label>
                 <Input
@@ -176,9 +176,9 @@ export default function UserProfile() {
                   data-testid="input-display-name"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="flex items-center gap-2">
-                  <Mail className="w-4 h-4" />
+              <div className={t("components.dashboard.userprofile.name.space_y_2")}>
+                <Label htmlFor="email" className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+                  <Mail className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                   {t('userProfile.email')}
                 </Label>
                 <Input
@@ -194,9 +194,9 @@ export default function UserProfile() {
                   data-testid="input-email"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
+              <div className={t("components.dashboard.userprofile.name.space_y_2")}>
+                <Label htmlFor="phone" className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+                  <Phone className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                   {t('userProfile.phone')}
                 </Label>
                 <Input
@@ -208,13 +208,13 @@ export default function UserProfile() {
                       phone: e.target.value,
                     }))
                   }
-                  placeholder="+966 5X XXX XXXX"
+                  placeholder="{t('components.dashboard.UserProfile.placeholder.+966_5x_xxx_xxxx')}"
                   data-testid="input-phone"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="language" className="flex items-center gap-2">
-                  <Globe className="w-4 h-4" />
+              <div className={t("components.dashboard.userprofile.name.space_y_2")}>
+                <Label htmlFor="language" className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+                  <Globe className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                   {t('userProfile.preferredLanguage')}
                 </Label>
                 <Select
@@ -230,8 +230,8 @@ export default function UserProfile() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ar">العربية</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="ar">{t('components.dashboard.UserProfile.العربية')}</SelectItem>
+                    <SelectItem value="en">{t('components.dashboard.UserProfile.english')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -241,14 +241,12 @@ export default function UserProfile() {
           <Separator />
 
           {/* Appearance Settings */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium">{t('userProfile.appearance')}</h4>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+          <div className={t("components.dashboard.userprofile.name.space_y_4")}>
+            <h4 className={t("components.dashboard.userprofile.name.text_sm_font_medium")}>{t('userProfile.appearance')}</h4>
+            <div className={t("components.dashboard.userprofile.name.flex_items_center_justify_between")}>
+              <div className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
                 {userSettings.theme === "light" ? (
-                  <Sun className="w-4 h-4" />
-                ) : (
-                  <Moon className="w-4 h-4" />
+                  <Sun className={t("components.dashboard.userprofile.name.w_4_h_4")} />{t('components.dashboard.UserProfile.)_:_(')}<Moon className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                 )}
                 <Label>{t('userProfile.darkMode')}</Label>
               </div>
@@ -263,9 +261,9 @@ export default function UserProfile() {
                 data-testid="switch-dark-mode"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Monitor className="w-4 h-4" />
+            <div className={t("components.dashboard.userprofile.name.flex_items_center_justify_between")}>
+              <div className={t("components.dashboard.userprofile.name.flex_items_center_gap_2")}>
+                <Monitor className={t("components.dashboard.userprofile.name.w_4_h_4")} />
                 <Label>{t('userProfile.compactView')}</Label>
               </div>
               <Switch
@@ -287,12 +285,12 @@ export default function UserProfile() {
           <Separator />
 
           {/* Dashboard Settings */}
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium">{t('userProfile.dashboardSettings')}</h4>
-            <div className="flex items-center justify-between">
+          <div className={t("components.dashboard.userprofile.name.space_y_4")}>
+            <h4 className={t("components.dashboard.userprofile.name.text_sm_font_medium")}>{t('userProfile.dashboardSettings')}</h4>
+            <div className={t("components.dashboard.userprofile.name.flex_items_center_justify_between")}>
               <div>
-                <Label className="text-base">{t('userProfile.autoRefresh')}</Label>
-                <p className="text-sm text-muted-foreground">
+                <Label className={t("components.dashboard.userprofile.name.text_base")}>{t('userProfile.autoRefresh')}</Label>
+                <p className={t("components.dashboard.userprofile.name.text_sm_text_muted_foreground")}>
                   {t('userProfile.autoRefreshDesc')}
                 </p>
               </div>
@@ -312,7 +310,7 @@ export default function UserProfile() {
             </div>
 
             {userSettings.dashboard.autoRefresh && (
-              <div className="space-y-2">
+              <div className={t("components.dashboard.userprofile.name.space_y_2")}>
                 <Label htmlFor="refreshInterval">
                   {t('userProfile.refreshInterval')}
                 </Label>
@@ -344,16 +342,14 @@ export default function UserProfile() {
             )}
           </div>
 
-          <div className="flex justify-end">
+          <div className={t("components.dashboard.userprofile.name.flex_justify_end")}>
             <Button
               onClick={handleSaveUserSettings}
               disabled={saveUserSettingsMutation.isPending}
               data-testid="button-save-profile"
             >
               {saveUserSettingsMutation.isPending ? (
-                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
+                <RefreshCw className={t("components.dashboard.userprofile.name.w_4_h_4_mr_2_animate_spin")} />{t('components.dashboard.UserProfile.)_:_(')}<Save className={t("components.dashboard.userprofile.name.w_4_h_4_mr_2")} />
               )}
               {t('userProfile.saveChanges')}
             </Button>
