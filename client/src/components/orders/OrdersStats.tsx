@@ -1,6 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
-import { Package, Clock } from "lucide-react";
-import { useTranslation } from 'react-i18next';
+import { Package, Clock, User } from "lucide-react";
 
 interface OrdersStatsProps {
   orders: any[];
@@ -11,61 +10,59 @@ export default function OrdersStats({
   orders,
   productionOrders,
 }: OrdersStatsProps) {
-  const { t } = useTranslation();
-  
   return (
-    <div className={t("components.orders.ordersstats.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
-        <CardHeader className={t("components.orders.ordersstats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.orders.ordersstats.name.text_sm_font_medium")}>{t('orders.totalOrders')}</CardTitle>
-          <Package className={t("components.orders.ordersstats.name.h_4_w_4_text_muted_foreground")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">إجمالي الطلبات</CardTitle>
+          <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.orders.ordersstats.name.text_2xl_font_bold")}>{orders.length}</div>
-          <p className={t("components.orders.ordersstats.name.text_xs_text_muted_foreground")}>{t('ordersStats.order')}</p>
+          <div className="text-2xl font-bold">{orders.length}</div>
+          <p className="text-xs text-muted-foreground">طلب</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.orders.ordersstats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.orders.ordersstats.name.text_sm_font_medium")}>{t('production.productionOrders')}</CardTitle>
-          <Package className={t("components.orders.ordersstats.name.h_4_w_4_text_muted_foreground")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">أوامر الإنتاج</CardTitle>
+          <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.orders.ordersstats.name.text_2xl_font_bold")}>{productionOrders.length}</div>
-          <p className={t("components.orders.ordersstats.name.text_xs_text_muted_foreground")}>{t('ordersStats.productionOrder')}</p>
+          <div className="text-2xl font-bold">{productionOrders.length}</div>
+          <p className="text-xs text-muted-foreground">أمر إنتاج</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.orders.ordersstats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.orders.ordersstats.name.text_sm_font_medium")}>{t('ordersStats.inProgress')}</CardTitle>
-          <Clock className={t("components.orders.ordersstats.name.h_4_w_4_text_yellow_500")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">قيد التنفيذ</CardTitle>
+          <Clock className="h-4 w-4 text-yellow-500" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.orders.ordersstats.name.text_2xl_font_bold_text_yellow_600")}>
+          <div className="text-2xl font-bold text-yellow-600">
             {
               productionOrders.filter((po: any) => po.status === "in_progress")
                 .length
             }
           </div>
-          <p className={t("components.orders.ordersstats.name.text_xs_text_muted_foreground")}>{t('ordersStats.orderInProgress')}</p>
+          <p className="text-xs text-muted-foreground">أمر قيد التنفيذ</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.orders.ordersstats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.orders.ordersstats.name.text_sm_font_medium")}>{t('ordersStats.completed')}</CardTitle>
-          <Package className={t("components.orders.ordersstats.name.h_4_w_4_text_green_500")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">مكتملة</CardTitle>
+          <Package className="h-4 w-4 text-green-500" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.orders.ordersstats.name.text_2xl_font_bold_text_green_600")}>
+          <div className="text-2xl font-bold text-green-600">
             {
               productionOrders.filter((po: any) => po.status === "completed")
                 .length
             }
           </div>
-          <p className={t("components.orders.ordersstats.name.text_xs_text_muted_foreground")}>{t('ordersStats.orderCompleted')}</p>
+          <p className="text-xs text-muted-foreground">أمر مكتمل</p>
         </CardContent>
       </Card>
     </div>

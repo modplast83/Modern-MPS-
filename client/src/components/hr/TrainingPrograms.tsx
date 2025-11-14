@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -43,7 +42,6 @@ interface TrainingEnrollment {
 }
 
 export default function TrainingPrograms() {
-  const { t } = useTranslation();
   const [selectedProgram, setSelectedProgram] = useState<number | null>(null);
 
   const { data: programs = [], isLoading: programsLoading } = useQuery<
@@ -104,7 +102,7 @@ export default function TrainingPrograms() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return t('hr.completed', 'مكتمل');
+        return "مكتمل";
       case "in_progress":
         return "قيد التنفيذ";
       case "not_started":
@@ -130,11 +128,11 @@ export default function TrainingPrograms() {
 
   if (programsLoading || enrollmentsLoading) {
     return (
-      <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_center_h_64")}>
-        <div className={t("components.hr.trainingprograms.name.text_center")}>
-          <div className={t("components.hr.trainingprograms.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-          <p className={t("components.hr.trainingprograms.name.text_gray_600_dark_text_gray_400_mt_2")}>
-            جاري تحميل ال{t('hr.trainingPrograms', 'برامج التدريب')}ية...
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            جاري تحميل البرامج التدريبية...
           </p>
         </div>
       </div>
@@ -142,73 +140,81 @@ export default function TrainingPrograms() {
   }
 
   return (
-    <div className={t("components.hr.trainingprograms.name.space_y_6")}>
+    <div className="space-y-6">
       {/* Header */}
-      <div className={t("components.hr.trainingprograms.name.flex_justify_between_items_center")}>
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className={t("components.hr.trainingprograms.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>{t('components.hr.TrainingPrograms.منصة_التدريب_الإلكتروني')}</h2>
-          <p className={t("components.hr.trainingprograms.name.text_gray_600_dark_text_gray_300")}>
-            إدارة ال{t('hr.trainingPrograms', 'برامج التدريب')}ية وتتبع تقدم الموظفين
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            منصة التدريب الإلكتروني
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">
+            إدارة البرامج التدريبية وتتبع تقدم الموظفين
           </p>
         </div>
-        <Button className={t("components.hr.trainingprograms.name.bg_blue_600_hover_bg_blue_700_text_white")}>
-          <Plus className={t("components.hr.trainingprograms.name.w_4_h_4_ml_2")} />{t('components.hr.TrainingPrograms.برنامج_تدريبي_جديد')}</Button>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus className="w-4 h-4 ml-2" />
+          برنامج تدريبي جديد
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className={t("components.hr.trainingprograms.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className={t("components.hr.trainingprograms.name.p_4")}>
-            <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.trainingprograms.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.totalPrograms', 'إجمالي البرامج')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي البرامج
                 </p>
-                <p className={t("components.hr.trainingprograms.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(programs.length)}
                 </p>
               </div>
-              <BookOpen className={t("components.hr.trainingprograms.name.w_8_h_8_text_blue_600")} />
+              <BookOpen className="w-8 h-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.trainingprograms.name.p_4")}>
-            <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.trainingprograms.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.activePrograms', 'البرامج النشطة')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  البرامج النشطة
                 </p>
-                <p className={t("components.hr.trainingprograms.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(programs.filter((p) => p.is_active).length)}
                 </p>
               </div>
-              <Play className={t("components.hr.trainingprograms.name.w_8_h_8_text_green_600")} />
+              <Play className="w-8 h-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.trainingprograms.name.p_4")}>
-            <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.trainingprograms.name.text_sm_text_gray_600_dark_text_gray_400")}>{t('components.hr.TrainingPrograms.إجمالي_التسجيلات')}</p>
-                <p className={t("components.hr.trainingprograms.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي التسجيلات
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(enrollments.length)}
                 </p>
               </div>
-              <Users className={t("components.hr.trainingprograms.name.w_8_h_8_text_purple_600")} />
+              <Users className="w-8 h-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.trainingprograms.name.p_4")}>
-            <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.trainingprograms.name.text_sm_text_gray_600_dark_text_gray_400")}>{t('components.hr.TrainingPrograms.معدل_الإنجاز')}</p>
-                <p className={t("components.hr.trainingprograms.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  معدل الإنجاز
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatPercentage(
                     enrollments.length > 0
                       ? Math.round(
@@ -222,20 +228,20 @@ export default function TrainingPrograms() {
                   )}
                 </p>
               </div>
-              <CheckCircle className={t("components.hr.trainingprograms.name.w_8_h_8_text_emerald_600")} />
+              <CheckCircle className="w-8 h-8 text-emerald-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Programs Grid */}
-      <div className={t("components.hr.trainingprograms.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_6")}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {programs.map((program) => (
-          <Card key={program.id} className={t("components.hr.trainingprograms.name.hover_shadow_lg_transition_shadow")}>
+          <Card key={program.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <div className={t("components.hr.trainingprograms.name.flex_justify_between_items_start")}>
-                <div className={t("components.hr.trainingprograms.name.flex_1")}>
-                  <CardTitle className={t("components.hr.trainingprograms.name.text_lg_mb_2")}>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <CardTitle className="text-lg mb-2">
                     {program.title_ar || program.title}
                   </CardTitle>
                   <Badge
@@ -245,57 +251,59 @@ export default function TrainingPrograms() {
                   </Badge>
                 </div>
                 <Badge variant={program.is_active ? "default" : "secondary"}>
-                  {program.is_active ? t('common.active', 'نشط') : "معطل"}
+                  {program.is_active ? "نشط" : "معطل"}
                 </Badge>
               </div>
             </CardHeader>
 
-            <CardContent className={t("components.hr.trainingprograms.name.space_y_4")}>
-              <p className={t("components.hr.trainingprograms.name.text_sm_text_gray_600_dark_text_gray_400_line_clamp_3")}>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">
                 {program.description_ar ||
                   program.description ||
                   "لا يوجد وصف متاح"}
               </p>
 
-              <div className={t("components.hr.trainingprograms.name.flex_items_center_justify_between_text_sm_text_gray_600_dark_text_gray_400")}>
-                <div className={t("components.hr.trainingprograms.name.flex_items_center_gap_1")}>
-                  <Clock className={t("components.hr.trainingprograms.name.w_4_h_4")} />
+              <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
                   <span>{program.duration_hours} ساعة</span>
                 </div>
-                <div className={t("components.hr.trainingprograms.name.flex_items_center_gap_1")}>
-                  <Users className={t("components.hr.trainingprograms.name.w_4_h_4")} />
+                <div className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
                   <span>{program.max_participants || "غير محدود"}</span>
                 </div>
               </div>
 
-              <div className={t("components.hr.trainingprograms.name.space_y_2")}>
-                <div className={t("components.hr.trainingprograms.name.flex_justify_between_text_sm")}>
-                  <span>{t('components.hr.TrainingPrograms.معدل_الإنجاز')}</span>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>معدل الإنجاز</span>
                   <span>{getEnrollmentProgress(program.id)}%</span>
                 </div>
                 <Progress
                   value={getEnrollmentProgress(program.id)}
-                  className={t("components.hr.trainingprograms.name.h_2")}
+                  className="h-2"
                 />
               </div>
 
-              <div className={t("components.hr.trainingprograms.name.flex_items_center_gap_2_text_xs_text_gray_500_dark_text_gray_400")}>
-                <Calendar className={t("components.hr.trainingprograms.name.w_3_h_3")} />
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <Calendar className="w-3 h-3" />
                 <span>
                   تم الإنشاء:{" "}
                   {new Date(program.created_at).toLocaleDateString("ar")}
                 </span>
               </div>
 
-              <div className={t("components.hr.trainingprograms.name.flex_gap_2_pt_2")}>
+              <div className="flex gap-2 pt-2">
                 <Button
                   size="sm"
-                  className={t("components.hr.trainingprograms.name.flex_1")}
+                  className="flex-1"
                   onClick={() => setSelectedProgram(program.id)}
                 >
-                  {t('common.viewDetails', 'عرض التفاصيل')}
+                  عرض التفاصيل
                 </Button>
-                <Button size="sm" variant="outline" className={t("components.hr.trainingprograms.name.flex_1")}>{t('components.hr.TrainingPrograms.تسجيل_موظف')}</Button>
+                <Button size="sm" variant="outline" className="flex-1">
+                  تسجيل موظف
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -305,14 +313,18 @@ export default function TrainingPrograms() {
       {/* Empty State */}
       {programs.length === 0 && (
         <Card>
-          <CardContent className={t("components.hr.trainingprograms.name.p_12_text_center")}>
-            <BookOpen className={t("components.hr.trainingprograms.name.w_16_h_16_text_gray_400_mx_auto_mb_4")} />
-            <h3 className={t("components.hr.trainingprograms.name.text_xl_font_semibold_text_gray_900_dark_text_white_mb_2")}>
-              {t('hr.noTrainingPrograms', 'لا توجد برامج تدريبية')}
+          <CardContent className="p-12 text-center">
+            <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              لا توجد برامج تدريبية
             </h3>
-            <p className={t("components.hr.trainingprograms.name.text_gray_600_dark_text_gray_400_mb_4")}>{t('components.hr.TrainingPrograms.ابدأ_بإنشاء_برنامج_تدريبي_جديد_لتطوير_مهارات_فريقك')}</p>
-            <Button className={t("components.hr.trainingprograms.name.bg_blue_600_hover_bg_blue_700_text_white")}>
-              <Plus className={t("components.hr.trainingprograms.name.w_4_h_4_ml_2")} />{t('components.hr.TrainingPrograms.إنشاء_برنامج_تدريبي')}</Button>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              ابدأ بإنشاء برنامج تدريبي جديد لتطوير مهارات فريقك
+            </p>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="w-4 h-4 ml-2" />
+              إنشاء برنامج تدريبي
+            </Button>
           </CardContent>
         </Card>
       )}

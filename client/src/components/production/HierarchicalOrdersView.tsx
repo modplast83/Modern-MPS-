@@ -8,7 +8,6 @@ import { Input } from "../ui/input";
 import { ChevronDown, ChevronRight, Eye, Plus, Search, Printer } from "lucide-react";
 import { formatNumber, formatWeight } from "../../lib/formatNumber";
 import { printRollLabel } from "./RollLabelPrint";
-import { useTranslation } from "react-i18next";
 
 interface HierarchicalOrdersViewProps {
   stage: string;
@@ -23,9 +22,9 @@ export default function HierarchicalOrdersView({
   stage,
   onCreateRoll,
 }: HierarchicalOrdersViewProps) {
-  const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>{t('components.production.HierarchicalOrdersView.(new_set());_const_[expandedproductionorders,_setexpandedproductionorders]_=_usestate')}<
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
+  const [expandedProductionOrders, setExpandedProductionOrders] = useState<
     Set<number>
   >(new Set());
   const [searchTerm, setSearchTerm] = useState("");
@@ -107,43 +106,43 @@ export default function HierarchicalOrdersView({
 
   if (isLoading) {
     return (
-      <div className={t("components.production.hierarchicalordersview.name.space_y_4")}>
+      <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className={t("components.production.hierarchicalordersview.name.h_24_bg_muted_animate_pulse_rounded")}></div>
+          <div key={i} className="h-24 bg-muted animate-pulse rounded"></div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className={t("components.production.hierarchicalordersview.name.space_y_4")}>
+    <div className="space-y-4">
       {/* Search Bar */}
-      <div className={t("components.production.hierarchicalordersview.name.relative")}>
-        <Search className={t("components.production.hierarchicalordersview.name.absolute_left_3_top_1_2_transform_translate_y_1_2_text_muted_foreground_h_4_w_4")} />
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          placeholder={t("production.searchOrdersProductionOrdersRollsOrCustomers")}
+          placeholder="البحث في الطلبات، أوامر العمل، الرولات، أو أسماء العملاء..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={t("components.production.hierarchicalordersview.name.pl_10")}
+          className="pl-10"
           data-testid="input-search-orders"
         />
       </div>
 
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
-        <div className={t("components.production.hierarchicalordersview.name.text_center_py_8")}>
-          <p className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
             {searchTerm
-              ? t("common.noSearchResults")
-              : t("production.noOrdersInProduction")}
+              ? "لا توجد نتائج مطابقة للبحث"
+              : "لا توجد طلبات في الإنتاج"}
           </p>
         </div>
       ) : (
         filteredOrders.map((order) => (
-          <Card key={order.id} className={t("components.production.hierarchicalordersview.name.border_l_4_border_l_blue_500")}>
-            <CardHeader className={t("components.production.hierarchicalordersview.name.pb_3")}>
-              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_justify_between")}>
-                <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_3")}>
+          <Card key={order.id} className="border-l-4 border-l-blue-500">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -151,39 +150,41 @@ export default function HierarchicalOrdersView({
                     data-testid={`button-expand-order-${order.id}`}
                   >
                     {expandedOrders.has(order.id) ? (
-                      <ChevronDown className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />{t('components.production.HierarchicalOrdersView.)_:_(')}<ChevronRight className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
                     )}
                   </Button>
                   <div>
-                    <CardTitle className={t("components.production.hierarchicalordersview.name.text_lg")}>
+                    <CardTitle className="text-lg">
                       {order.order_number}
                     </CardTitle>
-                    <p className={t("components.production.hierarchicalordersview.name.text_base_font_bold_text_blue_700")}>
-                      {t("common.customer")}:{" "}
+                    <p className="text-base font-bold text-blue-700">
+                      العميل:{" "}
                       {order.customer_name_ar ||
                         order.customer_name ||
-                        t("common.notSpecified")}
+                        "غير محدد"}
                     </p>
                   </div>
                 </div>
-                <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_2")}>
+                <div className="flex items-center gap-2">
                   <Badge variant="outline">
-                    {order.production_orders?.length || 0} {t("production.productionOrders")}
+                    {order.production_orders?.length || 0} أوامر إنتاج
                   </Badge>
                   <Badge
                     variant="secondary"
                     data-testid={`badge-order-status-${order.id}`}
                   >
                     {order.status === "for_production"
-                      ? t("orders.forProduction")
+                      ? "للإنتاج"
                       : order.status === "pending"
-                        ? t("common.pending")
+                        ? "بالإنتظار"
                         : order.status === "in_production"
-                          ? t("orders.inProduction")
+                          ? "قيد الإنتاج"
                           : order.status === "completed"
-                            ? t("common.completed")
+                            ? "مكتمل"
                             : order.status === "cancelled"
-                              ? t("common.cancelled")
+                              ? "ملغي"
                               : order.status}
                   </Badge>
                 </div>
@@ -191,9 +192,10 @@ export default function HierarchicalOrdersView({
             </CardHeader>
 
             {expandedOrders.has(order.id) && (
-              <CardContent className={t("components.production.hierarchicalordersview.name.pt_0")}>
+              <CardContent className="pt-0">
                 {order.production_orders &&
-                order.production_orders.length >{t('components.production.HierarchicalOrdersView.0_?_(')}<div className={t("components.production.hierarchicalordersview.name.space_y_3")}>
+                order.production_orders.length > 0 ? (
+                  <div className="space-y-3">
                     {order.production_orders.map((productionOrder: any) => {
                       const required =
                         parseFloat(productionOrder.quantity_kg) || 0;
@@ -205,13 +207,18 @@ export default function HierarchicalOrdersView({
                           )
                         : 0;
                       const progress =
-                        required >{t('components.production.HierarchicalOrdersView.0_?_math.round((produced_/_required)_*_100)_:_0;_return_(')}<Card
+                        required > 0
+                          ? Math.round((produced / required) * 100)
+                          : 0;
+
+                      return (
+                        <Card
                           key={productionOrder.id}
-                          className={t("components.production.hierarchicalordersview.name.border_border_gray_200_ml_6")}
+                          className="border border-gray-200 ml-6"
                         >
-                          <CardContent className={t("components.production.hierarchicalordersview.name.p_4")}>
-                            <div className={t("components.production.hierarchicalordersview.name.flex_items_center_justify_between")}>
-                              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_3")}>
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -225,83 +232,85 @@ export default function HierarchicalOrdersView({
                                   {expandedProductionOrders.has(
                                     productionOrder.id,
                                   ) ? (
-                                    <ChevronDown className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />{t('components.production.HierarchicalOrdersView.)_:_(')}<ChevronRight className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
                                   )}
                                 </Button>
                                 <div>
-                                  <h4 className={t("components.production.hierarchicalordersview.name.font_medium")}>
+                                  <h4 className="font-medium">
                                     {productionOrder.production_order_number}
                                   </h4>
-                                  <p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground")}>
+                                  <p className="text-sm text-muted-foreground">
                                     {productionOrder.item_name_ar ||
                                       productionOrder.item_name ||
-                                      t("common.notSpecified")}
+                                      "غير محدد"}
                                   </p>
-                                  <div className={t("components.production.hierarchicalordersview.name.grid_grid_cols_2_gap_x_4_gap_y_1_mt_2_text_xs")}>
+                                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
                                     {productionOrder.size_caption && (
                                       <div>
-                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
-                                          {t("production.size")}:{" "}
+                                        <span className="font-medium">
+                                          المقاس:{" "}
                                         </span>
-                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+                                        <span className="text-muted-foreground">
                                           {productionOrder.size_caption}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.thickness && (
                                       <div>
-                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
-                                          {t("production.thickness")}:{" "}
+                                        <span className="font-medium">
+                                          السماكة:{" "}
                                         </span>
-                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+                                        <span className="text-muted-foreground">
                                           {productionOrder.thickness}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.raw_material && (
                                       <div>
-                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
-                                          {t("production.rawMaterial")}:{" "}
+                                        <span className="font-medium">
+                                          الخامة:{" "}
                                         </span>
-                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+                                        <span className="text-muted-foreground">
                                           {productionOrder.raw_material}
                                         </span>
                                       </div>
                                     )}
                                     {productionOrder.master_batch_id && (
                                       <div>
-                                        <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
-                                          {t("production.masterBatchColor")}:{" "}
+                                        <span className="font-medium">
+                                          لون ماستر باتش:{" "}
                                         </span>
-                                        <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+                                        <span className="text-muted-foreground">
                                           {productionOrder.master_batch_id}
                                         </span>
                                       </div>
                                     )}
                                     <div>
-                                      <span className={t("components.production.hierarchicalordersview.name.font_medium")}>
-                                        {t("production.printing")}:{" "}
+                                      <span className="font-medium">
+                                        طباعة:{" "}
                                       </span>
-                                      <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
+                                      <span className="text-muted-foreground">
                                         {productionOrder.is_printed
-                                          ? t("common.yes")
-                                          : t("common.no")}
+                                          ? "نعم"
+                                          : "لا"}
                                       </span>
                                     </div>
                                   </div>
                                 </div>
                               </div>
-                              <div className={t("components.production.hierarchicalordersview.name.flex_items_center_gap_4")}>
-                                <div className={t("components.production.hierarchicalordersview.name.text_sm")}>
-                                  <span className={t("components.production.hierarchicalordersview.name.text_muted_foreground")}>
-                                    {t("production.quantity")}:{" "}
+                              <div className="flex items-center gap-4">
+                                <div className="text-sm">
+                                  <span className="text-muted-foreground">
+                                    الكمية:{" "}
                                   </span>
                                   {formatWeight(produced)} /{" "}
                                   {formatWeight(required)}
                                 </div>
-                                <div className={t("components.production.hierarchicalordersview.name.w_24")}>
-                                  <Progress value={progress} className={t("components.production.hierarchicalordersview.name.h_2")} />
-                                  <span className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
+                                <div className="w-24">
+                                  <Progress value={progress} className="h-2" />
+                                  <span className="text-xs text-muted-foreground">
                                     {formatPercentage(progress)}
                                   </span>
                                 </div>
@@ -313,49 +322,51 @@ export default function HierarchicalOrdersView({
                                   }
                                   data-testid={`button-create-roll-${productionOrder.id}`}
                                 >
-                                  <Plus className={t("components.production.hierarchicalordersview.name.h_4_w_4")} />
+                                  <Plus className="h-4 w-4" />
                                 </Button>
                               </div>
                             </div>
 
                             {expandedProductionOrders.has(productionOrder.id) &&
                               productionOrder.rolls && (
-                                <div className={t("components.production.hierarchicalordersview.name.mt_4_ml_6_space_y_2")}>
-                                  <h5 className={t("components.production.hierarchicalordersview.name.text_sm_font_medium_text_gray_700_mb_2")}>
-                                    {t("production.rolls")} ({productionOrder.rolls.length})
+                                <div className="mt-4 ml-6 space-y-2">
+                                  <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                    الرولات ({productionOrder.rolls.length})
                                   </h5>
                                   {productionOrder.rolls.length === 0 ? (
-                                    <p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground")}>
-                                      {t("production.noRollsYet")}
-                                    </p>{t('components.production.HierarchicalOrdersView.)_:_(')}<div className={t("components.production.hierarchicalordersview.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_2")}>
+                                    <p className="text-sm text-muted-foreground">
+                                      لا توجد رولات بعد
+                                    </p>
+                                  ) : (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                                       {productionOrder.rolls.map(
                                         (roll: any) => (
                                           <div
                                             key={roll.id}
-                                            className={t("components.production.hierarchicalordersview.name.border_rounded_p_3_bg_gray_50_hover_bg_gray_100_transition_colors")}
+                                            className="border rounded p-3 bg-gray-50 hover:bg-gray-100 transition-colors"
                                             data-testid={`roll-item-${roll.id}`}
                                           >
-                                            <div className={t("components.production.hierarchicalordersview.name.flex_justify_between_items_start_mb_2")}>
-                                              <div className={t("components.production.hierarchicalordersview.name.flex_1")}>
-                                                <p className={t("components.production.hierarchicalordersview.name.font_medium_text_sm")}>
+                                            <div className="flex justify-between items-start mb-2">
+                                              <div className="flex-1">
+                                                <p className="font-medium text-sm">
                                                   {roll.roll_number}
                                                 </p>
-                                                <p className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
-                                                  {t("production.weight")}:{" "}
+                                                <p className="text-xs text-muted-foreground">
+                                                  الوزن:{" "}
                                                   {formatWeight(
                                                     parseFloat(
                                                       roll.weight_kg,
                                                     ) || 0,
                                                   )}
                                                 </p>
-                                                <p className={t("components.production.hierarchicalordersview.name.text_xs_text_muted_foreground")}>
-                                                  {t("production.stage")}:{" "}
+                                                <p className="text-xs text-muted-foreground">
+                                                  المرحلة:{" "}
                                                   {roll.stage === "film"
-                                                    ? t("production.film")
+                                                    ? "فيلم"
                                                     : roll.stage === "printing"
-                                                      ? t("production.printing")
+                                                      ? "طباعة"
                                                       : roll.stage === "cutting"
-                                                        ? t("production.cutting")
+                                                        ? "تقطيع"
                                                         : roll.stage}
                                                 </p>
                                               </div>
@@ -365,23 +376,23 @@ export default function HierarchicalOrdersView({
                                                     ? "default"
                                                     : "secondary"
                                                 }
-                                                className={t("components.production.hierarchicalordersview.name.text_xs")}
+                                                className="text-xs"
                                               >
                                                 {roll.stage === "done"
-                                                  ? t("common.completed")
+                                                  ? "مكتمل"
                                                   : roll.stage === "film"
-                                                    ? t("production.film")
+                                                    ? "فيلم"
                                                     : roll.stage === "printing"
-                                                      ? t("production.printing")
+                                                      ? "طباعة"
                                                       : roll.stage === "cutting"
-                                                        ? t("production.cutting")
+                                                        ? "تقطيع"
                                                         : roll.stage}
                                               </Badge>
                                             </div>
                                             <Button
                                               variant="outline"
                                               size="sm"
-                                              className={t("components.production.hierarchicalordersview.name.w_full_text_xs")}
+                                              className="w-full text-xs"
                                               onClick={() => printRollLabel({
                                                 roll: roll,
                                                 productionOrder: productionOrder,
@@ -389,8 +400,8 @@ export default function HierarchicalOrdersView({
                                               })}
                                               data-testid={`button-print-label-${roll.id}`}
                                             >
-                                              <Printer className={t("components.production.hierarchicalordersview.name.h_3_w_3_mr_1")} />
-                                              {t("production.printLabel")}
+                                              <Printer className="h-3 w-3 mr-1" />
+                                              طباعة ملصق
                                             </Button>
                                           </div>
                                         ),
@@ -403,8 +414,10 @@ export default function HierarchicalOrdersView({
                         </Card>
                       );
                     })}
-                  </div>{t('components.production.HierarchicalOrdersView.)_:_(')}<p className={t("components.production.hierarchicalordersview.name.text_sm_text_muted_foreground_ml_6")}>
-                    {t("production.noProductionOrdersForThisOrder")}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground ml-6">
+                    لا توجد أوامر إنتاج لهذا الطلب
                   </p>
                 )}
               </CardContent>

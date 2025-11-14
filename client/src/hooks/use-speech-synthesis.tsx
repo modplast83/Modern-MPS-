@@ -26,7 +26,8 @@ interface UseSpeechSynthesisReturn {
 export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>{t('hooks.use-speech-synthesis.([]);_const_utteranceref_=_useref')}<SpeechSynthesisUtterance | null>(null);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const isSupported = "speechSynthesis" in window;
 
@@ -125,7 +126,17 @@ export const useSpeechSynthesis = (): UseSpeechSynthesisReturn => {
     const defaultVoice =
       dialectVoices.length > 0
         ? dialectVoices[0]
-        : arabicVoices.length >{t('hooks.use-speech-synthesis.0_?_arabicvoices[0]_:_null;_utterance.voice_=_options.voice_||_defaultvoice;_utterance.rate_=_options.rate_||_(dialect_===_"egyptian"_?_1.0_:_0.9);_//_egyptian_dialect_can_be_faster_utterance.pitch_=_options.pitch_||_(dialect_===_"gulf"_?_1.1_:_1.0);_//_gulf_dialect_slightly_higher_pitch_utterance.volume_=_options.volume_||_1;_//_set_language_based_on_dialect_const_dialectlanguagemap:_record')}<string, string> = {
+        : arabicVoices.length > 0
+          ? arabicVoices[0]
+          : null;
+
+    utterance.voice = options.voice || defaultVoice;
+    utterance.rate = options.rate || (dialect === "egyptian" ? 1.0 : 0.9); // Egyptian dialect can be faster
+    utterance.pitch = options.pitch || (dialect === "gulf" ? 1.1 : 1.0); // Gulf dialect slightly higher pitch
+    utterance.volume = options.volume || 1;
+
+    // Set language based on dialect
+    const dialectLanguageMap: Record<string, string> = {
       standard: "ar-SA",
       egyptian: "ar-EG",
       gulf: "ar-SA",

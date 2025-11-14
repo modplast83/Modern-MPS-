@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -66,7 +65,6 @@ import {
 } from "../components/charts";
 
 export default function Reports() {
-  const { t } = useTranslation();
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [selectedPeriod, setSelectedPeriod] = useState("month");
   const [reportType, setReportType] = useState("production");
@@ -175,28 +173,28 @@ export default function Reports() {
   const reportTypes = [
     {
       value: "production",
-      label: t('reports.productionReports'),
-      icon: <Package className={t("pages.reports.name.w_4_h_4")} />,
+      label: "تقارير الإنتاج",
+      icon: <Package className="w-4 h-4" />,
     },
     {
       value: "quality",
-      label: t('reports.qualityReports'),
-      icon: <CheckCircle2 className={t("pages.reports.name.w_4_h_4")} />,
+      label: "تقارير الجودة",
+      icon: <CheckCircle2 className="w-4 h-4" />,
     },
     {
       value: "maintenance",
-      label: t('reports.maintenanceReports'),
-      icon: <Settings className={t("pages.reports.name.w_4_h_4")} />,
+      label: "تقارير الصيانة",
+      icon: <Settings className="w-4 h-4" />,
     },
     {
       value: "hr",
-      label: t('reports.hrReports'),
-      icon: <Users className={t("pages.reports.name.w_4_h_4")} />,
+      label: "تقارير الموارد البشرية",
+      icon: <Users className="w-4 h-4" />,
     },
     {
       value: "financial",
-      label: t('reports.financialReports'),
-      icon: <BarChart3 className={t("pages.reports.name.w_4_h_4")} />,
+      label: "التقارير المالية",
+      icon: <BarChart3 className="w-4 h-4" />,
     },
   ];
 
@@ -275,34 +273,34 @@ export default function Reports() {
   };
 
   return (
-    <div className={t("pages.reports.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className={t("pages.reports.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.reports.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-          <div className={t("pages.reports.name.mb_6")}>
-            <h1 className={t("pages.reports.name.text_2xl_font_bold_text_gray_900_mb_2")}>
-              {t('reports.title')}
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              التقارير والتحليلات
             </h1>
-            <p className={t("pages.reports.name.text_gray_600")}>{t('reports.reportsManagement')}</p>
+            <p className="text-gray-600">تقارير شاملة حول الأداء والإنتاجية</p>
           </div>
 
           {/* Report Controls */}
-          <Card className={t("pages.reports.name.mb_6")}>
+          <Card className="mb-6">
             <CardHeader>
-              <CardTitle className={t("pages.reports.name.flex_items_center_gap_2")}>
-                <Filter className={t("pages.reports.name.w_5_h_5")} />
-                {t('reports.reportOptions')}
+              <CardTitle className="flex items-center gap-2">
+                <Filter className="w-5 h-5" />
+                خيارات التقرير
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.reports.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className={t("pages.reports.name.text_sm_font_medium_text_gray_700_mb_1_block")}>
-                    {t('reports.reportType')}
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">
+                    نوع التقرير
                   </label>
                   <Select value={reportType} onValueChange={setReportType}>
                     <SelectTrigger>
@@ -314,7 +312,7 @@ export default function Reports() {
                           key={type.value}
                           value={type.value || "unknown"}
                         >
-                          <div className={t("pages.reports.name.flex_items_center_gap_2")}>
+                          <div className="flex items-center gap-2">
                             {type.icon}
                             {type.label}
                           </div>
@@ -325,8 +323,8 @@ export default function Reports() {
                 </div>
 
                 <div>
-                  <label className={t("pages.reports.name.text_sm_font_medium_text_gray_700_mb_1_block")}>
-                    {t('reports.reportPeriod')}
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">
+                    الفترة الزمنية
                   </label>
                   <Select
                     value={selectedPeriod}
@@ -336,32 +334,32 @@ export default function Reports() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="week">{t('reports.lastWeek')}</SelectItem>
-                      <SelectItem value="month">{t('reports.thisMonth')}</SelectItem>
-                      <SelectItem value="quarter">{t('reports.lastQuarter')}</SelectItem>
-                      <SelectItem value="year">{t('reports.thisYear')}</SelectItem>
-                      <SelectItem value="custom">{t('reports.customReport')}</SelectItem>
+                      <SelectItem value="week">هذا الأسبوع</SelectItem>
+                      <SelectItem value="month">هذا الشهر</SelectItem>
+                      <SelectItem value="quarter">هذا الربع</SelectItem>
+                      <SelectItem value="year">هذا العام</SelectItem>
+                      <SelectItem value="custom">فترة مخصصة</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <label className={t("pages.reports.name.text_sm_font_medium_text_gray_700_mb_1_block")}>
-                    {t('reports.startDate')}
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">
+                    من تاريخ
                   </label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
-                        className={t("pages.reports.name.w_full_justify_start_text_left")}
+                        className="w-full justify-start text-left"
                       >
-                        <CalendarIcon className={t("pages.reports.name.mr_2_h_4_w_4")} />
+                        <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateRange.from
                           ? format(dateRange.from, "PPP", { locale: ar })
-                          : t('reports.selectDateRange')}
+                          : "اختر التاريخ"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className={t("pages.reports.name.w_auto_p_0")}>
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
                         mode="single"
                         selected={dateRange.from}
@@ -374,19 +372,19 @@ export default function Reports() {
                   </Popover>
                 </div>
 
-                <div className={t("pages.reports.name.flex_items_end_gap_2")}>
+                <div className="flex items-end gap-2">
                   <Button
                     onClick={() => exportReport("pdf")}
-                    className={t("pages.reports.name.flex_1")}
+                    className="flex-1"
                   >
-                    <Download className={t("pages.reports.name.w_4_h_4_mr_2")} />
-                    {t('reports.exportToPDF')}
+                    <Download className="w-4 h-4 mr-2" />
+                    تصدير PDF
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => exportReport("excel")}
                   >
-                    <FileText className={t("pages.reports.name.w_4_h_4")} />
+                    <FileText className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
@@ -395,16 +393,16 @@ export default function Reports() {
 
           {/* Report Content */}
           <Tabs value={reportType} onValueChange={setReportType}>
-            <TabsList className={t("pages.reports.name.grid_w_full_grid_cols_5")}>
+            <TabsList className="grid w-full grid-cols-5">
               {reportTypes.map((type) => (
                 <TabsTrigger
                   key={type.value}
                   value={type.value}
-                  className={t("pages.reports.name.text_xs")}
+                  className="text-xs"
                 >
-                  <div className={t("pages.reports.name.flex_items_center_gap_1")}>
+                  <div className="flex items-center gap-1">
                     {type.icon}
-                    <span className={t("pages.reports.name.hidden_sm_inline")}>
+                    <span className="hidden sm:inline">
                       {type.label.split(" ")[1]}
                     </span>
                   </div>
@@ -416,17 +414,19 @@ export default function Reports() {
             <TabsContent value="production">
               {isLoading ? (
                 <div
-                  className={t("pages.reports.name.text_center_py_8")}
+                  className="text-center py-8"
                   data-testid="loading-production"
                 >
-                  <div className={t("pages.reports.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("pages.reports.name.mt_2_text_gray_600")}>{t('common.loading')}</p>
-                </div>{t('pages.reports.)_:_(')}<>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">جاري تحميل التقارير...</p>
+                </div>
+              ) : (
+                <>
                   {/* Production KPI Metrics */}
                   {dashboardData?.success && (
                     <MetricsGrid
                       columns={4}
-                      className={t("pages.reports.name.mb_6")}
+                      className="mb-6"
                       metrics={[
                         {
                           title: "إجمالي الإنتاج",
@@ -435,7 +435,7 @@ export default function Reports() {
                               ?.daily_weight || 0,
                           ),
                           description: "كيلوجرام",
-                          icon: <Package className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Package className="w-5 h-5" />,
                           trend: {
                             value: 5.2,
                             isPositive: true,
@@ -446,7 +446,7 @@ export default function Reports() {
                           title: "كفاءة الإنتاج",
                           value: `${safeToFixed(dashboardData.data.realTime?.currentStats?.avg_efficiency || 90)}%`,
                           description: "متوسط الكفاءة",
-                          icon: <Target className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Target className="w-5 h-5" />,
                           trend: {
                             value: 3.1,
                             isPositive: true,
@@ -460,7 +460,7 @@ export default function Reports() {
                               ?.active_orders || 0,
                           ),
                           description: "طلبات قيد التنفيذ",
-                          icon: <Activity className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Activity className="w-5 h-5" />,
                           trend: {
                             value: 0,
                             isPositive: true,
@@ -471,7 +471,7 @@ export default function Reports() {
                           title: "معدل الهدر",
                           value: `${safeToFixed(((dashboardData.data.realTime?.currentStats?.current_waste || 0) / Math.max(dashboardData.data.realTime?.currentStats?.daily_weight || 1, 1)) * 100)}%`,
                           description: "نسبة الهدر",
-                          icon: <AlertTriangle className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <AlertTriangle className="w-5 h-5" />,
                           trend: {
                             value: 1.8,
                             isPositive: false,
@@ -482,14 +482,14 @@ export default function Reports() {
                     />
                   )}
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Machine Utilization Chart */}
                     {dashboardData?.success &&
                       dashboardData.data.machineUtilization && (
                         <InteractiveBarChart
                           data={dashboardData.data.machineUtilization}
-                          title="{t('pages.reports.title.{t('pages.reports.title.إنتاجية_المكائن')}')}"
-                          description={t("pages.reports.description._")}
+                          title="إنتاجية المكائن"
+                          description="إجمالي الإنتاج لكل ماكينة بالكيلوجرام"
                           xAxisKey="machine_name"
                           yAxisKey="total_weight"
                           barColor="#3b82f6"
@@ -497,7 +497,7 @@ export default function Reports() {
                           formatValue={(value) =>
                             formatChartValue(value, "number") + " كج"
                           }
-                          className={t("pages.reports.name.h_full")}
+                          className="h-full"
                         />
                       )}
 
@@ -506,8 +506,8 @@ export default function Reports() {
                       dashboardData.data.productionEfficiency?.trends && (
                         <InteractiveLineChart
                           data={dashboardData.data.productionEfficiency.trends}
-                          title="{t('pages.reports.title.{t('pages.reports.title.اتجاهات_الكفاءة_اليومية')}')}"
-                          description={t("pages.reports.description._")}
+                          title="اتجاهات الكفاءة اليومية"
+                          description="تتبع كفاءة الإنتاج على مدار الأيام"
                           xAxisKey="date"
                           lines={[
                             {
@@ -520,12 +520,12 @@ export default function Reports() {
                           formatValue={(value) =>
                             formatChartValue(value, "percentage")
                           }
-                          className={t("pages.reports.name.h_full")}
+                          className="h-full"
                         />
                       )}
                   </div>
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_3_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     {/* Machine Status Distribution */}
                     {dashboardData?.success &&
                       dashboardData.data.realTime?.machineStatus && (
@@ -552,8 +552,8 @@ export default function Reports() {
                             },
                             [],
                           )}
-                          title="{t('pages.reports.title.{t('pages.reports.title.حالة_المكائن')}')}"
-                          description={t("pages.reports.description._")}
+                          title="حالة المكائن"
+                          description="توزيع حالات المكائن"
                           nameKey="status"
                           valueKey="count"
                           height={300}
@@ -591,8 +591,8 @@ export default function Reports() {
                                   .pending_orders,
                             },
                           ]}
-                          title="{t('pages.reports.title.{t('pages.reports.title.طوابير_الإنتاج')}')}"
-                          description={t("pages.reports.description._")}
+                          title="طوابير الإنتاج"
+                          description="عدد الطلبات في كل مرحلة"
                           xAxisKey="stage"
                           yAxisKey="count"
                           barColor="#8b5cf6"
@@ -604,10 +604,11 @@ export default function Reports() {
                     {/* Advanced Metrics - OEE */}
                     {advancedMetrics?.success &&
                       advancedMetrics.data.oeeMetrics &&
-                      advancedMetrics.data.oeeMetrics.length >{t('pages.reports.0_&&_(')}<ComboChart
+                      advancedMetrics.data.oeeMetrics.length > 0 && (
+                        <ComboChart
                           data={advancedMetrics.data.oeeMetrics}
-                          title="{t('pages.reports.title.{t('pages.reports.title.مؤشر_فعالية_المعدات_(oee)')}')}"
-                          description={t("pages.reports.description._")}
+                          title="مؤشر فعالية المعدات (OEE)"
+                          description="التوفر والأداء والجودة"
                           xAxisKey="machine_name"
                           elements={[
                             {
@@ -636,8 +637,8 @@ export default function Reports() {
                           formatValue={(value) =>
                             formatChartValue(value, "percentage")
                           }
-                          leftAxisLabel={t("pages.reports.label._")}
-                          rightAxisLabel={t("pages.reports.label.oee_")}
+                          leftAxisLabel="النسبة %"
+                          rightAxisLabel="OEE %"
                         />
                       )}
                   </div>
@@ -645,21 +646,24 @@ export default function Reports() {
                   {/* Production Alerts */}
                   {dashboardData?.success &&
                     dashboardData.data.alerts &&
-                    dashboardData.data.alerts.length >{t('pages.reports.0_&&_(')}<Card>
+                    dashboardData.data.alerts.length > 0 && (
+                      <Card>
                         <CardHeader>
-                          <CardTitle className={t("pages.reports.name.flex_items_center_gap_2")}>
-                            <AlertTriangle className={t("pages.reports.name.w_5_h_5_text_amber_500")} />{t('pages.reports.تنبيهات_الإنتاج')}</CardTitle>
+                          <CardTitle className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-amber-500" />
+                            تنبيهات الإنتاج
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className={t("pages.reports.name.space_y_3")}>
+                          <div className="space-y-3">
                             {dashboardData.data.alerts
                               .slice(0, 5)
                               .map((alert: any, index: number) => (
                                 <div
                                   key={index}
-                                  className={t("pages.reports.name.flex_items_center_justify_between_p_3_bg_amber_50_rounded_lg_border_border_amber_200")}
+                                  className="flex items-center justify-between p-3 bg-amber-50 rounded-lg border border-amber-200"
                                 >
-                                  <div className={t("pages.reports.name.flex_items_center_gap_3")}>
+                                  <div className="flex items-center gap-3">
                                     <div
                                       className={`w-2 h-2 rounded-full ${
                                         alert.priority === "critical"
@@ -670,10 +674,10 @@ export default function Reports() {
                                       }`}
                                     ></div>
                                     <div>
-                                      <p className={t("pages.reports.name.font_medium_text_gray_900")}>
+                                      <p className="font-medium text-gray-900">
                                         {alert.title}
                                       </p>
-                                      <p className={t("pages.reports.name.text_sm_text_gray_600")}>
+                                      <p className="text-sm text-gray-600">
                                         {alert.message}
                                       </p>
                                     </div>
@@ -704,21 +708,25 @@ export default function Reports() {
             {/* Quality Reports - Advanced Metrics */}
             <TabsContent value="quality">
               {isLoading ? (
-                <div className={t("pages.reports.name.text_center_py_8")} data-testid="loading-quality">
-                  <div className={t("pages.reports.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("pages.reports.name.mt_2_text_gray_600")}>{t('pages.reports.جاري_تحميل_تقارير_الجودة...')}</p>
-                </div>{t('pages.reports.)_:_(')}<>
+                <div className="text-center py-8" data-testid="loading-quality">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">
+                    جاري تحميل تقارير الجودة...
+                  </p>
+                </div>
+              ) : (
+                <>
                   {/* Quality KPI Metrics */}
                   {advancedMetrics?.success && (
                     <MetricsGrid
                       columns={4}
-                      className={t("pages.reports.name.mb_6")}
+                      className="mb-6"
                       metrics={[
                         {
                           title: "معدل الجودة",
                           value: `${safeToFixed(advancedMetrics.data.qualityMetrics?.quality_rate || 95)}%`,
                           description: "نسبة الإنتاج السليم",
-                          icon: <CheckCircle2 className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <CheckCircle2 className="w-5 h-5" />,
                           trend: {
                             value: 2.1,
                             isPositive: true,
@@ -732,7 +740,7 @@ export default function Reports() {
                               0,
                           ),
                           description: "رولات مفحوصة",
-                          icon: <Package className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Package className="w-5 h-5" />,
                           trend: {
                             value: 15.3,
                             isPositive: true,
@@ -746,7 +754,7 @@ export default function Reports() {
                               ?.defective_rolls || 0,
                           ),
                           description: "تحتاج إعادة عمل",
-                          icon: <AlertTriangle className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <AlertTriangle className="w-5 h-5" />,
                           trend: {
                             value: 3.2,
                             isPositive: false,
@@ -757,7 +765,7 @@ export default function Reports() {
                           title: "متوسط الهدر",
                           value: `${safeToFixed(advancedMetrics.data.qualityMetrics?.avg_waste_percentage || 0)}%`,
                           description: "نسبة الهدر",
-                          icon: <Activity className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Activity className="w-5 h-5" />,
                           trend: {
                             value: 1.5,
                             isPositive: false,
@@ -768,7 +776,7 @@ export default function Reports() {
                     />
                   )}
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Quality Rate vs Defect Rate */}
                     {advancedMetrics?.success && (
                       <ComboChart
@@ -787,8 +795,8 @@ export default function Reports() {
                                 ?.rework_rate || 2,
                           },
                         ]}
-                        title="{t('pages.reports.title.{t('pages.reports.title.مؤشرات_الجودة_الشاملة')}')}"
-                        description={t("pages.reports.description._")}
+                        title="مؤشرات الجودة الشاملة"
+                        description="معدل الجودة مقابل معدل العيوب"
                         xAxisKey="period"
                         elements={[
                           {
@@ -814,7 +822,7 @@ export default function Reports() {
                         formatValue={(value) =>
                           formatChartValue(value, "percentage")
                         }
-                        leftAxisLabel={t("pages.reports.label._")}
+                        leftAxisLabel="النسبة %"
                       />
                     )}
 
@@ -839,8 +847,8 @@ export default function Reports() {
                                 .avg_total_cycle_time,
                             },
                           ]}
-                          title="{t('pages.reports.title.{t('pages.reports.title.تحليل_أوقات_الدورة')}')}"
-                          description={t("pages.reports.description._")}
+                          title="تحليل أوقات الدورة"
+                          description="متوسط الوقت لكل مرحلة بالساعات"
                           xAxisKey="stage"
                           yAxisKey="time"
                           barColor="#6366f1"
@@ -853,9 +861,12 @@ export default function Reports() {
                   {/* Machine OEE Performance */}
                   {advancedMetrics?.success &&
                     advancedMetrics.data.oeeMetrics &&
-                    advancedMetrics.data.oeeMetrics.length >{t('pages.reports.0_&&_(')}<Card className={t("pages.reports.name.mb_6")}>
+                    advancedMetrics.data.oeeMetrics.length > 0 && (
+                      <Card className="mb-6">
                         <CardHeader>
-                          <CardTitle>{t('pages.reports.أداء_المكائن_-_فعالية_المعدات_الشاملة_(oee)')}</CardTitle>
+                          <CardTitle>
+                            أداء المكائن - فعالية المعدات الشاملة (OEE)
+                          </CardTitle>
                         </CardHeader>
                         <CardContent>
                           <InteractiveBarChart
@@ -880,17 +891,21 @@ export default function Reports() {
             <TabsContent value="maintenance">
               {isLoading ? (
                 <div
-                  className={t("pages.reports.name.text_center_py_8")}
+                  className="text-center py-8"
                   data-testid="loading-maintenance"
                 >
-                  <div className={t("pages.reports.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("pages.reports.name.mt_2_text_gray_600")}>{t('pages.reports.جاري_تحميل_تقارير_الصيانة...')}</p>
-                </div>{t('pages.reports.)_:_(')}<>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">
+                    جاري تحميل تقارير الصيانة...
+                  </p>
+                </div>
+              ) : (
+                <>
                   {/* Maintenance KPI Metrics */}
                   {maintenanceReports?.success && (
                     <MetricsGrid
                       columns={4}
-                      className={t("pages.reports.name.mb_6")}
+                      className="mb-6"
                       metrics={[
                         {
                           title: "طلبات الصيانة",
@@ -899,7 +914,7 @@ export default function Reports() {
                               ?.total_requests || 0,
                           ),
                           description: "إجمالي الطلبات",
-                          icon: <Settings className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Settings className="w-5 h-5" />,
                           trend: {
                             value: 8.3,
                             isPositive: false,
@@ -913,7 +928,7 @@ export default function Reports() {
                               ?.completed_requests || 0,
                           ),
                           description: "تم الانتهاء",
-                          icon: <CheckCircle2 className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <CheckCircle2 className="w-5 h-5" />,
                           trend: {
                             value: 12.5,
                             isPositive: true,
@@ -924,7 +939,7 @@ export default function Reports() {
                           title: "متوسط وقت الإصلاح",
                           value: `${safeToFixed(maintenanceReports.data.maintenanceStats?.avg_resolution_time || 0)}`,
                           description: "ساعة",
-                          icon: <Clock className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Clock className="w-5 h-5" />,
                           trend: {
                             value: 5.7,
                             isPositive: false,
@@ -938,7 +953,7 @@ export default function Reports() {
                               ?.critical_requests || 0,
                           ),
                           description: "تحتاج انتباه",
-                          icon: <AlertTriangle className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <AlertTriangle className="w-5 h-5" />,
                           trend: {
                             value: 15.2,
                             isPositive: false,
@@ -949,14 +964,14 @@ export default function Reports() {
                     />
                   )}
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Maintenance Cost Analysis */}
                     {maintenanceReports?.success &&
                       maintenanceReports.data.costAnalysis && (
                         <InteractiveBarChart
                           data={maintenanceReports.data.costAnalysis}
-                          title="{t('pages.reports.title.{t('pages.reports.title.تحليل_تكاليف_الصيانة')}')}"
-                          description={t("pages.reports.description._")}
+                          title="تحليل تكاليف الصيانة"
+                          description="التكلفة التقديرية لصيانة كل ماكينة"
                           xAxisKey="machine_name"
                           yAxisKey="estimated_cost"
                           barColor="#f59e0b"
@@ -991,8 +1006,8 @@ export default function Reports() {
                                   .total_downtime,
                             },
                           ]}
-                          title="{t('pages.reports.title.{t('pages.reports.title.تحليل_فترات_التوقف')}')}"
-                          description={t("pages.reports.description._")}
+                          title="تحليل فترات التوقف"
+                          description="ساعات التوقف حسب النوع"
                           xAxisKey="type"
                           areas={[
                             {
@@ -1011,20 +1026,22 @@ export default function Reports() {
                   {maintenanceReports?.success && (
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('pages.reports.متوسط_الوقت_بين_الأعطال_(mtbf)')}</CardTitle>
+                        <CardTitle>متوسط الوقت بين الأعطال (MTBF)</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className={t("pages.reports.name.flex_items_center_justify_center_p_8")}>
-                          <div className={t("pages.reports.name.text_center")}>
-                            <div className={t("pages.reports.name.text_4xl_font_bold_text_blue_600_mb_2")}>
+                        <div className="flex items-center justify-center p-8">
+                          <div className="text-center">
+                            <div className="text-4xl font-bold text-blue-600 mb-2">
                               {safeToFixed(
                                 maintenanceReports.data.downtimeAnalysis
                                   ?.mtbf || 168,
                                 0,
                               )}
                             </div>
-                            <div className={t("pages.reports.name.text_lg_text_gray_600")}>{t('pages.reports.ساعة')}</div>
-                            <div className={t("pages.reports.name.text_sm_text_gray_500_mt_2")}>{t('pages.reports.متوسط_الوقت_بين_الأعطال_للمكائن')}</div>
+                            <div className="text-lg text-gray-600">ساعة</div>
+                            <div className="text-sm text-gray-500 mt-2">
+                              متوسط الوقت بين الأعطال للمكائن
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -1037,21 +1054,25 @@ export default function Reports() {
             {/* HR Reports */}
             <TabsContent value="hr">
               {isLoading ? (
-                <div className={t("pages.reports.name.text_center_py_8")} data-testid="loading-hr">
-                  <div className={t("pages.reports.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("pages.reports.name.mt_2_text_gray_600")}>{t('pages.reports.جاري_تحميل_تقارير_الموارد_البشرية...')}</p>
-                </div>{t('pages.reports.)_:_(')}<>
+                <div className="text-center py-8" data-testid="loading-hr">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">
+                    جاري تحميل تقارير الموارد البشرية...
+                  </p>
+                </div>
+              ) : (
+                <>
                   {/* HR KPI Metrics */}
                   {hrReports?.success && (
                     <MetricsGrid
                       columns={4}
-                      className={t("pages.reports.name.mb_6")}
+                      className="mb-6"
                       metrics={[
                         {
                           title: "معدل الحضور",
                           value: "94.5%",
                           description: "نسبة الحضور العامة",
-                          icon: <Users className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Users className="w-5 h-5" />,
                           trend: {
                             value: 2.1,
                             isPositive: true,
@@ -1064,7 +1085,7 @@ export default function Reports() {
                             hrReports.data.trainingStats?.total_programs || 0,
                           ),
                           description: "برامج نشطة",
-                          icon: <Package className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Package className="w-5 h-5" />,
                           trend: {
                             value: 15.3,
                             isPositive: true,
@@ -1075,7 +1096,7 @@ export default function Reports() {
                           title: "معدل الإكمال",
                           value: `${safeToFixed(hrReports.data.trainingStats?.completion_rate || 0)}%`,
                           description: "إكمال التدريب",
-                          icon: <Target className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Target className="w-5 h-5" />,
                           trend: {
                             value: 8.7,
                             isPositive: true,
@@ -1086,7 +1107,7 @@ export default function Reports() {
                           title: "كفاءة الفريق",
                           value: "91.2%",
                           description: "متوسط الأداء",
-                          icon: <Zap className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Zap className="w-5 h-5" />,
                           trend: {
                             value: 4.3,
                             isPositive: true,
@@ -1097,13 +1118,13 @@ export default function Reports() {
                     />
                   )}
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Attendance Analysis */}
                     {hrReports?.success && hrReports.data.attendanceStats && (
                       <InteractiveBarChart
                         data={hrReports.data.attendanceStats.slice(0, 10)}
-                        title="{t('pages.reports.title.{t('pages.reports.title.تحليل_الحضور_والغياب')}')}"
-                        description={t("pages.reports.description._")}
+                        title="تحليل الحضور والغياب"
+                        description="معدل الحضور لكل موظف"
                         xAxisKey="display_name_ar"
                         yAxisKey="attendance_rate"
                         barColor="#10b981"
@@ -1118,8 +1139,8 @@ export default function Reports() {
                     {hrReports?.success && hrReports.data.performanceStats && (
                       <ComboChart
                         data={hrReports.data.performanceStats.slice(0, 8)}
-                        title="{t('pages.reports.title.{t('pages.reports.title.الأداء_مقابل_التدريب')}')}"
-                        description={t("pages.reports.description._")}
+                        title="الأداء مقابل التدريب"
+                        description="كفاءة الإنتاج ومعدل الأخطاء"
                         xAxisKey="display_name_ar"
                         elements={[
                           {
@@ -1144,8 +1165,8 @@ export default function Reports() {
                         formatRightAxis={(value) =>
                           formatChartValue(value, "percentage")
                         }
-                        leftAxisLabel={t("pages.reports.label._")}
-                        rightAxisLabel={t("pages.reports.label._")}
+                        leftAxisLabel="الكفاءة %"
+                        rightAxisLabel="الأخطاء %"
                       />
                     )}
                   </div>
@@ -1154,29 +1175,35 @@ export default function Reports() {
                   {hrReports?.success && hrReports.data.trainingStats && (
                     <Card>
                       <CardHeader>
-                        <CardTitle>{t('pages.reports.تقدم_برامج_التدريب')}</CardTitle>
+                        <CardTitle>تقدم برامج التدريب</CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <div className={t("pages.reports.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
-                          <div className={t("pages.reports.name.text_center_p_4_bg_blue_50_rounded_lg")}>
-                            <div className={t("pages.reports.name.text_2xl_font_bold_text_blue_600")}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center p-4 bg-blue-50 rounded-lg">
+                            <div className="text-2xl font-bold text-blue-600">
                               {hrReports.data.trainingStats.total_programs}
                             </div>
-                            <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.إجمالي_البرامج')}</div>
+                            <div className="text-sm text-gray-600">
+                              إجمالي البرامج
+                            </div>
                           </div>
-                          <div className={t("pages.reports.name.text_center_p_4_bg_green_50_rounded_lg")}>
-                            <div className={t("pages.reports.name.text_2xl_font_bold_text_green_600")}>
+                          <div className="text-center p-4 bg-green-50 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600">
                               {hrReports.data.trainingStats.completed_trainings}
                             </div>
-                            <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.تدريبات_مكتملة')}</div>
+                            <div className="text-sm text-gray-600">
+                              تدريبات مكتملة
+                            </div>
                           </div>
-                          <div className={t("pages.reports.name.text_center_p_4_bg_amber_50_rounded_lg")}>
-                            <div className={t("pages.reports.name.text_2xl_font_bold_text_amber_600")}>
+                          <div className="text-center p-4 bg-amber-50 rounded-lg">
+                            <div className="text-2xl font-bold text-amber-600">
                               {hrReports.data.trainingStats.total_enrollments -
                                 hrReports.data.trainingStats
                                   .completed_trainings}
                             </div>
-                            <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.قيد_التنفيذ')}</div>
+                            <div className="text-sm text-gray-600">
+                              قيد التنفيذ
+                            </div>
                           </div>
                         </div>
                       </CardContent>
@@ -1190,17 +1217,21 @@ export default function Reports() {
             <TabsContent value="financial">
               {isLoading ? (
                 <div
-                  className={t("pages.reports.name.text_center_py_8")}
+                  className="text-center py-8"
                   data-testid="loading-financial"
                 >
-                  <div className={t("pages.reports.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("pages.reports.name.mt_2_text_gray_600")}>{t('pages.reports.جاري_تحميل_التقارير_المالية...')}</p>
-                </div>{t('pages.reports.)_:_(')}<>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">
+                    جاري تحميل التقارير المالية...
+                  </p>
+                </div>
+              ) : (
+                <>
                   {/* Financial KPI Metrics */}
                   {orderReports?.success && (
                     <MetricsGrid
                       columns={4}
-                      className={t("pages.reports.name.mb_6")}
+                      className="mb-6"
                       metrics={[
                         {
                           title: "إجمالي الطلبات",
@@ -1208,7 +1239,7 @@ export default function Reports() {
                             orderReports.data.revenueStats?.total_orders || 0,
                           ),
                           description: "طلب مكتمل",
-                          icon: <Package className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Package className="w-5 h-5" />,
                           trend: {
                             value: 12.5,
                             isPositive: true,
@@ -1223,7 +1254,7 @@ export default function Reports() {
                             "currency",
                           ),
                           description: "ريال سعودي",
-                          icon: <BarChart3 className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <BarChart3 className="w-5 h-5" />,
                           trend: {
                             value: 18.3,
                             isPositive: true,
@@ -1238,7 +1269,7 @@ export default function Reports() {
                             "currency",
                           ),
                           description: "ريال للطلب",
-                          icon: <Target className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <Target className="w-5 h-5" />,
                           trend: {
                             value: 5.7,
                             isPositive: true,
@@ -1249,7 +1280,7 @@ export default function Reports() {
                           title: "الطلبات في الوقت",
                           value: `${safeToFixed(((orderReports.data.deliveryPerformance?.on_time_orders || 0) / Math.max(orderReports.data.revenueStats?.total_orders || 1, 1)) * 100)}%`,
                           description: "أداء التسليم",
-                          icon: <CheckCircle2 className={t("pages.reports.name.w_5_h_5")} />,
+                          icon: <CheckCircle2 className="w-5 h-5" />,
                           trend: {
                             value: 8.9,
                             isPositive: true,
@@ -1260,7 +1291,7 @@ export default function Reports() {
                     />
                   )}
 
-                  <div className={t("pages.reports.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                     {/* Order Status Distribution */}
                     {orderReports?.success &&
                       orderReports.data.orderStatusStats && (
@@ -1280,8 +1311,8 @@ export default function Reports() {
                               count: status.count,
                             }),
                           )}
-                          title="{t('pages.reports.title.{t('pages.reports.title.توزيع_حالة_الطلبات')}')}"
-                          description={t("pages.reports.description._")}
+                          title="توزيع حالة الطلبات"
+                          description="نسبة كل حالة من إجمالي الطلبات"
                           nameKey="status"
                           valueKey="count"
                           height={350}
@@ -1294,8 +1325,8 @@ export default function Reports() {
                       orderReports.data.topCustomers && (
                         <InteractiveBarChart
                           data={orderReports.data.topCustomers.slice(0, 8)}
-                          title="{t('pages.reports.title.{t('pages.reports.title.أكثر_العملاء_طلباً')}')}"
-                          description={t("pages.reports.description._")}
+                          title="أكثر العملاء طلباً"
+                          description="العملاء الأكثر نشاطاً من حيث عدد الطلبات"
                           xAxisKey="customer_name"
                           yAxisKey="order_count"
                           barColor="#8b5cf6"
@@ -1309,8 +1340,8 @@ export default function Reports() {
                   {orderReports?.success && orderReports.data.topCustomers && (
                     <ComboChart
                       data={orderReports.data.topCustomers.slice(0, 6)}
-                      title="{t('pages.reports.title.{t('pages.reports.title.الإيرادات_مقابل_الكمية')}')}"
-                      description={t("pages.reports.description._")}
+                      title="الإيرادات مقابل الكمية"
+                      description="تحليل الإيرادات والكميات للعملاء الرئيسيين"
                       xAxisKey="customer_name"
                       elements={[
                         {
@@ -1335,46 +1366,52 @@ export default function Reports() {
                       formatRightAxis={(value) =>
                         formatChartValue(value, "currency")
                       }
-                      leftAxisLabel={t("pages.reports.label._")}
-                      rightAxisLabel={t("pages.reports.label._")}
+                      leftAxisLabel="الكمية"
+                      rightAxisLabel="القيمة"
                     />
                   )}
 
                   {/* Delivery Performance */}
                   {orderReports?.success &&
                     orderReports.data.deliveryPerformance && (
-                      <Card className={t("pages.reports.name.mt_6")}>
+                      <Card className="mt-6">
                         <CardHeader>
-                          <CardTitle>{t('pages.reports.أداء_التسليم')}</CardTitle>
+                          <CardTitle>أداء التسليم</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className={t("pages.reports.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
-                            <div className={t("pages.reports.name.text_center_p_4_bg_green_50_rounded_lg")}>
-                              <div className={t("pages.reports.name.text_2xl_font_bold_text_green_600")}>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="text-center p-4 bg-green-50 rounded-lg">
+                              <div className="text-2xl font-bold text-green-600">
                                 {
                                   orderReports.data.deliveryPerformance
                                     .on_time_orders
                                 }
                               </div>
-                              <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.طلبات_في_الوقت')}</div>
+                              <div className="text-sm text-gray-600">
+                                طلبات في الوقت
+                              </div>
                             </div>
-                            <div className={t("pages.reports.name.text_center_p_4_bg_red_50_rounded_lg")}>
-                              <div className={t("pages.reports.name.text_2xl_font_bold_text_red_600")}>
+                            <div className="text-center p-4 bg-red-50 rounded-lg">
+                              <div className="text-2xl font-bold text-red-600">
                                 {
                                   orderReports.data.deliveryPerformance
                                     .late_orders
                                 }
                               </div>
-                              <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.طلبات_متأخرة')}</div>
+                              <div className="text-sm text-gray-600">
+                                طلبات متأخرة
+                              </div>
                             </div>
-                            <div className={t("pages.reports.name.text_center_p_4_bg_blue_50_rounded_lg")}>
-                              <div className={t("pages.reports.name.text_2xl_font_bold_text_blue_600")}>
+                            <div className="text-center p-4 bg-blue-50 rounded-lg">
+                              <div className="text-2xl font-bold text-blue-600">
                                 {safeToFixed(
                                   orderReports.data.deliveryPerformance
                                     .avg_delivery_days || 0,
                                 )}
                               </div>
-                              <div className={t("pages.reports.name.text_sm_text_gray_600")}>{t('pages.reports.متوسط_أيام_التسليم')}</div>
+                              <div className="text-sm text-gray-600">
+                                متوسط أيام التسليم
+                              </div>
                             </div>
                           </div>
                         </CardContent>

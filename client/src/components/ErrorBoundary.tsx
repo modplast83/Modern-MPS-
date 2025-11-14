@@ -1,5 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { withTranslation, WithTranslation } from "react-i18next";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -12,7 +11,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
 
-interface Props extends WithTranslation {
+interface Props {
   children: ReactNode;
   fallback?: "page" | "component" | "inline";
   title?: string;
@@ -66,36 +65,34 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
-    const { t } = this.props;
-    
     if (this.state.hasError) {
       const fallback = this.props.fallback || "page";
-      const title = this.props.title || t('errors.unexpectedError');
+      const title = this.props.title || "حدث خطأ غير متوقع";
       const description =
         this.props.description ||
-        t('errors.errorDescription');
+        "عذراً، حدث خطأ في التطبيق. يرجى المحاولة مرة أخرى.";
 
       // Inline error display for small components
       if (fallback === "inline") {
         return (
           <Alert
             variant="destructive"
-            className={t("components.errorboundary.name.my_2")}
+            className="my-2"
             data-testid="error-inline"
           >
-            <AlertTriangle className={t("components.errorboundary.name.h_4_w_4")} />
-            <AlertTitle>{t('errors.error')}</AlertTitle>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>خطأ</AlertTitle>
             <AlertDescription>
               {description}
               <Button
                 onClick={this.handleReset}
                 variant="ghost"
                 size="sm"
-                className={t("components.errorboundary.name.mt_2_h_auto_p_1_text_xs")}
+                className="mt-2 h-auto p-1 text-xs"
                 data-testid="button-retry-inline"
               >
-                <RefreshCw className={t("components.errorboundary.name.h_3_w_3_ml_1")} />
-                {t('common.retry')}
+                <RefreshCw className="h-3 w-3 ml-1" />
+                إعادة المحاولة
               </Button>
             </AlertDescription>
           </Alert>
@@ -105,34 +102,34 @@ class ErrorBoundary extends Component<Props, State> {
       // Component-level error display
       if (fallback === "component") {
         return (
-          <Card className={t("components.errorboundary.name.w_full")} data-testid="error-component">
-            <CardContent className={t("components.errorboundary.name.p_4")}>
-              <div className={t("components.errorboundary.name.flex_items_center_space_x_2_space_x_reverse_mb_2")}>
-                <AlertTriangle className={t("components.errorboundary.name.h_5_w_5_text_destructive")} />
-                <h3 className={t("components.errorboundary.name.font_medium_text_destructive")}>{title}</h3>
+          <Card className="w-full" data-testid="error-component">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 space-x-reverse mb-2">
+                <AlertTriangle className="h-5 w-5 text-destructive" />
+                <h3 className="font-medium text-destructive">{title}</h3>
               </div>
-              <p className={t("components.errorboundary.name.text_sm_text_muted_foreground_mb_3")}>
+              <p className="text-sm text-muted-foreground mb-3">
                 {description}
               </p>
               {import.meta.env.DEV && this.state.error && (
-                <details className={t("components.errorboundary.name.mb_3_text_xs")}>
-                  <summary className={t("components.errorboundary.name.cursor_pointer_text_muted_foreground")}>
-                    {t('errors.errorDetails')}
+                <details className="mb-3 text-xs">
+                  <summary className="cursor-pointer text-muted-foreground">
+                    تفاصيل الخطأ
                   </summary>
-                  <pre className={t("components.errorboundary.name.mt_1_p_2_bg_muted_rounded_text_xs_overflow_x_auto")}>
+                  <pre className="mt-1 p-2 bg-muted rounded text-xs overflow-x-auto">
                     {this.state.error.message}
                   </pre>
                 </details>
               )}
-              <div className={t("components.errorboundary.name.flex_gap_2")}>
+              <div className="flex gap-2">
                 <Button
                   onClick={this.handleReset}
                   variant="outline"
                   size="sm"
                   data-testid="button-retry-component"
                 >
-                  <RefreshCw className={t("components.errorboundary.name.h_4_w_4_ml_1")} />
-                  {t('common.retry')}
+                  <RefreshCw className="h-4 w-4 ml-1" />
+                  إعادة المحاولة
                 </Button>
                 {this.props.showReload && (
                   <Button
@@ -140,8 +137,8 @@ class ErrorBoundary extends Component<Props, State> {
                     size="sm"
                     data-testid="button-reload-component"
                   >
-                    <Home className={t("components.errorboundary.name.h_4_w_4_ml_1")} />
-                    {t('errors.goHome')}
+                    <Home className="h-4 w-4 ml-1" />
+                    العودة للرئيسية
                   </Button>
                 )}
               </div>
@@ -153,32 +150,32 @@ class ErrorBoundary extends Component<Props, State> {
       // Full page error display (default)
       return (
         <div
-          className={t("components.errorboundary.name.min_h_screen_flex_items_center_justify_center_p_4_bg_background")}
+          className="min-h-screen flex items-center justify-center p-4 bg-background"
           data-testid="error-page"
         >
-          <Card className={t("components.errorboundary.name.w_full_max_w_lg")}>
-            <CardHeader className={t("components.errorboundary.name.text_center")}>
-              <div className={t("components.errorboundary.name.mx_auto_mb_4_w_12_h_12_rounded_full_bg_destructive_10_flex_items_center_justify_center")}>
-                <AlertTriangle className={t("components.errorboundary.name.w_6_h_6_text_destructive")} />
+          <Card className="w-full max-w-lg">
+            <CardHeader className="text-center">
+              <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
               </div>
-              <CardTitle className={t("components.errorboundary.name.text_xl")}>{title}</CardTitle>
+              <CardTitle className="text-xl">{title}</CardTitle>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
               {import.meta.env.DEV && this.state.error && (
-                <div className={t("components.errorboundary.name.mt_4_p_3_bg_muted_rounded_md_text_sm")}>
-                  <p className={t("components.errorboundary.name.font_semibold_text_destructive_mb_2")}>
-                    {t('errors.errorDetails')}:
+                <div className="mt-4 p-3 bg-muted rounded-md text-sm">
+                  <p className="font-semibold text-destructive mb-2">
+                    تفاصيل الخطأ:
                   </p>
-                  <code className={t("components.errorboundary.name.text_xs_break_all")}>
+                  <code className="text-xs break-all">
                     {this.state.error.message}
                   </code>
                   {this.state.errorInfo && (
-                    <details className={t("components.errorboundary.name.mt_2_text_xs")}>
-                      <summary className={t("components.errorboundary.name.cursor_pointer")}>
-                        {t('errors.additionalInfo')}
+                    <details className="mt-2 text-xs">
+                      <summary className="cursor-pointer">
+                        معلومات إضافية
                       </summary>
-                      <pre className={t("components.errorboundary.name.mt_1_whitespace_pre_wrap_text_xs")}>
+                      <pre className="mt-1 whitespace-pre-wrap text-xs">
                         {this.state.errorInfo.componentStack}
                       </pre>
                     </details>
@@ -186,20 +183,20 @@ class ErrorBoundary extends Component<Props, State> {
                 </div>
               )}
             </CardContent>
-            <CardFooter className={t("components.errorboundary.name.flex_gap_2_justify_center")}>
+            <CardFooter className="flex gap-2 justify-center">
               <Button
                 onClick={this.handleReset}
                 variant="outline"
                 data-testid="button-retry-page"
               >
-                <RefreshCw className={t("components.errorboundary.name.w_4_h_4_ml_2")} />
-                {t('common.retry')}
+                <RefreshCw className="w-4 h-4 ml-2" />
+                إعادة المحاولة
               </Button>
               <Button
                 onClick={this.handleReload}
                 data-testid="button-reload-page"
               >
-                {t('errors.reloadPage')}
+                إعادة تحميل الصفحة
               </Button>
             </CardFooter>
           </Card>
@@ -211,4 +208,4 @@ class ErrorBoundary extends Component<Props, State> {
   }
 }
 
-export default withTranslation()(ErrorBoundary);
+export default ErrorBoundary;

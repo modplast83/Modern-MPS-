@@ -28,27 +28,21 @@ import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import type { ProductionOrder, Machine } from "../../../../shared/schema";
 import { useRemainingQuantity } from "../../hooks/useRemainingQuantity";
-import { useTranslation } from 'react-i18next';
 
-const createCuttingFormSchema = (t: (key: string) => string) => z.object({
-  production_order_id: z.number().min(1, t('forms.selectProductionOrder')),
-  machine_id: z.number().int().positive(t('forms.selectMachine')),
+const cuttingFormSchema = z.object({
+  production_order_id: z.number().min(1, "يرجى اختيار أمر الإنتاج"),
+  machine_id: z.number().int().positive("يرجى اختيار المكينة"),
   weight_kg: z
     .string()
-    .min(1, t('forms.enterWeight'))
+    .min(1, "يرجى إدخال الوزن")
     .refine((val) => {
       const num = Number.parseFloat(val.replace(",", "."));
       return !Number.isNaN(num) && num > 0;
-    }, t('forms.weightMustBePositive')),
-  blade_setup_id: z.number().int().positive(t('forms.bladeSetupRequired')),
+    }, "الوزن يجب أن يكون رقمًا أكبر من 0"),
+  blade_setup_id: z.number().int().positive("إعداد السكاكين مطلوب"),
 });
 
-export type CuttingFormData = {
-  production_order_id: number;
-  machine_id: number;
-  weight_kg: string;
-  blade_setup_id: number;
-};
+export type CuttingFormData = z.infer<typeof cuttingFormSchema>;
 
 interface Props {
   isOpen: boolean;
@@ -58,10 +52,9 @@ interface Props {
 
 export default function CuttingCreationModal({ isOpen, onClose, selectedProductionOrderId }: Props) {
   const { toast } = useToast();
-  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const cuttingFormSchema = useMemo(() =>{t('components.modals.CuttingCreationModal.createcuttingformschema(t),_[t]);_const_form_=_useform')}<CuttingFormData>({
+  const form = useForm<CuttingFormData>({
     resolver: zodResolver(cuttingFormSchema),
     defaultValues: {
       production_order_id: selectedProductionOrderId,
@@ -121,7 +114,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
       });
       if (!response.ok) {
         const err = await response.text();
-        throw new Error(err || t('toast.requestFailed'));
+        throw new Error(err || "فشل الطلب");
       }
       return response.json();
     },
@@ -129,18 +122,18 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
       ["/api/rolls", "/api/production-orders", "/api/production/cutting-queue", "/api/production/grouped-cutting-queue"].forEach((key) =>
         queryClient.invalidateQueries({ queryKey: [key] })
       );
-      toast({ title: t('modals.cuttingJob.successTitle'), description: t('modals.cuttingJob.successDescription') });
+      toast({ title: "تم إنشاء مهمة التقطيع", description: "تمت الإضافة بنجاح" });
       onClose();
       form.reset();
     },
     onError: (error: any) => {
       const msg = String(error?.message || "");
       toast({
-        title: t('modals.cuttingJob.errorTitle'),
+        title: "خطأ في إنشاء مهمة التقطيع",
         description: /REMAINING_QUANTITY_EXCEEDED/.test(msg)
-          ? t('modals.cuttingJob.errorQuantityExceeded')
+          ? "الوزن المطلوب يتجاوز المتبقي وفق تحقق الخادم. قم بتحديث الصفحة وحاول بقيمة أقل."
           : /Network error|Failed to fetch/i.test(msg)
-          ? t('toast.networkError')
+          ? "تعذر الاتصال بالخادم"
           : msg,
         variant: "destructive",
       });
@@ -150,7 +143,7 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
   const onSubmit = (data: CuttingFormData) => {
     const weightParsed = Number.parseFloat(data.weight_kg.replace(",", "."));
     if (remaining > 0 && weightParsed > remaining + 0.0001) {
-      toast({ title: t('modals.cuttingJob.weightExceedsRemaining'), description: t('modals.cuttingJob.remainingLabel', { remaining: remaining.toFixed(2) }), variant: "destructive" });
+      toast({ title: "قيمة الوزن تتجاوز المتبقي", description: `المتبقي: ${remaining.toFixed(2)} كجم`, variant: "destructive" });
       return;
     }
     createMutation.mutate(data);
@@ -158,21 +151,21 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={t("components.modals.cuttingcreationmodal.name.max_w_md")} aria-describedby="cutting-creation-description">
+      <DialogContent className="max-w-md" aria-describedby="cutting-creation-description">
         <DialogHeader>
-          <DialogTitle>{t('modals.cuttingJob.title')}</DialogTitle>
-          <DialogDescription id="cutting-creation-description">{t('modals.cuttingJob.description')}</DialogDescription>
+          <DialogTitle>إنشاء مهمة تقطيع</DialogTitle>
+          <DialogDescription id="cutting-creation-description">إضافة مهمة تقطيع لأمر الإنتاج</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.modals.cuttingcreationmodal.name.space_y_4")}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {!selectedProductionOrderId && (
               <FormField
                 control={form.control}
-                name="{t('components.modals.CuttingCreationModal.name.production_order_id')}"
+                name="production_order_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('modals.cuttingJob.productionOrder')} *</FormLabel>
+                    <FormLabel>أمر الإنتاج *</FormLabel>
                     <ProductionOrderSelect value={field.value} onChange={field.onChange} loading={ordersLoading} orders={orders} />
                     <FormMessage />
                   </FormItem>
@@ -181,14 +174,14 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
             )}
 
             {selectedProductionOrderId && (
-              <div className={t("components.modals.cuttingcreationmodal.name.space_y_2")}>
-                <Label>{t('modals.cuttingJob.selectedProductionOrder')}</Label>
-                <div className={t("components.modals.cuttingcreationmodal.name.p_3_bg_gray_50_rounded_md_border")}>
-                  <p className={t("components.modals.cuttingcreationmodal.name.font_medium_text_sm")}>
+              <div className="space-y-2">
+                <Label>أمر الإنتاج المحدد</Label>
+                <div className="p-3 bg-gray-50 rounded-md border">
+                  <p className="font-medium text-sm">
                     {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
-                  <p className={t("components.modals.cuttingcreationmodal.name.text_xs_text_gray_600")}>
-                    {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || t('common.notSpecified')} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || t('common.notSpecified')}`}
+                  <p className="text-xs text-gray-600">
+                    {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || "غير محدد"} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || "غير محدد"}`}
                   </p>
                 </div>
               </div>
@@ -196,14 +189,14 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="{t('components.modals.CuttingCreationModal.name.weight_kg')}"
+              name="weight_kg"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('modals.cuttingJob.weightKg')} *</FormLabel>
+                  <FormLabel>الوزن (كجم) *</FormLabel>
                   <FormControl>
-                    <NumberInput value={field.value} onChange={field.onChange} placeholder="{t('components.modals.CuttingCreationModal.placeholder.45.2')}" />
+                    <NumberInput value={field.value} onChange={field.onChange} placeholder="45.2" />
                   </FormControl>
-                  {selectedOrder && <p className={t("components.modals.cuttingcreationmodal.name.text_xs_text_gray_600")}>{t('modals.cuttingJob.remaining')}: <span className={t("components.modals.cuttingcreationmodal.name.font_medium")}>{remaining.toFixed(2)} {t('units.kg')}</span></p>}
+                  {selectedOrder && <p className="text-xs text-gray-600">المتبقي: <span className="font-medium">{remaining.toFixed(2)} كجم</span></p>}
                   <FormMessage />
                 </FormItem>
               )}
@@ -211,10 +204,10 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="{t('components.modals.CuttingCreationModal.name.machine_id')}"
+              name="machine_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('modals.cuttingJob.machine')} *</FormLabel>
+                  <FormLabel>المكينة *</FormLabel>
                   <MachineSelect value={field.value} onChange={field.onChange} loading={machinesLoading} machines={machines} sections={sections} sectionKeyword="cutting" />
                   <FormMessage />
                 </FormItem>
@@ -223,21 +216,21 @@ export default function CuttingCreationModal({ isOpen, onClose, selectedProducti
 
             <FormField
               control={form.control}
-              name="{t('components.modals.CuttingCreationModal.name.blade_setup_id')}"
+              name="blade_setup_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('modals.cuttingJob.bladeSetup')} *</FormLabel>
+                  <FormLabel>إعداد السكاكين *</FormLabel>
                   {/* TODO: Replace with real Select when API is ready */}
-                  <NumberInput value={String(field.value ?? "")} onChange={(v: string) => field.onChange(Number.parseInt(v || "0", 10))} placeholder={t('modals.cuttingJob.bladeSetupIdPlaceholder')} />
+                  <NumberInput value={String(field.value ?? "")} onChange={(v: string) => field.onChange(Number.parseInt(v || "0", 10))} placeholder="معرّف الإعداد" />
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <div className={t("components.modals.cuttingcreationmodal.name.flex_justify_end_gap_3_pt_4_rtl_space_x_reverse")}>
-              <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>{t('common.cancel')}</Button>
-              <Button type="submit" className={t("components.modals.cuttingcreationmodal.name.btn_primary")} disabled={createMutation.isPending || remaining === 0}>
-                {createMutation.isPending ? t('modals.cuttingJob.creating') : remaining === 0 ? t('modals.cuttingJob.quantityCompleted') : t('modals.cuttingJob.createTask')}
+            <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
+              <Button type="button" variant="outline" onClick={onClose} disabled={createMutation.isPending}>إلغاء</Button>
+              <Button type="submit" className="btn-primary" disabled={createMutation.isPending || remaining === 0}>
+                {createMutation.isPending ? "جاري الإنشاء..." : remaining === 0 ? "اكتملت الكمية" : "إنشاء مهمة"}
               </Button>
             </div>
           </form>

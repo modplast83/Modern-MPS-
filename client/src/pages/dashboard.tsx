@@ -9,22 +9,22 @@ import { VoiceAssistant } from "../components/voice/VoiceAssistant";
 
 export default function Dashboard() {
   return (
-    <div className={t("pages.dashboard.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className={t("pages.dashboard.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.dashboard.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <Shortcuts />
           <DashboardStats />
 
-          <div className={t("pages.dashboard.name.mb_6")}>
+          <div className="mb-6">
             <QuickNotes />
           </div>
 
-          <div className={t("pages.dashboard.name.grid_grid_cols_1_lg_grid_cols_2_gap_6_mb_6")}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <AIAssistant />
             <VoiceAssistant />
           </div>

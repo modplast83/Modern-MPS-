@@ -1,7 +1,6 @@
 // src/pages/production-monitoring.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -149,7 +148,6 @@ interface ProductionAlert {
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export default function ProductionMonitoring() {
-  const { t } = useTranslation();
   const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
   const [dateFilter, setDateFilter] = useState("7");
   const [dateFrom, setDateFrom] = useState("");
@@ -309,14 +307,24 @@ export default function ProductionMonitoring() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "active":
-        return <CheckCircle className={t("pages.production-monitoring.name.w_4_h_4_text_green_500")} />{t('pages.production-monitoring.;_case_"maintenance":_return')}<AlertCircle className={t("pages.production-monitoring.name.w_4_h_4_text_yellow_500")} />{t('pages.production-monitoring.;_case_"down":_return')}<XCircle className={t("pages.production-monitoring.name.w_4_h_4_text_red_500")} />{t('pages.production-monitoring.;_default:_return')}<Timer className={t("pages.production-monitoring.name.w_4_h_4_text_gray_500")} />;
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "maintenance":
+        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case "down":
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Timer className="w-4 h-4 text-gray-500" />;
     }
   };
 
   const getAlertIcon = (type: string) => {
     switch (type) {
       case "error":
-        return <XCircle className={t("pages.production-monitoring.name.w_4_h_4_text_red_500")} />{t('pages.production-monitoring.;_case_"warning":_return')}<AlertTriangle className={t("pages.production-monitoring.name.w_4_h_4_text_yellow_500")} />{t('pages.production-monitoring.;_default:_return')}<AlertCircle className={t("pages.production-monitoring.name.w_4_h_4_text_blue_500")} />;
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      case "warning":
+        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      default:
+        return <AlertCircle className="w-4 h-4 text-blue-500" />;
     }
   };
 
@@ -355,26 +363,26 @@ export default function ProductionMonitoring() {
   useRealtime(wsUrl);
 
   return (
-    <div className={t("pages.production-monitoring.name.min_h_screen_bg_gray_50")} dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
 
-      <div className={t("pages.production-monitoring.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.production-monitoring.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4_space_y_6")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4 space-y-6">
           {/* Header Section */}
-          <div className={t("pages.production-monitoring.name.flex_flex_col_lg_flex_row_lg_items_center_lg_justify_between_gap_4")}>
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className={t("pages.production-monitoring.name.text_2xl_font_bold_text_gray_900_mb_2")}>
-                {t('productionMonitoring.title')}
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                لوحة مراقبة الإنتاج
               </h1>
-              <p className={t("pages.production-monitoring.name.text_gray_600")}>
-                {t('productionMonitoring.description')}
+              <p className="text-gray-600">
+                مراقبة شاملة وفورية لعمليات الإنتاج والأداء
               </p>
             </div>
 
-            <div className={t("pages.production-monitoring.name.flex_flex_wrap_items_center_gap_2")}>
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={isAutoRefreshEnabled ? "default" : "outline"}
                 size="sm"
@@ -382,9 +390,11 @@ export default function ProductionMonitoring() {
                 data-testid="button-auto-refresh"
               >
                 {isAutoRefreshEnabled ? (
-                  <Pause className={t("pages.production-monitoring.name.w_4_h_4_mr_2")} />{t('pages.production-monitoring.)_:_(')}<Play className={t("pages.production-monitoring.name.w_4_h_4_mr_2")} />
+                  <Pause className="w-4 h-4 mr-2" />
+                ) : (
+                  <Play className="w-4 h-4 mr-2" />
                 )}
-                {isAutoRefreshEnabled ? t('productionMonitoring.stopRefresh') : t('productionMonitoring.startRefresh')}
+                {isAutoRefreshEnabled ? "إيقاف التحديث" : "تشغيل التحديث"}
               </Button>
 
               <Button
@@ -398,8 +408,8 @@ export default function ProductionMonitoring() {
                 }}
                 data-testid="button-manual-refresh"
               >
-                <RefreshCw className={t("pages.production-monitoring.name.w_4_h_4_mr_2")} />
-                {t('productionMonitoring.refreshNow')}
+                <RefreshCw className="w-4 h-4 mr-2" />
+                تحديث الآن
               </Button>
 
               <Button
@@ -408,56 +418,56 @@ export default function ProductionMonitoring() {
                 onClick={handleExport}
                 data-testid="button-export"
               >
-                <Download className={t("pages.production-monitoring.name.w_4_h_4_mr_2")} />
-                {t('productionMonitoring.exportReport')}
+                <Download className="w-4 h-4 mr-2" />
+                تصدير التقرير
               </Button>
             </div>
           </div>
 
           {/* Date Filter Section */}
           <Card>
-            <CardContent className={t("pages.production-monitoring.name.p_4")}>
-              <div className={t("pages.production-monitoring.name.flex_flex_wrap_items_center_gap_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
-                  <Filter className={t("pages.production-monitoring.name.w_4_h_4_text_gray_500")} />
-                  <span className={t("pages.production-monitoring.name.text_sm_font_medium")}>{t('productionMonitoring.reportPeriod')}:</span>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-500" />
+                  <span className="text-sm font-medium">فترة التقرير:</span>
                 </div>
 
                 <Select value={dateFilter || ""} onValueChange={setDateFilter}>
                   <SelectTrigger
-                    className={t("pages.production-monitoring.name.w_32")}
+                    className="w-32"
                     data-testid="select-date-filter"
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">{t('productionMonitoring.today')}</SelectItem>
-                    <SelectItem value="7">{t('productionMonitoring.lastWeek')}</SelectItem>
-                    <SelectItem value="30">{t('productionMonitoring.lastMonth')}</SelectItem>
-                    <SelectItem value="90">{t('productionMonitoring.last3Months')}</SelectItem>
+                    <SelectItem value="1">اليوم</SelectItem>
+                    <SelectItem value="7">آخر أسبوع</SelectItem>
+                    <SelectItem value="30">آخر شهر</SelectItem>
+                    <SelectItem value="90">آخر 3 أشهر</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
+                <div className="flex items-center gap-2">
                   <Input
                     type="date"
                     value={dateFrom}
                     onChange={(e) => setDateFrom(e.target.value)}
-                    className={t("pages.production-monitoring.name.w_36")}
+                    className="w-36"
                     data-testid="input-date-from"
                   />
-                  <span className={t("pages.production-monitoring.name.text_sm_text_gray_500")}>{t('productionMonitoring.to')}</span>
+                  <span className="text-sm text-gray-500">إلى</span>
                   <Input
                     type="date"
                     value={dateTo}
                     onChange={(e) => setDateTo(e.target.value)}
-                    className={t("pages.production-monitoring.name.w_36")}
+                    className="w-36"
                     data-testid="input-date-to"
                   />
                 </div>
 
-                <Badge variant="outline" className={t("pages.production-monitoring.name.text_xs")}>
-                  {t('productionMonitoring.lastUpdate')}:{" "}
+                <Badge variant="outline" className="text-xs">
+                  آخر تحديث:{" "}
                   {new Date(stats.lastUpdated).toLocaleString("ar-EG")}
                 </Badge>
               </div>
@@ -465,126 +475,127 @@ export default function ProductionMonitoring() {
           </Card>
 
           {/* Real-time Statistics Cards */}
-          <div className={t("pages.production-monitoring.name.grid_grid_cols_2_lg_grid_cols_6_gap_4")}>
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.dailyRolls')}</p>
+                    <p className="text-xs text-gray-600">رولات اليوم</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_blue_600")}
+                      className="text-xl font-bold text-blue-600"
                       data-testid="stat-daily-rolls"
                     >
                       {formatNumber(stats.currentStats.daily_rolls)}
                     </p>
                   </div>
-                  <Factory className={t("pages.production-monitoring.name.w_8_h_8_text_blue_500")} />
+                  <Factory className="w-8 h-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.dailyProduction')}</p>
+                    <p className="text-xs text-gray-600">الإنتاج اليومي</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_green_600")}
+                      className="text-xl font-bold text-green-600"
                       data-testid="stat-daily-weight"
                     >
                       {formatWeight(stats.currentStats.daily_weight)}
                     </p>
                   </div>
-                  <Target className={t("pages.production-monitoring.name.w_8_h_8_text_green_500")} />
+                  <Target className="w-8 h-8 text-green-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.activeOrders')}</p>
+                    <p className="text-xs text-gray-600">الطلبات النشطة</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_purple_600")}
+                      className="text-xl font-bold text-purple-600"
                       data-testid="stat-active-orders"
                     >
                       {formatNumber(stats.currentStats.active_orders)}
                     </p>
                   </div>
-                  <Activity className={t("pages.production-monitoring.name.w_8_h_8_text_purple_500")} />
+                  <Activity className="w-8 h-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.completedToday')}</p>
+                    <p className="text-xs text-gray-600">مكتمل اليوم</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_emerald_600")}
+                      className="text-xl font-bold text-emerald-600"
                       data-testid="stat-completed-today"
                     >
                       {formatNumber(stats.currentStats.completed_today)}
                     </p>
                   </div>
-                  <CheckCircle className={t("pages.production-monitoring.name.w_8_h_8_text_emerald_500")} />
+                  <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.currentWaste')}</p>
+                    <p className="text-xs text-gray-600">الهدر الحالي</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_red_600")}
+                      className="text-xl font-bold text-red-600"
                       data-testid="stat-current-waste"
                     >
                       {formatWeight(stats.currentStats.current_waste)}
                     </p>
                   </div>
-                  <AlertTriangle className={t("pages.production-monitoring.name.w_8_h_8_text_red_500")} />
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
                 </div>
               </CardContent>
             </Card>
 
             <Card>
-              <CardContent className={t("pages.production-monitoring.name.p_4")}>
-                <div className={t("pages.production-monitoring.name.flex_items_center_justify_between")}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className={t("pages.production-monitoring.name.text_xs_text_gray_600")}>{t('productionMonitoring.avgEfficiency')}</p>
+                    <p className="text-xs text-gray-600">متوسط الكفاءة</p>
                     <p
-                      className={t("pages.production-monitoring.name.text_xl_font_bold_text_indigo_600")}
+                      className="text-xl font-bold text-indigo-600"
                       data-testid="stat-avg-efficiency"
                     >
                       {formatPercentage(stats.currentStats.avg_efficiency)}
                     </p>
                   </div>
-                  <Zap className={t("pages.production-monitoring.name.w_8_h_8_text_indigo_500")} />
+                  <Zap className="w-8 h-8 text-indigo-500" />
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Alerts Section */}
-          {alerts.length >{t('pages.production-monitoring.0_&&_(')}<div className={t("pages.production-monitoring.name.space_y_2")}>
-              <h3 className={t("pages.production-monitoring.name.text_lg_font_semibold_flex_items_center_gap_2")}>
-                <AlertTriangle className={t("pages.production-monitoring.name.w_5_h_5_text_yellow_500")} />
-                {t('productionMonitoring.productionAlerts')} ({alerts.length})
+          {alerts.length > 0 && (
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                تنبيهات الإنتاج ({alerts.length})
               </h3>
               {alerts.slice(0, 3).map((alert, index) => (
                 <Alert
                   key={index}
                   variant={alert.type === "error" ? "destructive" : "default"}
                 >
-                  <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
+                  <div className="flex items-center gap-2">
                     {getAlertIcon(alert.type)}
                     <AlertTitle>{alert.title}</AlertTitle>
                   </div>
-                  <AlertDescription className={t("pages.production-monitoring.name.mt_2")}>
+                  <AlertDescription className="mt-2">
                     {alert.message}
                   </AlertDescription>
                 </Alert>
@@ -593,13 +604,13 @@ export default function ProductionMonitoring() {
           )}
 
           {/* Charts and Analytics */}
-          <div className={t("pages.production-monitoring.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Queue Status Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
-                  <PieChartIcon className={t("pages.production-monitoring.name.w_5_h_5")} />
-                  {t('productionMonitoring.queueStatus')}
+                <CardTitle className="flex items-center gap-2">
+                  <PieChartIcon className="w-5 h-5" />
+                  حالة الطوابير
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -628,9 +639,9 @@ export default function ProductionMonitoring() {
             {/* Role Performance Chart */}
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
-                  <BarChart3 className={t("pages.production-monitoring.name.w_5_h_5")} />
-                  {t('productionMonitoring.departmentPerformance')}
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  أداء الأقسام
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -643,7 +654,7 @@ export default function ProductionMonitoring() {
                     <Bar
                       dataKey="production"
                       fill="#8884d8"
-                      name={t('productionMonitoring.productionKg')}
+                      name="الإنتاج (كجم)"
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -654,15 +665,15 @@ export default function ProductionMonitoring() {
           {/* Machine Status */}
           <Card>
             <CardHeader>
-              <CardTitle className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
-                <Settings className={t("pages.production-monitoring.name.w_5_h_5")} />
-                {t('productionMonitoring.machineStatus')}
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                حالة المكائن
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.production-monitoring.name.grid_grid_cols_2_lg_grid_cols_4_gap_4")}>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {stats.machineStatus.length === 0 ? (
-                  <div className={t("pages.production-monitoring.name.text_center_py_6_text_gray_500_col_span_full")}>{t('productionMonitoring.noMachineData')}</div>
+                  <div className="text-center py-6 text-gray-500 col-span-full">لا توجد بيانات للمكائن</div>
                 ) : (
                   stats.machineStatus.map((machine) => (
                     <MachineCard key={machine.machine_id} machine={machine} />
@@ -673,37 +684,37 @@ export default function ProductionMonitoring() {
           </Card>
 
           {/* Data Tables */}
-          <Tabs defaultValue="users" className={t("pages.production-monitoring.name.w_full")}>
-            <TabsList className={t("pages.production-monitoring.name.w_full_lg_w_auto")}>
+          <Tabs defaultValue="users" className="w-full">
+            <TabsList className="w-full lg:w-auto">
               <TabsTrigger value="users" data-testid="tab-users">
-                {t('productionMonitoring.userPerformance')}
+                أداء المستخدمين
               </TabsTrigger>
               <TabsTrigger value="roles" data-testid="tab-roles">
-                {t('productionMonitoring.departmentPerformance')}
+                أداء الأقسام
               </TabsTrigger>
               <TabsTrigger value="efficiency" data-testid="tab-efficiency">
-                {t('productionMonitoring.efficiencyMetrics')}
+                مؤشرات الكفاءة
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="users">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('productionMonitoring.userPerformanceStats')}</CardTitle>
+                  <CardTitle>إحصائيات أداء المستخدمين</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={t("pages.production-monitoring.name.overflow_x_auto")}>
+                  <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{t('productionMonitoring.user')}</TableHead>
-                          <TableHead>{t('productionMonitoring.department')}</TableHead>
-                          <TableHead>{t('productionMonitoring.rollsCreated')}</TableHead>
-                          <TableHead>{t('productionMonitoring.rollsPrinted')}</TableHead>
-                          <TableHead>{t('productionMonitoring.rollsCut')}</TableHead>
-                          <TableHead>{t('productionMonitoring.totalWeight')}</TableHead>
-                          <TableHead>{t('productionMonitoring.workHours')}</TableHead>
-                          <TableHead>{t('productionMonitoring.efficiencyPoints')}</TableHead>
+                          <TableHead>المستخدم</TableHead>
+                          <TableHead>القسم</TableHead>
+                          <TableHead>الرولات المُنشأة</TableHead>
+                          <TableHead>الرولات المطبوعة</TableHead>
+                          <TableHead>الرولات المقطوعة</TableHead>
+                          <TableHead>إجمالي الوزن</TableHead>
+                          <TableHead>ساعات العمل</TableHead>
+                          <TableHead>نقاط الكفاءة</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -711,10 +722,10 @@ export default function ProductionMonitoring() {
                           <TableRow key={user.user_id}>
                             <TableCell>
                               <div>
-                                <div className={t("pages.production-monitoring.name.font_medium")}>
+                                <div className="font-medium">
                                   {user.display_name_ar || user.username}
                                 </div>
-                                <div className={t("pages.production-monitoring.name.text_sm_text_gray_500")}>
+                                <div className="text-sm text-gray-500">
                                   {user.role_name}
                                 </div>
                               </div>
@@ -744,12 +755,12 @@ export default function ProductionMonitoring() {
                               {formatNumber(user.hours_worked)}
                             </TableCell>
                             <TableCell>
-                              <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
+                              <div className="flex items-center gap-2">
                                 <Progress
                                   value={user.efficiency_score}
-                                  className={t("pages.production-monitoring.name.w_16_h_2")}
+                                  className="w-16 h-2"
                                 />
-                                <span className={t("pages.production-monitoring.name.text_sm")}>
+                                <span className="text-sm">
                                   {formatPercentage(user.efficiency_score)}
                                 </span>
                               </div>
@@ -766,27 +777,27 @@ export default function ProductionMonitoring() {
             <TabsContent value="roles">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('productionMonitoring.departmentPerformanceStats')}</CardTitle>
+                  <CardTitle>إحصائيات أداء الأقسام</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className={t("pages.production-monitoring.name.overflow_x_auto")}>
+                  <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>{t('productionMonitoring.department')}</TableHead>
-                          <TableHead>{t('productionMonitoring.userCount')}</TableHead>
-                          <TableHead>{t('productionMonitoring.productionOrders')}</TableHead>
-                          <TableHead>{t('productionMonitoring.totalRolls')}</TableHead>
-                          <TableHead>{t('productionMonitoring.totalWeight')}</TableHead>
-                          <TableHead>{t('productionMonitoring.avgCompletionTime')}</TableHead>
-                          <TableHead>{t('productionMonitoring.qualityScore')}</TableHead>
-                          <TableHead>{t('productionMonitoring.onTimeDelivery')}</TableHead>
+                          <TableHead>القسم</TableHead>
+                          <TableHead>عدد المستخدمين</TableHead>
+                          <TableHead>أوامر الإنتاج</TableHead>
+                          <TableHead>إجمالي الرولات</TableHead>
+                          <TableHead>إجمالي الوزن</TableHead>
+                          <TableHead>متوسط وقت الإنجاز</TableHead>
+                          <TableHead>نقاط الجودة</TableHead>
+                          <TableHead>معدل التسليم في الوقت</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {rolePerformance.map((role) => (
                           <TableRow key={role.role_id}>
-                            <TableCell className={t("pages.production-monitoring.name.font_medium")}>
+                            <TableCell className="font-medium">
                               {role.role_name}
                             </TableCell>
                             <TableCell>
@@ -811,26 +822,26 @@ export default function ProductionMonitoring() {
                               {formatNumber(
                                 Math.round(role.avg_order_completion_time),
                               )}{" "}
-                              {t('productionMonitoring.hours')}
+                              ساعة
                             </TableCell>
                             <TableCell>
-                              <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
+                              <div className="flex items-center gap-2">
                                 <Progress
                                   value={role.quality_score}
-                                  className={t("pages.production-monitoring.name.w_16_h_2")}
+                                  className="w-16 h-2"
                                 />
-                                <span className={t("pages.production-monitoring.name.text_sm")}>
+                                <span className="text-sm">
                                   {formatPercentage(role.quality_score)}
                                 </span>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className={t("pages.production-monitoring.name.flex_items_center_gap_2")}>
+                              <div className="flex items-center gap-2">
                                 <Progress
                                   value={role.on_time_delivery_rate}
-                                  className={t("pages.production-monitoring.name.w_16_h_2")}
+                                  className="w-16 h-2"
                                 />
-                                <span className={t("pages.production-monitoring.name.text_sm")}>
+                                <span className="text-sm">
                                   {formatPercentage(role.on_time_delivery_rate)}
                                 </span>
                               </div>
@@ -847,58 +858,62 @@ export default function ProductionMonitoring() {
             <TabsContent value="efficiency">
               <Card>
                 <CardHeader>
-                  <CardTitle>{t('productionMonitoring.generalEfficiencyMetrics')}</CardTitle>
+                  <CardTitle>مؤشرات الكفاءة العامة</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {efficiencyLoading ? (
-                    <div className={t("pages.production-monitoring.name.text_center_py_8")}>
-                      {t('productionMonitoring.loadingData')}
-                    </div>{t('pages.production-monitoring.)_:_(efficiencydata_as_any)?.efficiency_?_(')}<div className={t("pages.production-monitoring.name.grid_grid_cols_2_lg_grid_cols_4_gap_4")}>
-                      <div className={t("pages.production-monitoring.name.text_center_p_4_bg_blue_50_rounded_lg")}>
-                        <div className={t("pages.production-monitoring.name.text_2xl_font_bold_text_blue_600")}>
+                    <div className="text-center py-8">
+                      جاري تحميل البيانات...
+                    </div>
+                  ) : (efficiencyData as any)?.efficiency ? (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-blue-50 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">
                           {formatWeight(
                             (efficiencyData as any).efficiency
                               .total_production || 0,
                           )}
                         </div>
-                        <div className={t("pages.production-monitoring.name.text_sm_text_gray_600")}>
-                          {t('productionMonitoring.totalProduction')}
+                        <div className="text-sm text-gray-600">
+                          إجمالي الإنتاج
                         </div>
                       </div>
 
-                      <div className={t("pages.production-monitoring.name.text_center_p_4_bg_red_50_rounded_lg")}>
-                        <div className={t("pages.production-monitoring.name.text_2xl_font_bold_text_red_600")}>
+                      <div className="text-center p-4 bg-red-50 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">
                           {formatPercentage(
                             (efficiencyData as any).efficiency
                               .waste_percentage || 0,
                           )}
                         </div>
-                        <div className={t("pages.production-monitoring.name.text_sm_text_gray_600")}>{t('productionMonitoring.wastePercentage')}</div>
+                        <div className="text-sm text-gray-600">نسبة الهدر</div>
                       </div>
 
-                      <div className={t("pages.production-monitoring.name.text_center_p_4_bg_green_50_rounded_lg")}>
-                        <div className={t("pages.production-monitoring.name.text_2xl_font_bold_text_green_600")}>
+                      <div className="text-center p-4 bg-green-50 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">
                           {formatPercentage(
                             (efficiencyData as any).efficiency.quality_score ||
                               0,
                           )}
                         </div>
-                        <div className={t("pages.production-monitoring.name.text_sm_text_gray_600")}>{t('productionMonitoring.qualityScore')}</div>
+                        <div className="text-sm text-gray-600">نقاط الجودة</div>
                       </div>
 
-                      <div className={t("pages.production-monitoring.name.text_center_p_4_bg_purple_50_rounded_lg")}>
-                        <div className={t("pages.production-monitoring.name.text_2xl_font_bold_text_purple_600")}>
+                      <div className="text-center p-4 bg-purple-50 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">
                           {formatPercentage(
                             (efficiencyData as any).efficiency
                               .machine_utilization || 0,
                           )}
                         </div>
-                        <div className={t("pages.production-monitoring.name.text_sm_text_gray_600")}>
-                          {t('productionMonitoring.machineUtilization')}
+                        <div className="text-sm text-gray-600">
+                          استخدام المكائن
                         </div>
                       </div>
-                    </div>{t('pages.production-monitoring.)_:_(')}<div className={t("pages.production-monitoring.name.text_center_py_8_text_gray_500")}>
-                      {t('productionMonitoring.noDataAvailable')}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      لا توجد بيانات متاحة
                     </div>
                   )}
                 </CardContent>

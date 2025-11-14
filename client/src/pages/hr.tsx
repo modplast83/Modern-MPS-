@@ -5,14 +5,14 @@ import HRTabs from "../components/hr/HRTabs";
 
 export default function HR() {
   return (
-    <div className={t("pages.hr.name.min_h_screen_bg_gray_50_dark_bg_gray_900")}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <div className={t("pages.hr.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.hr.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           <HRTabs />
         </main>
       </div>

@@ -126,22 +126,22 @@ function SortableItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={t("pages.productionqueues.name.mb_2")}
+      className="mb-2"
     >
-      <Card className={t("pages.productionqueues.name.hover_shadow_md_transition_shadow_cursor_move")} data-testid={`card-queue-item-${itemId}`}>
-        <CardContent className={t("pages.productionqueues.name.p_3")}>
-          <div className={t("pages.productionqueues.name.flex_items_start_gap_2")}>
+      <Card className="hover:shadow-md transition-shadow cursor-move" data-testid={`card-queue-item-${itemId}`}>
+        <CardContent className="p-3">
+          <div className="flex items-start gap-2">
             <div
               {...attributes}
               {...listeners}
-              className={t("pages.productionqueues.name.mt_1_cursor_grab_hover_cursor_grabbing_text_muted_foreground")}
+              className="mt-1 cursor-grab hover:cursor-grabbing text-muted-foreground"
               data-testid={`drag-handle-${itemId}`}
             >
-              <GripVertical className={t("pages.productionqueues.name.h_4_w_4")} />
+              <GripVertical className="h-4 w-4" />
             </div>
-            <div className={t("pages.productionqueues.name.flex_1")}>
-              <div className={t("pages.productionqueues.name.flex_items_center_justify_between_mb_1")}>
-                <span className={t("pages.productionqueues.name.font_medium_text_sm")} data-testid={`text-order-number-${itemId}`}>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-sm" data-testid={`text-order-number-${itemId}`}>
                   {isQueueItem ? item.production_order_number : item.production_order_number}
                 </span>
                 {!isQueueItem && (
@@ -153,31 +153,31 @@ function SortableItem({
               
               {/* معلومات العميل */}
               {(isQueueItem ? item.customer_name_ar || item.customer_name : (item as ProductionOrder).customer_name_ar || (item as ProductionOrder).customer_name) && (
-                <div className={t("pages.productionqueues.name.text_xs_text_muted_foreground_mb_1")} data-testid={`text-customer-${itemId}`}>
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-customer-${itemId}`}>
                   العميل: {isQueueItem ? item.customer_name_ar || item.customer_name : (item as ProductionOrder).customer_name_ar || (item as ProductionOrder).customer_name}
                 </div>
               )}
               
               {/* معلومات المنتج */}
               {(isQueueItem ? item.size_caption : (item as ProductionOrder).size_caption) && (
-                <div className={t("pages.productionqueues.name.text_xs_text_muted_foreground_mb_1")} data-testid={`text-product-${itemId}`}>
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-product-${itemId}`}>
                   المنتج: {isQueueItem ? item.size_caption : (item as ProductionOrder).size_caption}
                 </div>
               )}
               
               {/* المادة الخام */}
               {(isQueueItem ? item.raw_material : (item as ProductionOrder).raw_material) && (
-                <div className={t("pages.productionqueues.name.text_xs_text_muted_foreground_mb_1")} data-testid={`text-material-${itemId}`}>
+                <div className="text-xs text-muted-foreground mb-1" data-testid={`text-material-${itemId}`}>
                   المادة: {isQueueItem ? item.raw_material : (item as ProductionOrder).raw_material}
                 </div>
               )}
               
-              <div className={t("pages.productionqueues.name.text_xs_text_muted_foreground")} data-testid={`text-quantity-${itemId}`}>
+              <div className="text-xs text-muted-foreground" data-testid={`text-quantity-${itemId}`}>
                 الكمية: {isQueueItem ? item.quantity_kg : item.final_quantity_kg} كجم
               </div>
               
               {isQueueItem && item.assigned_by_name && (
-                <div className={t("pages.productionqueues.name.text_xs_text_muted_foreground_mt_1")} data-testid={`text-assigned-by-${itemId}`}>
+                <div className="text-xs text-muted-foreground mt-1" data-testid={`text-assigned-by-${itemId}`}>
                   بواسطة: {item.assigned_by_name}
                 </div>
               )}
@@ -230,16 +230,16 @@ function MachineColumn({
       className={`min-h-[600px] ${machine ? getMachineColor(machine.type) : "bg-gray-50"}`}
       data-testid={`column-machine-${machineId}`}
     >
-      <CardHeader className={t("pages.productionqueues.name.pb_3")}>
-        <CardTitle className={t("pages.productionqueues.name.text_lg_flex_items_center_justify_between")}>
-          <div className={t("pages.productionqueues.name.flex_items_center_gap_2")}>
-            <Factory className={t("pages.productionqueues.name.h_5_w_5")} />
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Factory className="h-5 w-5" />
             <span data-testid={`text-machine-name-${machineId}`}>
               {machine ? machine.name_ar || machine.name : "أوامر غير مخصصة"}
             </span>
           </div>
           {machine && (
-            <div className={t("pages.productionqueues.name.flex_items_center_gap_2_text_sm")}>
+            <div className="flex items-center gap-2 text-sm">
               <span data-testid={`icon-machine-status-${machineId}`}>{getMachineIcon(machine.status)}</span>
               <Badge variant="outline" data-testid={`badge-order-count-${machineId}`}>{items.length} أمر</Badge>
             </div>
@@ -247,16 +247,16 @@ function MachineColumn({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className={t("pages.productionqueues.name.h_500px_")}>
+        <ScrollArea className="h-[500px]">
           <SortableContext
             items={sortableItems}
             strategy={verticalListSortingStrategy}
           >
-            <div ref={setNodeRef} className={t("pages.productionqueues.name.min_h_50px_")} data-testid={`dropzone-${machineId}`}>
+            <div ref={setNodeRef} className="min-h-[50px]" data-testid={`dropzone-${machineId}`}>
               {items.length === 0 ? (
-                <div className={t("pages.productionqueues.name.text_center_text_muted_foreground_py_8")} data-testid={`text-no-orders-${machineId}`}>
-                  <Package className={t("pages.productionqueues.name.h_12_w_12_mx_auto_mb_2_opacity_30")} />
-                  <p className={t("pages.productionqueues.name.text_sm")}>{t('pages.ProductionQueues.لا_توجد_أوامر_إنتاج')}</p>
+                <div className="text-center text-muted-foreground py-8" data-testid={`text-no-orders-${machineId}`}>
+                  <Package className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">لا توجد أوامر إنتاج</p>
                 </div>
               ) : (
                 items.map((item) => (
@@ -277,7 +277,8 @@ function MachineColumn({
 
 export default function ProductionQueues() {
   const { toast } = useToast();
-  const [activeId, setActiveId] = useState<string | null>{t('pages.ProductionQueues.(null);_const_[localqueues,_setlocalqueues]_=_usestate')}<{ [key: string]: any[] }>({});
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [localQueues, setLocalQueues] = useState<{ [key: string]: any[] }>({});
   const [isDistributionModalOpen, setIsDistributionModalOpen] = useState(false);
   
   const sensors = useSensors(
@@ -546,16 +547,16 @@ export default function ProductionQueues() {
 
   if (isLoading) {
     return (
-      <div className={t("pages.productionqueues.name.min_h_screen_bg_gray_50")}>
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className={t("pages.productionqueues.name.flex")}>
+        <div className="flex">
           <Sidebar />
           <MobileNav />
-          <main className={t("pages.productionqueues.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-            <div className={t("pages.productionqueues.name.flex_items_center_justify_center_h_96")}>
-              <div className={t("pages.productionqueues.name.text_center")}>
-                <Loader2 className={t("pages.productionqueues.name.h_12_w_12_animate_spin_text_primary_mx_auto_mb_4")} />
-                <p className={t("pages.productionqueues.name.text_gray_600")}>{t('pages.ProductionQueues.جاري_تحميل_الطوابير...')}</p>
+          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-gray-600">جاري تحميل الطوابير...</p>
               </div>
             </div>
           </main>
@@ -580,12 +581,12 @@ export default function ProductionQueues() {
     : 0;
 
   return (
-    <div className={t("pages.productionqueues.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className={t("pages.productionqueues.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
-        <main className={t("pages.productionqueues.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           {/* Smart Distribution Modal */}
           <SmartDistributionModal
             isOpen={isDistributionModalOpen}
@@ -596,13 +597,15 @@ export default function ProductionQueues() {
             }}
           />
 
-          <div className={t("pages.productionqueues.name.mb_6")}>
-            <div className={t("pages.productionqueues.name.flex_items_center_justify_between_mb_4")}>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className={t("pages.productionqueues.name.text_2xl_font_bold_text_gray_900")}>{t('pages.ProductionQueues.طوابير_الإنتاج')}</h1>
-                <p className={t("pages.productionqueues.name.text_gray_600_mt_1")}>{t('pages.ProductionQueues.قم_بسحب_وإفلات_أوامر_الإنتاج_لتنظيم_العمل_على_المكائن')}</p>
+                <h1 className="text-2xl font-bold text-gray-900">طوابير الإنتاج</h1>
+                <p className="text-gray-600 mt-1">
+                  قم بسحب وإفلات أوامر الإنتاج لتنظيم العمل على المكائن
+                </p>
               </div>
-          <div className={t("pages.productionqueues.name.flex_gap_2")}>
+          <div className="flex gap-2">
             <Button
               variant="outline"
               onClick={() => {
@@ -615,17 +618,18 @@ export default function ProductionQueues() {
               }}
               data-testid="button-refresh-queues"
             >
-              <RefreshCw className={t("pages.productionqueues.name.h_4_w_4")} />
+              <RefreshCw className="h-4 w-4" />
             </Button>
             <Button
               onClick={() => setIsDistributionModalOpen(true)}
               disabled={unassignedCount === 0}
-              className={t("pages.productionqueues.name.gap_2")}
+              className="gap-2"
               data-testid="button-smart-distribution"
             >
-              <Sparkles className={t("pages.productionqueues.name.h_4_w_4")} />
+              <Sparkles className="h-4 w-4" />
               توزيع ذكي متقدم
-              {unassignedCount >{t('pages.ProductionQueues.0_&&_(')}<Badge variant="secondary" className={t("pages.productionqueues.name.ml_2")} data-testid="badge-unassigned-count">
+              {unassignedCount > 0 && (
+                <Badge variant="secondary" className="ml-2" data-testid="badge-unassigned-count">
                   {unassignedCount} أمر
                 </Badge>
               )}
@@ -634,17 +638,18 @@ export default function ProductionQueues() {
         </div>
 
         {/* Capacity Statistics Bar */}
-        {totalCapacityStats && totalCapacityStats.totalCapacity >{t('pages.ProductionQueues.0_&&_(')}<Card className={t("pages.productionqueues.name.mb_4")} data-testid="card-capacity-stats">
-            <CardContent className={t("pages.productionqueues.name.p_4")}>
-              <div className={t("pages.productionqueues.name.flex_items_center_justify_between_mb_2")}>
-                <div className={t("pages.productionqueues.name.flex_items_center_gap_2")}>
-                  <BarChart3 className={t("pages.productionqueues.name.h_4_w_4_text_muted_foreground")} />
-                  <span className={t("pages.productionqueues.name.text_sm_font_medium")}>{t('pages.ProductionQueues.إحصائيات_السعة_الإجمالية')}</span>
+        {totalCapacityStats && totalCapacityStats.totalCapacity > 0 && (
+          <Card className="mb-4" data-testid="card-capacity-stats">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">إحصائيات السعة الإجمالية</span>
                 </div>
-                <div className={t("pages.productionqueues.name.flex_items_center_gap_4_text_sm")}>
-                  <div className={t("pages.productionqueues.name.flex_items_center_gap_1")}>
-                    <span className={t("pages.productionqueues.name.text_muted_foreground")}>{t('pages.ProductionQueues.الحمولة:')}</span>
-                    <span className={t("pages.productionqueues.name.font_medium")} data-testid="text-total-load">
+                <div className="flex items-center gap-4 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-muted-foreground">الحمولة:</span>
+                    <span className="font-medium" data-testid="text-total-load">
                       {totalCapacityStats.totalLoad.toFixed(0)} / {totalCapacityStats.totalCapacity.toFixed(0)} كجم
                     </span>
                   </div>
@@ -655,10 +660,10 @@ export default function ProductionQueues() {
               </div>
               <Progress
                 value={overallUtilization}
-                className={t("pages.productionqueues.name.h_2")}
+                className="h-2"
                 data-testid="progress-utilization"
               />
-              <div className={t("pages.productionqueues.name.flex_items_center_justify_between_mt_2_text_xs_text_muted_foreground")}>
+              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                 <span data-testid="text-utilization-percentage">نسبة الاستخدام: {overallUtilization.toFixed(1)}%</span>
                 <span 
                   className={
@@ -681,17 +686,21 @@ export default function ProductionQueues() {
       </div>
 
       {activeMachines.length === 0 ? (
-        <Card className={t("pages.productionqueues.name.p_8_text_center")}>
-          <AlertCircle className={t("pages.productionqueues.name.h_12_w_12_text_muted_foreground_mx_auto_mb_4")} />
-          <h2 className={t("pages.productionqueues.name.text_xl_font_semibold_mb_2")}>{t('pages.ProductionQueues.لا_توجد_مكائن_نشطة')}</h2>
-          <p className={t("pages.productionqueues.name.text_muted_foreground")}>{t('pages.ProductionQueues.يجب_تفعيل_مكينة_واحدة_على_الأقل_لإدارة_طوابير_الإنتاج')}</p>
-        </Card>{t('pages.ProductionQueues.)_:_(')}<DndContext
+        <Card className="p-8 text-center">
+          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">لا توجد مكائن نشطة</h2>
+          <p className="text-muted-foreground">
+            يجب تفعيل مكينة واحدة على الأقل لإدارة طوابير الإنتاج
+          </p>
+        </Card>
+      ) : (
+        <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className={t("pages.productionqueues.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_xl_grid_cols_4_gap_4")}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {/* Unassigned orders column */}
             <MachineColumn
               machine={null}
@@ -722,11 +731,11 @@ export default function ProductionQueues() {
               });
 
               return activeItem ? (
-                <Card className={t("pages.productionqueues.name.shadow_2xl_opacity_90")}>
-                  <CardContent className={t("pages.productionqueues.name.p_3")}>
-                    <div className={t("pages.productionqueues.name.flex_items_center_gap_2")}>
-                      <Package className={t("pages.productionqueues.name.h_4_w_4")} />
-                      <span className={t("pages.productionqueues.name.font_medium")}>
+                <Card className="shadow-2xl opacity-90">
+                  <CardContent className="p-3">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <span className="font-medium">
                         {"production_order_number" in activeItem 
                           ? activeItem.production_order_number 
                           : "أمر إنتاج"}

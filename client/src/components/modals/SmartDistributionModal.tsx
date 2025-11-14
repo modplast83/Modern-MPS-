@@ -37,7 +37,6 @@ import {
   Clock,
   Weight,
 } from "lucide-react";
-import { useTranslation } from 'react-i18next';
 
 interface SmartDistributionModalProps {
   isOpen: boolean;
@@ -104,7 +103,7 @@ const algorithms: DistributionAlgorithm[] = [
     name: "Balanced Distribution",
     nameAr: "التوزيع المتوازن",
     description: "توزيع متساوٍ حسب عدد الأوامر على جميع المكائن",
-    icon: <Scale className={t("components.modals.smartdistributionmodal.name.h_5_w_5")} />,
+    icon: <Scale className="h-5 w-5" />,
     color: "bg-blue-100 border-blue-300",
   },
   {
@@ -112,7 +111,7 @@ const algorithms: DistributionAlgorithm[] = [
     name: "Load-Based Distribution",
     nameAr: "التوزيع حسب الحمولة",
     description: "توزيع الأوامر حسب الكمية الإجمالية والسعة المتاحة",
-    icon: <Weight className={t("components.modals.smartdistributionmodal.name.h_5_w_5")} />,
+    icon: <Weight className="h-5 w-5" />,
     color: "bg-green-100 border-green-300",
   },
   {
@@ -120,7 +119,7 @@ const algorithms: DistributionAlgorithm[] = [
     name: "Priority Distribution",
     nameAr: "التوزيع حسب الأولوية",
     description: "توزيع الأوامر العاجلة أولاً على المكائن الأقل حملاً",
-    icon: <AlertTriangle className={t("components.modals.smartdistributionmodal.name.h_5_w_5")} />,
+    icon: <AlertTriangle className="h-5 w-5" />,
     color: "bg-red-100 border-red-300",
   },
   {
@@ -128,7 +127,7 @@ const algorithms: DistributionAlgorithm[] = [
     name: "Product Type Grouping",
     nameAr: "التوزيع حسب نوع المنتج",
     description: "تجميع المنتجات المشابهة على نفس الماكينة",
-    icon: <Layers className={t("components.modals.smartdistributionmodal.name.h_5_w_5")} />,
+    icon: <Layers className="h-5 w-5" />,
     color: "bg-purple-100 border-purple-300",
   },
   {
@@ -136,7 +135,7 @@ const algorithms: DistributionAlgorithm[] = [
     name: "Hybrid Optimization",
     nameAr: "التوزيع الهجين",
     description: "مزج جميع المعايير للحصول على أفضل توزيع",
-    icon: <Zap className={t("components.modals.smartdistributionmodal.name.h_5_w_5")} />,
+    icon: <Zap className="h-5 w-5" />,
     color: "bg-orange-100 border-orange-300",
   },
 ];
@@ -147,7 +146,6 @@ export default function SmartDistributionModal({
   onDistribute,
 }: SmartDistributionModalProps) {
   const { toast } = useToast();
-  const { t } = useTranslation();
   const [selectedAlgorithm, setSelectedAlgorithm] = useState("balanced");
   const [hybridParams, setHybridParams] = useState({
     loadWeight: 30,
@@ -201,7 +199,7 @@ export default function SmartDistributionModal({
     onSuccess: (result) => {
       if (result.success) {
         toast({
-          title: t('modals.smartDistribution.successTitle'),
+          title: "تم التوزيع بنجاح",
           description: result.message,
         });
         queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
@@ -212,8 +210,8 @@ export default function SmartDistributionModal({
     },
     onError: (error: any) => {
       toast({
-        title: t('modals.smartDistribution.errorTitle'),
-        description: error.message || t('modals.smartDistribution.errorDescription'),
+        title: "خطأ في التوزيع",
+        description: error.message || "فشل تطبيق التوزيع الذكي",
         variant: "destructive",
       });
     },
@@ -247,26 +245,26 @@ export default function SmartDistributionModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={t("components.modals.smartdistributionmodal.name.max_w_4xl_max_h_90vh_overflow_hidden_flex_flex_col")}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className={t("components.modals.smartdistributionmodal.name.flex_items_center_gap_2_text_xl")}>
-            <Sparkles className={t("components.modals.smartdistributionmodal.name.h_6_w_6_text_purple_600")} />
-            {t('modals.smartDistribution.title')}
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-6 w-6 text-purple-600" />
+            التوزيع الذكي لأوامر الإنتاج
           </DialogTitle>
           <DialogDescription>
-            {t('modals.smartDistribution.description')}
+            اختر خوارزمية التوزيع المناسبة وعاين النتائج قبل التطبيق
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="algorithm" className={t("components.modals.smartdistributionmodal.name.flex_1_overflow_hidden")}>
-          <TabsList className={t("components.modals.smartdistributionmodal.name.grid_grid_cols_3_w_full")}>
-            <TabsTrigger value="algorithm" data-testid="tab-algorithm">{t('modals.smartDistribution.selectAlgorithm')}</TabsTrigger>
-            <TabsTrigger value="preview" data-testid="tab-preview">{t('modals.smartDistribution.previewDistribution')}</TabsTrigger>
-            <TabsTrigger value="stats" data-testid="tab-stats">{t('modals.smartDistribution.capacityStats')}</TabsTrigger>
+        <Tabs defaultValue="algorithm" className="flex-1 overflow-hidden">
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="algorithm" data-testid="tab-algorithm">اختيار الخوارزمية</TabsTrigger>
+            <TabsTrigger value="preview" data-testid="tab-preview">معاينة التوزيع</TabsTrigger>
+            <TabsTrigger value="stats" data-testid="tab-stats">إحصائيات السعة</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className={t("components.modals.smartdistributionmodal.name.flex_1_h_500px_mt_4")}>
-            <TabsContent value="algorithm" className={t("components.modals.smartdistributionmodal.name.space_y_4")}>
+          <ScrollArea className="flex-1 h-[500px] mt-4">
+            <TabsContent value="algorithm" className="space-y-4">
               <RadioGroup
                 value={selectedAlgorithm}
                 onValueChange={setSelectedAlgorithm}
@@ -282,19 +280,19 @@ export default function SmartDistributionModal({
                     onClick={() => setSelectedAlgorithm(algo.id)}
                     data-testid={`card-algorithm-${algo.id}`}
                   >
-                    <CardContent className={t("components.modals.smartdistributionmodal.name.p_4")}>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_items_start_gap_3")}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
                         <RadioGroupItem value={algo.id} id={algo.id} data-testid={`radio-algorithm-${algo.id}`} />
-                        <div className={t("components.modals.smartdistributionmodal.name.flex_1")}>
+                        <div className="flex-1">
                           <Label
                             htmlFor={algo.id}
-                            className={t("components.modals.smartdistributionmodal.name.flex_items_center_gap_2_text_base_font_semibold_cursor_pointer")}
+                            className="flex items-center gap-2 text-base font-semibold cursor-pointer"
                           >
                             {algo.icon}
-                            {t(`modals.smartDistribution.algorithms.${algo.id}.name`)}
+                            {algo.nameAr}
                           </Label>
-                          <p className={t("components.modals.smartdistributionmodal.name.text_sm_text_muted_foreground_mt_1")}>
-                            {t(`modals.smartDistribution.algorithms.${algo.id}.description`)}
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {algo.description}
                           </p>
                         </div>
                       </div>
@@ -304,15 +302,15 @@ export default function SmartDistributionModal({
               </RadioGroup>
 
               {selectedAlgorithm === "hybrid" && (
-                <Card className={t("components.modals.smartdistributionmodal.name.mt_4")}>
+                <Card className="mt-4">
                   <CardHeader>
-                    <CardTitle className={t("components.modals.smartdistributionmodal.name.text_sm")}>{t('modals.smartDistribution.hybridCriteria')}</CardTitle>
+                    <CardTitle className="text-sm">معايير التوزيع الهجين</CardTitle>
                   </CardHeader>
-                  <CardContent className={t("components.modals.smartdistributionmodal.name.space_y_4")}>
+                  <CardContent className="space-y-4">
                     <div>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_justify_between_mb_2")}>
-                        <Label>{t('modals.smartDistribution.loadWeight')}</Label>
-                        <span className={t("components.modals.smartdistributionmodal.name.text_sm_font_medium")}>
+                      <div className="flex justify-between mb-2">
+                        <Label>وزن الحمولة</Label>
+                        <span className="text-sm font-medium">
                           {hybridParams.loadWeight}%
                         </span>
                       </div>
@@ -327,9 +325,9 @@ export default function SmartDistributionModal({
                     </div>
 
                     <div>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_justify_between_mb_2")}>
-                        <Label>{t('modals.smartDistribution.capacityWeight')}</Label>
-                        <span className={t("components.modals.smartdistributionmodal.name.text_sm_font_medium")}>
+                      <div className="flex justify-between mb-2">
+                        <Label>وزن السعة</Label>
+                        <span className="text-sm font-medium">
                           {hybridParams.capacityWeight}%
                         </span>
                       </div>
@@ -344,9 +342,9 @@ export default function SmartDistributionModal({
                     </div>
 
                     <div>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_justify_between_mb_2")}>
-                        <Label>{t('modals.smartDistribution.priorityWeight')}</Label>
-                        <span className={t("components.modals.smartdistributionmodal.name.text_sm_font_medium")}>
+                      <div className="flex justify-between mb-2">
+                        <Label>وزن الأولوية</Label>
+                        <span className="text-sm font-medium">
                           {hybridParams.priorityWeight}%
                         </span>
                       </div>
@@ -361,9 +359,9 @@ export default function SmartDistributionModal({
                     </div>
 
                     <div>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_justify_between_mb_2")}>
-                        <Label>{t('modals.smartDistribution.productTypeWeight')}</Label>
-                        <span className={t("components.modals.smartdistributionmodal.name.text_sm_font_medium")}>
+                      <div className="flex justify-between mb-2">
+                        <Label>وزن نوع المنتج</Label>
+                        <span className="text-sm font-medium">
                           {hybridParams.typeWeight}%
                         </span>
                       </div>
@@ -381,72 +379,81 @@ export default function SmartDistributionModal({
               )}
             </TabsContent>
 
-            <TabsContent value="preview" className={t("components.modals.smartdistributionmodal.name.space_y_4")}>
+            <TabsContent value="preview" className="space-y-4">
               {isPreviewLoading ? (
-                <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_center_h_64")}>
-                  <Loader2 className={t("components.modals.smartdistributionmodal.name.h_8_w_8_animate_spin")} />
-                </div>{t('components.modals.SmartDistributionModal.)_:_preview?.data_?_(')}<>
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              ) : preview?.data ? (
+                <>
                   <Alert>
-                    <Info className={t("components.modals.smartdistributionmodal.name.h_4_w_4")} />
+                    <Info className="h-4 w-4" />
                     <AlertDescription>
-                      <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_between")}>
+                      <div className="flex items-center justify-between">
                         <span>
-                          {t('modals.smartDistribution.willDistribute', { orders: preview.data.totalOrders, machines: preview.data.machineCount })}
+                          سيتم توزيع {preview.data.totalOrders} أمر على{" "}
+                          {preview.data.machineCount} ماكينة
                         </span>
                         <Badge variant="outline">
-                          {t('modals.smartDistribution.distributionEfficiency')}: {preview.data.efficiency}%
+                          كفاءة التوزيع: {preview.data.efficiency}%
                         </Badge>
                       </div>
                     </AlertDescription>
                   </Alert>
 
-                  <div className={t("components.modals.smartdistributionmodal.name.space_y_3")}>
+                  <div className="space-y-3">
                     {preview.data.preview?.map((machine: any) => (
                       <Card key={machine.machineId}>
-                        <CardHeader className={t("components.modals.smartdistributionmodal.name.pb_3")}>
-                          <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_between")}>
-                            <CardTitle className={t("components.modals.smartdistributionmodal.name.text_sm_flex_items_center_gap_2")}>
-                              <Factory className={t("components.modals.smartdistributionmodal.name.h_4_w_4")} />
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Factory className="h-4 w-4" />
                               {machine.machineNameAr || machine.machineName}
                             </CardTitle>
-                            <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_gap_2")}>
+                            <div className="flex items-center gap-2">
                               <Badge
                                 className={getCapacityStatusColor(
                                   machine.newCapacityStatus
                                 )}
                               >
-                                {t(`modals.smartDistribution.capacityStatus.${machine.newCapacityStatus}`)}
+                                {machine.newCapacityStatus === "low"
+                                  ? "منخفض"
+                                  : machine.newCapacityStatus === "moderate"
+                                  ? "متوسط"
+                                  : machine.newCapacityStatus === "high"
+                                  ? "مرتفع"
+                                  : "مُحمل بشدة"}
                               </Badge>
                               <Badge variant="outline">
-                                {machine.proposedOrders?.length || 0} {t('modals.smartDistribution.newOrders')}
+                                {machine.proposedOrders?.length || 0} أمر جديد
                               </Badge>
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className={t("components.modals.smartdistributionmodal.name.space_y_3")}>
-                            <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_between_text_sm")}>
-                              <span>{t('modals.smartDistribution.currentLoad')}:</span>
-                              <span className={t("components.modals.smartdistributionmodal.name.font_medium")}>
-                                {machine.currentLoad?.toFixed(2)} {t('units.kg')}
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span>الحمولة الحالية:</span>
+                              <span className="font-medium">
+                                {machine.currentLoad?.toFixed(2)} كجم
                               </span>
                             </div>
-                            <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_between_text_sm")}>
-                              <span>{t('modals.smartDistribution.proposedLoad')}:</span>
-                              <span className={t("components.modals.smartdistributionmodal.name.font_medium")}>
-                                {machine.proposedLoad?.toFixed(2)} {t('units.kg')}
+                            <div className="flex items-center justify-between text-sm">
+                              <span>الحمولة المقترحة:</span>
+                              <span className="font-medium">
+                                {machine.proposedLoad?.toFixed(2)} كجم
                               </span>
                             </div>
-                            <div className={t("components.modals.smartdistributionmodal.name.space_y_1")}>
-                              <div className={t("components.modals.smartdistributionmodal.name.flex_justify_between_text_sm")}>
-                                <span>{t('modals.smartDistribution.utilizationRate')}:</span>
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-sm">
+                                <span>نسبة الاستخدام:</span>
                                 <span>
                                   {machine.proposedUtilization?.toFixed(1)}%
                                 </span>
                               </div>
                               <Progress
                                 value={machine.proposedUtilization || 0}
-                                className={t("components.modals.smartdistributionmodal.name.h_2")}
+                                className="h-2"
                                 style={{
                                   backgroundColor: "#e5e5e5",
                                 }}
@@ -461,13 +468,13 @@ export default function SmartDistributionModal({
                                 />
                               </Progress>
                             </div>
-                            <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_gap_2_text_sm_text_muted_foreground")}>
-                              <Clock className={t("components.modals.smartdistributionmodal.name.h_3_w_3")} />
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Clock className="h-3 w-3" />
                               <span>
-                                {t('modals.smartDistribution.expectedProductionTime')}:{" "}
+                                وقت الإنتاج المتوقع:{" "}
                                 {((machine.currentLoad + machine.proposedLoad) /
                                   machine.productionRate).toFixed(1)}{" "}
-                                {t('units.hour')}
+                                ساعة
                               </span>
                             </div>
                           </div>
@@ -475,24 +482,26 @@ export default function SmartDistributionModal({
                       </Card>
                     ))}
                   </div>
-                </>{t('components.modals.SmartDistributionModal.)_:_(')}<Alert>
-                  <AlertTriangle className={t("components.modals.smartdistributionmodal.name.h_4_w_4")} />
+                </>
+              ) : (
+                <Alert>
+                  <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    {t('modals.smartDistribution.noUnassignedOrders')}
+                    لا توجد أوامر غير مخصصة للتوزيع
                   </AlertDescription>
                 </Alert>
               )}
             </TabsContent>
 
-            <TabsContent value="stats" className={t("components.modals.smartdistributionmodal.name.space_y_4")}>
+            <TabsContent value="stats" className="space-y-4">
               {capacityStats?.data ? (
-                <div className={t("components.modals.smartdistributionmodal.name.space_y_3")}>
+                <div className="space-y-3">
                   {capacityStats.data.map((stat: any) => (
                     <Card key={stat.machineId}>
-                      <CardHeader className={t("components.modals.smartdistributionmodal.name.pb_3")}>
-                        <div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_between")}>
-                          <CardTitle className={t("components.modals.smartdistributionmodal.name.text_sm_flex_items_center_gap_2")}>
-                            <BarChart3 className={t("components.modals.smartdistributionmodal.name.h_4_w_4")} />
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4" />
                             {stat.machineNameAr || stat.machineName}
                           </CardTitle>
                           <Badge
@@ -503,50 +512,52 @@ export default function SmartDistributionModal({
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className={t("components.modals.smartdistributionmodal.name.grid_grid_cols_2_gap_4_text_sm")}>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
-                            <span className={t("components.modals.smartdistributionmodal.name.text_muted_foreground")}>
-                              {t('modals.smartDistribution.currentLoad')}:
+                            <span className="text-muted-foreground">
+                              الحمولة الحالية:
                             </span>
-                            <p className={t("components.modals.smartdistributionmodal.name.font_medium")}>
-                              {stat.currentLoad?.toFixed(2)} {t('units.kg')}
+                            <p className="font-medium">
+                              {stat.currentLoad?.toFixed(2)} كجم
                             </p>
                           </div>
                           <div>
-                            <span className={t("components.modals.smartdistributionmodal.name.text_muted_foreground")}>
-                              {t('modals.smartDistribution.maxCapacity')}:
+                            <span className="text-muted-foreground">
+                              السعة القصوى:
                             </span>
-                            <p className={t("components.modals.smartdistributionmodal.name.font_medium")}>
-                              {stat.maxCapacity?.toFixed(2)} {t('units.kg')}
+                            <p className="font-medium">
+                              {stat.maxCapacity?.toFixed(2)} كجم
                             </p>
                           </div>
                           <div>
-                            <span className={t("components.modals.smartdistributionmodal.name.text_muted_foreground")}>
-                              {t('modals.smartDistribution.orderCount')}:
+                            <span className="text-muted-foreground">
+                              عدد الأوامر:
                             </span>
-                            <p className={t("components.modals.smartdistributionmodal.name.font_medium")}>{stat.orderCount}</p>
+                            <p className="font-medium">{stat.orderCount}</p>
                           </div>
                           <div>
-                            <span className={t("components.modals.smartdistributionmodal.name.text_muted_foreground")}>
-                              {t('modals.smartDistribution.productionRate')}:
+                            <span className="text-muted-foreground">
+                              معدل الإنتاج:
                             </span>
-                            <p className={t("components.modals.smartdistributionmodal.name.font_medium")}>
-                              {stat.productionRate} {t('modals.smartDistribution.kgPerHour')}
+                            <p className="font-medium">
+                              {stat.productionRate} كجم/ساعة
                             </p>
                           </div>
                         </div>
-                        <div className={t("components.modals.smartdistributionmodal.name.mt_3_pt_3_border_t")}>
+                        <div className="mt-3 pt-3 border-t">
                           <Progress
                             value={stat.utilizationPercentage || 0}
-                            className={t("components.modals.smartdistributionmodal.name.h_3")}
+                            className="h-3"
                           />
                         </div>
                       </CardContent>
                     </Card>
                   ))}
-                </div>{t('components.modals.SmartDistributionModal.)_:_(')}<div className={t("components.modals.smartdistributionmodal.name.flex_items_center_justify_center_h_64")}>
-                  <p className={t("components.modals.smartdistributionmodal.name.text_muted_foreground")}>
-                    {t('modals.smartDistribution.loadingCapacityStats')}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-64">
+                  <p className="text-muted-foreground">
+                    جاري تحميل إحصائيات السعة...
                   </p>
                 </div>
               )}
@@ -561,7 +572,7 @@ export default function SmartDistributionModal({
             disabled={distributeMutation.isPending}
             data-testid="button-cancel-distribution"
           >
-            {t('common.cancel')}
+            إلغاء
           </Button>
           <Button
             onClick={handleApply}
@@ -570,11 +581,13 @@ export default function SmartDistributionModal({
           >
             {distributeMutation.isPending ? (
               <>
-                <Loader2 className={t("components.modals.smartdistributionmodal.name.mr_2_h_4_w_4_animate_spin")} />
-                {t('modals.smartDistribution.applying')}
-              </>{t('components.modals.SmartDistributionModal.)_:_(')}<>
-                <CheckCircle className={t("components.modals.smartdistributionmodal.name.mr_2_h_4_w_4")} />
-                {t('modals.smartDistribution.applyDistribution')}
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                جاري التطبيق...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                تطبيق التوزيع
               </>
             )}
           </Button>

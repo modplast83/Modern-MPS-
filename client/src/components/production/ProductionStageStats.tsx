@@ -1,4 +1,3 @@
-import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Package, Weight, Clock, CheckCircle2 } from "lucide-react";
 
@@ -8,8 +7,6 @@ interface ProductionStageStatsProps {
 }
 
 export default function ProductionStageStats({ stage, data }: ProductionStageStatsProps) {
-  const { t } = useTranslation();
-
   const calculateStats = () => {
     let totalOrders = 0;
     let totalRolls = 0;
@@ -90,66 +87,66 @@ export default function ProductionStageStats({ stage, data }: ProductionStageSta
   const getStageName = () => {
     switch (stage) {
       case "film":
-        return t('production.filmStage');
+        return "مرحلة الفيلم";
       case "printing":
-        return t('production.printingStage');
+        return "مرحلة الطباعة";
       case "cutting":
-        return t('production.cuttingStage');
+        return "مرحلة التقطيع";
       default:
         return "";
     }
   };
 
   return (
-    <div className={t("components.production.productionstagestats.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <Card>
-        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
             {getStageName()}
           </CardTitle>
-          <Package className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
+          <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>{stats.totalOrders}</div>
-          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('production.productionQueue')}</p>
+          <div className="text-2xl font-bold">{stats.totalOrders}</div>
+          <p className="text-xs text-muted-foreground">طلب في الطابور</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('orders.rolls')}</CardTitle>
-          <Package className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">عدد الرولات</CardTitle>
+          <Package className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>{stats.totalRolls}</div>
-          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('warehouse.roll')}</p>
+          <div className="text-2xl font-bold">{stats.totalRolls}</div>
+          <p className="text-xs text-muted-foreground">رول في الطابور</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('common.total')}</CardTitle>
-          <Weight className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">إجمالي الوزن</CardTitle>
+          <Weight className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>
+          <div className="text-2xl font-bold">
             {stats.totalWeight.toFixed(2)}
           </div>
-          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>{t('warehouse.kg')}</p>
+          <p className="text-xs text-muted-foreground">كيلوجرام</p>
         </CardContent>
       </Card>
 
       <Card>
-        <CardHeader className={t("components.production.productionstagestats.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-          <CardTitle className={t("components.production.productionstagestats.name.text_sm_font_medium")}>{t('orders.completionRate')}</CardTitle>
-          <CheckCircle2 className={t("components.production.productionstagestats.name.h_4_w_4_text_muted_foreground")} />
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">نسبة التقدم</CardTitle>
+          <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className={t("components.production.productionstagestats.name.text_2xl_font_bold")}>
+          <div className="text-2xl font-bold">
             {stats.progressPercentage}%
           </div>
-          <p className={t("components.production.productionstagestats.name.text_xs_text_muted_foreground")}>
-            {stats.completedRolls} / {stats.totalRolls} {t('production.completed')}
+          <p className="text-xs text-muted-foreground">
+            {stats.completedRolls} / {stats.totalRolls} رول مكتمل
           </p>
         </CardContent>
       </Card>

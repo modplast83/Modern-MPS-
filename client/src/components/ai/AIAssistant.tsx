@@ -7,7 +7,6 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Badge } from "../ui/badge";
 import { useToast } from "../../hooks/use-toast";
 import { useAuth } from "../../hooks/use-auth";
-import { useTranslation } from 'react-i18next';
 import { apiRequest } from "../../lib/queryClient";
 import ErrorBoundary from "../ErrorBoundary";
 import {
@@ -30,12 +29,11 @@ interface Message {
 }
 
 export default function AIAssistant() {
-  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       type: "assistant",
-      content: t('ai.developedAssistant'),
+      content: `👋 **مرحباً! أنا مساعدك الذكي المطور**`,
       timestamp: new Date(),
     },
   ]);
@@ -47,35 +45,35 @@ export default function AIAssistant() {
   // إجراءات سريعة للمساعد الذكي
   const quickActions = [
     {
-      label: t('aiAssistant.registerClient'),
+      label: "سجل عميل",
       icon: User,
-      command: t('aiAssistant.registerClientCommand'),
-      description: t('aiAssistant.addClient'),
+      command: "سجل عميل جديد",
+      description: "إضافة عميل جديد",
     },
     {
-      label: t('aiAssistant.addProduct'),
+      label: "أضف منتج",
       icon: TrendingUp,
-      command: t('aiAssistant.addProductCommand'),
-      description: t('aiAssistant.addClientProduct'),
+      command: "أضف منتج جديد",
+      description: "إضافة منتج للعميل",
     },
     {
-      label: t('aiAssistant.productionStatus'),
+      label: "حالة الإنتاج",
       icon: Settings,
-      command: t('aiAssistant.productionStatusCommand'),
-      description: t('aiAssistant.productionStats'),
+      command: "ما حالة الإنتاج؟",
+      description: "إحصائيات الإنتاج",
     },
     {
-      label: t('aiAssistant.help'),
+      label: "مساعدة",
       icon: Bell,
-      command: t('aiAssistant.helpCommand'),
-      description: t('aiAssistant.userGuide'),
+      command: "مساعدة",
+      description: "دليل الاستخدام",
     },
   ];
 
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
       if (!user?.id) {
-        throw new Error(t('ai.loginRequired'));
+        throw new Error("يجب تسجيل الدخول لاستخدام المساعد الذكي");
       }
       
       setIsTyping(true);
@@ -102,7 +100,7 @@ export default function AIAssistant() {
         response.message || 
         response.clarificationQuestion || 
         response.confirmationMessage || 
-        t('aiAssistant.processingError');
+        "عذراً، لم أستطع معالجة طلبك في الوقت الحالي.";
       
       const assistantMessage: Message = {
         id: generateMessageId(),
@@ -117,13 +115,13 @@ export default function AIAssistant() {
       const errorMessage: Message = {
         id: generateMessageId(),
         type: "assistant",
-        content: t('aiAssistant.connectionError'),
+        content: "عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
       toast({
-        title: t('aiAssistant.assistantError'),
-        description: t('aiAssistant.serviceUnavailable'),
+        title: "خطأ في المساعد الذكي",
+        description: "لا يمكن الوصول لخدمة المساعد الذكي حالياً",
         variant: "destructive",
       });
     },
@@ -158,8 +156,8 @@ export default function AIAssistant() {
 
   const toggleVoiceInput = () => {
     toast({
-      title: t('aiAssistant.voiceInput'),
-      description: t('aiAssistant.useVoiceAssistant'),
+      title: "الإدخال الصوتي",
+      description: "استخدم المساعد الصوتي في الصفحة الرئيسية للإدخال الصوتي المتقدم",
     });
   };
 
@@ -172,19 +170,19 @@ export default function AIAssistant() {
   };
 
   return (
-    <Card className={t("components.ai.aiassistant.name.h_96")}>
-      <CardHeader className={t("components.ai.aiassistant.name.pb_3")}>
-        <CardTitle className={t("components.ai.aiassistant.name.flex_items_center_gap_2")}>
-          <Bot className={t("components.ai.aiassistant.name.w_5_h_5_text_blue_500")} />
-          {t('ai.assistant')}
-          <Badge variant="secondary" className={t("components.ai.aiassistant.name.mr_auto")}>
-            {t('common.active')}
+    <Card className="h-96">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2">
+          <Bot className="w-5 h-5 text-blue-500" />
+          المساعد الذكي
+          <Badge variant="secondary" className="mr-auto">
+            نشط
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className={t("components.ai.aiassistant.name.p_0")}>
-        <ScrollArea className={t("components.ai.aiassistant.name.h_64_p_4")}>
-          <div className={t("components.ai.aiassistant.name.space_y_4")}>
+      <CardContent className="p-0">
+        <ScrollArea className="h-64 p-4">
+          <div className="space-y-4">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -199,7 +197,9 @@ export default function AIAssistant() {
                     }`}
                   >
                     {message.type === "user" ? (
-                      <User className={t("components.ai.aiassistant.name.w_4_h_4_text_blue_600")} />{t('components.ai.AIAssistant.)_:_(')}<Bot className={t("components.ai.aiassistant.name.w_4_h_4_text_green_600")} />
+                      <User className="w-4 h-4 text-blue-600" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-green-600" />
                     )}
                   </div>
                   <div
@@ -209,15 +209,15 @@ export default function AIAssistant() {
                         : "bg-gray-100 text-gray-900"
                     }`}
                   >
-                    <p className={t("components.ai.aiassistant.name.text_sm_whitespace_pre_wrap_break_words")}>{message.content}</p>
+                    <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                     {message.type === "assistant" && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className={t("components.ai.aiassistant.name.mt_1_h_6_p_1_text_gray_500_hover_text_gray_700")}
+                        className="mt-1 h-6 p-1 text-gray-500 hover:text-gray-700"
                         onClick={() => speakMessage(message.content)}
                       >
-                        <Volume2 className={t("components.ai.aiassistant.name.w_3_h_3")} />
+                        <Volume2 className="w-3 h-3" />
                       </Button>
                     )}
                   </div>
@@ -225,23 +225,23 @@ export default function AIAssistant() {
               </div>
             ))}
             {isTyping && (
-              <div className={t("components.ai.aiassistant.name.flex_justify_start")}>
-                <div className={t("components.ai.aiassistant.name.flex_gap_2")}>
-                  <div className={t("components.ai.aiassistant.name.w_8_h_8_rounded_full_bg_green_100_flex_items_center_justify_center_animate_pulse")}>
-                    <Bot className={t("components.ai.aiassistant.name.w_4_h_4_text_green_600")} />
+              <div className="flex justify-start">
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center animate-pulse">
+                    <Bot className="w-4 h-4 text-green-600" />
                   </div>
-                  <div className={t("components.ai.aiassistant.name.bg_gray_100_rounded_lg_p_3")}>
-                    <div className={t("components.ai.aiassistant.name.flex_gap_1_items_center")}>
-                      <div className={t("components.ai.aiassistant.name.w_2_h_2_bg_green_500_rounded_full_animate_bounce")}></div>
+                  <div className="bg-gray-100 rounded-lg p-3">
+                    <div className="flex gap-1 items-center">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce"></div>
                       <div
-                        className={t("components.ai.aiassistant.name.w_2_h_2_bg_green_500_rounded_full_animate_bounce")}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
                         style={{ animationDelay: "0.15s" }}
                       ></div>
                       <div
-                        className={t("components.ai.aiassistant.name.w_2_h_2_bg_green_500_rounded_full_animate_bounce")}
+                        className="w-2 h-2 bg-green-500 rounded-full animate-bounce"
                         style={{ animationDelay: "0.3s" }}
                       ></div>
-                      <span className={t("components.ai.aiassistant.name.text_xs_text_gray_500_mr_2")}>{t('aiAssistant.thinking')}</span>
+                      <span className="text-xs text-gray-500 mr-2">جاري التفكير...</span>
                     </div>
                   </div>
                 </div>
@@ -250,14 +250,14 @@ export default function AIAssistant() {
           </div>
         </ScrollArea>
 
-        <div className={t("components.ai.aiassistant.name.p_4_border_t")}>
-          <div className={t("components.ai.aiassistant.name.flex_gap_2")}>
+        <div className="p-4 border-t">
+          <div className="flex gap-2">
             <Input
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('aiAssistant.messagePlaceholder')}
-              className={t("components.ai.aiassistant.name.flex_1")}
+              placeholder="اكتب رسالتك هنا..."
+              className="flex-1"
               disabled={sendMessageMutation.isPending}
               data-testid="input-ai-message"
             />
@@ -266,17 +266,17 @@ export default function AIAssistant() {
               size="sm"
               onClick={toggleVoiceInput}
               data-testid="button-ai-voice"
-              title={t('aiAssistant.voiceInput')}
+              title="الإدخال الصوتي"
             >
-              <Mic className={t("components.ai.aiassistant.name.w_4_h_4")} />
+              <Mic className="w-4 h-4" />
             </Button>
             <Button
               onClick={() => handleSendMessage()}
               disabled={!inputValue.trim() || sendMessageMutation.isPending}
               data-testid="button-ai-send"
-              title={t('ai.send')}
+              title="إرسال"
             >
-              <Send className={t("components.ai.aiassistant.name.w_4_h_4")} />
+              <Send className="w-4 h-4" />
             </Button>
           </div>
         </div>

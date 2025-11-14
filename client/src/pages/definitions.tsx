@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -61,7 +60,6 @@ import {
 import { formatNumber } from "../lib/formatNumber";
 
 export default function Definitions() {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -501,11 +499,15 @@ export default function Definitions() {
       : "غير محدد";
 
     const masterBatchColor = masterBatchColors.find(
-      (mb) =>{t('pages.definitions.mb.id_===_product.master_batch_id,_);_const_printcontent_=_`')}<!DOCTYPE html>
+      (mb) => mb.id === product.master_batch_id,
+    );
+
+    const printContent = `
+    <!DOCTYPE html>
     <html dir="rtl" lang="ar">
     <head>
       <meta charset="UTF-8">
-      <title>{t('pages.definitions.تفاصيل_منتج_العميل')}</title>
+      <title>تفاصيل منتج العميل</title>
       <style>
         body { 
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -580,71 +582,71 @@ export default function Definitions() {
     </head>
     <body>
       <div class="header">
-        <h1>{t('pages.definitions.تفاصيل_منتج_العميل')}</h1>
-        <p>{t('pages.definitions.نظام_إدارة_مصنع_الأكياس_البلاستيكية')}</p>
+        <h1>تفاصيل منتج العميل</h1>
+        <p>نظام إدارة مصنع الأكياس البلاستيكية</p>
         <p>رقم المنتج: ${product.id}</p>
       </div>
       
       <div class="section">
-        <h3>{t('pages.definitions.معلومات_أساسية')}</h3>
+        <h3>معلومات أساسية</h3>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.اسم_العميل:')}</span>
+          <span class="detail-label">اسم العميل:</span>
           <span class="detail-value">${customerName}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الفئة:')}</span>
+          <span class="detail-label">الفئة:</span>
           <span class="detail-value">${categoryName}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الصنف:')}</span>
+          <span class="detail-label">الصنف:</span>
           <span class="detail-value">${itemName}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.وصف_المقاس:')}</span>
+          <span class="detail-label">وصف المقاس:</span>
           <span class="detail-value">${product.size_caption || "-"}</span>
         </div>
       </div>
 
       <div class="section">
-        <h3>{t('pages.definitions.المقاسات_والأبعاد')}</h3>
+        <h3>المقاسات والأبعاد</h3>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.العرض_(سم):')}</span>
+          <span class="detail-label">العرض (سم):</span>
           <span class="detail-value">${product.width || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الوجه_الأيسر_(سم):')}</span>
+          <span class="detail-label">الوجه الأيسر (سم):</span>
           <span class="detail-value">${product.left_facing || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الوجه_الأيمن_(سم):')}</span>
+          <span class="detail-label">الوجه الأيمن (سم):</span>
           <span class="detail-value">${product.right_facing || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.السمك_(ميكرون):')}</span>
+          <span class="detail-label">السمك (ميكرون):</span>
           <span class="detail-value">${product.thickness || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.طول_القطع_(سم):')}</span>
+          <span class="detail-label">طول القطع (سم):</span>
           <span class="detail-value">${product.cutting_length_cm || "-"}</span>
         </div>
       </div>
 
       <div class="section">
-        <h3>{t('pages.definitions.الطباعة_والإنتاج')}</h3>
+        <h3>الطباعة والإنتاج</h3>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.اسطوانة_الطباعة:')}</span>
+          <span class="detail-label">اسطوانة الطباعة:</span>
           <span class="detail-value">${product.printing_cylinder || "بدون طباعة"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.هل_مطبوع:')}</span>
+          <span class="detail-label">هل مطبوع:</span>
           <span class="detail-value">${product.is_printed ? "نعم" : "لا"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.المادة_الخام:')}</span>
+          <span class="detail-label">المادة الخام:</span>
           <span class="detail-value">${product.raw_material || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الماستر_باتش:')}</span>
+          <span class="detail-label">الماستر باتش:</span>
           <span class="detail-value">
             ${
               masterBatchColor
@@ -654,47 +656,47 @@ export default function Definitions() {
           </span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.التخريم:')}</span>
+          <span class="detail-label">التخريم:</span>
           <span class="detail-value">${product.punching || "-"}</span>
         </div>
       </div>
 
       <div class="section">
-        <h3>{t('pages.definitions.الوزن_والكميات')}</h3>
+        <h3>الوزن والكميات</h3>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.وحدة_القطع:')}</span>
+          <span class="detail-label">وحدة القطع:</span>
           <span class="detail-value">${product.cutting_unit || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.وزن_الوحدة_(كيلو):')}</span>
+          <span class="detail-label">وزن الوحدة (كيلو):</span>
           <span class="detail-value">${product.unit_weight_kg || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الكمية_لكل_وحدة:')}</span>
+          <span class="detail-label">الكمية لكل وحدة:</span>
           <span class="detail-value">${product.unit_quantity || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.وزن_التعبئة_(كيلو):')}</span>
+          <span class="detail-label">وزن التعبئة (كيلو):</span>
           <span class="detail-value">${product.package_weight_kg || "-"}</span>
         </div>
       </div>
 
       <div class="section">
-        <h3>{t('pages.definitions.التصاميم_والملاحظات')}</h3>
+        <h3>التصاميم والملاحظات</h3>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.تصميم_الواجهة_الأمامية:')}</span>
+          <span class="detail-label">تصميم الواجهة الأمامية:</span>
           <span class="detail-value">${product.cliche_front_design || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.تصميم_الواجهة_الخلفية:')}</span>
+          <span class="detail-label">تصميم الواجهة الخلفية:</span>
           <span class="detail-value">${product.cliche_back_design || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.ملاحظات:')}</span>
+          <span class="detail-label">ملاحظات:</span>
           <span class="detail-value">${product.notes || "-"}</span>
         </div>
         <div class="detail-row">
-          <span class="detail-label">{t('pages.definitions.الحالة:')}</span>
+          <span class="detail-label">الحالة:</span>
           <span class="detail-value">${product.status === "active" ? "نشط" : "غير نشط"}</span>
         </div>
       </div>
@@ -720,7 +722,8 @@ export default function Definitions() {
   };
 
   // Debounce timers for auto-calculations
-  const sizeCaptionTimer = useRef<NodeJS.Timeout | null>{t('pages.definitions.(null);_const_packageweighttimer_=_useref')}<NodeJS.Timeout | null>(null);
+  const sizeCaptionTimer = useRef<NodeJS.Timeout | null>(null);
+  const packageWeightTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-set printing status based on cylinder selection (immediate, no debounce needed)
   React.useEffect(() => {
@@ -1011,38 +1014,44 @@ export default function Definitions() {
     const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
     return (
-      <div className={t("pages.definitions.name.flex_items_center_justify_between_px_6_py_3_bg_white_border_t_border_gray_200")}>
-        <div className={t("pages.definitions.name.flex_flex_1_justify_between_sm_hidden")}>
+      <div className="flex items-center justify-between px-6 py-3 bg-white border-t border-gray-200">
+        <div className="flex flex-1 justify-between sm:hidden">
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-          >{t('pages.definitions.السابق')}</Button>
+          >
+            السابق
+          </Button>
           <Button
             variant="outline"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-          >{t('pages.definitions.التالي')}</Button>
+          >
+            التالي
+          </Button>
         </div>
-        <div className={t("pages.definitions.name.hidden_sm_flex_sm_flex_1_sm_items_center_sm_justify_between")}>
+        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
           <div>
-            <p className={t("pages.definitions.name.text_sm_text_gray_700")}>{t('pages.definitions.عرض')}<span className={t("pages.definitions.name.font_medium")}>{startItem}</span> إلى{" "}
-              <span className={t("pages.definitions.name.font_medium")}>{endItem}</span> من{" "}
-              <span className={t("pages.definitions.name.font_medium")}>{totalItems}</span>{t('pages.definitions.نتيجة')}</p>
+            <p className="text-sm text-gray-700">
+              عرض <span className="font-medium">{startItem}</span> إلى{" "}
+              <span className="font-medium">{endItem}</span> من{" "}
+              <span className="font-medium">{totalItems}</span> نتيجة
+            </p>
           </div>
           <div>
             <nav
-              className={t("pages.definitions.name.inline_flex_space_x_px_rounded_md_shadow_sm")}
-              aria-label="{t('pages.definitions.label.{t('pages.definitions.aria-label.pagination')}')}"
+              className="inline-flex -space-x-px rounded-md shadow-sm"
+              aria-label="Pagination"
             >
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={t("pages.definitions.name.rounded_l_md")}
+                className="rounded-l-md"
               >
-                <ChevronLeft className={t("pages.definitions.name.h_4_w_4")} />
+                <ChevronLeft className="h-4 w-4" />
               </Button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1)
@@ -1050,20 +1059,24 @@ export default function Definitions() {
                   return (
                     page === 1 ||
                     page === totalPages ||
-                    (page >{t('pages.definitions.=_currentpage_-_2_&&_page')}<= currentPage + 2)
+                    (page >= currentPage - 2 && page <= currentPage + 2)
                   );
                 })
                 .map((page, index, array) => {
                   const showEllipsis =
-                    index >{t('pages.definitions.0_&&_array[index_-_1]_!==_page_-_1;_return_(')}<div key={page}>
+                    index > 0 && array[index - 1] !== page - 1;
+                  return (
+                    <div key={page}>
                       {showEllipsis && (
-                        <span className={t("pages.definitions.name.relative_inline_flex_items_center_px_4_py_2_text_sm_font_medium_text_gray_700")}>{t('pages.definitions....')}</span>
+                        <span className="relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700">
+                          ...
+                        </span>
                       )}
                       <Button
                         variant={currentPage === page ? "default" : "outline"}
                         size="sm"
                         onClick={() => onPageChange(page)}
-                        className={t("pages.definitions.name.min_w_40px_")}
+                        className="min-w-[40px]"
                       >
                         {page}
                       </Button>
@@ -1076,9 +1089,9 @@ export default function Definitions() {
                 size="sm"
                 onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={t("pages.definitions.name.rounded_r_md")}
+                className="rounded-r-md"
               >
-                <ChevronRight className={t("pages.definitions.name.h_4_w_4")} />
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </nav>
           </div>
@@ -1537,43 +1550,45 @@ export default function Definitions() {
   };
 
   return (
-    <div className={t("pages.definitions.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className={t("pages.definitions.name.flex_min_h_screen")}>
+      <div className="flex min-h-screen">
         <Sidebar />
         <MobileNav />
         <main
-          className={t("pages.definitions.name.flex_1_lg_mr_64_p_4_lg_p_6")}
+          className="flex-1 lg:mr-64 p-4 lg:p-6"
           style={{ marginRight: "16rem" }}
         >
-          <div className={t("pages.definitions.name.w_full_space_y_4")}>
-            <div className={t("pages.definitions.name.flex_items_center_justify_between_mb_6")}>
-              <h1 className={t("pages.definitions.name.text_2xl_lg_text_3xl_font_bold_text_gray_900")}>{t('pages.definitions.التعريفات_الأساسية')}</h1>
+          <div className="w-full space-y-4">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+                التعريفات الأساسية
+              </h1>
             </div>
 
             {/* Search and Filter Controls */}
-            <div className={t("pages.definitions.name.flex_flex_col_sm_flex_row_gap_4_items_center_justify_between_bg_white_p_4_rounded_lg_shadow_sm_border_border_gray_200")}>
-              <div className={t("pages.definitions.name.flex_items_center_gap_4")}>
-                <div className={t("pages.definitions.name.relative")}>
-                  <Search className={t("pages.definitions.name.absolute_right_3_top_1_2_transform_translate_y_1_2_text_gray_400_w_4_h_4")} />
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    placeholder="{t('pages.definitions.placeholder.البحث_السريع...')}"
+                    placeholder="البحث السريع..."
                     value={quickSearch}
                     onChange={(e) => setQuickSearch(e.target.value)}
-                    className={t("pages.definitions.name.pr_10")}
+                    className="pr-10"
                   />
                 </div>
-                <div className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                  <Filter className={t("pages.definitions.name.w_4_h_4_text_gray_400")} />
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-400" />
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className={t("pages.definitions.name.w_40")}>
-                      <SelectValue placeholder="{t('pages.definitions.placeholder.فلترة_الحالة')}" />
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="فلترة الحالة" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('pages.definitions.جميع_الحالات')}</SelectItem>
-                      <SelectItem value="active">{t('pages.definitions.نشط')}</SelectItem>
-                      <SelectItem value="inactive">{t('pages.definitions.غير_نشط')}</SelectItem>
+                      <SelectItem value="all">جميع الحالات</SelectItem>
+                      <SelectItem value="active">نشط</SelectItem>
+                      <SelectItem value="inactive">غير نشط</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1581,57 +1596,91 @@ export default function Definitions() {
             </div>
 
             {/* Tabs */}
-            <div className={t("pages.definitions.name.w_full")}>
+            <div className="w-full">
               <Tabs
                 value={selectedTab}
                 onValueChange={setSelectedTab}
-                className={t("pages.definitions.name.space_y_4_w_full")}
+                className="space-y-4 w-full"
               >
                 <TabsList
-                  className={t("pages.definitions.name.grid_grid_cols_4_lg_grid_cols_8_w_full_h_auto_p_1_bg_white_rounded_lg_border_border_gray_200_shadow_sm_gap_1")}
+                  className="grid grid-cols-4 lg:grid-cols-8 w-full h-auto p-1 bg-white rounded-lg border border-gray-200 shadow-sm gap-1"
                   dir="rtl"
                 >
                   <TabsTrigger
                     value="customers"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.العملاء')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    العملاء
+                  </TabsTrigger>
                   <TabsTrigger
                     value="sections"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.الأقسام')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الأقسام
+                  </TabsTrigger>
                   <TabsTrigger
                     value="categories"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.الفئات')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الفئات
+                  </TabsTrigger>
                   <TabsTrigger
                     value="items"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.الأصناف')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    الأصناف
+                  </TabsTrigger>
                   <TabsTrigger
                     value="customer-products"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_2_py_2_text_xs_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.منتجات_العملاء')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-2 py-2 text-xs font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    منتجات العملاء
+                  </TabsTrigger>
                   <TabsTrigger
                     value="locations"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.المواقع')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    المواقع
+                  </TabsTrigger>
                   <TabsTrigger
                     value="machines"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.المكائن')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    المكائن
+                  </TabsTrigger>
                   <TabsTrigger
                     value="users"
-                    className={t("pages.definitions.name.data_state_active_bg_white_data_state_active_text_blue_600_text_gray_600_hover_text_blue_600_px_3_py_2_text_sm_font_medium_transition_all_duration_200_rounded_md_min_w_0_flex_1")}
-                  >{t('pages.definitions.المستخدمين')}</TabsTrigger>
+                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 
+                             text-gray-600 hover:text-blue-600 px-3 py-2 text-sm font-medium
+                             transition-all duration-200 rounded-md min-w-0 flex-1"
+                  >
+                    المستخدمين
+                  </TabsTrigger>
                 </TabsList>
 
                 {/* Customers Tab */}
-                <TabsContent value="customers" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="customers" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Building2 className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_العملاء')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Building2 className="w-5 h-5" />
+                          إدارة العملاء
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -1639,27 +1688,45 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_عميل')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة عميل
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {customersLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الهاتف')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.المدينة')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الهاتف
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  المدينة
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredCustomers =
                                   getFilteredCustomers();
@@ -1671,25 +1738,25 @@ export default function Definitions() {
                                   paginatedCustomers.map((customer: any) => (
                                     <tr
                                       key={customer.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {customer.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.phone || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.city || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -1715,14 +1782,17 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={6}
-                                      className={t("pages.definitions.name.px_6_py_4_text_center_text_gray_500")}
+                                      className="px-6 py-4 text-center text-gray-500"
                                     >
                                       {quickSearch || statusFilter !== "all"
                                         ? "لا توجد نتائج مطابقة للفلاتر المحددة"
@@ -1760,12 +1830,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Categories Tab */}
-                <TabsContent value="categories" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="categories" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Package className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_الفئات')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          إدارة الفئات
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -1773,26 +1845,42 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_فئة')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة فئة
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {categoriesLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الكود')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الكود
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredCategories =
                                   getFilteredCategories();
@@ -1804,22 +1892,22 @@ export default function Definitions() {
                                   paginatedCategories.map((category: any) => (
                                     <tr
                                       key={category.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {category.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {category.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {category.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {category.code || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -1839,14 +1927,17 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={5}
-                                      className={t("pages.definitions.name.px_6_py_4_text_center_text_gray_500")}
+                                      className="px-6 py-4 text-center text-gray-500"
                                     >
                                       {quickSearch || statusFilter !== "all"
                                         ? "لا توجد نتائج مطابقة للفلاتر المحددة"
@@ -1884,12 +1975,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Sections Tab */}
-                <TabsContent value="sections" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="sections" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Cog className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_الأقسام')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Cog className="w-5 h-5" />
+                          إدارة الأقسام
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -1897,26 +1990,42 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_قسم')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة قسم
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {sectionsLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الوصف')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الوصف
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredSections = getFilteredSections();
                                 const paginatedSections = paginateData(
@@ -1927,22 +2036,22 @@ export default function Definitions() {
                                   paginatedSections.map((section: any) => (
                                     <tr
                                       key={section.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {section.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {section.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {section.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {section.description || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -1958,15 +2067,20 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={5}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_أقسام_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد أقسام مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -1999,12 +2113,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Items Tab */}
-                <TabsContent value="items" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="items" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Package className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_الأصناف')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          إدارة الأصناف
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2012,26 +2128,42 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_صنف')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة صنف
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {itemsLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الفئة')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الفئة
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredItems = getFilteredItems();
                                 const paginatedItems = paginateData(
@@ -2042,22 +2174,22 @@ export default function Definitions() {
                                   paginatedItems.map((item: any) => (
                                     <tr
                                       key={item.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {item.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {item.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {item.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {item.category_id || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2075,15 +2207,20 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={5}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_أصناف_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد أصناف مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -2116,12 +2253,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Customer Products Tab */}
-                <TabsContent value="customer-products" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="customer-products" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Package className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.منتجات_العملاء')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          منتجات العملاء
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2129,32 +2268,60 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_منتج')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة منتج
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {customerProductsLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.اسم_العميل')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.اسم_الصنف')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.وصف_المقاس')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الطباعة/القطع')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.المادة_الخام')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الماستر_باتش')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.التخريم')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الوحدة')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.وزن_التعبئة')}</th>
-                                <th className={t("pages.definitions.name.px_3_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم العميل
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم الصنف
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  وصف المقاس
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الطباعة/القطع
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  المادة الخام
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الماستر باتش
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  التخريم
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الوحدة
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  وزن التعبئة
+                                </th>
+                                <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredCustomerProducts =
                                   getFilteredCustomerProducts();
@@ -2175,32 +2342,38 @@ export default function Definitions() {
                                       // Find item details
                                       const item = Array.isArray(items)
                                         ? items.find(
-                                            (i: any) =>{t('pages.definitions.i.id_===_product.item_id,_)_:_null;_return_(')}<tr
+                                            (i: any) =>
+                                              i.id === product.item_id,
+                                          )
+                                        : null;
+
+                                      return (
+                                        <tr
                                           key={product.id}
-                                          className={t("pages.definitions.name.hover_bg_gray_50")}
+                                          className="hover:bg-gray-50"
                                         >
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                             {product.id}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_text_sm_text_gray_900_text_center")}>
-                                            <div className={t("pages.definitions.name.flex_flex_col_items_center")}>
-                                              <span className={t("pages.definitions.name.font_medium")}>
+                                          <td className="px-3 py-4 text-sm text-gray-900 text-center">
+                                            <div className="flex flex-col items-center">
+                                              <span className="font-medium">
                                                 {customer?.name_ar ||
                                                   customer?.name ||
                                                   "-"}
                                               </span>
-                                              <span className={t("pages.definitions.name.text_xs_text_gray_500")}>
+                                              <span className="text-xs text-gray-500">
                                                 {customer?.name || "-"}
                                               </span>
                                             </div>
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {item?.name_ar || item?.name || "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.size_caption || "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.is_printed
                                               ? product.printing_cylinder ||
                                                 "بدون طباعة"
@@ -2208,16 +2381,21 @@ export default function Definitions() {
                                                 ? `${formatNumber(parseFloat(product.cutting_length_cm))} سم`
                                                 : "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.raw_material || "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {(() => {
                                               const masterBatchColor =
                                                 masterBatchColors.find(
-                                                  (mb) =>{t('pages.definitions.mb.id_===_product.master_batch_id,_);_return_masterbatchcolor_?_(')}<div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                                  (mb) =>
+                                                    mb.id ===
+                                                    product.master_batch_id,
+                                                );
+                                              return masterBatchColor ? (
+                                                <div className="flex items-center justify-center gap-2">
                                                   <div
-                                                    className={t("pages.definitions.name.w_6_h_6_rounded_full_border_2_border_gray_300_shadow_sm")}
+                                                    className="w-6 h-6 rounded-full border-2 border-gray-300 shadow-sm"
                                                     style={{
                                                       backgroundColor:
                                                         masterBatchColor.color,
@@ -2226,7 +2404,7 @@ export default function Definitions() {
                                                       masterBatchColor.name
                                                     }
                                                   ></div>
-                                                  <span className={t("pages.definitions.name.text_xs_font_medium_text_gray_700")}>
+                                                  <span className="text-xs font-medium text-gray-700">
                                                     {masterBatchColor.name_ar}
                                                   </span>
                                                 </div>
@@ -2235,19 +2413,19 @@ export default function Definitions() {
                                               );
                                             })()}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.punching || "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.cutting_unit || "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_text_gray_900_text_center")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                                             {product.package_weight_kg
                                               ? `${formatNumber(parseFloat(product.package_weight_kg))} كغ`
                                               : "-"}
                                           </td>
-                                          <td className={t("pages.definitions.name.px_3_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                            <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_1")}>
+                                          <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                            <div className="flex items-center justify-center gap-1">
                                               {/* Edit Button */}
                                               <Button
                                                 variant="outline"
@@ -2321,9 +2499,9 @@ export default function Definitions() {
                                                   );
                                                   setIsDialogOpen(true);
                                                 }}
-                                                title="{t('pages.definitions.title.{t('pages.definitions.title.تحديث')}')}"
+                                                title="تحديث"
                                               >
-                                                <Edit className={t("pages.definitions.name.w_3_h_3")} />
+                                                <Edit className="w-3 h-3" />
                                               </Button>
 
                                               {/* Clone Button */}
@@ -2335,10 +2513,10 @@ export default function Definitions() {
                                                     product,
                                                   )
                                                 }
-                                                title="{t('pages.definitions.title.{t('pages.definitions.title.استنساخ')}')}"
-                                                className={t("pages.definitions.name.text_blue_600_hover_text_blue_700_hover_bg_blue_50")}
+                                                title="استنساخ"
+                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                               >
-                                                <Copy className={t("pages.definitions.name.w_3_h_3")} />
+                                                <Copy className="w-3 h-3" />
                                               </Button>
 
                                               {/* Print Button */}
@@ -2350,10 +2528,10 @@ export default function Definitions() {
                                                     product,
                                                   )
                                                 }
-                                                title="{t('pages.definitions.title.{t('pages.definitions.title.طباعة')}')}"
-                                                className={t("pages.definitions.name.text_green_600_hover_text_green_700_hover_bg_green_50")}
+                                                title="طباعة"
+                                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
                                               >
-                                                <Printer className={t("pages.definitions.name.w_3_h_3")} />
+                                                <Printer className="w-3 h-3" />
                                               </Button>
 
                                               {/* Delete Button */}
@@ -2365,14 +2543,16 @@ export default function Definitions() {
                                                     product,
                                                   )
                                                 }
-                                                title="{t('pages.definitions.title.{t('pages.definitions.title.حذف')}')}"
-                                                className={t("pages.definitions.name.text_red_600_hover_text_red_700_hover_bg_red_50")}
+                                                title="حذف"
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                                 disabled={
                                                   deleteCustomerProductMutation.isPending
                                                 }
                                               >
                                                 {deleteCustomerProductMutation.isPending ? (
-                                                  <div className={t("pages.definitions.name.animate_spin_rounded_full_h_3_w_3_border_b_2_border_red_600")}></div>{t('pages.definitions.)_:_(')}<Trash2 className={t("pages.definitions.name.w_3_h_3")} />
+                                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
+                                                ) : (
+                                                  <Trash2 className="w-3 h-3" />
                                                 )}
                                               </Button>
                                             </div>
@@ -2385,8 +2565,10 @@ export default function Definitions() {
                                   <tr>
                                     <td
                                       colSpan={11}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_منتجات_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد منتجات مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -2420,12 +2602,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Locations Tab */}
-                <TabsContent value="locations" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="locations" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <MapPin className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_المواقع')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          إدارة المواقع
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2433,26 +2617,42 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_موقع')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة موقع
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {locationsLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.النوع')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  النوع
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredLocations =
                                   getFilteredLocations();
@@ -2464,22 +2664,22 @@ export default function Definitions() {
                                   paginatedLocations.map((location: any) => (
                                     <tr
                                       key={location.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {location.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.type || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2500,15 +2700,20 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={5}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_مواقع_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مواقع مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -2541,12 +2746,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Machines Tab */}
-                <TabsContent value="machines" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="machines" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <Settings className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_الماكينات')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <Settings className="w-5 h-5" />
+                          إدارة الماكينات
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2554,36 +2761,60 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_ماكينة')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة ماكينة
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {machinesLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.النوع')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.نشطة')}</th>
-                                <th className={t("pages.definitions.name.px_4_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.قدرة_صغير')}<br />
-                                  <span className={t("pages.definitions.name.text_10px_font_normal")}>{t('pages.definitions.(كجم/ساعة)')}</span>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
                                 </th>
-                                <th className={t("pages.definitions.name.px_4_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.قدرة_وسط')}<br />
-                                  <span className={t("pages.definitions.name.text_10px_font_normal")}>{t('pages.definitions.(كجم/ساعة)')}</span>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
                                 </th>
-                                <th className={t("pages.definitions.name.px_4_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.قدرة_كبير')}<br />
-                                  <span className={t("pages.definitions.name.text_10px_font_normal")}>{t('pages.definitions.(كجم/ساعة)')}</span>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
                                 </th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  النوع
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  نشطة
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة صغير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة وسط
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  قدرة كبير
+                                  <br />
+                                  <span className="text-[10px] font-normal">(كجم/ساعة)</span>
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredMachines = getFilteredMachines();
                                 const paginatedMachines = paginateData(
@@ -2594,21 +2825,21 @@ export default function Definitions() {
                                   paginatedMachines.map((machine: any) => (
                                     <tr
                                       key={machine.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {machine.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {machine.type || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_center")} data-testid={`text-status-${machine.id}`}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-center" data-testid={`text-status-${machine.id}`}>
                                         <Badge 
                                           variant={machine.status === "active" ? "default" : "secondary"}
                                           className={machine.status === "active" ? "bg-green-500 hover:bg-green-600" : "bg-gray-500 hover:bg-gray-600"}
@@ -2616,17 +2847,17 @@ export default function Definitions() {
                                           {machine.status === "active" ? "نشطة" : machine.status === "maintenance" ? "صيانة" : "متوقفة"}
                                         </Badge>
                                       </td>
-                                      <td className={t("pages.definitions.name.px_4_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")} data-testid={`text-capacity-small-${machine.id}`}>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-small-${machine.id}`}>
                                         {machine.capacity_small_kg_per_hour ? formatNumber(parseFloat(machine.capacity_small_kg_per_hour)) : "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_4_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")} data-testid={`text-capacity-medium-${machine.id}`}>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-medium-${machine.id}`}>
                                         {machine.capacity_medium_kg_per_hour ? formatNumber(parseFloat(machine.capacity_medium_kg_per_hour)) : "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_4_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")} data-testid={`text-capacity-large-${machine.id}`}>
+                                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 text-center" data-testid={`text-capacity-large-${machine.id}`}>
                                         {machine.capacity_large_kg_per_hour ? formatNumber(parseFloat(machine.capacity_large_kg_per_hour)) : "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2649,15 +2880,20 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={9}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_ماكينات_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد ماكينات مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -2690,12 +2926,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Users Tab */}
-                <TabsContent value="users" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="users" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <User className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_المستخدمين')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <User className="w-5 h-5" />
+                          إدارة المستخدمين
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2703,27 +2941,45 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_مستخدم')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة مستخدم
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {usersLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.اسم_المستخدم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.القسم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الدور')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  اسم المستخدم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  القسم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الدور
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredUsers = getFilteredUsers();
                                 const paginatedUsers = paginateData(
@@ -2734,18 +2990,18 @@ export default function Definitions() {
                                   paginatedUsers.map((user: any) => (
                                     <tr
                                       key={user.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {user.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {user.username || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {user.display_name || user.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {(() => {
                                           if (!user.section_id) return "-";
                                           // Map numeric section_id to section string ID
@@ -2772,7 +3028,7 @@ export default function Definitions() {
                                             : `قسم ${user.section_id}`;
                                         })()}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {(() => {
                                           if (!user.role_id) return "-";
                                           const role =
@@ -2785,8 +3041,8 @@ export default function Definitions() {
                                             : "-";
                                         })()}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2829,15 +3085,20 @@ export default function Definitions() {
                                               setIsDialogOpen(true);
                                             }}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={5}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_مستخدمين_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مستخدمين مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -2870,12 +3131,14 @@ export default function Definitions() {
                 </TabsContent>
 
                 {/* Locations Tab */}
-                <TabsContent value="locations" className={t("pages.definitions.name.space_y_6")}>
+                <TabsContent value="locations" className="space-y-6">
                   <Card>
                     <CardHeader>
-                      <div className={t("pages.definitions.name.flex_items_center_justify_between")}>
-                        <CardTitle className={t("pages.definitions.name.flex_items_center_gap_2")}>
-                          <MapPin className={t("pages.definitions.name.w_5_h_5")} />{t('pages.definitions.إدارة_المواقع')}</CardTitle>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          إدارة المواقع
+                        </CardTitle>
                         <Button
                           onClick={() => {
                             resetForm();
@@ -2883,27 +3146,45 @@ export default function Definitions() {
                             setIsDialogOpen(true);
                           }}
                         >
-                          <Plus className={t("pages.definitions.name.w_4_h_4_mr_2")} />{t('pages.definitions.إضافة_موقع')}</Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          إضافة موقع
+                        </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
                       {locationsLoading ? (
-                        <div className={t("pages.definitions.name.text_center_py_8")}>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_primary_mx_auto")}></div>
-                          <p className={t("pages.definitions.name.mt_2_text_sm_text_muted_foreground")}>{t('pages.definitions.جاري_التحميل...')}</p>
-                        </div>{t('pages.definitions.)_:_(')}<div className={t("pages.definitions.name.overflow_x_auto")}>
-                          <table className={t("pages.definitions.name.min_w_full_divide_y_divide_gray_200")}>
-                            <thead className={t("pages.definitions.name.bg_gray_50")}>
+                        <div className="text-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            جاري التحميل...
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead className="bg-gray-50">
                               <tr>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الرقم')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_العربي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الاسم_الإنجليزي')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.الإحداثيات')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.نطاق_التسامح')}</th>
-                                <th className={t("pages.definitions.name.px_6_py_3_text_center_text_xs_font_medium_text_gray_500_uppercase")}>{t('pages.definitions.العمليات')}</th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الرقم
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم العربي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الاسم الإنجليزي
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  الإحداثيات
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  نطاق التسامح
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  العمليات
+                                </th>
                               </tr>
                             </thead>
-                            <tbody className={t("pages.definitions.name.bg_white_divide_y_divide_gray_200")}>
+                            <tbody className="bg-white divide-y divide-gray-200">
                               {(() => {
                                 const filteredLocations =
                                   getFilteredLocations();
@@ -2915,25 +3196,25 @@ export default function Definitions() {
                                   paginatedLocations.map((location: any) => (
                                     <tr
                                       key={location.id}
-                                      className={t("pages.definitions.name.hover_bg_gray_50")}
+                                      className="hover:bg-gray-50"
                                     >
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-center">
                                         {location.id}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.name_ar || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.name || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.coordinates || "-"}
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_500_text_center")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {location.tolerance_range || "-"} متر
                                       </td>
-                                      <td className={t("pages.definitions.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_center")}>
-                                        <div className={t("pages.definitions.name.flex_items_center_justify_center_gap_2")}>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                        <div className="flex items-center justify-center gap-2">
                                           <Button
                                             variant="outline"
                                             size="sm"
@@ -2955,15 +3236,20 @@ export default function Definitions() {
                                             }}
                                             data-testid={`button-edit-location-${location.id}`}
                                           >
-                                            <Edit className={t("pages.definitions.name.w_4_h_4")} />
+                                            <Edit className="w-4 h-4" />
                                           </Button>
                                         </div>
                                       </td>
-                                    </tr>{t('pages.definitions.))_)_:_(')}<tr>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
                                     <td
                                       colSpan={6}
-                                      className={t("pages.definitions.name.px_6_py_8_text_center_text_gray_500")}
-                                    >{t('pages.definitions.لا_توجد_مواقع_مطابقة_للبحث')}</td>
+                                      className="px-6 py-8 text-center text-gray-500"
+                                    >
+                                      لا توجد مواقع مطابقة للبحث
+                                    </td>
                                   </tr>
                                 );
                               })()}
@@ -3003,7 +3289,7 @@ export default function Definitions() {
             {selectedTab === "customers" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent
-                  className={t("pages.definitions.name.max_w_4xl_max_h_90vh_overflow_y_auto")}
+                  className="max-w-4xl max-h-[90vh] overflow-y-auto"
                   aria-describedby="customer-dialog-description"
                 >
                   <DialogHeader>
@@ -3016,10 +3302,10 @@ export default function Definitions() {
                         : "إضافة عميل جديد إلى النظام"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={customerForm.name_ar}
@@ -3029,12 +3315,12 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_العميل_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم العميل بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={customerForm.name}
@@ -3044,14 +3330,14 @@ export default function Definitions() {
                               name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.customer_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Customer Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_3_gap_4")}>
+                    <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="code">{t('pages.definitions.كود_العميل')}</Label>
+                        <Label htmlFor="code">كود العميل</Label>
                         <Input
                           id="code"
                           value={customerForm.code}
@@ -3061,12 +3347,12 @@ export default function Definitions() {
                               code: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.كود_العميل')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="كود العميل"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="phone">{t('pages.definitions.الهاتف')}</Label>
+                        <Label htmlFor="phone">الهاتف</Label>
                         <Input
                           id="phone"
                           value={customerForm.phone}
@@ -3076,12 +3362,12 @@ export default function Definitions() {
                               phone: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.رقم_الهاتف')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="رقم الهاتف"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="city">{t('pages.definitions.المدينة')}</Label>
+                        <Label htmlFor="city">المدينة</Label>
                         <Input
                           id="city"
                           value={customerForm.city}
@@ -3091,14 +3377,14 @@ export default function Definitions() {
                               city: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.المدينة')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="المدينة"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="sales_rep_id">{t('pages.definitions.المندوب')}</Label>
+                        <Label htmlFor="sales_rep_id">المندوب</Label>
                         <Select
                           value={customerForm.sales_rep_id?.toString() || "none"}
                           onValueChange={(value) =>
@@ -3108,11 +3394,11 @@ export default function Definitions() {
                             })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")} data-testid="select-sales-rep">
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_المندوب')}" />
+                          <SelectTrigger className="mt-1" data-testid="select-sales-rep">
+                            <SelectValue placeholder="اختر المندوب" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_مندوب')}</SelectItem>
+                            <SelectItem value="none">بدون مندوب</SelectItem>
                             {Array.isArray(salesReps) &&
                               salesReps.map((rep: any) => (
                                 <SelectItem
@@ -3126,7 +3412,7 @@ export default function Definitions() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="tax_number">{t('pages.definitions.الرقم_الضريبي')}</Label>
+                        <Label htmlFor="tax_number">الرقم الضريبي</Label>
                         <Input
                           id="tax_number"
                           value={customerForm.tax_number}
@@ -3136,13 +3422,13 @@ export default function Definitions() {
                               tax_number: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.الرقم_الضريبي')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="الرقم الضريبي"
+                          className="mt-1"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="address">{t('pages.definitions.العنوان')}</Label>
+                      <Label htmlFor="address">العنوان</Label>
                       <Input
                         id="address"
                         value={customerForm.address}
@@ -3152,8 +3438,8 @@ export default function Definitions() {
                             address: e.target.value,
                           })
                         }
-                        placeholder="{t('pages.definitions.placeholder.العنوان_كاملاً')}"
-                        className={t("pages.definitions.name.mt_1")}
+                        placeholder="العنوان كاملاً"
+                        className="mt-1"
                       />
                     </div>
                   </div>
@@ -3161,7 +3447,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -3181,7 +3469,7 @@ export default function Definitions() {
                       {createCustomerMutation.isPending ||
                       updateCustomerMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -3198,7 +3486,7 @@ export default function Definitions() {
             {/* Section Add/Edit Dialog */}
             {selectedTab === "sections" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث القسم" : "إضافة قسم جديد"}
@@ -3209,10 +3497,10 @@ export default function Definitions() {
                         : "إضافة قسم جديد للمؤسسة"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={sectionForm.name_ar}
@@ -3222,12 +3510,12 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_القسم_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم القسم بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={sectionForm.name}
@@ -3237,13 +3525,13 @@ export default function Definitions() {
                               name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.section_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Section Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="description">{t('pages.definitions.الوصف')}</Label>
+                      <Label htmlFor="description">الوصف</Label>
                       <Input
                         id="description"
                         value={sectionForm.description}
@@ -3253,8 +3541,8 @@ export default function Definitions() {
                             description: e.target.value,
                           })
                         }
-                        placeholder="{t('pages.definitions.placeholder.وصف_القسم_(اختياري)')}"
-                        className={t("pages.definitions.name.mt_1")}
+                        placeholder="وصف القسم (اختياري)"
+                        className="mt-1"
                       />
                     </div>
                   </div>
@@ -3262,7 +3550,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -3282,7 +3572,7 @@ export default function Definitions() {
                       {createSectionMutation.isPending ||
                       updateSectionMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -3299,7 +3589,7 @@ export default function Definitions() {
             {/* Category Add/Edit Dialog */}
             {selectedTab === "categories" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث الفئة" : "إضافة فئة جديدة"}
@@ -3310,10 +3600,10 @@ export default function Definitions() {
                         : "إضافة فئة جديدة لتصنيف المنتجات"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={categoryForm.name_ar}
@@ -3323,12 +3613,12 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_الفئة_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم الفئة بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={categoryForm.name}
@@ -3338,15 +3628,15 @@ export default function Definitions() {
                               name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.category_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Category Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
 
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="code">{t('pages.definitions.الكود')}</Label>
+                        <Label htmlFor="code">الكود</Label>
                         <Input
                           id="code"
                           value={categoryForm.code}
@@ -3356,12 +3646,12 @@ export default function Definitions() {
                               code: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.كود_الفئة_(اختياري)')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="كود الفئة (اختياري)"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="parent_id">{t('pages.definitions.الفئة_الرئيسية')}</Label>
+                        <Label htmlFor="parent_id">الفئة الرئيسية</Label>
                         <Select
                           value={categoryForm.parent_id}
                           onValueChange={(value) =>
@@ -3371,11 +3661,13 @@ export default function Definitions() {
                             })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الفئة_الرئيسية')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة الرئيسية" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_فئة_رئيسية')}</SelectItem>
+                            <SelectItem value="none">
+                              بدون فئة رئيسية
+                            </SelectItem>
                             {Array.isArray(categories) &&
                               categories
                                 .filter(
@@ -3399,7 +3691,7 @@ export default function Definitions() {
                     </div>
 
                     <div>
-                      <Label htmlFor="description">{t('pages.definitions.الوصف')}</Label>
+                      <Label htmlFor="description">الوصف</Label>
                       <Input
                         id="description"
                         value={categoryForm.description}
@@ -3409,25 +3701,25 @@ export default function Definitions() {
                             description: e.target.value,
                           })
                         }
-                        placeholder="{t('pages.definitions.placeholder.وصف_الفئة_(اختياري)')}"
-                        className={t("pages.definitions.name.mt_1")}
+                        placeholder="وصف الفئة (اختياري)"
+                        className="mt-1"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="status">{t('pages.definitions.الحالة')}</Label>
+                      <Label htmlFor="status">الحالة</Label>
                       <Select
                         value={categoryForm.status}
                         onValueChange={(value) =>
                           setCategoryForm({ ...categoryForm, status: value })
                         }
                       >
-                        <SelectTrigger className={t("pages.definitions.name.mt_1")}>
+                        <SelectTrigger className="mt-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">{t('pages.definitions.نشط')}</SelectItem>
-                          <SelectItem value="inactive">{t('pages.definitions.غير_نشط')}</SelectItem>
+                          <SelectItem value="active">نشط</SelectItem>
+                          <SelectItem value="inactive">غير نشط</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -3436,7 +3728,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -3456,7 +3750,7 @@ export default function Definitions() {
                       {createCategoryMutation.isPending ||
                       updateCategoryMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -3473,7 +3767,7 @@ export default function Definitions() {
             {/* Items Add/Edit Dialog */}
             {selectedTab === "items" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث الصنف" : "إضافة صنف جديد"}
@@ -3484,10 +3778,10 @@ export default function Definitions() {
                         : "إضافة صنف جديد إلى المخزون"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={itemForm.name_ar}
@@ -3497,49 +3791,49 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_الصنف_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم الصنف بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={itemForm.name}
                           onChange={(e) =>
                             setItemForm({ ...itemForm, name: e.target.value })
                           }
-                          placeholder="{t('pages.definitions.placeholder.item_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Item Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="code">{t('pages.definitions.كود_الصنف')}</Label>
+                        <Label htmlFor="code">كود الصنف</Label>
                         <Input
                           id="code"
                           value={itemForm.code}
                           onChange={(e) =>
                             setItemForm({ ...itemForm, code: e.target.value })
                           }
-                          placeholder="{t('pages.definitions.placeholder.كود_الصنف')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="كود الصنف"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="category_id">{t('pages.definitions.الفئة')}</Label>
+                        <Label htmlFor="category_id">الفئة</Label>
                         <Select
                           value={itemForm.category_id}
                           onValueChange={(value) =>
                             setItemForm({ ...itemForm, category_id: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الفئة')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_فئة')}</SelectItem>
+                            <SelectItem value="none">بدون فئة</SelectItem>
                             {Array.isArray(categories) &&
                               categories
                                 .filter(
@@ -3566,7 +3860,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -3586,7 +3882,7 @@ export default function Definitions() {
                       {createItemMutation.isPending ||
                       updateItemMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -3603,24 +3899,24 @@ export default function Definitions() {
             {/* Customer Products Add/Edit Dialog */}
             {selectedTab === "customer-products" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_6xl_max_h_90vh_overflow_y_auto_sm_max_w_95vw_w_full_mx_4")}>
+                <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto sm:max-w-[95vw] w-full mx-4">
                   <DialogHeader>
-                    <DialogTitle className={t("pages.definitions.name.text_lg_sm_text_xl")}>
+                    <DialogTitle className="text-lg sm:text-xl">
                       {editingItem
                         ? "تحديث منتج العميل"
                         : "إضافة منتج عميل جديد"}
                     </DialogTitle>
-                    <DialogDescription className={t("pages.definitions.name.text_sm_sm_text_base")}>
+                    <DialogDescription className="text-sm sm:text-base">
                       {editingItem
                         ? "تعديل بيانات منتج العميل الحالي"
                         : "إضافة منتج جديد لعميل محدد"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_6_py_4_px_2_sm_px_0")}>
+                  <div className="grid gap-6 py-4 px-2 sm:px-0">
                     {/* العميل والفئة والصنف */}
-                    <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_lg_grid_cols_3_gap_4")}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div>
-                        <Label htmlFor="customer_id">{t('pages.definitions.العميل_*')}</Label>
+                        <Label htmlFor="customer_id">العميل *</Label>
                         <Select
                           value={customerProductForm.customer_id}
                           onValueChange={(value) =>
@@ -3630,11 +3926,11 @@ export default function Definitions() {
                             })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_العميل')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر العميل" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.اختر_العميل')}</SelectItem>
+                            <SelectItem value="none">اختر العميل</SelectItem>
                             {Array.isArray(customers) &&
                               customers
                                 .filter(
@@ -3657,7 +3953,7 @@ export default function Definitions() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="category_id">{t('pages.definitions.الفئة')}</Label>
+                        <Label htmlFor="category_id">الفئة</Label>
                         <Select
                           value={customerProductForm.category_id}
                           onValueChange={(value) => {
@@ -3668,11 +3964,11 @@ export default function Definitions() {
                             });
                           }}
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الفئة')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الفئة" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.اختر_الفئة')}</SelectItem>
+                            <SelectItem value="none">اختر الفئة</SelectItem>
                             {Array.isArray(categories) &&
                               categories
                                 .filter(
@@ -3694,7 +3990,7 @@ export default function Definitions() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="item_id">{t('pages.definitions.الصنف')}</Label>
+                        <Label htmlFor="item_id">الصنف</Label>
                         <Select
                           value={customerProductForm.item_id}
                           onValueChange={(value) =>
@@ -3708,7 +4004,7 @@ export default function Definitions() {
                             customerProductForm.category_id === "none"
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
+                          <SelectTrigger className="mt-1">
                             <SelectValue
                               placeholder={
                                 !customerProductForm.category_id ||
@@ -3719,7 +4015,7 @@ export default function Definitions() {
                             />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.اختر_الصنف')}</SelectItem>
+                            <SelectItem value="none">اختر الصنف</SelectItem>
                             {Array.isArray(items) &&
                               items
                                 .filter(
@@ -3751,21 +4047,25 @@ export default function Definitions() {
                     </div>
 
                     {/* وصف الحجم والتثقيب */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.مواصفات_المنتج')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        مواصفات المنتج
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="size_caption">{t('pages.definitions.مقاس_المنتج_(يُحسب_تلقائياً)')}</Label>
+                          <Label htmlFor="size_caption">
+                            مقاس المنتج (يُحسب تلقائياً)
+                          </Label>
                           <Input
                             id="size_caption"
                             value={customerProductForm.size_caption}
-                            placeholder="{t('pages.definitions.placeholder.سيتم_إنشاؤه_تلقائياً:_العرض_×_الطول')}"
-                            className={t("pages.definitions.name.mt_1_bg_gray_50")}
+                            placeholder="سيتم إنشاؤه تلقائياً: العرض × الطول"
+                            className="mt-1 bg-gray-50"
                             readOnly
                           />
                         </div>
                         <div>
-                          <Label htmlFor="punching">{t('pages.definitions.التخريم')}</Label>
+                          <Label htmlFor="punching">التخريم</Label>
                           <Select
                             value={customerProductForm.punching}
                             onValueChange={(value) =>
@@ -3775,14 +4075,16 @@ export default function Definitions() {
                               })
                             }
                           >
-                            <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                              <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_نوع_التخريم')}" />
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر نوع التخريم" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="بدون">{t('pages.definitions.بدون')}</SelectItem>
-                              <SelectItem value="علاقي">{t('pages.definitions.علاقي')}</SelectItem>
-                              <SelectItem value="علاقي هوك">{t('pages.definitions.علاقي_هوك')}</SelectItem>
-                              <SelectItem value="بنانة">{t('pages.definitions.بنانة')}</SelectItem>
+                              <SelectItem value="بدون">بدون</SelectItem>
+                              <SelectItem value="علاقي">علاقي</SelectItem>
+                              <SelectItem value="علاقي هوك">
+                                علاقي هوك
+                              </SelectItem>
+                              <SelectItem value="بنانة">بنانة</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -3790,11 +4092,15 @@ export default function Definitions() {
                     </div>
 
                     {/* الأبعاد والقياسات بالترتيب المطلوب */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.الأبعاد_والقياسات')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_2_sm_grid_cols_3_lg_grid_cols_4_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الأبعاد والقياسات
+                      </h4>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="right_facing">{t('pages.definitions.الجانب_الأيمن_(سم)')}</Label>
+                          <Label htmlFor="right_facing">
+                            الجانب الأيمن (سم)
+                          </Label>
                           <Input
                             id="right_facing"
                             type="number"
@@ -3806,12 +4112,12 @@ export default function Definitions() {
                                 right_facing: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.0.00')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="0.00"
+                            className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="width">{t('pages.definitions.العرض_(سم)')}</Label>
+                          <Label htmlFor="width">العرض (سم)</Label>
                           <Input
                             id="width"
                             type="number"
@@ -3823,12 +4129,14 @@ export default function Definitions() {
                                 width: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.0.00')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="0.00"
+                            className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="left_facing">{t('pages.definitions.الجانب_الأيسر_(سم)')}</Label>
+                          <Label htmlFor="left_facing">
+                            الجانب الأيسر (سم)
+                          </Label>
                           <Input
                             id="left_facing"
                             type="number"
@@ -3840,12 +4148,12 @@ export default function Definitions() {
                                 left_facing: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.0.00')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="0.00"
+                            className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="thickness">{t('pages.definitions.السماكة_(ميكرون)')}</Label>
+                          <Label htmlFor="thickness">السماكة (ميكرون)</Label>
                           <Input
                             id="thickness"
                             type="number"
@@ -3857,19 +4165,23 @@ export default function Definitions() {
                                 thickness: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.0.00')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="0.00"
+                            className="mt-1"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* الطباعة والقطع */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.مواصفات_الطباعة_والقطع')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_lg_grid_cols_4_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        مواصفات الطباعة والقطع
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
-                          <Label htmlFor="printing_cylinder">{t('pages.definitions.أسطوانة_الطباعة')}</Label>
+                          <Label htmlFor="printing_cylinder">
+                            أسطوانة الطباعة
+                          </Label>
                           <Select
                             value={customerProductForm.printing_cylinder}
                             onValueChange={(value) =>
@@ -3879,8 +4191,8 @@ export default function Definitions() {
                               })
                             }
                           >
-                            <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                              <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الأسطوانة')}" />
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر الأسطوانة" />
                             </SelectTrigger>
                             <SelectContent>
                               {printingCylinderOptions
@@ -3903,7 +4215,9 @@ export default function Definitions() {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="cutting_length_cm">{t('pages.definitions.طول_القطع_(سم)')}</Label>
+                          <Label htmlFor="cutting_length_cm">
+                            طول القطع (سم)
+                          </Label>
                           <Input
                             id="cutting_length_cm"
                             type="number"
@@ -3914,29 +4228,31 @@ export default function Definitions() {
                                 cutting_length_cm: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.يحسب_تلقائياً_أو_أدخل_يدوياً')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="يحسب تلقائياً أو أدخل يدوياً"
+                            className="mt-1"
                             disabled={
                               customerProductForm.printing_cylinder !==
                               "بدون طباعة"
                             }
                           />
                         </div>
-                        <div className={t("pages.definitions.name.flex_items_center_gap_3_mt_6_p_3_bg_gray_50_rounded_md")}>
+                        <div className="flex items-center gap-3 mt-6 p-3 bg-gray-50 rounded-md">
                           <input
                             type="checkbox"
                             id="is_printed"
                             checked={customerProductForm.is_printed}
-                            className={t("pages.definitions.name.rounded_w_4_h_4")}
+                            className="rounded w-4 h-4"
                             disabled
                           />
                           <Label
                             htmlFor="is_printed"
-                            className={t("pages.definitions.name.text_gray_600_text_sm")}
-                          >{t('pages.definitions.منتج_مطبوع_(يتم_تحديده_تلقائياً)')}</Label>
+                            className="text-gray-600 text-sm"
+                          >
+                            منتج مطبوع (يتم تحديده تلقائياً)
+                          </Label>
                         </div>
                         <div>
-                          <Label htmlFor="cutting_unit">{t('pages.definitions.وحدة_القطع')}</Label>
+                          <Label htmlFor="cutting_unit">وحدة القطع</Label>
                           <Select
                             value={customerProductForm.cutting_unit}
                             onValueChange={(value) =>
@@ -3946,14 +4262,14 @@ export default function Definitions() {
                               })
                             }
                           >
-                            <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                              <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الوحدة')}" />
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر الوحدة" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="كيلو">{t('pages.definitions.كيلو')}</SelectItem>
-                              <SelectItem value="رول">{t('pages.definitions.رول')}</SelectItem>
-                              <SelectItem value="باكت">{t('pages.definitions.باكت')}</SelectItem>
-                              <SelectItem value="كرتون">{t('pages.definitions.كرتون')}</SelectItem>
+                              <SelectItem value="كيلو">كيلو</SelectItem>
+                              <SelectItem value="رول">رول</SelectItem>
+                              <SelectItem value="باكت">باكت</SelectItem>
+                              <SelectItem value="كرتون">كرتون</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -3961,11 +4277,13 @@ export default function Definitions() {
                     </div>
 
                     {/* المواد والخامات */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.المواد_والخامات')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        المواد والخامات
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="raw_material">{t('pages.definitions.المادة_الخام')}</Label>
+                          <Label htmlFor="raw_material">المادة الخام</Label>
                           <Select
                             value={customerProductForm.raw_material}
                             onValueChange={(value) =>
@@ -3975,18 +4293,20 @@ export default function Definitions() {
                               })
                             }
                           >
-                            <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                              <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_المادة_الخام')}" />
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر المادة الخام" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="HDPE">{t('pages.definitions.hdpe')}</SelectItem>
-                              <SelectItem value="LDPE">{t('pages.definitions.ldpe')}</SelectItem>
-                              <SelectItem value="Regrind">{t('pages.definitions.regrind')}</SelectItem>
+                              <SelectItem value="HDPE">HDPE</SelectItem>
+                              <SelectItem value="LDPE">LDPE</SelectItem>
+                              <SelectItem value="Regrind">Regrind</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="master_batch_id">{t('pages.definitions.لون_الماستر_باتش')}</Label>
+                          <Label htmlFor="master_batch_id">
+                            لون الماستر باتش
+                          </Label>
                           <Select
                             value={customerProductForm.master_batch_id}
                             onValueChange={(value) =>
@@ -3996,11 +4316,11 @@ export default function Definitions() {
                               })
                             }
                           >
-                            <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                              <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_اللون')}" />
+                            <SelectTrigger className="mt-1">
+                              <SelectValue placeholder="اختر اللون" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">{t('pages.definitions.بدون_لون')}</SelectItem>
+                              <SelectItem value="none">بدون لون</SelectItem>
                               {masterBatchColors
                                 .filter(
                                   (color) =>
@@ -4014,9 +4334,9 @@ export default function Definitions() {
                                     key={color.id}
                                     value={color.id.toString()}
                                   >
-                                    <div className={t("pages.definitions.name.flex_items_center_gap_3")}>
+                                    <div className="flex items-center gap-3">
                                       <div
-                                        className={t("pages.definitions.name.w_5_h_5_rounded_full_border_2_border_gray_300_flex_items_center_justify_center")}
+                                        className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center"
                                         style={{
                                           backgroundColor: color.color,
                                           border:
@@ -4026,12 +4346,12 @@ export default function Definitions() {
                                         }}
                                       >
                                         {color.id === "transparent" && (
-                                          <span className={t("pages.definitions.name.text_xs_text_gray_400")}>
+                                          <span className="text-xs text-gray-400">
                                             ⊘
                                           </span>
                                         )}
                                       </div>
-                                      <span className={t("pages.definitions.name.font_medium")}>
+                                      <span className="font-medium">
                                         {color.name_ar}
                                       </span>
                                     </div>
@@ -4044,11 +4364,15 @@ export default function Definitions() {
                     </div>
 
                     {/* الأوزان والكميات */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.الأوزان_والكميات')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_lg_grid_cols_3_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الأوزان والكميات
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
-                          <Label htmlFor="unit_weight_kg">{t('pages.definitions.وزن_الوحدة_(كغ)')}</Label>
+                          <Label htmlFor="unit_weight_kg">
+                            وزن الوحدة (كغ)
+                          </Label>
                           <Input
                             id="unit_weight_kg"
                             type="number"
@@ -4060,12 +4384,12 @@ export default function Definitions() {
                                 unit_weight_kg: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.0.00')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="0.00"
+                            className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="unit_quantity">{t('pages.definitions.التعبئة')}</Label>
+                          <Label htmlFor="unit_quantity">التعبئة</Label>
                           <Input
                             id="unit_quantity"
                             type="number"
@@ -4077,18 +4401,20 @@ export default function Definitions() {
                               })
                             }
                             placeholder="0"
-                            className={t("pages.definitions.name.mt_1")}
+                            className="mt-1"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="package_weight_kg">{t('pages.definitions.وزن_العبوة_(كغ)_-_محسوب_تلقائياً')}</Label>
+                          <Label htmlFor="package_weight_kg">
+                            وزن العبوة (كغ) - محسوب تلقائياً
+                          </Label>
                           <Input
                             id="package_weight_kg"
                             type="number"
                             step="0.01"
                             value={customerProductForm.package_weight_kg}
-                            placeholder="{t('pages.definitions.placeholder.وزن_الوحدة_×_كمية_الوحدة')}"
-                            className={t("pages.definitions.name.mt_1_bg_gray_50")}
+                            placeholder="وزن الوحدة × كمية الوحدة"
+                            className="mt-1 bg-gray-50"
                             readOnly
                           />
                         </div>
@@ -4096,12 +4422,16 @@ export default function Definitions() {
                     </div>
 
                     {/* الكليشيهات والتصاميم */}
-                    <div className={t("pages.definitions.name.space_y_4")}>
-                      <h4 className={t("pages.definitions.name.text_lg_sm_text_xl_font_medium_border_b_border_gray_200_pb_2")}>{t('pages.definitions.الكليشيهات_والتصاميم')}</h4>
-                      <div className={t("pages.definitions.name.grid_grid_cols_1_sm_grid_cols_2_gap_4")}>
+                    <div className="space-y-4">
+                      <h4 className="text-lg sm:text-xl font-medium border-b border-gray-200 pb-2">
+                        الكليشيهات والتصاميم
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="cliche_front_design">{t('pages.definitions.تصميم_الوجه_الأمامي')}</Label>
-                          <div className={t("pages.definitions.name.space_y_2")}>
+                          <Label htmlFor="cliche_front_design">
+                            تصميم الوجه الأمامي
+                          </Label>
+                          <div className="space-y-2">
                             <Input
                               id="cliche_front_design"
                               type="file"
@@ -4132,20 +4462,20 @@ export default function Definitions() {
                                   reader.readAsDataURL(file);
                                 }
                               }}
-                              className={t("pages.definitions.name.mt_1")}
+                              className="mt-1"
                             />
                             {customerProductForm.cliche_front_design && (
-                              <div className={t("pages.definitions.name.relative")}>
+                              <div className="relative">
                                 <img
                                   src={customerProductForm.cliche_front_design}
-                                  alt="{t('pages.definitions.alt.التصميم_الأمامي')}"
-                                  className={t("pages.definitions.name.max_w_full_max_h_32_object_contain_border_rounded_md_bg_gray_50")}
+                                  alt="التصميم الأمامي"
+                                  className="max-w-full max-h-32 object-contain border rounded-md bg-gray-50"
                                 />
                                 <Button
                                   type="button"
                                   variant="destructive"
                                   size="sm"
-                                  className={t("pages.definitions.name.absolute_top_1_right_1_h_6_w_6_p_0")}
+                                  className="absolute top-1 right-1 h-6 w-6 p-0"
                                   onClick={() =>
                                     setCustomerProductForm({
                                       ...customerProductForm,
@@ -4161,8 +4491,10 @@ export default function Definitions() {
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="cliche_back_design">{t('pages.definitions.تصميم_الوجه_الخلفي')}</Label>
-                          <div className={t("pages.definitions.name.space_y_2")}>
+                          <Label htmlFor="cliche_back_design">
+                            تصميم الوجه الخلفي
+                          </Label>
+                          <div className="space-y-2">
                             <Input
                               id="cliche_back_design"
                               type="file"
@@ -4193,20 +4525,20 @@ export default function Definitions() {
                                   reader.readAsDataURL(file);
                                 }
                               }}
-                              className={t("pages.definitions.name.mt_1")}
+                              className="mt-1"
                             />
                             {customerProductForm.cliche_back_design && (
-                              <div className={t("pages.definitions.name.relative")}>
+                              <div className="relative">
                                 <img
                                   src={customerProductForm.cliche_back_design}
-                                  alt="{t('pages.definitions.alt.التصميم_الخلفي')}"
-                                  className={t("pages.definitions.name.max_w_full_max_h_32_object_contain_border_rounded_md_bg_gray_50")}
+                                  alt="التصميم الخلفي"
+                                  className="max-w-full max-h-32 object-contain border rounded-md bg-gray-50"
                                 />
                                 <Button
                                   type="button"
                                   variant="destructive"
                                   size="sm"
-                                  className={t("pages.definitions.name.absolute_top_1_right_1_h_6_w_6_p_0")}
+                                  className="absolute top-1 right-1 h-6 w-6 p-0"
                                   onClick={() =>
                                     setCustomerProductForm({
                                       ...customerProductForm,
@@ -4226,7 +4558,9 @@ export default function Definitions() {
 
                     {/* ملاحظات */}
                     <div>
-                      <Label htmlFor="notes" className={t("pages.definitions.name.text_base")}>{t('pages.definitions.ملاحظات')}</Label>
+                      <Label htmlFor="notes" className="text-base">
+                        ملاحظات
+                      </Label>
                       <textarea
                         id="notes"
                         value={customerProductForm.notes}
@@ -4236,19 +4570,21 @@ export default function Definitions() {
                             notes: e.target.value,
                           })
                         }
-                        placeholder="{t('pages.definitions.placeholder.أي_ملاحظات_إضافية_حول_المنتج...')}"
-                        className={t("pages.definitions.name.mt_2_w_full_p_3_border_border_gray_300_rounded_md_resize_none_text_right")}
+                        placeholder="أي ملاحظات إضافية حول المنتج..."
+                        className="mt-2 w-full p-3 border border-gray-300 rounded-md resize-none text-right"
                         rows={4}
                         dir="rtl"
                       />
                     </div>
                   </div>
-                  <DialogFooter className={t("pages.definitions.name.flex_flex_col_sm_flex_row_gap_2_sm_gap_0")}>
+                  <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                      className={t("pages.definitions.name.w_full_sm_w_auto_order_2_sm_order_1")}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                      className="w-full sm:w-auto order-2 sm:order-1"
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         // Convert string fields to numbers for validation
@@ -4297,12 +4633,12 @@ export default function Definitions() {
                         createCustomerProductMutation.isPending ||
                         updateCustomerProductMutation.isPending
                       }
-                      className={t("pages.definitions.name.w_full_sm_w_auto_order_1_sm_order_2")}
+                      className="w-full sm:w-auto order-1 sm:order-2"
                     >
                       {createCustomerProductMutation.isPending ||
                       updateCustomerProductMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -4319,7 +4655,7 @@ export default function Definitions() {
             {/* Locations Add/Edit Dialog */}
             {selectedTab === "locations" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث الموقع" : "إضافة موقع جديد"}
@@ -4330,10 +4666,10 @@ export default function Definitions() {
                         : "إضافة موقع جديد لتخزين المواد والمنتجات"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={locationForm.name_ar}
@@ -4343,12 +4679,12 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_الموقع_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم الموقع بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={locationForm.name}
@@ -4358,33 +4694,33 @@ export default function Definitions() {
                               name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.location_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Location Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="type">{t('pages.definitions.النوع')}</Label>
+                        <Label htmlFor="type">النوع</Label>
                         <Select
                           value={locationForm.type}
                           onValueChange={(value) =>
                             setLocationForm({ ...locationForm, type: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
+                          <SelectTrigger className="mt-1">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="city">{t('pages.definitions.مدينة')}</SelectItem>
-                            <SelectItem value="warehouse">{t('pages.definitions.مستودع')}</SelectItem>
-                            <SelectItem value="factory">{t('pages.definitions.مصنع')}</SelectItem>
-                            <SelectItem value="office">{t('pages.definitions.مكتب')}</SelectItem>
+                            <SelectItem value="city">مدينة</SelectItem>
+                            <SelectItem value="warehouse">مستودع</SelectItem>
+                            <SelectItem value="factory">مصنع</SelectItem>
+                            <SelectItem value="office">مكتب</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="coordinates">{t('pages.definitions.الإحداثيات')}</Label>
+                        <Label htmlFor="coordinates">الإحداثيات</Label>
                         <Input
                           id="coordinates"
                           value={locationForm.coordinates}
@@ -4394,8 +4730,8 @@ export default function Definitions() {
                               coordinates: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.lat,lng')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="lat,lng"
+                          className="mt-1"
                         />
                       </div>
                     </div>
@@ -4404,7 +4740,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -4424,7 +4762,7 @@ export default function Definitions() {
                       {createLocationMutation.isPending ||
                       updateLocationMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -4441,7 +4779,7 @@ export default function Definitions() {
             {/* Machines Add/Edit Dialog */}
             {selectedTab === "machines" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث الماكينة" : "إضافة ماكينة جديدة"}
@@ -4452,10 +4790,10 @@ export default function Definitions() {
                         : "إضافة ماكينة جديدة إلى خط الإنتاج"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="name_ar">الاسم بالعربية *</Label>
                         <Input
                           id="name_ar"
                           value={machineForm.name_ar}
@@ -4465,12 +4803,12 @@ export default function Definitions() {
                               name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_الماكينة_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم الماكينة بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="name">الاسم بالإنجليزية</Label>
                         <Input
                           id="name"
                           value={machineForm.name}
@@ -4480,33 +4818,33 @@ export default function Definitions() {
                               name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.machine_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Machine Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="type">{t('pages.definitions.النوع')}</Label>
+                        <Label htmlFor="type">النوع</Label>
                         <Select
                           value={machineForm.type}
                           onValueChange={(value) =>
                             setMachineForm({ ...machineForm, type: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
+                          <SelectTrigger className="mt-1">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="extruder">{t('pages.definitions.فيلم')}</SelectItem>
-                            <SelectItem value="cutting">{t('pages.definitions.قطع')}</SelectItem>
-                            <SelectItem value="printing">{t('pages.definitions.طباعة')}</SelectItem>
-                            <SelectItem value="packaging">{t('pages.definitions.تعبئة')}</SelectItem>
+                            <SelectItem value="extruder">فيلم</SelectItem>
+                            <SelectItem value="cutting">قطع</SelectItem>
+                            <SelectItem value="printing">طباعة</SelectItem>
+                            <SelectItem value="packaging">تعبئة</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="section_id">{t('pages.definitions.القسم')}</Label>
+                        <Label htmlFor="section_id">القسم</Label>
                         <Select
                           value={machineForm.section_id}
                           onValueChange={(value) =>
@@ -4516,11 +4854,11 @@ export default function Definitions() {
                             })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_القسم')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر القسم" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_قسم')}</SelectItem>
+                            <SelectItem value="none">بدون قسم</SelectItem>
                             {Array.isArray(sections) &&
                               sections
                                 .filter(
@@ -4546,7 +4884,7 @@ export default function Definitions() {
                     
                     {/* حالة الماكينة */}
                     <div>
-                      <Label htmlFor="status">{t('pages.definitions.حالة_الماكينة')}</Label>
+                      <Label htmlFor="status">حالة الماكينة</Label>
                       <Select
                         value={machineForm.status}
                         onValueChange={(value) =>
@@ -4556,23 +4894,23 @@ export default function Definitions() {
                           })
                         }
                       >
-                        <SelectTrigger className={t("pages.definitions.name.mt_1")} data-testid="select-machine-status">
-                          <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الحالة')}" />
+                        <SelectTrigger className="mt-1" data-testid="select-machine-status">
+                          <SelectValue placeholder="اختر الحالة" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="active">{t('pages.definitions.نشطة')}</SelectItem>
-                          <SelectItem value="maintenance">{t('pages.definitions.صيانة')}</SelectItem>
-                          <SelectItem value="down">{t('pages.definitions.متوقفة')}</SelectItem>
+                          <SelectItem value="active">نشطة</SelectItem>
+                          <SelectItem value="maintenance">صيانة</SelectItem>
+                          <SelectItem value="down">متوقفة</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     
                     {/* قدرة الإنتاج حسب الحجم */}
-                    <div className={t("pages.definitions.name.border_t_pt_4_mt_4")}>
-                      <h3 className={t("pages.definitions.name.text_sm_font_medium_mb_3")}>{t('pages.definitions.قدرة_الإنتاج_(كجم/ساعة)')}</h3>
-                      <div className={t("pages.definitions.name.grid_grid_cols_3_gap_4")}>
+                    <div className="border-t pt-4 mt-4">
+                      <h3 className="text-sm font-medium mb-3">قدرة الإنتاج (كجم/ساعة)</h3>
+                      <div className="grid grid-cols-3 gap-4">
                         <div>
-                          <Label htmlFor="capacity_small">{t('pages.definitions.حجم_صغير')}</Label>
+                          <Label htmlFor="capacity_small">حجم صغير</Label>
                           <Input
                             id="capacity_small"
                             type="number"
@@ -4584,13 +4922,13 @@ export default function Definitions() {
                                 capacity_small_kg_per_hour: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.كجم/ساعة')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
                             data-testid="input-capacity-small"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="capacity_medium">{t('pages.definitions.حجم_وسط')}</Label>
+                          <Label htmlFor="capacity_medium">حجم وسط</Label>
                           <Input
                             id="capacity_medium"
                             type="number"
@@ -4602,13 +4940,13 @@ export default function Definitions() {
                                 capacity_medium_kg_per_hour: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.كجم/ساعة')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
                             data-testid="input-capacity-medium"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="capacity_large">{t('pages.definitions.حجم_كبير')}</Label>
+                          <Label htmlFor="capacity_large">حجم كبير</Label>
                           <Input
                             id="capacity_large"
                             type="number"
@@ -4620,8 +4958,8 @@ export default function Definitions() {
                                 capacity_large_kg_per_hour: e.target.value,
                               })
                             }
-                            placeholder="{t('pages.definitions.placeholder.كجم/ساعة')}"
-                            className={t("pages.definitions.name.mt_1")}
+                            placeholder="كجم/ساعة"
+                            className="mt-1"
                             data-testid="input-capacity-large"
                           />
                         </div>
@@ -4632,7 +4970,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -4652,7 +4992,7 @@ export default function Definitions() {
                       {createMachineMutation.isPending ||
                       updateMachineMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (
@@ -4669,7 +5009,7 @@ export default function Definitions() {
             {/* Users Add/Edit Dialog */}
             {selectedTab === "users" && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className={t("pages.definitions.name.max_w_2xl_max_h_90vh_overflow_y_auto")}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>
                       {editingItem ? "تحديث المستخدم" : "إضافة مستخدم جديد"}
@@ -4680,10 +5020,12 @@ export default function Definitions() {
                         : "إضافة مستخدم جديد إلى النظام"}
                     </DialogDescription>
                   </DialogHeader>
-                  <div className={t("pages.definitions.name.grid_gap_4_py_4")}>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="display_name_ar">{t('pages.definitions.الاسم_بالعربية_*')}</Label>
+                        <Label htmlFor="display_name_ar">
+                          الاسم بالعربية *
+                        </Label>
                         <Input
                           id="display_name_ar"
                           value={userForm.display_name_ar}
@@ -4693,12 +5035,12 @@ export default function Definitions() {
                               display_name_ar: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.اسم_المستخدم_بالعربية')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="اسم المستخدم بالعربية"
+                          className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label htmlFor="display_name">{t('pages.definitions.الاسم_بالإنجليزية')}</Label>
+                        <Label htmlFor="display_name">الاسم بالإنجليزية</Label>
                         <Input
                           id="display_name"
                           value={userForm.display_name}
@@ -4708,14 +5050,14 @@ export default function Definitions() {
                               display_name: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.display_name')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="Display Name"
+                          className="mt-1"
                         />
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="username">{t('pages.definitions.اسم_المستخدم_*')}</Label>
+                        <Label htmlFor="username">اسم المستخدم *</Label>
                         <Input
                           id="username"
                           value={userForm.username}
@@ -4725,8 +5067,8 @@ export default function Definitions() {
                               username: e.target.value,
                             })
                           }
-                          placeholder="{t('pages.definitions.placeholder.username')}"
-                          className={t("pages.definitions.name.mt_1")}
+                          placeholder="username"
+                          className="mt-1"
                           data-testid="input-username"
                         />
                       </div>
@@ -4734,7 +5076,7 @@ export default function Definitions() {
                         <Label htmlFor="password">
                           كلمة المرور {editingItem ? "(اتركها فارغة إذا لم ترد تغييرها)" : "*"}
                         </Label>
-                        <div className={t("pages.definitions.name.relative")}>
+                        <div className="relative">
                           <Input
                             id="password"
                             type={showPassword ? "text" : "password"}
@@ -4746,36 +5088,38 @@ export default function Definitions() {
                               })
                             }
                             placeholder={editingItem ? "أدخل كلمة مرور جديدة" : "أدخل كلمة المرور"}
-                            className={t("pages.definitions.name.mt_1_pr_10")}
+                            className="mt-1 pr-10"
                             data-testid="input-password"
                           />
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className={t("pages.definitions.name.absolute_left_3_top_1_2_translate_y_1_2_text_gray_500_hover_text_gray_700")}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                             data-testid="button-toggle-password"
                           >
                             {showPassword ? (
-                              <EyeOff className={t("pages.definitions.name.w_4_h_4")} />{t('pages.definitions.)_:_(')}<Eye className={t("pages.definitions.name.w_4_h_4")} />
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
                             )}
                           </button>
                         </div>
                       </div>
                     </div>
-                    <div className={t("pages.definitions.name.grid_grid_cols_2_gap_4")}>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="role_id">{t('pages.definitions.الدور')}</Label>
+                        <Label htmlFor="role_id">الدور</Label>
                         <Select
                           value={userForm.role_id}
                           onValueChange={(value) =>
                             setUserForm({ ...userForm, role_id: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الدور')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الدور" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_دور')}</SelectItem>
+                            <SelectItem value="none">بدون دور</SelectItem>
                             {Array.isArray(roles) &&
                               roles
                                 .filter(
@@ -4797,18 +5141,18 @@ export default function Definitions() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="section_id">{t('pages.definitions.القسم')}</Label>
+                        <Label htmlFor="section_id">القسم</Label>
                         <Select
                           value={userForm.section_id}
                           onValueChange={(value) =>
                             setUserForm({ ...userForm, section_id: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_القسم')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر القسم" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">{t('pages.definitions.بدون_قسم')}</SelectItem>
+                            <SelectItem value="none">بدون قسم</SelectItem>
                             {Array.isArray(sections) &&
                               sections
                                 .filter(
@@ -4831,19 +5175,19 @@ export default function Definitions() {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="status">{t('pages.definitions.الحالة')}</Label>
+                        <Label htmlFor="status">الحالة</Label>
                         <Select
                           value={userForm.status}
                           onValueChange={(value) =>
                             setUserForm({ ...userForm, status: value })
                           }
                         >
-                          <SelectTrigger className={t("pages.definitions.name.mt_1")}>
-                            <SelectValue placeholder="{t('pages.definitions.placeholder.اختر_الحالة')}" />
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="اختر الحالة" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="active">{t('pages.definitions.نشط')}</SelectItem>
-                            <SelectItem value="inactive">{t('pages.definitions.غير_نشط')}</SelectItem>
+                            <SelectItem value="active">نشط</SelectItem>
+                            <SelectItem value="inactive">غير نشط</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -4853,7 +5197,9 @@ export default function Definitions() {
                     <Button
                       variant="outline"
                       onClick={() => setIsDialogOpen(false)}
-                    >{t('pages.definitions.إلغاء')}</Button>
+                    >
+                      إلغاء
+                    </Button>
                     <Button
                       onClick={() => {
                         if (editingItem) {
@@ -4888,7 +5234,7 @@ export default function Definitions() {
                       {createUserMutation.isPending ||
                       updateUserMutation.isPending ? (
                         <>
-                          <div className={t("pages.definitions.name.animate_spin_rounded_full_h_4_w_4_border_b_2_border_white_mr_2")}></div>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           {editingItem ? "جاري التحديث..." : "جاري الحفظ..."}
                         </>
                       ) : editingItem ? (

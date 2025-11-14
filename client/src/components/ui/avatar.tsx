@@ -6,7 +6,8 @@ import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { cn } from "../../lib/utils";
 
 const Avatar = React.forwardRef<
-  React.ElementRef<typeof AvatarPrimitive.Root>{t('components.ui.avatar.,_react.componentpropswithoutref')}<typeof AvatarPrimitive.Root>
+  React.ElementRef<typeof AvatarPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root
     ref={ref}
@@ -15,15 +16,25 @@ const Avatar = React.forwardRef<
       className,
     )}
     {...props}
-  />{t('components.ui.avatar.));_avatar.displayname_=_avatarprimitive.root.displayname;_const_avatarimage_=_react.forwardref')}<
-  React.ElementRef<typeof AvatarPrimitive.Image>{t('components.ui.avatar.,_react.componentpropswithoutref')}<typeof AvatarPrimitive.Image>
+  />
+));
+Avatar.displayName = AvatarPrimitive.Root.displayName;
+
+const AvatarImage = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Image>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Image
     ref={ref}
     className={cn("aspect-square h-full w-full", className)}
     {...props}
-  />{t('components.ui.avatar.));_avatarimage.displayname_=_avatarprimitive.image.displayname;_const_avatarfallback_=_react.forwardref')}<
-  React.ElementRef<typeof AvatarPrimitive.Fallback>{t('components.ui.avatar.,_react.componentpropswithoutref')}<typeof AvatarPrimitive.Fallback>
+  />
+));
+AvatarImage.displayName = AvatarPrimitive.Image.displayName;
+
+const AvatarFallback = React.forwardRef<
+  React.ElementRef<typeof AvatarPrimitive.Fallback>,
+  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
 >(({ className, ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
 import { queryClient, apiRequest } from "../lib/queryClient";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -65,7 +64,8 @@ type BatchDetail = {
     material_name?: string;
     material_name_ar?: string;
     percentage: string;
-  }>{t('pages.material-mixing.;_ingredients?:_array')}<{
+  }>;
+  ingredients?: Array<{
     item_id: string;
     item_name?: string;
     item_name_ar?: string;
@@ -106,14 +106,14 @@ const getMasterBatchColor = (code: string | null | undefined): string => {
 };
 
 export default function MaterialMixing() {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const { user } = useAuth();
   
   const [productionOrderId, setProductionOrderId] = useState("");
   const [machineId, setMachineId] = useState("");
   const [screw, setScrew] = useState("A");
-  const [materials, setMaterials] = useState<Material[]>{t('pages.material-mixing.([]);_const_[selectedbatch,_setselectedbatch]_=_usestate')}<BatchDetail | null>(null);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<BatchDetail | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   // Fetch data - get in_production and pending production orders
@@ -174,8 +174,8 @@ export default function MaterialMixing() {
   const addMaterial = () => {
     if (materials.length >= 10) {
       toast({
-        title: t('common.error'),
-        description: t('production.maxMaterialsReached'),
+        title: "تحذير",
+        description: "الحد الأقصى 10 مواد في الخلطة",
         variant: "destructive",
       });
       return;
@@ -229,16 +229,16 @@ export default function MaterialMixing() {
     },
     onSuccess: () => {
       toast({
-        title: t('common.success'),
-        description: t('production.batchCreatedSuccess'),
+        title: "نجح الحفظ",
+        description: "تم إنشاء الخلطة بنجاح",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/mixing-batches"] });
       resetForm();
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
-        description: error.message || t('production.batchCreationFailed'),
+        title: "خطأ",
+        description: error.message || "فشل في إنشاء الخلطة",
         variant: "destructive",
       });
     },
@@ -255,19 +255,19 @@ export default function MaterialMixing() {
   // Handle save
   const handleSave = () => {
     if (!productionOrderId) {
-      toast({ title: t('common.error'), description: t('production.selectProductionOrder'), variant: "destructive" });
+      toast({ title: "خطأ", description: "اختر أمر الإنتاج", variant: "destructive" });
       return;
     }
     if (!machineId) {
-      toast({ title: t('common.error'), description: t('production.selectMachine'), variant: "destructive" });
+      toast({ title: "خطأ", description: "اختر الماكينة", variant: "destructive" });
       return;
     }
     if (materials.length === 0) {
-      toast({ title: t('common.error'), description: t('production.atLeastOneMaterial'), variant: "destructive" });
+      toast({ title: "خطأ", description: "أضف مادة واحدة على الأقل", variant: "destructive" });
       return;
     }
-    if (materials.some(m =>{t('pages.material-mixing.!m.item_id_||_!m.weight_kg_||_parsefloat(m.weight_kg)')}<= 0)) {
-      toast({ title: t('common.error'), description: t('production.checkMaterialData'), variant: "destructive" });
+    if (materials.some(m => !m.item_id || !m.weight_kg || parseFloat(m.weight_kg) <= 0)) {
+      toast({ title: "خطأ", description: "تحقق من بيانات المواد", variant: "destructive" });
       return;
     }
 
@@ -296,44 +296,46 @@ export default function MaterialMixing() {
   };
 
   return (
-    <div className={t("pages.material-mixing.name.min_h_screen_bg_gray_50")} dir="rtl">
+    <div className="min-h-screen bg-gray-50" dir="rtl">
       <Header />
       
-      <div className={t("pages.material-mixing.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
         
-        <main className={t("pages.material-mixing.name.flex_1_p_4_lg_pr_64")}>
-          <div className={t("pages.material-mixing.name.max_w_7xl_mx_auto_space_y_6")}>
-            <div className={t("pages.material-mixing.name.flex_items_center_gap_2")}>
-              <Beaker className={t("pages.material-mixing.name.h_8_w_8_text_primary")} />
-              <h1 className={t("pages.material-mixing.name.text_3xl_font_bold")}>{t('sidebar.materialMixing')}</h1>
+        <main className="flex-1 p-4 lg:pr-64">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="flex items-center gap-2">
+              <Beaker className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold">خلط المواد</h1>
             </div>
 
             {/* Create New Batch Card */}
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.material-mixing.name.flex_items_center_gap_2")}>
-                  <Plus className={t("pages.material-mixing.name.h_5_w_5")} />
-                  {t('production.createNewBatch')}
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  إنشاء خلطة جديدة
                 </CardTitle>
               </CardHeader>
-              <CardContent className={t("pages.material-mixing.name.space_y_4")}>
+              <CardContent className="space-y-4">
                 {/* Production Order & Machine Selection */}
-                <div className={t("pages.material-mixing.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
-                  <div className={t("pages.material-mixing.name.space_y_2")}>
-                    <Label>{t('production.productionOrderNumber')}</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>أمر الإنتاج</Label>
                     {ordersLoading ? (
-                      <Skeleton className={t("pages.material-mixing.name.h_10_w_full")} />{t('pages.material-mixing.)_:_(')}<Select value={productionOrderId} onValueChange={setProductionOrderId}>
+                      <Skeleton className="h-10 w-full" />
+                    ) : (
+                      <Select value={productionOrderId} onValueChange={setProductionOrderId}>
                         <SelectTrigger data-testid="select-production-order">
-                          <SelectValue placeholder={t('production.selectProductionOrder')} />
+                          <SelectValue placeholder="اختر أمر الإنتاج" />
                         </SelectTrigger>
                         <SelectContent>
                           {productionOrders.map((order: any) => (
                             <SelectItem key={order.id} value={order.id.toString()}>
-                              <div className={t("pages.material-mixing.name.flex_flex_col_gap_1")}>
-                                <div className={t("pages.material-mixing.name.font_semibold")}>{order.production_order_number}</div>
-                                <div className={t("pages.material-mixing.name.text_sm_text_gray_600")}>
+                              <div className="flex flex-col gap-1">
+                                <div className="font-semibold">{order.production_order_number}</div>
+                                <div className="text-sm text-gray-600">
                                   {order.item_name_ar || order.item_name} | 
                                   {' '}{order.raw_material}
                                   {order.master_batch_id && ` | ${getMasterBatchColor(order.master_batch_id)}`} | 
@@ -348,12 +350,14 @@ export default function MaterialMixing() {
                     )}
                   </div>
 
-                  <div className={t("pages.material-mixing.name.space_y_2")}>
-                    <Label>{t('production.filmMachine')}</Label>
+                  <div className="space-y-2">
+                    <Label>ماكينة الفيلم</Label>
                     {machinesLoading ? (
-                      <Skeleton className={t("pages.material-mixing.name.h_10_w_full")} />{t('pages.material-mixing.)_:_(')}<Select value={machineId} onValueChange={setMachineId}>
+                      <Skeleton className="h-10 w-full" />
+                    ) : (
+                      <Select value={machineId} onValueChange={setMachineId}>
                         <SelectTrigger data-testid="select-machine">
-                          <SelectValue placeholder={t('production.selectFilmMachine')} />
+                          <SelectValue placeholder="اختر الماكينة" />
                         </SelectTrigger>
                         <SelectContent>
                           {machines.map((machine: any) => (
@@ -366,15 +370,15 @@ export default function MaterialMixing() {
                     )}
                   </div>
 
-                  <div className={t("pages.material-mixing.name.space_y_2")}>
-                    <Label>{t('production.screw')}</Label>
+                  <div className="space-y-2">
+                    <Label>السكرو</Label>
                     <RadioGroup value={screw} onValueChange={setScrew}>
-                      <div className={t("pages.material-mixing.name.flex_gap_4")}>
-                        <div className={t("pages.material-mixing.name.flex_items_center_space_x_2_space_x_reverse")}>
+                      <div className="flex gap-4">
+                        <div className="flex items-center space-x-2 space-x-reverse">
                           <RadioGroupItem value="A" id="screw-a" data-testid="radio-screw-a" />
                           <Label htmlFor="screw-a">A</Label>
                         </div>
-                        <div className={t("pages.material-mixing.name.flex_items_center_space_x_2_space_x_reverse")}>
+                        <div className="flex items-center space-x-2 space-x-reverse">
                           <RadioGroupItem value="B" id="screw-b" data-testid="radio-screw-b" />
                           <Label htmlFor="screw-b">B</Label>
                         </div>
@@ -384,9 +388,9 @@ export default function MaterialMixing() {
                 </div>
 
                 {/* Materials Section */}
-                <div className={t("pages.material-mixing.name.border_rounded_lg_p_4_space_y_3")}>
-                  <div className={t("pages.material-mixing.name.flex_justify_between_items_center")}>
-                    <Label className={t("pages.material-mixing.name.text_lg_font_semibold")}>{t('production.rawMaterials')}</Label>
+                <div className="border rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <Label className="text-lg font-semibold">المواد الخام</Label>
                     <Button
                       type="button"
                       variant="outline"
@@ -394,30 +398,34 @@ export default function MaterialMixing() {
                       onClick={addMaterial}
                       data-testid="button-add-material"
                     >
-                      <Plus className={t("pages.material-mixing.name.h_4_w_4_ml_2")} />
-                      {t('production.addMaterial')}
+                      <Plus className="h-4 w-4 ml-2" />
+                      إضافة مادة
                     </Button>
                   </div>
 
                   {materials.length === 0 ? (
-                    <p className={t("pages.material-mixing.name.text_muted_foreground_text_center_py_4")}>
-                      {t('production.noMaterialsAdded')}
-                    </p>{t('pages.material-mixing.)_:_(')}<div className={t("pages.material-mixing.name.space_y_2")}>
+                    <p className="text-muted-foreground text-center py-4">
+                      لا توجد مواد. اضغط "إضافة مادة" للبدء
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
                       {materials.map((material, index) => (
                         <div
                           key={material.id}
-                          className={t("pages.material-mixing.name.grid_grid_cols_12_gap_2_items_end")}
+                          className="grid grid-cols-12 gap-2 items-end"
                           data-testid={`material-row-${index}`}
                         >
-                          <div className={t("pages.material-mixing.name.col_span_5_space_y_1")}>
-                            <Label className={t("pages.material-mixing.name.text_xs")}>{t('warehouse.item')}</Label>
+                          <div className="col-span-5 space-y-1">
+                            <Label className="text-xs">المادة</Label>
                             {itemsLoading ? (
-                              <Skeleton className={t("pages.material-mixing.name.h_10_w_full")} />{t('pages.material-mixing.)_:_(')}<Select
+                              <Skeleton className="h-10 w-full" />
+                            ) : (
+                              <Select
                                 value={material.item_id}
                                 onValueChange={(val) => updateMaterialItem(material.id, val)}
                               >
                                 <SelectTrigger data-testid={`select-material-${index}`}>
-                                  <SelectValue placeholder={t('production.selectMaterial')} />
+                                  <SelectValue placeholder="اختر المادة" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   {rawMaterials.map((item: any) => (
@@ -430,31 +438,31 @@ export default function MaterialMixing() {
                             )}
                           </div>
 
-                          <div className={t("pages.material-mixing.name.col_span_3_space_y_1")}>
-                            <Label className={t("pages.material-mixing.name.text_xs")}>{t('production.materialWeight')} ({t('warehouse.kg')})</Label>
+                          <div className="col-span-3 space-y-1">
+                            <Label className="text-xs">الوزن (كجم)</Label>
                             <Input
                               type="number"
                               step="0.01"
                               min="0"
                               value={material.weight_kg}
                               onChange={(e) => updateMaterialWeight(material.id, e.target.value)}
-                              placeholder="{t('pages.material-mixing.placeholder.0.00')}"
+                              placeholder="0.00"
                               data-testid={`input-weight-${index}`}
                             />
                           </div>
 
-                          <div className={t("pages.material-mixing.name.col_span_3_space_y_1")}>
-                            <Label className={t("pages.material-mixing.name.text_xs")}>{t('production.percentage')}</Label>
+                          <div className="col-span-3 space-y-1">
+                            <Label className="text-xs">النسبة المئوية</Label>
                             <Input
                               type="text"
                               value={material.percentage.toFixed(2) + "%"}
                               disabled
-                              className={t("pages.material-mixing.name.bg_gray_100")}
+                              className="bg-gray-100"
                               data-testid={`text-percentage-${index}`}
                             />
                           </div>
 
-                          <div className={t("pages.material-mixing.name.col_span_1")}>
+                          <div className="col-span-1">
                             <Button
                               type="button"
                               variant="destructive"
@@ -462,7 +470,7 @@ export default function MaterialMixing() {
                               onClick={() => removeMaterial(material.id)}
                               data-testid={`button-remove-${index}`}
                             >
-                              <Trash2 className={t("pages.material-mixing.name.h_4_w_4")} />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -471,10 +479,11 @@ export default function MaterialMixing() {
                   )}
 
                   {/* Total Weight */}
-                  {materials.length >{t('pages.material-mixing.0_&&_(')}<div className={t("pages.material-mixing.name.pt_3_border_t")}>
-                      <div className={t("pages.material-mixing.name.flex_justify_between_items_center_text_lg_font_semibold")}>
-                        <span>{t('production.totalWeight')}:</span>
-                        <span data-testid="text-total-weight">{totalWeight.toFixed(2)} {t('warehouse.kg')}</span>
+                  {materials.length > 0 && (
+                    <div className="pt-3 border-t">
+                      <div className="flex justify-between items-center text-lg font-semibold">
+                        <span>الوزن الإجمالي:</span>
+                        <span data-testid="text-total-weight">{totalWeight.toFixed(2)} كجم</span>
                       </div>
                     </div>
                   )}
@@ -484,10 +493,10 @@ export default function MaterialMixing() {
                 <Button
                   onClick={handleSave}
                   disabled={createBatchMutation.isPending}
-                  className={t("pages.material-mixing.name.w_full")}
+                  className="w-full"
                   data-testid="button-save-batch"
                 >
-                  {createBatchMutation.isPending ? t('common.loading') : t('production.saveBatch')}
+                  {createBatchMutation.isPending ? "جاري الحفظ..." : "حفظ الخلطة"}
                 </Button>
               </CardContent>
             </Card>
@@ -495,39 +504,45 @@ export default function MaterialMixing() {
             {/* Batches List Table */}
             <Card>
               <CardHeader>
-                <CardTitle>{t('production.batchHistory')}</CardTitle>
+                <CardTitle>سجل الخلطات</CardTitle>
               </CardHeader>
               <CardContent>
                 {batchesLoading ? (
-                  <div className={t("pages.material-mixing.name.space_y_2")}>
-                    <Skeleton className={t("pages.material-mixing.name.h_12_w_full")} />
-                    <Skeleton className={t("pages.material-mixing.name.h_12_w_full")} />
-                    <Skeleton className={t("pages.material-mixing.name.h_12_w_full")} />
-                  </div>{t('pages.material-mixing.)_:_batches.length_===_0_?_(')}<p className={t("pages.material-mixing.name.text_center_text_muted_foreground_py_8")}>
-                    {t('production.noBatchesRecorded')}
-                  </p>{t('pages.material-mixing.)_:_(')}<div className={t("pages.material-mixing.name.overflow_x_auto")}>
+                  <div className="space-y-2">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                ) : batches.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">
+                    لا توجد خلطات مسجلة
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.batchNumber')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.productionOrderNumber')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.machine')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.screw')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.totalWeight')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('common.date')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.operator')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.composition')}</TableHead>
-                          <TableHead className={t("pages.material-mixing.name.text_right")}>{t('common.actions')}</TableHead>
+                          <TableHead className="text-right">رقم الخلطة</TableHead>
+                          <TableHead className="text-right">أمر الإنتاج</TableHead>
+                          <TableHead className="text-right">الماكينة</TableHead>
+                          <TableHead className="text-right">السكرو</TableHead>
+                          <TableHead className="text-right">الوزن الكلي</TableHead>
+                          <TableHead className="text-right">التاريخ</TableHead>
+                          <TableHead className="text-right">المشغل</TableHead>
+                          <TableHead className="text-right">الخلطة</TableHead>
+                          <TableHead className="text-right">إجراءات</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {batches.map((batch) => {
-                          const operator = users.find((u: any) =>{t('pages.material-mixing.u.id_===_batch.operator_id);_return_(')}<TableRow
+                          const operator = users.find((u: any) => u.id === batch.operator_id);
+                          return (
+                            <TableRow
                               key={batch.id}
-                              className={t("pages.material-mixing.name.cursor_pointer_hover_bg_gray_50")}
+                              className="cursor-pointer hover:bg-gray-50"
                               data-testid={`row-batch-${batch.id}`}
                             >
-                              <TableCell className={t("pages.material-mixing.name.font_medium")}>
+                              <TableCell className="font-medium">
                                 {batch.batch_number}
                               </TableCell>
                               <TableCell>
@@ -547,13 +562,16 @@ export default function MaterialMixing() {
                                 {operator?.display_name_ar || operator?.display_name || "-"}
                               </TableCell>
                               <TableCell>
-                                <div className={t("pages.material-mixing.name.text_sm_space_y_0_5")}>
+                                <div className="text-sm space-y-0.5">
                                   {batch.composition && batch.composition.length > 0 ? (
                                     batch.composition.map((comp: any, idx: number) => (
-                                      <div key={idx} className={t("pages.material-mixing.name.text_xs")}>
-                                        <span className={t("pages.material-mixing.name.font_medium")}>{comp.material_name_ar || comp.material_name}</span>
-                                        <span className={t("pages.material-mixing.name.text_muted_foreground")}> ({comp.percentage})</span>
-                                      </div>{t('pages.material-mixing.))_)_:_(')}<span className={t("pages.material-mixing.name.text_muted_foreground")}>-</span>
+                                      <div key={idx} className="text-xs">
+                                        <span className="font-medium">{comp.material_name_ar || comp.material_name}</span>
+                                        <span className="text-muted-foreground"> ({comp.percentage})</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted-foreground">-</span>
                                   )}
                                 </div>
                               </TableCell>
@@ -564,7 +582,7 @@ export default function MaterialMixing() {
                                   onClick={() => viewBatchDetails(batch)}
                                   data-testid={`button-view-${batch.id}`}
                                 >
-                                  <Eye className={t("pages.material-mixing.name.h_4_w_4")} />
+                                  <Eye className="h-4 w-4" />
                                 </Button>
                               </TableCell>
                             </TableRow>
@@ -582,53 +600,54 @@ export default function MaterialMixing() {
 
       {/* Batch Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-        <DialogContent className={t("pages.material-mixing.name.max_w_2xl")} dir="rtl">
+        <DialogContent className="max-w-2xl" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{t('production.batchDetails')}</DialogTitle>
+            <DialogTitle>تفاصيل الخلطة</DialogTitle>
           </DialogHeader>
           {selectedBatch && (
-            <div className={t("pages.material-mixing.name.space_y_4")}>
-              <div className={t("pages.material-mixing.name.grid_grid_cols_2_gap_4")}>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('production.batchNumber')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>{selectedBatch.batch_number}</p>
+                  <Label className="text-muted-foreground">رقم الخلطة</Label>
+                  <p className="font-semibold">{selectedBatch.batch_number}</p>
                 </div>
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('production.productionOrderNumber')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>
+                  <Label className="text-muted-foreground">أمر الإنتاج</Label>
+                  <p className="font-semibold">
                     {selectedBatch.production_order_number || `PO-${selectedBatch.production_order_id}`}
                   </p>
                 </div>
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('production.machine')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>
+                  <Label className="text-muted-foreground">الماكينة</Label>
+                  <p className="font-semibold">
                     {selectedBatch.machine_name_ar || selectedBatch.machine_name || selectedBatch.machine_id}
                   </p>
                 </div>
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('production.screw')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>{selectedBatch.screw_assignment}</p>
+                  <Label className="text-muted-foreground">السكرو</Label>
+                  <p className="font-semibold">{selectedBatch.screw_assignment}</p>
                 </div>
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('production.totalWeight')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>{parseFloat(selectedBatch.total_weight_kg).toFixed(2)} {t('warehouse.kg')}</p>
+                  <Label className="text-muted-foreground">الوزن الكلي</Label>
+                  <p className="font-semibold">{parseFloat(selectedBatch.total_weight_kg).toFixed(2)} كجم</p>
                 </div>
                 <div>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('common.date')}</Label>
-                  <p className={t("pages.material-mixing.name.font_semibold")}>
+                  <Label className="text-muted-foreground">التاريخ</Label>
+                  <p className="font-semibold">
                     {new Date(selectedBatch.created_at).toLocaleString("ar-EG")}
                   </p>
                 </div>
               </div>
 
-              {selectedBatch.ingredients && selectedBatch.ingredients.length >{t('pages.material-mixing.0_&&_(')}<div className={t("pages.material-mixing.name.space_y_2")}>
-                  <Label className={t("pages.material-mixing.name.text_lg_font_semibold")}>{t('production.ingredients')}</Label>
+              {selectedBatch.ingredients && selectedBatch.ingredients.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-lg font-semibold">المكونات</Label>
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className={t("pages.material-mixing.name.text_right")}>{t('warehouse.item')}</TableHead>
-                        <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.materialWeight')} ({t('warehouse.kg')})</TableHead>
-                        <TableHead className={t("pages.material-mixing.name.text_right")}>{t('production.percentage')}</TableHead>
+                        <TableHead className="text-right">المادة</TableHead>
+                        <TableHead className="text-right">الوزن (كجم)</TableHead>
+                        <TableHead className="text-right">النسبة المئوية</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -647,9 +666,9 @@ export default function MaterialMixing() {
               )}
 
               {selectedBatch.notes && (
-                <div className={t("pages.material-mixing.name.space_y_2")}>
-                  <Label className={t("pages.material-mixing.name.text_muted_foreground")}>{t('common.notes')}</Label>
-                  <p className={t("pages.material-mixing.name.text_sm")}>{selectedBatch.notes}</p>
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground">ملاحظات</Label>
+                  <p className="text-sm">{selectedBatch.notes}</p>
                 </div>
               )}
             </div>

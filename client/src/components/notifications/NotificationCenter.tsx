@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -61,7 +60,6 @@ interface Notification {
 }
 
 export default function NotificationCenter() {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
@@ -73,9 +71,18 @@ export default function NotificationCenter() {
   const [systemMessage, setSystemMessage] = useState("");
   const [systemType, setSystemType] = useState<
     "system" | "order" | "production" | "maintenance" | "quality" | "hr"
-  >{t('components.notifications.NotificationCenter.("system");_const_[systempriority,_setsystempriority]_=_usestate')}<
+  >("system");
+  const [systemPriority, setSystemPriority] = useState<
     "low" | "normal" | "high" | "urgent"
-  >{t('components.notifications.NotificationCenter.("normal");_const_[recipienttype,_setrecipienttype]_=_usestate')}<"user" | "role" | "all">{t('components.notifications.NotificationCenter.(_"all",_);_const_[recipientid,_setrecipientid]_=_usestate("");_const_[notificationsound,_setnotificationsound]_=_usestate(false);_//_real-time_notifications_state_const_[realtimenotifications,_setrealtimenotifications]_=_usestate')}<
+  >("normal");
+  const [recipientType, setRecipientType] = useState<"user" | "role" | "all">(
+    "all",
+  );
+  const [recipientId, setRecipientId] = useState("");
+  const [notificationSound, setNotificationSound] = useState(false);
+
+  // Real-time notifications state
+  const [realtimeNotifications, setRealtimeNotifications] = useState<
     SSENotification[]
   >([]);
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
@@ -202,8 +209,8 @@ export default function NotificationCenter() {
     },
     onSuccess: () => {
       toast({
-        title: t('notifications.sent'),
-        description: t('notifications.sent'),
+        title: "✅ تم إرسال الإشعار",
+        description: "تم إرسال الإشعار للنظام بنجاح",
       });
       setSystemTitle("");
       setSystemMessage("");
@@ -212,8 +219,8 @@ export default function NotificationCenter() {
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.sendError'),
-        description: error.message || t('notifications.sendError'),
+        title: "❌ خطأ في الإرسال",
+        description: error.message || "فشل في إرسال إشعار النظام",
         variant: "destructive",
       });
     },
@@ -235,8 +242,8 @@ export default function NotificationCenter() {
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.markReadError'),
-        description: error.message || t('notifications.markReadErrorMessage'),
+        title: "❌ خطأ",
+        description: error.message || "فشل في تعليم الإشعار كمقروء",
         variant: "destructive",
       });
     },
@@ -253,14 +260,14 @@ export default function NotificationCenter() {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/user"] });
       setRealtimeNotifications([]);
       toast({
-        title: t('notifications.updated'),
-        description: t('notifications.allMarkedRead'),
+        title: "✅ تم التحديث",
+        description: "تم تعليم جميع الإشعارات كمقروءة",
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.markReadError'),
-        description: error.message || t('notifications.markAllReadError'),
+        title: "❌ خطأ",
+        description: error.message || "فشل في تعليم الإشعارات كمقروءة",
         variant: "destructive",
       });
     },
@@ -277,14 +284,14 @@ export default function NotificationCenter() {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications/user"] });
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       toast({
-        title: t('notifications.deleted'),
-        description: t('notifications.deletedSuccess'),
+        title: "✅ تم الحذف",
+        description: "تم حذف الإشعار بنجاح",
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.deleteError'),
-        description: error.message || t('notifications.deleteErrorMessage'),
+        title: "❌ خطأ في الحذف",
+        description: error.message || "فشل في حذف الإشعار",
         variant: "destructive",
       });
     },
@@ -306,8 +313,8 @@ export default function NotificationCenter() {
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       toast({
-        title: t('notifications.messageSent'),
-        description: t('notifications.messageSentSuccess'),
+        title: "✅ تم إرسال الرسالة",
+        description: "تم إرسال رسالة الواتس اب بنجاح",
       });
       setMessage("");
       setTitle("");
@@ -315,8 +322,8 @@ export default function NotificationCenter() {
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.sendError'),
-        description: error.message || t('notifications.sendErrorMessage'),
+        title: "❌ خطأ في الإرسال",
+        description: error.message || "فشل في إرسال رسالة الواتس اب",
         variant: "destructive",
       });
     },
@@ -333,14 +340,14 @@ export default function NotificationCenter() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
       toast({
-        title: t('notifications.testSent'),
-        description: t('notifications.testSentSuccess'),
+        title: "✅ رسالة الاختبار",
+        description: "تم إرسال رسالة الاختبار بنجاح",
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('notifications.testError'),
-        description: error.message || t('notifications.testErrorMessage'),
+        title: "❌ خطأ في الاختبار",
+        description: error.message || "فشل في إرسال رسالة الاختبار",
         variant: "destructive",
       });
     },
@@ -350,8 +357,8 @@ export default function NotificationCenter() {
   const handleSendMessage = () => {
     if (!phoneNumber || !message) {
       toast({
-        title: t('notifications.missingData'),
-        description: t('notifications.missingPhoneMessage'),
+        title: "⚠️ بيانات ناقصة",
+        description: "يرجى إدخال رقم الهاتف والرسالة",
         variant: "destructive",
       });
       return;
@@ -368,8 +375,8 @@ export default function NotificationCenter() {
   const handleSendSystemNotification = () => {
     if (!systemTitle || !systemMessage) {
       toast({
-        title: t('notifications.missingData'),
-        description: t('notifications.missingTitleMessage'),
+        title: "⚠️ بيانات ناقصة",
+        description: "يرجى إدخال العنوان والرسالة",
         variant: "destructive",
       });
       return;
@@ -377,8 +384,8 @@ export default function NotificationCenter() {
 
     if (recipientType !== "all" && !recipientId) {
       toast({
-        title: t('notifications.recipientIdRequired'),
-        description: t('notifications.recipientIdRequiredMessage'),
+        title: "⚠️ معرف المستلم مطلوب",
+        description: "يرجى إدخال معرف المستخدم أو الدور",
         variant: "destructive",
       });
       return;
@@ -419,8 +426,8 @@ export default function NotificationCenter() {
   const handleSendTest = () => {
     if (!phoneNumber) {
       toast({
-        title: t('notifications.phoneRequired'),
-        description: t('notifications.phoneRequiredMessage'),
+        title: "⚠️ رقم الهاتف مطلوب",
+        description: "يرجى إدخال رقم الهاتف لإرسال رسالة الاختبار",
         variant: "destructive",
       });
       return;
@@ -432,7 +439,13 @@ export default function NotificationCenter() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "sent":
-        return <Send className={t("components.notifications.notificationcenter.name.h_4_w_4_text_blue_500")} />{t('components.notifications.NotificationCenter.;_case_"delivered":_return')}<CheckCircle className={t("components.notifications.notificationcenter.name.h_4_w_4_text_green_500")} />{t('components.notifications.NotificationCenter.;_case_"failed":_return')}<XCircle className={t("components.notifications.notificationcenter.name.h_4_w_4_text_red_500")} />{t('components.notifications.NotificationCenter.;_default:_return')}<Clock className={t("components.notifications.notificationcenter.name.h_4_w_4_text_yellow_500")} />;
+        return <Send className="h-4 w-4 text-blue-500" />;
+      case "delivered":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "failed":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-500" />;
     }
   };
 
@@ -463,33 +476,37 @@ export default function NotificationCenter() {
   };
 
   return (
-    <div className={t("components.notifications.notificationcenter.name.space_y_6")}>
-      <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2_mb_6")}>
-        <Bell className={t("components.notifications.notificationcenter.name.h_6_w_6_text_blue_600")} />
-        <h1 className={t("components.notifications.notificationcenter.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
-          {t('notifications.center')}
+    <div className="space-y-6">
+      <div className="flex items-center gap-2 mb-6">
+        <Bell className="h-6 w-6 text-blue-600" />
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          مركز الإشعارات
         </h1>
       </div>
 
       {/* SSE Connection Status */}
-      <Card className={t("components.notifications.notificationcenter.name.mb_6")}>
-        <CardContent className={t("components.notifications.notificationcenter.name.p_4")}>
-          <div className={t("components.notifications.notificationcenter.name.flex_items_center_justify_between")}>
-            <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               {connectionState.isConnected ? (
-                <Wifi className={t("components.notifications.notificationcenter.name.h_5_w_5_text_green_500")} />{t('components.notifications.NotificationCenter.)_:_connectionstate.isconnecting_?_(')}<Loader2 className={t("components.notifications.notificationcenter.name.h_5_w_5_text_yellow_500_animate_spin")} />{t('components.notifications.NotificationCenter.)_:_(')}<WifiOff className={t("components.notifications.notificationcenter.name.h_5_w_5_text_red_500")} />
+                <Wifi className="h-5 w-5 text-green-500" />
+              ) : connectionState.isConnecting ? (
+                <Loader2 className="h-5 w-5 text-yellow-500 animate-spin" />
+              ) : (
+                <WifiOff className="h-5 w-5 text-red-500" />
               )}
-              <span className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>
+              <span className="text-sm font-medium">
                 {connectionState.isConnected
-                  ? t('notifications.connected')
+                  ? "متصل - الإشعارات الفورية نشطة"
                   : connectionState.isConnecting
-                    ? t('notifications.connecting')
-                    : t('notifications.disconnected')}
+                    ? "جاري الاتصال..."
+                    : "غير متصل - الإشعارات الفورية معطلة"}
               </span>
             </div>
             {connectionState.error && (
-              <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
-                <span className={t("components.notifications.notificationcenter.name.text_xs_text_red_600")}>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-red-600">
                   {connectionState.error}
                 </span>
                 <Button
@@ -497,7 +514,7 @@ export default function NotificationCenter() {
                   variant="outline"
                   onClick={handleReconnectSSE}
                 >
-                  {t('notifications.reconnect')}
+                  إعادة الاتصال
                 </Button>
               </div>
             )}
@@ -505,68 +522,70 @@ export default function NotificationCenter() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="realtime" className={t("components.notifications.notificationcenter.name.space_y_6")}>
-        <TabsList className={t("components.notifications.notificationcenter.name.grid_w_full_grid_cols_4")}>
+      <Tabs defaultValue="realtime" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger
             value="realtime"
-            className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+            className="flex items-center gap-2"
             data-testid="tab-realtime"
           >
-            <Bell className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
-            {t('notifications.realtime')}
+            <Bell className="h-4 w-4" />
+            الإشعارات الفورية
           </TabsTrigger>
           <TabsTrigger
             value="send"
-            className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+            className="flex items-center gap-2"
             data-testid="tab-send"
           >
-            <MessageSquare className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
-            {t('notifications.sendMessages')}
+            <MessageSquare className="h-4 w-4" />
+            إرسال رسائل
           </TabsTrigger>
           <TabsTrigger
             value="system"
-            className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+            className="flex items-center gap-2"
             data-testid="tab-system"
           >
-            <Settings className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
-            {t('notifications.systemNotifications')}
+            <Settings className="h-4 w-4" />
+            إشعارات النظام
           </TabsTrigger>
           <TabsTrigger
             value="history"
-            className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+            className="flex items-center gap-2"
             data-testid="tab-history"
           >
-            <Clock className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
-            {t('notifications.history')}
+            <Clock className="h-4 w-4" />
+            سجل الإشعارات
           </TabsTrigger>
         </TabsList>
 
         {/* Real-time Notifications Tab */}
-        <TabsContent value="realtime" className={t("components.notifications.notificationcenter.name.space_y_6")}>
+        <TabsContent value="realtime" className="space-y-6">
           <Card>
             <CardHeader>
-              <div className={t("components.notifications.notificationcenter.name.flex_items_center_justify_between")}>
-                <CardTitle className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
-                  <Zap className={t("components.notifications.notificationcenter.name.h_5_w_5_text_blue_600")} />
-                  {t('notifications.realtime')}
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-blue-600" />
+                  الإشعارات الفورية
                   {userNotificationsData?.unread_count &&
-                    userNotificationsData.unread_count >{t('components.notifications.NotificationCenter.0_&&_(')}<Badge variant="destructive" className={t("components.notifications.notificationcenter.name.ml_2")}>
+                    userNotificationsData.unread_count > 0 && (
+                      <Badge variant="destructive" className="ml-2">
                         {userNotificationsData.unread_count}
                       </Badge>
                     )}
                 </CardTitle>
-                <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
-                  <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <Switch
                       checked={showUnreadOnly}
                       onCheckedChange={setShowUnreadOnly}
                       data-testid="switch-unread-only"
                     />
-                    <span className={t("components.notifications.notificationcenter.name.text_sm_text_gray_600")}>
-                      {t('notifications.unreadOnly')}
+                    <span className="text-sm text-gray-600">
+                      غير المقروء فقط
                     </span>
                   </div>
-                  {(userNotificationsData?.unread_count || 0) >{t('components.notifications.NotificationCenter.0_&&_(')}<Button
+                  {(userNotificationsData?.unread_count || 0) > 0 && (
+                    <Button
                       size="sm"
                       variant="outline"
                       onClick={handleMarkAllAsRead}
@@ -574,9 +593,9 @@ export default function NotificationCenter() {
                       data-testid="button-mark-all-read"
                     >
                       {markAllAsReadMutation.isPending && (
-                        <Loader2 className={t("components.notifications.notificationcenter.name.h_4_w_4_animate_spin_ml_1")} />
+                        <Loader2 className="h-4 w-4 animate-spin ml-1" />
                       )}
-                      {t('notifications.markAllRead')}
+                      تعليم الجميع كمقروء
                     </Button>
                   )}
                 </div>
@@ -584,10 +603,12 @@ export default function NotificationCenter() {
             </CardHeader>
             <CardContent>
               {userNotificationsLoading ? (
-                <div className={t("components.notifications.notificationcenter.name.flex_items_center_justify_center_py_8")}>
-                  <Loader2 className={t("components.notifications.notificationcenter.name.h_6_w_6_animate_spin_text_blue_600")} />
-                  <span className={t("components.notifications.notificationcenter.name.ml_2")}>{t('notifications.loading')}</span>
-                </div>{t('components.notifications.NotificationCenter.)_:_(')}<div className={t("components.notifications.notificationcenter.name.space_y_4_max_h_96_overflow_y_auto")}>
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  <span className="ml-2">جاري تحميل الإشعارات...</span>
+                </div>
+              ) : (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                   {userNotificationsData?.notifications &&
                   userNotificationsData.notifications.filter(n => n.type !== "system").length > 0 ? (
                     userNotificationsData.notifications
@@ -602,10 +623,10 @@ export default function NotificationCenter() {
                         }`}
                         data-testid={`notification-${notification.id}`}
                       >
-                        <div className={t("components.notifications.notificationcenter.name.flex_items_start_justify_between")}>
-                          <div className={t("components.notifications.notificationcenter.name.flex_1")}>
-                            <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2_mb_1")}>
-                              <span className={t("components.notifications.notificationcenter.name.font_medium_text_gray_900_dark_text_white")}>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-gray-900 dark:text-white">
                                 {notification.title_ar || notification.title}
                               </span>
                               <Badge
@@ -624,29 +645,29 @@ export default function NotificationCenter() {
                               {!notification.read_at && (
                                 <Badge
                                   variant="secondary"
-                                  className={t("components.notifications.notificationcenter.name.bg_blue_100_text_blue_800")}
+                                  className="bg-blue-100 text-blue-800"
                                 >
-                                  {t('notifications.new')}
+                                  جديد
                                 </Badge>
                               )}
                             </div>
-                            <p className={t("components.notifications.notificationcenter.name.text_gray_700_dark_text_gray_300_text_sm_mb_2")}>
+                            <p className="text-gray-700 dark:text-gray-300 text-sm mb-2">
                               {notification.message_ar || notification.message}
                             </p>
-                            <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_4_text_xs_text_gray_500")}>
-                              <span>{t('notifications.type')}: {notification.type}</span>
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                              <span>نوع: {notification.type}</span>
                               <span>
-                                {t('notifications.date')}:{" "}
+                                تاريخ:{" "}
                                 {new Date(
                                   notification.created_at,
                                 ).toLocaleString("ar")}
                               </span>
                               {notification.context_type && (
-                                <span>{t('common.details')}: {notification.context_type}</span>
+                                <span>السياق: {notification.context_type}</span>
                               )}
                             </div>
                           </div>
-                          <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_1")}>
+                          <div className="flex items-center gap-1">
                             {!notification.read_at && (
                               <Button
                                 size="sm"
@@ -657,26 +678,29 @@ export default function NotificationCenter() {
                                 disabled={markAsReadMutation.isPending}
                                 data-testid={`button-mark-read-${notification.id}`}
                               >
-                                <Eye className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
+                                <Eye className="h-4 w-4" />
                               </Button>
                             )}
                             <Button
                               size="sm"
                               variant="ghost"
-                              className={t("components.notifications.notificationcenter.name.text_red_600_hover_text_red_700")}
+                              className="text-red-600 hover:text-red-700"
                               onClick={() =>
                                 handleDeleteNotification(notification.id)
                               }
                               disabled={deleteNotificationMutation.isPending}
                               data-testid={`button-delete-${notification.id}`}
                             >
-                              <Trash2 className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                      </div>{t('components.notifications.NotificationCenter.))_)_:_(')}<div className={t("components.notifications.notificationcenter.name.text_center_py_8_text_gray_500")}>
-                      <Bell className={t("components.notifications.notificationcenter.name.h_12_w_12_mx_auto_mb_4_text_gray_300")} />
-                      <p>{t('notifications.noNotificationsYet')}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Bell className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>لا توجد إشعارات حالياً</p>
                     </div>
                   )}
                 </div>
@@ -686,27 +710,27 @@ export default function NotificationCenter() {
         </TabsContent>
 
         {/* System Notifications Tab */}
-        <TabsContent value="system" className={t("components.notifications.notificationcenter.name.space_y_6")}>
+        <TabsContent value="system" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
-                <Settings className={t("components.notifications.notificationcenter.name.h_5_w_5_text_purple_600")} />
-                {t('notifications.systemNotificationForm')}
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-purple-600" />
+                إنشاء إشعار نظام
               </CardTitle>
             </CardHeader>
-            <CardContent className={t("components.notifications.notificationcenter.name.space_y_4")}>
-              <div className={t("components.notifications.notificationcenter.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.title')} *</label>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">عنوان الإشعار *</label>
                   <Input
-                    placeholder={t('notifications.titlePlaceholder')}
+                    placeholder="عنوان الإشعار"
                     value={systemTitle}
                     onChange={(e) => setSystemTitle(e.target.value)}
                     data-testid="input-system-title"
                   />
                 </div>
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.notificationType')}</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">نوع الإشعار</label>
                   <Select
                     value={systemType ?? ""}
                     onValueChange={(value: any) => setSystemType(value)}
@@ -715,21 +739,21 @@ export default function NotificationCenter() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="system">{t('components.notifications.NotificationCenter.نظام')}</SelectItem>
-                      <SelectItem value="order">{t('components.notifications.NotificationCenter.طلب')}</SelectItem>
-                      <SelectItem value="production">{t('components.notifications.NotificationCenter.إنتاج')}</SelectItem>
-                      <SelectItem value="maintenance">{t('components.notifications.NotificationCenter.صيانة')}</SelectItem>
-                      <SelectItem value="quality">{t('components.notifications.NotificationCenter.جودة')}</SelectItem>
-                      <SelectItem value="hr">{t('components.notifications.NotificationCenter.موارد_بشرية')}</SelectItem>
+                      <SelectItem value="system">نظام</SelectItem>
+                      <SelectItem value="order">طلب</SelectItem>
+                      <SelectItem value="production">إنتاج</SelectItem>
+                      <SelectItem value="maintenance">صيانة</SelectItem>
+                      <SelectItem value="quality">جودة</SelectItem>
+                      <SelectItem value="hr">موارد بشرية</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.message')} *</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">محتوى الإشعار *</label>
                 <Textarea
-                  placeholder={t('notifications.messagePlaceholder')}
+                  placeholder="اكتب محتوى الإشعار هنا..."
                   value={systemMessage}
                   onChange={(e) => setSystemMessage(e.target.value)}
                   rows={3}
@@ -737,9 +761,9 @@ export default function NotificationCenter() {
                 />
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.priority')}</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">الأولوية</label>
                   <Select
                     value={systemPriority ?? ""}
                     onValueChange={(value: any) => setSystemPriority(value)}
@@ -748,16 +772,16 @@ export default function NotificationCenter() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">{t('components.notifications.NotificationCenter.منخفضة')}</SelectItem>
-                      <SelectItem value="normal">{t('components.notifications.NotificationCenter.عادية')}</SelectItem>
-                      <SelectItem value="high">{t('components.notifications.NotificationCenter.عالية')}</SelectItem>
-                      <SelectItem value="urgent">{t('components.notifications.NotificationCenter.عاجلة')}</SelectItem>
+                      <SelectItem value="low">منخفضة</SelectItem>
+                      <SelectItem value="normal">عادية</SelectItem>
+                      <SelectItem value="high">عالية</SelectItem>
+                      <SelectItem value="urgent">عاجلة</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.recipientType')}</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">المستلم</label>
                   <Select
                     value={recipientType ?? ""}
                     onValueChange={(value: any) => setRecipientType(value)}
@@ -766,18 +790,22 @@ export default function NotificationCenter() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">{t('components.notifications.NotificationCenter.جميع_المستخدمين')}</SelectItem>
-                      <SelectItem value="user">{t('components.notifications.NotificationCenter.مستخدم_محدد')}</SelectItem>
-                      <SelectItem value="role">{t('components.notifications.NotificationCenter.دور_محدد')}</SelectItem>
+                      <SelectItem value="all">جميع المستخدمين</SelectItem>
+                      <SelectItem value="user">مستخدم محدد</SelectItem>
+                      <SelectItem value="role">دور محدد</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {recipientType !== "all" && (
-                  <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                    <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.recipientId')}</label>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">معرف المستلم</label>
                     <Input
-                      placeholder={t('notifications.recipientIdPlaceholder')}
+                      placeholder={
+                        recipientType === "user"
+                          ? "معرف المستخدم"
+                          : "معرف الدور"
+                      }
                       value={recipientId}
                       onChange={(e) => setRecipientId(e.target.value)}
                       type="number"
@@ -787,51 +815,51 @@ export default function NotificationCenter() {
                 )}
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.flex_items_center_space_x_2")}>
+              <div className="flex items-center space-x-2">
                 <Switch
                   checked={notificationSound}
                   onCheckedChange={setNotificationSound}
                   data-testid="switch-notification-sound"
                 />
-                <label className={t("components.notifications.notificationcenter.name.text_sm")}>{t('notifications.notificationSound')}</label>
+                <label className="text-sm">تشغيل صوت الإشعار</label>
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.flex_gap_2_pt_4")}>
+              <div className="flex gap-2 pt-4">
                 <Button
                   onClick={handleSendSystemNotification}
                   disabled={createSystemNotificationMutation.isPending}
-                  className={t("components.notifications.notificationcenter.name.flex_1")}
+                  className="flex-1"
                   data-testid="button-send-system-notification"
                 >
                   {createSystemNotificationMutation.isPending && (
-                    <Loader2 className={t("components.notifications.notificationcenter.name.h_4_w_4_animate_spin_ml_1")} />
+                    <Loader2 className="h-4 w-4 animate-spin ml-1" />
                   )}
-                  <Send className={t("components.notifications.notificationcenter.name.h_4_w_4_ml_1")} />
-                  {t('notifications.sendSystemNotification')}
+                  <Send className="h-4 w-4 ml-1" />
+                  إرسال الإشعار
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="send" className={t("components.notifications.notificationcenter.name.space_y_6")}>
+        <TabsContent value="send" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}>
-                <MessageSquare className={t("components.notifications.notificationcenter.name.h_5_w_5_text_green_600")} />
-                {t('notifications.sendMessages')}
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-green-600" />
+                إرسال رسالة واتس اب
               </CardTitle>
             </CardHeader>
-            <CardContent className={t("components.notifications.notificationcenter.name.space_y_4")}>
-              <div className={t("components.notifications.notificationcenter.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.phoneNumber')} *</label>
-                  <div className={t("components.notifications.notificationcenter.name.flex_gap_2")}>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">رقم الهاتف *</label>
+                  <div className="flex gap-2">
                     <Input
-                      placeholder="{t('components.notifications.NotificationCenter.placeholder.+966501234567')}"
+                      placeholder="+966501234567"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      className={t("components.notifications.notificationcenter.name.flex_1")}
+                      className="flex-1"
                       dir="ltr"
                     />
                     <Button
@@ -840,95 +868,98 @@ export default function NotificationCenter() {
                       onClick={handleSendTest}
                       disabled={sendTestMutation.isPending}
                     >
-                      <TestTube className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
+                      <TestTube className="h-4 w-4" />
                     </Button>
                   </div>
-                  <p className={t("components.notifications.notificationcenter.name.text_xs_text_gray_500")}>{t('components.notifications.NotificationCenter.مثال:_+966501234567_(يجب_أن_يبدأ_برمز_الدولة)')}</p>
+                  <p className="text-xs text-gray-500">
+                    مثال: +966501234567 (يجب أن يبدأ برمز الدولة)
+                  </p>
                 </div>
 
-                <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                  <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.titleOptional')}</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">عنوان الرسالة</label>
                   <Input
-                    placeholder={t('notifications.titlePlaceholder')}
+                    placeholder="عنوان الإشعار"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                   />
                 </div>
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.message')} *</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">محتوى الرسالة *</label>
                 <Textarea
-                  placeholder={t('notifications.messagePlaceholder')}
+                  placeholder="اكتب محتوى الرسالة هنا..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={4}
-                  className={t("components.notifications.notificationcenter.name.resize_none")}
+                  className="resize-none"
                 />
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.space_y_2")}>
-                <label className={t("components.notifications.notificationcenter.name.text_sm_font_medium")}>{t('notifications.priority')}</label>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">الأولوية</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className={t("components.notifications.notificationcenter.name.w_full_p_2_border_border_gray_300_rounded_md_dark_border_gray_600_dark_bg_gray_800")}
+                  className="w-full p-2 border border-gray-300 rounded-md dark:border-gray-600 dark:bg-gray-800"
                 >
-                  <option value="low">{t('components.notifications.NotificationCenter.منخفضة')}</option>
-                  <option value="normal">{t('components.notifications.NotificationCenter.عادية')}</option>
-                  <option value="high">{t('components.notifications.NotificationCenter.عالية')}</option>
-                  <option value="urgent">{t('components.notifications.NotificationCenter.عاجلة')}</option>
+                  <option value="low">منخفضة</option>
+                  <option value="normal">عادية</option>
+                  <option value="high">عالية</option>
+                  <option value="urgent">عاجلة</option>
                 </select>
               </div>
 
-              <div className={t("components.notifications.notificationcenter.name.flex_gap_2")}>
+              <div className="flex gap-2">
                 <Button
                   onClick={handleSendMessage}
                   disabled={sendWhatsAppMutation.isPending}
-                  className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+                  className="flex items-center gap-2"
                 >
-                  <Send className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
+                  <Send className="h-4 w-4" />
                   {sendWhatsAppMutation.isPending
-                    ? t('notifications.sending')
-                    : t('notifications.sendMessage')}
+                    ? "جاري الإرسال..."
+                    : "إرسال الرسالة"}
                 </Button>
 
                 <Button
                   variant="outline"
                   onClick={handleSendTest}
                   disabled={sendTestMutation.isPending || !phoneNumber}
-                  className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2")}
+                  className="flex items-center gap-2"
                 >
-                  <TestTube className={t("components.notifications.notificationcenter.name.h_4_w_4")} />
-                  {t('notifications.sendTest')}
+                  <TestTube className="h-4 w-4" />
+                  رسالة اختبار
                 </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="history" className={t("components.notifications.notificationcenter.name.space_y_6")}>
+        <TabsContent value="history" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>{t('notifications.whatsappHistory')}</CardTitle>
+              <CardTitle>سجل الإشعارات</CardTitle>
             </CardHeader>
             <CardContent>
               {whatsappLoading ? (
-                <div className={t("components.notifications.notificationcenter.name.text_center_py_8")}>
-                  <div className={t("components.notifications.notificationcenter.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-                  <p className={t("components.notifications.notificationcenter.name.text_gray_600_mt_2")}>{t('notifications.loading')}</p>
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-600 mt-2">جاري تحميل الإشعارات...</p>
                 </div>
-              ) : whatsappNotifications && whatsappNotifications.length >{t('components.notifications.NotificationCenter.0_?_(')}<div className={t("components.notifications.notificationcenter.name.space_y_3")}>
+              ) : whatsappNotifications && whatsappNotifications.length > 0 ? (
+                <div className="space-y-3">
                   {whatsappNotifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className={t("components.notifications.notificationcenter.name.border_border_gray_200_dark_border_gray_700_rounded_lg_p_4_space_y_3")}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3"
                     >
-                      <div className={t("components.notifications.notificationcenter.name.flex_items_start_justify_between")}>
-                        <div className={t("components.notifications.notificationcenter.name.flex_1")}>
-                          <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_2_mb_2")}>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
                             {getStatusIcon(notification.status)}
-                            <h3 className={t("components.notifications.notificationcenter.name.font_medium_text_gray_900_dark_text_white")}>
+                            <h3 className="font-medium text-gray-900 dark:text-white">
                               {notification.title_ar || notification.title}
                             </h3>
                             <Badge
@@ -956,18 +987,18 @@ export default function NotificationCenter() {
                                     : "عادي"}
                             </Badge>
                           </div>
-                          <p className={t("components.notifications.notificationcenter.name.text_gray_600_dark_text_gray_400_mb_2")}>
+                          <p className="text-gray-600 dark:text-gray-400 mb-2">
                             {notification.message_ar || notification.message}
                           </p>
-                          <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_4_text_sm_text_gray_500")}>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
                             {notification.phone_number && (
-                              <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_1")}>
-                                <Phone className={t("components.notifications.notificationcenter.name.h_3_w_3")} />
+                              <div className="flex items-center gap-1">
+                                <Phone className="h-3 w-3" />
                                 {notification.phone_number}
                               </div>
                             )}
-                            <div className={t("components.notifications.notificationcenter.name.flex_items_center_gap_1")}>
-                              <Clock className={t("components.notifications.notificationcenter.name.h_3_w_3")} />
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
                               {new Date(notification.created_at).toLocaleString(
                                 "ar",
                               )}
@@ -977,17 +1008,21 @@ export default function NotificationCenter() {
                       </div>
 
                       {notification.error_message && (
-                        <div className={t("components.notifications.notificationcenter.name.bg_red_50_dark_bg_red_900_20_border_border_red_200_dark_border_red_800_rounded_p_2")}>
-                          <p className={t("components.notifications.notificationcenter.name.text_red_700_dark_text_red_300_text_sm")}>
-                            {t('notifications.error')}: {notification.error_message}
+                        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2">
+                          <p className="text-red-700 dark:text-red-300 text-sm">
+                            خطأ: {notification.error_message}
                           </p>
                         </div>
                       )}
                     </div>
                   ))}
-                </div>{t('components.notifications.NotificationCenter.)_:_(')}<div className={t("components.notifications.notificationcenter.name.text_center_py_8")}>
-                  <Bell className={t("components.notifications.notificationcenter.name.h_12_w_12_text_gray_400_mx_auto_mb_4")} />
-                  <p className={t("components.notifications.notificationcenter.name.text_gray_600_dark_text_gray_400")}>{t('components.notifications.NotificationCenter.لا_توجد_إشعارات_بعد')}</p>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 dark:text-gray-400">
+                    لا توجد إشعارات بعد
+                  </p>
                 </div>
               )}
             </CardContent>

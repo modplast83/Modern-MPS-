@@ -12,10 +12,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react";
-import { useTranslation } from 'react-i18next';
 
 export default function RecentRolls() {
-  const { t } = useTranslation();
   const {
     data: rolls = [],
     isLoading,
@@ -42,13 +40,13 @@ export default function RecentRolls() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return t('production.completed');
+        return "مكتمل";
       case "in_progress":
-        return t('production.inProduction');
+        return "قيد التنفيذ";
       case "pending":
-        return t('production.pending');
+        return "في الانتظار";
       case "failed":
-        return t('recentRolls.failed');
+        return "فشل";
       default:
         return status;
     }
@@ -57,7 +55,15 @@ export default function RecentRolls() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "completed":
-        return <CheckCircle2 className={t("components.dashboard.recentrolls.name.w_4_h_4_text_green_600")} />{t('components.dashboard.RecentRolls.;_case_"in_progress":_return')}<RefreshCw className={t("components.dashboard.recentrolls.name.w_4_h_4_text_blue_600_animate_spin")} />{t('components.dashboard.RecentRolls.;_case_"pending":_return')}<Clock className={t("components.dashboard.recentrolls.name.w_4_h_4_text_yellow_600")} />{t('components.dashboard.RecentRolls.;_case_"failed":_return')}<AlertCircle className={t("components.dashboard.recentrolls.name.w_4_h_4_text_red_600")} />{t('components.dashboard.RecentRolls.;_default:_return')}<Package className={t("components.dashboard.recentrolls.name.w_4_h_4_text_gray_600")} />;
+        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
+      case "in_progress":
+        return <RefreshCw className="w-4 h-4 text-blue-600 animate-spin" />;
+      case "pending":
+        return <Clock className="w-4 h-4 text-yellow-600" />;
+      case "failed":
+        return <AlertCircle className="w-4 h-4 text-red-600" />;
+      default:
+        return <Package className="w-4 h-4 text-gray-600" />;
     }
   };
 
@@ -67,20 +73,20 @@ export default function RecentRolls() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className={t("components.dashboard.recentrolls.name.flex_items_center_gap_2")}>
-            <Package className={t("components.dashboard.recentrolls.name.w_5_h_5")} />
-            {t('dashboard.recentRolls')}
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            الرولات الحديثة
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={t("components.dashboard.recentrolls.name.space_y_4")}>
+          <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className={t("components.dashboard.recentrolls.name.animate_pulse")}>
-                <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_3")}>
-                  <div className={t("components.dashboard.recentrolls.name.w_10_h_10_bg_gray_200_rounded")}></div>
-                  <div className={t("components.dashboard.recentrolls.name.flex_1")}>
-                    <div className={t("components.dashboard.recentrolls.name.h_4_bg_gray_200_rounded_mb_2")}></div>
-                    <div className={t("components.dashboard.recentrolls.name.h_3_bg_gray_200_rounded_w_2_3")}></div>
+              <div key={i} className="animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-200 rounded"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                   </div>
                 </div>
               </div>
@@ -93,31 +99,32 @@ export default function RecentRolls() {
 
   return (
     <Card>
-      <CardHeader className={t("components.dashboard.recentrolls.name.pb_3")}>
-        <div className={t("components.dashboard.recentrolls.name.flex_items_center_justify_between")}>
-          <CardTitle className={t("components.dashboard.recentrolls.name.flex_items_center_gap_2")}>
-            <Package className={t("components.dashboard.recentrolls.name.w_5_h_5")} />
-            {t('dashboard.recentRolls')}
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            الرولات الحديثة
           </CardTitle>
           <Button variant="outline" size="sm" onClick={() => refetch()}>
-            <RefreshCw className={t("components.dashboard.recentrolls.name.w_4_h_4")} />
+            <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
       </CardHeader>
-      <CardContent className={t("components.dashboard.recentrolls.name.p_0")}>
-        <ScrollArea className={t("components.dashboard.recentrolls.name.h_80")}>
-          {recentRolls.length >{t('components.dashboard.RecentRolls.0_?_(')}<div className={t("components.dashboard.recentrolls.name.p_4_space_y_4")}>
+      <CardContent className="p-0">
+        <ScrollArea className="h-80">
+          {recentRolls.length > 0 ? (
+            <div className="p-4 space-y-4">
               {recentRolls.map((roll: any) => (
                 <div
                   key={roll.id}
-                  className={t("components.dashboard.recentrolls.name.border_rounded_lg_p_3_hover_bg_gray_50_transition_colors")}
+                  className="border rounded-lg p-3 hover:bg-gray-50 transition-colors"
                 >
-                  <div className={t("components.dashboard.recentrolls.name.flex_items_start_justify_between")}>
-                    <div className={t("components.dashboard.recentrolls.name.flex_items_start_gap_3")}>
-                      <div className={t("components.dashboard.recentrolls.name.mt_1")}>{getStatusIcon(roll.status)}</div>
-                      <div className={t("components.dashboard.recentrolls.name.flex_1_min_w_0")}>
-                        <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_2_mb_1")}>
-                          <h4 className={t("components.dashboard.recentrolls.name.font_medium_text_gray_900_truncate")}>
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">{getStatusIcon(roll.status)}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-medium text-gray-900 truncate">
                             {roll.roll_number}
                           </h4>
                           <Badge className={getStatusColor(roll.status)}>
@@ -125,28 +132,28 @@ export default function RecentRolls() {
                           </Badge>
                         </div>
 
-                        <div className={t("components.dashboard.recentrolls.name.space_y_1_text_sm_text_gray_600")}>
-                          <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_1")}>
-                            <Package className={t("components.dashboard.recentrolls.name.w_3_h_3")} />
-                            <span>{t('recentRolls.productionOrder')}: {roll.production_order_id}</span>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Package className="w-3 h-3" />
+                            <span>أمر إنتاج: {roll.production_order_id}</span>
                           </div>
 
                           {roll.machine_id && (
-                            <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_1")}>
-                              <Settings className={t("components.dashboard.recentrolls.name.w_3_h_3")} />
-                              <span>{t('recentRolls.machine')}: {roll.machine_id}</span>
+                            <div className="flex items-center gap-1">
+                              <Settings className="w-3 h-3" />
+                              <span>ماكينة: {roll.machine_id}</span>
                             </div>
                           )}
 
                           {roll.employee_id && (
-                            <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_1")}>
-                              <User className={t("components.dashboard.recentrolls.name.w_3_h_3")} />
-                              <span>{t('recentRolls.operator')}: {roll.employee_id}</span>
+                            <div className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              <span>عامل: {roll.employee_id}</span>
                             </div>
                           )}
 
-                          <div className={t("components.dashboard.recentrolls.name.flex_items_center_gap_1")}>
-                            <Clock className={t("components.dashboard.recentrolls.name.w_3_h_3")} />
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
                             <span>
                               {new Date(roll.created_at).toLocaleDateString(
                                 "ar",
@@ -163,14 +170,14 @@ export default function RecentRolls() {
                       </div>
                     </div>
 
-                    <div className={t("components.dashboard.recentrolls.name.text_right")}>
+                    <div className="text-right">
                       {roll.length && (
-                        <div className={t("components.dashboard.recentrolls.name.text_sm_font_medium_text_gray_900")}>
+                        <div className="text-sm font-medium text-gray-900">
                           {roll.length} م
                         </div>
                       )}
                       {roll.weight && (
-                        <div className={t("components.dashboard.recentrolls.name.text_xs_text_gray_500")}>
+                        <div className="text-xs text-gray-500">
                           {roll.weight} كغ
                         </div>
                       )}
@@ -181,9 +188,9 @@ export default function RecentRolls() {
                   {roll.status === "in_progress" &&
                     roll.length &&
                     roll.target_length && (
-                      <div className={t("components.dashboard.recentrolls.name.mt_3")}>
-                        <div className={t("components.dashboard.recentrolls.name.flex_justify_between_text_xs_text_gray_600_mb_1")}>
-                          <span>{t('recentRolls.progress')}</span>
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>التقدم</span>
                           <span>
                             {Math.round(
                               (roll.length / roll.target_length) * 100,
@@ -191,9 +198,9 @@ export default function RecentRolls() {
                             %
                           </span>
                         </div>
-                        <div className={t("components.dashboard.recentrolls.name.w_full_bg_gray_200_rounded_full_h_2")}>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
                           <div
-                            className={t("components.dashboard.recentrolls.name.bg_blue_600_h_2_rounded_full_transition_all_duration_300")}
+                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                             style={{
                               width: `${Math.min((roll.length / roll.target_length) * 100, 100)}%`,
                             }}
@@ -203,10 +210,12 @@ export default function RecentRolls() {
                     )}
                 </div>
               ))}
-            </div>{t('components.dashboard.RecentRolls.)_:_(')}<div className={t("components.dashboard.recentrolls.name.p_8_text_center")}>
-              <Package className={t("components.dashboard.recentrolls.name.w_12_h_12_text_gray_400_mx_auto_mb_3")} />
-              <p className={t("components.dashboard.recentrolls.name.text_gray_600_mb_2")}>{t('recentRolls.noRolls')}</p>
-              <p className={t("components.dashboard.recentrolls.name.text_sm_text_gray_500")}>{t('recentRolls.newRollsAppearHere')}</p>
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 mb-2">لا توجد رولات حديثة</p>
+              <p className="text-sm text-gray-500">ستظهر الرولات الجديدة هنا</p>
             </div>
           )}
         </ScrollArea>

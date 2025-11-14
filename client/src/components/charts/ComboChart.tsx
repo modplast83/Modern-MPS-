@@ -45,15 +45,15 @@ const CustomTooltip = ({
   if (active && payload && payload.length) {
     return (
       <div
-        className={t("components.charts.combochart.name.bg_white_p_3_border_border_gray_300_rounded_lg_shadow_lg")}
+        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
         dir="rtl"
       >
-        <p className={t("components.charts.combochart.name.font_medium_text_gray_900")}>{`${label}`}</p>
+        <p className="font-medium text-gray-900">{`${label}`}</p>
         {payload.map((entry: any, index: number) => {
           const formatter =
             entry.yAxisId === "right" ? formatRightAxis : formatValue;
           return (
-            <p key={index} className={t("components.charts.combochart.name.text_sm")} style={{ color: entry.color }}>
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${formatter ? formatter(entry.value) : entry.value}`}
             </p>
           );
@@ -78,17 +78,20 @@ export function ComboChart({
   leftAxisLabel,
   rightAxisLabel,
 }: ComboChartProps) {
-  const hasRightAxis = elements.some((el) =>{t('components.charts.ComboChart.el.yaxisid_===_"right");_return_(')}<Card className={`${className}`} data-testid="chart-combo">
+  const hasRightAxis = elements.some((el) => el.yAxisId === "right");
+
+  return (
+    <Card className={`${className}`} data-testid="chart-combo">
       <CardHeader>
         <CardTitle
-          className={t("components.charts.combochart.name.text_lg_font_semibold_text_gray_900")}
+          className="text-lg font-semibold text-gray-900"
           data-testid="text-chart-title"
         >
           {title}
         </CardTitle>
         {description && (
           <p
-            className={t("components.charts.combochart.name.text_sm_text_gray_600")}
+            className="text-sm text-gray-600"
             data-testid="text-chart-description"
           >
             {description}
@@ -169,7 +172,11 @@ export function ComboChart({
                       {...commonProps}
                       fill={element.color}
                       radius={[2, 2, 0, 0]}
-                    />{t('components.charts.ComboChart.);_case_"line":_return_(')}<Line
+                    />
+                  );
+                case "line":
+                  return (
+                    <Line
                       {...commonProps}
                       type="monotone"
                       stroke={element.color}
@@ -180,7 +187,11 @@ export function ComboChart({
                         stroke: element.color,
                         strokeWidth: 2,
                       }}
-                    />{t('components.charts.ComboChart.);_case_"area":_return_(')}<Area
+                    />
+                  );
+                case "area":
+                  return (
+                    <Area
                       {...commonProps}
                       type="monotone"
                       stroke={element.color}

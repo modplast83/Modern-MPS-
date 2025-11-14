@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -95,14 +94,15 @@ interface SearchFilters {
 }
 
 export default function RollSearch() {
-  const { t } = useTranslation();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [selectedRollId, setSelectedRollId] = useState<number | null>{t('pages.RollSearch.(null);_const_[showfilters,_setshowfilters]_=_usestate(false);_const_[filters,_setfilters]_=_usestate')}<SearchFilters>({});
+  const [selectedRollId, setSelectedRollId] = useState<number | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>({});
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [barcodeInput, setBarcodeInput] = useState("");
 
@@ -176,20 +176,20 @@ export default function RollSearch() {
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || t('common.error'));
+        throw new Error(error.message || "خطأ في البحث بالباركود");
       }
       return response.json();
     },
     onSuccess: (data) => {
       setSelectedRollId(data.roll_id);
       toast({
-        title: t('common.success'),
-        description: `${t('common.number')}: ${data.roll_number}`,
+        title: "تم العثور على الرول",
+        description: `رقم الرول: ${data.roll_number}`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: t('common.error'),
+        title: "خطأ",
         description: error.message,
         variant: "destructive",
       });
@@ -200,7 +200,7 @@ export default function RollSearch() {
   const exportToExcel = () => {
     if (!searchResults || searchResults.length === 0) {
       toast({
-        title: t('common.noData'),
+        title: "لا توجد بيانات للتصدير",
         variant: "destructive",
       });
       return;
@@ -228,17 +228,18 @@ export default function RollSearch() {
     XLSX.writeFile(wb, `roll_search_${format(new Date(), "yyyy-MM-dd_HH-mm")}.xlsx`);
 
     toast({
-      title: t('common.success'),
-      description: `${t('common.export')} ${searchResults.length}`,
+      title: "تم التصدير بنجاح",
+      description: `تم تصدير ${searchResults.length} رول`,
     });
   };
 
+  // Get stage name in Arabic
   const getStageNameAr = (stage: string) => {
     switch (stage) {
-      case "film": return t('productionStages.film');
-      case "printing": return t('productionStages.printing');
-      case "cutting": return t('productionStages.cutting');
-      case "done": return t('common.completed');
+      case "film": return "فيلم";
+      case "printing": return "طباعة";
+      case "cutting": return "تقطيع";
+      case "done": return "مكتمل";
       default: return stage;
     }
   };
@@ -246,7 +247,11 @@ export default function RollSearch() {
   // Get stage icon
   const getStageIcon = (stage: string) => {
     switch (stage) {
-      case "film": return <Film className={t("pages.rollsearch.name.h_4_w_4")} />{t('pages.RollSearch.;_case_"printing":_return')}<PrinterIcon className={t("pages.rollsearch.name.h_4_w_4")} />{t('pages.RollSearch.;_case_"cutting":_return')}<Scissors className={t("pages.rollsearch.name.h_4_w_4")} />{t('pages.RollSearch.;_case_"done":_return')}<CheckCircle className={t("pages.rollsearch.name.h_4_w_4")} />{t('pages.RollSearch.;_default:_return')}<Package className={t("pages.rollsearch.name.h_4_w_4")} />;
+      case "film": return <Film className="h-4 w-4" />;
+      case "printing": return <PrinterIcon className="h-4 w-4" />;
+      case "cutting": return <Scissors className="h-4 w-4" />;
+      case "done": return <CheckCircle className="h-4 w-4" />;
+      default: return <Package className="h-4 w-4" />;
     }
   };
 
@@ -270,50 +275,50 @@ export default function RollSearch() {
   };
 
   return (
-    <div className={t("pages.rollsearch.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className={t("pages.rollsearch.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
-        <main className={t("pages.rollsearch.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           {/* Header */}
-          <div className={t("pages.rollsearch.name.mb_6")}>
-            <h1 className={t("pages.rollsearch.name.text_2xl_font_bold_text_gray_900_mb_2_flex_items_center_gap_2")}>
-              <Search className={t("pages.rollsearch.name.h_6_w_6")} />
-              {t('sidebar.rollSearch')}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <Search className="h-6 w-6" />
+              البحث عن الرولات
             </h1>
-              <p className={t("pages.rollsearch.name.text_muted_foreground_mt_1")}>
-                {t('common.search')}
+              <p className="text-muted-foreground mt-1">
+                ابحث عن الرولات بالرقم، الباركود، أمر الإنتاج أو الطلب
               </p>
             </div>
 
-          <div className={t("pages.rollsearch.name.grid_grid_cols_1_lg_grid_cols_3_gap_6")}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Search Panel */}
-          <div className={t("pages.rollsearch.name.lg_col_span_2")}>
-            <Card className={t("pages.rollsearch.name.p_6")}>
-              <Tabs defaultValue="text" className={t("pages.rollsearch.name.space_y_4")}>
-                <TabsList className={t("pages.rollsearch.name.grid_w_full_grid_cols_2")}>
+          <div className="lg:col-span-2">
+            <Card className="p-6">
+              <Tabs defaultValue="text" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="text" data-testid="tab-text-search">
-                    <Search className={t("pages.rollsearch.name.h_4_w_4_ml_2")} />
-                    {t('common.search')}
+                    <Search className="h-4 w-4 ml-2" />
+                    بحث نصي
                   </TabsTrigger>
                   <TabsTrigger value="barcode" data-testid="tab-barcode-search">
-                    <ScanLine className={t("pages.rollsearch.name.h_4_w_4_ml_2")} />
-                    {t('common.barcode')}
+                    <ScanLine className="h-4 w-4 ml-2" />
+                    بحث بالباركود
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="text" className={t("pages.rollsearch.name.space_y_4")}>
+                <TabsContent value="text" className="space-y-4">
                   {/* Search Input */}
-                  <div className={t("pages.rollsearch.name.relative")}>
-                    <Search className={t("pages.rollsearch.name.absolute_right_3_top_3_h_5_w_5_text_muted_foreground")} />
+                  <div className="relative">
+                    <Search className="absolute right-3 top-3 h-5 w-5 text-muted-foreground" />
                     <Input
                       id="search-input"
                       type="text"
-                      placeholder={t('common.search')}
+                      placeholder="ابحث برقم الرول، أمر الإنتاج، الطلب أو اسم العميل..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className={t("pages.rollsearch.name.pr_10_text_lg_h_12")}
+                      className="pr-10 text-lg h-12"
                       data-testid="input-search"
                     />
                     {searchQuery && (
@@ -321,25 +326,26 @@ export default function RollSearch() {
                         variant="ghost"
                         size="sm"
                         onClick={() => setSearchQuery("")}
-                        className={t("pages.rollsearch.name.absolute_left_2_top_2")}
+                        className="absolute left-2 top-2"
                       >
-                        <X className={t("pages.rollsearch.name.h_4_w_4")} />
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
 
                   {/* Quick Search History */}
-                  {searchHistory.length >{t('pages.RollSearch.0_&&_!searchquery_&&_(')}<div className={t("pages.rollsearch.name.space_y_2")}>
-                      <Label className={t("pages.rollsearch.name.text_sm_text_muted_foreground")}>{t('common.history')}</Label>
-                      <div className={t("pages.rollsearch.name.flex_flex_wrap_gap_2")}>
+                  {searchHistory.length > 0 && !searchQuery && (
+                    <div className="space-y-2">
+                      <Label className="text-sm text-muted-foreground">عمليات البحث الأخيرة</Label>
+                      <div className="flex flex-wrap gap-2">
                         {searchHistory.map((query, idx) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className={t("pages.rollsearch.name.cursor_pointer_hover_bg_secondary_80")}
+                            className="cursor-pointer hover:bg-secondary/80"
                             onClick={() => setSearchQuery(query)}
                           >
-                            <Clock className={t("pages.rollsearch.name.h_3_w_3_ml_1")} />
+                            <Clock className="h-3 w-3 ml-1" />
                             {query}
                           </Badge>
                         ))}
@@ -348,57 +354,61 @@ export default function RollSearch() {
                   )}
 
                   {/* Advanced Filters */}
-                  <div className={t("pages.rollsearch.name.flex_items_center_justify_between")}>
+                  <div className="flex items-center justify-between">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setShowFilters(!showFilters)}
                       data-testid="button-toggle-filters"
                     >
-                      <Filter className={t("pages.rollsearch.name.h_4_w_4_ml_2")} />
-                      {t('common.filter')}
-                      {Object.keys(filters).length >{t('pages.RollSearch.0_&&_(')}<Badge className={t("pages.rollsearch.name.mr_2")} variant="secondary">
+                      <Filter className="h-4 w-4 ml-2" />
+                      فلاتر متقدمة
+                      {Object.keys(filters).length > 0 && (
+                        <Badge className="mr-2" variant="secondary">
                           {Object.keys(filters).length}
                         </Badge>
                       )}
                     </Button>
 
-                    {Object.keys(filters).length >{t('pages.RollSearch.0_&&_(')}<Button
+                    {Object.keys(filters).length > 0 && (
+                      <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setFilters({})}
                         data-testid="button-clear-filters"
                       >
-                        {t('common.clear')}
+                        مسح الفلاتر
                       </Button>
                     )}
                   </div>
 
                   {/* Filter Panel */}
                   {showFilters && (
-                    <Card className={t("pages.rollsearch.name.p_4_space_y_4")}>
-                      <div className={t("pages.rollsearch.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
-                        <div className={t("pages.rollsearch.name.space_y_2")}>
-                          <Label>{t('common.stage')}</Label>
+                    <Card className="p-4 space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Stage Filter */}
+                        <div className="space-y-2">
+                          <Label>المرحلة</Label>
                           <Select
                             value={filters.stage || "all"}
                             onValueChange={(value) => setFilters({ ...filters, stage: value === "all" ? undefined : value })}
                           >
                             <SelectTrigger data-testid="select-stage-filter">
-                              <SelectValue placeholder={t('common.all')} />
+                              <SelectValue placeholder="جميع المراحل" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="all">{t('common.all')}</SelectItem>
-                              <SelectItem value="film">{t('productionStages.film')}</SelectItem>
-                              <SelectItem value="printing">{t('productionStages.printing')}</SelectItem>
-                              <SelectItem value="cutting">{t('productionStages.cutting')}</SelectItem>
-                              <SelectItem value="done">{t('common.completed')}</SelectItem>
+                              <SelectItem value="all">جميع المراحل</SelectItem>
+                              <SelectItem value="film">فيلم</SelectItem>
+                              <SelectItem value="printing">طباعة</SelectItem>
+                              <SelectItem value="cutting">تقطيع</SelectItem>
+                              <SelectItem value="done">مكتمل</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
-                        <div className={t("pages.rollsearch.name.space_y_2")}>
-                          <Label>{t('common.from')}</Label>
+                        {/* Date Range */}
+                        <div className="space-y-2">
+                          <Label>من تاريخ</Label>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -409,11 +419,11 @@ export default function RollSearch() {
                                 )}
                                 data-testid="button-start-date"
                               >
-                                <CalendarIcon className={t("pages.rollsearch.name.ml_2_h_4_w_4")} />
-                                {filters.startDate ? format(filters.startDate, "PPP", { locale: ar }) : t('common.select')}
+                                <CalendarIcon className="ml-2 h-4 w-4" />
+                                {filters.startDate ? format(filters.startDate, "PPP", { locale: ar }) : "اختر التاريخ"}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className={t("pages.rollsearch.name.w_auto_p_0")}>
+                            <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
                                 selected={filters.startDate}
@@ -423,8 +433,8 @@ export default function RollSearch() {
                           </Popover>
                         </div>
 
-                        <div className={t("pages.rollsearch.name.space_y_2")}>
-                          <Label>{t('common.to')}</Label>
+                        <div className="space-y-2">
+                          <Label>إلى تاريخ</Label>
                           <Popover>
                             <PopoverTrigger asChild>
                               <Button
@@ -435,11 +445,11 @@ export default function RollSearch() {
                                 )}
                                 data-testid="button-end-date"
                               >
-                                <CalendarIcon className={t("pages.rollsearch.name.ml_2_h_4_w_4")} />
-                                {filters.endDate ? format(filters.endDate, "PPP", { locale: ar }) : t('common.select')}
+                                <CalendarIcon className="ml-2 h-4 w-4" />
+                                {filters.endDate ? format(filters.endDate, "PPP", { locale: ar }) : "اختر التاريخ"}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className={t("pages.rollsearch.name.w_auto_p_0")}>
+                            <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
                                 selected={filters.endDate}
@@ -449,8 +459,9 @@ export default function RollSearch() {
                           </Popover>
                         </div>
 
-                        <div className={t("pages.rollsearch.name.space_y_2")}>
-                          <Label>{t('common.weight')} ({t('common.kg')})</Label>
+                        {/* Weight Range */}
+                        <div className="space-y-2">
+                          <Label>الوزن الأدنى (كجم)</Label>
                           <Input
                             type="number"
                             placeholder="0"
@@ -460,11 +471,11 @@ export default function RollSearch() {
                           />
                         </div>
 
-                        <div className={t("pages.rollsearch.name.space_y_2")}>
-                          <Label>{t('common.weight')} ({t('common.kg')})</Label>
+                        <div className="space-y-2">
+                          <Label>الوزن الأقصى (كجم)</Label>
                           <Input
                             type="number"
-                            placeholder="{t('pages.RollSearch.placeholder.1000')}"
+                            placeholder="1000"
                             value={filters.maxWeight || ""}
                             onChange={(e) => setFilters({ ...filters, maxWeight: e.target.value ? parseFloat(e.target.value) : undefined })}
                             data-testid="input-max-weight"
@@ -475,20 +486,20 @@ export default function RollSearch() {
                   )}
                 </TabsContent>
 
-                <TabsContent value="barcode" className={t("pages.rollsearch.name.space_y_4")}>
-                  <div className={t("pages.rollsearch.name.text_center_space_y_4")}>
-                    <QrCode className={t("pages.rollsearch.name.h_16_w_16_mx_auto_text_muted_foreground")} />
-                    <p className={t("pages.rollsearch.name.text_muted_foreground")}>
-                      {t('common.scan')}
+                <TabsContent value="barcode" className="space-y-4">
+                  <div className="text-center space-y-4">
+                    <QrCode className="h-16 w-16 mx-auto text-muted-foreground" />
+                    <p className="text-muted-foreground">
+                      امسح الباركود أو أدخل رقمه يدوياً
                     </p>
-                    <div className={t("pages.rollsearch.name.flex_gap_2_max_w_md_mx_auto")}>
+                    <div className="flex gap-2 max-w-md mx-auto">
                       <Input
                         type="text"
-                        placeholder={t('common.barcode')}
+                        placeholder="أدخل رقم الباركود..."
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
                         onKeyPress={(e) => e.key === "Enter" && handleBarcodeScan()}
-                        className={t("pages.rollsearch.name.text_lg_h_12")}
+                        className="text-lg h-12"
                         data-testid="input-barcode"
                       />
                       <Button
@@ -497,9 +508,11 @@ export default function RollSearch() {
                         data-testid="button-scan"
                       >
                         {searchByBarcodeMutation.isPending ? (
-                          <RefreshCw className={t("pages.rollsearch.name.h_4_w_4_animate_spin")} />{t('pages.RollSearch.)_:_(')}<ScanLine className={t("pages.rollsearch.name.h_4_w_4")} />
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <ScanLine className="h-4 w-4" />
                         )}
-                        {t('common.scan')}
+                        مسح
                       </Button>
                     </div>
                   </div>
@@ -507,21 +520,22 @@ export default function RollSearch() {
               </Tabs>
 
               {/* Search Results */}
-              <div className={t("pages.rollsearch.name.mt_6")}>
+              <div className="mt-6">
                 {isSearching ? (
-                  <div className={t("pages.rollsearch.name.space_y_3")}>
+                  <div className="space-y-3">
                     {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className={t("pages.rollsearch.name.h_24")} />
+                      <Skeleton key={i} className="h-24" />
                     ))}
                   </div>
-                ) : searchResults.length >{t('pages.RollSearch.0_?_(')}<div className={t("pages.rollsearch.name.space_y_3")}>
-                    <div className={t("pages.rollsearch.name.flex_items_center_justify_between")}>
-                      <h3 className={t("pages.rollsearch.name.font_semibold")}>
-                        {t('common.results')} ({searchResults.length})
+                ) : searchResults.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">
+                        نتائج البحث ({searchResults.length})
                       </h3>
                     </div>
-                    <ScrollArea className={t("pages.rollsearch.name.h_600px_pr_4")}>
-                      <div className={t("pages.rollsearch.name.space_y_3")}>
+                    <ScrollArea className="h-[600px] pr-4">
+                      <div className="space-y-3">
                         {searchResults.map((roll: RollSearchResult) => (
                           <Card
                             key={roll.roll_id}
@@ -532,16 +546,16 @@ export default function RollSearch() {
                             onClick={() => setSelectedRollId(roll.roll_id)}
                             data-testid={`card-roll-${roll.roll_id}`}
                           >
-                            <div className={t("pages.rollsearch.name.space_y_3")}>
+                            <div className="space-y-3">
                               {/* Roll Header */}
-                              <div className={t("pages.rollsearch.name.flex_items_start_justify_between")}>
-                                <div className={t("pages.rollsearch.name.flex_items_center_gap_3")}>
-                                  <div className={t("pages.rollsearch.name.p_2_bg_primary_10_rounded")}>
-                                    <Package className={t("pages.rollsearch.name.h_5_w_5_text_primary")} />
+                              <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded">
+                                    <Package className="h-5 w-5 text-primary" />
                                   </div>
                                   <div>
-                                    <h4 className={t("pages.rollsearch.name.font_bold_text_lg")}>{roll.roll_number}</h4>
-                                    <p className={t("pages.rollsearch.name.text_sm_text_muted_foreground")}>
+                                    <h4 className="font-bold text-lg">{roll.roll_number}</h4>
+                                    <p className="text-sm text-muted-foreground">
                                       {roll.customer_name_ar || roll.customer_name}
                                     </p>
                                   </div>
@@ -552,44 +566,46 @@ export default function RollSearch() {
                                 </Badge>
                               </div>
 
-                              <div className={t("pages.rollsearch.name.grid_grid_cols_2_md_grid_cols_4_gap_3_text_sm")}>
+                              {/* Roll Details */}
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                                 <div>
-                                  <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.productionOrder')}</p>
-                                  <p className={t("pages.rollsearch.name.font_medium")}>{roll.production_order_number}</p>
+                                  <p className="text-muted-foreground">أمر الإنتاج</p>
+                                  <p className="font-medium">{roll.production_order_number}</p>
                                 </div>
                                 <div>
-                                  <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.orderNumber')}</p>
-                                  <p className={t("pages.rollsearch.name.font_medium")}>{roll.order_number}</p>
+                                  <p className="text-muted-foreground">رقم الطلب</p>
+                                  <p className="font-medium">{roll.order_number}</p>
                                 </div>
                                 <div>
-                                  <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.weight')}</p>
-                                  <p className={t("pages.rollsearch.name.font_medium")}>{roll.weight_kg} {t('common.kg')}</p>
+                                  <p className="text-muted-foreground">الوزن</p>
+                                  <p className="font-medium">{roll.weight_kg} كجم</p>
                                 </div>
                                 <div>
-                                  <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.date')}</p>
-                                  <p className={t("pages.rollsearch.name.font_medium")}>
+                                  <p className="text-muted-foreground">التاريخ</p>
+                                  <p className="font-medium">
                                     {format(new Date(roll.created_at), "dd/MM/yyyy")}
                                   </p>
                                 </div>
                               </div>
 
+                              {/* Product Info */}
                               {(roll.item_name || roll.size_caption) && (
-                                <div className={t("pages.rollsearch.name.pt_2_border_t")}>
-                                  <div className={t("pages.rollsearch.name.flex_items_center_gap_4_text_sm")}>
-                                    <span className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.product')}:</span>
-                                    <span className={t("pages.rollsearch.name.font_medium")}>
+                                <div className="pt-2 border-t">
+                                  <div className="flex items-center gap-4 text-sm">
+                                    <span className="text-muted-foreground">المنتج:</span>
+                                    <span className="font-medium">
                                       {roll.item_name_ar || roll.item_name || "-"}
                                     </span>
                                     {roll.size_caption && (
                                       <>
-                                        <span className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.size')}:</span>
-                                        <span className={t("pages.rollsearch.name.font_medium")}>{roll.size_caption}</span>
+                                        <span className="text-muted-foreground">المقاس:</span>
+                                        <span className="font-medium">{roll.size_caption}</span>
                                       </>
                                     )}
                                     {roll.raw_material && (
                                       <>
-                                        <span className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.material')}:</span>
-                                        <span className={t("pages.rollsearch.name.font_medium")}>{roll.raw_material}</span>
+                                        <span className="text-muted-foreground">الخامة:</span>
+                                        <span className="font-medium">{roll.raw_material}</span>
                                       </>
                                     )}
                                   </div>
@@ -597,17 +613,17 @@ export default function RollSearch() {
                               )}
 
                               {/* Actions */}
-                              <div className={t("pages.rollsearch.name.flex_items_center_justify_between_pt_2")}>
-                                <div className={t("pages.rollsearch.name.flex_gap_2")}>
+                              <div className="flex items-center justify-between pt-2">
+                                <div className="flex gap-2">
                                   {roll.created_by_name && (
-                                    <Badge variant="outline" className={t("pages.rollsearch.name.text_xs")}>
-                                      <User className={t("pages.rollsearch.name.h_3_w_3_ml_1")} />
+                                    <Badge variant="outline" className="text-xs">
+                                      <User className="h-3 w-3 ml-1" />
                                       {roll.created_by_name}
                                     </Badge>
                                   )}
                                   {roll.film_machine_name && (
-                                    <Badge variant="outline" className={t("pages.rollsearch.name.text_xs")}>
-                                      <Factory className={t("pages.rollsearch.name.h_3_w_3_ml_1")} />
+                                    <Badge variant="outline" className="text-xs">
+                                      <Factory className="h-3 w-3 ml-1" />
                                       {roll.film_machine_name}
                                     </Badge>
                                   )}
@@ -621,8 +637,8 @@ export default function RollSearch() {
                                   }}
                                   data-testid={`button-view-order-${roll.roll_id}`}
                                 >
-                                  <ExternalLink className={t("pages.rollsearch.name.h_3_w_3_ml_1")} />
-                                  {t('common.view')}
+                                  <ExternalLink className="h-3 w-3 ml-1" />
+                                  عرض الطلب
                                 </Button>
                               </div>
                             </div>
@@ -631,17 +647,20 @@ export default function RollSearch() {
                       </div>
                     </ScrollArea>
                   </div>
-                ) : debouncedQuery || Object.keys(filters).length >{t('pages.RollSearch.0_?_(')}<div className={t("pages.rollsearch.name.text_center_py_8")}>
-                    <Package className={t("pages.rollsearch.name.h_12_w_12_mx_auto_text_muted_foreground_mb_3")} />
-                    <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.noData')}</p>
-                    <p className={t("pages.rollsearch.name.text_sm_text_muted_foreground_mt_1")}>
-                      {t('common.tryAgain')}
+                ) : debouncedQuery || Object.keys(filters).length > 0 ? (
+                  <div className="text-center py-8">
+                    <Package className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">لا توجد نتائج للبحث</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      جرب البحث بكلمات مختلفة أو تعديل الفلاتر
                     </p>
-                  </div>{t('pages.RollSearch.)_:_(')}<div className={t("pages.rollsearch.name.text_center_py_8")}>
-                    <Search className={t("pages.rollsearch.name.h_12_w_12_mx_auto_text_muted_foreground_mb_3")} />
-                    <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.search')}</p>
-                    <p className={t("pages.rollsearch.name.text_sm_text_muted_foreground_mt_1")}>
-                      {t('common.searchHint')}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Search className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                    <p className="text-muted-foreground">ابدأ البحث لعرض النتائج</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      يمكنك البحث برقم الرول، أمر الإنتاج، الطلب أو اسم العميل
                     </p>
                   </div>
                 )}
@@ -650,17 +669,19 @@ export default function RollSearch() {
           </div>
 
           {/* Roll Details Panel */}
-          <div className={t("pages.rollsearch.name.lg_col_span_1")}>
+          <div className="lg:col-span-1">
             {selectedRollId ? (
               <RollDetailsCard
                 rollId={selectedRollId}
                 onClose={() => setSelectedRollId(null)}
-              />{t('pages.RollSearch.)_:_(')}<Card className={t("pages.rollsearch.name.p_6")}>
-                <div className={t("pages.rollsearch.name.text_center_py_8")}>
-                  <FileText className={t("pages.rollsearch.name.h_12_w_12_mx_auto_text_muted_foreground_mb_3")} />
-                  <p className={t("pages.rollsearch.name.text_muted_foreground")}>{t('common.selectItem')}</p>
-                  <p className={t("pages.rollsearch.name.text_sm_text_muted_foreground_mt_1")}>
-                    {t('common.clickToView')}
+              />
+            ) : (
+              <Card className="p-6">
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">اختر رول لعرض التفاصيل</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    انقر على أي رول من نتائج البحث
                   </p>
                 </div>
               </Card>

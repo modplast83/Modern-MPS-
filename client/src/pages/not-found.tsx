@@ -1,23 +1,20 @@
 import { Card, CardContent } from "../components/ui/card";
 import { AlertCircle } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function NotFound() {
-  const { t } = useTranslation();
-
   return (
-    <div className={t("pages.not-found.name.min_h_screen_w_full_flex_items_center_justify_center_bg_gray_50")}>
-      <Card className={t("pages.not-found.name.w_full_max_w_md_mx_4")}>
-        <CardContent className={t("pages.not-found.name.pt_6")}>
-          <div className={t("pages.not-found.name.flex_mb_4_gap_2")}>
-            <AlertCircle className={t("pages.not-found.name.h_8_w_8_text_red_500")} />
-            <h1 className={t("pages.not-found.name.text_2xl_font_bold_text_gray_900")}>
-              {t('notFound.title')}
+    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
+      <Card className="w-full max-w-md mx-4">
+        <CardContent className="pt-6">
+          <div className="flex mb-4 gap-2">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+            <h1 className="text-2xl font-bold text-gray-900">
+              404 Page Not Found
             </h1>
           </div>
 
-          <p className={t("pages.not-found.name.mt_4_text_sm_text_gray_600")}>
-            {t('notFound.message')}
+          <p className="mt-4 text-sm text-gray-600">
+            Did you forget to add the page to the router?
           </p>
         </CardContent>
       </Card>

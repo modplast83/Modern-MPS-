@@ -21,98 +21,112 @@ import {
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../../hooks/use-auth";
 import { canAccessRoute } from "../../utils/roleUtils";
-import { useTranslation } from 'react-i18next';
 
 const modules = [
   {
-    translationKey: "sidebar.home",
+    name: "الرئيسية",
+    name_ar: "الرئيسية",
     icon: Home,
     path: "/",
     active: false,
   },
   {
-    translationKey: "sidebar.dashboard",
+    name: "لوحة التحكم",
+    name_ar: "لوحة التحكم",
     icon: LayoutDashboard,
     path: "/user-dashboard",
     active: false,
   },
   {
-    translationKey: "sidebar.ordersProduction",
+    name: "الطلبات والإنتاج",
+    name_ar: "الطلبات والإنتاج",
     icon: FileText,
     path: "/orders",
     active: false,
   },
   {
-    translationKey: "sidebar.filmOperator",
+    name: "لوحة عامل الفيلم",
+    name_ar: "لوحة عامل الفيلم",
     icon: Film,
     path: "/film-operator",
     active: false,
-    requiredSections: [3],
+    requiredSections: [3], // SEC03 - قسم الفيلم/البثق
   },
   {
-    translationKey: "sidebar.printingOperator",
+    name: "لوحة عامل الطباعة",
+    name_ar: "لوحة عامل الطباعة",
     icon: Printer,
     path: "/printing-operator",
     active: false,
-    requiredSections: [4],
+    requiredSections: [4], // مخصص لعاملي قسم الطباعة
   },
   {
-    translationKey: "sidebar.cuttingOperator",
+    name: "لوحة عامل التقطيع",
+    name_ar: "لوحة عامل التقطيع",
     icon: Scissors,
     path: "/cutting-operator",
     active: false,
-    requiredSections: [5],
+    requiredSections: [5], // مخصص لعاملي قسم التقطيع
   },
   {
-    translationKey: "sidebar.productionMonitoring",
+    name: "مراقبة الإنتاج",
+    name_ar: "مراقبة الإنتاج",
     icon: Monitor,
     path: "/production-monitoring",
     active: false,
   },
   {
-    translationKey: "sidebar.quality",
+    name: "الجودة",
+    name_ar: "الجودة",
     icon: ClipboardCheck,
     path: "/quality",
     active: false,
   },
   {
-    translationKey: "sidebar.maintenance",
+    name: "الصيانة",
+    name_ar: "الصيانة",
     icon: Wrench,
     path: "/maintenance",
     active: false,
   },
   {
-    translationKey: "sidebar.hr",
+    name: "الموارد البشرية",
+    name_ar: "الموارد البشرية",
     icon: Users,
     path: "/hr",
     active: false,
   },
   {
-    translationKey: "sidebar.warehouse",
+    name: "المستودع",
+    name_ar: "المستودع",
     icon: Warehouse,
     path: "/warehouse",
     active: false,
   },
   {
-    translationKey: "sidebar.definitions",
+    name: "التعريفات",
+    name_ar: "التعريفات",
     icon: Database,
     path: "/definitions",
     active: false,
   },
   {
-    translationKey: "sidebar.reports",
+    name: "التقارير",
+    name_ar: "التقارير",
     icon: BarChart3,
     path: "/reports",
     active: false,
   },
   {
-    translationKey: "sidebar.tools",
-    icon: Wrench,
-    path: "/tools",
-    active: false,
-  },
+      name: "الأدوات",
+      name_ar: "الأدوات",
+      icon: Wrench,
+      path: "/tools",
+      active: false,
+    },
   {
-    translationKey: "sidebar.settings",
+    name: "الإعدادات",
+    name_ar: "الإعدادات",
     icon: Settings,
     path: "/settings",
     active: false,
@@ -122,7 +136,6 @@ const modules = [
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
-  const { t } = useTranslation();
 
   // Filter modules based on user permissions and sections
   const accessibleModules = modules.filter(module => {
@@ -148,22 +161,22 @@ export default function Sidebar() {
   });
 
   return (
-    <aside className={t("components.layout.sidebar.name.fixed_right_0_top_16_bottom_0_bg_white_shadow_sm_border_l_border_gray_200_w_64_hidden_lg_block_z_10_overflow_y_auto")}>
-      <nav className={t("components.layout.sidebar.name.p_4")}>
-        <div className={t("components.layout.sidebar.name.space_y_2")}>
+    <aside className="fixed right-0 top-16 bottom-0 bg-white shadow-sm border-l border-gray-200 w-64 hidden lg:block z-10 overflow-y-auto">
+      <nav className="p-4">
+        <div className="space-y-2">
           {accessibleModules.map((module) => {
             const Icon = module.icon;
             const isActive = location === module.path;
 
             return (
-              <Link key={module.translationKey} href={module.path}>
+              <Link key={module.name} href={module.path}>
                 <div
                   className={isActive ? "nav-item nav-item-active" : "nav-item"}
                 >
-                  <div className={t("components.layout.sidebar.name.w_full")}>
-                    <div className={t("components.layout.sidebar.name.flex_items_center_space_x_3_space_x_reverse")}>
-                      <Icon className={t("components.layout.sidebar.name.h_5_w_5")} />
-                      <span className={t("components.layout.sidebar.name.font_medium")}>{t(module.translationKey)}</span>
+                  <div className="w-full">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium">{module.name_ar}</span>
                     </div>
                   </div>
                 </div>

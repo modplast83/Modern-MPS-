@@ -30,12 +30,17 @@ export function NotificationBell() {
   );
   
   const unreadCount = filteredNotifications.filter(
-    (n) =>{t('components.notifications.NotificationBell.!n.read_at_&&_n.status_!==_"failed",_).length;_return_(')}<Link to="/notifications">
-      <Button variant="ghost" size="sm" className={t("components.notifications.notificationbell.name.relative")}>
-        <Bell className={t("components.notifications.notificationbell.name.h_5_w_5")} />
-        {unreadCount >{t('components.notifications.NotificationBell.0_&&_(')}<Badge
+    (n) => !n.read_at && n.status !== "failed",
+  ).length;
+
+  return (
+    <Link to="/notifications">
+      <Button variant="ghost" size="sm" className="relative">
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <Badge
             variant="destructive"
-            className={t("components.notifications.notificationbell.name.absolute_top_1_right_1_h_5_w_5_flex_items_center_justify_center_text_xs_p_0")}
+            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs p-0"
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </Badge>

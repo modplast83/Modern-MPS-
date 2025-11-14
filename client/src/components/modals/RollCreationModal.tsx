@@ -232,21 +232,23 @@ export default function RollCreationModal({
         if (!open) handleClose();
       }}
     >
-      <DialogContent className={t("components.modals.rollcreationmodal.name.max_w_md")} aria-describedby="roll-creation-description">
+      <DialogContent className="max-w-md" aria-describedby="roll-creation-description">
         <DialogHeader>
-          <DialogTitle>{t('components.modals.RollCreationModal.إنشاء_رول_جديد')}</DialogTitle>
-          <DialogDescription id="roll-creation-description">{t('components.modals.RollCreationModal.إضافة_رول_جديد_إلى_أمر_الإنتاج_المحدد')}</DialogDescription>
+          <DialogTitle>إنشاء رول جديد</DialogTitle>
+          <DialogDescription id="roll-creation-description">
+            إضافة رول جديد إلى أمر الإنتاج المحدد
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.modals.rollcreationmodal.name.space_y_4")}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {!selectedProductionOrderId && (
               <FormField
                 control={form.control}
-                name="{t('components.modals.RollCreationModal.name.production_order_id')}"
+                name="production_order_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('components.modals.RollCreationModal.أمر_الإنتاج_*')}</FormLabel>
+                    <FormLabel>أمر الإنتاج *</FormLabel>
                     <Select
                       value={field.value != null ? String(field.value) : undefined}
                       onValueChange={(value) => field.onChange(value)}
@@ -254,19 +256,26 @@ export default function RollCreationModal({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="{t('components.modals.RollCreationModal.placeholder.اختر_أمر_الإنتاج')}" />
+                          <SelectValue placeholder="اختر أمر الإنتاج" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {productionOrdersLoading ? (
-                          <SelectItem value="loading" disabled>{t('components.modals.RollCreationModal.جارِ_التحميل...')}</SelectItem>
+                          <SelectItem value="loading" disabled>
+                            جارِ التحميل...
+                          </SelectItem>
                         ) : productionOrders.length ? (
                           productionOrders
                             .filter((order) => order.id)
                             .map((order) => (
                               <SelectItem key={order.id} value={String(order.id)}>
                                 {order.production_order_number} - { (order as any).customer_name_ar || (order as any).customer_name || "غير محدد" } - { (order as any).item_name_ar || (order as any).item_name || (order as any).size_caption || "غير محدد" }
-                              </SelectItem>{t('components.modals.RollCreationModal.))_)_:_(')}<SelectItem value="empty" disabled>{t('components.modals.RollCreationModal.لا_توجد_أوامر_إنتاج_متاحة')}</SelectItem>
+                              </SelectItem>
+                            ))
+                        ) : (
+                          <SelectItem value="empty" disabled>
+                            لا توجد أوامر إنتاج متاحة
+                          </SelectItem>
                         )}
                       </SelectContent>
                     </Select>
@@ -277,13 +286,13 @@ export default function RollCreationModal({
             )}
 
             {selectedProductionOrderId && (
-              <div className={t("components.modals.rollcreationmodal.name.space_y_2")}>
-                <Label>{t('components.modals.RollCreationModal.أمر_الإنتاج_المحدد')}</Label>
-                <div className={t("components.modals.rollcreationmodal.name.p_3_bg_gray_50_rounded_md_border")}>
-                  <p className={t("components.modals.rollcreationmodal.name.font_medium_text_sm")}>
+              <div className="space-y-2">
+                <Label>أمر الإنتاج المحدد</Label>
+                <div className="p-3 bg-gray-50 rounded-md border">
+                  <p className="font-medium text-sm">
                     {selectedOrder?.production_order_number || `PO-${selectedProductionOrderId}`}
                   </p>
-                  <p className={t("components.modals.rollcreationmodal.name.text_xs_text_gray_600")}>
+                  <p className="text-xs text-gray-600">
                     {`${(selectedOrder as any)?.customer_name_ar || (selectedOrder as any)?.customer_name || "غير محدد"} - ${(selectedOrder as any)?.item_name_ar || (selectedOrder as any)?.item_name || (selectedOrder as any)?.size_caption || "غير محدد"}`}
                   </p>
                 </div>
@@ -292,24 +301,25 @@ export default function RollCreationModal({
 
             <FormField
               control={form.control}
-              name="{t('components.modals.RollCreationModal.name.weight_kg')}"
+              name="weight_kg"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('components.modals.RollCreationModal.الوزن_(كجم)_*')}</FormLabel>
+                  <FormLabel>الوزن (كجم) *</FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       step="0.1"
                       min="0.1"
                       inputMode="decimal"
-                      placeholder="{t('components.modals.RollCreationModal.placeholder.45.2')}"
-                      className={t("components.modals.rollcreationmodal.name.text_right")}
+                      placeholder="45.2"
+                      className="text-right"
                       data-testid="input-weight_kg"
                       {...field}
                     />
                   </FormControl>
                   {selectedOrder && (
-                    <p className={t("components.modals.rollcreationmodal.name.text_xs_text_gray_600")}>{t('components.modals.RollCreationModal.المتبقي_من_الكمية:')}<span className={t("components.modals.rollcreationmodal.name.font_medium")}>{remainingQuantity.toFixed(2)} كجم</span>
+                    <p className="text-xs text-gray-600">
+                      المتبقي من الكمية: <span className="font-medium">{remainingQuantity.toFixed(2)} كجم</span>
                     </p>
                   )}
                   <FormMessage />
@@ -319,10 +329,10 @@ export default function RollCreationModal({
 
             <FormField
               control={form.control}
-              name="{t('components.modals.RollCreationModal.name.film_machine_id')}"
+              name="film_machine_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('components.modals.RollCreationModal.ماكينة_الفيلم_*')}</FormLabel>
+                  <FormLabel>ماكينة الفيلم *</FormLabel>
                   <Select
                     value={field.value != null ? String(field.value) : undefined}
                     onValueChange={(value) => field.onChange(value)}
@@ -330,17 +340,24 @@ export default function RollCreationModal({
                   >
                     <FormControl>
                       <SelectTrigger data-testid="select-film-machine">
-                        <SelectValue placeholder="{t('components.modals.RollCreationModal.placeholder.اختر_ماكينة_الفيلم')}" />
+                        <SelectValue placeholder="اختر ماكينة الفيلم" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {machinesLoading ? (
-                        <SelectItem value="loading" disabled>{t('components.modals.RollCreationModal.جارِ_التحميل...')}</SelectItem>
+                        <SelectItem value="loading" disabled>
+                          جارِ التحميل...
+                        </SelectItem>
                       ) : filmSectionMachines.length ? (
                         filmSectionMachines.map((machine: any) => (
                           <SelectItem key={String(machine.id)} value={String(machine.id)}>
                             {machine.name_ar || machine.name}
-                          </SelectItem>{t('components.modals.RollCreationModal.))_)_:_(')}<SelectItem value="empty" disabled>{t('components.modals.RollCreationModal.لا_توجد_مكائن_متاحة_في_قسم_الفيلم')}</SelectItem>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="empty" disabled>
+                          لا توجد مكائن متاحة في قسم الفيلم
+                        </SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -349,9 +366,11 @@ export default function RollCreationModal({
               )}
             />
 
-            <div className={t("components.modals.rollcreationmodal.name.flex_justify_end_gap_3_pt_4_rtl_space_x_reverse")}>
-              <Button type="button" variant="outline" onClick={handleClose} disabled={createRollMutation.isPending}>{t('components.modals.RollCreationModal.إلغاء')}</Button>
-              <Button type="submit" className={t("components.modals.rollcreationmodal.name.btn_primary")} disabled={createRollMutation.isPending || remainingQuantity === 0}>
+            <div className="flex justify-end gap-3 pt-4 rtl:space-x-reverse">
+              <Button type="button" variant="outline" onClick={handleClose} disabled={createRollMutation.isPending}>
+                إلغاء
+              </Button>
+              <Button type="submit" className="btn-primary" disabled={createRollMutation.isPending || remainingQuantity === 0}>
                 {createRollMutation.isPending ? "جاري الإنشاء..." : remainingQuantity === 0 ? "اكتملت الكمية" : "إنشاء رول"}
               </Button>
             </div>

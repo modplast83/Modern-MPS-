@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -52,7 +51,6 @@ interface PerformanceCriteria {
 }
 
 export default function PerformanceReviews() {
-  const { t } = useTranslation();
   const [selectedReview, setSelectedReview] = useState<number | null>(null);
 
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery<
@@ -87,13 +85,13 @@ export default function PerformanceReviews() {
   const getStatusText = (status: string) => {
     switch (status) {
       case "completed":
-        return t('hr.completed', 'مكتمل');
+        return "مكتمل";
       case "in_progress":
-        return t('hr.inReview', 'قيد المراجعة');
+        return "قيد المراجعة";
       case "draft":
-        return t('status.draft', 'مسودة');
+        return "مسودة";
       case "approved":
-        return t('status.approved', 'معتمد');
+        return "معتمد";
       default:
         return status;
     }
@@ -119,15 +117,15 @@ export default function PerformanceReviews() {
   const getRatingText = (rating: string) => {
     switch (rating) {
       case "excellent":
-        return t('hr.excellent', 'ممتاز');
+        return "ممتاز";
       case "very_good":
-        return t('hr.veryGood', 'جيد جداً');
+        return "جيد جداً";
       case "good":
-        return t('hr.good', 'جيد');
+        return "جيد";
       case "needs_improvement":
-        return t('hr.needsImprovement', 'يحتاج تحسين');
+        return "يحتاج تحسين";
       case "unsatisfactory":
-        return t('hr.unsatisfactory', 'غير مرضي');
+        return "غير مرضي";
       default:
         return rating;
     }
@@ -136,13 +134,13 @@ export default function PerformanceReviews() {
   const getReviewTypeText = (type: string) => {
     switch (type) {
       case "annual":
-        return t('hr.annualReview', 'تقييم سنوي');
+        return "تقييم سنوي";
       case "quarterly":
-        return t('hr.quarterlyReview', 'تقييم ربع سنوي');
+        return "تقييم ربع سنوي";
       case "project_based":
-        return t('hr.projectReview', 'تقييم مشروع');
+        return "تقييم مشروع";
       case "probation":
-        return t('hr.probationReview', 'تقييم فترة تجريبية');
+        return "تقييم فترة تجريبية";
       default:
         return type;
     }
@@ -170,11 +168,11 @@ export default function PerformanceReviews() {
 
   if (reviewsLoading || criteriaLoading) {
     return (
-      <div className={t("components.hr.performancereviews.name.flex_items_center_justify_center_h_64")}>
-        <div className={t("components.hr.performancereviews.name.text_center")}>
-          <div className={t("components.hr.performancereviews.name.animate_spin_rounded_full_h_8_w_8_border_b_2_border_blue_600_mx_auto")}></div>
-          <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_400_mt_2")}>
-            {t('hr.loadingPerformanceReviews', 'جاري تحميل تقييمات الأداء...')}
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            جاري تحميل تقييمات الأداء...
           </p>
         </div>
       </div>
@@ -182,47 +180,47 @@ export default function PerformanceReviews() {
   }
 
   return (
-    <div className={t("components.hr.performancereviews.name.space_y_6")}>
+    <div className="space-y-6">
       {/* Header */}
-      <div className={t("components.hr.performancereviews.name.flex_justify_between_items_center")}>
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className={t("components.hr.performancereviews.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
-            {t('hr.performanceReviewSystem', 'نظام تقييم الأداء')}
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            نظام تقييم الأداء
           </h2>
-          <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_300")}>
-            {t('hr.performanceReviewDescription', 'متابعة وتقييم أداء الموظفين بشكل دوري ومنهجي')}
+          <p className="text-gray-600 dark:text-gray-300">
+            متابعة وتقييم أداء الموظفين بشكل دوري ومنهجي
           </p>
         </div>
-        <Button className={t("components.hr.performancereviews.name.bg_green_600_hover_bg_green_700_text_white")}>
-          <Plus className={t("components.hr.performancereviews.name.w_4_h_4_ml_2")} />
-          {t('hr.newReview', 'تقييم جديد')}
+        <Button className="bg-green-600 hover:bg-green-700 text-white">
+          <Plus className="w-4 h-4 ml-2" />
+          تقييم جديد
         </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className={t("components.hr.performancereviews.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className={t("components.hr.performancereviews.name.p_4")}>
-            <div className={t("components.hr.performancereviews.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.totalReviews', 'إجمالي التقييمات')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  إجمالي التقييمات
                 </p>
-                <p className={t("components.hr.performancereviews.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(reviews.length)}
                 </p>
               </div>
-              <Target className={t("components.hr.performancereviews.name.w_8_h_8_text_blue_600")} />
+              <Target className="w-8 h-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.performancereviews.name.p_4")}>
-            <div className={t("components.hr.performancereviews.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.overallAverage', 'المتوسط العام')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  المتوسط العام
                 </p>
                 <p
                   className={`text-2xl font-bold ${getScoreColor(averageScore)}`}
@@ -230,19 +228,19 @@ export default function PerformanceReviews() {
                   {formatPercentage(averageScore)}
                 </p>
               </div>
-              <BarChart3 className={t("components.hr.performancereviews.name.w_8_h_8_text_green_600")} />
+              <BarChart3 className="w-8 h-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.performancereviews.name.p_4")}>
-            <div className={t("components.hr.performancereviews.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.completedReviews', 'التقييمات المكتملة')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  التقييمات المكتملة
                 </p>
-                <p className={t("components.hr.performancereviews.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(
                     reviews.filter(
                       (r) =>
@@ -251,25 +249,25 @@ export default function PerformanceReviews() {
                   )}
                 </p>
               </div>
-              <Award className={t("components.hr.performancereviews.name.w_8_h_8_text_purple_600")} />
+              <Award className="w-8 h-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.performancereviews.name.p_4")}>
-            <div className={t("components.hr.performancereviews.name.flex_items_center_justify_between")}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
               <div>
-                <p className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                  {t('hr.inReview', 'قيد المراجعة')}
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  قيد المراجعة
                 </p>
-                <p className={t("components.hr.performancereviews.name.text_2xl_font_bold_text_gray_900_dark_text_white")}>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {formatNumber(
                     reviews.filter((r) => r.status === "in_progress").length,
                   )}
                 </p>
               </div>
-              <TrendingUp className={t("components.hr.performancereviews.name.w_8_h_8_text_orange_600")} />
+              <TrendingUp className="w-8 h-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -278,33 +276,33 @@ export default function PerformanceReviews() {
       {/* Performance Criteria */}
       <Card>
         <CardHeader>
-          <CardTitle className={t("components.hr.performancereviews.name.flex_items_center_gap_2")}>
-            <Star className={t("components.hr.performancereviews.name.w_5_h_5")} />
-            {t('hr.activePerformanceCriteria', 'معايير التقييم النشطة')}
+          <CardTitle className="flex items-center gap-2">
+            <Star className="w-5 h-5" />
+            معايير التقييم النشطة
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={t("components.hr.performancereviews.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_gap_4")}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {criteria.map((criterion) => (
               <div
                 key={criterion.id}
-                className={t("components.hr.performancereviews.name.p_4_border_rounded_lg_bg_gray_50_dark_bg_gray_800")}
+                className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-800"
               >
-                <div className={t("components.hr.performancereviews.name.flex_justify_between_items_start_mb_2")}>
-                  <h4 className={t("components.hr.performancereviews.name.font_medium")}>
+                <div className="flex justify-between items-start mb-2">
+                  <h4 className="font-medium">
                     {criterion.name_ar || criterion.name}
                   </h4>
                   <Badge variant="outline">
                     {formatPercentage(criterion.weight)}
                   </Badge>
                 </div>
-                <p className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   {criterion.description_ar ||
                     criterion.description ||
-                    t('common.noDescription', 'لا يوجد وصف')}
+                    "لا يوجد وصف"}
                 </p>
-                <div className={t("components.hr.performancereviews.name.mt_2")}>
-                  <Badge variant="secondary" className={t("components.hr.performancereviews.name.text_xs")}>
+                <div className="mt-2">
+                  <Badge variant="secondary" className="text-xs">
                     {criterion.category}
                   </Badge>
                 </div>
@@ -312,13 +310,13 @@ export default function PerformanceReviews() {
             ))}
           </div>
           {criteria.length === 0 && (
-            <div className={t("components.hr.performancereviews.name.text_center_py_8")}>
-              <Star className={t("components.hr.performancereviews.name.w_12_h_12_text_gray_400_mx_auto_mb_3")} />
-              <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_400")}>
-                {t('hr.noCriteriaDefined', 'لا توجد معايير تقييم محددة')}
+            <div className="text-center py-8">
+              <Star className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600 dark:text-gray-400">
+                لا توجد معايير تقييم محددة
               </p>
-              <Button variant="outline" className={t("components.hr.performancereviews.name.mt_2")}>
-                {t('hr.addPerformanceCriteria', 'إضافة معايير التقييم')}
+              <Button variant="outline" className="mt-2">
+                إضافة معايير التقييم
               </Button>
             </div>
           )}
@@ -326,18 +324,18 @@ export default function PerformanceReviews() {
       </Card>
 
       {/* Reviews List */}
-      <div className={t("components.hr.performancereviews.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {reviews.map((review) => (
-          <Card key={review.id} className={t("components.hr.performancereviews.name.hover_shadow_lg_transition_shadow")}>
+          <Card key={review.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <div className={t("components.hr.performancereviews.name.flex_justify_between_items_start")}>
+              <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className={t("components.hr.performancereviews.name.text_lg_mb_1")}>
+                  <CardTitle className="text-lg mb-1">
                     {getReviewTypeText(review.review_type)}
                   </CardTitle>
-                  <div className={t("components.hr.performancereviews.name.flex_items_center_gap_2_text_sm_text_gray_600_dark_text_gray_400")}>
-                    <User className={t("components.hr.performancereviews.name.w_4_h_4")} />
-                    <span>{t('hr.employeeNo', 'موظف رقم')} {review.employee_id}</span>
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <User className="w-4 h-4" />
+                    <span>موظف رقم {review.employee_id}</span>
                   </div>
                 </div>
                 <Badge className={getStatusColor(review.status)}>
@@ -346,13 +344,13 @@ export default function PerformanceReviews() {
               </div>
             </CardHeader>
 
-            <CardContent className={t("components.hr.performancereviews.name.space_y_4")}>
-              <div className={t("components.hr.performancereviews.name.grid_grid_cols_2_gap_4_text_sm")}>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_400")}>
-                    {t('hr.reviewPeriod', 'فترة التقييم')}
+                  <p className="text-gray-600 dark:text-gray-400">
+                    فترة التقييم
                   </p>
-                  <p className={t("components.hr.performancereviews.name.font_medium")}>
+                  <p className="font-medium">
                     {new Date(review.review_period_start).toLocaleDateString(
                       "ar",
                     )}{" "}
@@ -363,16 +361,16 @@ export default function PerformanceReviews() {
                   </p>
                 </div>
                 <div>
-                  <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_400")}>{t('hr.reviewer', 'المقيم')}</p>
-                  <p className={t("components.hr.performancereviews.name.font_medium")}>{t('hr.managerNo', 'مدير رقم')} {review.reviewer_id}</p>
+                  <p className="text-gray-600 dark:text-gray-400">المقيم</p>
+                  <p className="font-medium">مدير رقم {review.reviewer_id}</p>
                 </div>
               </div>
 
               {review.overall_score && (
-                <div className={t("components.hr.performancereviews.name.space_y_2")}>
-                  <div className={t("components.hr.performancereviews.name.flex_justify_between")}>
-                    <span className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>
-                      {t('hr.overallScore', 'النتيجة الإجمالية')}
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      النتيجة الإجمالية
                     </span>
                     <span
                       className={`font-bold ${getScoreColor(review.overall_score)}`}
@@ -380,13 +378,15 @@ export default function PerformanceReviews() {
                       {formatPercentage(review.overall_score)}
                     </span>
                   </div>
-                  <Progress value={review.overall_score} className={t("components.hr.performancereviews.name.h_2")} />
+                  <Progress value={review.overall_score} className="h-2" />
                 </div>
               )}
 
               {review.overall_rating && (
-                <div className={t("components.hr.performancereviews.name.flex_items_center_justify_between")}>
-                  <span className={t("components.hr.performancereviews.name.text_sm_text_gray_600_dark_text_gray_400")}>{t('components.hr.PerformanceReviews.التقدير_العام')}</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    التقدير العام
+                  </span>
                   <Badge
                     className={`${getRatingColor(review.overall_rating)} bg-transparent border`}
                   >
@@ -395,23 +395,25 @@ export default function PerformanceReviews() {
                 </div>
               )}
 
-              <div className={t("components.hr.performancereviews.name.flex_items_center_gap_2_text_xs_text_gray_500_dark_text_gray_400")}>
-                <Calendar className={t("components.hr.performancereviews.name.w_3_h_3")} />
+              <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <Calendar className="w-3 h-3" />
                 <span>
                   تم الإنشاء:{" "}
                   {new Date(review.created_at).toLocaleDateString("ar")}
                 </span>
               </div>
 
-              <div className={t("components.hr.performancereviews.name.flex_gap_2_pt_2")}>
+              <div className="flex gap-2 pt-2">
                 <Button
                   size="sm"
-                  className={t("components.hr.performancereviews.name.flex_1")}
+                  className="flex-1"
                   onClick={() => setSelectedReview(review.id)}
                 >
-                  {t('common.viewDetails', 'عرض التفاصيل')}
+                  عرض التفاصيل
                 </Button>
-                <Button size="sm" variant="outline" className={t("components.hr.performancereviews.name.flex_1")}>{t('components.hr.PerformanceReviews.تحرير')}</Button>
+                <Button size="sm" variant="outline" className="flex-1">
+                  تحرير
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -421,17 +423,17 @@ export default function PerformanceReviews() {
       {/* Empty State */}
       {reviews.length === 0 && (
         <Card>
-          <CardContent className={t("components.hr.performancereviews.name.p_12_text_center")}>
-            <Target className={t("components.hr.performancereviews.name.w_16_h_16_text_gray_400_mx_auto_mb_4")} />
-            <h3 className={t("components.hr.performancereviews.name.text_xl_font_semibold_text_gray_900_dark_text_white_mb_2")}>
-              {t('hr.noPerformanceReviews', 'لا توجد تقييمات أداء')}
+          <CardContent className="p-12 text-center">
+            <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              لا توجد تقييمات أداء
             </h3>
-            <p className={t("components.hr.performancereviews.name.text_gray_600_dark_text_gray_400_mb_4")}>
-              {t('hr.startByCreatingReview', 'ابدأ بإنشاء تقييم أداء جديد لتتبع أداء فريقك')}
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              ابدأ بإنشاء تقييم أداء جديد لتتبع أداء فريقك
             </p>
-            <Button className={t("components.hr.performancereviews.name.bg_green_600_hover_bg_green_700_text_white")}>
-              <Plus className={t("components.hr.performancereviews.name.w_4_h_4_ml_2")} />
-              {t('hr.createNewReview', 'إنشاء تقييم جديد')}
+            <Button className="bg-green-600 hover:bg-green-700 text-white">
+              <Plus className="w-4 h-4 ml-2" />
+              إنشاء تقييم جديد
             </Button>
           </CardContent>
         </Card>

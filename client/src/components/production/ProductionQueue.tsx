@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
@@ -32,10 +31,12 @@ export default function ProductionQueue({
   queueType,
   items,
 }: ProductionQueueProps) {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [processingId, setProcessingId] = useState<number | null>{t('components.production.ProductionQueue.(null);_const_[printingmodalopen,_setprintingmodalopen]_=_usestate(false);_const_[selectedrollid,_setselectedrollid]_=_usestate')}<number | null>{t('components.production.ProductionQueue.(null);_const_[selectedprintingmachine,_setselectedprintingmachine]_=_usestate')}<string>("");
+  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [printingModalOpen, setPrintingModalOpen] = useState(false);
+  const [selectedRollId, setSelectedRollId] = useState<number | null>(null);
+  const [selectedPrintingMachine, setSelectedPrintingMachine] = useState<string>("");
 
   // Fetch machines for printing selection
   const { data: machines = [] } = useQuery<Machine[]>({
@@ -76,7 +77,7 @@ export default function ProductionQueue({
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || t('common.error'));
+          throw new Error(error.message || "فشل في تسجيل الطباعة");
         }
 
         return response.json();
@@ -96,7 +97,7 @@ export default function ProductionQueue({
 
         if (!response.ok) {
           const error = await response.json();
-          throw new Error(error.message || t('common.error'));
+          throw new Error(error.message || "فشل في تسجيل التقطيع");
         }
 
         return response.json();
@@ -104,9 +105,9 @@ export default function ProductionQueue({
     },
     onSuccess: () => {
       toast({
-        title: t('common.success'),
+        title: "تم بنجاح",
         description:
-          queueType === "printing" ? t('production.confirmPrinting') : t('production.confirmCutting'),
+          queueType === "printing" ? "تم تسجيل الطباعة" : "تم تسجيل التقطيع",
       });
       queryClient.invalidateQueries({
         queryKey: [`/api/production/${queueType}-queue`],
@@ -120,7 +121,7 @@ export default function ProductionQueue({
     },
     onError: (error: Error) => {
       toast({
-        title: t('common.error'),
+        title: "خطأ",
         description: error.message,
         variant: "destructive",
       });
@@ -136,8 +137,8 @@ export default function ProductionQueue({
   const handlePrintConfirm = () => {
     if (!selectedPrintingMachine) {
       toast({
-        title: t('common.error'),
-        description: t('production.selectPrintingMachine'),
+        title: "خطأ",
+        description: "يرجى اختيار ماكينة الطباعة",
         variant: "destructive",
       });
       return;
@@ -158,9 +159,9 @@ export default function ProductionQueue({
 
   const getStatusBadge = (item: any) => {
     if (queueType === "printing") {
-      return <Badge variant="outline">{t('production.waiting')}</Badge>;
+      return <Badge variant="outline">جاهز للطباعة</Badge>;
     } else if (queueType === "cutting") {
-      return <Badge variant="outline">{t('production.waiting')}</Badge>;
+      return <Badge variant="outline">جاهز للتقطيع</Badge>;
     }
     return null;
   };
@@ -176,8 +177,8 @@ export default function ProductionQueue({
           size="sm"
           data-testid={`button-print-${item.id}`}
         >
-          <Play className={t("components.production.productionqueue.name.h_4_w_4_mr_1")} />
-          {isProcessing ? t('common.loading') : t('common.print')}
+          <Play className="h-4 w-4 mr-1" />
+          {isProcessing ? "جاري الطباعة..." : "طباعة"}
         </Button>
       );
     } else if (queueType === "cutting") {
@@ -188,8 +189,8 @@ export default function ProductionQueue({
           size="sm"
           data-testid={`button-cut-${item.id}`}
         >
-          <Scissors className={t("components.production.productionqueue.name.h_4_w_4_mr_1")} />
-          {isProcessing ? t('common.loading') : t('common.cut')}
+          <Scissors className="h-4 w-4 mr-1" />
+          {isProcessing ? "جاري التقطيع..." : "تقطيع"}
         </Button>
       );
     }
@@ -199,10 +200,10 @@ export default function ProductionQueue({
   if (items.length === 0) {
     return (
       <Card>
-        <CardContent className={t("components.production.productionqueue.name.p_6_text_center")}>
-          <div className={t("components.production.productionqueue.name.text_gray_500")}>
-            <Clock className={t("components.production.productionqueue.name.h_12_w_12_mx_auto_mb_2_opacity_50")} />
-            <p>{t('common.noData')}</p>
+        <CardContent className="p-6 text-center">
+          <div className="text-gray-500">
+            <Clock className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p>لا توجد عناصر في قائمة الانتظار</p>
           </div>
         </CardContent>
       </Card>
@@ -211,34 +212,34 @@ export default function ProductionQueue({
 
   return (
     <>
-      <div className={t("components.production.productionqueue.name.space_y_4")}>
+      <div className="space-y-4">
         {items.map((item) => (
           <Card key={item.id}>
-            <CardContent className={t("components.production.productionqueue.name.p_4")}>
-              <div className={t("components.production.productionqueue.name.flex_items_center_justify_between")}>
-                <div className={t("components.production.productionqueue.name.flex_items_center_space_x_4_space_x_reverse")}>
-                  <QrCode className={t("components.production.productionqueue.name.h_6_w_6_text_gray_400")} />
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 space-x-reverse">
+                  <QrCode className="h-6 w-6 text-gray-400" />
                   <div>
                     <p
-                      className={t("components.production.productionqueue.name.font_medium")}
+                      className="font-medium"
                       data-testid={`text-roll-number-${item.id}`}
                     >
-                      {item.roll_number || `${t('warehouse.roll')} ${item.id}`}
+                      {item.roll_number || `رول ${item.id}`}
                     </p>
-                    <p className={t("components.production.productionqueue.name.text_sm_text_gray_500")}>
-                      {t('production.rollWeight')}:{" "}
+                    <p className="text-sm text-gray-500">
+                      الوزن:{" "}
                       {parseFloat(item.weight_kg || item.weight || 0).toFixed(2)}{" "}
-                      {t('warehouse.kg')}
+                      كجم
                     </p>
                     {item.film_machine_id && (
-                      <p className={t("components.production.productionqueue.name.text_xs_text_gray_400")}>
-                        {t('production.filmMachine')}: {item.film_machine_id}
+                      <p className="text-xs text-gray-400">
+                        ماكينة الفيلم: {item.film_machine_id}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className={t("components.production.productionqueue.name.flex_items_center_space_x_2_space_x_reverse")}>
+                <div className="flex items-center space-x-2 space-x-reverse">
                   {getStatusBadge(item)}
                   {getActionButton(item)}
                 </div>
@@ -250,45 +251,48 @@ export default function ProductionQueue({
 
       {/* Printing Machine Selection Modal */}
       <Dialog open={printingModalOpen} onOpenChange={setPrintingModalOpen}>
-        <DialogContent className={t("components.production.productionqueue.name.max_w_md")} aria-describedby="printing-machine-description">
+        <DialogContent className="max-w-md" aria-describedby="printing-machine-description">
           <DialogHeader>
-            <DialogTitle>{t('production.selectPrintingMachine')}</DialogTitle>
+            <DialogTitle>اختيار ماكينة الطباعة</DialogTitle>
             <DialogDescription id="printing-machine-description">
-              {t('production.selectPrintingMachine')}
+              اختر الماكينة التي ستستخدم لطباعة هذا الرول
             </DialogDescription>
           </DialogHeader>
 
-          <div className={t("components.production.productionqueue.name.space_y_4_py_4")}>
-            <div className={t("components.production.productionqueue.name.space_y_2")}>
-              <Label htmlFor="printing-machine">{t('production.printingMachine')} *</Label>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="printing-machine">ماكينة الطباعة *</Label>
               <Select
                 value={selectedPrintingMachine}
                 onValueChange={setSelectedPrintingMachine}
                 disabled={printingMachines.length === 0}
               >
                 <SelectTrigger id="printing-machine" data-testid="select-printing-machine">
-                  <SelectValue placeholder={printingMachines.length === 0 ? t('common.noData') : t('production.selectPrintingMachine')} />
+                  <SelectValue placeholder={printingMachines.length === 0 ? "لا توجد مكائن طباعة متاحة" : "اختر ماكينة الطباعة"} />
                 </SelectTrigger>
                 <SelectContent>
                   {printingMachines.length > 0 ? (
                     printingMachines.map((machine) => (
                       <SelectItem key={machine.id} value={machine.id}>
                         {machine.name_ar || machine.name} - {machine.id}
-                      </SelectItem>{t('components.production.ProductionQueue.))_)_:_(')}<SelectItem value="none" disabled>
-                      {t('common.noData')}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="none" disabled>
+                      لا توجد مكائن طباعة متاحة
                     </SelectItem>
                   )}
                 </SelectContent>
               </Select>
               {printingMachines.length === 0 && (
-                <p className={t("components.production.productionqueue.name.text_sm_text_amber_600")}>
-                  {t('common.noData')}
+                <p className="text-sm text-amber-600">
+                  تنبيه: لا توجد مكائن طباعة نشطة حالياً. يرجى تفعيل ماكينة طباعة أولاً.
                 </p>
               )}
             </div>
           </div>
 
-          <div className={t("components.production.productionqueue.name.flex_justify_end_space_x_2_space_x_reverse")}>
+          <div className="flex justify-end space-x-2 space-x-reverse">
             <Button
               variant="outline"
               onClick={() => {
@@ -297,14 +301,14 @@ export default function ProductionQueue({
               }}
               data-testid="button-cancel-printing"
             >
-              {t('common.cancel')}
+              إلغاء
             </Button>
             <Button
               onClick={handlePrintConfirm}
               disabled={!selectedPrintingMachine || processItemMutation.isPending}
               data-testid="button-confirm-printing"
             >
-              {processItemMutation.isPending ? t('common.loading') : t('production.confirmPrinting')}
+              {processItemMutation.isPending ? "جاري الطباعة..." : "تأكيد الطباعة"}
             </Button>
           </div>
         </DialogContent>

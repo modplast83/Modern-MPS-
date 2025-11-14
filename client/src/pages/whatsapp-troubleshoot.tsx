@@ -120,29 +120,33 @@ export default function WhatsAppTroubleshoot() {
   const error63016 = getErrorCode63016Details();
 
   return (
-    <div className={t("pages.whatsapp-troubleshoot.name.min_h_screen_bg_gray_50_p_4")} dir="rtl">
-      <div className={t("pages.whatsapp-troubleshoot.name.max_w_4xl_mx_auto_space_y_6")}>
+    <div className="min-h-screen bg-gray-50 p-4" dir="rtl">
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className={t("pages.whatsapp-troubleshoot.name.text_center")}>
-          <h1 className={t("pages.whatsapp-troubleshoot.name.text_3xl_font_bold_text_gray_900_mb_2")}>{t('pages.whatsapp-troubleshoot.🔧_تشخيص_مشاكل_whatsapp')}</h1>
-          <p className={t("pages.whatsapp-troubleshoot.name.text_gray_600")}>{t('pages.whatsapp-troubleshoot.دليل_خطوة_بخطوة_لحل_مشاكل_إرسال_رسائل_whatsapp')}</p>
+        <div className="text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            🔧 تشخيص مشاكل WhatsApp
+          </h1>
+          <p className="text-gray-600">
+            دليل خطوة بخطوة لحل مشاكل إرسال رسائل WhatsApp
+          </p>
         </div>
 
         {/* خطأ 63016 */}
-        <Card className={t("pages.whatsapp-troubleshoot.name.border_red_200_bg_red_50")}>
+        <Card className="border-red-200 bg-red-50">
           <CardHeader>
-            <CardTitle className={t("pages.whatsapp-troubleshoot.name.flex_items_center_gap_2_text_red_700")}>
-              <XCircle className={t("pages.whatsapp-troubleshoot.name.h_5_w_5")} />
+            <CardTitle className="flex items-center gap-2 text-red-700">
+              <XCircle className="h-5 w-5" />
               خطأ Twilio: {error63016.code}
             </CardTitle>
-            <CardDescription className={t("pages.whatsapp-troubleshoot.name.text_red_600")}>
+            <CardDescription className="text-red-600">
               {error63016.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={t("pages.whatsapp-troubleshoot.name.space_y_2")}>
-              <h4 className={t("pages.whatsapp-troubleshoot.name.font_medium_text_red_700")}>{t('pages.whatsapp-troubleshoot.الحلول_المقترحة:')}</h4>
-              <ul className={t("pages.whatsapp-troubleshoot.name.list_disc_list_inside_space_y_1_text_sm_text_red_700")}>
+            <div className="space-y-2">
+              <h4 className="font-medium text-red-700">الحلول المقترحة:</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-red-700">
                 {error63016.solutions.map((solution, index) => (
                   <li key={index}>{solution}</li>
                 ))}
@@ -154,42 +158,52 @@ export default function WhatsAppTroubleshoot() {
         {/* معلومات النظام الحالي */}
         <Card>
           <CardHeader>
-            <CardTitle className={t("pages.whatsapp-troubleshoot.name.flex_items_center_gap_2")}>
-              <Settings className={t("pages.whatsapp-troubleshoot.name.h_5_w_5")} />{t('pages.whatsapp-troubleshoot.حالة_النظام_الحالي')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              حالة النظام الحالي
+            </CardTitle>
           </CardHeader>
-          <CardContent className={t("pages.whatsapp-troubleshoot.name.space_y_4")}>
-            <div className={t("pages.whatsapp-troubleshoot.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
-              <div className={t("pages.whatsapp-troubleshoot.name.space_y_2")}>
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.رقم_whatsapp:')}</span>
-                  <Badge variant="outline">{t('pages.whatsapp-troubleshoot.+15557911537')}</Badge>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">رقم WhatsApp:</span>
+                  <Badge variant="outline">+15557911537</Badge>
                 </div>
 
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.business_account_id:')}</span>
-                  <Badge variant="outline" className={t("pages.whatsapp-troubleshoot.name.text_xs")}>{t('pages.whatsapp-troubleshoot.795259496521200')}</Badge>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Business Account ID:
+                  </span>
+                  <Badge variant="outline" className="text-xs">
+                    795259496521200
+                  </Badge>
                 </div>
 
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.twilio_account:')}</span>
-                  <Badge variant="outline" className={t("pages.whatsapp-troubleshoot.name.text_xs")}>{t('pages.whatsapp-troubleshoot.ace4ba2fd2e98be5b019c354539404cc29')}</Badge>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Twilio Account:</span>
+                  <Badge variant="outline" className="text-xs">
+                    ACe4ba2fd2e98be5b019c354539404cc29
+                  </Badge>
                 </div>
               </div>
 
-              <div className={t("pages.whatsapp-troubleshoot.name.space_y_2")}>
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.آخر_رسالة:')}</span>
-                  <Badge className={t("pages.whatsapp-troubleshoot.name.bg_red_100_text_red_800")}>{t('pages.whatsapp-troubleshoot.undelivered')}</Badge>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">آخر رسالة:</span>
+                  <Badge className="bg-red-100 text-red-800">undelivered</Badge>
                 </div>
 
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.كود_الخطأ:')}</span>
-                  <Badge className={t("pages.whatsapp-troubleshoot.name.bg_red_100_text_red_800")}>{t('pages.whatsapp-troubleshoot.63016')}</Badge>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">كود الخطأ:</span>
+                  <Badge className="bg-red-100 text-red-800">63016</Badge>
                 </div>
 
-                <div className={t("pages.whatsapp-troubleshoot.name.flex_justify_between_items_center")}>
-                  <span className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600")}>{t('pages.whatsapp-troubleshoot.الرسائل_الفاشلة:')}</span>
-                  <Badge className={t("pages.whatsapp-troubleshoot.name.bg_red_100_text_red_800")}>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    الرسائل الفاشلة:
+                  </span>
+                  <Badge className="bg-red-100 text-red-800">
                     {failedMessages.length}
                   </Badge>
                 </div>
@@ -201,14 +215,16 @@ export default function WhatsAppTroubleshoot() {
         {/* خطوات التشخيص */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('pages.whatsapp-troubleshoot.📋_قائمة_التحقق')}</CardTitle>
-            <CardDescription>{t('pages.whatsapp-troubleshoot.اتبع_هذه_الخطوات_بالترتيب_لحل_المشكلة')}</CardDescription>
+            <CardTitle>📋 قائمة التحقق</CardTitle>
+            <CardDescription>
+              اتبع هذه الخطوات بالترتيب لحل المشكلة
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={t("pages.whatsapp-troubleshoot.name.space_y_4")}>
+            <div className="space-y-4">
               {troubleshootSteps.map((step) => (
-                <div key={step.id} className={t("pages.whatsapp-troubleshoot.name.border_rounded_lg_p_4")}>
-                  <div className={t("pages.whatsapp-troubleshoot.name.flex_items_start_gap_3")}>
+                <div key={step.id} className="border rounded-lg p-4">
+                  <div className="flex items-start gap-3">
                     <button
                       onClick={() => toggleCheck(step.id)}
                       className={`mt-1 h-5 w-5 rounded-full border-2 flex items-center justify-center ${
@@ -218,25 +234,25 @@ export default function WhatsAppTroubleshoot() {
                       }`}
                     >
                       {checkedItems.includes(step.id) && (
-                        <CheckCircle className={t("pages.whatsapp-troubleshoot.name.h_3_w_3")} />
+                        <CheckCircle className="h-3 w-3" />
                       )}
                     </button>
 
-                    <div className={t("pages.whatsapp-troubleshoot.name.flex_1")}>
-                      <h4 className={t("pages.whatsapp-troubleshoot.name.font_medium_text_gray_900")}>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900">
                         {step.title}
                       </h4>
-                      <p className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_600_mb_2")}>
+                      <p className="text-sm text-gray-600 mb-2">
                         {step.description}
                       </p>
 
-                      <div className={t("pages.whatsapp-troubleshoot.name.space_y_1")}>
+                      <div className="space-y-1">
                         {step.actions.map((action, index) => (
                           <div
                             key={index}
-                            className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_700_flex_items_start_gap_2")}
+                            className="text-sm text-gray-700 flex items-start gap-2"
                           >
-                            <span className={t("pages.whatsapp-troubleshoot.name.text_blue_500_mt_1")}>•</span>
+                            <span className="text-blue-500 mt-1">•</span>
                             <span>{action}</span>
                           </div>
                         ))}
@@ -252,14 +268,16 @@ export default function WhatsAppTroubleshoot() {
         {/* روابط مفيدة */}
         <Card>
           <CardHeader>
-            <CardTitle className={t("pages.whatsapp-troubleshoot.name.flex_items_center_gap_2")}>
-              <ExternalLink className={t("pages.whatsapp-troubleshoot.name.h_5_w_5")} />{t('pages.whatsapp-troubleshoot.روابط_مفيدة')}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <ExternalLink className="h-5 w-5" />
+              روابط مفيدة
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={t("pages.whatsapp-troubleshoot.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Button
                 variant="outline"
-                className={t("pages.whatsapp-troubleshoot.name.h_auto_p_4_justify_start")}
+                className="h-auto p-4 justify-start"
                 asChild
               >
                 <a
@@ -267,16 +285,18 @@ export default function WhatsAppTroubleshoot() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className={t("pages.whatsapp-troubleshoot.name.text_left")}>
-                    <div className={t("pages.whatsapp-troubleshoot.name.font_medium")}>{t('pages.whatsapp-troubleshoot.twilio_whatsapp_console')}</div>
-                    <div className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_500")}>{t('pages.whatsapp-troubleshoot.إدارة_أرقام_whatsapp')}</div>
+                  <div className="text-left">
+                    <div className="font-medium">Twilio WhatsApp Console</div>
+                    <div className="text-sm text-gray-500">
+                      إدارة أرقام WhatsApp
+                    </div>
                   </div>
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className={t("pages.whatsapp-troubleshoot.name.h_auto_p_4_justify_start")}
+                className="h-auto p-4 justify-start"
                 asChild
               >
                 <a
@@ -284,16 +304,18 @@ export default function WhatsAppTroubleshoot() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className={t("pages.whatsapp-troubleshoot.name.text_left")}>
-                    <div className={t("pages.whatsapp-troubleshoot.name.font_medium")}>{t('pages.whatsapp-troubleshoot.meta_business_manager')}</div>
-                    <div className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_500")}>{t('pages.whatsapp-troubleshoot.إدارة_whatsapp_business')}</div>
+                  <div className="text-left">
+                    <div className="font-medium">Meta Business Manager</div>
+                    <div className="text-sm text-gray-500">
+                      إدارة WhatsApp Business
+                    </div>
                   </div>
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className={t("pages.whatsapp-troubleshoot.name.h_auto_p_4_justify_start")}
+                className="h-auto p-4 justify-start"
                 asChild
               >
                 <a
@@ -301,16 +323,18 @@ export default function WhatsAppTroubleshoot() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className={t("pages.whatsapp-troubleshoot.name.text_left")}>
-                    <div className={t("pages.whatsapp-troubleshoot.name.font_medium")}>{t('pages.whatsapp-troubleshoot.whatsapp_sandbox')}</div>
-                    <div className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_500")}>{t('pages.whatsapp-troubleshoot.دليل_وضع_الاختبار')}</div>
+                  <div className="text-left">
+                    <div className="font-medium">WhatsApp Sandbox</div>
+                    <div className="text-sm text-gray-500">
+                      دليل وضع الاختبار
+                    </div>
                   </div>
                 </a>
               </Button>
 
               <Button
                 variant="outline"
-                className={t("pages.whatsapp-troubleshoot.name.h_auto_p_4_justify_start")}
+                className="h-auto p-4 justify-start"
                 asChild
               >
                 <a
@@ -318,9 +342,9 @@ export default function WhatsAppTroubleshoot() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <div className={t("pages.whatsapp-troubleshoot.name.text_left")}>
-                    <div className={t("pages.whatsapp-troubleshoot.name.font_medium")}>{t('pages.whatsapp-troubleshoot.تفاصيل_خطأ_63016')}</div>
-                    <div className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_500")}>{t('pages.whatsapp-troubleshoot.شرح_مفصل_للخطأ')}</div>
+                  <div className="text-left">
+                    <div className="font-medium">تفاصيل خطأ 63016</div>
+                    <div className="text-sm text-gray-500">شرح مفصل للخطأ</div>
                   </div>
                 </a>
               </Button>
@@ -329,37 +353,38 @@ export default function WhatsAppTroubleshoot() {
         </Card>
 
         {/* الرسائل الفاشلة */}
-        {failedMessages.length >{t('pages.whatsapp-troubleshoot.0_&&_(')}<Card>
+        {failedMessages.length > 0 && (
+          <Card>
             <CardHeader>
-              <CardTitle className={t("pages.whatsapp-troubleshoot.name.flex_items_center_gap_2_text_red_700")}>
-                <AlertTriangle className={t("pages.whatsapp-troubleshoot.name.h_5_w_5")} />
+              <CardTitle className="flex items-center gap-2 text-red-700">
+                <AlertTriangle className="h-5 w-5" />
                 الرسائل الفاشلة ({failedMessages.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.whatsapp-troubleshoot.name.space_y_3")}>
+              <div className="space-y-3">
                 {failedMessages.slice(0, 5).map((message: any) => (
                   <div
                     key={message.id}
-                    className={t("pages.whatsapp-troubleshoot.name.border_rounded_lg_p_3_bg_red_50")}
+                    className="border rounded-lg p-3 bg-red-50"
                   >
-                    <div className={t("pages.whatsapp-troubleshoot.name.flex_items_center_justify_between_mb_2")}>
-                      <span className={t("pages.whatsapp-troubleshoot.name.font_medium_text_red_700")}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-red-700">
                         {message.phone_number || "رقم غير محدد"}
                       </span>
-                      <Badge className={t("pages.whatsapp-troubleshoot.name.bg_red_100_text_red_800")}>
+                      <Badge className="bg-red-100 text-red-800">
                         {message.status}
                       </Badge>
                     </div>
-                    <p className={t("pages.whatsapp-troubleshoot.name.text_sm_text_gray_700_mb_1")}>
+                    <p className="text-sm text-gray-700 mb-1">
                       {message.message}
                     </p>
                     {message.error_message && (
-                      <p className={t("pages.whatsapp-troubleshoot.name.text_xs_text_red_600")}>
+                      <p className="text-xs text-red-600">
                         خطأ: {message.error_message}
                       </p>
                     )}
-                    <p className={t("pages.whatsapp-troubleshoot.name.text_xs_text_gray_500")}>
+                    <p className="text-xs text-gray-500">
                       {new Date(message.created_at).toLocaleString("ar")}
                     </p>
                   </div>

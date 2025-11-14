@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from 'react-i18next';
 import { format, subDays } from "date-fns";
 import {
   FileDown,
@@ -53,7 +52,6 @@ import { useToast } from "../hooks/use-toast";
 const COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
 
 export default function ProductionReports() {
-  const { t } = useTranslation();
   const { toast } = useToast();
   const [filters, setFilters] = useState({
     dateFrom: format(subDays(new Date(), 30), "yyyy-MM-dd"),
@@ -132,53 +130,53 @@ export default function ProductionReports() {
       // Summary sheet
       if (summary?.data) {
         const summaryData = [
-          [t('reports.totalOrders'), summary.data.totalOrders],
-          [t('production.activeOrdersCount'), summary.data.activeOrders],
-          [t('production.completedOrdersCount'), summary.data.completedOrders],
-          [t('reports.rollsProduced'), summary.data.totalRolls],
-          [t('reports.totalWeight') + ' (' + t('warehouse.kg') + ')', summary.data.totalWeight],
-          [t('reports.avgProductionTime') + ' (' + t('reports.hours') + ')', summary.data.avgProductionTime?.toFixed(2)],
-          [t('reports.wastePercentage') + ' %', summary.data.wastePercentage?.toFixed(2)],
-          [t('reports.completionRate') + ' %', summary.data.completionRate?.toFixed(2)],
+          ["إجمالي الطلبات", summary.data.totalOrders],
+          ["أوامر نشطة", summary.data.activeOrders],
+          ["أوامر مكتملة", summary.data.completedOrders],
+          ["الرولات المنتجة", summary.data.totalRolls],
+          ["الوزن الكلي (كجم)", summary.data.totalWeight],
+          ["متوسط وقت الإنتاج (ساعة)", summary.data.avgProductionTime?.toFixed(2)],
+          ["نسبة الهدر %", summary.data.wastePercentage?.toFixed(2)],
+          ["معدل الإنجاز %", summary.data.completionRate?.toFixed(2)],
         ];
         const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
-        XLSX.utils.book_append_sheet(workbook, summarySheet, t('reports.summary'));
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "الملخص");
       }
 
       // Production by date sheet
       if (productionByDate?.data) {
         const dateSheet = XLSX.utils.json_to_sheet(productionByDate.data);
-        XLSX.utils.book_append_sheet(workbook, dateSheet, t('reports.dailyProduction'));
+        XLSX.utils.book_append_sheet(workbook, dateSheet, "الإنتاج اليومي");
       }
 
       // Production by product sheet
       if (productionByProduct?.data) {
         const productSheet = XLSX.utils.json_to_sheet(productionByProduct.data);
-        XLSX.utils.book_append_sheet(workbook, productSheet, t('reports.productionByProduct'));
+        XLSX.utils.book_append_sheet(workbook, productSheet, "الإنتاج حسب المنتج");
       }
 
       // Machine performance sheet
       if (machinePerformance?.data) {
         const machineSheet = XLSX.utils.json_to_sheet(machinePerformance.data);
-        XLSX.utils.book_append_sheet(workbook, machineSheet, t('reports.machinePerformance'));
+        XLSX.utils.book_append_sheet(workbook, machineSheet, "أداء المكائن");
       }
 
       // Operator performance sheet
       if (operatorPerformance?.data) {
         const operatorSheet = XLSX.utils.json_to_sheet(operatorPerformance.data);
-        XLSX.utils.book_append_sheet(workbook, operatorSheet, t('reports.operatorPerformance'));
+        XLSX.utils.book_append_sheet(workbook, operatorSheet, "أداء العمال");
       }
 
-      XLSX.writeFile(workbook, `${t('reports.productionReport')}_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+      XLSX.writeFile(workbook, `تقرير_الإنتاج_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
       toast({
-        title: t("toast.exportSuccess"),
-        description: t("toast.exportSuccessDesc"),
+        title: "تم التصدير بنجاح",
+        description: "تم تصدير التقرير إلى ملف Excel",
       });
     } catch (error) {
       console.error("Export error:", error);
       toast({
-        title: t("toast.exportError"),
-        description: t("toast.exportErrorDesc"),
+        title: "خطأ في التصدير",
+        description: "حدث خطأ أثناء تصدير التقرير",
         variant: "destructive",
       });
     }
@@ -200,20 +198,20 @@ export default function ProductionReports() {
   };
 
   return (
-    <div className={t("pages.productionreports.name.container_mx_auto_p_6_space_y_6_max_w_7xl")}>
-      <div className={t("pages.productionreports.name.flex_justify_between_items_center")}>
+    <div className="container mx-auto p-6 space-y-6 max-w-7xl">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className={t("pages.productionreports.name.text_3xl_font_bold")} data-testid="text-page-title">{t("reports.comprehensiveProductionReports")}</h1>
-          <p className={t("pages.productionreports.name.text_muted_foreground")}>{t("reports.comprehensiveAnalysisDesc")}</p>
+          <h1 className="text-3xl font-bold" data-testid="text-page-title">تقارير الإنتاج الشاملة</h1>
+          <p className="text-muted-foreground">تحليل شامل لأداء الإنتاج مع رسوم بيانية تفاعلية</p>
         </div>
-        <div className={t("pages.productionreports.name.flex_gap_2")}>
+        <div className="flex gap-2">
           <Button onClick={exportToExcel} variant="outline" data-testid="button-export-excel">
-            <FileSpreadsheet className={t("pages.productionreports.name.mr_2_h_4_w_4")} />
-            {t('reports.exportToExcel')}
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            تصدير Excel
           </Button>
           <Button onClick={exportToPDF} variant="outline" data-testid="button-export-pdf">
-            <FileText className={t("pages.productionreports.name.mr_2_h_4_w_4")} />
-            {t('reports.exportToPDF')}
+            <FileText className="mr-2 h-4 w-4" />
+            طباعة PDF
           </Button>
         </div>
       </div>
@@ -221,13 +219,13 @@ export default function ProductionReports() {
       {/* Filters Section */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('reports.reportFilters')}</CardTitle>
-          <CardDescription>{t('reports.selectCriteriaDesc')}</CardDescription>
+          <CardTitle>فلاتر التقرير</CardTitle>
+          <CardDescription>اختر المعايير لتخصيص التقرير</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={t("pages.productionreports.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4")}>
-            <div className={t("pages.productionreports.name.space_y_2")}>
-              <Label htmlFor="dateFrom">{t('reports.startDate')}</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="dateFrom">من تاريخ</Label>
               <Input
                 id="dateFrom"
                 type="date"
@@ -237,8 +235,8 @@ export default function ProductionReports() {
               />
             </div>
 
-            <div className={t("pages.productionreports.name.space_y_2")}>
-              <Label htmlFor="dateTo">{t('reports.endDate')}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="dateTo">إلى تاريخ</Label>
               <Input
                 id="dateTo"
                 type="date"
@@ -248,17 +246,17 @@ export default function ProductionReports() {
               />
             </div>
 
-            <div className={t("pages.productionreports.name.space_y_2")}>
-              <Label htmlFor="section">{t('pages.ProductionReports.القسم')}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="section">القسم</Label>
               <Select
                 value={filters.sectionId || "all"}
                 onValueChange={(value) => setFilters({ ...filters, sectionId: value === "all" ? "" : value })}
               >
                 <SelectTrigger data-testid="select-section">
-                  <SelectValue placeholder="{t('pages.ProductionReports.placeholder.اختر_القسم')}" />
+                  <SelectValue placeholder="اختر القسم" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('pages.ProductionReports.جميع_الأقسام')}</SelectItem>
+                  <SelectItem value="all">جميع الأقسام</SelectItem>
                   {sections?.map((section: any) => (
                     <SelectItem key={section.id} value={section.id}>
                       {section.name_ar || section.name}
@@ -268,17 +266,17 @@ export default function ProductionReports() {
               </Select>
             </div>
 
-            <div className={t("pages.productionreports.name.space_y_2")}>
-              <Label htmlFor="machine">{t('pages.ProductionReports.الماكينة')}</Label>
+            <div className="space-y-2">
+              <Label htmlFor="machine">الماكينة</Label>
               <Select
                 value={filters.machineId || "all"}
                 onValueChange={(value) => setFilters({ ...filters, machineId: value === "all" ? "" : value })}
               >
                 <SelectTrigger data-testid="select-machine">
-                  <SelectValue placeholder="{t('pages.ProductionReports.placeholder.اختر_الماكينة')}" />
+                  <SelectValue placeholder="اختر الماكينة" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{t('pages.ProductionReports.جميع_المكائن')}</SelectItem>
+                  <SelectItem value="all">جميع المكائن</SelectItem>
                   {machines?.map((machine: any) => (
                     <SelectItem key={machine.id} value={machine.id}>
                       {machine.name_ar || machine.name}
@@ -289,25 +287,31 @@ export default function ProductionReports() {
             </div>
           </div>
 
-          <div className={t("pages.productionreports.name.flex_gap_2_mt_4")}>
+          <div className="flex gap-2 mt-4">
             <Button onClick={handleSearch} data-testid="button-search">
-              <Search className={t("pages.productionreports.name.mr_2_h_4_w_4")} />{t('pages.ProductionReports.بحث')}</Button>
+              <Search className="mr-2 h-4 w-4" />
+              بحث
+            </Button>
             <Button onClick={handleReset} variant="outline" data-testid="button-reset">
-              <RotateCcw className={t("pages.productionreports.name.mr_2_h_4_w_4")} />{t('pages.ProductionReports.إعادة_تعيين')}</Button>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              إعادة تعيين
+            </Button>
           </div>
         </CardContent>
       </Card>
 
       {/* KPI Cards */}
-      <div className={t("pages.productionreports.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_3_xl_grid_cols_6_gap_4")}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.إجمالي_الطلبات')}</CardTitle>
-            <Package className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">إجمالي الطلبات</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div className={t("pages.productionreports.name.text_2xl_font_bold")} data-testid="text-total-orders">
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold" data-testid="text-total-orders">
                 {summary?.data?.totalOrders || 0}
               </div>
             )}
@@ -315,13 +319,15 @@ export default function ProductionReports() {
         </Card>
 
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.أوامر_نشطة')}</CardTitle>
-            <Activity className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">أوامر نشطة</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div className={t("pages.productionreports.name.text_2xl_font_bold_text_blue_600")} data-testid="text-active-orders">
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold text-blue-600" data-testid="text-active-orders">
                 {summary?.data?.activeOrders || 0}
               </div>
             )}
@@ -329,13 +335,15 @@ export default function ProductionReports() {
         </Card>
 
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.الرولات_المنتجة')}</CardTitle>
-            <TrendingUp className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">الرولات المنتجة</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div className={t("pages.productionreports.name.text_2xl_font_bold")} data-testid="text-total-rolls">
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold" data-testid="text-total-rolls">
                 {summary?.data?.totalRolls || 0}
               </div>
             )}
@@ -343,13 +351,15 @@ export default function ProductionReports() {
         </Card>
 
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.متوسط_وقت_الإنتاج')}</CardTitle>
-            <Clock className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">متوسط وقت الإنتاج</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div className={t("pages.productionreports.name.text_2xl_font_bold")} data-testid="text-avg-time">
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className="text-2xl font-bold" data-testid="text-avg-time">
                 {summary?.data?.avgProductionTime?.toFixed(1) || "0"} ساعة
               </div>
             )}
@@ -357,13 +367,15 @@ export default function ProductionReports() {
         </Card>
 
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.نسبة_الهدر')}</CardTitle>
-            <AlertTriangle className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">نسبة الهدر</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div
                 className={`text-2xl font-bold rounded px-2 ${getStatusColor(summary?.data?.wastePercentage || 0, "waste")}`}
                 data-testid="text-waste-percentage"
               >
@@ -374,13 +386,15 @@ export default function ProductionReports() {
         </Card>
 
         <Card>
-          <CardHeader className={t("pages.productionreports.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-            <CardTitle className={t("pages.productionreports.name.text_sm_font_medium")}>{t('pages.ProductionReports.معدل_الإنجاز')}</CardTitle>
-            <CheckCircle className={t("pages.productionreports.name.h_4_w_4_text_muted_foreground")} />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">معدل الإنجاز</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {summaryLoading ? (
-              <Skeleton className={t("pages.productionreports.name.h_8_w_20")} />{t('pages.ProductionReports.)_:_(')}<div
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div
                 className={`text-2xl font-bold rounded px-2 ${getStatusColor(summary?.data?.completionRate || 0, "completion")}`}
                 data-testid="text-completion-rate"
               >
@@ -392,24 +406,26 @@ export default function ProductionReports() {
       </div>
 
       {/* Charts Section */}
-      <Tabs defaultValue="daily" className={t("pages.productionreports.name.space_y_4")}>
-        <TabsList className={t("pages.productionreports.name.grid_w_full_grid_cols_5")}>
-          <TabsTrigger value="daily" data-testid="tab-daily">{t('pages.ProductionReports.الإنتاج_اليومي')}</TabsTrigger>
-          <TabsTrigger value="products" data-testid="tab-products">{t('pages.ProductionReports.حسب_المنتج')}</TabsTrigger>
-          <TabsTrigger value="waste" data-testid="tab-waste">{t('pages.ProductionReports.تحليل_الهدر')}</TabsTrigger>
-          <TabsTrigger value="machines" data-testid="tab-machines">{t('pages.ProductionReports.أداء_المكائن')}</TabsTrigger>
-          <TabsTrigger value="operators" data-testid="tab-operators">{t('pages.ProductionReports.أداء_العمال')}</TabsTrigger>
+      <Tabs defaultValue="daily" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="daily" data-testid="tab-daily">الإنتاج اليومي</TabsTrigger>
+          <TabsTrigger value="products" data-testid="tab-products">حسب المنتج</TabsTrigger>
+          <TabsTrigger value="waste" data-testid="tab-waste">تحليل الهدر</TabsTrigger>
+          <TabsTrigger value="machines" data-testid="tab-machines">أداء المكائن</TabsTrigger>
+          <TabsTrigger value="operators" data-testid="tab-operators">أداء العمال</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="daily" className={t("pages.productionreports.name.space_y_4")}>
+        <TabsContent value="daily" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.الإنتاج_اليومي')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.عدد_الرولات_والوزن_المنتج_يومياً')}</CardDescription>
+              <CardTitle>الإنتاج اليومي</CardTitle>
+              <CardDescription>عدد الرولات والوزن المنتج يومياً</CardDescription>
             </CardHeader>
             <CardContent>
               {dateLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={productionByDate?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
@@ -422,7 +438,7 @@ export default function ProductionReports() {
                       type="monotone"
                       dataKey="rollsCount"
                       stroke="#3b82f6"
-                      name="{t('pages.ProductionReports.name.عدد_الرولات')}"
+                      name="عدد الرولات"
                       strokeWidth={2}
                     />
                     <Line
@@ -430,7 +446,7 @@ export default function ProductionReports() {
                       type="monotone"
                       dataKey="totalWeight"
                       stroke="#10b981"
-                      name="{t('pages.ProductionReports.name.الوزن_(كجم)')}"
+                      name="الوزن (كجم)"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -440,23 +456,25 @@ export default function ProductionReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="products" className={t("pages.productionreports.name.space_y_4")}>
+        <TabsContent value="products" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.الإنتاج_حسب_المنتج')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.توزيع_الإنتاج_على_المنتجات_المختلفة')}</CardDescription>
+              <CardTitle>الإنتاج حسب المنتج</CardTitle>
+              <CardDescription>توزيع الإنتاج على المنتجات المختلفة</CardDescription>
             </CardHeader>
             <CardContent>
               {productLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={productionByProduct?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="productName" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="totalWeight" fill="#3b82f6" name="{t('pages.ProductionReports.name.الوزن_(كجم)')}" />
-                    <Bar dataKey="rollsCount" fill="#10b981" name="{t('pages.ProductionReports.name.عدد_الرولات')}" />
+                    <Bar dataKey="totalWeight" fill="#3b82f6" name="الوزن (كجم)" />
+                    <Bar dataKey="rollsCount" fill="#10b981" name="عدد الرولات" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -466,12 +484,14 @@ export default function ProductionReports() {
           {/* Pie Chart */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.توزيع_الإنتاج')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.النسبة_المئوية_لكل_منتج')}</CardDescription>
+              <CardTitle>توزيع الإنتاج</CardTitle>
+              <CardDescription>النسبة المئوية لكل منتج</CardDescription>
             </CardHeader>
             <CardContent>
               {productLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={productionByProduct?.data || []}
@@ -496,15 +516,17 @@ export default function ProductionReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="waste" className={t("pages.productionreports.name.space_y_4")}>
+        <TabsContent value="waste" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.اتجاه_الهدر_عبر_الوقت')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.تحليل_كمية_الهدر_اليومية')}</CardDescription>
+              <CardTitle>اتجاه الهدر عبر الوقت</CardTitle>
+              <CardDescription>تحليل كمية الهدر اليومية</CardDescription>
             </CardHeader>
             <CardContent>
               {wasteLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <AreaChart data={wasteAnalysis?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="date" />
@@ -516,7 +538,7 @@ export default function ProductionReports() {
                       dataKey="totalWaste"
                       stroke="#ef4444"
                       fill="#fecaca"
-                      name="{t('pages.ProductionReports.name.كمية_الهدر_(كجم)')}"
+                      name="كمية الهدر (كجم)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -525,23 +547,25 @@ export default function ProductionReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="machines" className={t("pages.productionreports.name.space_y_4")}>
+        <TabsContent value="machines" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.أداء_المكائن')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.الإنتاجية_حسب_كل_ماكينة')}</CardDescription>
+              <CardTitle>أداء المكائن</CardTitle>
+              <CardDescription>الإنتاجية حسب كل ماكينة</CardDescription>
             </CardHeader>
             <CardContent>
               {machineLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={machinePerformance?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="machineName" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="totalWeight" fill="#3b82f6" name="{t('pages.ProductionReports.name.الوزن_(كجم)')}" />
-                    <Bar dataKey="rollsCount" fill="#10b981" name="{t('pages.ProductionReports.name.عدد_الرولات')}" />
+                    <Bar dataKey="totalWeight" fill="#3b82f6" name="الوزن (كجم)" />
+                    <Bar dataKey="rollsCount" fill="#10b981" name="عدد الرولات" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -551,23 +575,23 @@ export default function ProductionReports() {
           {/* Machine Performance Table */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.جدول_أداء_المكائن')}</CardTitle>
+              <CardTitle>جدول أداء المكائن</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('pages.ProductionReports.الماكينة')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.عدد_الرولات')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.الوزن_الكلي_(كجم)')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.متوسط_الوقت_(ساعة)')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.الكفاءة')}</TableHead>
+                    <TableHead>الماكينة</TableHead>
+                    <TableHead>عدد الرولات</TableHead>
+                    <TableHead>الوزن الكلي (كجم)</TableHead>
+                    <TableHead>متوسط الوقت (ساعة)</TableHead>
+                    <TableHead>الكفاءة</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {machinePerformance?.data?.map((machine: any) => (
                     <TableRow key={machine.machineId}>
-                      <TableCell className={t("pages.productionreports.name.font_medium")}>{machine.machineName}</TableCell>
+                      <TableCell className="font-medium">{machine.machineName}</TableCell>
                       <TableCell>{machine.rollsCount}</TableCell>
                       <TableCell>{machine.totalWeight?.toFixed(2)}</TableCell>
                       <TableCell>{machine.avgProductionTime?.toFixed(2)}</TableCell>
@@ -584,23 +608,25 @@ export default function ProductionReports() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="operators" className={t("pages.productionreports.name.space_y_4")}>
+        <TabsContent value="operators" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.أداء_العمال')}</CardTitle>
-              <CardDescription>{t('pages.ProductionReports.إنتاجية_كل_عامل')}</CardDescription>
+              <CardTitle>أداء العمال</CardTitle>
+              <CardDescription>إنتاجية كل عامل</CardDescription>
             </CardHeader>
             <CardContent>
               {operatorLoading ? (
-                <Skeleton className={t("pages.productionreports.name.h_300px_w_full")} />{t('pages.ProductionReports.)_:_(')}<ResponsiveContainer width="100%" height={300}>
+                <Skeleton className="h-[300px] w-full" />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={operatorPerformance?.data || []}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="operatorName" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Bar dataKey="totalWeight" fill="#8b5cf6" name="{t('pages.ProductionReports.name.الوزن_(كجم)')}" />
-                    <Bar dataKey="rollsCount" fill="#ec4899" name="{t('pages.ProductionReports.name.عدد_الرولات')}" />
+                    <Bar dataKey="totalWeight" fill="#8b5cf6" name="الوزن (كجم)" />
+                    <Bar dataKey="rollsCount" fill="#ec4899" name="عدد الرولات" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -610,23 +636,23 @@ export default function ProductionReports() {
           {/* Operator Performance Table */}
           <Card>
             <CardHeader>
-              <CardTitle>{t('pages.ProductionReports.جدول_أداء_العمال')}</CardTitle>
+              <CardTitle>جدول أداء العمال</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t('pages.ProductionReports.العامل')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.عدد_الرولات')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.الوزن_الكلي_(كجم)')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.متوسط_وزن_الرولة')}</TableHead>
-                    <TableHead>{t('pages.ProductionReports.الإنتاجية')}</TableHead>
+                    <TableHead>العامل</TableHead>
+                    <TableHead>عدد الرولات</TableHead>
+                    <TableHead>الوزن الكلي (كجم)</TableHead>
+                    <TableHead>متوسط وزن الرولة</TableHead>
+                    <TableHead>الإنتاجية</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {operatorPerformance?.data?.map((operator: any) => (
                     <TableRow key={operator.operatorId}>
-                      <TableCell className={t("pages.productionreports.name.font_medium")}>{operator.operatorName}</TableCell>
+                      <TableCell className="font-medium">{operator.operatorName}</TableCell>
                       <TableCell>{operator.rollsCount}</TableCell>
                       <TableCell>{operator.totalWeight?.toFixed(2)}</TableCell>
                       <TableCell>{operator.avgRollWeight?.toFixed(2)}</TableCell>

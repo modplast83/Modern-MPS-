@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import MobileNav from "../components/layout/MobileNav";
@@ -69,8 +68,10 @@ interface Roll {
 }
 
 export default function FilmOperatorDashboard() {
-  const { t } = useTranslation();
-  const [selectedProductionOrder, setSelectedProductionOrder] = useState<ActiveProductionOrderDetails | null>{t('pages.FilmOperatorDashboard.(null);_const_[ismodalopen,_setismodalopen]_=_usestate(false);_const_[isfinalroll,_setisfinalroll]_=_usestate(false);_const_[expandedorders,_setexpandedorders]_=_usestate')}<Set<number>>(new Set());
+  const [selectedProductionOrder, setSelectedProductionOrder] = useState<ActiveProductionOrderDetails | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFinalRoll, setIsFinalRoll] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
   // Fetch active production orders for operator
   const { data: productionOrders = [], isLoading } = useQuery<ActiveProductionOrderDetails[]>({
@@ -129,7 +130,7 @@ export default function FilmOperatorDashboard() {
       });
     } catch (error) {
       console.error("Error printing label:", error);
-      alert(`${t('toast.errorPrintLabel')}: ${error instanceof Error ? error.message : t('errors.unknownError')}`);
+      alert(`خطأ في طباعة الليبل: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     }
   };
 
@@ -148,16 +149,16 @@ export default function FilmOperatorDashboard() {
 
   if (isLoading) {
     return (
-      <div className={t("pages.filmoperatordashboard.name.min_h_screen_bg_gray_50")}>
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className={t("pages.filmoperatordashboard.name.flex")}>
+        <div className="flex">
           <Sidebar />
           <MobileNav />
-          <main className={t("pages.filmoperatordashboard.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-            <div className={t("pages.filmoperatordashboard.name.flex_items_center_justify_center_h_96")}>
-              <div className={t("pages.filmoperatordashboard.name.text_center")}>
-                <Loader2 className={t("pages.filmoperatordashboard.name.h_12_w_12_animate_spin_text_primary_mx_auto_mb_4")} />
-                <p className={t("pages.filmoperatordashboard.name.text_gray_600")}>{t('filmOperator.loadingOrders')}</p>
+          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+            <div className="flex items-center justify-center h-96">
+              <div className="text-center">
+                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+                <p className="text-gray-600">جاري تحميل أوامر الإنتاج...</p>
               </div>
             </div>
           </main>
@@ -167,191 +168,197 @@ export default function FilmOperatorDashboard() {
   }
 
   return (
-    <div className={t("pages.filmoperatordashboard.name.min_h_screen_bg_gray_50_dark_bg_gray_900")}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <div className={t("pages.filmoperatordashboard.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.filmoperatordashboard.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
           {/* Page Header */}
-          <div className={t("pages.filmoperatordashboard.name.mb_6")}>
-            <h1 className={t("pages.filmoperatordashboard.name.text_2xl_font_bold_text_gray_900_dark_text_gray_100_mb_2")}>
-              {t('filmOperator.title')}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              لوحة عامل الفيلم
             </h1>
-            <p className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>
-              {t('filmOperator.description')}
+            <p className="text-gray-600 dark:text-gray-400">
+              إدارة أوامر الإنتاج وخلط المواد
             </p>
           </div>
 
           {/* Tabs Navigation */}
-          <Tabs defaultValue="production" className={t("pages.filmoperatordashboard.name.space_y_6")}>
-            <TabsList className={t("pages.filmoperatordashboard.name.grid_w_full_max_w_md_grid_cols_2")}>
-              <TabsTrigger value="production" className={t("pages.filmoperatordashboard.name.flex_items_center_gap_2")} data-testid="tab-production">
-                <Package className={t("pages.filmoperatordashboard.name.h_4_w_4")} />
-                {t('production.productionOrders')}
+          <Tabs defaultValue="production" className="space-y-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="production" className="flex items-center gap-2" data-testid="tab-production">
+                <Package className="h-4 w-4" />
+                أوامر الإنتاج
               </TabsTrigger>
-              <TabsTrigger value="mixing" className={t("pages.filmoperatordashboard.name.flex_items_center_gap_2")} data-testid="tab-mixing">
-                <Beaker className={t("pages.filmoperatordashboard.name.h_4_w_4")} />
-                {t('production.filmMaterialMixing')}
+              <TabsTrigger value="mixing" className="flex items-center gap-2" data-testid="tab-mixing">
+                <Beaker className="h-4 w-4" />
+                خلط المواد
               </TabsTrigger>
             </TabsList>
 
             {/* Production Tab */}
-            <TabsContent value="production" className={t("pages.filmoperatordashboard.name.space_y_6")}>
+            <TabsContent value="production" className="space-y-6">
           {/* Statistics Cards */}
-          <div className={t("pages.filmoperatordashboard.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card data-testid="card-active-orders">
-              <CardHeader className={t("pages.filmoperatordashboard.name.pb_3")}>
-                <CardTitle className={t("pages.filmoperatordashboard.name.text_sm_font_medium")}>{t('filmOperator.activeOrders')}</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">الأوامر النشطة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.filmoperatordashboard.name.text_2xl_font_bold")} data-testid="stat-active-orders">{stats.totalOrders}</div>
-                <p className={t("pages.filmoperatordashboard.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('filmOperator.productionOrder')}</p>
+                <div className="text-2xl font-bold" data-testid="stat-active-orders">{stats.totalOrders}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-required">
-              <CardHeader className={t("pages.filmoperatordashboard.name.pb_3")}>
-                <CardTitle className={t("pages.filmoperatordashboard.name.text_sm_font_medium")}>{t('filmOperator.requiredQuantity')}</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">الكمية المطلوبة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.filmoperatordashboard.name.text_2xl_font_bold")} data-testid="stat-total-required">{formatNumberAr(stats.totalRequired)}</div>
-                <p className={t("pages.filmoperatordashboard.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('warehouse.kg')}</p>
+                <div className="text-2xl font-bold" data-testid="stat-total-required">{formatNumberAr(stats.totalRequired)}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-total-produced">
-              <CardHeader className={t("pages.filmoperatordashboard.name.pb_3")}>
-                <CardTitle className={t("pages.filmoperatordashboard.name.text_sm_font_medium")}>{t('filmOperator.producedQuantity')}</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">الكمية المنتجة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.filmoperatordashboard.name.text_2xl_font_bold")} data-testid="stat-total-produced">{formatNumberAr(stats.totalProduced)}</div>
-                <p className={t("pages.filmoperatordashboard.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('warehouse.kg')}</p>
+                <div className="text-2xl font-bold" data-testid="stat-total-produced">{formatNumberAr(stats.totalProduced)}</div>
+                <p className="text-xs text-gray-600 dark:text-gray-400">كيلوجرام</p>
               </CardContent>
             </Card>
 
             <Card data-testid="card-near-completion">
-              <CardHeader className={t("pages.filmoperatordashboard.name.pb_3")}>
-                <CardTitle className={t("pages.filmoperatordashboard.name.text_sm_font_medium")}>{t('filmOperator.nearCompletion')}</CardTitle>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium">قريبة من الإكمال</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.filmoperatordashboard.name.text_2xl_font_bold_text_orange_600_dark_text_orange_400")} data-testid="stat-near-completion">
+                <div className="text-2xl font-bold text-orange-600 dark:text-orange-400" data-testid="stat-near-completion">
                   {stats.ordersNearCompletion}
                 </div>
-                <p className={t("pages.filmoperatordashboard.name.text_xs_text_gray_600_dark_text_gray_400")}>{t('filmOperator.productionOrder')}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400">أمر إنتاج</p>
               </CardContent>
             </Card>
           </div>
 
           {/* Production Orders List */}
           {productionOrders.length === 0 ? (
-            <Card className={t("pages.filmoperatordashboard.name.p_8")} data-testid="card-no-orders">
-              <div className={t("pages.filmoperatordashboard.name.text_center")}>
-                <Info className={t("pages.filmoperatordashboard.name.h_12_w_12_text_gray_400_mx_auto_mb_4")} />
-                <h3 className={t("pages.filmoperatordashboard.name.text_lg_font_semibold_text_gray_900_dark_text_gray_100_mb_2")}>
-                  {t('filmOperator.noActiveOrders')}
+            <Card className="p-8" data-testid="card-no-orders">
+              <div className="text-center">
+                <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  لا توجد أوامر إنتاج نشطة
                 </h3>
-                <p className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")} data-testid="text-no-orders">
-                  {t('filmOperator.noActiveOrdersInFilm')}
+                <p className="text-gray-600 dark:text-gray-400" data-testid="text-no-orders">
+                  لا توجد أوامر إنتاج نشطة في قسم الفيلم حالياً
                 </p>
               </div>
-            </Card>{t('pages.FilmOperatorDashboard.)_:_(')}<div className={t("pages.filmoperatordashboard.name.grid_grid_cols_1_lg_grid_cols_2_gap_4")}>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {productionOrders.map((order: ActiveProductionOrderDetails) => {
                 const progress = (Number(order.total_weight_produced || 0) / Number(order.final_quantity_kg || 1)) * 100;
-                const isNearCompletion = progress >{t('pages.FilmOperatorDashboard.=_80;_const_iscomplete_=_order.is_final_roll_created;_return_(')}<Card 
+                const isNearCompletion = progress >= 80;
+                const isComplete = order.is_final_roll_created;
+
+                return (
+                  <Card 
                     key={order.id} 
                     className={`${isComplete ? 'opacity-60' : ''} transition-all hover:shadow-lg`}
                     data-testid={`card-production-order-${order.id}`}
                   >
                     <CardHeader>
-                      <div className={t("pages.filmoperatordashboard.name.flex_justify_between_items_start")}>
+                      <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className={t("pages.filmoperatordashboard.name.text_lg")} data-testid={`text-order-number-${order.id}`}>
+                          <CardTitle className="text-lg" data-testid={`text-order-number-${order.id}`}>
                             {order.production_order_number}
                           </CardTitle>
                           <CardDescription data-testid={`text-order-ref-${order.id}`}>
-                            {t('orders.orderNumber')}: {order.order_number}
+                            الطلب: {order.order_number}
                           </CardDescription>
                         </div>
-                        <div className={t("pages.filmoperatordashboard.name.flex_gap_2")}>
+                        <div className="flex gap-2">
                           {isComplete && (
-                            <Badge variant="secondary" className={t("pages.filmoperatordashboard.name.bg_green_100_text_green_800")} data-testid={`badge-complete-${order.id}`}>
-                              <CheckCircle2 className={t("pages.filmoperatordashboard.name.h_3_w_3_ml_1")} />
-                              {t('production.completed')}
+                            <Badge variant="secondary" className="bg-green-100 text-green-800" data-testid={`badge-complete-${order.id}`}>
+                              <CheckCircle2 className="h-3 w-3 ml-1" />
+                              مكتمل
                             </Badge>
                           )}
                           {isNearCompletion && !isComplete && (
-                            <Badge variant="secondary" className={t("pages.filmoperatordashboard.name.bg_orange_100_text_orange_800")} data-testid={`badge-near-completion-${order.id}`}>
-                              <AlertTriangle className={t("pages.filmoperatordashboard.name.h_3_w_3_ml_1")} />
-                              {t('filmOperator.nearCompletion')}
+                            <Badge variant="secondary" className="bg-orange-100 text-orange-800" data-testid={`badge-near-completion-${order.id}`}>
+                              <AlertTriangle className="h-3 w-3 ml-1" />
+                              قريب من الإكمال
                             </Badge>
                           )}
                         </div>
                       </div>
                     </CardHeader>
                     
-                    <CardContent className={t("pages.filmoperatordashboard.name.space_y_4")}>
+                    <CardContent className="space-y-4">
                       {/* Customer and Product Info */}
-                      <div className={t("pages.filmoperatordashboard.name.grid_grid_cols_2_gap_4_text_sm")}>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className={t("pages.filmoperatordashboard.name.text_gray_500_dark_text_gray_400")}>{t('orders.customer')}</p>
-                          <p className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-customer-${order.id}`}>{order.customer_name}</p>
+                          <p className="text-gray-500 dark:text-gray-400">العميل</p>
+                          <p className="font-medium" data-testid={`text-customer-${order.id}`}>{order.customer_name}</p>
                         </div>
                         <div>
-                          <p className={t("pages.filmoperatordashboard.name.text_gray_500_dark_text_gray_400")}>{t('orders.product')}</p>
-                          <p className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-product-${order.id}`}>{order.product_name}</p>
+                          <p className="text-gray-500 dark:text-gray-400">المنتج</p>
+                          <p className="font-medium" data-testid={`text-product-${order.id}`}>{order.product_name}</p>
                         </div>
                       </div>
 
                       {/* Quantities */}
-                      <div className={t("pages.filmoperatordashboard.name.space_y_2")}>
-                        <div className={t("pages.filmoperatordashboard.name.flex_justify_between_text_sm")}>
-                          <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.requiredQuantity')}</span>
-                          <span className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-required-qty-${order.id}`}>{formatNumberAr(Number(order.final_quantity_kg))} {t('warehouse.kg')}</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">الكمية المطلوبة</span>
+                          <span className="font-medium" data-testid={`text-required-qty-${order.id}`}>{formatNumberAr(Number(order.final_quantity_kg))} كجم</span>
                         </div>
-                        <div className={t("pages.filmoperatordashboard.name.flex_justify_between_text_sm")}>
-                          <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.producedQuantity')}</span>
-                          <span className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-produced-qty-${order.id}`}>{formatNumberAr(Number(order.total_weight_produced))} {t('warehouse.kg')}</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">الكمية المنتجة</span>
+                          <span className="font-medium" data-testid={`text-produced-qty-${order.id}`}>{formatNumberAr(Number(order.total_weight_produced))} كجم</span>
                         </div>
-                        <div className={t("pages.filmoperatordashboard.name.flex_justify_between_text_sm")}>
-                          <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.remainingQuantity')}</span>
-                          <span className={t("pages.filmoperatordashboard.name.font_medium_text_orange_600")} data-testid={`text-remaining-qty-${order.id}`}>
-                            {formatNumberAr(Number(order.remaining_quantity))} {t('warehouse.kg')}
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">الكمية المتبقية</span>
+                          <span className="font-medium text-orange-600" data-testid={`text-remaining-qty-${order.id}`}>
+                            {formatNumberAr(Number(order.remaining_quantity))} كجم
                           </span>
                         </div>
                       </div>
 
                       {/* Progress Bar */}
-                      <div className={t("pages.filmoperatordashboard.name.space_y_2")}>
-                        <div className={t("pages.filmoperatordashboard.name.flex_justify_between_text_sm")}>
-                          <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.progress')}</span>
-                          <span className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-progress-${order.id}`}>{Math.round(progress)}%</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">التقدم</span>
+                          <span className="font-medium" data-testid={`text-progress-${order.id}`}>{Math.round(progress)}%</span>
                         </div>
-                        <Progress value={progress} className={t("pages.filmoperatordashboard.name.h_2")} data-testid={`progress-bar-${order.id}`} />
+                        <Progress value={progress} className="h-2" data-testid={`progress-bar-${order.id}`} />
                       </div>
 
                       {/* Rolls Info */}
-                      <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_4_text_sm")}>
-                        <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_2")}>
-                          <Package className={t("pages.filmoperatordashboard.name.h_4_w_4_text_gray_400")} />
-                          <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.rollsCount')}:</span>
-                          <span className={t("pages.filmoperatordashboard.name.font_medium")} data-testid={`text-rolls-count-${order.id}`}>{order.rolls_count}</span>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4 text-gray-400" />
+                          <span className="text-gray-600 dark:text-gray-400">عدد الرولات:</span>
+                          <span className="font-medium" data-testid={`text-rolls-count-${order.id}`}>{order.rolls_count}</span>
                         </div>
                         {order.production_start_time && (
-                          <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_2")}>
-                            <Clock className={t("pages.filmoperatordashboard.name.h_4_w_4_text_gray_400")} />
-                            <span className={t("pages.filmoperatordashboard.name.text_gray_600_dark_text_gray_400")}>{t('filmOperator.startedSince')}:</span>
-                            <span className={t("pages.filmoperatordashboard.name.font_medium")}>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-gray-400" />
+                            <span className="text-gray-600 dark:text-gray-400">بدأ منذ:</span>
+                            <span className="font-medium">
                               {(() => {
                                 const startTime = new Date(order.production_start_time).getTime();
                                 const now = Date.now();
                                 const diffMinutes = Math.floor((now - startTime) / (1000 * 60));
-                                if (diffMinutes < 60) return `${diffMinutes} ${t('filmOperator.minutes')}`;
+                                if (diffMinutes < 60) return `${diffMinutes} دقيقة`;
                                 const hours = Math.floor(diffMinutes / 60);
                                 const minutes = diffMinutes % 60;
-                                return `${hours}${t('filmOperator.hours')} ${minutes}${t('filmOperator.mins')}`;
+                                return `${hours}س ${minutes}د`;
                               })()}
                             </span>
                           </div>
@@ -359,54 +366,55 @@ export default function FilmOperatorDashboard() {
                       </div>
 
                       {/* Display Rolls for this order */}
-                      {order.rolls_count >{t('pages.FilmOperatorDashboard.0_&&_(')}<div className={t("pages.filmoperatordashboard.name.space_y_2")}>
-                          <div className={t("pages.filmoperatordashboard.name.flex_items_center_justify_between")}>
+                      {order.rolls_count > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
                             <button
                               onClick={() => toggleOrderExpansion(order.id)}
-                              className={t("pages.filmoperatordashboard.name.text_sm_font_medium_text_blue_600_dark_text_blue_400_hover_underline_flex_items_center_gap_1")}
+                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
                               data-testid={`button-toggle-rolls-${order.id}`}
                             >
-                              {expandedOrders.has(order.id) ? '▼' : '◀'} {t('filmOperator.viewRolls')} ({order.rolls_count})
+                              {expandedOrders.has(order.id) ? '▼' : '◀'} عرض الرولات ({order.rolls_count})
                             </button>
                           </div>
                           
                           {expandedOrders.has(order.id) && (
-                            <div className={t("pages.filmoperatordashboard.name.grid_grid_cols_2_md_grid_cols_3_gap_2_mt_2")}>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                               {allRolls
                                 .filter(roll => roll.production_order_id === order.id)
                                 .sort((a, b) => a.roll_seq - b.roll_seq)
                                 .map((roll) => (
                                   <div
                                     key={roll.id}
-                                    className={t("pages.filmoperatordashboard.name.bg_blue_50_dark_bg_blue_900_20_border_border_blue_200_dark_border_blue_800_rounded_lg_p_3_hover_shadow_md_transition_shadow")}
+                                    className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 hover:shadow-md transition-shadow"
                                     data-testid={`roll-card-${roll.id}`}
                                   >
-                                    <div className={t("pages.filmoperatordashboard.name.flex_items_start_justify_between_mb_2")}>
-                                      <div className={t("pages.filmoperatordashboard.name.flex_1")}>
-                                        <div className={t("pages.filmoperatordashboard.name.font_bold_text_sm_text_blue_900_dark_text_blue_100")} data-testid={`roll-number-${roll.id}`}>
+                                    <div className="flex items-start justify-between mb-2">
+                                      <div className="flex-1">
+                                        <div className="font-bold text-sm text-blue-900 dark:text-blue-100" data-testid={`roll-number-${roll.id}`}>
                                           {roll.roll_number}
                                         </div>
-                                        <div className={t("pages.filmoperatordashboard.name.text_xs_text_blue_700_dark_text_blue_300_mt_1")}>
-                                          {t('filmOperator.rollHash')}{roll.roll_seq}
+                                        <div className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                                          الرول #{roll.roll_seq}
                                         </div>
                                       </div>
                                       <Badge 
                                         variant="secondary" 
-                                        className={t("pages.filmoperatordashboard.name.text_xs_bg_blue_100_dark_bg_blue_800_text_blue_800_dark_text_blue_100")}
+                                        className="text-xs bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100"
                                       >
                                         {roll.status}
                                       </Badge>
                                     </div>
                                     
-                                    <div className={t("pages.filmoperatordashboard.name.space_y_1_text_xs")}>
-                                      <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_1_text_blue_800_dark_text_blue_200")}>
-                                        <Package className={t("pages.filmoperatordashboard.name.h_3_w_3")} />
-                                        <span className={t("pages.filmoperatordashboard.name.font_medium")}>{formatNumberAr(Number(roll.weight_kg))} كجم</span>
+                                    <div className="space-y-1 text-xs">
+                                      <div className="flex items-center gap-1 text-blue-800 dark:text-blue-200">
+                                        <Package className="h-3 w-3" />
+                                        <span className="font-medium">{formatNumberAr(Number(roll.weight_kg))} كجم</span>
                                       </div>
                                       
                                       {roll.created_by_name && (
-                                        <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_1_text_blue_700_dark_text_blue_300")}>
-                                          <User className={t("pages.filmoperatordashboard.name.h_3_w_3")} />
+                                        <div className="flex items-center gap-1 text-blue-700 dark:text-blue-300">
+                                          <User className="h-3 w-3" />
                                           <span>{roll.created_by_name}</span>
                                         </div>
                                       )}
@@ -416,11 +424,11 @@ export default function FilmOperatorDashboard() {
                                       onClick={() => handlePrintLabel(roll)}
                                       size="sm"
                                       variant="outline"
-                                      className={t("pages.filmoperatordashboard.name.w_full_mt_2_h_7_text_xs_bg_white_dark_bg_gray_800_border_blue_300_dark_border_blue_700_hover_bg_blue_50_dark_hover_bg_blue_900_30")}
+                                      className="w-full mt-2 h-7 text-xs bg-white dark:bg-gray-800 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30"
                                       data-testid={`button-print-label-${roll.id}`}
                                     >
-                                      <Printer className={t("pages.filmoperatordashboard.name.h_3_w_3_ml_1")} />
-                                      {t('production.printLabel')}
+                                      <Printer className="h-3 w-3 ml-1" />
+                                      طباعة ملصق
                                     </Button>
                                   </div>
                                 ))}
@@ -430,42 +438,43 @@ export default function FilmOperatorDashboard() {
                       )}
 
                       {/* Action Buttons */}
-                      <div className={t("pages.filmoperatordashboard.name.flex_gap_2_pt_2")}>
+                      <div className="flex gap-2 pt-2">
                         {!isComplete && (
                           <>
                             <Button
                               onClick={() => handleCreateRoll(order, false)}
-                              className={t("pages.filmoperatordashboard.name.flex_1")}
+                              className="flex-1"
                               variant="default"
                               data-testid={`button-create-roll-${order.id}`}
                             >
-                              <Plus className={t("pages.filmoperatordashboard.name.h_4_w_4_ml_2")} />
-                              {t('filmOperator.createNewRoll')}
+                              <Plus className="h-4 w-4 ml-2" />
+                              إنشاء رول جديد
                             </Button>
                             
-                            {order.rolls_count >{t('pages.FilmOperatorDashboard.0_&&_(')}<Button
+                            {order.rolls_count > 0 && (
+                              <Button
                                 onClick={() => handleCreateRoll(order, true)}
                                 variant="destructive"
                                 data-testid={`button-final-roll-${order.id}`}
                               >
-                                <Flag className={t("pages.filmoperatordashboard.name.h_4_w_4_ml_2")} />
-                                {t('filmOperator.finalRoll')}
+                                <Flag className="h-4 w-4 ml-2" />
+                                آخر رول
                               </Button>
                             )}
                           </>
                         )}
                         
                         {isComplete && (
-                          <div className={t("pages.filmoperatordashboard.name.flex_1_bg_green_50_dark_bg_green_900_20_border_border_green_200_dark_border_green_800_rounded_lg_p_3")}>
-                            <div className={t("pages.filmoperatordashboard.name.flex_items_center_gap_2")}>
-                              <CheckCircle2 className={t("pages.filmoperatordashboard.name.h_4_w_4_text_green_600_dark_text_green_400")} />
-                              <div className={t("pages.filmoperatordashboard.name.text_sm")}>
-                                <p className={t("pages.filmoperatordashboard.name.font_medium_text_green_900_dark_text_green_100")}>
-                                  {t('production.filmComplete')}
+                          <div className="flex-1 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                              <div className="text-sm">
+                                <p className="font-medium text-green-900 dark:text-green-100">
+                                  تم إكمال مرحلة الفيلم
                                 </p>
                                 {order.production_time_minutes && (
-                                  <p className={t("pages.filmoperatordashboard.name.text_xs_text_green_700_dark_text_green_300")}>
-                                    {t('filmOperator.totalProductionTime')}: {order.production_time_minutes} {t('filmOperator.minutes')}
+                                  <p className="text-xs text-green-700 dark:text-green-300">
+                                    وقت الإنتاج الكلي: {order.production_time_minutes} دقيقة
                                   </p>
                                 )}
                               </div>
@@ -482,7 +491,7 @@ export default function FilmOperatorDashboard() {
             </TabsContent>
 
             {/* Material Mixing Tab */}
-            <TabsContent value="mixing" className={t("pages.filmoperatordashboard.name.space_y_6")}>
+            <TabsContent value="mixing" className="space-y-6">
               <FilmMaterialMixingTab />
             </TabsContent>
           </Tabs>

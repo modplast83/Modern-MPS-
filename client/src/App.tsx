@@ -46,10 +46,10 @@ function AppRoutes() {
 
   if (isLoading) {
     return (
-      <div className={t("app.name.min_h_screen_flex_items_center_justify_center")}>
-        <div className={t("app.name.text_center")}>
-          <div className={t("app.name.animate_spin_rounded_full_h_12_w_12_border_b_2_border_primary_mx_auto_mb_4")}></div>
-          <p className={t("app.name.text_muted_foreground")}>{t('App.جاري_التحميل...')}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">جاري التحميل...</p>
         </div>
       </div>
     );

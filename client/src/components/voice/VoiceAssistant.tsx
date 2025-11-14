@@ -43,7 +43,11 @@ type ArabicDialect = "standard" | "egyptian" | "gulf" | "levantine" | "maghreb";
 
 export function VoiceAssistant() {
   const [isEnabled, setIsEnabled] = useState(false);
-  const [language, setLanguage] = useState<"ar-SA" | "en-US">{t('components.voice.VoiceAssistant.("ar-sa");_const_[selecteddialect,_setselecteddialect]_=_usestate')}<ArabicDialect>{t('components.voice.VoiceAssistant.("standard");_const_[commandhistory,_setcommandhistory]_=_usestate')}<VoiceCommand[]>{t('components.voice.VoiceAssistant.([]);_const_[currentresponse,_setcurrentresponse]_=_usestate')}<string>("");
+  const [language, setLanguage] = useState<"ar-SA" | "en-US">("ar-SA");
+  const [selectedDialect, setSelectedDialect] =
+    useState<ArabicDialect>("standard");
+  const [commandHistory, setCommandHistory] = useState<VoiceCommand[]>([]);
+  const [currentResponse, setCurrentResponse] = useState<string>("");
 
   const queryClient = useQueryClient();
 
@@ -215,11 +219,11 @@ export function VoiceAssistant() {
 
   if (!hasRecognitionSupport || !isSpeechSupported) {
     return (
-      <Card className={t("components.voice.voiceassistant.name.w_full_max_w_md")}>
-        <CardContent className={t("components.voice.voiceassistant.name.pt_6")}>
-          <div className={t("components.voice.voiceassistant.name.text_center_text_muted_foreground")}>
-            <AlertCircle className={t("components.voice.voiceassistant.name.mx_auto_h_8_w_8_mb_2")} />
-            <p className={t("components.voice.voiceassistant.name.text_sm")}>
+      <Card className="w-full max-w-md">
+        <CardContent className="pt-6">
+          <div className="text-center text-muted-foreground">
+            <AlertCircle className="mx-auto h-8 w-8 mb-2" />
+            <p className="text-sm">
               {language === "ar-SA"
                 ? "المتصفح لا يدعم الأوامر الصوتية"
                 : "Voice commands not supported in this browser"}
@@ -231,17 +235,17 @@ export function VoiceAssistant() {
   }
 
   return (
-    <div className={t("components.voice.voiceassistant.name.space_y_4")}>
+    <div className="space-y-4">
       {/* Main Voice Control */}
-      <Card className={t("components.voice.voiceassistant.name.w_full")}>
-        <CardHeader className={t("components.voice.voiceassistant.name.pb_3")}>
-          <div className={t("components.voice.voiceassistant.name.flex_items_center_justify_between")}>
-            <CardTitle className={t("components.voice.voiceassistant.name.text_lg_flex_items_center_gap_2")}>
-              <MessageSquare className={t("components.voice.voiceassistant.name.h_5_w_5")} />
+      <Card className="w-full">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MessageSquare className="h-5 w-5" />
               {language === "ar-SA" ? "المساعد الصوتي" : "Voice Assistant"}
             </CardTitle>
 
-            <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_2")}>
+            <div className="flex items-center gap-2">
               {/* Dialect Selector for Arabic */}
               {language === "ar-SA" && (
                 <Select
@@ -250,16 +254,16 @@ export function VoiceAssistant() {
                     handleDialectChange(value)
                   }
                 >
-                  <SelectTrigger className={t("components.voice.voiceassistant.name.w_140px_h_8")}>
-                    <Globe className={t("components.voice.voiceassistant.name.h_4_w_4_mr_1")} />
+                  <SelectTrigger className="w-[140px] h-8">
+                    <Globe className="h-4 w-4 mr-1" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="standard">{t('components.voice.VoiceAssistant.العربية_الفصحى')}</SelectItem>
-                    <SelectItem value="egyptian">{t('components.voice.VoiceAssistant.المصرية')}</SelectItem>
-                    <SelectItem value="gulf">{t('components.voice.VoiceAssistant.الخليجية')}</SelectItem>
-                    <SelectItem value="levantine">{t('components.voice.VoiceAssistant.الشامية')}</SelectItem>
-                    <SelectItem value="maghreb">{t('components.voice.VoiceAssistant.المغاربية')}</SelectItem>
+                    <SelectItem value="standard">العربية الفصحى</SelectItem>
+                    <SelectItem value="egyptian">المصرية</SelectItem>
+                    <SelectItem value="gulf">الخليجية</SelectItem>
+                    <SelectItem value="levantine">الشامية</SelectItem>
+                    <SelectItem value="maghreb">المغاربية</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -268,9 +272,9 @@ export function VoiceAssistant() {
                 variant="outline"
                 size="sm"
                 onClick={toggleLanguage}
-                className={t("components.voice.voiceassistant.name.gap_2")}
+                className="gap-2"
               >
-                <Languages className={t("components.voice.voiceassistant.name.h_4_w_4")} />
+                <Languages className="h-4 w-4" />
                 {language === "ar-SA" ? "عربي" : "EN"}
               </Button>
 
@@ -278,9 +282,9 @@ export function VoiceAssistant() {
                 variant={isEnabled ? "default" : "outline"}
                 size="sm"
                 onClick={toggleVoiceAssistant}
-                className={t("components.voice.voiceassistant.name.gap_2")}
+                className="gap-2"
               >
-                <Settings className={t("components.voice.voiceassistant.name.h_4_w_4")} />
+                <Settings className="h-4 w-4" />
                 {isEnabled
                   ? language === "ar-SA"
                     ? "مفعل"
@@ -293,22 +297,24 @@ export function VoiceAssistant() {
           </div>
         </CardHeader>
 
-        <CardContent className={t("components.voice.voiceassistant.name.space_y_4")}>
+        <CardContent className="space-y-4">
           {/* Voice Input Control */}
-          <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_3")}>
+          <div className="flex items-center gap-3">
             <Button
               variant={isListening ? "destructive" : "default"}
               size="lg"
               onClick={handleVoiceInput}
               disabled={!isEnabled || aiMutation.isPending}
-              className={t("components.voice.voiceassistant.name.gap_2")}
+              className="gap-2"
             >
               {isListening ? (
                 <>
-                  <MicOff className={t("components.voice.voiceassistant.name.h_5_w_5")} />
+                  <MicOff className="h-5 w-5" />
                   {language === "ar-SA" ? "إيقاف" : "Stop"}
-                </>{t('components.voice.VoiceAssistant.)_:_(')}<>
-                  <Mic className={t("components.voice.voiceassistant.name.h_5_w_5")} />
+                </>
+              ) : (
+                <>
+                  <Mic className="h-5 w-5" />
                   {language === "ar-SA" ? "تحدث" : "Speak"}
                 </>
               )}
@@ -318,16 +324,16 @@ export function VoiceAssistant() {
               <Button
                 variant="outline"
                 onClick={stopSpeaking}
-                className={t("components.voice.voiceassistant.name.gap_2")}
+                className="gap-2"
               >
-                <VolumeX className={t("components.voice.voiceassistant.name.h_4_w_4")} />
+                <VolumeX className="h-4 w-4" />
                 {language === "ar-SA" ? "إيقاف الصوت" : "Stop Audio"}
               </Button>
             )}
 
             {aiMutation.isPending && (
-              <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_2_text_sm_text_muted_foreground")}>
-                <Loader2 className={t("components.voice.voiceassistant.name.h_4_w_4_animate_spin")} />
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
                 {language === "ar-SA" ? "جاري المعالجة..." : "Processing..."}
               </div>
             )}
@@ -335,18 +341,19 @@ export function VoiceAssistant() {
 
           {/* Live Transcript */}
           {(transcript || isListening) && (
-            <div className={t("components.voice.voiceassistant.name.p_3_bg_muted_rounded_lg")}>
-              <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_2_mb_2")}>
-                <Mic className={t("components.voice.voiceassistant.name.h_4_w_4_text_blue_500")} />
-                <span className={t("components.voice.voiceassistant.name.text_sm_font_medium")}>
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Mic className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium">
                   {language === "ar-SA" ? "النص المسموع:" : "Transcript:"}
                 </span>
-                {confidence >{t('components.voice.VoiceAssistant.0_&&_(')}<Badge variant="secondary" className={t("components.voice.voiceassistant.name.text_xs")}>
+                {confidence > 0 && (
+                  <Badge variant="secondary" className="text-xs">
                     {Math.round(confidence * 100)}%
                   </Badge>
                 )}
               </div>
-              <p className={t("components.voice.voiceassistant.name.text_sm")}>
+              <p className="text-sm">
                 {transcript ||
                   (language === "ar-SA" ? "استمع..." : "Listening...")}
               </p>
@@ -355,60 +362,69 @@ export function VoiceAssistant() {
 
           {/* Current Response */}
           {currentResponse && (
-            <div className={t("components.voice.voiceassistant.name.p_3_bg_blue_50_dark_bg_blue_950_rounded_lg")}>
-              <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_2_mb_2")}>
-                <Volume2 className={t("components.voice.voiceassistant.name.h_4_w_4_text_blue_500")} />
-                <span className={t("components.voice.voiceassistant.name.text_sm_font_medium_text_blue_700_dark_text_blue_300")}>
+            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <Volume2 className="h-4 w-4 text-blue-500" />
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
                   {language === "ar-SA" ? "رد المساعد:" : "Assistant Response:"}
                 </span>
               </div>
-              <p className={t("components.voice.voiceassistant.name.text_sm_text_blue_800_dark_text_blue_200")}>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
                 {currentResponse}
               </p>
             </div>
           )}
 
           {/* Voice Commands Help with Dialect Examples */}
-          <div className={t("components.voice.voiceassistant.name.text_xs_text_muted_foreground")}>
-            <p className={t("components.voice.voiceassistant.name.font_medium_mb_1")}>
+          <div className="text-xs text-muted-foreground">
+            <p className="font-medium mb-1">
               {language === "ar-SA"
                 ? "أمثلة على الأوامر الصوتية:"
                 : "Voice command examples:"}
             </p>
-            <ul className={t("components.voice.voiceassistant.name.space_y_1")}>
+            <ul className="space-y-1">
               {language === "ar-SA" ? (
                 selectedDialect === "egyptian" ? (
                   <>
-                    <li>{t('components.voice.VoiceAssistant.•_"وريني_إحصائيات_الإنتاج"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"روح_لصفحة_الطلبات"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"إيه_حالة_المكن؟"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"اعمل_طلب_جديد"')}</li>
-                  </>{t('components.voice.VoiceAssistant.)_:_selecteddialect_===_"gulf"_?_(')}<>
-                    <li>{t('components.voice.VoiceAssistant.•_"خلني_أشوف_إحصائيات_الإنتاج"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"روح_لصفحة_الطلبيات"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"شلون_حالة_المكائن؟"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"سوي_طلب_جديد"')}</li>
-                  </>{t('components.voice.VoiceAssistant.)_:_selecteddialect_===_"levantine"_?_(')}<>
-                    <li>{t('components.voice.VoiceAssistant.•_"فيني_شوف_إحصائيات_الإنتاج"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"روح_عصفحة_الطلبات"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"شو_وضع_المكائن؟"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"اعمل_طلب_جديد"')}</li>
-                  </>{t('components.voice.VoiceAssistant.)_:_(')}<>
-                    <li>{t('components.voice.VoiceAssistant.•_"اعرض_لي_إحصائيات_الإنتاج"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"انتقل_إلى_صفحة_الطلبات"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"ما_هي_حالة_المكائن؟"')}</li>
-                    <li>{t('components.voice.VoiceAssistant.•_"أضف_طلب_جديد"')}</li>
-                  </>{t('components.voice.VoiceAssistant.)_)_:_(')}<>
-                  <li>{t('components.voice.VoiceAssistant.•_"show_production_statistics"')}</li>
-                  <li>{t('components.voice.VoiceAssistant.•_"go_to_orders_page"')}</li>
-                  <li>{t('components.voice.VoiceAssistant.•_"what_is_the_machine_status?"')}</li>
-                  <li>{t('components.voice.VoiceAssistant.•_"add_new_order"')}</li>
+                    <li>• "وريني إحصائيات الإنتاج"</li>
+                    <li>• "روح لصفحة الطلبات"</li>
+                    <li>• "إيه حالة المكن؟"</li>
+                    <li>• "اعمل طلب جديد"</li>
+                  </>
+                ) : selectedDialect === "gulf" ? (
+                  <>
+                    <li>• "خلني أشوف إحصائيات الإنتاج"</li>
+                    <li>• "روح لصفحة الطلبيات"</li>
+                    <li>• "شلون حالة المكائن؟"</li>
+                    <li>• "سوي طلب جديد"</li>
+                  </>
+                ) : selectedDialect === "levantine" ? (
+                  <>
+                    <li>• "فيني شوف إحصائيات الإنتاج"</li>
+                    <li>• "روح عصفحة الطلبات"</li>
+                    <li>• "شو وضع المكائن؟"</li>
+                    <li>• "اعمل طلب جديد"</li>
+                  </>
+                ) : (
+                  <>
+                    <li>• "اعرض لي إحصائيات الإنتاج"</li>
+                    <li>• "انتقل إلى صفحة الطلبات"</li>
+                    <li>• "ما هي حالة المكائن؟"</li>
+                    <li>• "أضف طلب جديد"</li>
+                  </>
+                )
+              ) : (
+                <>
+                  <li>• "Show production statistics"</li>
+                  <li>• "Go to orders page"</li>
+                  <li>• "What is the machine status?"</li>
+                  <li>• "Add new order"</li>
                 </>
               )}
             </ul>
 
             {language === "ar-SA" && selectedDialect !== "standard" && (
-              <p className={t("components.voice.voiceassistant.name.mt_2_text_xs_text_blue_600_dark_text_blue_400")}>
+              <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
                 💡 يمكنك استخدام اللهجة{" "}
                 {selectedDialect === "egyptian"
                   ? "المصرية"
@@ -425,31 +441,32 @@ export function VoiceAssistant() {
       </Card>
 
       {/* Command History */}
-      {commandHistory.length >{t('components.voice.VoiceAssistant.0_&&_(')}<Card>
-          <CardHeader className={t("components.voice.voiceassistant.name.pb_3")}>
-            <CardTitle className={t("components.voice.voiceassistant.name.text_base")}>
+      {commandHistory.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">
               {language === "ar-SA" ? "سجل الأوامر" : "Command History"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={t("components.voice.voiceassistant.name.space_y_2_max_h_60_overflow_y_auto")}>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
               {commandHistory.map((cmd, index) => (
-                <div key={index} className={t("components.voice.voiceassistant.name.p_2_bg_muted_rounded_text_sm")}>
-                  <div className={t("components.voice.voiceassistant.name.flex_items_center_justify_between_mb_1")}>
-                    <span className={t("components.voice.voiceassistant.name.font_medium")}>{cmd.command}</span>
-                    <div className={t("components.voice.voiceassistant.name.flex_items_center_gap_1")}>
-                      <Badge variant="outline" className={t("components.voice.voiceassistant.name.text_xs")}>
+                <div key={index} className="p-2 bg-muted rounded text-sm">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium">{cmd.command}</span>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-xs">
                         {Math.round(cmd.confidence * 100)}%
                       </Badge>
-                      <CheckCircle className={t("components.voice.voiceassistant.name.h_3_w_3_text_green_500")} />
+                      <CheckCircle className="h-3 w-3 text-green-500" />
                     </div>
                   </div>
                   {cmd.response && (
-                    <p className={t("components.voice.voiceassistant.name.text_muted_foreground_text_xs")}>
+                    <p className="text-muted-foreground text-xs">
                       {cmd.response}
                     </p>
                   )}
-                  <span className={t("components.voice.voiceassistant.name.text_xs_text_muted_foreground")}>
+                  <span className="text-xs text-muted-foreground">
                     {cmd.timestamp.toLocaleTimeString()}
                   </span>
                 </div>

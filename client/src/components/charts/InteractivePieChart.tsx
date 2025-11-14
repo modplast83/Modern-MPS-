@@ -7,7 +7,6 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { useTranslation } from "react-i18next";
 
 interface InteractivePieChartProps {
   data: any[];
@@ -38,21 +37,21 @@ const COLORS = [
   "#6b7280", // gray
 ];
 
-const CustomTooltip = ({ active, payload, formatValue, t }: any) => {
+const CustomTooltip = ({ active, payload, formatValue }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0];
     return (
       <div
-        className={t("components.charts.interactivepiechart.name.bg_white_p_3_border_border_gray_300_rounded_lg_shadow_lg")}
+        className="bg-white p-3 border border-gray-300 rounded-lg shadow-lg"
         dir="rtl"
       >
-        <p className={t("components.charts.interactivepiechart.name.font_medium_text_gray_900")}>{data.name}</p>
-        <p className={t("components.charts.interactivepiechart.name.text_sm")} style={{ color: data.fill }}>
-          {`${t('charts.value')}: ${formatValue ? formatValue(data.value) : data.value}`}
+        <p className="font-medium text-gray-900">{data.name}</p>
+        <p className="text-sm" style={{ color: data.fill }}>
+          {`القيمة: ${formatValue ? formatValue(data.value) : data.value}`}
         </p>
         {data.payload.percentage && (
-          <p className={t("components.charts.interactivepiechart.name.text_sm_text_gray_600")}>
-            {`${t('charts.percentage')}: ${data.payload.percentage.toFixed(1)}%`}
+          <p className="text-sm text-gray-600">
+            {`النسبة: ${data.payload.percentage.toFixed(1)}%`}
           </p>
         )}
       </div>
@@ -107,8 +106,6 @@ export function InteractivePieChart({
   innerRadius = 0,
   outerRadius = 80,
 }: InteractivePieChartProps) {
-  const { t } = useTranslation();
-  
   // Calculate percentages
   const total = data.reduce((sum, item) => sum + (item[valueKey] || 0), 0);
   const dataWithPercentages = data.map((item) => ({
@@ -120,14 +117,14 @@ export function InteractivePieChart({
     <Card className={`${className}`} data-testid="chart-interactive-pie">
       <CardHeader>
         <CardTitle
-          className={t("components.charts.interactivepiechart.name.text_lg_font_semibold_text_gray_900")}
+          className="text-lg font-semibold text-gray-900"
           data-testid="text-chart-title"
         >
           {title}
         </CardTitle>
         {description && (
           <p
-            className={t("components.charts.interactivepiechart.name.text_sm_text_gray_600")}
+            className="text-sm text-gray-600"
             data-testid="text-chart-description"
           >
             {description}
@@ -156,14 +153,14 @@ export function InteractivePieChart({
                 />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip formatValue={formatValue} t={t} />} />
+            <Tooltip content={<CustomTooltip formatValue={formatValue} />} />
             {showLegend && (
               <Legend
                 verticalAlign="bottom"
                 height={36}
                 iconType="circle"
                 formatter={(value) => (
-                  <span className={t("components.charts.interactivepiechart.name.text_sm_text_gray_700")}>{value}</span>
+                  <span className="text-sm text-gray-700">{value}</span>
                 )}
               />
             )}

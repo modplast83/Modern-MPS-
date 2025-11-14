@@ -21,14 +21,18 @@ const alertVariants = cva(
 
 const Alert = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>{t('components.ui.alert.&_variantprops')}<typeof alertVariants>
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
 >(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
     role="alert"
     className={cn(alertVariants({ variant }), className)}
     {...props}
-  />{t('components.ui.alert.));_alert.displayname_=_"alert";_const_alerttitle_=_react.forwardref')}<
+  />
+));
+Alert.displayName = "Alert";
+
+const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
@@ -36,7 +40,11 @@ const Alert = React.forwardRef<
     ref={ref}
     className={cn("mb-1 font-medium leading-none tracking-tight", className)}
     {...props}
-  />{t('components.ui.alert.));_alerttitle.displayname_=_"alerttitle";_const_alertdescription_=_react.forwardref')}<
+  />
+));
+AlertTitle.displayName = "AlertTitle";
+
+const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (
@@ -46,6 +54,6 @@ const Alert = React.forwardRef<
     {...props}
   />
 ));
-AlertDescription.displayName={t("components.ui.alert.name.alertdescription")};
+AlertDescription.displayName = "AlertDescription";
 
 export { Alert, AlertTitle, AlertDescription };

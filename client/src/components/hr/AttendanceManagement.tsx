@@ -41,11 +41,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "../../hooks/use-toast";
 import { format } from "date-fns";
-import { useTranslation } from 'react-i18next';
 
-const createAttendanceSchema = (t: any) => z.object({
-  user_id: z.number().min(1, t('common.required')),
-  status: z.string().min(1, t('common.required')),
+const attendanceSchema = z.object({
+  user_id: z.number().min(1, "الموظف مطلوب"),
+  status: z.string().min(1, "الحالة مطلوبة"),
   notes: z.string().optional(),
 });
 
@@ -67,7 +66,6 @@ interface AttendanceRecord {
 }
 
 export default function AttendanceManagement() {
-  const { t } = useTranslation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState<
     AttendanceRecord | null
@@ -75,11 +73,11 @@ export default function AttendanceManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const attendanceSchema = useMemo(() =>{t('components.hr.AttendanceManagement.createattendanceschema(t),_[t]);_const_form_=_useform')}<z.infer<ReturnType<typeof createAttendanceSchema>>>({
+  const form = useForm<z.infer<typeof attendanceSchema>>({
     resolver: zodResolver(attendanceSchema),
     defaultValues: {
       user_id: 0,
-      status: t('hr.absent'),
+      status: "غائب",
       notes: "",
     },
   });
@@ -93,14 +91,14 @@ export default function AttendanceManagement() {
     queryKey: ["/api/attendance"],
     queryFn: async () => {
       const response = await fetch("/api/attendance");
-      if (!response.ok) throw new Error(t('errors.fetchError'));
+      if (!response.ok) throw new Error("فشل في جلب بيانات الحضور");
       return response.json();
     },
     onError: (err: any) => {
       toast({
-        title: t('common.error'),
+        title: "خطأ",
         description:
-          err instanceof Error ? err.message : t('errors.fetchError'),
+          err instanceof Error ? err.message : "فشل في جلب بيانات الحضور",
         variant: "destructive",
       });
     },
@@ -112,14 +110,14 @@ export default function AttendanceManagement() {
       queryKey: ["/api/users"],
       queryFn: async () => {
         const response = await fetch("/api/users");
-        if (!response.ok) throw new Error(t('errors.fetchError'));
+        if (!response.ok) throw new Error("فشل في جلب بيانات المستخدمين");
         return response.json();
       },
       onError: (err: any) => {
         toast({
-          title: t('common.error'),
+          title: "خطأ",
           description:
-            err instanceof Error ? err.message : t('errors.fetchError'),
+            err instanceof Error ? err.message : "فشل في جلب بيانات المستخدمين",
           variant: "destructive",
         });
       },
@@ -127,7 +125,7 @@ export default function AttendanceManagement() {
 
   // Attendance mutation
   const attendanceMutation = useMutation({
-    mutationFn: async (data: z.infer<ReturnType<typeof createAttendanceSchema>>) => {
+    mutationFn: async (data: z.infer<typeof attendanceSchema>) => {
       const url = editingAttendance
         ? `/api/attendance/${editingAttendance.id}`
         : `/api/attendance`;
@@ -139,7 +137,7 @@ export default function AttendanceManagement() {
         body: JSON.stringify(data),
       });
 
-      if (!response.ok) throw new Error(t('errors.savingError'));
+      if (!response.ok) throw new Error("فشل في حفظ بيانات الحضور");
       return response.json();
     },
     onSuccess: () => {
@@ -148,27 +146,27 @@ export default function AttendanceManagement() {
       setEditingAttendance(null);
       form.reset({
         user_id: 0,
-        status: t('hr.absent'),
+        status: "غائب",
         notes: "",
       });
       toast({
-        title: t('toast.successSaved'),
+        title: "تم الحفظ بنجاح",
         description: editingAttendance
-          ? t('hr.attendanceUpdated', 'تم تحديث حالة الحضور')
-          : t('hr.attendanceRecorded'),
+          ? "تم تحديث حالة الحضور"
+          : "تم تسجيل حالة الحضور",
       });
     },
     onError: (error: any) => {
       toast({
-        title: t('common.error'),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t('errors.savingError'),
+          error instanceof Error ? error.message : "فشل في حفظ البيانات",
         variant: "destructive",
       });
     },
   });
 
-  const onSubmit = (data: z.infer<ReturnType<typeof createAttendanceSchema>>) => {
+  const onSubmit = (data: z.infer<typeof attendanceSchema>) => {
     attendanceMutation.mutate(data);
   };
 
@@ -184,48 +182,49 @@ export default function AttendanceManagement() {
     setEditingAttendance(null);
     form.reset({
       user_id: 0,
-      status: t('hr.absent'),
+      status: "غائب",
       notes: "",
     });
     setIsDialogOpen(true);
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: string; icon: any; color: string }> = {
-      [t('hr.present')]: {
-        label: t('hr.present'),
-        variant: "default",
+    const statusMap = {
+      حاضر: {
+        label: "حاضر",
+        variant: "default" as const,
         icon: UserCheck,
         color: "bg-green-100 text-green-800",
       },
-      [t('hr.absent')]: {
-        label: t('hr.absent'),
-        variant: "destructive",
+      غائب: {
+        label: "غائب",
+        variant: "destructive" as const,
         icon: UserX,
         color: "bg-red-100 text-red-800",
       },
-      [t('hr.breakStart')]: {
-        label: t('hr.breakStart'),
-        variant: "secondary",
+      "استراحة غداء": {
+        label: "استراحة غداء",
+        variant: "secondary" as const,
         icon: Coffee,
         color: "bg-orange-100 text-orange-800",
       },
-      [t('hr.checkOut')]: {
-        label: t('hr.checkOut'),
-        variant: "outline",
+      مغادر: {
+        label: "مغادر",
+        variant: "outline" as const,
         icon: LogOut,
         color: "bg-gray-100 text-gray-800",
       },
     };
 
-    const statusInfo = statusMap[status] || statusMap[t('hr.absent')];
+    const statusInfo =
+      (statusMap as any)[status as keyof typeof statusMap] || statusMap["غائب"];
     const IconComponent = statusInfo.icon;
 
     return (
       <div
         className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
       >
-        <IconComponent className={t("components.hr.attendancemanagement.name.h_4_w_4")} />
+        <IconComponent className="h-4 w-4" />
         {statusInfo.label}
       </div>
     );
@@ -263,62 +262,62 @@ export default function AttendanceManagement() {
       );
       return {
         ...user,
-        attendance: userAttendance || { status: t('hr.absent'), user_id: user.id },
+        attendance: userAttendance || { status: "غائب", user_id: user.id },
       };
     });
-  }, [users, todayAttendance, t]);
+  }, [users, todayAttendance]);
 
   const userIdWatched = form.watch("user_id");
   const isSubmitDisabled =
     attendanceMutation.isPending || Number(userIdWatched) <= 0;
 
   return (
-    <div className={t("components.hr.attendancemanagement.name.space_y_6")}>
-      <div className={t("components.hr.attendancemanagement.name.flex_justify_between_items_center")}>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_gray_900")}>{t('hr.attendance')}</h2>
-          <p className={t("components.hr.attendancemanagement.name.text_gray_600_mt_1")}>
-            {t('hr.attendanceManagement', 'متابعة حضور الموظفين وحالاتهم اليومية')}
+          <h2 className="text-2xl font-bold text-gray-900">إدارة الحضور</h2>
+          <p className="text-gray-600 mt-1">
+            متابعة حضور الموظفين وحالاتهم اليومية
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={handleAdd}>
-              <Clock className={t("components.hr.attendancemanagement.name.h_4_w_4_mr_2")} />
-              {t('hr.recordAttendance')}
+              <Clock className="h-4 w-4 mr-2" />
+              تسجيل حضور
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
-                {editingAttendance ? t('hr.editAttendance', 'تعديل حالة الحضور') : t('hr.recordAttendance')}
+                {editingAttendance ? "تعديل حالة الحضور" : "تسجيل حضور جديد"}
               </DialogTitle>
               <DialogDescription>
                 {editingAttendance
-                  ? t('hr.updateAttendanceDesc', 'تحديث حالة حضور الموظف وإضافة ملاحظات')
-                  : t('hr.newAttendanceDesc', 'تسجيل حالة حضور جديدة للموظف مع الملاحظات')}
+                  ? "تحديث حالة حضور الموظف وإضافة ملاحظات"
+                  : "تسجيل حالة حضور جديدة للموظف مع الملاحظات"}
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className={t("components.hr.attendancemanagement.name.space_y_4")}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="{t('components.hr.AttendanceManagement.name.user_id')}"
+                  name="user_id"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('hr.employeeName')}</FormLabel>
+                      <FormLabel>الموظف</FormLabel>
                       <Select
                         onValueChange={(value) => field.onChange(parseInt(value))}
                         value={field.value !== undefined ? String(field.value) : "0"}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('hr.selectEmployee', 'اختر الموظف')} />
+                            <SelectValue placeholder="اختر الموظف" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="0" key="placeholder" disabled>
-                            {t('hr.selectEmployee', 'اختر الموظف')}
+                            اختر الموظف
                           </SelectItem>
                           {users.map((user: User) => (
                             <SelectItem key={user.id} value={String(user.id)}>
@@ -334,23 +333,23 @@ export default function AttendanceManagement() {
 
                 <FormField
                   control={form.control}
-                  name="{t('components.hr.AttendanceManagement.name.status')}"
+                  name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('hr.status')}</FormLabel>
+                      <FormLabel>حالة الحضور</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={t('common.select')} />
+                            <SelectValue placeholder="اختر الحالة" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value={t('hr.present')}>{t('hr.present')}</SelectItem>
-                          <SelectItem value={t('hr.absent')}>{t('hr.absent')}</SelectItem>
-                          <SelectItem value={t('hr.breakStart')}>
-                            {t('hr.breakStart')}
+                          <SelectItem value="حاضر">حاضر</SelectItem>
+                          <SelectItem value="غائب">غائب</SelectItem>
+                          <SelectItem value="استراحة غداء">
+                            استراحة غداء
                           </SelectItem>
-                          <SelectItem value={t('hr.checkOut')}>{t('hr.checkOut')}</SelectItem>
+                          <SelectItem value="مغادر">مغادر</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -360,14 +359,14 @@ export default function AttendanceManagement() {
 
                 <FormField
                   control={form.control}
-                  name="{t('components.hr.AttendanceManagement.name.notes')}"
+                  name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('common.notes')}</FormLabel>
+                      <FormLabel>ملاحظات</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder={t('hr.notesPlaceholder', 'ملاحظات إضافية (اختياري)')}
+                          placeholder="ملاحظات إضافية (اختياري)"
                         />
                       </FormControl>
                       <FormMessage />
@@ -375,21 +374,21 @@ export default function AttendanceManagement() {
                   )}
                 />
 
-                <div className={t("components.hr.attendancemanagement.name.flex_gap_4_pt_4")}>
+                <div className="flex gap-4 pt-4">
                   <Button
                     type="submit"
-                    className={t("components.hr.attendancemanagement.name.flex_1")}
+                    className="flex-1"
                     disabled={isSubmitDisabled}
                   >
-                    {attendanceMutation.isPending ? t('common.saving') : t('common.save')}
+                    {attendanceMutation.isPending ? "جاري الحفظ..." : "حفظ"}
                   </Button>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
-                    className={t("components.hr.attendancemanagement.name.flex_1")}
+                    className="flex-1"
                   >
-                    {t('common.cancel')}
+                    إلغاء
                   </Button>
                 </div>
               </form>
@@ -399,17 +398,17 @@ export default function AttendanceManagement() {
       </div>
 
       {/* Statistics Cards */}
-      <div className={t("components.hr.attendancemanagement.name.grid_grid_cols_1_md_grid_cols_4_gap_4")}>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
-            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
-              <UserCheck className={t("components.hr.attendancemanagement.name.h_8_w_8_text_green_600")} />
-              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
-                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.presentCount', 'الحاضرون')}</p>
-                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_green_600")}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <UserCheck className="h-8 w-8 text-green-600" />
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">الحاضرون</p>
+                <p className="text-2xl font-bold text-green-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) => u.attendance.status === t('hr.present')
+                      (u: AttendanceSummaryItem) => u.attendance.status === "حاضر"
                     ).length
                   }
                 </p>
@@ -419,15 +418,15 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
-            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
-              <UserX className={t("components.hr.attendancemanagement.name.h_8_w_8_text_red_600")} />
-              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
-                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.absentCount', 'الغائبون')}</p>
-                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_red_600")}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <UserX className="h-8 w-8 text-red-600" />
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">الغائبون</p>
+                <p className="text-2xl font-bold text-red-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) => u.attendance.status === t('hr.absent')
+                      (u: AttendanceSummaryItem) => u.attendance.status === "غائب"
                     ).length
                   }
                 </p>
@@ -437,16 +436,16 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
-            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
-              <Coffee className={t("components.hr.attendancemanagement.name.h_8_w_8_text_orange_600")} />
-              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
-                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.breakCount', 'استراحة الغداء')}</p>
-                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_orange_600")}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Coffee className="h-8 w-8 text-orange-600" />
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">استراحة الغداء</p>
+                <p className="text-2xl font-bold text-orange-600">
                   {
                     attendanceSummary.filter(
                       (u: AttendanceSummaryItem) =>
-                        u.attendance.status === t('hr.breakStart')
+                        u.attendance.status === "استراحة غداء"
                     ).length
                   }
                 </p>
@@ -456,15 +455,15 @@ export default function AttendanceManagement() {
         </Card>
 
         <Card>
-          <CardContent className={t("components.hr.attendancemanagement.name.p_6")}>
-            <div className={t("components.hr.attendancemanagement.name.flex_items_center")}>
-              <LogOut className={t("components.hr.attendancemanagement.name.h_8_w_8_text_gray_600")} />
-              <div className={t("components.hr.attendancemanagement.name.mr_4")}>
-                <p className={t("components.hr.attendancemanagement.name.text_sm_font_medium_text_gray_600")}>{t('hr.checkOutCount', 'المغادرون')}</p>
-                <p className={t("components.hr.attendancemanagement.name.text_2xl_font_bold_text_gray_600")}>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <LogOut className="h-8 w-8 text-gray-600" />
+              <div className="mr-4">
+                <p className="text-sm font-medium text-gray-600">المغادرون</p>
+                <p className="text-2xl font-bold text-gray-600">
                   {
                     attendanceSummary.filter(
-                      (u: AttendanceSummaryItem) => u.attendance.status === t('hr.checkOut')
+                      (u: AttendanceSummaryItem) => u.attendance.status === "مغادر"
                     ).length
                   }
                 </p>
@@ -477,52 +476,54 @@ export default function AttendanceManagement() {
       {/* Attendance Table */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('hr.todayAttendance', 'حضور اليوم')} - {format(new Date(), "dd/MM/yyyy")}</CardTitle>
+          <CardTitle>حضور اليوم - {format(new Date(), "dd/MM/yyyy")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.employeeName')}</TableHead>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.user')}</TableHead>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.status')}</TableHead>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.notes')}</TableHead>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('hr.lastUpdate', 'آخر تحديث')}</TableHead>
-                <TableHead className={t("components.hr.attendancemanagement.name.text_center")}>{t('common.actions')}</TableHead>
+                <TableHead className="text-center">الموظف</TableHead>
+                <TableHead className="text-center">اسم المستخدم</TableHead>
+                <TableHead className="text-center">حالة الحضور</TableHead>
+                <TableHead className="text-center">الملاحظات</TableHead>
+                <TableHead className="text-center">آخر تحديث</TableHead>
+                <TableHead className="text-center">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {attendanceLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className={t("components.hr.attendancemanagement.name.text_center_py_8")}>
-                    {t('common.loading')}
+                  <TableCell colSpan={6} className="text-center py-8">
+                    جاري تحميل البيانات...
                   </TableCell>
-                </TableRow>{t('components.hr.AttendanceManagement.)_:_attendancesummary.length_===_0_?_(')}<TableRow>
-                  <TableCell colSpan={6} className={t("components.hr.attendancemanagement.name.text_center_py_8")}>
-                    {t('common.noData')}
+                </TableRow>
+              ) : attendanceSummary.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    لا توجد بيانات حضور
                   </TableCell>
                 </TableRow>
               ) : (
                 attendanceSummary.map((user: AttendanceSummaryItem) => (
                   <TableRow key={user.id}>
-                    <TableCell className={t("components.hr.attendancemanagement.name.font_medium_text_center")}>
+                    <TableCell className="font-medium text-center">
                       {user.display_name_ar || user.display_name || user.username}
                     </TableCell>
-                    <TableCell className={t("components.hr.attendancemanagement.name.text_center_text_gray_500")}>
+                    <TableCell className="text-center text-gray-500">
                       {user.username}
                     </TableCell>
-                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
+                    <TableCell className="text-center">
                       {getStatusBadge(user.attendance.status)}
                     </TableCell>
-                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
+                    <TableCell className="text-center">
                       {user.attendance.notes || "-"}
                     </TableCell>
-                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
+                    <TableCell className="text-center">
                       {user.attendance.updated_at
                         ? format(new Date(user.attendance.updated_at), "HH:mm")
                         : "-"}
                     </TableCell>
-                    <TableCell className={t("components.hr.attendancemanagement.name.text_center")}>
+                    <TableCell className="text-center">
                       <Button
                         variant="outline"
                         size="sm"
@@ -533,13 +534,12 @@ export default function AttendanceManagement() {
                             ) as AttendanceRecord) || {
                               id: 0,
                               user_id: user.id,
-                              status: t('hr.absent'),
+                              status: "غائب",
                             }
                           )
                         }
-                        data-testid={`button-edit-attendance-${user.id}`}
                       >
-                        <Edit className={t("components.hr.attendancemanagement.name.h_4_w_4")} />
+                        <Edit className="h-4 w-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

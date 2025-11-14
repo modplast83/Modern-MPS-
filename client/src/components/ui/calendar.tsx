@@ -63,6 +63,6 @@ function Calendar({
     />
   );
 }
-Calendar.displayName={t("components.ui.calendar.name.calendar")};
+Calendar.displayName = "Calendar";
 
 export { Calendar };

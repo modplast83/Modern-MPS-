@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Card,
   CardContent,
@@ -63,7 +62,6 @@ interface OptimizationResult {
 }
 
 export default function MLAnalytics() {
-  const { t } = useTranslation();
   const [selectedMachine, setSelectedMachine] = useState<number>(1);
   const queryClient = useQueryClient();
 
@@ -158,131 +156,133 @@ export default function MLAnalytics() {
   };
 
   return (
-    <div className={t("pages.ml-analytics.name.container_mx_auto_p_6_space_y_6")} dir="rtl">
-      <div className={t("pages.ml-analytics.name.flex_items_center_justify_between")}>
-        <div className={t("pages.ml-analytics.name.flex_items_center_gap_2")}>
-          <Brain className={t("pages.ml-analytics.name.h_8_w_8_text_blue_600")} />
+    <div className="container mx-auto p-6 space-y-6" dir="rtl">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Brain className="h-8 w-8 text-blue-600" />
           <div>
-            <h1 className={t("pages.ml-analytics.name.text_3xl_font_bold")}>{t('mlAnalytics.title')}</h1>
-            <p className={t("pages.ml-analytics.name.text_muted_foreground")}>
-              {t('mlAnalytics.description')}
+            <h1 className="text-3xl font-bold">تحليلات التعلم الآلي</h1>
+            <p className="text-muted-foreground">
+              تحليل ذكي للإنتاج والتنبؤ بالأداء
             </p>
           </div>
         </div>
 
-        <div className={t("pages.ml-analytics.name.flex_items_center_gap_2")}>
+        <div className="flex items-center gap-2">
           <select
             value={selectedMachine}
             onChange={(e) => setSelectedMachine(Number(e.target.value))}
-            className={t("pages.ml-analytics.name.px_3_py_2_border_rounded_md")}
+            className="px-3 py-2 border rounded-md"
           >
-            <option value={1}>{t('mlAnalytics.machine1')}</option>
-            <option value={2}>{t('mlAnalytics.machine2')}</option>
-            <option value={3}>{t('mlAnalytics.machine3')}</option>
+            <option value={1}>مكينة الإنتاج 1</option>
+            <option value={2}>مكينة الإنتاج 2</option>
+            <option value={3}>مكينة الإنتاج 3</option>
           </select>
 
           <Button
             onClick={() => trainModelMutation.mutate(selectedMachine)}
             disabled={trainModelMutation.isPending}
-            className={t("pages.ml-analytics.name.gap_2")}
+            className="gap-2"
           >
             <RefreshCw
               className={`h-4 w-4 ${trainModelMutation.isPending ? "animate-spin" : ""}`}
             />
-            {t('mlAnalytics.trainModel')}
+            تدريب النموذج
           </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="predictions" className={t("pages.ml-analytics.name.space_y_4")}>
-        <TabsList className={t("pages.ml-analytics.name.grid_w_full_grid_cols_4")}>
-          <TabsTrigger value="predictions" className={t("pages.ml-analytics.name.gap_2")}>
-            <TrendingUp className={t("pages.ml-analytics.name.h_4_w_4")} />
-            {t('mlAnalytics.predictions')}
+      <Tabs defaultValue="predictions" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="predictions" className="gap-2">
+            <TrendingUp className="h-4 w-4" />
+            التنبؤات
           </TabsTrigger>
-          <TabsTrigger value="anomalies" className={t("pages.ml-analytics.name.gap_2")}>
-            <AlertTriangle className={t("pages.ml-analytics.name.h_4_w_4")} />
-            {t('mlAnalytics.anomalyDetection')}
+          <TabsTrigger value="anomalies" className="gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            اكتشاف الشذوذ
           </TabsTrigger>
-          <TabsTrigger value="patterns" className={t("pages.ml-analytics.name.gap_2")}>
-            <BarChart3 className={t("pages.ml-analytics.name.h_4_w_4")} />
-            {t('mlAnalytics.patternAnalysis')}
+          <TabsTrigger value="patterns" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            تحليل الأنماط
           </TabsTrigger>
-          <TabsTrigger value="optimization" className={t("pages.ml-analytics.name.gap_2")}>
-            <Target className={t("pages.ml-analytics.name.h_4_w_4")} />
-            {t('mlAnalytics.optimization')}
+          <TabsTrigger value="optimization" className="gap-2">
+            <Target className="h-4 w-4" />
+            التحسين
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="predictions" className={t("pages.ml-analytics.name.space_y_4")}>
-          <div className={t("pages.ml-analytics.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4")}>
+        <TabsContent value="predictions" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <CardHeader className={t("pages.ml-analytics.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm_font_medium")}>
-                  {t('mlAnalytics.predictedRate')}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  معدل الإنتاج المتوقع
                 </CardTitle>
-                <Activity className={t("pages.ml-analytics.name.h_4_w_4_text_muted_foreground")} />
+                <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {predictionLoading
                     ? "..."
                     : `${predictions?.predictedRate.toFixed(1)}%`}
                 </div>
-                <p className={t("pages.ml-analytics.name.text_xs_text_muted_foreground")}>
-                  {t('mlAnalytics.next24Hours')}
+                <p className="text-xs text-muted-foreground">
+                  للـ 24 ساعة القادمة
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className={t("pages.ml-analytics.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm_font_medium")}>
-                  {t('mlAnalytics.qualityForecast')}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  توقع الجودة
                 </CardTitle>
-                <CheckCircle className={t("pages.ml-analytics.name.h_4_w_4_text_muted_foreground")} />
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {predictionLoading
                     ? "..."
                     : `${predictions?.qualityForecast.toFixed(1)}%`}
                 </div>
-                <p className={t("pages.ml-analytics.name.text_xs_text_muted_foreground")}>
-                  {t('mlAnalytics.expectedQuality')}
+                <p className="text-xs text-muted-foreground">
+                  نسبة الجودة المتوقعة
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className={t("pages.ml-analytics.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm_font_medium")}>
-                  {t('mlAnalytics.maintenanceAlert')}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  تنبيه الصيانة
                 </CardTitle>
-                <Settings className={t("pages.ml-analytics.name.h_4_w_4_text_muted_foreground")} />
+                <Settings className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {predictionLoading ? (
                     "..."
                   ) : predictions?.maintenanceAlert ? (
-                    <XCircle className={t("pages.ml-analytics.name.h_8_w_8_text_red_500")} />{t('pages.ml-analytics.)_:_(')}<CheckCircle className={t("pages.ml-analytics.name.h_8_w_8_text_green_500")} />
+                    <XCircle className="h-8 w-8 text-red-500" />
+                  ) : (
+                    <CheckCircle className="h-8 w-8 text-green-500" />
                   )}
                 </div>
-                <p className={t("pages.ml-analytics.name.text_xs_text_muted_foreground")}>
+                <p className="text-xs text-muted-foreground">
                   {predictions?.maintenanceAlert
-                    ? t('mlAnalytics.maintenanceRequired')
-                    : t('mlAnalytics.noAlerts')}
+                    ? "صيانة مطلوبة"
+                    : "لا يوجد تنبيهات"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
-              <CardHeader className={t("pages.ml-analytics.name.flex_flex_row_items_center_justify_between_space_y_0_pb_2")}>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm_font_medium")}>
-                  {t('mlAnalytics.confidenceLevel')}
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  مستوى الثقة
                 </CardTitle>
-                <Brain className={t("pages.ml-analytics.name.h_4_w_4_text_muted_foreground")} />
+                <Brain className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div
@@ -292,25 +292,25 @@ export default function MLAnalytics() {
                     ? "..."
                     : `${((predictions?.confidence || 0) * 100).toFixed(0)}%`}
                 </div>
-                <p className={t("pages.ml-analytics.name.text_xs_text_muted_foreground")}>{t('mlAnalytics.predictionAccuracy')}</p>
+                <p className="text-xs text-muted-foreground">دقة التنبؤ</p>
               </CardContent>
             </Card>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('mlAnalytics.smartRecommendations')}</CardTitle>
+              <CardTitle>التوصيات الذكية</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.ml-analytics.name.space_y_2")}>
+              <div className="space-y-2">
                 {predictions?.recommendations?.map(
                   (rec: string, index: number) => (
                     <div
                       key={index}
-                      className={t("pages.ml-analytics.name.flex_items_center_gap_2_p_2_bg_blue_50_rounded_md")}
+                      className="flex items-center gap-2 p-2 bg-blue-50 rounded-md"
                     >
-                      <Zap className={t("pages.ml-analytics.name.h_4_w_4_text_blue_600")} />
-                      <span className={t("pages.ml-analytics.name.text_sm")}>{rec}</span>
+                      <Zap className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm">{rec}</span>
                     </div>
                   ),
                 )}
@@ -319,37 +319,41 @@ export default function MLAnalytics() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="anomalies" className={t("pages.ml-analytics.name.space_y_4")}>
-          <div className={t("pages.ml-analytics.name.grid_grid_cols_1_md_grid_cols_3_gap_4")}>
+        <TabsContent value="anomalies" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.ml-analytics.name.flex_items_center_gap_2")}>
-                  <AlertTriangle className={t("pages.ml-analytics.name.h_5_w_5")} />
-                  {t('mlAnalytics.anomalyStatus')}
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5" />
+                  حالة الشذوذ
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_center")}>
+                <div className="text-center">
                   {anomalyLoading ? (
-                    <div className={t("pages.ml-analytics.name.animate_pulse")}>{t('mlAnalytics.analyzing')}</div>{t('pages.ml-analytics.)_:_(')}<>
+                    <div className="animate-pulse">جاري التحليل...</div>
+                  ) : (
+                    <>
                       {anomalies?.isAnomaly ? (
-                        <XCircle className={t("pages.ml-analytics.name.h_16_w_16_text_red_500_mx_auto_mb_2")} />{t('pages.ml-analytics.)_:_(')}<CheckCircle className={t("pages.ml-analytics.name.h_16_w_16_text_green_500_mx_auto_mb_2")} />
+                        <XCircle className="h-16 w-16 text-red-500 mx-auto mb-2" />
+                      ) : (
+                        <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-2" />
                       )}
-                      <p className={t("pages.ml-analytics.name.font_medium")}>
+                      <p className="font-medium">
                         {anomalies?.isAnomaly
-                          ? t('mlAnalytics.anomalyDetected')
-                          : t('mlAnalytics.noAnomaly')}
+                          ? "تم اكتشاف شذوذ"
+                          : "لا يوجد شذوذ"}
                       </p>
                       {anomalies?.isAnomaly && (
                         <Badge
                           variant={getSeverityColor(anomalies.severity)}
-                          className={t("pages.ml-analytics.name.mt_2")}
+                          className="mt-2"
                         >
                           {anomalies.severity === "high"
-                            ? t('alertsCenter.highSeverity')
+                            ? "عالي"
                             : anomalies.severity === "medium"
-                              ? t('alertsCenter.mediumSeverity')
-                              : t('alertsCenter.lowSeverity')}
+                              ? "متوسط"
+                              : "منخفض"}
                         </Badge>
                       )}
                     </>
@@ -360,28 +364,28 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{t('mlAnalytics.anomalyScore')}</CardTitle>
+                <CardTitle>درجة الشذوذ</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_3xl_font_bold_text_center")}>
+                <div className="text-3xl font-bold text-center">
                   {anomalyLoading ? "..." : anomalies?.anomalyScore.toFixed(2)}
                 </div>
-                <p className={t("pages.ml-analytics.name.text_center_text_muted_foreground")}>{t('mlAnalytics.outOf5')}</p>
+                <p className="text-center text-muted-foreground">من أصل 5.0</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>{t('mlAnalytics.affectedMetrics')}</CardTitle>
+                <CardTitle>المقاييس المتأثرة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.space_y_1")}>
+                <div className="space-y-1">
                   {anomalies?.affectedMetrics?.map(
                     (metric: string, index: number) => (
                       <Badge
                         key={index}
                         variant="outline"
-                        className={t("pages.ml-analytics.name.block_text_center")}
+                        className="block text-center"
                       >
                         {metric}
                       </Badge>
@@ -389,7 +393,7 @@ export default function MLAnalytics() {
                   )}
                   {(!anomalies?.affectedMetrics ||
                     anomalies?.affectedMetrics?.length === 0) && (
-                    <p className={t("pages.ml-analytics.name.text_center_text_muted_foreground")}>{t('mlAnalytics.none')}</p>
+                    <p className="text-center text-muted-foreground">لا يوجد</p>
                   )}
                 </div>
               </CardContent>
@@ -399,18 +403,18 @@ export default function MLAnalytics() {
           {anomalies?.isAnomaly && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('mlAnalytics.suggestedActions')}</CardTitle>
+                <CardTitle>إجراءات مقترحة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.space_y_2")}>
+                <div className="space-y-2">
                   {anomalies?.recommendations?.map(
                     (rec: string, index: number) => (
                       <div
                         key={index}
-                        className={t("pages.ml-analytics.name.flex_items_center_gap_2_p_2_bg_red_50_rounded_md")}
+                        className="flex items-center gap-2 p-2 bg-red-50 rounded-md"
                       >
-                        <AlertTriangle className={t("pages.ml-analytics.name.h_4_w_4_text_red_600")} />
-                        <span className={t("pages.ml-analytics.name.text_sm")}>{rec}</span>
+                        <AlertTriangle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm">{rec}</span>
                       </div>
                     ),
                   )}
@@ -420,16 +424,16 @@ export default function MLAnalytics() {
           )}
         </TabsContent>
 
-        <TabsContent value="patterns" className={t("pages.ml-analytics.name.space_y_4")}>
-          <div className={t("pages.ml-analytics.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+        <TabsContent value="patterns" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>{t('mlAnalytics.peakHours')}</CardTitle>
+                <CardTitle>ساعات الذروة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.grid_grid_cols_6_gap_2")}>
+                <div className="grid grid-cols-6 gap-2">
                   {patterns?.peakHours?.map((hour: number) => (
-                    <Badge key={hour} variant="default" className={t("pages.ml-analytics.name.text_center")}>
+                    <Badge key={hour} variant="default" className="text-center">
                       {hour}:00
                     </Badge>
                   ))}
@@ -439,18 +443,18 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle>{t('mlAnalytics.optimalShifts')}</CardTitle>
+                <CardTitle>أفضل نوبات العمل</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.space_y_2")}>
+                <div className="space-y-2">
                   {patterns?.optimalShifts?.map(
                     (shift: string, index: number) => (
                       <Badge
                         key={index}
                         variant="secondary"
-                        className={t("pages.ml-analytics.name.block_text_center")}
+                        className="block text-center"
                       >
-                        {t('mlAnalytics.shift')} {shift}
+                        النوبة {shift}
                       </Badge>
                     ),
                   )}
@@ -461,18 +465,18 @@ export default function MLAnalytics() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('mlAnalytics.efficiencyInsights')}</CardTitle>
+              <CardTitle>رؤى الكفاءة</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.ml-analytics.name.space_y_3")}>
+              <div className="space-y-3">
                 {patterns?.efficiencyInsights?.map(
                   (insight: string, index: number) => (
                     <div
                       key={index}
-                      className={t("pages.ml-analytics.name.flex_items_center_gap_2_p_3_bg_green_50_rounded_md")}
+                      className="flex items-center gap-2 p-3 bg-green-50 rounded-md"
                     >
-                      <BarChart3 className={t("pages.ml-analytics.name.h_4_w_4_text_green_600")} />
-                      <span className={t("pages.ml-analytics.name.text_sm")}>{insight}</span>
+                      <BarChart3 className="h-4 w-4 text-green-600" />
+                      <span className="text-sm">{insight}</span>
                     </div>
                   ),
                 )}
@@ -481,14 +485,14 @@ export default function MLAnalytics() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="optimization" className={t("pages.ml-analytics.name.space_y_4")}>
-          <div className={t("pages.ml-analytics.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4")}>
+        <TabsContent value="optimization" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm")}>{t('mlAnalytics.recommendedSpeed')}</CardTitle>
+                <CardTitle className="text-sm">السرعة المقترحة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {optimizationLoading
                     ? "..."
                     : `${optimization?.recommendedSpeed}%`}
@@ -498,10 +502,10 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm")}>{t('mlAnalytics.temperature')}</CardTitle>
+                <CardTitle className="text-sm">درجة الحرارة</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {optimizationLoading
                     ? "..."
                     : `${optimization?.recommendedTemperature}°C`}
@@ -511,23 +515,23 @@ export default function MLAnalytics() {
 
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm")}>{t('mlAnalytics.recommendedPressure')}</CardTitle>
+                <CardTitle className="text-sm">الضغط المقترح</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold")}>
+                <div className="text-2xl font-bold">
                   {optimizationLoading
                     ? "..."
-                    : `${optimization?.recommendedPressure} ${t('mlAnalytics.bar')}`}
+                    : `${optimization?.recommendedPressure} بار`}
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className={t("pages.ml-analytics.name.text_sm")}>{t('mlAnalytics.expectedImprovement')}</CardTitle>
+                <CardTitle className="text-sm">التحسن المتوقع</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className={t("pages.ml-analytics.name.text_2xl_font_bold_text_green_600")}>
+                <div className="text-2xl font-bold text-green-600">
                   {optimizationLoading
                     ? "..."
                     : `+${optimization?.expectedImprovement.toFixed(1)}%`}
@@ -538,12 +542,12 @@ export default function MLAnalytics() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('mlAnalytics.applyRecommended')}</CardTitle>
+              <CardTitle>تطبيق التحسينات</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={t("pages.ml-analytics.name.space_y_4")}>
-                <div className={t("pages.ml-analytics.name.flex_items_center_justify_between_p_3_border_rounded_md")}>
-                  <span>{t('mlAnalytics.optimizationConfidence')}</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-md">
+                  <span>مستوى الثقة في التحسينات</span>
                   <Badge variant="secondary">
                     {optimization
                       ? `${(optimization.confidence * 100).toFixed(0)}%`
@@ -559,10 +563,10 @@ export default function MLAnalytics() {
                   disabled={
                     applyOptimizationMutation.isPending || !optimization
                   }
-                  className={t("pages.ml-analytics.name.w_full_gap_2")}
+                  className="w-full gap-2"
                 >
-                  <Target className={t("pages.ml-analytics.name.h_4_w_4")} />
-                  {t('mlAnalytics.applyRecommended')}
+                  <Target className="h-4 w-4" />
+                  تطبيق التحسينات المقترحة
                 </Button>
               </div>
             </CardContent>

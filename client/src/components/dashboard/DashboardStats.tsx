@@ -3,7 +3,6 @@ import { Card, CardContent } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { formatNumber, formatPercentage } from "../../lib/formatNumber";
 import ErrorBoundary from "../ErrorBoundary";
-import { useTranslation } from 'react-i18next';
 import {
   ShoppingCart,
   Package,
@@ -25,7 +24,6 @@ interface DashboardStat {
 }
 
 function DashboardStatsContent() {
-  const { t } = useTranslation();
   const {
     data: stats = {},
     isLoading,
@@ -36,14 +34,14 @@ function DashboardStatsContent() {
 
   if (isLoading) {
     return (
-      <div className={t("components.dashboard.dashboardstats.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4_mb_6")}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <CardContent className={t("components.dashboard.dashboardstats.name.p_6")}>
-              <div className={t("components.dashboard.dashboardstats.name.animate_pulse")}>
-                <div className={t("components.dashboard.dashboardstats.name.h_4_bg_gray_200_rounded_mb_2")}></div>
-                <div className={t("components.dashboard.dashboardstats.name.h_8_bg_gray_200_rounded_mb_2")}></div>
-                <div className={t("components.dashboard.dashboardstats.name.h_3_bg_gray_200_rounded")}></div>
+            <CardContent className="p-6">
+              <div className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded"></div>
               </div>
             </CardContent>
           </Card>
@@ -54,26 +52,29 @@ function DashboardStatsContent() {
 
   const dashboardStats: DashboardStat[] = [
     {
-      label: t('dashboard.activeOrders'),
+      label: "الطلبات النشطة",
       value: formatNumber((stats as any)?.activeOrders || 12),
-      change: `+12% ${t('dashboard.weeklyChange')}`,
+      change: "+12% من الأسبوع الماضي",
       trend: "up",
-      icon: <ShoppingCart className={t("components.dashboard.dashboardstats.name.w_6_h_6")} />,
+      icon: <ShoppingCart className="w-6 h-6" />,
       color: "text-blue-600",
     },
     {
-      label: t('dashboard.productionRate'),
+      label: "معدل الإنتاج",
       value: formatPercentage((stats as any)?.productionRate || 85),
       change:
         ((stats as any)?.productionRate || 85) >= 85
-          ? t('dashboard.excellentPerformance')
+          ? "أداء ممتاز"
           : ((stats as any)?.productionRate || 85) >= 70
-            ? t('dashboard.goodPerformance')
-            : t('dashboard.needsImprovement'),
+            ? "أداء جيد"
+            : "يحتاج تحسين",
       trend:
         ((stats as any)?.productionRate || 85) >= 85
           ? "up"
-          : ((stats as any)?.productionRate || 85) >{t('components.dashboard.DashboardStats.=_70_?_"neutral"_:_"down",_icon:')}<TrendingUp className={t("components.dashboard.dashboardstats.name.w_6_h_6")} />,
+          : ((stats as any)?.productionRate || 85) >= 70
+            ? "neutral"
+            : "down",
+      icon: <TrendingUp className="w-6 h-6" />,
       color:
         ((stats as any)?.productionRate || 85) >= 85
           ? "text-green-600"
@@ -82,21 +83,22 @@ function DashboardStatsContent() {
             : "text-red-600",
     },
     {
-      label: t('dashboard.presentEmployees'),
+      label: "العمال الحاضرين",
       value: `${formatNumber((stats as any)?.presentEmployees || 18)}/${formatNumber((stats as any)?.totalEmployees || 22)}`,
-      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} ${t('dashboard.attendanceRate')}`,
+      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} معدل الحضور`,
       trend: "neutral",
-      icon: <Users className={t("components.dashboard.dashboardstats.name.w_6_h_6")} />,
+      icon: <Users className="w-6 h-6" />,
       color: "text-purple-600",
     },
     {
-      label: t('dashboard.maintenanceAlerts'),
+      label: "تنبيهات الصيانة",
       value: formatNumber((stats as any)?.maintenanceAlerts || 2),
       change:
         ((stats as any)?.maintenanceAlerts || 2) > 0
-          ? t('dashboard.requiresAttention')
-          : t('dashboard.allMachinesNormal'),
-      trend: ((stats as any)?.maintenanceAlerts || 2) >{t('components.dashboard.DashboardStats.0_?_"down"_:_"up",_icon:')}<AlertTriangle className={t("components.dashboard.dashboardstats.name.w_6_h_6")} />,
+          ? "يتطلب انتباه"
+          : "جميع المكائن تعمل بشكل طبيعي",
+      trend: ((stats as any)?.maintenanceAlerts || 2) > 0 ? "down" : "up",
+      icon: <AlertTriangle className="w-6 h-6" />,
       color:
         ((stats as any)?.maintenanceAlerts || 2) > 0
           ? "text-red-600"
@@ -105,18 +107,18 @@ function DashboardStatsContent() {
   ];
 
   return (
-    <div className={t("components.dashboard.dashboardstats.name.grid_grid_cols_1_md_grid_cols_2_lg_grid_cols_4_gap_4_mb_6")}>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {dashboardStats.map((stat, index) => (
         <Card
           key={index}
-          className={t("components.dashboard.dashboardstats.name.hover_shadow_md_transition_shadow")}
+          className="hover:shadow-md transition-shadow"
           data-testid={`stat-card-${index}`}
         >
-          <CardContent className={t("components.dashboard.dashboardstats.name.p_6")}>
-            <div className={t("components.dashboard.dashboardstats.name.flex_items_center_justify_between")}>
-              <div className={t("components.dashboard.dashboardstats.name.flex_1")}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
                 <p
-                  className={t("components.dashboard.dashboardstats.name.text_sm_font_medium_text_gray_600_mb_1")}
+                  className="text-sm font-medium text-gray-600 mb-1"
                   data-testid={`stat-label-${index}`}
                 >
                   {stat.label}
@@ -127,18 +129,18 @@ function DashboardStatsContent() {
                 >
                   {stat.value}
                 </p>
-                <div className={t("components.dashboard.dashboardstats.name.flex_items_center_gap_1")}>
+                <div className="flex items-center gap-1">
                   {stat.trend === "up" && (
-                    <TrendingUp className={t("components.dashboard.dashboardstats.name.w_3_h_3_text_green_500")} />
+                    <TrendingUp className="w-3 h-3 text-green-500" />
                   )}
                   {stat.trend === "down" && (
-                    <TrendingDown className={t("components.dashboard.dashboardstats.name.w_3_h_3_text_red_500")} />
+                    <TrendingDown className="w-3 h-3 text-red-500" />
                   )}
                   {stat.trend === "neutral" && (
-                    <Activity className={t("components.dashboard.dashboardstats.name.w_3_h_3_text_gray_500")} />
+                    <Activity className="w-3 h-3 text-gray-500" />
                   )}
                   <p
-                    className={t("components.dashboard.dashboardstats.name.text_xs_text_gray_500")}
+                    className="text-xs text-gray-500"
                     data-testid={`stat-change-${index}`}
                   >
                     {stat.change}
@@ -149,7 +151,7 @@ function DashboardStatsContent() {
             </div>
 
             {/* Additional indicators */}
-            <div className={t("components.dashboard.dashboardstats.name.mt_3_flex_justify_between_items_center")}>
+            <div className="mt-3 flex justify-between items-center">
               <Badge
                 variant={
                   stat.trend === "up"
@@ -158,16 +160,16 @@ function DashboardStatsContent() {
                       ? "destructive"
                       : "secondary"
                 }
-                className={t("components.dashboard.dashboardstats.name.text_xs")}
+                className="text-xs"
                 data-testid={`stat-badge-${index}`}
               >
                 {stat.trend === "up"
-                  ? t('dashboard.excellent')
+                  ? "ممتاز"
                   : stat.trend === "down"
-                    ? t('dashboard.needsAttention')
-                    : t('dashboard.stable')}
+                    ? "يحتاج انتباه"
+                    : "مستقر"}
               </Badge>
-              <Clock className={t("components.dashboard.dashboardstats.name.w_3_h_3_text_gray_400")} />
+              <Clock className="w-3 h-3 text-gray-400" />
             </div>
           </CardContent>
         </Card>
@@ -177,12 +179,11 @@ function DashboardStatsContent() {
 }
 
 export default function DashboardStats() {
-  const { t } = useTranslation();
   return (
     <ErrorBoundary
       fallback="component"
-      title={t('dashboard.errorLoadingStats')}
-      description={t('dashboard.errorDescription')}
+      title="خطأ في تحميل الإحصائيات"
+      description="تعذر تحميل إحصائيات لوحة التحكم. يرجى المحاولة مرة أخرى."
       onError={(error, errorInfo) => {
         console.error("Dashboard stats error:", error, errorInfo);
       }}

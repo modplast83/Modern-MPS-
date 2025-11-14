@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Checkbox } from "../ui/checkbox";
@@ -60,14 +59,12 @@ export default function OrdersTable({
   onOrderSelect,
   onSelectAll,
 }: OrdersTableProps) {
-  const { t } = useTranslation();
-  
   // Check if all orders are selected
   const allOrdersSelected =
     orders.length > 0 &&
     orders.every((order: any) => selectedOrders.includes(order.id));
   const someOrdersSelected =
-    selectedOrders.length >{t('components.orders.OrdersTable.0_&&_selectedorders.length')}< orders.length;
+    selectedOrders.length > 0 && selectedOrders.length < orders.length;
 
   const handleSelectAll = (checked: boolean) => {
     if (onSelectAll) {
@@ -83,69 +80,69 @@ export default function OrdersTable({
 
   const getStatusBadge = (status: string) => {
     const statusMap: {
-      [key: string]: { labelKey: string; variant: any; color: string };
+      [key: string]: { label: string; variant: any; color: string };
     } = {
       waiting: {
-        labelKey: "production.waiting",
+        label: "انتظار",
         variant: "secondary",
         color: "bg-yellow-100 text-yellow-800",
       },
       pending: {
-        labelKey: "production.pending",
+        label: "معلق",
         variant: "secondary",
         color: "bg-yellow-100 text-yellow-800",
       },
       in_production: {
-        labelKey: "production.inProduction",
+        label: "قيد الإنتاج",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
       for_production: {
-        labelKey: "production.forProduction",
+        label: "للإنتاج",
         variant: "default",
         color: "bg-blue-100 text-blue-800",
       },
       paused: {
-        labelKey: "production.paused",
+        label: "معلق",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
       on_hold: {
-        labelKey: "production.onHold",
+        label: "إيقاف مؤقت",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
       completed: {
-        labelKey: "production.completed",
+        label: "مكتمل",
         variant: "default",
         color: "bg-green-100 text-green-800",
       },
       received: {
-        labelKey: "production.received",
+        label: "مستلم",
         variant: "default",
         color: "bg-purple-100 text-purple-800",
       },
       delivered: {
-        labelKey: "production.delivered",
+        label: "تم التوصيل",
         variant: "default",
         color: "bg-gray-100 text-gray-800",
       },
       cancelled: {
-        labelKey: "production.cancelled",
+        label: "ملغي",
         variant: "destructive",
         color: "bg-red-100 text-red-800",
       },
     };
 
     const statusInfo = statusMap[status] || {
-      labelKey: null,
+      label: status,
       variant: "outline",
       color: "bg-gray-100 text-gray-800",
     };
 
     return (
       <Badge className={statusInfo.color} data-testid={`status-${status}`}>
-        {statusInfo.labelKey ? t(statusInfo.labelKey) : status}
+        {statusInfo.label}
       </Badge>
     );
   };
@@ -176,7 +173,7 @@ export default function OrdersTable({
       <TableHeader>
         <TableRow>
           {onOrderSelect && onSelectAll && (
-            <TableHead className={t("components.orders.orderstable.name.w_12")}>
+            <TableHead className="w-12">
               <Checkbox
                 checked={
                   allOrdersSelected
@@ -190,15 +187,15 @@ export default function OrdersTable({
               />
             </TableHead>
           )}
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.orderNumber")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.customer")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.createdAt")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.creator")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.delivery")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.completionRate")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_right")}>{t("orders.notes")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_center")}>{t("orders.status")}</TableHead>
-          <TableHead className={t("components.orders.orderstable.name.text_center_w_10_md_w_14")}>{t("orders.actions")}</TableHead>
+          <TableHead className="text-right">رقم الطلب</TableHead>
+          <TableHead className="text-right">العميل</TableHead>
+          <TableHead className="text-right">تاريخ الإنشاء</TableHead>
+          <TableHead className="text-right">المنشئ</TableHead>
+          <TableHead className="text-right">التسليم</TableHead>
+          <TableHead className="text-right">نسبة الإكمال</TableHead>
+          <TableHead className="text-right">ملاحظات</TableHead>
+          <TableHead className="text-center">الحالة</TableHead>
+          <TableHead className="text-center w-10 md:w-14">الإجراءات</TableHead>
           
         </TableRow>
       </TableHeader>
@@ -282,17 +279,17 @@ export default function OrdersTable({
                 </TableCell>
               )}
               <TableCell
-                className={t("components.orders.orderstable.name.font_medium")}
+                className="font-medium"
                 data-testid={`order-number-${order.id}`}
               >
                 {order.order_number}
               </TableCell>
               <TableCell data-testid={`customer-${order.id}`}>
-                <div className={t("components.orders.orderstable.name.text_right")}>
-                  <div className={t("components.orders.orderstable.name.font_medium")}>
+                <div className="text-right">
+                  <div className="font-medium">
                     {customer?.name_ar || customer?.name}
                   </div>
-                  <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>{customer?.id}</div>
+                  <div className="text-sm text-gray-500">{customer?.id}</div>
                 </div>
               </TableCell>
               <TableCell data-testid={`created-date-${order.id}`}>
@@ -301,27 +298,32 @@ export default function OrdersTable({
                   : "-"}
               </TableCell>
               <TableCell data-testid={`created-by-${order.id}`}>
-                <div className={t("components.orders.orderstable.name.text_right")}>
-                  <div className={t("components.orders.orderstable.name.font_medium")}>{user?.display_name_ar || user?.display_name || user?.username || '-'}</div>
-                  <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>#{user?.id}</div>
+                <div className="text-right">
+                  <div className="font-medium">{user?.display_name_ar || user?.display_name || user?.username || '-'}</div>
+                  <div className="text-sm text-gray-500">#{user?.id}</div>
                 </div>
               </TableCell>
               <TableCell data-testid={`delivery-${order.id}`}>
-                <div className={t("components.orders.orderstable.name.text_right")}>
+                <div className="text-right">
                   {deliveryDate && daysRemaining !== null ? (
                     <>
-                      <div className={t("components.orders.orderstable.name.font_medium")}>
-                        {daysRemaining >{t('components.orders.OrdersTable.0_?_(')}<span className={t("components.orders.orderstable.name.text_green_600")}>
-                            {daysRemaining} {t("orders.day")} {t("orders.daysRemaining")}
-                          </span>{t('components.orders.OrdersTable.)_:_daysremaining_===_0_?_(')}<span className={t("components.orders.orderstable.name.text_orange_600")}>
-                            {t("orders.deliverToday")}
-                          </span>{t('components.orders.OrdersTable.)_:_(')}<span className={t("components.orders.orderstable.name.text_red_600")}>
-                            {t("orders.late")} {Math.abs(daysRemaining)} {t("orders.day")}
+                      <div className="font-medium">
+                        {daysRemaining > 0 ? (
+                          <span className="text-green-600">
+                            {daysRemaining} يوم متبقي
+                          </span>
+                        ) : daysRemaining === 0 ? (
+                          <span className="text-orange-600">
+                            يجب التسليم اليوم
+                          </span>
+                        ) : (
+                          <span className="text-red-600">
+                            متأخر {Math.abs(daysRemaining)} يوم
                           </span>
                         )}
                       </div>
-                      <div className={t("components.orders.orderstable.name.text_sm_text_gray_500")}>
-                        {t("orders.deliveryDate")}: {format(deliveryDate, "dd/MM/yyyy")}
+                      <div className="text-sm text-gray-500">
+                        التسليم: {format(deliveryDate, "dd/MM/yyyy")}
                       </div>
                     </>
                   ) : (
@@ -330,51 +332,54 @@ export default function OrdersTable({
                 </div>
               </TableCell>
               <TableCell data-testid={`production-progress-${order.id}`}>
-                {orderProductionOrders.length >{t('components.orders.OrdersTable.0_?_(')}<ProductionProgress
+                {orderProductionOrders.length > 0 ? (
+                  <ProductionProgress
                     filmPercentage={avgFilmPercentage}
                     printingPercentage={avgPrintingPercentage}
                     cuttingPercentage={avgCuttingPercentage}
-                  />{t('components.orders.OrdersTable.)_:_(')}<div className={t("components.orders.orderstable.name.text_gray_400_text_center")}>-</div>
+                  />
+                ) : (
+                  <div className="text-gray-400 text-center">-</div>
                 )}
               </TableCell>
               <TableCell data-testid={`notes-${order.id}`}>
                 {order.notes || "-"}
               </TableCell>
-              <TableCell className={t("components.orders.orderstable.name.text_center")}>
+              <TableCell className="text-center">
                 {getStatusBadge(order.status || "pending")}
               </TableCell>
               <TableCell>
-                <div className={t("components.orders.orderstable.name.grid_grid_cols_3_gap_1")}>
+                <div className="grid grid-cols-3 gap-1">
                   <Button
                     variant="outline"
                     size="sm"
-                    className={t("components.orders.orderstable.name.text_blue_600_border_blue_600_hover_bg_blue_50_p_1")}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50 p-1"
                     onClick={() => onViewOrder(order)}
-                    title={t("common.view")}
+                    title="عرض"
                     data-testid={`button-view-${order.id}`}
                   >
-                    <Eye className={t("components.orders.orderstable.name.h_4_w_4")} />
+                    <Eye className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className={t("components.orders.orderstable.name.text_green_600_border_green_600_hover_bg_green_50_p_1")}
+                    className="text-green-600 border-green-600 hover:bg-green-50 p-1"
                     onClick={() => onPrintOrder(order)}
-                    title={t("common.print")}
+                    title="طباعة"
                     data-testid={`button-print-${order.id}`}
                   >
-                    <FileText className={t("components.orders.orderstable.name.h_4_w_4")} />
+                    <FileText className="h-4 w-4" />
                   </Button>
                   {isAdmin && onEditOrder && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className={t("components.orders.orderstable.name.text_purple_600_border_purple_600_hover_bg_purple_50_p_1")}
+                      className="text-purple-600 border-purple-600 hover:bg-purple-50 p-1"
                       onClick={() => onEditOrder(order)}
-                      title={t("common.edit")}
+                      title="تعديل"
                       data-testid={`button-edit-${order.id}`}
                     >
-                      <Edit className={t("components.orders.orderstable.name.h_4_w_4")} />
+                      <Edit className="h-4 w-4" />
                     </Button>
                   )}
                   <DropdownMenu>
@@ -382,44 +387,44 @@ export default function OrdersTable({
                       <Button
                         variant="outline"
                         size="sm"
-                        className={t("components.orders.orderstable.name.text_orange_600_border_orange_600_hover_bg_orange_50_p_1")}
-                        title={t("orders.changeStatus")}
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50 p-1"
+                        title="تغيير الحالة"
                         data-testid={`button-status-${order.id}`}
                       >
-                        <RefreshCw className={t("components.orders.orderstable.name.h_3_w_3")} />
+                        <RefreshCw className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className={t("components.orders.orderstable.name.w_48")}>
+                    <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "for_production")}
                       >
-                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
-                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_blue_500_rounded_full_mr_2")}></div>
-                          {t("production.forProduction")}
+                        <div className="flex items-center w-full">
+                          <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                          إلى الإنتاج
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "on_hold")}
                       >
-                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
-                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_red_500_rounded_full_mr_2")}></div>
-                          {t("production.onHold")}
+                        <div className="flex items-center w-full">
+                          <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                          إيقاف مؤقت
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "pending")}
                       >
-                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
-                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_yellow_500_rounded_full_mr_2")}></div>
-                          {t("production.pending")}
+                        <div className="flex items-center w-full">
+                          <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                          في الانتظار
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => onStatusChange(order, "completed")}
                       >
-                        <div className={t("components.orders.orderstable.name.flex_items_center_w_full")}>
-                          <div className={t("components.orders.orderstable.name.w_3_h_3_bg_green_500_rounded_full_mr_2")}></div>
-                          {t("production.completed")}
+                        <div className="flex items-center w-full">
+                          <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                          مكتمل
                         </div>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -428,12 +433,12 @@ export default function OrdersTable({
                     <Button
                       variant="outline"
                       size="sm"
-                      className={t("components.orders.orderstable.name.text_red_600_border_red_600_hover_bg_red_50_p_1")}
+                      className="text-red-600 border-red-600 hover:bg-red-50 p-1"
                       onClick={() => onDeleteOrder(order)}
-                      title={t("common.delete")}
+                      title="حذف"
                       data-testid={`button-delete-${order.id}`}
                     >
-                      <Trash2 className={t("components.orders.orderstable.name.h_4_w_4")} />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
                 </div>

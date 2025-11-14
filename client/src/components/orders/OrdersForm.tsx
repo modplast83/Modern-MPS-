@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -57,15 +56,15 @@ const masterBatchColors = [
   { id: "PT-CLEAR", name: "CLEAR", name_ar: "شفاف", color: "#E2DCC8", textColor: "#000000" },
 ];
 
-const getMasterBatchArabicName = (masterBatchId: string, t: any): string => {
-  if (!masterBatchId) return t('orders.notSpecified');
+const getMasterBatchArabicName = (masterBatchId: string): string => {
+  if (!masterBatchId) return "غير محدد";
   const color = masterBatchColors.find((c) => c.id === masterBatchId);
   return color?.name_ar || masterBatchId;
 };
 
-const createOrderFormSchema = (t: any) => z.object({
-  customer_id: z.string().min(1, t('orders.validation.customerRequired')),
-  delivery_days: z.coerce.number().int().positive().max(365, t('orders.validation.deliveryDaysRange')),
+const orderFormSchema = z.object({
+  customer_id: z.string().min(1, "العميل مطلوب"),
+  delivery_days: z.coerce.number().int().positive().max(365, "عدد أيام التسليم يجب أن يكون بين 1 و 365"),
   notes: z.string().optional(),
 });
 
@@ -98,13 +97,14 @@ export default function OrdersForm({
   items,
   editingOrder,
 }: OrdersFormProps) {
-  const { t } = useTranslation();
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string>{t('components.orders.OrdersForm.("");_const_[productionordersinform,_setproductionordersinform]_=_usestate')}<ProdOrderInForm[]>{t('components.orders.OrdersForm.([]);_const_[quantitypreviews,_setquantitypreviews]_=_usestate')}<Record<string, any>>({});
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
+  const [productionOrdersInForm, setProductionOrdersInForm] = useState<ProdOrderInForm[]>([]);
+  const [quantityPreviews, setQuantityPreviews] = useState<Record<string, any>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const orderForm = useForm({
-    resolver: zodResolver(createOrderFormSchema(t)),
+    resolver: zodResolver(orderFormSchema),
     defaultValues: {
       customer_id: "",
       delivery_days: 15,
@@ -152,7 +152,7 @@ export default function OrdersForm({
             );
           }
         } catch (error) {
-          console.error(t('orders.errors.loadProductionOrdersFailed'), error);
+          console.error("فشل تحميل أوامر الإنتاج:", error);
           setProductionOrdersInForm([]);
         }
       } else if (isOpen && !editingOrder) {
@@ -290,17 +290,17 @@ export default function OrdersForm({
 
     // تحقق سريع قبل الإرسال
     if (productionOrdersInForm.length === 0) {
-      alert(t('orders.validation.atLeastOneProductionOrder'));
+      alert("يجب إضافة أمر إنتاج واحد على الأقل");
       return;
     }
     for (let i = 0; i < productionOrdersInForm.length; i++) {
       const po = productionOrdersInForm[i];
       if (!po.customer_product_id) {
-        alert(t('orders.validation.selectProductForOrder', { number: i + 1 }));
+        alert(`اختر منتج العميل لأمر #${i + 1}`);
         return;
       }
       if (!(po.quantity_kg && po.quantity_kg > 0)) {
-        alert(t('orders.validation.enterQuantityForOrder', { number: i + 1 }));
+        alert(`أدخل كمية أساسية (>0) لأمر #${i + 1}`);
         return;
       }
     }
@@ -329,32 +329,32 @@ export default function OrdersForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className={t("components.orders.ordersform.name.max_w_3xl_max_h_85vh_overflow_y_auto")}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className={t("components.orders.ordersform.name.text_xl")}>
-            {editingOrder ? t('orders.editOrder') : t('orders.addNewOrder')}
+          <DialogTitle className="text-xl">
+            {editingOrder ? "تعديل الطلب" : "إضافة طلب جديد"}
           </DialogTitle>
-          <DialogDescription className={t("components.orders.ordersform.name.text_sm")}>
-            {editingOrder ? t('orders.editOrderDetails') : t('orders.addNewOrderDescription')}
+          <DialogDescription className="text-sm">
+            {editingOrder ? "تعديل تفاصيل الطلب" : "إضافة طلب جديد مع أوامر الإنتاج والمواصفات المطلوبة"}
           </DialogDescription>
         </DialogHeader>
         <Form {...orderForm}>
-          <form onSubmit={orderForm.handleSubmit(handleSubmit)} className={t("components.orders.ordersform.name.space_y_4")}>
+          <form onSubmit={orderForm.handleSubmit(handleSubmit)} className="space-y-4">
             {/* Customer Selection with Search */}
             <FormField
               control={orderForm.control}
-              name="{t('components.orders.OrdersForm.name.customer_id')}"
+              name="customer_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('orders.customer')}</FormLabel>
-                  <div className={t("components.orders.ordersform.name.space_y_2")}>
-                    <div className={t("components.orders.ordersform.name.relative")}>
-                      <Search className={t("components.orders.ordersform.name.absolute_left_3_top_1_2_transform_translate_y_1_2_h_4_w_4_text_gray_400")} />
+                  <FormLabel>العميل</FormLabel>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        placeholder={t('orders.searchCustomerPlaceholder')}
+                        placeholder="البحث بالاسم العربي أو الإنجليزي..."
                         value={customerSearchTerm}
                         onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                        className={t("components.orders.ordersform.name.pl_10")}
+                        className="pl-10"
                         data-testid="input-search-customers"
                       />
                     </div>
@@ -370,7 +370,7 @@ export default function OrdersForm({
                     >
                       <FormControl>
                         <SelectTrigger data-testid="select-customer">
-                          <SelectValue placeholder={t('orders.selectCustomer')} />
+                          <SelectValue placeholder="اختر العميل" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -389,9 +389,9 @@ export default function OrdersForm({
             />
 
             {/* Production Orders Section */}
-            <div className={t("components.orders.ordersform.name.border_t_pt_4")}>
-              <div className={t("components.orders.ordersform.name.flex_items_center_justify_between_mb_3")}>
-                <h3 className={t("components.orders.ordersform.name.text_base_font_semibold")}>{t('orders.productionOrders')}</h3>
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-base font-semibold">أوامر الإنتاج</h3>
                 <Button
                   type="button"
                   onClick={addProductionOrder}
@@ -399,26 +399,26 @@ export default function OrdersForm({
                   size="sm"
                   data-testid="button-add-production-order"
                 >
-                  <Plus className={t("components.orders.ordersform.name.h_4_w_4_mr_2")} />
-                  {t('orders.addProductionOrder')}
+                  <Plus className="h-4 w-4 mr-2" />
+                  إضافة أمر إنتاج
                 </Button>
               </div>
 
               {productionOrdersInForm.length === 0 && (
-                <div className={t("components.orders.ordersform.name.text_center_py_6_text_sm_text_gray_500")}>
-                  {t('orders.validation.atLeastOneProductionOrder')}
+                <div className="text-center py-6 text-sm text-gray-500">
+                  يجب إضافة أمر إنتاج واحد على الأقل
                 </div>
               )}
 
-              <div className={t("components.orders.ordersform.name.space_y_3")}>
+              <div className="space-y-3">
                 {productionOrdersInForm.map((prodOrder, index) => (
                   <div
                     key={prodOrder.uid}
-                    className={t("components.orders.ordersform.name.p_3_border_rounded_lg_bg_gray_50")}
+                    className="p-3 border rounded-lg bg-gray-50"
                     data-testid={`production-order-${index}`}
                   >
-                    <div className={t("components.orders.ordersform.name.flex_items_center_justify_between_mb_2")}>
-                      <h4 className={t("components.orders.ordersform.name.text_sm_font_medium")}>{t('orders.productionOrderNumber', { number: index + 1 })}</h4>
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-sm font-medium">أمر إنتاج #{index + 1}</h4>
                       <Button
                         type="button"
                         onClick={() => removeProductionOrder(index)}
@@ -426,21 +426,21 @@ export default function OrdersForm({
                         size="sm"
                         data-testid={`button-remove-production-order-${index}`}
                       >
-                        <Trash2 className={t("components.orders.ordersform.name.h_4_w_4_text_red_500")} />
+                        <Trash2 className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>
 
-                    <div className={t("components.orders.ordersform.name.grid_grid_cols_3_gap_3")}>
-                      <div className={t("components.orders.ordersform.name.col_span_2")}>
-                        <label className={t("components.orders.ordersform.name.text_sm_font_medium_text_gray_700")}>{t('orders.customerProduct')}</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="col-span-2">
+                        <label className="text-sm font-medium text-gray-700">منتج العميل</label>
                         <Select
                           onValueChange={(value) =>
                             updateProductionOrder(index, "customer_product_id", parseInt(value, 10))
                           }
                           value={prodOrder.customer_product_id?.toString() || ""}
                         >
-                          <SelectTrigger className={t("components.orders.ordersform.name.h_auto_min_h_50px_w_full")} data-testid={`select-product-${index}`}>
-                            <SelectValue placeholder={t('orders.selectProduct')}>
+                          <SelectTrigger className="h-auto min-h-[50px] w-full" data-testid={`select-product-${index}`}>
+                            <SelectValue placeholder="اختر المنتج">
                               {prodOrder.customer_product_id &&
                                 (() => {
                                   const selectedProduct = filteredCustomerProducts.find(
@@ -449,83 +449,85 @@ export default function OrdersForm({
                                   if (selectedProduct) {
                                     const item = items.find((it: any) => it.id === selectedProduct.item_id);
                                     const parts = [
-                                      item?.name_ar || item?.name || t('orders.productNotSpecified'),
+                                      item?.name_ar || item?.name || "منتج غير محدد",
                                       selectedProduct.size_caption,
-                                      selectedProduct.cutting_length_cm ? `${selectedProduct.cutting_length_cm} ${t('common.cm')}` : null,
-                                      selectedProduct.master_batch_id ? getMasterBatchArabicName(selectedProduct.master_batch_id, t) : null,
+                                      selectedProduct.cutting_length_cm ? `${selectedProduct.cutting_length_cm} سم` : null,
+                                      selectedProduct.master_batch_id ? getMasterBatchArabicName(selectedProduct.master_batch_id) : null,
                                       selectedProduct.raw_material,
                                     ].filter(Boolean);
-                                    return <div className={t("components.orders.ordersform.name.text_right_text_sm")}>{parts.join(" - ")}</div>;
+                                    return <div className="text-right text-sm">{parts.join(" - ")}</div>;
                                   }
-                                  return t('orders.selectProduct');
+                                  return "اختر المنتج";
                                 })()}
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent className={t("components.orders.ordersform.name.max_w_750px_w_750px_")}>
+                          <SelectContent className="max-w-[750px] w-[750px]">
                             {filteredCustomerProducts.map((product: any) => (
-                              <SelectItem key={product.id} value={String(product.id)} className={t("components.orders.ordersform.name.h_auto_min_h_70px_py_2")}>
-                                <div className={t("components.orders.ordersform.name.w_full_text_right_py_1_min_w_650px_")}>
-                                  <div className={t("components.orders.ordersform.name.font_semibold_text_gray_900_mb_1_text_sm_leading_relaxed")}>
+                              <SelectItem key={product.id} value={String(product.id)} className="h-auto min-h-[70px] py-2">
+                                <div className="w-full text-right py-1 min-w-[650px]">
+                                  <div className="font-semibold text-gray-900 mb-1 text-sm leading-relaxed">
                                     {(() => {
-                                      const item = items.find((it: any) =>{t('components.orders.OrdersForm.it.id_===_product.item_id);_return_(')}<>
-                                          <div>{item?.name_ar || item?.name || t('orders.productNotSpecified')}</div>
+                                      const item = items.find((it: any) => it.id === product.item_id);
+                                      return (
+                                        <>
+                                          <div>{item?.name_ar || item?.name || "منتج غير محدد"}</div>
                                           {product?.size_caption && <div>{product.size_caption}</div>}
-                                          {product.cutting_length_cm && <div>{t('orders.cuttingLength')}: {product.cutting_length_cm} {t('common.cm')}</div>}
+                                          {product.cutting_length_cm && <div>طول القطع: {product.cutting_length_cm} سم</div>}
                                         </>
                                       );
                                     })()}
                                   </div>
-                                  <div className={t("components.orders.ordersform.name.grid_grid_cols_2_gap_6_text_sm_text_gray_600")}>
-                                    <div className={t("components.orders.ordersform.name.space_y_2")}>
+                                  <div className="grid grid-cols-2 gap-6 text-sm text-gray-600">
+                                    <div className="space-y-2">
                                       {product.thickness && (
-                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.thickness')}:</span>
-                                          <span className={t("components.orders.ordersform.name.text_blue_600_font_semibold_bg_blue_50_px_2_py_0_5_rounded")}>
-                                            {product.thickness} {t('orders.micron')}
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium text-gray-700">السماكة:</span>
+                                          <span className="text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded">
+                                            {product.thickness} ميكرون
                                           </span>
                                         </div>
                                       )}
                                       {product.master_batch_id && (
-                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.masterBatch')}:</span>
-                                          <span className={t("components.orders.ordersform.name.text_purple_600_font_semibold_bg_purple_50_px_2_py_0_5_rounded")}>
-                                            {getMasterBatchArabicName(product.master_batch_id, t)}
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium text-gray-700">الماستر باتش:</span>
+                                          <span className="text-purple-600 font-semibold bg-purple-50 px-2 py-0.5 rounded">
+                                            {getMasterBatchArabicName(product.master_batch_id)}
                                           </span>
                                         </div>
                                       )}
                                       {product.raw_material && (
-                                        <div className={t("components.orders.ordersform.name.flex_items_center_gap_2")}>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.rawMaterial')}:</span>
-                                          <span className={t("components.orders.ordersform.name.text_green_600_font_semibold_bg_green_50_px_2_py_0_5_rounded")}>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-medium text-gray-700">المادة الخام:</span>
+                                          <span className="text-green-600 font-semibold bg-green-50 px-2 py-0.5 rounded">
                                             {product.raw_material}
                                           </span>
                                         </div>
                                       )}
                                     </div>
-                                    <div className={t("components.orders.ordersform.name.space_y_2")}>
+                                    <div className="space-y-2">
                                       {product.width && (
                                         <div>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.width')}:</span>{" "}
-                                          <span className={t("components.orders.ordersform.name.text_orange_600_font_medium")}>{product.width} {t('common.cm')}</span>
+                                          <span className="font-medium text-gray-700">العرض:</span>{" "}
+                                          <span className="text-orange-600 font-medium">{product.width} سم</span>
                                         </div>
                                       )}
                                       {product.punching && (
                                         <div>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.punching')}:</span>{" "}
-                                          <span className={t("components.orders.ordersform.name.text_teal_600_font_medium")}>{product.punching}</span>
+                                          <span className="font-medium text-gray-700">التخريم:</span>{" "}
+                                          <span className="text-teal-600 font-medium">{product.punching}</span>
                                         </div>
                                       )}
                                       {product.cutting_unit && (
                                         <div>
-                                          <span className={t("components.orders.ordersform.name.font_medium_text_gray_700")}>{t('orders.cuttingUnit')}:</span>{" "}
-                                          <span className={t("components.orders.ordersform.name.text_indigo_600_font_medium")}>{product.cutting_unit}</span>
+                                          <span className="font-medium text-gray-700">وحدة القطع:</span>{" "}
+                                          <span className="text-indigo-600 font-medium">{product.cutting_unit}</span>
                                         </div>
                                       )}
                                     </div>
                                   </div>
                                   {product.notes && (
-                                    <div className={t("components.orders.ordersform.name.mt_2_text_xs_text_gray_500_bg_gray_50_rounded_p_2")}>
-                                      <span className={t("components.orders.ordersform.name.font_medium")}>{t('common.notes')}:</span> {product.notes}
+                                    <div className="mt-2 text-xs text-gray-500 bg-gray-50 rounded p-2">
+                                      <span className="font-medium">ملاحظات:</span> {product.notes}
                                     </div>
                                   )}
                                 </div>
@@ -536,28 +538,28 @@ export default function OrdersForm({
                       </div>
 
                       <div>
-                        <label className={t("components.orders.ordersform.name.text_sm_font_medium_text_gray_700")}>{t('orders.baseQuantityKg')}</label>
+                        <label className="text-sm font-medium text-gray-700">الكمية الأساسية (كيلو)</label>
                         <Input
                           type="number"
-                          placeholder={t('common.quantity')}
+                          placeholder="الكمية"
                           value={prodOrder.quantity_kg ?? ""}
                           onChange={(e) => {
                             const num = Number.parseFloat(e.target.value);
                             updateProductionOrder(index, "quantity_kg", Number.isNaN(num) ? null : num);
                           }}
-                          className={t("components.orders.ordersform.name.w_full")}
+                          className="w-full"
                           data-testid={`input-base-quantity-${index}`}
                         />
                         {quantityPreviews[prodOrder.uid] && (
-                          <div className={t("components.orders.ordersform.name.mt_2_p_2_bg_blue_50_rounded_border_border_blue_200")}>
-                            <div className={t("components.orders.ordersform.name.text_xs_font_medium_text_blue_800_mb_1")}>{t('orders.preview')}:</div>
-                            <div className={t("components.orders.ordersform.name.text_xs_space_y_1")}>
-                              <div className={t("components.orders.ordersform.name.text_blue_700")}>
-                                <span className={t("components.orders.ordersform.name.font_medium")}>{t('orders.overrunPercentage')}:</span>{" "}
+                          <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200">
+                            <div className="text-xs font-medium text-blue-800 mb-1">معاينة:</div>
+                            <div className="text-xs space-y-1">
+                              <div className="text-blue-700">
+                                <span className="font-medium">نسبة الزيادة:</span>{" "}
                                 {formatPercentage(quantityPreviews[prodOrder.uid].overrun_percentage)}
                               </div>
-                              <div className={t("components.orders.ordersform.name.text_blue_700")}>
-                                <span className={t("components.orders.ordersform.name.font_medium")}>{t('orders.finalQuantity')}:</span>{" "}
+                              <div className="text-blue-700">
+                                <span className="font-medium">الكمية النهائية:</span>{" "}
                                 {formatWeight(quantityPreviews[prodOrder.uid].final_quantity_kg)}
                               </div>
                             </div>
@@ -571,19 +573,19 @@ export default function OrdersForm({
             </div>
 
             {/* Delivery Days & Notes Section */}
-            <div className={t("components.orders.ordersform.name.border_t_pt_4")}>
-              <div className={t("components.orders.ordersform.name.grid_grid_cols_3_gap_4")}>
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-3 gap-4">
                 <FormField
                   control={orderForm.control}
-                  name="{t('components.orders.OrdersForm.name.delivery_days')}"
+                  name="delivery_days"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t('orders.deliveryDays')}</FormLabel>
+                      <FormLabel>أيام التسليم</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
                           {...field}
-                          placeholder={t('orders.deliveryDaysPlaceholder')}
+                          placeholder="عدد أيام التسليم"
                           data-testid="input-delivery-days"
                         />
                       </FormControl>
@@ -594,15 +596,15 @@ export default function OrdersForm({
 
                 <FormField
                   control={orderForm.control}
-                  name="{t('components.orders.OrdersForm.name.notes')}"
+                  name="notes"
                   render={({ field }) => (
-                    <FormItem className={t("components.orders.ordersform.name.col_span_2")}>
-                      <FormLabel>{t('common.notes')}</FormLabel>
+                    <FormItem className="col-span-2">
+                      <FormLabel>ملاحظات</FormLabel>
                       <FormControl>
                         <Textarea
                           {...field}
-                          placeholder={t('orders.notesPlaceholder')}
-                          className={t("components.orders.ordersform.name.min_h_40px_resize_none")}
+                          placeholder="ملاحظات إضافية..."
+                          className="min-h-[40px] resize-none"
                           data-testid="textarea-notes"
                         />
                       </FormControl>
@@ -614,7 +616,7 @@ export default function OrdersForm({
             </div>
 
             {/* Submit Button */}
-            <div className={t("components.orders.ordersform.name.flex_justify_end_space_x_2_space_x_reverse_pt_3_border_t")}>
+            <div className="flex justify-end space-x-2 space-x-reverse pt-3 border-t">
               <Button
                 type="button"
                 variant="outline"
@@ -622,10 +624,10 @@ export default function OrdersForm({
                 disabled={isSubmitting}
                 data-testid="button-cancel"
               >
-                {t('common.cancel')}
+                إلغاء
               </Button>
               <Button type="submit" disabled={isSubmitting} data-testid="button-submit">
-                {isSubmitting ? t('orders.saving') : editingOrder ? t('orders.updateOrder') : t('orders.saveOrder')}
+                {isSubmitting ? "جاري الحفظ..." : editingOrder ? "تحديث الطلب" : "حفظ الطلب"}
               </Button>
             </div>
           </form>

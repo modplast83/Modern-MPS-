@@ -37,7 +37,10 @@ export default function ProductionOrdersManagement() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedOrder, setSelectedOrder] = useState<any>{t('pages.ProductionOrdersManagement.(null);_const_[isactivationmodalopen,_setisactivationmodalopen]_=_usestate(false);_const_[showstats,_setshowstats]_=_usestate')}<number | null>{t('pages.ProductionOrdersManagement.(null);_const_[printingproductionorder,_setprintingproductionorder]_=_usestate')}<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [isActivationModalOpen, setIsActivationModalOpen] = useState(false);
+  const [showStats, setShowStats] = useState<number | null>(null);
+  const [printingProductionOrder, setPrintingProductionOrder] = useState<any>(null);
   const [filters, setFilters] = useState({
     status: "all",
     customerId: "",
@@ -205,7 +208,36 @@ export default function ProductionOrdersManagement() {
     switch (status) {
       case "pending":
         return (
-          <Badge className={t("pages.name.bg_yellow_100_text_yellow_800")}>{t('pages.ProductionOrdersManagement.⏳_انتظار')}</Badge>{t('pages.ProductionOrdersManagement.);_case_"active":_return_(')}<Badge className={t("pages.name.bg_green_100_text_green_800")}>{t('pages.ProductionOrdersManagement.▶️_نشط')}</Badge>{t('pages.ProductionOrdersManagement.);_case_"in_production":_return_(')}<Badge className={t("pages.name.bg_blue_100_text_blue_800")}>{t('pages.ProductionOrdersManagement.🔄_قيد_الإنتاج')}</Badge>{t('pages.ProductionOrdersManagement.);_case_"completed":_return_(')}<Badge className={t("pages.name.bg_gray_100_text_gray_800")}>{t('pages.ProductionOrdersManagement.✅_مكتمل')}</Badge>{t('pages.ProductionOrdersManagement.);_case_"cancelled":_return_(')}<Badge className={t("pages.name.bg_red_100_text_red_800")}>{t('pages.ProductionOrdersManagement.❌_ملغي')}</Badge>{t('pages.ProductionOrdersManagement.);_default:_return')}<Badge>{status}</Badge>;
+          <Badge className="bg-yellow-100 text-yellow-800">
+            ⏳ انتظار
+          </Badge>
+        );
+      case "active":
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            ▶️ نشط
+          </Badge>
+        );
+      case "in_production":
+        return (
+          <Badge className="bg-blue-100 text-blue-800">
+            🔄 قيد الإنتاج
+          </Badge>
+        );
+      case "completed":
+        return (
+          <Badge className="bg-gray-100 text-gray-800">
+            ✅ مكتمل
+          </Badge>
+        );
+      case "cancelled":
+        return (
+          <Badge className="bg-red-100 text-red-800">
+            ❌ ملغي
+          </Badge>
+        );
+      default:
+        return <Badge>{status}</Badge>;
     }
   };
 
@@ -214,7 +246,7 @@ export default function ProductionOrdersManagement() {
     const badges = [];
     if (order.assigned_machine_id) {
       badges.push(
-        <Badge key="machine" variant="secondary" className={t("pages.name.mr_1")}>
+        <Badge key="machine" variant="secondary" className="mr-1">
           🏭 {order.machine_name_ar || order.machine_name || order.assigned_machine_id}
         </Badge>
       );
@@ -239,41 +271,45 @@ export default function ProductionOrdersManagement() {
 
   if (ordersLoading) {
     return (
-      <div className={t("pages.name.min_h_screen_bg_gray_50_flex_items_center_justify_center")}>
-        <Loader2 className={t("pages.name.h_8_w_8_animate_spin_text_primary")} />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className={t("pages.name.min_h_screen_bg_gray_50")}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
-      <div className={t("pages.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
-        <main className={t("pages.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-          <div className={t("pages.name.mb_6")}>
-            <h1 className={t("pages.name.text_2xl_font_bold_text_gray_900_mb_2")}>{t('pages.ProductionOrdersManagement.إدارة_أوامر_الإنتاج')}</h1>
-            <p className={t("pages.name.text_gray_600")}>{t('pages.ProductionOrdersManagement.مراقبة_وإدارة_جميع_أوامر_الإنتاج_وتحويلها_للإنتاج')}</p>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              إدارة أوامر الإنتاج
+            </h1>
+            <p className="text-gray-600">
+              مراقبة وإدارة جميع أوامر الإنتاج وتحويلها للإنتاج
+            </p>
           </div>
 
           {/* الإحصائيات الإجمالية */}
-          <div className={t("pages.name.grid_grid_cols_1_md_grid_cols_4_gap_4_mb_6")}>
-            <Card className={t("pages.name.p_4")} data-testid="card-total-orders">
-              <div className={t("pages.name.text_sm_text_gray_600")}>{t('pages.ProductionOrdersManagement.إجمالي_الأوامر')}</div>
-              <div className={t("pages.name.text_2xl_font_bold")} data-testid="stat-total-orders">{totalStats.total}</div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="p-4" data-testid="card-total-orders">
+              <div className="text-sm text-gray-600">إجمالي الأوامر</div>
+              <div className="text-2xl font-bold" data-testid="stat-total-orders">{totalStats.total}</div>
             </Card>
-            <Card className={t("pages.name.p_4")} data-testid="card-pending-orders">
-              <div className={t("pages.name.text_sm_text_gray_600")}>{t('pages.ProductionOrdersManagement.في_الانتظار')}</div>
-              <div className={t("pages.name.text_2xl_font_bold_text_yellow_600")} data-testid="stat-pending-orders">{totalStats.pending}</div>
+            <Card className="p-4" data-testid="card-pending-orders">
+              <div className="text-sm text-gray-600">في الانتظار</div>
+              <div className="text-2xl font-bold text-yellow-600" data-testid="stat-pending-orders">{totalStats.pending}</div>
             </Card>
-            <Card className={t("pages.name.p_4")} data-testid="card-active-orders">
-              <div className={t("pages.name.text_sm_text_gray_600")}>{t('pages.ProductionOrdersManagement.نشطة')}</div>
-              <div className={t("pages.name.text_2xl_font_bold_text_green_600")} data-testid="stat-active-orders">{totalStats.active}</div>
+            <Card className="p-4" data-testid="card-active-orders">
+              <div className="text-sm text-gray-600">نشطة</div>
+              <div className="text-2xl font-bold text-green-600" data-testid="stat-active-orders">{totalStats.active}</div>
             </Card>
-            <Card className={t("pages.name.p_4")} data-testid="card-completed-orders">
-              <div className={t("pages.name.text_sm_text_gray_600")}>{t('pages.ProductionOrdersManagement.مكتملة')}</div>
-              <div className={t("pages.name.text_2xl_font_bold_text_gray_600")} data-testid="stat-completed-orders">{totalStats.completed}</div>
+            <Card className="p-4" data-testid="card-completed-orders">
+              <div className="text-sm text-gray-600">مكتملة</div>
+              <div className="text-2xl font-bold text-gray-600" data-testid="stat-completed-orders">{totalStats.completed}</div>
             </Card>
           </div>
 
@@ -286,70 +322,76 @@ export default function ProductionOrdersManagement() {
 
           {/* جدول أوامر الإنتاج */}
           <Card data-testid="card-production-orders-table">
-            <div className={t("pages.name.overflow_x_auto")}>
+            <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead data-testid="header-order-number">{t('pages.ProductionOrdersManagement.رقم_الطلب')}</TableHead>
-                    <TableHead data-testid="header-production-order">{t('pages.ProductionOrdersManagement.رقم_أمر_الإنتاج')}</TableHead>
-                    <TableHead data-testid="header-customer">{t('pages.ProductionOrdersManagement.العميل')}</TableHead>
-                    <TableHead data-testid="header-product">{t('pages.ProductionOrdersManagement.المنتج')}</TableHead>
-                    <TableHead className={t("pages.name.text_center")} data-testid="header-quantity">{t('pages.ProductionOrdersManagement.الكمية_(كجم)')}</TableHead>
-                    <TableHead className={t("pages.name.text_center")} data-testid="header-status">{t('pages.ProductionOrdersManagement.الحالة')}</TableHead>
-                    <TableHead data-testid="header-assignment">{t('pages.ProductionOrdersManagement.التخصيص')}</TableHead>
-                    <TableHead className={t("pages.name.text_center")} data-testid="header-actions">{t('pages.ProductionOrdersManagement.الإجراءات')}</TableHead>
+                    <TableHead data-testid="header-order-number">رقم الطلب</TableHead>
+                    <TableHead data-testid="header-production-order">رقم أمر الإنتاج</TableHead>
+                    <TableHead data-testid="header-customer">العميل</TableHead>
+                    <TableHead data-testid="header-product">المنتج</TableHead>
+                    <TableHead className="text-center" data-testid="header-quantity">الكمية (كجم)</TableHead>
+                    <TableHead className="text-center" data-testid="header-status">الحالة</TableHead>
+                    <TableHead data-testid="header-assignment">التخصيص</TableHead>
+                    <TableHead className="text-center" data-testid="header-actions">الإجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className={t("pages.name.text_center_text_gray_500_py_8")} data-testid="text-no-orders">{t('pages.ProductionOrdersManagement.لا_توجد_أوامر_إنتاج')}</TableCell>
+                      <TableCell colSpan={8} className="text-center text-gray-500 py-8" data-testid="text-no-orders">
+                        لا توجد أوامر إنتاج
+                      </TableCell>
                     </TableRow>
                   ) : (
                     filteredOrders.map((order: any) => (
                       <TableRow key={order.id} data-testid={`row-order-${order.id}`}>
-                        <TableCell className={t("pages.name.font_medium")} data-testid={`cell-order-number-${order.id}`}>
+                        <TableCell className="font-medium" data-testid={`cell-order-number-${order.id}`}>
                           {order.order_number}
                         </TableCell>
-                        <TableCell className={t("pages.name.font_medium")} data-testid={`cell-production-order-${order.id}`}>
+                        <TableCell className="font-medium" data-testid={`cell-production-order-${order.id}`}>
                           {order.production_order_number}
                         </TableCell>
                         <TableCell data-testid={`cell-customer-${order.id}`}>
                           {order.customer_name_ar || order.customer_name}
                         </TableCell>
                         <TableCell data-testid={`cell-product-${order.id}`}>
-                          <div className={t("pages.name.text_sm")}>
+                          <div className="text-sm">
                             {order.size_caption}
                             {order.is_printed && (
-                              <Badge variant="outline" className={t("pages.name.mr_1_text_xs")} data-testid={`badge-printed-${order.id}`}>{t('pages.ProductionOrdersManagement.🎨_مطبوع')}</Badge>
+                              <Badge variant="outline" className="mr-1 text-xs" data-testid={`badge-printed-${order.id}`}>
+                                🎨 مطبوع
+                              </Badge>
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className={t("pages.name.text_center")} data-testid={`cell-quantity-${order.id}`}>
+                        <TableCell className="text-center" data-testid={`cell-quantity-${order.id}`}>
                           <div>
-                            <div className={t("pages.name.font_medium")}>{order.quantity_kg}</div>
-                            <div className={t("pages.name.text_xs_text_gray_500")}>
+                            <div className="font-medium">{order.quantity_kg}</div>
+                            <div className="text-xs text-gray-500">
                               نهائي: {order.final_quantity_kg}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className={t("pages.name.text_center")} data-testid={`cell-status-${order.id}`}>
+                        <TableCell className="text-center" data-testid={`cell-status-${order.id}`}>
                           {getStatusBadge(order.status)}
                         </TableCell>
                         <TableCell data-testid={`cell-assignment-${order.id}`}>
-                          <div className={t("pages.name.flex_flex_wrap_gap_1")}>
+                          <div className="flex flex-wrap gap-1">
                             {getAssignmentBadges(order)}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className={t("pages.name.flex_gap_2_justify_center")}>
+                          <div className="flex gap-2 justify-center">
                             {order.status === "pending" && (
                               <Button
                                 size="sm"
                                 onClick={() => handleActivate(order)}
                                 data-testid={`button-activate-${order.id}`}
                               >
-                                <Play className={t("pages.name.h_4_w_4_ml_1")} />{t('pages.ProductionOrdersManagement.تفعيل')}</Button>
+                                <Play className="h-4 w-4 ml-1" />
+                                تفعيل
+                              </Button>
                             )}
                             {order.status === "active" && (
                               <Button
@@ -361,7 +403,9 @@ export default function ProductionOrdersManagement() {
                                 }}
                                 data-testid={`button-reassign-${order.id}`}
                               >
-                                <Settings className={t("pages.name.h_4_w_4_ml_1")} />{t('pages.ProductionOrdersManagement.تخصيص')}</Button>
+                                <Settings className="h-4 w-4 ml-1" />
+                                تخصيص
+                              </Button>
                             )}
                             <IconWithTooltip
                               icon={
@@ -371,10 +415,10 @@ export default function ProductionOrdersManagement() {
                                   onClick={() => setShowStats(showStats === order.id ? null : order.id)}
                                   data-testid={`button-stats-${order.id}`}
                                 >
-                                  <BarChart3 className={t("pages.name.h_4_w_4")} />
+                                  <BarChart3 className="h-4 w-4" />
                                 </Button>
                               }
-                              tooltip="{t('pages.ProductionOrdersManagement.tooltip.عرض_الإحصائيات_التفصيلية')}"
+                              tooltip="عرض الإحصائيات التفصيلية"
                             />
                             <IconWithTooltip
                               icon={
@@ -384,10 +428,10 @@ export default function ProductionOrdersManagement() {
                                   onClick={() => handlePrintProductionOrder(order)}
                                   data-testid={`button-print-${order.id}`}
                                 >
-                                  <Printer className={t("pages.name.h_4_w_4")} />
+                                  <Printer className="h-4 w-4" />
                                 </Button>
                               }
-                              tooltip="{t('pages.ProductionOrdersManagement.tooltip.طباعة_أمر_الإنتاج')}"
+                              tooltip="طباعة أمر الإنتاج"
                             />
                           </div>
                         </TableCell>
@@ -401,7 +445,7 @@ export default function ProductionOrdersManagement() {
 
           {/* عرض إحصائيات أمر الإنتاج */}
           {showStats && (
-            <div className={t("pages.name.mt_4")}>
+            <div className="mt-4">
               <ProductionOrderStatsCard productionOrderId={showStats} />
             </div>
           )}
@@ -518,7 +562,10 @@ function PrintProductionOrderWrapper({ productionOrder, onClose }: { productionO
   const customerProduct = customerProductsData.find((cp: any) => cp.id === productionOrder.customer_product_id);
   const item = itemsData.find((i: any) => i.id === customerProduct?.item_id);
   const machine = machinesData.find((m: any) => m.id === productionOrder.assigned_machine_id);
-  const operator = usersData.find((u: any) =>{t('pages.ProductionOrdersManagement.u.id_===_productionorder.assigned_operator_id);_return_(')}<ProductionOrderPrintTemplate
+  const operator = usersData.find((u: any) => u.id === productionOrder.assigned_operator_id);
+
+  return (
+    <ProductionOrderPrintTemplate
       productionOrder={productionOrder}
       order={order}
       customer={customer}

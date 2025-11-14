@@ -14,7 +14,6 @@ import { Plus, Trash2, RefreshCw, ChevronDown } from "lucide-react";
 import OrdersSearch from "./OrdersSearch";
 import OrdersTable from "./OrdersTable";
 import OrdersForm from "./OrdersForm";
-import { useTranslation } from 'react-i18next';
 
 interface OrdersTabsProps {
   orders: any[];
@@ -44,8 +43,8 @@ interface OrdersTabsProps {
   onViewOrder: (order: any) => void;
   onPrintOrder: (order: any) => void;
   onOrderSubmit: (data: any, productionOrders: any[]) => void;
-  onBulkDelete?: (orderIds: number[]) =>{t('components.orders.OrdersTabs.promise')}<void>;
-  onBulkStatusChange?: (orderIds: number[], status: string) =>{t('components.orders.OrdersTabs.promise')}<void>;
+  onBulkDelete?: (orderIds: number[]) => Promise<void>;
+  onBulkStatusChange?: (orderIds: number[], status: string) => Promise<void>;
   currentUser?: any;
   isAdmin?: boolean;
 }
@@ -83,8 +82,6 @@ export default function OrdersTabs({
   currentUser,
   isAdmin = false,
 }: OrdersTabsProps) {
-  const { t } = useTranslation();
-  
   // Bulk selection state
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
 
@@ -112,14 +109,14 @@ export default function OrdersTabs({
   const handleBulkDelete = async () => {
     if (!onBulkDelete || selectedOrders.length === 0 || !isAdmin) return;
 
-    const confirmMessage = t('orders.bulk.confirmDelete', { count: selectedOrders.length });
+    const confirmMessage = `هل أنت متأكد من حذف ${selectedOrders.length} طلب؟ هذا الإجراء لا يمكن التراجع عنه.`;
     if (!confirm(confirmMessage)) return;
 
     try {
       await onBulkDelete(selectedOrders);
       setSelectedOrders([]);
     } catch (error) {
-      console.error(t('orders.bulk.deleteError'), error);
+      console.error("خطأ في الحذف الجماعي:", error);
     }
   };
 
@@ -130,23 +127,23 @@ export default function OrdersTabs({
       await onBulkStatusChange(selectedOrders, status);
       setSelectedOrders([]);
     } catch (error) {
-      console.error(t('orders.bulk.statusChangeError'), error);
+      console.error("خطأ في تغيير الحالة الجماعية:", error);
     }
   };
 
   return (
-    <Tabs defaultValue="orders" className={t("components.orders.orderstabs.name.space_y_4")}>
+    <Tabs defaultValue="orders" className="space-y-4">
       <TabsList>
-        <TabsTrigger value="orders">{t('orders.orders')}</TabsTrigger>
-        <TabsTrigger value="production-orders">{t('orders.productionOrders')}</TabsTrigger>
+        <TabsTrigger value="orders">الطلبات</TabsTrigger>
+        <TabsTrigger value="production-orders">أوامر الإنتاج</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="orders" className={t("components.orders.orderstabs.name.space_y_4")}>
+      <TabsContent value="orders" className="space-y-4">
         <Card>
           <CardHeader>
-            <div className={t("components.orders.orderstabs.name.flex_items_center_justify_between")}>
-              <CardTitle>{t('orders.manageOrders')}</CardTitle>
-              <div className={t("components.orders.orderstabs.name.flex_items_center_space_x_2_space_x_reverse")}>
+            <div className="flex items-center justify-between">
+              <CardTitle>إدارة الطلبات</CardTitle>
+              <div className="flex items-center space-x-2 space-x-reverse">
                 <OrdersSearch
                   searchTerm={searchTerm}
                   setSearchTerm={setSearchTerm}
@@ -159,8 +156,8 @@ export default function OrdersTabs({
                 >
                   <DialogTrigger asChild>
                     <Button onClick={onAddOrder} data-testid="button-add-order">
-                      <Plus className={t("components.orders.orderstabs.name.h_4_w_4_mr_2")} />
-                      {t('orders.addOrder')}
+                      <Plus className="h-4 w-4 mr-2" />
+                      إضافة طلب
                     </Button>
                   </DialogTrigger>
                 </Dialog>
@@ -169,59 +166,60 @@ export default function OrdersTabs({
           </CardHeader>
           <CardContent>
             {/* Bulk Actions Bar */}
-            {selectedOrders.length >{t('components.orders.OrdersTabs.0_&&_(')}<Alert className={t("components.orders.orderstabs.name.mb_4")}>
+            {selectedOrders.length > 0 && (
+              <Alert className="mb-4">
                 <AlertDescription>
-                  <div className={t("components.orders.orderstabs.name.flex_items_center_justify_between")}>
-                    <span className={t("components.orders.orderstabs.name.font_medium")}>
-                      {t('orders.bulk.selectedCount', { count: selectedOrders.length })}
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">
+                      تم تحديد {selectedOrders.length} طلب
                     </span>
-                    <div className={t("components.orders.orderstabs.name.flex_items_center_space_x_2_space_x_reverse")}>
+                    <div className="flex items-center space-x-2 space-x-reverse">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
-                            className={t("components.orders.orderstabs.name.text_orange_600_border_orange_600_hover_bg_orange_50")}
+                            className="text-orange-600 border-orange-600 hover:bg-orange-50"
                             data-testid="button-bulk-status-change"
                           >
-                            <RefreshCw className={t("components.orders.orderstabs.name.h_4_w_4_mr_1")} />
-                            {t('orders.bulk.changeStatus')}
-                            <ChevronDown className={t("components.orders.orderstabs.name.h_3_w_3_mr_1")} />
+                            <RefreshCw className="h-4 w-4 mr-1" />
+                            تغيير الحالة
+                            <ChevronDown className="h-3 w-3 mr-1" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className={t("components.orders.orderstabs.name.w_48")}>
+                        <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem
                             onClick={() =>
                               handleBulkStatusChange("for_production")
                             }
                           >
-                            <div className={t("components.orders.orderstabs.name.flex_items_center_w_full")}>
-                              <div className={t("components.orders.orderstabs.name.w_3_h_3_bg_blue_500_rounded_full_mr_2")}></div>
-                              {t('orders.status.for_production')}
+                            <div className="flex items-center w-full">
+                              <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                              إلى الإنتاج
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleBulkStatusChange("on_hold")}
                           >
-                            <div className={t("components.orders.orderstabs.name.flex_items_center_w_full")}>
-                              <div className={t("components.orders.orderstabs.name.w_3_h_3_bg_red_500_rounded_full_mr_2")}></div>
-                              {t('orders.status.on_hold')}
+                            <div className="flex items-center w-full">
+                              <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                              إيقاف مؤقت
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleBulkStatusChange("pending")}
                           >
-                            <div className={t("components.orders.orderstabs.name.flex_items_center_w_full")}>
-                              <div className={t("components.orders.orderstabs.name.w_3_h_3_bg_yellow_500_rounded_full_mr_2")}></div>
-                              {t('orders.status.pending')}
+                            <div className="flex items-center w-full">
+                              <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                              في الانتظار
                             </div>
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => handleBulkStatusChange("completed")}
                           >
-                            <div className={t("components.orders.orderstabs.name.flex_items_center_w_full")}>
-                              <div className={t("components.orders.orderstabs.name.w_3_h_3_bg_green_500_rounded_full_mr_2")}></div>
-                              {t('orders.status.completed')}
+                            <div className="flex items-center w-full">
+                              <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                              مكتمل
                             </div>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -233,8 +231,8 @@ export default function OrdersTabs({
                           onClick={handleBulkDelete}
                           data-testid="button-bulk-delete"
                         >
-                          <Trash2 className={t("components.orders.orderstabs.name.h_4_w_4_mr_2")} />
-                          {t('orders.bulk.deleteSelected', { count: selectedOrders.length })}
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          حذف المحدد ({selectedOrders.length})
                         </Button>
                       )}
                       <Button
@@ -243,7 +241,7 @@ export default function OrdersTabs({
                         onClick={() => setSelectedOrders([])}
                         data-testid="button-clear-selection"
                       >
-                        {t('orders.bulk.clearSelection')}
+                        إلغاء التحديد
                       </Button>
                     </div>
                   </div>
@@ -282,11 +280,11 @@ export default function OrdersTabs({
         />
       </TabsContent>
 
-      <TabsContent value="production-orders" className={t("components.orders.orderstabs.name.space_y_4")}>
+      <TabsContent value="production-orders" className="space-y-4">
         <Card>
           <CardHeader>
-            <div className={t("components.orders.orderstabs.name.flex_items_center_justify_between")}>
-              <CardTitle>{t('orders.productionOrders')}</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>أوامر الإنتاج</CardTitle>
               <OrdersSearch
                 searchTerm={productionSearchTerm}
                 setSearchTerm={setProductionSearchTerm}
@@ -298,95 +296,100 @@ export default function OrdersTabs({
           </CardHeader>
           <CardContent>
             {filteredProductionOrders.length === 0 ? (
-              <div className={t("components.orders.orderstabs.name.text_center_py_8_text_gray_500")}>
+              <div className="text-center py-8 text-gray-500">
                 {productionOrders.length === 0 
-                  ? t('orders.noProductionOrders') 
-                  : t('common.noSearchResults')}
-              </div>{t('components.orders.OrdersTabs.)_:_(')}<div className={t("components.orders.orderstabs.name.overflow_x_auto")}>
-                <table className={t("components.orders.orderstabs.name.min_w_full_divide_y_divide_gray_200")}>
-                  <thead className={t("components.orders.orderstabs.name.bg_gray_50")}>
+                  ? "لا توجد أوامر إنتاج" 
+                  : "لا توجد نتائج مطابقة للبحث"}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.productionOrderNumber')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        رقم أمر الإنتاج
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.orderNumber')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        رقم الطلب
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.customer')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        العميل
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('common.category')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الفئة
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('common.product')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        المنتج
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.quantityKg')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الكمية (كجم)
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.overrunPercentage')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        نسبة الزيادة
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('orders.finalQuantityKg')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الكمية النهائية (كجم)
                       </th>
-                      <th className={t("components.orders.orderstabs.name.px_6_py_3_text_right_text_xs_font_medium_text_gray_500_uppercase_tracking_wider")}>
-                        {t('common.status')}
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الحالة
                       </th>
                     </tr>
                   </thead>
-                  <tbody className={t("components.orders.orderstabs.name.bg_white_divide_y_divide_gray_200")}>
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {filteredProductionOrders.map((po: any) => {
                       const order = orders.find((o: any) => o.id === po.order_id);
                       const customer = customers.find((c: any) => c.id === order?.customer_id);
                       const customerProduct = customerProducts.find((cp: any) => cp.id === po.customer_product_id);
                       const category = categories.find((cat: any) => cat.id === customerProduct?.category_id);
-                      const item = items.find((itm: any) =>{t('components.orders.OrdersTabs.itm.id_===_customerproduct?.item_id);_return_(')}<tr key={po.id} className={t("components.orders.orderstabs.name.hover_bg_gray_50")} data-testid={`row-production-order-${po.id}`}>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900")}>
+                      const item = items.find((itm: any) => itm.id === customerProduct?.item_id);
+                      
+                      return (
+                        <tr key={po.id} className="hover:bg-gray-50" data-testid={`row-production-order-${po.id}`}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {po.production_order_number || po.id}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_900")}>
-                            {order?.order_number || t('common.notSpecified')}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {order?.order_number || "غير محدد"}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_900")}>
-                            {customer?.name_ar || customer?.name || t('common.notSpecified')}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {customer?.name_ar || customer?.name || "غير محدد"}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_900")} data-testid={`text-category-${po.id}`}>
-                            {category?.name_ar || category?.name || t('common.notSpecified')}
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-category-${po.id}`}>
+                            {category?.name_ar || category?.name || "غير محدد"}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_text_sm_text_gray_900")} data-testid={`text-product-${po.id}`}>
-                            <div className={t("components.orders.orderstabs.name.text_right")}>
-                              <div className={t("components.orders.orderstabs.name.font_medium_text_gray_900")}>
-                                {item?.name_ar || item?.name || t('common.notSpecified')}
+                          <td className="px-6 py-4 text-sm text-gray-900" data-testid={`text-product-${po.id}`}>
+                            <div className="text-right">
+                              <div className="font-medium text-gray-900">
+                                {item?.name_ar || item?.name || "غير محدد"}
                               </div>
                               {customerProduct?.size_caption && (
-                                <div className={t("components.orders.orderstabs.name.text_xs_text_gray_500_mt_0_5")}>
+                                <div className="text-xs text-gray-500 mt-0.5">
                                   {customerProduct.size_caption}
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_900")}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {po.quantity_kg || 0}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_text_gray_900")} data-testid={`text-overrun-percentage-${po.id}`}>
-                            <span className={t("components.orders.orderstabs.name.inline_flex_items_center_px_2_py_0_5_rounded_text_xs_font_medium_bg_blue_100_text_blue_800")}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-testid={`text-overrun-percentage-${po.id}`}>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                               {po.overrun_percentage ?? 0}%
                             </span>
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap_text_sm_font_medium_text_gray_900")} data-testid={`text-final-quantity-${po.id}`}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900" data-testid={`text-final-quantity-${po.id}`}>
                             {po.final_quantity_kg || po.quantity_kg || 0}
                           </td>
-                          <td className={t("components.orders.orderstabs.name.px_6_py_4_whitespace_nowrap")}>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                               po.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               po.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                               po.status === 'completed' ? 'bg-green-100 text-green-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
-                              {po.status === 'pending' ? t('orders.status.pending') :
-                               po.status === 'in_progress' ? t('orders.status.in_progress') :
-                               po.status === 'completed' ? t('orders.status.completed') :
+                              {po.status === 'pending' ? 'معلق' :
+                               po.status === 'in_progress' ? 'قيد التنفيذ' :
+                               po.status === 'completed' ? 'مكتمل' :
                                po.status}
                             </span>
                           </td>

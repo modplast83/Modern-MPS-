@@ -4,67 +4,64 @@ import SimpleFieldTraining from "./SimpleFieldTraining.tsx";
 import PerformanceReviews from "./PerformanceReviews.tsx";
 import LeaveManagement from "./LeaveManagement.tsx";
 import AttendanceManagement from "./AttendanceManagement.tsx";
-import { useTranslation } from 'react-i18next';
 
 export default function HRTabs() {
-  const { t } = useTranslation();
-
   return (
-    <div className={t("components.hr.hrtabs.name.space_y_6")} dir="rtl">
-      <div className={t("components.hr.hrtabs.name.text_center")}>
-        <h1 className={t("components.hr.hrtabs.name.text_3xl_font_bold_text_gray_900_dark_text_white")}>
-          {t('hr.title')}
+    <div className="space-y-6" dir="rtl">
+      <div className="text-center">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          نظام الموارد البشرية المتقدم
         </h1>
-        <p className={t("components.hr.hrtabs.name.text_gray_600_dark_text_gray_300_mt_2")}>
-          {t('hr.description', 'إدارة شاملة للتدريب وتقييم الأداء والإجازات')}
+        <p className="text-gray-600 dark:text-gray-300 mt-2">
+          إدارة شاملة للتدريب وتقييم الأداء والإجازات
         </p>
       </div>
 
-      <Tabs defaultValue="attendance" className={t("components.hr.hrtabs.name.w_full")}>
-        <TabsList className={t("components.hr.hrtabs.name.grid_w_full_grid_cols_4_bg_gray_100_dark_bg_gray_800")}>
+      <Tabs defaultValue="attendance" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 bg-gray-100 dark:bg-gray-800">
           <TabsTrigger
             value="attendance"
-            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
+            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
-            <Clock className={t("components.hr.hrtabs.name.w_4_h_4")} />
-            {t('hr.attendance')}
+            <Clock className="w-4 h-4" />
+            إدارة الحضور
           </TabsTrigger>
           <TabsTrigger
             value="training"
-            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
+            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
-            <GraduationCap className={t("components.hr.hrtabs.name.w_4_h_4")} />
-            {t('hr.fieldTraining')}
+            <GraduationCap className="w-4 h-4" />
+            التدريب الميداني
           </TabsTrigger>
           <TabsTrigger
             value="performance"
-            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
+            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
-            <Target className={t("components.hr.hrtabs.name.w_4_h_4")} />
-            {t('hr.performance')}
+            <Target className="w-4 h-4" />
+            تقييم الأداء
           </TabsTrigger>
           <TabsTrigger
             value="leaves"
-            className={t("components.hr.hrtabs.name.flex_items_center_gap_2_data_state_active_bg_white_dark_data_state_active_bg_gray_700")}
+            className="flex items-center gap-2 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700"
           >
-            <Calendar className={t("components.hr.hrtabs.name.w_4_h_4")} />
-            {t('hr.leaves')}
+            <Calendar className="w-4 h-4" />
+            إدارة الطلبات
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="attendance" className={t("components.hr.hrtabs.name.space_y_4")}>
+        <TabsContent value="attendance" className="space-y-4">
           <AttendanceManagement />
         </TabsContent>
 
-        <TabsContent value="training" className={t("components.hr.hrtabs.name.space_y_4")}>
+        <TabsContent value="training" className="space-y-4">
           <SimpleFieldTraining />
         </TabsContent>
 
-        <TabsContent value="performance" className={t("components.hr.hrtabs.name.space_y_4")}>
+        <TabsContent value="performance" className="space-y-4">
           <PerformanceReviews />
         </TabsContent>
 
-        <TabsContent value="leaves" className={t("components.hr.hrtabs.name.space_y_4")}>
+        <TabsContent value="leaves" className="space-y-4">
           <LeaveManagement />
         </TabsContent>
       </Tabs>

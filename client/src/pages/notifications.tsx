@@ -6,15 +6,15 @@ import NotificationCenter from "../components/notifications/NotificationCenter";
 
 export default function NotificationsPage() {
   return (
-    <div className={t("pages.notifications.name.min_h_screen_bg_gray_50_dark_bg_gray_900")}>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
 
-      <div className={t("pages.notifications.name.flex")}>
+      <div className="flex">
         <Sidebar />
         <MobileNav />
 
-        <main className={t("pages.notifications.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-          <div className={t("pages.notifications.name.max_w_7xl_mx_auto")}>
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="max-w-7xl mx-auto">
             <NotificationCenter />
           </div>
         </main>

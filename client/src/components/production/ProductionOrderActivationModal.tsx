@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -37,8 +36,8 @@ export default function ProductionOrderActivationModal({
   operators,
   isUpdating = false,
 }: ProductionOrderActivationModalProps) {
-  const { t } = useTranslation();
-  const [selectedMachineId, setSelectedMachineId] = useState<string>{t('components.production.ProductionOrderActivationModal.("");_const_[selectedoperatorid,_setselectedoperatorid]_=_usestate')}<string>("");
+  const [selectedMachineId, setSelectedMachineId] = useState<string>("");
+  const [selectedOperatorId, setSelectedOperatorId] = useState<string>("");
 
   const handleConfirm = () => {
     const machineId = selectedMachineId || undefined;
@@ -46,9 +45,12 @@ export default function ProductionOrderActivationModal({
     onConfirm(machineId, operatorId);
   };
 
+  // فلتر المكائن النشطة فقط
   const activeMachines = machines.filter(m => m.status === "active");
 
+  // فلتر العمال حسب الأقسام المناسبة
   const productionOperators = operators.filter(u => {
+    // يمكنك تعديل هذا الفلتر حسب هيكل البيانات
     return u.section_id && ['production', 'factory'].includes(u.section_id);
   });
 
@@ -57,45 +59,45 @@ export default function ProductionOrderActivationModal({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {isUpdating ? t('common.update') : t('production.activateOrder')}
+            {isUpdating ? "تحديث تخصيص أمر الإنتاج" : "تفعيل أمر الإنتاج"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className={t("components.production.name.space_y_4")}>
+        <div className="space-y-4">
           {order && (
-            <div className={t("components.production.name.bg_gray_50_p_3_rounded_lg")}>
-              <div className={t("components.production.name.text_sm_space_y_1")}>
-                <div className={t("components.production.name.flex_justify_between")}>
-                  <span className={t("components.production.name.text_gray_600")}>{t('production.productionOrderNumber')}:</span>
-                  <span className={t("components.production.name.font_medium")}>{order.production_order_number}</span>
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <div className="text-sm space-y-1">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">رقم أمر الإنتاج:</span>
+                  <span className="font-medium">{order.production_order_number}</span>
                 </div>
-                <div className={t("components.production.name.flex_justify_between")}>
-                  <span className={t("components.production.name.text_gray_600")}>{t('orders.customer')}:</span>
-                  <span className={t("components.production.name.font_medium")}>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">العميل:</span>
+                  <span className="font-medium">
                     {order.customer_name_ar || order.customer_name}
                   </span>
                 </div>
-                <div className={t("components.production.name.flex_justify_between")}>
-                  <span className={t("components.production.name.text_gray_600")}>{t('orders.product')}:</span>
-                  <span className={t("components.production.name.font_medium")}>{order.size_caption}</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">المنتج:</span>
+                  <span className="font-medium">{order.size_caption}</span>
                 </div>
-                <div className={t("components.production.name.flex_justify_between")}>
-                  <span className={t("components.production.name.text_gray_600")}>{t('common.quantity')}:</span>
-                  <span className={t("components.production.name.font_medium")}>{order.quantity_kg} {t('warehouse.kg')}</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">الكمية:</span>
+                  <span className="font-medium">{order.quantity_kg} كجم</span>
                 </div>
               </div>
             </div>
           )}
 
           <div>
-            <Label htmlFor="machine">{t('production.machine')} ({t('common.optional')})</Label>
+            <Label htmlFor="machine">الماكينة (اختياري)</Label>
             <Select value={selectedMachineId} onValueChange={setSelectedMachineId}>
               <SelectTrigger id="machine" data-testid="select-machine">
-                <SelectValue placeholder={t('production.selectMachine')} />
+                <SelectValue placeholder="اختر الماكينة..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none" data-testid="option-no-machine">
-                  {t('common.noData')}
+                  بدون تخصيص
                 </SelectItem>
                 {activeMachines.map((machine) => (
                   <SelectItem
@@ -103,10 +105,10 @@ export default function ProductionOrderActivationModal({
                     value={machine.id}
                     data-testid={`option-machine-${machine.id}`}
                   >
-                    <div className={t("components.production.name.flex_items_center_gap_2")}>
+                    <div className="flex items-center gap-2">
                       {machine.name_ar || machine.name}
                       {machine.type && (
-                        <Badge variant="outline" className={t("components.production.name.text_xs")}>
+                        <Badge variant="outline" className="text-xs">
                           {machine.type}
                         </Badge>
                       )}
@@ -116,21 +118,21 @@ export default function ProductionOrderActivationModal({
               </SelectContent>
             </Select>
             {selectedMachineId && selectedMachineId !== "none" && (
-              <p className={t("components.production.name.text_sm_text_green_600_mt_1")}>
-                {t('production.assignToMachine')}
+              <p className="text-sm text-green-600 mt-1">
+                سيتم تخصيص الماكينة لهذا الأمر
               </p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="operator">{t('production.operator')} ({t('common.optional')})</Label>
+            <Label htmlFor="operator">العامل المسؤول (اختياري)</Label>
             <Select value={selectedOperatorId} onValueChange={setSelectedOperatorId}>
               <SelectTrigger id="operator" data-testid="select-operator">
-                <SelectValue placeholder={t('common.select')} />
+                <SelectValue placeholder="اختر العامل..." />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none" data-testid="option-no-operator">
-                  {t('common.noData')}
+                  بدون تخصيص
                 </SelectItem>
                 {productionOperators.map((operator) => (
                   <SelectItem
@@ -144,16 +146,17 @@ export default function ProductionOrderActivationModal({
               </SelectContent>
             </Select>
             {selectedOperatorId && selectedOperatorId !== "none" && (
-              <p className={t("components.production.name.text_sm_text_green_600_mt_1")}>
-                {t('production.assignToMachine')}
+              <p className="text-sm text-green-600 mt-1">
+                سيتم تخصيص العامل لهذا الأمر
               </p>
             )}
           </div>
 
           {!isUpdating && (
-            <div className={t("components.production.name.bg_yellow_50_border_border_yellow_200_rounded_lg_p_3")}>
-              <p className={t("components.production.name.text_sm_text_yellow_800")}>
-                <strong>{t('common.notes')}:</strong> {t('production.activate')}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <p className="text-sm text-yellow-800">
+                <strong>ملاحظة:</strong> سيتم تفعيل أمر الإنتاج وتغيير حالته إلى "نشط".
+                يمكنك تخصيص الماكينة والعامل الآن أو لاحقاً.
               </p>
             </div>
           )}
@@ -161,10 +164,10 @@ export default function ProductionOrderActivationModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            {t('common.cancel')}
+            إلغاء
           </Button>
           <Button onClick={handleConfirm} data-testid="button-confirm-activation">
-            {isUpdating ? t('common.update') : t('production.activate')}
+            {isUpdating ? "تحديث التخصيص" : "تفعيل الأمر"}
           </Button>
         </DialogFooter>
       </DialogContent>

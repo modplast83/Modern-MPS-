@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { Input } from "../ui/input";
 import {
   Select,
@@ -24,40 +23,41 @@ export default function OrdersSearch({
   setStatusFilter,
   type = 'orders',
 }: OrdersSearchProps) {
-  const { t } = useTranslation();
   const isProduction = type === 'production';
   
   return (
-    <div className={t("components.orders.orderssearch.name.flex_space_x_2_space_x_reverse")}>
-      <div className={t("components.orders.orderssearch.name.relative")}>
-        <Search className={t("components.orders.orderssearch.name.absolute_left_3_top_1_2_transform_translate_y_1_2_h_4_w_4_text_gray_400")} />
+    <div className="flex space-x-2 space-x-reverse">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <Input
-          placeholder={isProduction ? t("orders.searchProductionOrders") : t("orders.searchPlaceholder")}
+          placeholder={isProduction ? "البحث في أوامر الإنتاج..." : "البحث في الطلبات..."}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className={t("components.orders.orderssearch.name.pl_10_w_64")}
+          className="pl-10 w-64"
           data-testid={isProduction ? "input-search-production" : "input-search-orders"}
         />
       </div>
       <Select value={statusFilter || ""} onValueChange={setStatusFilter}>
-        <SelectTrigger className={t("components.orders.orderssearch.name.w_48")} data-testid="select-status-filter">
-          <SelectValue placeholder={t("orders.filterByStatus")} />
+        <SelectTrigger className="w-48" data-testid="select-status-filter">
+          <SelectValue placeholder="فلترة حسب الحالة" />
         </SelectTrigger>
         <SelectContent>
           {isProduction ? (
             <>
-              <SelectItem value="all">{t("orders.allProductionOrders")}</SelectItem>
-              <SelectItem value="pending">{t("production.pending")}</SelectItem>
-              <SelectItem value="in_progress">{t("production.inProduction")}</SelectItem>
-              <SelectItem value="completed">{t("production.completed")}</SelectItem>
-            </>{t('components.orders.OrdersSearch.)_:_(')}<>
-              <SelectItem value="all">{t("orders.allOrders")}</SelectItem>
-              <SelectItem value="waiting">{t("production.waiting")}</SelectItem>
-              <SelectItem value="in_production">{t("production.inProduction")}</SelectItem>
-              <SelectItem value="paused">{t("production.paused")}</SelectItem>
-              <SelectItem value="completed">{t("production.completed")}</SelectItem>
-              <SelectItem value="received">{t("production.received")}</SelectItem>
-              <SelectItem value="delivered">{t("production.delivered")}</SelectItem>
+              <SelectItem value="all">جميع أوامر الإنتاج</SelectItem>
+              <SelectItem value="pending">معلق</SelectItem>
+              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+              <SelectItem value="completed">مكتمل</SelectItem>
+            </>
+          ) : (
+            <>
+              <SelectItem value="all">جميع الطلبات</SelectItem>
+              <SelectItem value="waiting">انتظار</SelectItem>
+              <SelectItem value="in_production">قيد الإنتاج</SelectItem>
+              <SelectItem value="paused">معلق</SelectItem>
+              <SelectItem value="completed">مكتمل</SelectItem>
+              <SelectItem value="received">مستلم</SelectItem>
+              <SelectItem value="delivered">تم التوصيل</SelectItem>
             </>
           )}
         </SelectContent>

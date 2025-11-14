@@ -20,7 +20,8 @@ type CarouselProps = {
 };
 
 type CarouselContextProps = {
-  carouselRef: ReturnType<typeof useEmblaCarousel>{t('components.ui.carousel.[0];_api:_returntype')}<typeof useEmblaCarousel>[1];
+  carouselRef: ReturnType<typeof useEmblaCarousel>[0];
+  api: ReturnType<typeof useEmblaCarousel>[1];
   scrollPrev: () => void;
   scrollNext: () => void;
   canScrollPrev: boolean;
@@ -145,7 +146,7 @@ const Carousel = React.forwardRef<
     );
   },
 );
-Carousel.displayName={t("components.ui.carousel.name.carousel")};
+Carousel.displayName = "Carousel";
 
 const CarouselContent = React.forwardRef<
   HTMLDivElement,
@@ -154,7 +155,7 @@ const CarouselContent = React.forwardRef<
   const { carouselRef, orientation } = useCarousel();
 
   return (
-    <div ref={carouselRef} className={t("components.ui.carousel.name.overflow_hidden")}>
+    <div ref={carouselRef} className="overflow-hidden">
       <div
         ref={ref}
         className={cn(
@@ -167,7 +168,7 @@ const CarouselContent = React.forwardRef<
     </div>
   );
 });
-CarouselContent.displayName={t("components.ui.carousel.name.carouselcontent")};
+CarouselContent.displayName = "CarouselContent";
 
 const CarouselItem = React.forwardRef<
   HTMLDivElement,
@@ -189,7 +190,7 @@ const CarouselItem = React.forwardRef<
     />
   );
 });
-CarouselItem.displayName={t("components.ui.carousel.name.carouselitem")};
+CarouselItem.displayName = "CarouselItem";
 
 const CarouselPrevious = React.forwardRef<
   HTMLButtonElement,
@@ -213,12 +214,12 @@ const CarouselPrevious = React.forwardRef<
       onClick={scrollPrev}
       {...props}
     >
-      <ArrowLeft className={t("components.ui.carousel.name.h_4_w_4")} />
-      <span className={t("components.ui.carousel.name.sr_only")}>{t('components.ui.carousel.previous_slide')}</span>
+      <ArrowLeft className="h-4 w-4" />
+      <span className="sr-only">Previous slide</span>
     </Button>
   );
 });
-CarouselPrevious.displayName={t("components.ui.carousel.name.carouselprevious")};
+CarouselPrevious.displayName = "CarouselPrevious";
 
 const CarouselNext = React.forwardRef<
   HTMLButtonElement,
@@ -242,12 +243,12 @@ const CarouselNext = React.forwardRef<
       onClick={scrollNext}
       {...props}
     >
-      <ArrowRight className={t("components.ui.carousel.name.h_4_w_4")} />
-      <span className={t("components.ui.carousel.name.sr_only")}>{t('components.ui.carousel.next_slide')}</span>
+      <ArrowRight className="h-4 w-4" />
+      <span className="sr-only">Next slide</span>
     </Button>
   );
 });
-CarouselNext.displayName={t("components.ui.carousel.name.carouselnext")};
+CarouselNext.displayName = "CarouselNext";
 
 export {
   type CarouselApi,

@@ -7,7 +7,6 @@ import {
 import { Button } from "../ui/button";
 import { Printer } from "lucide-react";
 import { format } from "date-fns";
-import { useTranslation } from 'react-i18next';
 
 interface ViewOrderDialogProps {
   isOpen: boolean;
@@ -30,19 +29,17 @@ export default function ViewOrderDialog({
   items,
   onPrint,
 }: ViewOrderDialogProps) {
-  const { t } = useTranslation();
-  
   if (!order) return null;
 
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
-      waiting: t('orders.status.waiting'),
-      for_production: t('orders.status.for_production'),
-      in_production: t('orders.status.in_production'),
-      completed: t('orders.status.completed'),
-      cancelled: t('orders.status.cancelled'),
-      on_hold: t('orders.status.on_hold'),
-      pending: t('orders.status.pending'),
+      waiting: "قيد الانتظار",
+      for_production: "جاهز للإنتاج",
+      in_production: "قيد الإنتاج",
+      completed: "مكتمل",
+      cancelled: "ملغي",
+      on_hold: "معلق",
+      pending: "معلق",
     };
     return statusMap[status] || status;
   };
@@ -61,43 +58,47 @@ export default function ViewOrderDialog({
   };
 
   const orderProductionOrders = productionOrders.filter(
-    (po: any) =>{t('components.orders.ViewOrderDialog.po.order_id_===_order.id_);_return_(')}<Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={t("components.orders.vieworderdialog.name.max_w_3xl_max_h_85vh_overflow_y_auto")}>
+    (po: any) => po.order_id === order.id
+  );
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <div className={t("components.orders.vieworderdialog.name.flex_items_center_justify_between")}>
-            <DialogTitle className={t("components.orders.vieworderdialog.name.text_xl")}>
-              {t('orders.orderDetails')} {order.order_number}
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl">
+              تفاصيل الطلب {order.order_number}
             </DialogTitle>
             {onPrint && (
               <Button
                 onClick={() => onPrint(order)}
                 variant="outline"
                 size="sm"
-                className={t("components.orders.vieworderdialog.name.gap_2")}
+                className="gap-2"
                 data-testid="button-print-order-dialog"
               >
-                <Printer className={t("components.orders.vieworderdialog.name.h_4_w_4")} />
-                {t('common.print')}
+                <Printer className="h-4 w-4" />
+                طباعة
               </Button>
             )}
           </div>
         </DialogHeader>
 
-        <div className={t("components.orders.vieworderdialog.name.space_y_6")}>
+        <div className="space-y-6">
           {/* Order Info */}
-          <div className={t("components.orders.vieworderdialog.name.grid_grid_cols_2_gap_4")}>
-            <div className={t("components.orders.vieworderdialog.name.space_y_3")}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('orders.orderNumber')}</span>
-                <p className={t("components.orders.vieworderdialog.name.text_base_font_semibold")}>{order.order_number}</p>
+                <span className="text-sm font-medium text-gray-500">رقم الطلب</span>
+                <p className="text-base font-semibold">{order.order_number}</p>
               </div>
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('orders.customer')}</span>
-                <p className={t("components.orders.vieworderdialog.name.text_base")}>{customer?.name_ar || customer?.name || t('common.notSpecified')}</p>
+                <span className="text-sm font-medium text-gray-500">العميل</span>
+                <p className="text-base">{customer?.name_ar || customer?.name || "غير محدد"}</p>
               </div>
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('common.status')}</span>
-                <div className={t("components.orders.vieworderdialog.name.mt_1")}>
+                <span className="text-sm font-medium text-gray-500">الحالة</span>
+                <div className="mt-1">
                   <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(order.status)}`}>
                     {getStatusText(order.status)}
                   </span>
@@ -105,25 +106,25 @@ export default function ViewOrderDialog({
               </div>
             </div>
 
-            <div className={t("components.orders.vieworderdialog.name.space_y_3")}>
+            <div className="space-y-3">
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('common.createdAt')}</span>
-                <p className={t("components.orders.vieworderdialog.name.text_base")}>
+                <span className="text-sm font-medium text-gray-500">تاريخ الإنشاء</span>
+                <p className="text-base">
                   {order.created_at
                     ? format(new Date(order.created_at), "dd/MM/yyyy")
-                    : t('common.notSpecified')}
+                    : "غير محدد"}
                 </p>
               </div>
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('orders.deliveryDays')}</span>
-                <p className={t("components.orders.vieworderdialog.name.text_base")}>{order.delivery_days || t('common.notSpecified')} {t('common.day')}</p>
+                <span className="text-sm font-medium text-gray-500">أيام التسليم</span>
+                <p className="text-base">{order.delivery_days || "غير محدد"} يوم</p>
               </div>
               <div>
-                <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('orders.expectedDeliveryDate')}</span>
-                <p className={t("components.orders.vieworderdialog.name.text_base")}>
+                <span className="text-sm font-medium text-gray-500">تاريخ التسليم المتوقع</span>
+                <p className="text-base">
                   {order.delivery_date
                     ? format(new Date(order.delivery_date), "dd/MM/yyyy")
-                    : t('common.notSpecified')}
+                    : "غير محدد"}
                 </p>
               </div>
             </div>
@@ -132,35 +133,41 @@ export default function ViewOrderDialog({
           {/* Notes */}
           {order.notes && (
             <div>
-              <span className={t("components.orders.vieworderdialog.name.text_sm_font_medium_text_gray_500")}>{t('common.notes')}</span>
-              <p className={t("components.orders.vieworderdialog.name.text_base_mt_1_bg_gray_50_p_3_rounded")}>{order.notes}</p>
+              <span className="text-sm font-medium text-gray-500">ملاحظات</span>
+              <p className="text-base mt-1 bg-gray-50 p-3 rounded">{order.notes}</p>
             </div>
           )}
 
           {/* Production Orders */}
           <div>
-            <h3 className={t("components.orders.vieworderdialog.name.text_base_font_semibold_mb_3")}>{t('orders.productionOrders')} ({orderProductionOrders.length})</h3>
+            <h3 className="text-base font-semibold mb-3">أوامر الإنتاج ({orderProductionOrders.length})</h3>
             {orderProductionOrders.length === 0 ? (
-              <div className={t("components.orders.vieworderdialog.name.text_center_py_6_text_sm_text_gray_500")}>
-                {t('orders.noProductionOrdersForOrder')}
-              </div>{t('components.orders.ViewOrderDialog.)_:_(')}<div className={t("components.orders.vieworderdialog.name.space_y_3")}>
+              <div className="text-center py-6 text-sm text-gray-500">
+                لا توجد أوامر إنتاج لهذا الطلب
+              </div>
+            ) : (
+              <div className="space-y-3">
                 {orderProductionOrders.map((po: any) => {
                   const customerProduct = customerProducts.find(
                     (cp: any) => cp.id === po.customer_product_id
                   );
                   const item = items.find(
-                    (i: any) =>{t('components.orders.ViewOrderDialog.i.id_===_customerproduct?.item_id_);_return_(')}<div
+                    (i: any) => i.id === customerProduct?.item_id
+                  );
+
+                  return (
+                    <div
                       key={po.id}
-                      className={t("components.orders.vieworderdialog.name.border_rounded_lg_p_4_bg_gray_50")}
+                      className="border rounded-lg p-4 bg-gray-50"
                       data-testid={`production-order-detail-${po.id}`}
                     >
-                      <div className={t("components.orders.vieworderdialog.name.flex_items_start_justify_between_mb_2")}>
+                      <div className="flex items-start justify-between mb-2">
                         <div>
-                          <h4 className={t("components.orders.vieworderdialog.name.font_medium_text_sm")}>
+                          <h4 className="font-medium text-sm">
                             {po.production_order_number || `PO-${po.id}`}
                           </h4>
-                          <p className={t("components.orders.vieworderdialog.name.text_xs_text_gray_600_mt_1")}>
-                            {item?.name_ar || item?.name || t('orders.productNotSpecified')}
+                          <p className="text-xs text-gray-600 mt-1">
+                            {item?.name_ar || item?.name || "منتج غير محدد"}
                             {customerProduct?.size_caption && ` - ${customerProduct.size_caption}`}
                           </p>
                         </div>
@@ -169,18 +176,18 @@ export default function ViewOrderDialog({
                         </span>
                       </div>
 
-                      <div className={t("components.orders.vieworderdialog.name.grid_grid_cols_3_gap_3_mt_3_text_sm")}>
+                      <div className="grid grid-cols-3 gap-3 mt-3 text-sm">
                         <div>
-                          <span className={t("components.orders.vieworderdialog.name.text_gray_500")}>{t('orders.baseQuantity')}:</span>
-                          <p className={t("components.orders.vieworderdialog.name.font_medium")}>{po.quantity_kg} {t('common.kg')}</p>
+                          <span className="text-gray-500">الكمية الأساسية:</span>
+                          <p className="font-medium">{po.quantity_kg} كجم</p>
                         </div>
                         <div>
-                          <span className={t("components.orders.vieworderdialog.name.text_gray_500")}>{t('orders.overrunPercentage')}:</span>
-                          <p className={t("components.orders.vieworderdialog.name.font_medium")}>{po.overrun_percentage ?? 0}%</p>
+                          <span className="text-gray-500">نسبة الزيادة:</span>
+                          <p className="font-medium">{po.overrun_percentage ?? 0}%</p>
                         </div>
                         <div>
-                          <span className={t("components.orders.vieworderdialog.name.text_gray_500")}>{t('orders.finalQuantity')}:</span>
-                          <p className={t("components.orders.vieworderdialog.name.font_medium_text_blue_600")}>{po.final_quantity_kg || po.quantity_kg} {t('common.kg')}</p>
+                          <span className="text-gray-500">الكمية النهائية:</span>
+                          <p className="font-medium text-blue-600">{po.final_quantity_kg || po.quantity_kg} كجم</p>
                         </div>
                       </div>
                     </div>

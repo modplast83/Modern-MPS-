@@ -28,11 +28,13 @@ export function MetricCard({
     if (!trend) return null;
 
     if (trend.value === 0) {
-      return <Minus className={t("components.charts.metricscards.name.w_4_h_4_text_gray_500")} />;
+      return <Minus className="w-4 h-4 text-gray-500" />;
     }
 
     return trend.isPositive ? (
-      <TrendingUp className={t("components.charts.metricscards.name.w_4_h_4_text_green_500")} />{t('components.charts.MetricsCards.)_:_(')}<TrendingDown className={t("components.charts.metricscards.name.w_4_h_4_text_red_500")} />
+      <TrendingUp className="w-4 h-4 text-green-500" />
+    ) : (
+      <TrendingDown className="w-4 h-4 text-red-500" />
     );
   };
 
@@ -44,20 +46,20 @@ export function MetricCard({
 
   return (
     <Card className={`${className}`} data-testid="card-metric">
-      <CardContent className={t("components.charts.metricscards.name.p_6")}>
-        <div className={t("components.charts.metricscards.name.flex_items_center_justify_between")}>
-          <div className={t("components.charts.metricscards.name.flex_1")}>
-            <div className={t("components.charts.metricscards.name.flex_items_center_justify_between")}>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
               <p
-                className={t("components.charts.metricscards.name.text_sm_font_medium_text_gray_600")}
+                className="text-sm font-medium text-gray-600"
                 data-testid="text-metric-title"
               >
                 {title}
               </p>
-              {icon && <div className={t("components.charts.metricscards.name.text_gray_400")}>{icon}</div>}
+              {icon && <div className="text-gray-400">{icon}</div>}
             </div>
 
-            <div className={t("components.charts.metricscards.name.mt_2")}>
+            <div className="mt-2">
               <p
                 className={`text-2xl font-bold text-gray-900 ${valueClassName}`}
                 data-testid="text-metric-value"
@@ -67,7 +69,7 @@ export function MetricCard({
 
               {description && (
                 <p
-                  className={t("components.charts.metricscards.name.text_xs_text_gray_500_mt_1")}
+                  className="text-xs text-gray-500 mt-1"
                   data-testid="text-metric-description"
                 >
                   {description}
@@ -75,7 +77,7 @@ export function MetricCard({
               )}
 
               {trend && (
-                <div className={t("components.charts.metricscards.name.flex_items_center_gap_1_mt_2")}>
+                <div className="flex items-center gap-1 mt-2">
                   {getTrendIcon()}
                   <span
                     className={`text-xs font-medium ${getTrendColor()}`}

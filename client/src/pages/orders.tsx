@@ -2,7 +2,6 @@ import { useState, lazy, Suspense } from "react";
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useTranslation } from "react-i18next";
 import Header from "../components/layout/Header";
 import Sidebar from "../components/layout/Sidebar";
 import { useAuth } from "../hooks/use-auth";
@@ -16,13 +15,13 @@ import { Skeleton } from "../components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Search, ClipboardCheck, Link2, BarChart3, Package } from "lucide-react";
 
+// استيراد كسول للصفحات
 const RollSearch = lazy(() => import("./RollSearch"));
 const ProductionOrdersManagement = lazy(() => import("./ProductionOrdersManagement"));
 const ProductionQueues = lazy(() => import("./ProductionQueues"));
 const ProductionReports = lazy(() => import("./ProductionReports"));
 
 export default function Orders() {
-  const { t } = useTranslation();
   const [location, setLocation] = useLocation();
   
   // الحصول على tab من query parameters
@@ -87,7 +86,7 @@ export default function Orders() {
     queryKey: ["/api/orders"],
     queryFn: async () => {
       const response = await fetch("/api/orders");
-      if (!response.ok) throw new Error(t("toast.fetchOrdersError"));
+      if (!response.ok) throw new Error("فشل في جلب الطلبات");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -99,7 +98,7 @@ export default function Orders() {
     queryKey: ["/api/production-orders"],
     queryFn: async () => {
       const response = await fetch("/api/production-orders");
-      if (!response.ok) throw new Error(t("toast.fetchProductionOrdersError"));
+      if (!response.ok) throw new Error("فشل في جلب أوامر الإنتاج");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -111,7 +110,7 @@ export default function Orders() {
     queryKey: ["/api/customers"],
     queryFn: async () => {
       const response = await fetch("/api/customers");
-      if (!response.ok) throw new Error(t("toast.fetchCustomersError"));
+      if (!response.ok) throw new Error("فشل في جلب العملاء");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -123,7 +122,7 @@ export default function Orders() {
     queryKey: ["/api/customer-products"],
     queryFn: async () => {
       const response = await fetch("/api/customer-products");
-      if (!response.ok) throw new Error(t("toast.fetchCustomerProductsError"));
+      if (!response.ok) throw new Error("فشل في جلب منتجات العملاء");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -135,7 +134,7 @@ export default function Orders() {
     queryKey: ["/api/users"],
     queryFn: async () => {
       const response = await fetch("/api/users");
-      if (!response.ok) throw new Error(t("toast.fetchUsersError"));
+      if (!response.ok) throw new Error("فشل في جلب المستخدمين");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -147,7 +146,7 @@ export default function Orders() {
     queryKey: ["/api/items"],
     queryFn: async () => {
       const response = await fetch("/api/items");
-      if (!response.ok) throw new Error(t("toast.fetchItemsError"));
+      if (!response.ok) throw new Error("فشل في جلب العناصر");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -159,7 +158,7 @@ export default function Orders() {
     queryKey: ["/api/categories"],
     queryFn: async () => {
       const response = await fetch("/api/categories");
-      if (!response.ok) throw new Error(t("toast.fetchCategoriesError"));
+      if (!response.ok) throw new Error("فشل في جلب الفئات");
       const result = await response.json();
       const data = result.data || result;
       return Array.isArray(data) ? data : [];
@@ -241,8 +240,8 @@ export default function Orders() {
       // Check if user is authenticated
       if (!user?.id) {
         toast({
-          title: t("common.error"),
-          description: t("production.loginFirst"),
+          title: "خطأ",
+          description: "يجب تسجيل الدخول لإنشاء طلب",
           variant: "destructive",
         });
         return;
@@ -329,8 +328,8 @@ export default function Orders() {
         setEditingOrder(null);
 
         toast({
-          title: t("toast.orderUpdated"),
-          description: `${t("toast.orderUpdatedSuccess")} ${editingOrder.order_number}`,
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث الطلب ${editingOrder.order_number} بنجاح`,
         });
         return;
       }
@@ -338,8 +337,8 @@ export default function Orders() {
       // Creating new order - check if at least one production order is added
       if (productionOrdersData.length === 0) {
         toast({
-          title: t("common.error"),
-          description: t("toast.atLeastOneProductionOrder"),
+          title: "تحذير",
+          description: "يجب إضافة أمر إنتاج واحد على الأقل",
           variant: "destructive",
         });
         return;
@@ -347,13 +346,18 @@ export default function Orders() {
 
       // Validate that all production orders have complete data
       const invalidOrders = productionOrdersData.filter(
-        (order) => !order.customer_product_id || order.customer_product_id === "" || !order.quantity_kg || order.quantity_kg <= 0,
+        (order) =>
+          !order.customer_product_id ||
+          order.customer_product_id === "" ||
+          !order.quantity_kg ||
+          order.quantity_kg <= 0,
       );
 
       if (invalidOrders.length > 0) {
         toast({
-          title: t("common.error"),
-          description: t("toast.completeAllProductionOrders"),
+          title: "خطأ في البيانات",
+          description:
+            "يرجى التأكد من اكتمال جميع أوامر الإنتاج (اختيار المنتج وإدخال الكمية)",
           variant: "destructive",
         });
         return;
@@ -461,18 +465,19 @@ export default function Orders() {
       setEditingOrder(null);
 
       toast({
-        title: t("toast.orderCreated"),
-        description: `${t("toast.orderCreatedSuccess")} ${orderNumber} ${t("common.with")} ${validProductionOrders.length} ${t("production.productionOrders")}`,
+        title: "تم الحفظ بنجاح",
+        description: `تم إنشاء الطلب ${orderNumber} بنجاح مع ${validProductionOrders.length} أمر إنتاج`,
       });
     } catch (error) {
-      console.error("Error saving order:", error);
+      console.error("خطأ في حفظ الطلب:", error);
       toast({
-        title: t("common.error"),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t("toast.saveOrderFailed"),
+          error instanceof Error ? error.message : "فشل في حفظ البيانات",
         variant: "destructive",
       });
     } finally {
+      // إعادة تعيين حالة isCreatingOrder بغض النظر عن النجاح أو الفشل
       setIsCreatingOrder(false);
     }
   };
@@ -486,8 +491,8 @@ export default function Orders() {
   const handleEditOrder = (order: any) => {
     if (!isAdmin) {
       toast({
-        title: t("toast.unauthorized"),
-        description: t("toast.adminPermissionsRequired"),
+        title: "غير مخول",
+        description: "صلاحيات المدير مطلوبة لتعديل الطلبات",
         variant: "destructive",
       });
       return;
@@ -499,8 +504,8 @@ export default function Orders() {
   const handleDeleteOrder = async (order: any) => {
     if (!isAdmin) {
       toast({
-        title: t("toast.unauthorized"),
-        description: t("toast.adminPermissionsRequired"),
+        title: "غير مخول",
+        description: "صلاحيات المدير مطلوبة لحذف الطلبات",
         variant: "destructive",
       });
       return;
@@ -508,7 +513,7 @@ export default function Orders() {
 
     if (
       !confirm(
-        `${t("orders.confirmDelete")} ${order.order_number}؟ ${t("orders.deleteWarning")}`,
+        `هل أنت متأكد من حذف الطلب ${order.order_number}؟ هذا الإجراء لا يمكن التراجع عنه.`,
       )
     ) {
       return;
@@ -533,14 +538,14 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
 
       toast({
-        title: t("toast.orderDeleted"),
-        description: `${t("toast.orderDeletedSuccess")} ${order.order_number}`,
+        title: "تم الحذف بنجاح",
+        description: `تم حذف الطلب ${order.order_number}`,
       });
     } catch (error) {
       toast({
-        title: t("common.error"),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t("toast.deleteOrderFailed"),
+          error instanceof Error ? error.message : "فشل في حذف الطلب",
         variant: "destructive",
       });
     }
@@ -570,14 +575,14 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
 
       toast({
-        title: t("toast.orderUpdated"),
-        description: `${t("toast.orderStatusUpdated")} ${order.order_number}`,
+        title: "تم التحديث بنجاح",
+        description: `تم تحديث حالة الطلب ${order.order_number}`,
       });
     } catch (error) {
       toast({
-        title: t("common.error"),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t("toast.updateOrderStatusFailed"),
+          error instanceof Error ? error.message : "فشل في تحديث حالة الطلب",
         variant: "destructive",
       });
     }
@@ -587,8 +592,8 @@ export default function Orders() {
   const handleBulkDelete = async (orderIds: number[]) => {
     if (!isAdmin) {
       toast({
-        title: t("toast.unauthorized"),
-        description: t("toast.adminPermissionsRequired"),
+        title: "غير مخول",
+        description: "صلاحيات المدير مطلوبة لحذف الطلبات",
         variant: "destructive",
       });
       return;
@@ -611,14 +616,14 @@ export default function Orders() {
 
       if (failures.length > 0) {
         toast({
-          title: t("common.error"),
-          description: `${t("toast.bulkDeleteFailed")} ${failures.length} ${t("common.of")} ${orderIds.length}`,
+          title: "تحذير",
+          description: `فشل حذف ${failures.length} من ${orderIds.length} طلب`,
           variant: "destructive",
         });
       } else {
         toast({
-          title: t("toast.orderDeleted"),
-          description: `${t("toast.bulkDeleteSuccess")} ${orderIds.length}`,
+          title: "تم الحذف بنجاح",
+          description: `تم حذف ${orderIds.length} طلب بنجاح`,
         });
       }
 
@@ -631,9 +636,9 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     } catch (error) {
       toast({
-        title: t("common.error"),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t("toast.bulkDeleteFailed"),
+          error instanceof Error ? error.message : "فشل في الحذف الجماعي",
         variant: "destructive",
       });
     }
@@ -664,14 +669,14 @@ export default function Orders() {
 
       if (failures.length > 0) {
         toast({
-          title: t("common.error"),
-          description: `${t("toast.bulkUpdateFailed")} ${failures.length} ${t("common.of")} ${orderIds.length}`,
+          title: "تحذير",
+          description: `فشل تحديث ${failures.length} من ${orderIds.length} طلب`,
           variant: "destructive",
         });
       } else {
         toast({
-          title: t("toast.orderUpdated"),
-          description: `${t("toast.bulkUpdateSuccess")} ${orderIds.length}`,
+          title: "تم التحديث بنجاح",
+          description: `تم تحديث حالة ${orderIds.length} طلب بنجاح`,
         });
       }
 
@@ -684,9 +689,9 @@ export default function Orders() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
     } catch (error) {
       toast({
-        title: t("common.error"),
+        title: "خطأ",
         description:
-          error instanceof Error ? error.message : t("toast.bulkUpdateFailed"),
+          error instanceof Error ? error.message : "فشل في التحديث الجماعي",
         variant: "destructive",
       });
     }
@@ -705,68 +710,74 @@ export default function Orders() {
 
   if (ordersLoading) {
     return (
-      <div className={t("pages.orders.name.min_h_screen_bg_gray_50")}>
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className={t("pages.orders.name.flex")}>
+        <div className="flex">
           <Sidebar />
-          <main className={t("pages.orders.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-            <div className={t("pages.orders.name.text_center")}>{t("common.loading")}</div>
+          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+            <div className="text-center">جاري التحميل...</div>
           </main>
         </div>
       </div>
     );
   }
 
+  // Loading fallback للصفحات الكسولة
   const LoadingFallback = () => (
-    <div className={t("pages.orders.name.space_y_4_p_6")}>
-      <Skeleton className={t("pages.orders.name.h_12_w_full")} />
-      <Skeleton className={t("pages.orders.name.h_64_w_full")} />
-      <Skeleton className={t("pages.orders.name.h_64_w_full")} />
-    </div>{t('pages.orders.);_return_(')}<div className={t("pages.orders.name.min_h_screen_bg_gray_50")}>
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-12 w-full" />
+      <Skeleton className="h-64 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className={t("pages.orders.name.flex")}>
+      <div className="flex">
         <Sidebar />
 
-        <main className={t("pages.orders.name.flex_1_lg_mr_64_p_4_pb_20_lg_pb_4")}>
-          <div className={t("pages.orders.name.mb_6")}>
-            <h1 className={t("pages.orders.name.text_2xl_font_bold_text_gray_900_mb_2")}>
-              {t("orders.title")}
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              إدارة الطلبات والإنتاج
             </h1>
-            <p className={t("pages.orders.name.text_gray_600")}>
-              {t("orders.subtitle")}
+            <p className="text-gray-600">
+              إنشاء ومتابعة الطلبات وأوامر الإنتاج والطوابير والتقارير
             </p>
             {isAdmin && (
-              <div className={t("pages.orders.name.mt_2_text_sm_text_green_600_font_medium")}>
-                ✓ {t("orders.adminPermissions")}
+              <div className="mt-2 text-sm text-green-600 font-medium">
+                ✓ لديك صلاحيات المدير - يمكنك تعديل وحذف الطلبات
               </div>
             )}
           </div>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className={t("pages.orders.name.space_y_6")} dir="rtl">
-            <TabsList className={t("pages.orders.name.grid_w_full_grid_cols_3_md_grid_cols_6_lg_w_auto_lg_inline_grid")}>
+          {/* التبويبات الرئيسية */}
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
+            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
               <TabsTrigger value="orders" data-testid="tab-orders">
-                {t("sidebar.orders")}
+                الطلبات
               </TabsTrigger>
               <TabsTrigger value="production-orders" data-testid="tab-production-orders">
-                <ClipboardCheck className={t("pages.orders.name.h_4_w_4_ml_2")} />
-                <span>{t("sidebar.productionOrders")}</span>
+                <ClipboardCheck className="h-4 w-4 ml-2" />
+                <span>أوامر الإنتاج</span>
               </TabsTrigger>
               <TabsTrigger value="rolls" data-testid="tab-rolls">
-                <Package className={t("pages.orders.name.h_4_w_4_ml_2")} />
-                <span>{t("orders.rolls")}</span>
+                <Package className="h-4 w-4 ml-2" />
+                <span>الرولات</span>
               </TabsTrigger>
               <TabsTrigger value="production-queues" data-testid="tab-production-queues">
-                <Link2 className={t("pages.orders.name.h_4_w_4_ml_2")} />
-                <span>{t("sidebar.productionQueues")}</span>
+                <Link2 className="h-4 w-4 ml-2" />
+                <span>طوابير الإنتاج</span>
               </TabsTrigger>
               <TabsTrigger value="roll-search" data-testid="tab-roll-search">
-                <Search className={t("pages.orders.name.h_4_w_4_ml_2")} />
-                <span>{t("sidebar.rollSearch")}</span>
+                <Search className="h-4 w-4 ml-2" />
+                <span>البحث عن الرولات</span>
               </TabsTrigger>
               <TabsTrigger value="production-reports" data-testid="tab-production-reports">
-                <BarChart3 className={t("pages.orders.name.h_4_w_4_ml_2")} />
-                <span>{t("sidebar.productionReports")}</span>
+                <BarChart3 className="h-4 w-4 ml-2" />
+                <span>تقارير الإنتاج</span>
               </TabsTrigger>
             </TabsList>
 
@@ -775,7 +786,7 @@ export default function Orders() {
               {!ordersLoading && (
                 <>
                   <OrdersStats orders={orders} productionOrders={productionOrders} />
-                  <div className={t("pages.orders.name.mt_6")}>
+                  <div className="mt-6">
                     <OrdersTabs
                       orders={orders}
                       productionOrders={productionOrders}
@@ -817,7 +828,7 @@ export default function Orders() {
             {/* محتوى أوامر الإنتاج */}
             <TabsContent value="production-orders">
               <Suspense fallback={<LoadingFallback />}>
-                <div className={t("pages.orders.name.embedded_page_wrapper")}>
+                <div className="embedded-page-wrapper">
                   <ProductionOrdersManagement />
                 </div>
               </Suspense>
@@ -834,7 +845,7 @@ export default function Orders() {
             {/* محتوى طوابير الإنتاج */}
             <TabsContent value="production-queues">
               <Suspense fallback={<LoadingFallback />}>
-                <div className={t("pages.orders.name.embedded_page_wrapper")}>
+                <div className="embedded-page-wrapper">
                   <ProductionQueues />
                 </div>
               </Suspense>
@@ -843,7 +854,7 @@ export default function Orders() {
             {/* محتوى البحث عن الرولات */}
             <TabsContent value="roll-search">
               <Suspense fallback={<LoadingFallback />}>
-                <div className={t("pages.orders.name.embedded_page_wrapper")}>
+                <div className="embedded-page-wrapper">
                   <RollSearch />
                 </div>
               </Suspense>
@@ -852,7 +863,7 @@ export default function Orders() {
             {/* محتوى تقارير الإنتاج */}
             <TabsContent value="production-reports">
               <Suspense fallback={<LoadingFallback />}>
-                <div className={t("pages.orders.name.embedded_page_wrapper")}>
+                <div className="embedded-page-wrapper">
                   <ProductionReports />
                 </div>
               </Suspense>

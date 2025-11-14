@@ -77,25 +77,25 @@ export default function WhatsAppFinalSetup() {
 
   const features = [
     {
-      icon: <MessageSquare className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />,
+      icon: <MessageSquare className="h-5 w-5" />,
       title: "إرسال الرسائل",
       description: "إرسال رسائل WhatsApp للموظفين والعملاء",
       status: "active",
     },
     {
-      icon: <CheckCircle className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />,
+      icon: <CheckCircle className="h-5 w-5" />,
       title: "القوالب المُوافقة",
       description: "استخدام قوالب Meta المُوافق عليها",
       status: "active",
     },
     {
-      icon: <Zap className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />,
+      icon: <Zap className="h-5 w-5" />,
       title: "إشعارات فورية",
       description: "إشعارات تلقائية للطلبات والصيانة",
       status: "active",
     },
     {
-      icon: <Settings className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />,
+      icon: <Settings className="h-5 w-5" />,
       title: "تحديثات الحالة",
       description: "متابعة حالة الرسائل والتسليم",
       status: "active",
@@ -104,58 +104,67 @@ export default function WhatsAppFinalSetup() {
 
   return (
     <div
-      className={t("pages.whatsapp-final-setup.name.min_h_screen_bg_gradient_to_br_from_green_50_to_blue_50_p_4")}
+      className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4"
       dir="rtl"
     >
-      <div className={t("pages.whatsapp-final-setup.name.max_w_4xl_mx_auto_space_y_6")}>
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className={t("pages.whatsapp-final-setup.name.text_center_space_y_4")}>
-          <div className={t("pages.whatsapp-final-setup.name.w_20_h_20_bg_green_600_rounded_full_flex_items_center_justify_center_mx_auto")}>
-            <CheckCircle className={t("pages.whatsapp-final-setup.name.h_12_w_12_text_white")} />
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle className="h-12 w-12 text-white" />
           </div>
-          <h1 className={t("pages.whatsapp-final-setup.name.text_4xl_font_bold_text_gray_900")}>{t('pages.whatsapp-final-setup.🎉_whatsapp_business_api_جاهز!')}</h1>
-          <p className={t("pages.whatsapp-final-setup.name.text_xl_text_gray_600")}>{t('pages.whatsapp-final-setup.تم_إعداد_نظام_whatsapp_بنجاح_مع_جميع_الميزات_المطلوبة')}</p>
+          <h1 className="text-4xl font-bold text-gray-900">
+            🎉 WhatsApp Business API جاهز!
+          </h1>
+          <p className="text-xl text-gray-600">
+            تم إعداد نظام WhatsApp بنجاح مع جميع الميزات المطلوبة
+          </p>
         </div>
 
         {/* Success Alert */}
-        <Alert className={t("pages.whatsapp-final-setup.name.border_green_200_bg_green_50")}>
-          <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4_text_green_600")} />
-          <AlertDescription className={t("pages.whatsapp-final-setup.name.text_green_700")}>
-            <strong>{t('pages.whatsapp-final-setup.إعداد_مكتمل!')}</strong>{t('pages.whatsapp-final-setup.النظام_جاهز_لإرسال_رسائل_whatsapp_باستخدام_twilio_مع_content_template_المرتبط_بقالب_meta_المُوافق_عليه._لا_مزيد_من_خطأ_63016!')}</AlertDescription>
+        <Alert className="border-green-200 bg-green-50">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-700">
+            <strong>إعداد مكتمل!</strong> النظام جاهز لإرسال رسائل WhatsApp
+            باستخدام Twilio مع Content Template المرتبط بقالب Meta المُوافق
+            عليه. لا مزيد من خطأ 63016!
+          </AlertDescription>
         </Alert>
 
-        <div className={t("pages.whatsapp-final-setup.name.grid_grid_cols_1_lg_grid_cols_2_gap_6")}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* System Status */}
           <Card>
             <CardHeader>
-              <CardTitle className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-                <Settings className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />{t('pages.whatsapp-final-setup.حالة_النظام')}</CardTitle>
-              <CardDescription>{t('pages.whatsapp-final-setup.جميع_المكونات_تعمل_بشكل_صحيح')}</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5" />
+                حالة النظام
+              </CardTitle>
+              <CardDescription>جميع المكونات تعمل بشكل صحيح</CardDescription>
             </CardHeader>
-            <CardContent className={t("pages.whatsapp-final-setup.name.space_y_4")}>
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_justify_between")}>
-                <span className={t("pages.whatsapp-final-setup.name.text_sm")}>{t('pages.whatsapp-final-setup.بيانات_twilio')}</span>
-                <Badge className={t("pages.whatsapp-final-setup.name.bg_green_100_text_green_800")}>{t('pages.whatsapp-final-setup.متصل')}</Badge>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">بيانات Twilio</span>
+                <Badge className="bg-green-100 text-green-800">متصل</Badge>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_justify_between")}>
-                <span className={t("pages.whatsapp-final-setup.name.text_sm")}>{t('pages.whatsapp-final-setup.content_template')}</span>
-                <Badge className={t("pages.whatsapp-final-setup.name.bg_green_100_text_green_800")}>{t('pages.whatsapp-final-setup.مُعد')}</Badge>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Content Template</span>
+                <Badge className="bg-green-100 text-green-800">مُعد</Badge>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_justify_between")}>
-                <span className={t("pages.whatsapp-final-setup.name.text_sm")}>{t('pages.whatsapp-final-setup.meta_template')}</span>
-                <Badge className={t("pages.whatsapp-final-setup.name.bg_green_100_text_green_800")}>{t('pages.whatsapp-final-setup.مُوافق')}</Badge>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Meta Template</span>
+                <Badge className="bg-green-100 text-green-800">مُوافق</Badge>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_justify_between")}>
-                <span className={t("pages.whatsapp-final-setup.name.text_sm")}>{t('pages.whatsapp-final-setup.webhook')}</span>
-                <Badge className={t("pages.whatsapp-final-setup.name.bg_green_100_text_green_800")}>{t('pages.whatsapp-final-setup.نشط')}</Badge>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Webhook</span>
+                <Badge className="bg-green-100 text-green-800">نشط</Badge>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_justify_between_font_medium_pt_2_border_t")}>
-                <span>{t('pages.whatsapp-final-setup.الحالة_العامة')}</span>
-                <Badge className={t("pages.whatsapp-final-setup.name.bg_green_600_text_white")}>{t('pages.whatsapp-final-setup.جاهز_للإنتاج')}</Badge>
+              <div className="flex items-center justify-between font-medium pt-2 border-t">
+                <span>الحالة العامة</span>
+                <Badge className="bg-green-600 text-white">جاهز للإنتاج</Badge>
               </div>
             </CardContent>
           </Card>
@@ -163,25 +172,29 @@ export default function WhatsAppFinalSetup() {
           {/* Test Message */}
           <Card>
             <CardHeader>
-              <CardTitle className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-                <Send className={t("pages.whatsapp-final-setup.name.h_5_w_5")} />{t('pages.whatsapp-final-setup.اختبار_نهائي')}</CardTitle>
-              <CardDescription>{t('pages.whatsapp-final-setup.إرسال_رسالة_تجريبية_للتأكد_من_العمل_الصحيح')}</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="h-5 w-5" />
+                اختبار نهائي
+              </CardTitle>
+              <CardDescription>
+                إرسال رسالة تجريبية للتأكد من العمل الصحيح
+              </CardDescription>
             </CardHeader>
-            <CardContent className={t("pages.whatsapp-final-setup.name.space_y_4")}>
+            <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="finalTestPhone">{t('pages.whatsapp-final-setup.رقم_الهاتف')}</Label>
+                <Label htmlFor="finalTestPhone">رقم الهاتف</Label>
                 <Input
                   id="finalTestPhone"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="{t('pages.whatsapp-final-setup.placeholder.+966501234567')}"
+                  placeholder="+966501234567"
                   dir="ltr"
                   data-testid="input-final-phone"
                 />
               </div>
 
               <div>
-                <Label htmlFor="finalTestMessage">{t('pages.whatsapp-final-setup.الرسالة')}</Label>
+                <Label htmlFor="finalTestMessage">الرسالة</Label>
                 <Input
                   id="finalTestMessage"
                   value={message}
@@ -190,7 +203,7 @@ export default function WhatsAppFinalSetup() {
                 />
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_center_space_x_2")}>
+              <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="finalUseTemplate"
@@ -198,7 +211,9 @@ export default function WhatsAppFinalSetup() {
                   onChange={(e) => setUseTemplate(e.target.checked)}
                   data-testid="checkbox-final-template"
                 />
-                <Label htmlFor="finalUseTemplate" className={t("pages.whatsapp-final-setup.name.text_sm")}>{t('pages.whatsapp-final-setup.استخدام_content_template_(موصى_به)')}</Label>
+                <Label htmlFor="finalUseTemplate" className="text-sm">
+                  استخدام Content Template (موصى به)
+                </Label>
               </div>
 
               <Button
@@ -210,13 +225,19 @@ export default function WhatsAppFinalSetup() {
                   })
                 }
                 disabled={testMessage.isPending}
-                className={t("pages.whatsapp-final-setup.name.w_full_bg_green_600_hover_bg_green_700")}
+                className="w-full bg-green-600 hover:bg-green-700"
                 data-testid="button-final-test"
               >
                 {testMessage.isPending ? (
                   <>
-                    <Loader2 className={t("pages.whatsapp-final-setup.name.mr_2_h_4_w_4_animate_spin")} />{t('pages.whatsapp-final-setup.جاري_الإرسال...')}</>{t('pages.whatsapp-final-setup.)_:_(')}<>
-                    <Send className={t("pages.whatsapp-final-setup.name.mr_2_h_4_w_4")} />{t('pages.whatsapp-final-setup.إرسال_رسالة_تجريبية')}</>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    إرسال رسالة تجريبية
+                  </>
                 )}
               </Button>
             </CardContent>
@@ -226,26 +247,28 @@ export default function WhatsAppFinalSetup() {
         {/* Features Overview */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('pages.whatsapp-final-setup.المميزات_المتاحة_الآن')}</CardTitle>
-            <CardDescription>{t('pages.whatsapp-final-setup.جميع_المميزات_جاهزة_للاستخدام_في_نظام_mpbf')}</CardDescription>
+            <CardTitle>المميزات المتاحة الآن</CardTitle>
+            <CardDescription>
+              جميع المميزات جاهزة للاستخدام في نظام MPBF
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={t("pages.whatsapp-final-setup.name.grid_grid_cols_1_md_grid_cols_2_gap_4")}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className={t("pages.whatsapp-final-setup.name.flex_items_start_gap_3_p_4_border_rounded_lg_bg_white")}
+                  className="flex items-start gap-3 p-4 border rounded-lg bg-white"
                 >
-                  <div className={t("pages.whatsapp-final-setup.name.text_green_600")}>{feature.icon}</div>
-                  <div className={t("pages.whatsapp-final-setup.name.flex_1")}>
-                    <h4 className={t("pages.whatsapp-final-setup.name.font_medium_text_gray_900")}>
+                  <div className="text-green-600">{feature.icon}</div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">
                       {feature.title}
                     </h4>
-                    <p className={t("pages.whatsapp-final-setup.name.text_sm_text_gray_600_mt_1")}>
+                    <p className="text-sm text-gray-600 mt-1">
                       {feature.description}
                     </p>
                   </div>
-                  <Badge className={t("pages.whatsapp-final-setup.name.bg_green_100_text_green_800")}>{t('pages.whatsapp-final-setup.نشط')}</Badge>
+                  <Badge className="bg-green-100 text-green-800">نشط</Badge>
                 </div>
               ))}
             </div>
@@ -253,30 +276,36 @@ export default function WhatsAppFinalSetup() {
         </Card>
 
         {/* Technical Details */}
-        <Card className={t("pages.whatsapp-final-setup.name.border_blue_200_bg_blue_50")}>
+        <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
-            <CardTitle className={t("pages.whatsapp-final-setup.name.text_blue_800")}>{t('pages.whatsapp-final-setup.التفاصيل_التقنية')}</CardTitle>
+            <CardTitle className="text-blue-800">التفاصيل التقنية</CardTitle>
           </CardHeader>
-          <CardContent className={t("pages.whatsapp-final-setup.name.text_blue_700_space_y_2_text_sm")}>
-            <div className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-              <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4")} />
-              <span>{t('pages.whatsapp-final-setup.twilio_account_sid:_ace4ba2fd2e98be5b019c354539404cc29')}</span>
+          <CardContent className="text-blue-700 space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>
+                Twilio Account SID: ACe4ba2fd2e98be5b019c354539404cc29
+              </span>
             </div>
-            <div className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-              <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4")} />
-              <span>{t('pages.whatsapp-final-setup.whatsapp_number:_+15557911537')}</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>WhatsApp Number: +15557911537</span>
             </div>
-            <div className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-              <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4")} />
-              <span>{t('pages.whatsapp-final-setup.content_template_sid:_hxc4485f514cb7d4536026fc56250f75e7')}</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>
+                Content Template SID: HXc4485f514cb7d4536026fc56250f75e7
+              </span>
             </div>
-            <div className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-              <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4")} />
-              <span>{t('pages.whatsapp-final-setup.meta_template:_welcome_hxc4485f514cb7d4536026fc56250f75e7')}</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>
+                Meta Template: welcome_hxc4485f514cb7d4536026fc56250f75e7
+              </span>
             </div>
-            <div className={t("pages.whatsapp-final-setup.name.flex_items_center_gap_2")}>
-              <CheckCircle className={t("pages.whatsapp-final-setup.name.h_4_w_4")} />
-              <span>{t('pages.whatsapp-final-setup.business_account_id:_795259496521200')}</span>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <span>Business Account ID: 795259496521200</span>
             </div>
           </CardContent>
         </Card>
@@ -284,37 +313,43 @@ export default function WhatsAppFinalSetup() {
         {/* Next Steps */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('pages.whatsapp-final-setup.الخطوات_التالية')}</CardTitle>
+            <CardTitle>الخطوات التالية</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={t("pages.whatsapp-final-setup.name.space_y_3")}>
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_start_gap_3")}>
-                <span className={t("pages.whatsapp-final-setup.name.bg_blue_600_text_white_rounded_full_w_6_h_6_flex_items_center_justify_center_text_sm_font_bold")}>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
                   1
                 </span>
                 <div>
-                  <h4 className={t("pages.whatsapp-final-setup.name.font_medium")}>{t('pages.whatsapp-final-setup.استخدام_النظام_في_الإنتاج')}</h4>
-                  <p className={t("pages.whatsapp-final-setup.name.text_sm_text_gray_600")}>{t('pages.whatsapp-final-setup.النظام_جاهز_لإرسال_إشعارات_الطلبات_والصيانة')}</p>
+                  <h4 className="font-medium">استخدام النظام في الإنتاج</h4>
+                  <p className="text-sm text-gray-600">
+                    النظام جاهز لإرسال إشعارات الطلبات والصيانة
+                  </p>
                 </div>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_start_gap_3")}>
-                <span className={t("pages.whatsapp-final-setup.name.bg_blue_600_text_white_rounded_full_w_6_h_6_flex_items_center_justify_center_text_sm_font_bold")}>
+              <div className="flex items-start gap-3">
+                <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
                   2
                 </span>
                 <div>
-                  <h4 className={t("pages.whatsapp-final-setup.name.font_medium")}>{t('pages.whatsapp-final-setup.مراقبة_الأداء')}</h4>
-                  <p className={t("pages.whatsapp-final-setup.name.text_sm_text_gray_600")}>{t('pages.whatsapp-final-setup.متابعة_حالة_الرسائل_ومعدلات_التسليم')}</p>
+                  <h4 className="font-medium">مراقبة الأداء</h4>
+                  <p className="text-sm text-gray-600">
+                    متابعة حالة الرسائل ومعدلات التسليم
+                  </p>
                 </div>
               </div>
 
-              <div className={t("pages.whatsapp-final-setup.name.flex_items_start_gap_3")}>
-                <span className={t("pages.whatsapp-final-setup.name.bg_blue_600_text_white_rounded_full_w_6_h_6_flex_items_center_justify_center_text_sm_font_bold")}>
+              <div className="flex items-start gap-3">
+                <span className="bg-blue-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
                   3
                 </span>
                 <div>
-                  <h4 className={t("pages.whatsapp-final-setup.name.font_medium")}>{t('pages.whatsapp-final-setup.إضافة_قوالب_جديدة')}</h4>
-                  <p className={t("pages.whatsapp-final-setup.name.text_sm_text_gray_600")}>{t('pages.whatsapp-final-setup.إنشاء_قوالب_إضافية_حسب_الحاجة')}</p>
+                  <h4 className="font-medium">إضافة قوالب جديدة</h4>
+                  <p className="text-sm text-gray-600">
+                    إنشاء قوالب إضافية حسب الحاجة
+                  </p>
                 </div>
               </div>
             </div>
