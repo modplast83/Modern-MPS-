@@ -48,7 +48,7 @@ export default function RecentRolls() {
       case "failed":
         return "فشل";
       default:
-        return `غير معروف (${status})`;
+        return status;
     }
   };
 

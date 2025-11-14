@@ -21,7 +21,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Factory } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const loginSchema = z.object({
   username: z
@@ -36,9 +35,9 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+export default function Login() {
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -52,8 +51,8 @@ type LoginFormValues = z.infer<typeof loginSchema>;
     try {
       await login(values.username, values.password);
       toast({
-        title: t('login_welcome', 'مرحباً بك'),
-        description: t('login_success', 'تم تسجيل الدخول بنجاح'),
+        title: "مرحباً بك",
+        description: "تم تسجيل الدخول بنجاح",
       });
     } catch (error) {
       let errorMessage = "حدث خطأ غير متوقع";
@@ -72,7 +71,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
       }
 
       toast({
-        title: t('login_error', 'خطأ في تسجيل الدخول'),
+        title: "خطأ في تسجيل الدخول",
         description: errorMessage,
         variant: "destructive",
       });
@@ -84,11 +83,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src="/FactoryLogoHPNGWg.png" alt={t('factory_logo_alt', 'Logo')} className="w-34 h-34" />
+            <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
           </div>
           <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">
-            {t('system_name', 'نظام إدارة مصنع الأكياس البلاستيكية')}
+            نظام إدارة مصنع الأكياس البلاستيكية
           </p>
         </CardHeader>
         <CardContent>
@@ -99,10 +98,10 @@ type LoginFormValues = z.infer<typeof loginSchema>;
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('login_username', 'اسم المستخدم')}</FormLabel>
+                    <FormLabel>اسم المستخدم</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder={t('login_username_placeholder', 'أدخل اسم المستخدم')}
+                        placeholder="أدخل اسم المستخدم"
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-username"
@@ -119,11 +118,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('login_password', 'كلمة المرور')}</FormLabel>
+                    <FormLabel>كلمة المرور</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder={t('login_password_placeholder', 'أدخل كلمة المرور')}
+                        placeholder="أدخل كلمة المرور"
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-password"
@@ -141,7 +140,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
                 disabled={isLoading}
                 data-testid="button-login"
               >
-                {isLoading ? t('login_loading', 'جاري تسجيل الدخول...') : t('login', 'تسجيل الدخول')}
+                {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
               </Button>
             </form>
           </Form>
@@ -152,7 +151,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                {t('or', 'أو')}
+                أو
               </span>
             </div>
           </div>
@@ -173,13 +172,13 @@ type LoginFormValues = z.infer<typeof loginSchema>;
               >
                 <path d="M2 2v20h20V2H2zm18 18H4V4h16v16z"/>
               </svg>
-              {t('login_with_replit', 'تسجيل الدخول باستخدام Replit')}
+              تسجيل الدخول باستخدام Replit
             </Button>
           </div>
 
           <div className="mt-6 pt-6 border-t">
             <p className="text-xs text-muted-foreground text-center">
-              {t('copyright', 'جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ')}
+              جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ
             </p>
           </div>
         </CardContent>

@@ -53,7 +53,7 @@ export default function MachineStatus({ onCreateRoll }: MachineStatusProps) {
       case "idle":
         return "خامل";
       default:
-        return `غير معروف (${status})`;
+        return status;
     }
   };
 
