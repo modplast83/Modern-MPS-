@@ -1,0 +1,39 @@
+{
+  "welcome": "مرحباً بك في نظام المصنع الحديث",
+  "login": "تسجيل الدخول",
+  "logout": "تسجيل الخروج",
+  "language": "اللغة",
+  "arabic": "العربية",
+  "english": "الإنجليزية"
+  ,"factory_logo_alt": "شعار مصنع الأكياس البلاستيكية"
+  ,"system_name": "نظام إدارة مصنع الأكياس البلاستيكية"
+  ,"ai_assistant": "المساعد الذكي"
+  ,"user": "مستخدم"
+  ,"user_initial": "م"
+  ,"login_welcome": "مرحباً بك"
+  ,"login_success": "تم تسجيل الدخول بنجاح"
+  ,"login_error": "خطأ في تسجيل الدخول"
+  ,"login_username": "اسم المستخدم"
+  ,"login_username_placeholder": "أدخل اسم المستخدم"
+  ,"login_password": "كلمة المرور"
+  ,"login_password_placeholder": "أدخل كلمة المرور"
+  ,"login_loading": "جاري تسجيل الدخول..."
+  ,"or": "أو"
+  ,"login_with_replit": "تسجيل الدخول باستخدام Replit"
+  ,"copyright": "جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ"
+  ,"shortcut_add_order": "إضافة طلب"
+  ,"shortcut_add_customer": "إضافة عميل"
+  ,"shortcut_add_customer_product": "إضافة منتج عميل"
+  ,"shortcut": "اختصار"
+  ,"dashboard_active_orders": "الطلبات النشطة"
+  ,"dashboard_active_orders_change": "+12% من الأسبوع الماضي"
+  ,"dashboard_production_rate": "معدل الإنتاج"
+  ,"dashboard_performance_excellent": "أداء ممتاز"
+  ,"dashboard_performance_good": "أداء جيد"
+  ,"dashboard_performance_needs_improvement": "يحتاج تحسين"
+  ,"dashboard_present_employees": "العمال الحاضرين"
+  ,"dashboard_attendance_rate": "معدل الحضور"
+  ,"dashboard_maintenance_alerts": "تنبيهات الصيانة"
+  ,"dashboard_attention_required": "يتطلب انتباه"
+  ,"dashboard_all_machines_ok": "جميع المكائن تعمل بشكل طبيعي"
+}

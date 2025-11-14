@@ -93,15 +93,15 @@ export default function MachineCard({ machine }: { machine: Machine }) {
       <div className="mt-3 text-xs text-gray-600 grid grid-cols-3 gap-2">
         <div className="text-center">
           <div className="font-semibold">{pct(computed.availability)}%</div>
-          <div className="text-[11px] text-gray-500">Availability</div>
+          <div className="text-[11px] text-gray-500">التوافرية<br /><span className='sr-only'>Availability</span></div>
         </div>
         <div className="text-center">
           <div className="font-semibold">{pct(computed.performance)}%</div>
-          <div className="text-[11px] text-gray-500">Performance</div>
+          <div className="text-[11px] text-gray-500">الأداء<br /><span className='sr-only'>Performance</span></div>
         </div>
         <div className="text-center">
           <div className="font-semibold">{pct(computed.quality)}%</div>
-          <div className="text-[11px] text-gray-500">Quality</div>
+          <div className="text-[11px] text-gray-500">الجودة<br /><span className='sr-only'>Quality</span></div>
         </div>
       </div>
     </div>

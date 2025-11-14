@@ -13,6 +13,7 @@ import {
   Activity,
   Clock,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface DashboardStat {
   label: string;
@@ -24,6 +25,7 @@ interface DashboardStat {
 }
 
 function DashboardStatsContent() {
+  const { t } = useTranslation();
   const {
     data: stats = {},
     isLoading,
@@ -50,61 +52,40 @@ function DashboardStatsContent() {
     );
   }
 
-  const dashboardStats: DashboardStat[] = [
-    {
-      label: "الطلبات النشطة",
-      value: formatNumber((stats as any)?.activeOrders || 12),
-      change: "+12% من الأسبوع الماضي",
-      trend: "up",
-      icon: <ShoppingCart className="w-6 h-6" />,
-      color: "text-blue-600",
-    },
-    {
-      label: "معدل الإنتاج",
-      value: formatPercentage((stats as any)?.productionRate || 85),
-      change:
-        ((stats as any)?.productionRate || 85) >= 85
-          ? "أداء ممتاز"
-          : ((stats as any)?.productionRate || 85) >= 70
-            ? "أداء جيد"
-            : "يحتاج تحسين",
-      trend:
-        ((stats as any)?.productionRate || 85) >= 85
-          ? "up"
-          : ((stats as any)?.productionRate || 85) >= 70
-            ? "neutral"
-            : "down",
-      icon: <TrendingUp className="w-6 h-6" />,
-      color:
-        ((stats as any)?.productionRate || 85) >= 85
-          ? "text-green-600"
-          : ((stats as any)?.productionRate || 85) >= 70
-            ? "text-yellow-600"
-            : "text-red-600",
-    },
-    {
-      label: "العمال الحاضرين",
-      value: `${formatNumber((stats as any)?.presentEmployees || 18)}/${formatNumber((stats as any)?.totalEmployees || 22)}`,
-      change: `${formatPercentage(Math.round((((stats as any)?.presentEmployees || 18) / ((stats as any)?.totalEmployees || 22)) * 100))} معدل الحضور`,
-      trend: "neutral",
-      icon: <Users className="w-6 h-6" />,
-      color: "text-purple-600",
-    },
-    {
-      label: "تنبيهات الصيانة",
-      value: formatNumber((stats as any)?.maintenanceAlerts || 2),
-      change:
-        ((stats as any)?.maintenanceAlerts || 2) > 0
-          ? "يتطلب انتباه"
-          : "جميع المكائن تعمل بشكل طبيعي",
-      trend: ((stats as any)?.maintenanceAlerts || 2) > 0 ? "down" : "up",
-      icon: <AlertTriangle className="w-6 h-6" />,
-      color:
-        ((stats as any)?.maintenanceAlerts || 2) > 0
-          ? "text-red-600"
-          : "text-green-600",
-    },
-  ];
+    const dashboardStats: DashboardStat[] = [
+      {
+        label: t('dashboard_active_orders', 'الطلبات النشطة'),
+        value: formatNumber((stats as any)?.activeOrders || 12),
+        change: t('dashboard_active_orders_change', '+12% من الأسبوع الماضي'),
+        trend: "up",
+        icon: <ShoppingCart className="w-6 h-6" />,
+        color: "bg-blue-100 text-blue-800",
+      },
+      {
+        label: t('dashboard_in_production', 'قيد الإنتاج'),
+        value: formatNumber((stats as any)?.inProduction || 8),
+        change: t('dashboard_in_production_change', '+8% من الأسبوع الماضي'),
+        trend: "up",
+        icon: <Package className="w-6 h-6" />,
+        color: "bg-green-100 text-green-800",
+      },
+      {
+        label: t('dashboard_customers', 'العملاء'),
+        value: formatNumber((stats as any)?.customers || 120),
+        change: t('dashboard_customers_change', '+5 عملاء جدد'),
+        trend: "neutral",
+        icon: <Users className="w-6 h-6" />,
+        color: "bg-yellow-100 text-yellow-800",
+      },
+      {
+        label: t('dashboard_alerts', 'التنبيهات'),
+        value: formatNumber((stats as any)?.alerts || 2),
+        change: t('dashboard_alerts_change', 'تنبيه جديد'),
+        trend: "down",
+        icon: <AlertTriangle className="w-6 h-6" />,
+        color: "bg-red-100 text-red-800",
+      },
+    ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

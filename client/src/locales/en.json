@@ -1,0 +1,39 @@
+{
+  "welcome": "Welcome to Modern Factory System",
+  "login": "Login",
+  "logout": "Logout",
+  "language": "Language",
+  "arabic": "Arabic",
+  "english": "English"
+  ,"factory_logo_alt": "Plastic Bag Factory Logo"
+  ,"system_name": "Plastic Bag Factory Management System"
+  ,"ai_assistant": "AI Assistant"
+  ,"user": "User"
+  ,"user_initial": "U"
+  ,"login_welcome": "Welcome"
+  ,"login_success": "Login successful"
+  ,"login_error": "Login error"
+  ,"login_username": "Username"
+  ,"login_username_placeholder": "Enter username"
+  ,"login_password": "Password"
+  ,"login_password_placeholder": "Enter password"
+  ,"login_loading": "Logging in..."
+  ,"or": "or"
+  ,"login_with_replit": "Login with Replit"
+  ,"copyright": "All rights reserved to AbuKhalid, developer and implementer"
+  ,"shortcut_add_order": "Add Order"
+  ,"shortcut_add_customer": "Add Customer"
+  ,"shortcut_add_customer_product": "Add Customer Product"
+  ,"shortcut": "Shortcut"
+  ,"dashboard_active_orders": "Active Orders"
+  ,"dashboard_active_orders_change": "+12% from last week"
+  ,"dashboard_production_rate": "Production Rate"
+  ,"dashboard_performance_excellent": "Excellent Performance"
+  ,"dashboard_performance_good": "Good Performance"
+  ,"dashboard_performance_needs_improvement": "Needs Improvement"
+  ,"dashboard_present_employees": "Present Employees"
+  ,"dashboard_attendance_rate": "Attendance Rate"
+  ,"dashboard_maintenance_alerts": "Maintenance Alerts"
+  ,"dashboard_attention_required": "Attention Required"
+  ,"dashboard_all_machines_ok": "All machines operating normally"
+}

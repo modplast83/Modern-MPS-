@@ -21,6 +21,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Factory } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const loginSchema = z.object({
   username: z
@@ -35,9 +36,9 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function Login() {
   const { login, isLoading } = useAuth();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -51,8 +52,8 @@ export default function Login() {
     try {
       await login(values.username, values.password);
       toast({
-        title: "مرحباً بك",
-        description: "تم تسجيل الدخول بنجاح",
+        title: t('login_welcome', 'مرحباً بك'),
+        description: t('login_success', 'تم تسجيل الدخول بنجاح'),
       });
     } catch (error) {
       let errorMessage = "حدث خطأ غير متوقع";
@@ -71,7 +72,7 @@ export default function Login() {
       }
 
       toast({
-        title: "خطأ في تسجيل الدخول",
+        title: t('login_error', 'خطأ في تسجيل الدخول'),
         description: errorMessage,
         variant: "destructive",
       });
@@ -83,11 +84,11 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
+            <img src="/FactoryLogoHPNGWg.png" alt={t('factory_logo_alt', 'Logo')} className="w-34 h-34" />
           </div>
           <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">
-            نظام إدارة مصنع الأكياس البلاستيكية
+            {t('system_name', 'نظام إدارة مصنع الأكياس البلاستيكية')}
           </p>
         </CardHeader>
         <CardContent>
@@ -98,10 +99,10 @@ export default function Login() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>اسم المستخدم</FormLabel>
+                    <FormLabel>{t('login_username', 'اسم المستخدم')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="أدخل اسم المستخدم"
+                        placeholder={t('login_username_placeholder', 'أدخل اسم المستخدم')}
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-username"
@@ -118,11 +119,11 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>كلمة المرور</FormLabel>
+                    <FormLabel>{t('login_password', 'كلمة المرور')}</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
-                        placeholder="أدخل كلمة المرور"
+                        placeholder={t('login_password_placeholder', 'أدخل كلمة المرور')}
                         className="text-right"
                         disabled={isLoading}
                         data-testid="input-password"
@@ -140,7 +141,7 @@ export default function Login() {
                 disabled={isLoading}
                 data-testid="button-login"
               >
-                {isLoading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+                {isLoading ? t('login_loading', 'جاري تسجيل الدخول...') : t('login', 'تسجيل الدخول')}
               </Button>
             </form>
           </Form>
@@ -151,7 +152,7 @@ export default function Login() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                أو
+                {t('or', 'أو')}
               </span>
             </div>
           </div>
@@ -172,13 +173,13 @@ export default function Login() {
               >
                 <path d="M2 2v20h20V2H2zm18 18H4V4h16v16z"/>
               </svg>
-              تسجيل الدخول باستخدام Replit
+              {t('login_with_replit', 'تسجيل الدخول باستخدام Replit')}
             </Button>
           </div>
 
           <div className="mt-6 pt-6 border-t">
             <p className="text-xs text-muted-foreground text-center">
-              جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ
+              {t('copyright', 'جميع الحقوق محفوظة لـ AbuKhalid مطور ومنفذ')}
             </p>
           </div>
         </CardContent>
