@@ -1722,6 +1722,9 @@ export default function Definitions() {
                                   الاسم الإنجليزي
                                 </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                                  رقم درج
+                                </th>
+                                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
                                   الهاتف
                                 </th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
@@ -1754,6 +1757,9 @@ export default function Definitions() {
                                       </td>
                                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.name || "-"}
+                                      </td>
+                                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                        {customer.plate_drawer_code || "-"}
                                       </td>
                                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
                                         {customer.phone || "-"}
@@ -1797,7 +1803,7 @@ export default function Definitions() {
                                 ) : (
                                   <tr>
                                     <td
-                                      colSpan={6}
+                                      colSpan={7}
                                       className="px-6 py-4 text-center text-gray-500"
                                     >
                                       {quickSearch || statusFilter !== "all"
@@ -3358,6 +3364,21 @@ export default function Definitions() {
                         />
                       </div>
                       <div>
+                        <Label htmlFor="plate_drawer_code">رقم درج</Label>
+                        <Input
+                          id="plate_drawer_code"
+                          value={customerForm.plate_drawer_code}
+                          onChange={(e) =>
+                            setCustomerForm({
+                              ...customerForm,
+                              plate_drawer_code: e.target.value,
+                            })
+                          }
+                          placeholder="رقم درج"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
                         <Label htmlFor="phone">الهاتف</Label>
                         <Input
                           id="phone"
@@ -3372,6 +3393,8 @@ export default function Definitions() {
                           className="mt-1"
                         />
                       </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="city">المدينة</Label>
                         <Input
@@ -3386,36 +3409,6 @@ export default function Definitions() {
                           placeholder="المدينة"
                           className="mt-1"
                         />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="sales_rep_id">المندوب</Label>
-                        <Select
-                          value={customerForm.sales_rep_id?.toString() || "none"}
-                          onValueChange={(value) =>
-                            setCustomerForm({
-                              ...customerForm,
-                              sales_rep_id: value === "none" ? "" : value,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="mt-1" data-testid="select-sales-rep">
-                            <SelectValue placeholder="اختر المندوب" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">بدون مندوب</SelectItem>
-                            {Array.isArray(salesReps) &&
-                              salesReps.map((rep: any) => (
-                                <SelectItem
-                                  key={rep.id}
-                                  value={rep.id.toString()}
-                                >
-                                  {rep.display_name_ar || rep.display_name || rep.username}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
                       </div>
                       <div>
                         <Label htmlFor="tax_number">الرقم الضريبي</Label>
@@ -3432,6 +3425,34 @@ export default function Definitions() {
                           className="mt-1"
                         />
                       </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="sales_rep_id">المندوب</Label>
+                      <Select
+                        value={customerForm.sales_rep_id?.toString() || "none"}
+                        onValueChange={(value) =>
+                          setCustomerForm({
+                            ...customerForm,
+                            sales_rep_id: value === "none" ? "" : value,
+                          })
+                        }
+                      >
+                        <SelectTrigger className="mt-1" data-testid="select-sales-rep">
+                          <SelectValue placeholder="اختر المندوب" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">بدون مندوب</SelectItem>
+                          {Array.isArray(salesReps) &&
+                            salesReps.map((rep: any) => (
+                              <SelectItem
+                                key={rep.id}
+                                value={rep.id.toString()}
+                              >
+                                {rep.display_name_ar || rep.display_name || rep.username}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label htmlFor="address">العنوان</Label>
