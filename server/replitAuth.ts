@@ -112,11 +112,52 @@ export async function setupAuth(app: Express) {
     })(req, res, next);
   });
 
-  app.get("/api/callback", (req, res, next) => {
+  app.get("/api/callback", async (req, res, next) => {
     ensureStrategy(req.hostname);
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login-replit",
+    passport.authenticate(`replitauth:${req.hostname}`, async (err: any, user: any, info: any) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.redirect("/api/login-replit");
+      }
+      
+      // Log in the user (sets req.user)
+      req.logIn(user, async (err) => {
+        if (err) {
+          return next(err);
+        }
+        
+        // Critical: Set req.session.userId for backward compatibility with existing middleware
+        // This allows requireAuth and other middleware to recognize Replit-authenticated users
+        try {
+          const replitUserId = user.claims?.sub;
+          if (replitUserId) {
+            const dbUser = await storage.getUserByReplitId(replitUserId);
+            if (dbUser) {
+              req.session.userId = dbUser.id;
+              
+              // Save session to ensure userId persists
+              req.session.save((saveErr: any) => {
+                if (saveErr) {
+                  console.error("Error saving session after Replit login:", saveErr);
+                }
+                // Redirect to home or original destination
+                res.redirect("/");
+              });
+            } else {
+              console.error("Replit user authenticated but not found in database");
+              res.redirect("/");
+            }
+          } else {
+            console.error("No Replit user ID in claims");
+            res.redirect("/");
+          }
+        } catch (error) {
+          console.error("Error setting session userId after Replit login:", error);
+          res.redirect("/");
+        }
+      });
     })(req, res, next);
   });
 

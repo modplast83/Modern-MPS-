@@ -121,6 +121,7 @@ import {
 } from "./middleware/validation";
 import { calculateProductionQuantities } from "@shared/quantity-utils";
 import { setupAuth, isAuthenticated as isAuthenticatedReplit } from "./replitAuth";
+import { resolveSessionUser } from "./auth/sessionUser";
 
 // Initialize notification service
 const notificationService = new NotificationService(storage);
@@ -228,45 +229,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Get current user
-  app.get("/api/me", requireAuth, async (req, res) => {
+  // Get current user - unified endpoint for both username/password and Replit Auth
+  app.get("/api/me", async (req, res) => {
     try {
-      // Double-check session (redundant with requireAuth but safer)
-      if (!req.session?.userId || typeof req.session.userId !== "number") {
-        logger.debug("Invalid session on /api/me");
-        return res.status(401).json({
-          message: "جلسة غير صحيحة",
-          success: false,
-        });
-      }
-
-      const user = await storage.getUserById(req.session.userId);
+      // Use unified session resolver to handle both auth types
+      const user = await resolveSessionUser(req);
+      
       if (!user) {
-        // User doesn't exist in database, clear invalid session
-        try {
-          if (req.session?.destroy) {
-            req.session.destroy((err: any) => {
-              if (err) logger.error("Error destroying invalid session", err);
-            });
-          }
-        } catch (destroyError) {
-          logger.error("Failed to destroy invalid session", destroyError);
-        }
-        return res.status(404).json({
-          message: "المستخدم غير موجود",
+        logger.debug("No authenticated session on /api/me");
+        return res.status(401).json({
+          message: "Unauthorized",
           success: false,
         });
       }
 
-      // Validate user status
-      if (user.status !== "active") {
-        return res.status(403).json({
-          message: "الحساب غير نشط",
-          success: false,
-        });
-      }
-
-      // User found - extend session safely
+      // Extend session safely
       try {
         if (req.session?.touch) {
           req.session.touch();
@@ -344,26 +321,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Logout
+  // Logout - unified endpoint for both username/password and Replit Auth
   app.post("/api/logout", async (req, res) => {
     try {
+      // Check if user is authenticated via Replit Auth
+      const replitUser = req.user as any;
+      const isReplitAuth = replitUser?.claims?.sub;
+
+      // Destroy session
       if (req.session?.destroy) {
         req.session.destroy((err) => {
           if (err) {
             logger.error("Session destroy error", err);
             return res.status(500).json({ message: "خطأ في تسجيل الخروج" });
           }
+          
           // Clear all possible session cookies
           res.clearCookie("connect.sid");
           res.clearCookie("plastic-bag-session");
-          res.json({ message: "تم تسجيل الخروج بنجاح" });
+          
+          // For Replit Auth users, also call passport logout
+          if (isReplitAuth && req.logout) {
+            req.logout(() => {
+              res.json({ 
+                message: "تم تسجيل الخروج بنجاح",
+                replitAuth: true 
+              });
+            });
+          } else {
+            res.json({ message: "تم تسجيل الخروج بنجاح" });
+          }
         });
       } else {
         // Fallback session clearing
         req.session = {} as any;
         res.clearCookie("connect.sid");
         res.clearCookie("plastic-bag-session");
-        res.json({ message: "تم تسجيل الخروج بنجاح" });
+        
+        if (isReplitAuth && req.logout) {
+          req.logout(() => {
+            res.json({ 
+              message: "تم تسجيل الخروج بنجاح",
+              replitAuth: true 
+            });
+          });
+        } else {
+          res.json({ message: "تم تسجيل الخروج بنجاح" });
+        }
       }
     } catch (error) {
       logger.error("Logout error", error);
