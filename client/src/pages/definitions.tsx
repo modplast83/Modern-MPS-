@@ -3405,11 +3405,12 @@ export default function Definitions() {
                         <Label htmlFor="plate_drawer_code">رقم درج</Label>
                         <div className="grid grid-cols-2 gap-2 mt-1">
                           <Select
-                            value={drawerLetter}
+                            value={drawerLetter || "none"}
                             onValueChange={(value) => {
-                              setDrawerLetter(value);
-                              const combined = value && drawerNumber 
-                                ? `${value}-${drawerNumber}` 
+                              const newLetter = value === "none" ? "" : value;
+                              setDrawerLetter(newLetter);
+                              const combined = newLetter && drawerNumber 
+                                ? `${newLetter}-${drawerNumber}` 
                                 : "";
                               setCustomerForm({
                                 ...customerForm,
@@ -3421,7 +3422,7 @@ export default function Definitions() {
                               <SelectValue placeholder="الحرف" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">بدون</SelectItem>
+                              <SelectItem value="none">بدون</SelectItem>
                               <SelectItem value="A">A</SelectItem>
                               <SelectItem value="B">B</SelectItem>
                               <SelectItem value="C">C</SelectItem>
@@ -3432,11 +3433,12 @@ export default function Definitions() {
                             </SelectContent>
                           </Select>
                           <Select
-                            value={drawerNumber}
+                            value={drawerNumber || "none"}
                             onValueChange={(value) => {
-                              setDrawerNumber(value);
-                              const combined = drawerLetter && value 
-                                ? `${drawerLetter}-${value}` 
+                              const newNumber = value === "none" ? "" : value;
+                              setDrawerNumber(newNumber);
+                              const combined = drawerLetter && newNumber 
+                                ? `${drawerLetter}-${newNumber}` 
                                 : "";
                               setCustomerForm({
                                 ...customerForm,
@@ -3448,7 +3450,7 @@ export default function Definitions() {
                               <SelectValue placeholder="الرقم" />
                             </SelectTrigger>
                             <SelectContent className="max-h-[200px]">
-                              <SelectItem value="">بدون</SelectItem>
+                              <SelectItem value="none">بدون</SelectItem>
                               {Array.from({ length: 60 }, (_, i) => i + 1).map((num) => (
                                 <SelectItem key={num} value={num.toString()}>
                                   {num}
