@@ -6066,6 +6066,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let closestDistance = Infinity;
       let closestLocation = null;
 
+      const isDevMode = process.env.NODE_ENV === 'development';
+
+      if (isDevMode) {
+        console.log(`📍 بدء التحقق من الموقع للمستخدم ${req.body.user_id}`);
+        console.log(`📍 الموقع المستلم: lat=${req.body.location.lat}, lng=${req.body.location.lng}`);
+        console.log(`📍 عدد المواقع النشطة: ${activeLocations.length}`);
+      }
+
       for (const factoryLocation of activeLocations) {
         const distance = calculateDistance(
           req.body.location.lat,
@@ -6074,6 +6082,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           parseFloat(factoryLocation.longitude)
         );
 
+        if (isDevMode) {
+          console.log(`📍 مقارنة مع ${factoryLocation.name_ar}:`);
+          console.log(`   - موقع المصنع: lat=${factoryLocation.latitude}, lng=${factoryLocation.longitude}`);
+          console.log(`   - المسافة المحسوبة: ${Math.round(distance)} متر`);
+          console.log(`   - النطاق المسموح: ${factoryLocation.allowed_radius} متر`);
+          console.log(`   - ضمن النطاق: ${distance <= factoryLocation.allowed_radius ? 'نعم ✅' : 'لا ❌'}`);
+        }
+
         if (distance < closestDistance) {
           closestDistance = distance;
           closestLocation = factoryLocation;
@@ -6081,15 +6097,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (distance <= factoryLocation.allowed_radius) {
           isWithinRange = true;
-          console.log(`✅ Location verified at ${factoryLocation.name_ar} - Distance: ${Math.round(distance)}m`);
+          console.log(`✅ تم التحقق من الموقع عند ${factoryLocation.name_ar} - المسافة: ${Math.round(distance)} متر`);
           break;
         }
       }
 
       if (!isWithinRange) {
-        console.log(`❌ Attendance denied - Outside all factory ranges. Closest: ${Math.round(closestDistance)}m`);
+        const errorMsg = `أنت خارج نطاق جميع المصانع. أقرب موقع (${closestLocation?.name_ar}): ${Math.round(closestDistance)} متر. النطاق المسموح: ${closestLocation?.allowed_radius} متر.`;
+        console.log(`❌ رفض الحضور - ${errorMsg}`);
+        
+        if (isDevMode) {
+          console.log(`❌ تفاصيل المستخدم ${req.body.user_id}:`);
+          console.log(`   - الموقع الحالي: lat=${req.body.location.lat}, lng=${req.body.location.lng}`);
+          console.log(`   - أقرب موقع: ${closestLocation?.name_ar}`);
+          console.log(`   - المسافة: ${Math.round(closestDistance)} متر`);
+          console.log(`   - النطاق المطلوب: ${closestLocation?.allowed_radius} متر`);
+          console.log(`   - الفرق: ${Math.round(closestDistance - (closestLocation?.allowed_radius || 0))} متر خارج النطاق`);
+        }
+        
         return res.status(403).json({
-          message: `أنت خارج نطاق جميع المصانع. أقرب موقع (${closestLocation?.name_ar}): ${Math.round(closestDistance)} متر. النطاق المسموح: ${closestLocation?.allowed_radius} متر.`,
+          message: errorMsg,
+          ...(isDevMode && {
+            debug: {
+              userLocation: req.body.location,
+              closestLocation: {
+                name: closestLocation?.name_ar,
+                distance: Math.round(closestDistance),
+                allowedRadius: closestLocation?.allowed_radius
+              }
+            }
+          })
         });
       }
 

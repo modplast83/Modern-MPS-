@@ -141,6 +141,8 @@ export default function UserDashboard() {
   const [locationError, setLocationError] = useState<string>("");
   const [isLoadingLocation, setIsLoadingLocation] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [locationWatchId, setLocationWatchId] = useState<number | null>(null);
+  const [lastLocationUpdate, setLastLocationUpdate] = useState<Date | null>(null);
 
   // جلب مواقع المصانع النشطة من قاعدة البيانات
   const { data: activeLocations, isLoading: isLoadingLocations } = useQuery<any[]>({
@@ -156,18 +158,32 @@ export default function UserDashboard() {
 
     setIsLoadingLocation(true);
     setLocationError("");
-    setCurrentLocation(null);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setCurrentLocation({
+        const newLocation = {
           lat: position.coords.latitude,
           lng: position.coords.longitude,
           accuracy: position.coords.accuracy,
           timestamp: position.timestamp,
+        };
+        
+        console.log('📍 تحديث الموقع:', {
+          lat: newLocation.lat,
+          lng: newLocation.lng,
+          accuracy: Math.round(newLocation.accuracy || 0),
+          time: new Date().toLocaleTimeString('ar')
         });
+
+        setCurrentLocation(newLocation);
+        setLastLocationUpdate(new Date());
         setLocationError("");
         setIsLoadingLocation(false);
+        
+        toast({
+          title: "✅ تم تحديث الموقع",
+          description: `الدقة: ${Math.round(newLocation.accuracy || 0)} متر`,
+        });
       },
       (error) => {
         setIsLoadingLocation(false);
@@ -185,19 +201,99 @@ export default function UserDashboard() {
             break;
         }
         
+        console.error('❌ خطأ في الموقع:', errorMessage, error);
         setLocationError(errorMessage);
+        
+        toast({
+          title: "خطأ في تحديد الموقع",
+          description: errorMessage,
+          variant: "destructive",
+        });
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0
       }
     );
   };
 
-  // Get current location on mount
+  // تفعيل التتبع المستمر للموقع
+  const startLocationWatch = () => {
+    if (!navigator.geolocation) {
+      return;
+    }
+
+    // إيقاف التتبع القديم إذا كان موجوداً
+    if (locationWatchId !== null) {
+      navigator.geolocation.clearWatch(locationWatchId);
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp,
+        };
+        
+        console.log('📍 تحديث تلقائي للموقع:', {
+          lat: newLocation.lat,
+          lng: newLocation.lng,
+          accuracy: Math.round(newLocation.accuracy || 0),
+          time: new Date().toLocaleTimeString('ar')
+        });
+
+        setCurrentLocation(newLocation);
+        setLastLocationUpdate(new Date());
+        setLocationError("");
+      },
+      (error) => {
+        console.error('❌ خطأ في التتبع التلقائي:', error);
+        
+        let errorMessage = "خطأ في التتبع التلقائي للموقع";
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = "تم رفض الإذن للتتبع التلقائي. يرجى تحديث الموقع يدوياً";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = "الموقع غير متاح. تأكد من تفعيل GPS";
+            break;
+          case error.TIMEOUT:
+            errorMessage = "انتهت مهلة التتبع التلقائي";
+            break;
+        }
+        
+        setLocationError(errorMessage);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 30000
+      }
+    );
+
+    setLocationWatchId(watchId);
+  };
+
+  // إيقاف التتبع المستمر للموقع
+  const stopLocationWatch = () => {
+    if (locationWatchId !== null) {
+      navigator.geolocation.clearWatch(locationWatchId);
+      setLocationWatchId(null);
+    }
+  };
+
+  // Get current location on mount and start watching
   useEffect(() => {
     requestLocation();
+    startLocationWatch();
+
+    // إيقاف التتبع عند إغلاق المكون
+    return () => {
+      stopLocationWatch();
+    };
   }, []);
 
   // Update time display every minute for live hour calculation
@@ -1517,21 +1613,33 @@ export default function UserDashboard() {
                       <div className="space-y-6">
                         {/* GPS Status Header */}
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                            <MapPin className="h-5 w-5" />
-                            <span className="font-medium">
-                              تم تحديد الموقع بنجاح
-                            </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                              <MapPin className="h-5 w-5" />
+                              <span className="font-medium">
+                                تم تحديد الموقع بنجاح
+                              </span>
+                            </div>
+                            {lastLocationUpdate && (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                آخر تحديث: {lastLocationUpdate.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                              </p>
+                            )}
                           </div>
-                          <Button
-                            onClick={requestLocation}
-                            variant="outline"
-                            size="sm"
-                            disabled={isLoadingLocation}
-                            data-testid="button-refresh-location-top"
-                          >
-                            {isLoadingLocation ? "جاري التحديث..." : "تحديث الموقع"}
-                          </Button>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              onClick={requestLocation}
+                              variant="outline"
+                              size="sm"
+                              disabled={isLoadingLocation}
+                              data-testid="button-refresh-location-top"
+                            >
+                              {isLoadingLocation ? "جاري التحديث..." : "🔄 تحديث الموقع"}
+                            </Button>
+                            <Badge variant={locationWatchId !== null ? "default" : "secondary"} className="text-xs text-center">
+                              {locationWatchId !== null ? "✅ التتبع التلقائي مفعل" : "التتبع التلقائي"}
+                            </Badge>
+                          </div>
                         </div>
 
                         {/* GPS Diagnostics Card */}
