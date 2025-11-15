@@ -2509,8 +2509,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Received customer data:", req.body);
       const validatedData = insertCustomerSchema.parse(req.body);
-      console.log("Validated customer data:", validatedData);
-      const customer = await storage.createCustomer(validatedData);
+      
+      // Convert empty strings to null for fields with length constraints
+      const cleanedData = {
+        ...validatedData,
+        code: validatedData.code || null,
+        user_id: validatedData.user_id || null,
+        tax_number: validatedData.tax_number || null,
+        plate_drawer_code: validatedData.plate_drawer_code || null,
+      };
+      
+      console.log("Validated customer data:", cleanedData);
+      const customer = await storage.createCustomer(cleanedData);
       res.json(customer);
     } catch (error) {
       console.error("Customer creation error:", error);
@@ -2528,7 +2538,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = req.params.id;
       const validatedData = insertCustomerSchema.parse(req.body);
-      const customer = await storage.updateCustomer(id, validatedData);
+      
+      // Convert empty strings to null for fields with length constraints
+      const cleanedData = {
+        ...validatedData,
+        code: validatedData.code || null,
+        user_id: validatedData.user_id || null,
+        tax_number: validatedData.tax_number || null,
+        plate_drawer_code: validatedData.plate_drawer_code || null,
+      };
+      
+      const customer = await storage.updateCustomer(id, cleanedData);
       res.json(customer);
     } catch (error) {
       console.error("Customer update error:", error);
