@@ -111,6 +111,10 @@ export default function Definitions() {
     }));
   };
 
+  // Drawer code separate states
+  const [drawerLetter, setDrawerLetter] = useState("");
+  const [drawerNumber, setDrawerNumber] = useState("");
+
   // Form states
   const [customerForm, setCustomerForm] = useState({
     name: "",
@@ -849,6 +853,25 @@ export default function Definitions() {
     staleTime: 0,
   });
 
+  // Parse plate_drawer_code when editing customer
+  React.useEffect(() => {
+    if (editingItem && selectedTab === "customers") {
+      const drawerCode = editingItem.plate_drawer_code || "";
+      if (drawerCode && drawerCode.includes("-")) {
+        const [letter, number] = drawerCode.split("-");
+        setDrawerLetter(letter || "");
+        setDrawerNumber(number || "");
+      } else {
+        setDrawerLetter("");
+        setDrawerNumber("");
+      }
+    } else if (!isDialogOpen) {
+      // Reset when dialog closes
+      setDrawerLetter("");
+      setDrawerNumber("");
+    }
+  }, [editingItem, selectedTab, isDialogOpen]);
+
   // Auto-calculations after data is loaded
   React.useEffect(() => {
     // Auto-set cutting unit based on item category
@@ -1484,6 +1507,8 @@ export default function Definitions() {
 
   // Event handlers
   const resetForm = () => {
+    setDrawerLetter("");
+    setDrawerNumber("");
     setCustomerForm({
       name: "",
       name_ar: "",
@@ -3378,18 +3403,60 @@ export default function Definitions() {
                       </div>
                       <div>
                         <Label htmlFor="plate_drawer_code">رقم درج</Label>
-                        <Input
-                          id="plate_drawer_code"
-                          value={customerForm.plate_drawer_code}
-                          onChange={(e) =>
-                            setCustomerForm({
-                              ...customerForm,
-                              plate_drawer_code: e.target.value,
-                            })
-                          }
-                          placeholder="رقم درج"
-                          className="mt-1"
-                        />
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          <Select
+                            value={drawerLetter}
+                            onValueChange={(value) => {
+                              setDrawerLetter(value);
+                              const combined = value && drawerNumber 
+                                ? `${value}-${drawerNumber}` 
+                                : "";
+                              setCustomerForm({
+                                ...customerForm,
+                                plate_drawer_code: combined,
+                              });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="الحرف" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">بدون</SelectItem>
+                              <SelectItem value="A">A</SelectItem>
+                              <SelectItem value="B">B</SelectItem>
+                              <SelectItem value="C">C</SelectItem>
+                              <SelectItem value="D">D</SelectItem>
+                              <SelectItem value="E">E</SelectItem>
+                              <SelectItem value="F">F</SelectItem>
+                              <SelectItem value="G">G</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={drawerNumber}
+                            onValueChange={(value) => {
+                              setDrawerNumber(value);
+                              const combined = drawerLetter && value 
+                                ? `${drawerLetter}-${value}` 
+                                : "";
+                              setCustomerForm({
+                                ...customerForm,
+                                plate_drawer_code: combined,
+                              });
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="الرقم" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-[200px]">
+                              <SelectItem value="">بدون</SelectItem>
+                              {Array.from({ length: 60 }, (_, i) => i + 1).map((num) => (
+                                <SelectItem key={num} value={num.toString()}>
+                                  {num}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="phone">الهاتف</Label>
