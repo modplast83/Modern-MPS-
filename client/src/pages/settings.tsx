@@ -301,55 +301,72 @@ export default function Settings() {
   // Get table schema for column mapping
   const getTableSchema = (tableName: string) => {
     const schemas: { [key: string]: string[] } = {
-      customers: [
-        "id",
-        "name",
-        "name_ar",
-        "phone",
-        "email",
-        "address",
-        "status",
-      ],
+      customers: ["id", "name", "name_ar", "phone", "email", "address", "status"],
       categories: ["id", "name", "name_ar", "description"],
       sections: ["id", "name", "name_ar", "description"],
       items: ["id", "category_id", "name", "name_ar"],
       users: ["id", "username", "display_name", "display_name_ar", "role_id"],
       machines: ["id", "name", "name_ar", "type", "status"],
       locations: ["id", "name", "name_ar", "type"],
+      roles: ["id", "name", "name_ar", "permissions"],
+      suppliers: ["id", "name", "name_ar", "contact_person", "phone", "email", "address"],
       customer_products: [
-        "id",
-        "customer_id",
-        "category_id",
-        "item_id",
-        "size_caption",
-        "width",
-        "left_facing",
-        "right_facing",
-        "thickness",
-        "printing_cylinder",
-        "cutting_length_cm",
-        "raw_material",
-        "master_batch_id",
-        "is_printed",
-        "cutting_unit",
-        "punching",
-        "unit_weight_kg",
-        "unit_quantity",
-        "package_weight_kg",
-        "cliche_front_design",
-        "cliche_back_design",
-        "notes",
-        "status",
-        "created_at",
+        "id", "customer_id", "category_id", "item_id", "size_caption", "width",
+        "left_facing", "right_facing", "thickness", "printing_cylinder",
+        "cutting_length_cm", "raw_material", "master_batch_id", "is_printed",
+        "cutting_unit", "punching", "unit_weight_kg", "unit_quantity",
+        "package_weight_kg", "cliche_front_design", "cliche_back_design",
+        "notes", "status", "created_at",
       ],
       orders: ["id", "customer_id", "order_date", "status", "total_amount"],
-      production_orders: [
-        "id",
-        "order_id",
-        "customer_product_id",
-        "quantity_kg",
-        "status",
-      ],
+      production_orders: ["id", "order_id", "customer_product_id", "quantity_kg", "status"],
+      rolls: ["id", "production_order_id", "weight_kg", "status", "created_at"],
+      cuts: ["id", "roll_id", "quantity", "created_at"],
+      inventory: ["id", "item_id", "location_id", "current_stock", "unit"],
+      inventory_movements: ["id", "inventory_id", "movement_type", "quantity", "created_at"],
+      warehouse_receipts: ["id", "supplier_id", "receipt_date", "total_amount"],
+      warehouse_transactions: ["id", "item_id", "transaction_type", "quantity", "created_at"],
+      maintenance_requests: ["id", "machine_id", "request_type", "status", "created_at"],
+      maintenance_actions: ["id", "maintenance_request_id", "action_type", "performed_by", "created_at"],
+      maintenance_reports: ["id", "machine_id", "report_type", "title", "description", "status"],
+      spare_parts: ["id", "name", "name_ar", "part_number", "quantity", "unit_price"],
+      consumable_parts: ["id", "name", "name_ar", "current_stock", "unit_price"],
+      consumable_parts_transactions: ["id", "consumable_part_id", "transaction_type", "quantity", "created_at"],
+      waste: ["id", "production_order_id", "quantity_kg", "reason", "created_at"],
+      quality_checks: ["id", "production_order_id", "check_type", "result", "created_at"],
+      machine_queues: ["id", "machine_id", "production_order_id", "priority", "status"],
+      production_settings: ["id", "setting_key", "setting_value"],
+      operator_negligence_reports: ["id", "operator_id", "machine_id", "report_type", "description"],
+      violations: ["id", "user_id", "violation_type", "description", "created_at"],
+      user_requests: ["id", "user_id", "request_type", "status", "created_at"],
+      attendance: ["id", "user_id", "date", "check_in", "check_out"],
+      training_programs: ["id", "program_name", "description", "duration_hours"],
+      training_records: ["id", "user_id", "training_program_id", "completion_date", "score"],
+      training_materials: ["id", "training_program_id", "material_type", "title", "content"],
+      training_enrollments: ["id", "user_id", "training_program_id", "enrollment_date", "status"],
+      training_evaluations: ["id", "enrollment_id", "evaluation_date", "score"],
+      training_certificates: ["id", "user_id", "training_program_id", "issue_date", "certificate_number"],
+      performance_reviews: ["id", "user_id", "review_date", "reviewer_id", "overall_score"],
+      performance_criteria: ["id", "criteria_name", "description", "weight"],
+      performance_ratings: ["id", "review_id", "criteria_id", "rating"],
+      leave_types: ["id", "name", "name_ar", "max_days", "requires_approval"],
+      leave_requests: ["id", "user_id", "leave_type_id", "start_date", "end_date", "status"],
+      leave_balances: ["id", "user_id", "leave_type_id", "balance_days"],
+      admin_decisions: ["id", "decision_type", "description", "created_by", "created_at"],
+      company_profile: ["id", "company_name", "address", "phone", "email"],
+      notifications: ["id", "user_id", "title", "message", "type", "is_read"],
+      notification_templates: ["id", "template_name", "subject", "body", "template_type"],
+      factory_locations: ["id", "name", "address", "latitude", "longitude"],
+      system_alerts: ["id", "alert_type", "severity", "message", "created_at"],
+      alert_rules: ["id", "rule_name", "condition", "action", "is_active"],
+      system_health_checks: ["id", "check_type", "status", "last_check", "details"],
+      system_performance_metrics: ["id", "metric_name", "value", "timestamp"],
+      corrective_actions: ["id", "issue_description", "action_taken", "created_by", "created_at"],
+      system_analytics: ["id", "event_type", "event_data", "timestamp"],
+      quick_notes: ["id", "user_id", "title", "content", "created_at"],
+      note_attachments: ["id", "note_id", "file_name", "file_url"],
+      mixing_batches: ["id", "batch_number", "formula_id", "quantity_kg", "created_at"],
+      batch_ingredients: ["id", "batch_id", "ingredient_id", "quantity_kg"],
     };
     return schemas[tableName] || [];
   };
@@ -1545,37 +1562,66 @@ export default function Settings() {
                             <SelectTrigger>
                               <SelectValue placeholder="اختر جدول للتصدير أو الاستيراد" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="customers">
-                                العملاء (Customers)
-                              </SelectItem>
-                              <SelectItem value="categories">
-                                الفئات (Categories)
-                              </SelectItem>
-                              <SelectItem value="sections">
-                                الأقسام (Sections)
-                              </SelectItem>
-                              <SelectItem value="items">
-                                الأصناف (Items)
-                              </SelectItem>
-                              <SelectItem value="customer_products">
-                                منتجات العملاء (Customer Products)
-                              </SelectItem>
-                              <SelectItem value="users">
-                                المستخدمين (Users)
-                              </SelectItem>
-                              <SelectItem value="machines">
-                                الماكينات (Machines)
-                              </SelectItem>
-                              <SelectItem value="locations">
-                                المواقع (Locations)
-                              </SelectItem>
-                              <SelectItem value="orders">
-                                الطلبات (Orders)
-                              </SelectItem>
-                              <SelectItem value="production_orders">
-                                أوامر الإنتاج (Production Orders)
-                              </SelectItem>
+                            <SelectContent className="max-h-[400px] overflow-y-auto">
+                              <SelectItem value="customers">العملاء (Customers)</SelectItem>
+                              <SelectItem value="categories">الفئات (Categories)</SelectItem>
+                              <SelectItem value="sections">الأقسام (Sections)</SelectItem>
+                              <SelectItem value="items">الأصناف (Items)</SelectItem>
+                              <SelectItem value="customer_products">منتجات العملاء (Customer Products)</SelectItem>
+                              <SelectItem value="users">المستخدمين (Users)</SelectItem>
+                              <SelectItem value="roles">الأدوار (Roles)</SelectItem>
+                              <SelectItem value="machines">الماكينات (Machines)</SelectItem>
+                              <SelectItem value="locations">المواقع (Locations)</SelectItem>
+                              <SelectItem value="suppliers">الموردين (Suppliers)</SelectItem>
+                              <SelectItem value="orders">الطلبات (Orders)</SelectItem>
+                              <SelectItem value="production_orders">أوامر الإنتاج (Production Orders)</SelectItem>
+                              <SelectItem value="rolls">البكرات (Rolls)</SelectItem>
+                              <SelectItem value="cuts">القصات (Cuts)</SelectItem>
+                              <SelectItem value="inventory">المخزون (Inventory)</SelectItem>
+                              <SelectItem value="inventory_movements">حركات المخزون (Inventory Movements)</SelectItem>
+                              <SelectItem value="warehouse_receipts">إيصالات المستودع (Warehouse Receipts)</SelectItem>
+                              <SelectItem value="warehouse_transactions">معاملات المستودع (Warehouse Transactions)</SelectItem>
+                              <SelectItem value="maintenance_requests">طلبات الصيانة (Maintenance Requests)</SelectItem>
+                              <SelectItem value="maintenance_actions">إجراءات الصيانة (Maintenance Actions)</SelectItem>
+                              <SelectItem value="maintenance_reports">تقارير الصيانة (Maintenance Reports)</SelectItem>
+                              <SelectItem value="spare_parts">قطع الغيار (Spare Parts)</SelectItem>
+                              <SelectItem value="consumable_parts">الأجزاء الاستهلاكية (Consumable Parts)</SelectItem>
+                              <SelectItem value="consumable_parts_transactions">معاملات الأجزاء الاستهلاكية (Consumable Parts Transactions)</SelectItem>
+                              <SelectItem value="waste">الهدر (Waste)</SelectItem>
+                              <SelectItem value="quality_checks">فحوصات الجودة (Quality Checks)</SelectItem>
+                              <SelectItem value="machine_queues">طوابير الماكينات (Machine Queues)</SelectItem>
+                              <SelectItem value="production_settings">إعدادات الإنتاج (Production Settings)</SelectItem>
+                              <SelectItem value="operator_negligence_reports">تقارير إهمال المشغلين (Operator Negligence Reports)</SelectItem>
+                              <SelectItem value="violations">المخالفات (Violations)</SelectItem>
+                              <SelectItem value="user_requests">طلبات المستخدمين (User Requests)</SelectItem>
+                              <SelectItem value="attendance">الحضور (Attendance)</SelectItem>
+                              <SelectItem value="training_programs">برامج التدريب (Training Programs)</SelectItem>
+                              <SelectItem value="training_records">سجلات التدريب (Training Records)</SelectItem>
+                              <SelectItem value="training_materials">مواد التدريب (Training Materials)</SelectItem>
+                              <SelectItem value="training_enrollments">تسجيلات التدريب (Training Enrollments)</SelectItem>
+                              <SelectItem value="training_evaluations">تقييمات التدريب (Training Evaluations)</SelectItem>
+                              <SelectItem value="training_certificates">شهادات التدريب (Training Certificates)</SelectItem>
+                              <SelectItem value="performance_reviews">مراجعات الأداء (Performance Reviews)</SelectItem>
+                              <SelectItem value="performance_criteria">معايير الأداء (Performance Criteria)</SelectItem>
+                              <SelectItem value="performance_ratings">تقييمات الأداء (Performance Ratings)</SelectItem>
+                              <SelectItem value="leave_types">أنواع الإجازات (Leave Types)</SelectItem>
+                              <SelectItem value="leave_requests">طلبات الإجازات (Leave Requests)</SelectItem>
+                              <SelectItem value="leave_balances">أرصدة الإجازات (Leave Balances)</SelectItem>
+                              <SelectItem value="admin_decisions">قرارات الإدارة (Admin Decisions)</SelectItem>
+                              <SelectItem value="company_profile">ملف الشركة (Company Profile)</SelectItem>
+                              <SelectItem value="notifications">الإشعارات (Notifications)</SelectItem>
+                              <SelectItem value="notification_templates">قوالب الإشعارات (Notification Templates)</SelectItem>
+                              <SelectItem value="factory_locations">مواقع المصنع (Factory Locations)</SelectItem>
+                              <SelectItem value="system_alerts">تنبيهات النظام (System Alerts)</SelectItem>
+                              <SelectItem value="alert_rules">قواعد التنبيه (Alert Rules)</SelectItem>
+                              <SelectItem value="system_health_checks">فحوصات صحة النظام (System Health Checks)</SelectItem>
+                              <SelectItem value="system_performance_metrics">مقاييس أداء النظام (System Performance Metrics)</SelectItem>
+                              <SelectItem value="corrective_actions">الإجراءات التصحيحية (Corrective Actions)</SelectItem>
+                              <SelectItem value="system_analytics">تحليلات النظام (System Analytics)</SelectItem>
+                              <SelectItem value="quick_notes">الملاحظات السريعة (Quick Notes)</SelectItem>
+                              <SelectItem value="note_attachments">مرفقات الملاحظات (Note Attachments)</SelectItem>
+                              <SelectItem value="mixing_batches">دفعات الخلط (Mixing Batches)</SelectItem>
+                              <SelectItem value="batch_ingredients">مكونات الدفعات (Batch Ingredients)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
