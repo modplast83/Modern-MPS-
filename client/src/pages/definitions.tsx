@@ -72,6 +72,12 @@ export default function Definitions() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickSearch, setQuickSearch] = useState("");
 
+  // Reset search and filters when changing tabs
+  useEffect(() => {
+    setQuickSearch("");
+    setStatusFilter("all");
+  }, [selectedTab]);
+
   // Pagination states for each tab
   const [currentPages, setCurrentPages] = useState({
     customers: 1,
