@@ -38,6 +38,7 @@ import ToolsPage from "./pages/tools_page";
 import FilmOperatorDashboard from "./pages/FilmOperatorDashboard";
 import PrintingOperatorDashboard from "./pages/PrintingOperatorDashboard";
 import CuttingOperatorDashboard from "./pages/CuttingOperatorDashboard";
+import ProductionDashboard from "./pages/ProductionDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
 
@@ -98,22 +99,24 @@ function AppRoutes() {
         <Redirect to="/orders?tab=roll-search" />
       </Route>
 
-      <Route path="/film-operator">
-        <ProtectedRoute path="/film-operator">
-          <FilmOperatorDashboard />
+      {/* Production Dashboard - Unified operators dashboard */}
+      <Route path="/production-dashboard">
+        <ProtectedRoute path="/production-dashboard">
+          <ProductionDashboard />
         </ProtectedRoute>
+      </Route>
+
+      {/* Redirect old operator routes to new unified dashboard */}
+      <Route path="/film-operator">
+        <Redirect to="/production-dashboard" />
       </Route>
 
       <Route path="/printing-operator">
-        <ProtectedRoute path="/printing-operator">
-          <PrintingOperatorDashboard />
-        </ProtectedRoute>
+        <Redirect to="/production-dashboard" />
       </Route>
 
       <Route path="/cutting-operator">
-        <ProtectedRoute path="/cutting-operator">
-          <CuttingOperatorDashboard />
-        </ProtectedRoute>
+        <Redirect to="/production-dashboard" />
       </Route>
 
       <Route path="/quality">

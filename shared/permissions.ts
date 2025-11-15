@@ -307,6 +307,7 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey[]> = {
   '/dashboard': ['view_dashboard'],
   '/orders': ['manage_orders'],
   '/production': ['view_production', 'manage_production'],
+  '/production-dashboard': ['view_film_dashboard', 'view_printing_dashboard', 'view_cutting_dashboard'],
   '/film-operator': ['view_film_dashboard'],
   '/printing-operator': ['view_printing_dashboard'],
   '/cutting-operator': ['view_cutting_dashboard'],

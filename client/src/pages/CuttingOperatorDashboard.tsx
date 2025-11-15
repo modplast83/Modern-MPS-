@@ -41,7 +41,11 @@ interface ProductionOrderWithRolls {
   total_weight: number;
 }
 
-export default function CuttingOperatorDashboard() {
+interface CuttingOperatorDashboardProps {
+  hideLayout?: boolean;
+}
+
+export default function CuttingOperatorDashboard({ hideLayout = false }: CuttingOperatorDashboardProps) {
   const { toast } = useToast();
   const [processingRollIds, setProcessingRollIds] = useState<Set<number>>(new Set());
 
@@ -86,6 +90,19 @@ export default function CuttingOperatorDashboard() {
   };
 
   if (isLoading) {
+    const loadingContent = (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600 text-lg">جاري تحميل رولات التقطيع...</p>
+        </div>
+      </div>
+    );
+
+    if (hideLayout) {
+      return loadingContent;
+    }
+
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -93,31 +110,19 @@ export default function CuttingOperatorDashboard() {
           <Sidebar />
           <MobileNav />
           <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-gray-600 text-lg">جاري تحميل رولات التقطيع...</p>
-              </div>
-            </div>
+            {loadingContent}
           </main>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل التقطيع</h1>
-            <p className="text-gray-600 dark:text-gray-400">إدارة رولات التقطيع وإنهائها</p>
-          </div>
+  const mainContent = (
+    <div className="space-y-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل التقطيع</h1>
+        <p className="text-gray-600 dark:text-gray-400">إدارة رولات التقطيع وإنهائها</p>
+      </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card data-testid="card-active-orders">
@@ -266,6 +271,21 @@ export default function CuttingOperatorDashboard() {
               })}
             </div>
           )}
+    </div>
+  );
+
+  if (hideLayout) {
+    return mainContent;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          {mainContent}
         </main>
       </div>
     </div>

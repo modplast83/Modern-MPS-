@@ -67,7 +67,11 @@ interface Roll {
   qr_png_base64?: string;
 }
 
-export default function FilmOperatorDashboard() {
+interface FilmOperatorDashboardProps {
+  hideLayout?: boolean;
+}
+
+export default function FilmOperatorDashboard({ hideLayout = false }: FilmOperatorDashboardProps) {
   const [selectedProductionOrder, setSelectedProductionOrder] = useState<ActiveProductionOrderDetails | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFinalRoll, setIsFinalRoll] = useState(false);
@@ -148,6 +152,19 @@ export default function FilmOperatorDashboard() {
   };
 
   if (isLoading) {
+    const loadingContent = (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-gray-600">جاري تحميل أوامر الإنتاج...</p>
+        </div>
+      </div>
+    );
+
+    if (hideLayout) {
+      return loadingContent;
+    }
+
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -155,27 +172,15 @@ export default function FilmOperatorDashboard() {
           <Sidebar />
           <MobileNav />
           <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-gray-600">جاري تحميل أوامر الإنتاج...</p>
-              </div>
-            </div>
+            {loadingContent}
           </main>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+  const mainContent = (
+    <div className="space-y-6">
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
@@ -495,8 +500,6 @@ export default function FilmOperatorDashboard() {
               <FilmMaterialMixingTab />
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
 
       {/* Roll Creation Modal */}
       {selectedProductionOrder && (
@@ -508,6 +511,23 @@ export default function FilmOperatorDashboard() {
           isFinalRoll={isFinalRoll}
         />
       )}
+    </div>
+  );
+
+  if (hideLayout) {
+    return mainContent;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Header />
+      <div className="flex">
+        <Sidebar />
+        <MobileNav />
+        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
+          {mainContent}
+        </main>
+      </div>
     </div>
   );
 }
