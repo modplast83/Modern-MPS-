@@ -925,8 +925,9 @@ export default function Definitions() {
   };
 
   // Specific filter functions
-  const getFilteredCustomers = () =>
-    filterData(customers as any[], [
+  const getFilteredCustomers = () => {
+    // Sort descending (newest first) for customers
+    const filtered = filterData(customers as any[], [
       "name",
       "name_ar",
       "phone",
@@ -934,6 +935,18 @@ export default function Definitions() {
       "address",
       "id",
     ]);
+    return filtered.sort((a, b) => {
+      const aId =
+        typeof a.id === "string"
+          ? parseInt(a.id.replace(/\D/g, "")) || 0
+          : a.id || 0;
+      const bId =
+        typeof b.id === "string"
+          ? parseInt(b.id.replace(/\D/g, "")) || 0
+          : b.id || 0;
+      return bId - aId; // Descending order (newest first)
+    });
+  };
   const getFilteredSections = () =>
     filterData(sections as any[], ["name", "name_ar", "description", "id"]);
   const getFilteredCategories = () =>
@@ -986,7 +999,7 @@ export default function Definitions() {
           typeof b.id === "string"
             ? parseInt(b.id.replace(/\D/g, "")) || 0
             : b.id || 0;
-        return aId - bId;
+        return bId - aId; // Descending order (newest first)
       });
     return filtered;
   };
