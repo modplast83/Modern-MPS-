@@ -3830,19 +3830,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.body.role_id !== "none"
       ) {
         if (typeof req.body.role_id === "string") {
-          // If it's a role name like 'admin', convert to role ID
-          const roles = await storage.getRoles();
-          const role = roles.find(
-            (r) =>
-              r.name === req.body.role_id || r.name_ar === req.body.role_id,
-          );
-          if (role) {
-            roleId = role.id;
+          // Extract numeric ID from ROLE{number} format (e.g., ROLE09 -> 9)
+          const roleMatch = req.body.role_id.match(/^ROLE(\d+)$/);
+          if (roleMatch) {
+            roleId = parseInt(roleMatch[1], 10);
           } else {
-            // If it's a numeric string, parse it
-            const parsed = parseInt(req.body.role_id);
-            if (!isNaN(parsed)) {
-              roleId = parsed;
+            // If it's a role name like 'admin', convert to role ID
+            const roles = await storage.getRoles();
+            const role = roles.find(
+              (r) =>
+                r.name === req.body.role_id || r.name_ar === req.body.role_id,
+            );
+            if (role) {
+              roleId = role.id;
+            } else {
+              // If it's a numeric string, parse it
+              const parsed = parseInt(req.body.role_id);
+              if (!isNaN(parsed)) {
+                roleId = parsed;
+              }
             }
           }
         } else if (typeof req.body.role_id === "number") {
