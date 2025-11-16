@@ -1,8 +1,8 @@
-# AI-Powered Order Management System for Plastic Bag Manufacturing
+# Order Management System for Plastic Bag Manufacturing
 
 ## Overview
 
-This project is an advanced AI-powered order management system for plastic bag manufacturing. Its main purpose is to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform. Key capabilities include comprehensive order and production management, AI-powered analytics and predictions, quality control, maintenance tracking, and HR management. The system aims to provide real-time tracking, multilingual interfaces, and intelligent data processing to improve overall operational efficiency and decision-making.
+This project is an advanced order management system for plastic bag manufacturing. Its main purpose is to streamline manufacturing processes, improve decision-making, and provide a robust, user-friendly platform. Key capabilities include comprehensive order and production management, quality control, maintenance tracking, and HR management. The system aims to provide real-time tracking, multilingual interfaces, and efficient data processing to improve overall operational efficiency and decision-making.
 
 ## User Preferences
 
@@ -23,7 +23,6 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
 - **Feature Specifications**:
     - Multilingual support (Arabic/English).
     - Real-time order tracking and management.
-    - Voice recognition and synthesis.
     - Advanced production order management, including detailed product specifications and notes.
     - **Three-Machine Roll Tracking**: Tracks each roll through film/extruder, printing, and cutting stages.
     - **Material Mixing System**: Formula-based mixing system using size and thickness ranges, and master batch colors. Categorized by machine screw type ('A' or 'ABA'). Ingredients sourced from items table (CAT10 - raw materials).
@@ -32,20 +31,6 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
     - HR management with attendance tracking and training programs.
     - **Geolocation-Based Attendance**: Attendance check-in system with GPS verification within factory premises (500m radius) using the Haversine formula. Supports multiple factory locations.
     - Role-based access control (Admin, Production Manager, Film Operator, Printing Operator, Cutting Operator).
-    - **Enhanced AI Assistant (v2.0)**: 
-      - Database schema understanding with 20+ supported tables
-      - Clarification logic - asks for clarification when confidence < 60%
-      - Missing information detection - requests required data
-      - Confirmation system - requires approval before write operations
-      - Error learning system - learns from mistakes and patterns (threshold: 3 errors)
-      - Context-aware intelligence with improved intent analysis
-      - Confidence scoring (0.0-1.0) for all responses
-      - **Security Features**:
-        - SQL injection prevention via whitelist validation and parameterized queries
-        - Schema tampering prevention with strict table/column validation
-        - XSS prevention through input sanitization
-        - Read-only operations (SELECT only) for AI queries
-        - Suspicious input detection and blocking
     - **Replit Auth Integration**: Dual authentication support (traditional username/password and Replit Auth).
 - **System Design Choices**: Features role-based access control, comprehensive order and production management, real-time inventory and warehouse tracking, and integrated quality/maintenance monitoring.
 - **Error Handling Strategy**: Implemented with global error boundaries on the frontend, comprehensive error logging and graceful responses on the API, transaction safety and connection resilience for the database, and intelligent retry with exponential backoff for network operations. Detailed Arabic error messages are provided for specific scenarios.
@@ -59,5 +44,4 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
 ## External Dependencies
 
 - **Database**: PostgreSQL (Neon Serverless)
-- **AI/ML**: OpenAI
 - **Messaging**: Twilio (for WhatsApp notifications)

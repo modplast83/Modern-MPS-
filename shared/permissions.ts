@@ -324,7 +324,6 @@ export const ROUTE_PERMISSIONS: Record<string, PermissionKey[]> = {
   '/notifications': ['view_notifications'],
   '/alerts': ['view_alerts', 'manage_alerts'],
   '/system-health': ['view_system_health'],
-  '/ml-analytics': ['manage_analytics'],
   '/production-monitoring': ['view_production_monitoring'],
   '/meta-whatsapp-setup': ['manage_whatsapp'],
   '/whatsapp-setup': ['manage_whatsapp'],

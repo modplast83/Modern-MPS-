@@ -22,7 +22,6 @@ import NotFound from "./pages/not-found";
 import Notifications from "./pages/notifications";
 import AlertsCenter from "./pages/AlertsCenter";
 import SystemHealth from "./pages/SystemHealth";
-import MLAnalytics from "./pages/ml-analytics";
 import ProductionMonitoring from "./pages/production-monitoring";
 import MetaWhatsAppSetup from "./pages/meta-whatsapp-setup";
 import WhatsAppSetup from "./pages/whatsapp-setup";
@@ -186,12 +185,6 @@ function AppRoutes() {
       <Route path="/system-health">
         <ProtectedRoute path="/system-health">
           <SystemHealth />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/ml-analytics">
-        <ProtectedRoute path="/ml-analytics">
-          <MLAnalytics />
         </ProtectedRoute>
       </Route>
 

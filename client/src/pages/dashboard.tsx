@@ -4,8 +4,6 @@ import MobileNav from "../components/layout/MobileNav";
 import DashboardStats from "../components/dashboard/DashboardStats";
 import Shortcuts from "../components/dashboard/Shortcuts";
 import QuickNotes from "../components/dashboard/QuickNotes";
-import AIAssistant from "../components/ai/AIAssistant";
-import { VoiceAssistant } from "../components/voice/VoiceAssistant";
 
 export default function Dashboard() {
   return (
@@ -22,11 +20,6 @@ export default function Dashboard() {
 
           <div className="mb-6">
             <QuickNotes />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <AIAssistant />
-            <VoiceAssistant />
           </div>
         </main>
       </div>
