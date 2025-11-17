@@ -253,13 +253,16 @@ function PrintContent({
         <table className="print-table">
           <thead>
             <tr>
-              <th>#</th>
-              <th>رقم أمر الإنتاج</th>
-              <th>المنتج</th>
-              <th>المقاس</th>
-              <th>الكمية (كجم)</th>
-              <th>الحالة</th>
-              <th>الملاحظات</th>
+              <th style={{ width: "3%" }}>#</th>
+              <th style={{ width: "10%" }}>رقم أمر الإنتاج</th>
+              <th style={{ width: "15%" }}>المنتج</th>
+              <th style={{ width: "12%" }}>المقاس</th>
+              <th style={{ width: "8%" }}>الكمية المطلوبة (كجم)</th>
+              <th style={{ width: "8%" }}>الكمية المنتجة (كجم)</th>
+              <th style={{ width: "8%" }}>الكمية الصافية (كجم)</th>
+              <th style={{ width: "7%" }}>نسبة الإنجاز</th>
+              <th style={{ width: "8%" }}>الحالة</th>
+              <th style={{ width: "21%" }}>الملاحظات</th>
             </tr>
           </thead>
           <tbody>
@@ -271,19 +274,31 @@ function PrintContent({
                 (i: any) => i.id === customerProduct?.item_id
               );
 
+              const producedQty = parseFloat(po.produced_quantity_kg || 0);
+              const netQty = parseFloat(po.net_quantity_kg || 0);
+              const requiredQty = parseFloat(po.final_quantity_kg || po.quantity_kg || 0);
+              const completionPercentage = requiredQty > 0 
+                ? ((netQty / requiredQty) * 100).toFixed(1)
+                : "0.0";
+
               return (
                 <tr key={po.id}>
                   <td>{index + 1}</td>
                   <td>{po.production_order_number}</td>
                   <td>{item?.name_ar || item?.name || "غير محدد"}</td>
                   <td>{customerProduct?.size_caption || "غير محدد"}</td>
-                  <td>{parseFloat(po.quantity_kg || 0).toFixed(2)}</td>
+                  <td>{requiredQty.toFixed(2)}</td>
+                  <td>{producedQty.toFixed(2)}</td>
+                  <td>{netQty.toFixed(2)}</td>
+                  <td>
+                    <strong>{completionPercentage}%</strong>
+                  </td>
                   <td>
                     <span className="print-badge print-badge-info">
                       {getStatusText(po.status)}
                     </span>
                   </td>
-                  <td>{po.notes || "-"}</td>
+                  <td style={{ fontSize: "9px" }}>{po.notes || "-"}</td>
                 </tr>
               );
             })}
@@ -293,9 +308,26 @@ function PrintContent({
               <td colSpan={4} style={{ textAlign: "left" }}>
                 <strong>المجموع الكلي:</strong>
               </td>
-              <td colSpan={3}>
-                <strong>{totalQuantity.toFixed(2)} كجم</strong>
+              <td>
+                <strong>{totalQuantity.toFixed(2)}</strong>
               </td>
+              <td>
+                <strong>
+                  {orderProductionOrders.reduce(
+                    (sum: number, po: any) => sum + parseFloat(po.produced_quantity_kg || 0),
+                    0
+                  ).toFixed(2)}
+                </strong>
+              </td>
+              <td>
+                <strong>
+                  {orderProductionOrders.reduce(
+                    (sum: number, po: any) => sum + parseFloat(po.net_quantity_kg || 0),
+                    0
+                  ).toFixed(2)}
+                </strong>
+              </td>
+              <td colSpan={3}></td>
             </tr>
           </tfoot>
         </table>
