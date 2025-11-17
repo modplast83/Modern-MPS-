@@ -158,6 +158,7 @@ export default function OrderPrintTemplate({
               orderProductionOrders={orderProductionOrders}
               customerProducts={customerProducts}
               items={items}
+              categories={categories}
               qrCodeUrl={qrCodeUrl}
               totalQuantity={totalQuantity}
               getStatusText={getStatusText}
@@ -174,6 +175,7 @@ export default function OrderPrintTemplate({
           orderProductionOrders={orderProductionOrders}
           customerProducts={customerProducts}
           items={items}
+          categories={categories}
           qrCodeUrl={qrCodeUrl}
           totalQuantity={totalQuantity}
           getStatusText={getStatusText}
@@ -189,6 +191,7 @@ function PrintContent({
   orderProductionOrders,
   customerProducts,
   items,
+  categories,
   qrCodeUrl,
   totalQuantity,
   getStatusText,
