@@ -10,6 +10,44 @@ interface OrderPrintTemplateProps {
   onClose: () => void;
 }
 
+// Master Batch Colors
+const masterBatchColors = [
+  { id: "PT-111111", name: "White", name_ar: "أبيض", color: "#FFFFFF", textColor: "#000000" },
+  { id: "PT-000000", name: "Black", name_ar: "أسود", color: "#000000", textColor: "#FFFFFF" },
+  { id: "PT-160060", name: "Terracotta", name_ar: "تيراكوتا", color: "#CC4E3A", textColor: "#FFFFFF" },
+  { id: "PT-160061", name: "Coffee Brown", name_ar: "بني قهوة", color: "#4B2E2B", textColor: "#FFFFFF" },
+  { id: "PT-160055", name: "Chocolate", name_ar: "بني شوكولا", color: "#7B3F00", textColor: "#FFFFFF" },
+  { id: "PT-102004", name: "Dark Silver", name_ar: "فضي داكن", color: "#6E6E6E", textColor: "#000000" },
+  { id: "PT-101008", name: "Gold", name_ar: "ذهبي", color: "#D4AF37", textColor: "#000000" },
+  { id: "PT-150245", name: "Pistachio Green", name_ar: "أخضر فستقي", color: "#93C572", textColor: "#000000" },
+  { id: "PT-150086", name: "Light Green", name_ar: "أخضر فاتح", color: "#90EE90", textColor: "#000000" },
+  { id: "PT-170028", name: "Light Grey", name_ar: "رمادي فاتح", color: "#B0B0B0", textColor: "#000000" },
+  { id: "PT-180361", name: "Dark Pink", name_ar: "وردي داكن", color: "#D81B60", textColor: "#FFFFFF" },
+  { id: "PT-180374", name: "Pastel Pink", name_ar: "وردي باستيل", color: "#FFB6C1", textColor: "#000000" },
+  { id: "PT-180375", name: "Baby Pink", name_ar: "وردي فاتح", color: "#F4C2C2", textColor: "#000000" },
+  { id: "PT-140079", name: "Light Blue", name_ar: "أزرق فاتح", color: "#66B2FF", textColor: "#000000" },
+  { id: "PT-140340", name: "Dark Blue", name_ar: "أزرق داكن", color: "#0033A0", textColor: "#FFFFFF" },
+  { id: "PT-140352", name: "Pure Blue", name_ar: "أزرق صافي", color: "#0057FF", textColor: "#FFFFFF" },
+  { id: "PT-140080", name: "African Violet", name_ar: "بنفسجي أفريقي", color: "#B284BE", textColor: "#000000" },
+  { id: "PT-140114", name: "Royal Purple", name_ar: "بنفسجي ملكي", color: "#613399", textColor: "#FFFFFF" },
+  { id: "PT-120074", name: "Dark Ivory", name_ar: "عاجي داكن", color: "#E2DCC8", textColor: "#000000" },
+  { id: "PT-130232-A", name: "Sunflower Yellow", name_ar: "أصفر دوار الشمس", color: "#FFDA03", textColor: "#000000" },
+  { id: "PT-130112", name: "Lemon Yellow", name_ar: "أصفر ليموني", color: "#FFF44F", textColor: "#000000" },
+  { id: "PT-130231", name: "Yellow", name_ar: "أصفر", color: "#FFD000", textColor: "#000000" },
+  { id: "PT-130232-B", name: "Golden Yellow", name_ar: "أصفر ذهبي", color: "#FFC000", textColor: "#000000" },
+  { id: "PT-180370", name: "Orange", name_ar: "برتقالي 805", color: "#FF7A00", textColor: "#FFFFFF" },
+  { id: "PT-180363", name: "Orange", name_ar: "برتقالي 801", color: "#FF5A1F", textColor: "#FFFFFF" },
+  { id: "PT-180122", name: "Tomato Red", name_ar: "أحمر طماطمي", color: "#E53935", textColor: "#FFFFFF" },
+  { id: "PT-MIX", name: "MIX", name_ar: "مخلوط", color: "#E2DCC8", textColor: "#000000" },
+  { id: "PT-CLEAR", name: "CLEAR", name_ar: "شفاف", color: "#E2DCC8", textColor: "#000000" },
+];
+
+const getMasterBatchArabicName = (masterBatchId: string): string => {
+  if (!masterBatchId) return "غير محدد";
+  const color = masterBatchColors.find((c) => c.id === masterBatchId);
+  return color?.name_ar || masterBatchId;
+};
+
 export default function OrderPrintTemplate({
   order,
   customer,
@@ -363,11 +401,11 @@ function PrintContent({
                     {customerProduct.width || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الدخلات يمين:</strong>{" "}
+                    <strong>الكشة اليمنى:</strong>{" "}
                     {customerProduct.right_facing || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الدخلات يسار:</strong>{" "}
+                    <strong>الكشة اليسرى:</strong>{" "}
                     {customerProduct.left_facing || "غير محدد"} سم
                   </div>
                   <div>
@@ -388,14 +426,14 @@ function PrintContent({
                   </div>
                   <div>
                     <strong>اللون:</strong>{" "}
-                    {customerProduct.master_batch_id || "غير محدد"}
+                    {getMasterBatchArabicName(customerProduct.master_batch_id)}
                   </div>
                   <div>
                     <strong>الطباعة:</strong>{" "}
                     {customerProduct.is_printed ? "نعم" : "لا"}
                   </div>
                   <div>
-                    <strong>التخريم:</strong>{" "}
+                    <strong>الثقب:</strong>{" "}
                     {customerProduct.punching || "غير محدد"}
                   </div>
                   <div>
