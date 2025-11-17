@@ -3,6 +3,11 @@
  * Professional A4 Format with RTL Support
  */
 
+/* Hide print container on screen, show only when printing */
+.print-container {
+  display: none;
+}
+
 @media print {
   /* إخفاء العناصر غير المطلوبة */
   body > *:not(.print-container) {
