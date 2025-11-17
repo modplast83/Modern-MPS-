@@ -198,116 +198,78 @@ function PrintContent({
 }: any) {
   return (
     <>
-      {/* Header */}
-      <div className="print-header">
-        <div>
-          <h1 className="print-title">طلب عميل</h1>
-          <p className="print-subtitle">Order Form</p>
+      {/* Compact Header with Logo */}
+      <div className="compact-header">
+        <div className="header-logo">
+          <img src="/attached_assets/factory-logo.svg" alt="Factory Logo" />
         </div>
-        {qrCodeUrl && (
-          <img
-            src={qrCodeUrl}
-            alt="QR Code"
-            className="print-qr"
-          />
-        )}
-      </div>
-
-      {/* Document Info */}
-      <div className="print-info">
-        <div className="print-info-item">
-          <span className="print-info-label">رقم الطلب:</span>
-          <span className="print-info-value">{order.order_number}</span>
+        <div className="header-center">
+          <h1 className="header-title">طلب عميل</h1>
+          <p className="header-subtitle">Customer Order</p>
         </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ الإصدار:</span>
-          <span className="print-info-value">
-            {format(new Date(), "dd/MM/yyyy - HH:mm")}
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">العميل:</span>
-          <span className="print-info-value">
-            {customer?.name_ar || customer?.name || "غير محدد"}
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">رمز العميل:</span>
-          <span className="print-info-value">
-            {customer?.id || "غير محدد"}
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ الطلب:</span>
-          <span className="print-info-value">
-            {order.created_at
-              ? format(new Date(order.created_at), "dd/MM/yyyy")
-              : "غير محدد"}
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">تاريخ التسليم المتوقع:</span>
-          <span className="print-info-value">
-            {order.delivery_date
-              ? format(new Date(order.delivery_date), "dd/MM/yyyy")
-              : "غير محدد"}
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">مدة التسليم:</span>
-          <span className="print-info-value">
-            {order.delivery_days || "غير محدد"} يوم
-          </span>
-        </div>
-        <div className="print-info-item">
-          <span className="print-info-label">الحالة:</span>
-          <span className="print-badge print-badge-info">
-            {getStatusText(order.status)}
-          </span>
+        <div className="header-qr">
+          {qrCodeUrl && <img src={qrCodeUrl} alt="QR" />}
         </div>
       </div>
 
-      {/* Customer Info */}
-      {customer && (
-        <div className="print-section">
-          <h3 className="print-section-title">معلومات العميل</h3>
-          <div className="print-grid-2">
-            <div>
-              <strong>العنوان:</strong> {customer.address || "غير محدد"}
-            </div>
-            <div>
-              <strong>المدينة:</strong> {customer.city || "غير محدد"}
-            </div>
-            <div>
-              <strong>الهاتف:</strong> {customer.phone || "غير محدد"}
-            </div>
-            <div>
-              <strong>الرقم الضريبي:</strong>{" "}
-              {customer.tax_number || "غير محدد"}
-            </div>
-          </div>
+      {/* Compact Info Grid */}
+      <div className="compact-info-grid">
+        <div className="info-cell">
+          <span className="info-label">رقم الطلب:</span>
+          <span className="info-value">{order.order_number}</span>
         </div>
-      )}
+        <div className="info-cell">
+          <span className="info-label">العميل:</span>
+          <span className="info-value">{customer?.name_ar || customer?.name || "غير محدد"}</span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">تاريخ الطباعة:</span>
+          <span className="info-value">{format(new Date(), "dd/MM/yyyy HH:mm")}</span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">رمز العميل:</span>
+          <span className="info-value">{customer?.id || "-"}</span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">تاريخ الطلب:</span>
+          <span className="info-value">
+            {order.created_at ? format(new Date(order.created_at), "dd/MM/yyyy") : "-"}
+          </span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">تاريخ التسليم:</span>
+          <span className="info-value">
+            {order.delivery_date ? format(new Date(order.delivery_date), "dd/MM/yyyy") : "-"}
+          </span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">الهاتف:</span>
+          <span className="info-value">{customer?.phone || "-"}</span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">المدينة:</span>
+          <span className="info-value">{customer?.city || "-"}</span>
+        </div>
+        <div className="info-cell">
+          <span className="info-label">الحالة:</span>
+          <span className="info-badge">{getStatusText(order.status)}</span>
+        </div>
+      </div>
 
-      {/* Production Orders Table */}
-      <div className="print-section avoid-page-break">
-        <h3 className="print-section-title">
-          أوامر الإنتاج ({orderProductionOrders.length})
-        </h3>
-        <table className="print-table">
+      {/* Compact Production Orders Table */}
+      <div className="compact-section">
+        <h3 className="section-title">أوامر الإنتاج ({orderProductionOrders.length})</h3>
+        <table className="compact-table">
           <thead>
             <tr>
               <th style={{ width: "3%" }}>#</th>
-              <th style={{ width: "9%" }}>رقم أمر الإنتاج</th>
-              <th style={{ width: "10%" }}>فئة الصنف</th>
-              <th style={{ width: "12%" }}>المنتج</th>
-              <th style={{ width: "10%" }}>المقاس</th>
-              <th style={{ width: "7%" }}>الكمية المطلوبة (كجم)</th>
-              <th style={{ width: "7%" }}>الكمية المنتجة (كجم)</th>
-              <th style={{ width: "7%" }}>الكمية الصافية (كجم)</th>
-              <th style={{ width: "6%" }}>نسبة الإكمال</th>
-              <th style={{ width: "7%" }}>الحالة</th>
-              <th style={{ width: "22%" }}>الملاحظات</th>
+              <th style={{ width: "8%" }}>رقم الأمر</th>
+              <th style={{ width: "13%" }}>المنتج</th>
+              <th style={{ width: "12%" }}>المقاس</th>
+              <th style={{ width: "18%" }}>المواصفات</th>
+              <th style={{ width: "10%" }}>الكميات (كجم)<br/><span style={{ fontSize: "7px" }}>مطلوب/منتج/صافي</span></th>
+              <th style={{ width: "6%" }}>إكمال</th>
+              <th style={{ width: "30%" }}>ملاحظات</th>
             </tr>
           </thead>
           <tbody>
@@ -318,181 +280,76 @@ function PrintContent({
               const item = items.find(
                 (i: any) => i.id === customerProduct?.item_id
               );
-              const category = categories.find(
-                (cat: any) => cat.id === item?.category_id
-              );
 
               const producedQty = parseFloat(po.produced_quantity_kg || 0);
               const netQty = parseFloat(po.net_quantity_kg || 0);
               const requiredQty = parseFloat(po.final_quantity_kg || po.quantity_kg || 0);
               const completionPercentage = requiredQty > 0 
-                ? ((netQty / requiredQty) * 100).toFixed(1)
-                : "0.0";
+                ? ((netQty / requiredQty) * 100).toFixed(0)
+                : "0";
 
               return (
                 <tr key={po.id}>
                   <td>{index + 1}</td>
                   <td>{po.production_order_number}</td>
-                  <td>{category?.name_ar || category?.name || "غير محدد"}</td>
                   <td>{item?.name_ar || item?.name || "غير محدد"}</td>
-                  <td>{customerProduct?.size_caption || "غير محدد"}</td>
-                  <td>{requiredQty.toFixed(2)}</td>
-                  <td>{producedQty.toFixed(2)}</td>
-                  <td>{netQty.toFixed(2)}</td>
-                  <td>
-                    <strong>{completionPercentage}%</strong>
+                  <td>{customerProduct?.size_caption || "-"}</td>
+                  <td className="specs-cell">
+                    <div>عرض: {customerProduct?.width || "-"} | سماكة: {customerProduct?.thickness || "-"}</div>
+                    <div>لون: {getMasterBatchArabicName(customerProduct?.master_batch_id)} | طباعة: {customerProduct?.is_printed ? "نعم" : "لا"}</div>
                   </td>
-                  <td>
-                    <span className="print-badge print-badge-info">
-                      {getStatusText(po.status)}
-                    </span>
+                  <td className="qty-cell">
+                    <div>{requiredQty.toFixed(2)}</div>
+                    <div>{producedQty.toFixed(2)}</div>
+                    <div><strong>{netQty.toFixed(2)}</strong></div>
                   </td>
-                  <td style={{ fontSize: "9px" }}>{po.notes || "-"}</td>
+                  <td><strong>{completionPercentage}%</strong></td>
+                  <td className="notes-cell">{po.notes || "-"}</td>
                 </tr>
               );
             })}
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={5} style={{ textAlign: "left" }}>
-                <strong>المجموع الكلي:</strong>
+              <td colSpan={5} style={{ textAlign: "left", fontWeight: "bold" }}>المجموع:</td>
+              <td className="qty-cell">
+                <div>{totalQuantity.toFixed(2)}</div>
+                <div>{orderProductionOrders.reduce((sum: number, po: any) => sum + parseFloat(po.produced_quantity_kg || 0), 0).toFixed(2)}</div>
+                <div><strong>{orderProductionOrders.reduce((sum: number, po: any) => sum + parseFloat(po.net_quantity_kg || 0), 0).toFixed(2)}</strong></div>
               </td>
-              <td>
-                <strong>{totalQuantity.toFixed(2)}</strong>
-              </td>
-              <td>
-                <strong>
-                  {orderProductionOrders.reduce(
-                    (sum: number, po: any) => sum + parseFloat(po.produced_quantity_kg || 0),
-                    0
-                  ).toFixed(2)}
-                </strong>
-              </td>
-              <td>
-                <strong>
-                  {orderProductionOrders.reduce(
-                    (sum: number, po: any) => sum + parseFloat(po.net_quantity_kg || 0),
-                    0
-                  ).toFixed(2)}
-                </strong>
-              </td>
-              <td colSpan={3}></td>
+              <td colSpan={2}></td>
             </tr>
           </tfoot>
         </table>
       </div>
 
-      {/* Product Specifications */}
-      {orderProductionOrders.length > 0 && (
-        <div className="print-section avoid-page-break">
-          <h3 className="print-section-title">مواصفات المنتجات</h3>
-          {orderProductionOrders.map((po: any, index: number) => {
-            const customerProduct = customerProducts.find(
-              (cp: any) => cp.id === po.customer_product_id
-            );
-
-            if (!customerProduct) return null;
-
-            return (
-              <div
-                key={po.id}
-                style={{
-                  marginBottom: "15px",
-                  padding: "10px",
-                  border: "1px solid #ddd",
-                  background: "#fafafa",
-                }}
-              >
-                <h4 style={{ marginBottom: "8px", fontWeight: "bold" }}>
-                  {index + 1}. {customerProduct.size_caption || "منتج"}
-                </h4>
-                <div className="print-grid-3">
-                  <div>
-                    <strong>العرض:</strong>{" "}
-                    {customerProduct.width || "غير محدد"} سم
-                  </div>
-                  <div>
-                    <strong>الكشة اليمنى:</strong>{" "}
-                    {customerProduct.right_facing || "غير محدد"} سم
-                  </div>
-                  <div>
-                    <strong>الكشة اليسرى:</strong>{" "}
-                    {customerProduct.left_facing || "غير محدد"} سم
-                  </div>
-                  <div>
-                    <strong>السماكة:</strong>{" "}
-                    {customerProduct.thickness || "غير محدد"} مايكرون
-                  </div>
-                  <div>
-                    <strong>طول القطع:</strong>{" "}
-                    {customerProduct.cutting_length_cm || "غير محدد"} سم
-                  </div>
-                  <div>
-                    <strong>اسطوانة الطباعة:</strong>{" "}
-                    {customerProduct.printing_cylinder || "غير محدد"}
-                  </div>
-                  <div>
-                    <strong>الخامة:</strong>{" "}
-                    {customerProduct.raw_material || "غير محدد"}
-                  </div>
-                  <div>
-                    <strong>اللون:</strong>{" "}
-                    {getMasterBatchArabicName(customerProduct.master_batch_id)}
-                  </div>
-                  <div>
-                    <strong>الطباعة:</strong>{" "}
-                    {customerProduct.is_printed ? "نعم" : "لا"}
-                  </div>
-                  <div>
-                    <strong>الثقب:</strong>{" "}
-                    {customerProduct.punching || "غير محدد"}
-                  </div>
-                  <div>
-                    <strong>وحدة القطع:</strong>{" "}
-                    {customerProduct.cutting_unit || "غير محدد"}
-                  </div>
-                  <div>
-                    <strong>وزن الوحدة:</strong>{" "}
-                    {customerProduct.unit_weight_kg || "غير محدد"} كجم
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Notes */}
+      {/* Notes if any */}
       {order.notes && (
-        <div className="print-notes avoid-page-break">
-          <div className="print-notes-title">ملاحظات وتعليمات:</div>
-          <div className="print-notes-content">{order.notes}</div>
+        <div className="compact-notes">
+          <strong>ملاحظات:</strong> {order.notes}
         </div>
       )}
 
-      {/* Signatures */}
-      <div className="print-signatures">
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">تم الاعداد بواسطة</div>
+      {/* Compact Footer with Signatures */}
+      <div className="compact-footer">
+        <div className="footer-signatures">
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <span>الإعداد</span>
+          </div>
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <span>المندوب</span>
+          </div>
+          <div className="signature-box">
+            <div className="signature-line"></div>
+            <span>الإدارة</span>
+          </div>
         </div>
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">المندوب</div>
+        <div className="footer-info">
+          <span>طُبع في: {format(new Date(), "dd/MM/yyyy HH:mm")}</span>
+          <span>نظام إدارة الإنتاج</span>
         </div>
-        <div className="print-signature">
-          <div className="print-signature-line"></div>
-          <div className="print-signature-label">الإدارة</div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="print-footer">
-        <p>
-          هذا المستند تم إنشاؤه إلكترونياً بتاريخ{" "}
-          {format(new Date(), "dd/MM/yyyy - HH:mm")}
-        </p>
-        <p>نظام إدارة الإنتاج - Factory IQ</p>
       </div>
     </>
   );

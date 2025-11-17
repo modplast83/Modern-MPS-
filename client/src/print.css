@@ -1,6 +1,6 @@
 /* 
- * Print Styles for Orders and Production Orders
- * Professional A4 Format with RTL Support
+ * Compact Print Styles for Orders - Professional A4 Landscape
+ * Optimized to fit 5 production orders on one page
  */
 
 /* Hide print container on screen, show only when printing */
@@ -8,149 +8,193 @@
   display: none;
 }
 
-/* Styles for screen preview */
-.print-header {
+/* Screen preview styles */
+.compact-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #000;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #1a1a1a;
 }
 
-.print-title {
-  font-size: 24px;
+.header-logo img {
+  max-width: 120px;
+  height: auto;
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.header-title {
+  font-size: 22px;
   font-weight: bold;
-  text-align: center;
   margin: 0;
+  color: #1a1a1a;
 }
 
-.print-subtitle {
-  font-size: 14px;
-  text-align: center;
+.header-subtitle {
+  font-size: 12px;
+  margin: 3px 0 0 0;
   color: #666;
-  margin: 5px 0 0 0;
 }
 
-.print-qr {
-  max-width: 80px;
-  max-height: 80px;
+.header-qr img {
+  max-width: 70px;
+  height: auto;
 }
 
-.print-info {
-  margin: 15px 0;
-  padding: 10px;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
+.compact-info-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.print-info-item {
-  margin: 0;
-}
-
-.print-info-label {
-  font-weight: bold;
-  display: inline-block;
-  min-width: 120px;
-}
-
-.print-info-value {
-  display: inline;
-}
-
-.print-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 15px 0;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+  padding: 10px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
   font-size: 11px;
 }
 
-.print-table th {
+.info-cell {
+  display: flex;
+  gap: 5px;
+}
+
+.info-label {
+  font-weight: bold;
+  color: #333;
+}
+
+.info-value {
+  color: #000;
+}
+
+.info-badge {
+  background: #e0e8ff;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: bold;
+  border: 1px solid #b0c0ff;
+}
+
+.compact-section {
+  margin-bottom: 15px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #666;
+}
+
+.compact-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+
+.compact-table th {
   background: #1a1a1a;
   color: white;
-  padding: 8px 5px;
+  padding: 6px 4px;
   text-align: right;
   font-weight: 900;
   border: 1px solid #000;
-  font-size: 12px;
+  font-size: 10px;
+  line-height: 1.2;
 }
 
-.print-table td {
-  padding: 6px 5px;
-  border: 1px solid #333;
+.compact-table td {
+  padding: 4px;
+  border: 1px solid #666;
   text-align: right;
+  font-size: 9px;
+  line-height: 1.3;
 }
 
-.print-table tr:nth-child(even) {
+.compact-table tbody tr:nth-child(even) {
   background: #f9f9f9;
 }
 
-.print-table tfoot td {
+.compact-table tfoot td {
   font-weight: bold;
   background: #e9e9e9;
   border-top: 2px solid #000;
 }
 
-.print-section {
-  margin: 20px 0;
+.specs-cell div {
+  font-size: 8px;
+  line-height: 1.4;
+  margin: 1px 0;
 }
 
-.print-section-title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid #666;
+.qty-cell {
+  text-align: center !important;
 }
 
-.print-notes {
-  margin: 15px 0;
-  padding: 10px;
-  border: 1px solid #999;
-  background: #fafafa;
-  min-height: 60px;
+.qty-cell div {
+  font-size: 8px;
+  line-height: 1.4;
+  padding: 1px 0;
 }
 
-.print-notes-title {
-  font-weight: bold;
+.notes-cell {
+  font-size: 8px !important;
+  line-height: 1.3;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compact-notes {
+  margin: 10px 0;
+  padding: 8px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  font-size: 10px;
+}
+
+.compact-footer {
+  margin-top: 15px;
+  padding-top: 10px;
+  border-top: 1px solid #999;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.footer-signatures {
+  display: flex;
+  gap: 40px;
+}
+
+.signature-box {
+  text-align: center;
+  font-size: 10px;
+}
+
+.signature-line {
+  width: 120px;
+  border-bottom: 1px solid #000;
   margin-bottom: 5px;
+  padding-top: 30px;
 }
 
-.print-notes-content {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
-
-.print-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: bold;
-  border: 1px solid #000;
-}
-
-.print-badge-success {
-  background: #e0f0e0;
-}
-
-.print-badge-warning {
-  background: #fff8dc;
-}
-
-.print-badge-danger {
-  background: #ffe0e0;
-}
-
-.print-badge-info {
-  background: #e0e8ff;
+.footer-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  font-size: 9px;
+  color: #666;
+  gap: 3px;
 }
 
 @media print {
-  /* إخفاء كل شيء ما عدا print-container */
+  /* Hide everything except print-container */
   body * {
     visibility: hidden;
   }
@@ -164,30 +208,30 @@
     position: absolute;
     left: 0;
     top: 0;
+    width: 100%;
   }
 
   .no-print {
     display: none !important;
   }
 
-  /* إعدادات الصفحة */
+  /* Page setup for A4 Landscape */
   @page {
     size: A4 landscape;
-    margin: 12mm 15mm 12mm 15mm;
+    margin: 10mm 12mm 10mm 12mm;
   }
 
   body {
     margin: 0;
     padding: 0;
     font-family: 'Arial', 'Helvetica', 'Tahoma', sans-serif;
-    font-size: 11pt;
-    line-height: 1.4;
+    font-size: 8pt;
+    line-height: 1.2;
     color: #000;
     background: white;
     direction: rtl;
   }
 
-  /* حاوية الطباعة */
   .print-container {
     display: block !important;
     width: 100%;
@@ -202,232 +246,213 @@
     page-break-after: auto;
   }
 
-  /* رأس المستند */
-  .print-header {
+  /* Compact Header */
+  .compact-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #000;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #1a1a1a;
   }
 
-  .print-logo {
-    max-width: 120px;
-    max-height: 60px;
+  .header-logo img {
+    max-width: 100px;
+    max-height: 50px;
   }
 
-  .print-title {
-    font-size: 16pt;
-    font-weight: bold;
+  .header-center {
+    flex: 1;
     text-align: center;
+  }
+
+  .header-title {
+    font-size: 14pt;
+    font-weight: bold;
     margin: 0;
   }
 
-  .print-subtitle {
-    font-size: 10pt;
-    text-align: center;
+  .header-subtitle {
+    font-size: 8pt;
+    margin: 2px 0 0 0;
     color: #333;
-    margin: 3px 0 0 0;
   }
 
-  .print-qr {
-    max-width: 70px;
-    max-height: 70px;
+  .header-qr img {
+    max-width: 55px;
+    max-height: 55px;
   }
 
-  /* معلومات المستند */
-  .print-info {
-    margin: 10px 0;
-    padding: 8px;
-    background: #f5f5f5;
-    border: 1px solid #ddd;
+  /* Compact Info Grid */
+  .compact-info-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    font-size: 9pt;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+    padding: 6px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    font-size: 7.5pt;
+    line-height: 1.3;
   }
 
-  .print-info-item {
-    margin: 0;
+  .info-cell {
+    display: flex;
+    gap: 4px;
   }
 
-  .print-info-label {
+  .info-label {
     font-weight: bold;
-    display: inline-block;
-    min-width: 120px;
+    color: #333;
   }
 
-  .print-info-value {
-    display: inline;
+  .info-value {
+    color: #000;
   }
 
-  /* الجداول */
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 9pt;
-  }
-
-  .print-table th {
-    background: #1a1a1a;
-    color: white;
-    padding: 6px 4px;
-    text-align: right;
-    font-weight: 900;
-    border: 1px solid #000;
-    font-size: 9pt;
-    line-height: 1.2;
-  }
-
-  .print-table td {
-    padding: 5px 4px;
-    border: 1px solid #333;
-    text-align: right;
-    font-size: 8.5pt;
-    line-height: 1.2;
-  }
-
-  .print-table tr:nth-child(even) {
-    background: #f9f9f9;
-  }
-
-  .print-table tfoot td {
+  .info-badge {
+    background: #e0e8ff;
+    padding: 1px 6px;
+    border-radius: 2px;
     font-weight: bold;
-    background: #e9e9e9;
-    border-top: 2px solid #000;
+    border: 1px solid #b0c0ff;
+    font-size: 7pt;
   }
 
-  /* القسم */
-  .print-section {
-    margin: 20px 0;
-    page-break-inside: avoid;
+  /* Compact Section */
+  .compact-section {
+    margin-bottom: 8px;
   }
 
-  .print-section-title {
-    font-size: 13pt;
+  .section-title {
+    font-size: 10pt;
     font-weight: bold;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
+    margin-bottom: 5px;
+    padding-bottom: 3px;
     border-bottom: 1px solid #666;
   }
 
-  /* الملاحظات */
-  .print-notes {
-    margin: 15px 0;
-    padding: 10px;
-    border: 1px solid #999;
-    background: #fafafa;
-    min-height: 60px;
+  /* Super Compact Table */
+  .compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7pt;
+    line-height: 1.1;
   }
 
-  .print-notes-title {
-    font-weight: bold;
-    margin-bottom: 5px;
-  }
-
-  .print-notes-content {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-
-  /* التوقيعات */
-  .print-signatures {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-    margin-top: 30mm;
-    page-break-inside: avoid;
-  }
-
-  .print-signature {
-    text-align: center;
-    border-top: 1px solid #000;
-    padding-top: 5px;
-  }
-
-  .print-signature-label {
-    font-weight: bold;
-    font-size: 10pt;
-  }
-
-  .print-signature-line {
-    margin: 40px 0 5px 0;
-    border-bottom: 1px solid #000;
-  }
-
-  /* Footer المستند */
-  .print-footer {
-    margin-top: 20px;
-    padding-top: 10px;
-    border-top: 1px solid #999;
-    font-size: 9pt;
-    text-align: center;
-    color: #666;
-  }
-
-  /* الباركود و QR */
-  .print-barcode,
-  .print-qr-code {
-    display: block;
-    margin: 10px auto;
-    max-width: 200px;
-  }
-
-  /* Badge و الحالة */
-  .print-badge {
-    display: inline-block;
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 9pt;
-    font-weight: bold;
+  .compact-table th {
+    background: #1a1a1a;
+    color: white;
+    padding: 3px 2px;
+    text-align: right;
+    font-weight: 900;
     border: 1px solid #000;
+    font-size: 7.5pt;
+    line-height: 1.1;
   }
 
-  .print-badge-success {
-    background: #e0f0e0;
+  .compact-table td {
+    padding: 2px;
+    border: 1px solid #666;
+    text-align: right;
+    font-size: 7pt;
+    line-height: 1.2;
   }
 
-  .print-badge-warning {
-    background: #fff8dc;
+  .compact-table tbody tr:nth-child(even) {
+    background: #f9f9f9;
   }
 
-  .print-badge-danger {
-    background: #ffe0e0;
+  .compact-table tfoot td {
+    font-weight: bold;
+    background: #e9e9e9;
+    border-top: 2px solid #000;
+    font-size: 7.5pt;
   }
 
-  .print-badge-info {
-    background: #e0e8ff;
+  /* Specifications Cell - Very Compact */
+  .specs-cell {
+    font-size: 6.5pt !important;
+    line-height: 1.2;
+    padding: 2px !important;
   }
 
-  /* فواصل الصفحات */
-  .page-break {
-    page-break-after: always;
+  .specs-cell div {
+    margin: 0;
+    padding: 0;
   }
 
-  .page-break-before {
-    page-break-before: always;
+  /* Quantity Cell - Stacked */
+  .qty-cell {
+    text-align: center !important;
+    padding: 2px !important;
   }
 
-  .avoid-page-break {
+  .qty-cell div {
+    font-size: 6.5pt;
+    line-height: 1.3;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Notes Cell - Single Line */
+  .notes-cell {
+    font-size: 6.5pt !important;
+    line-height: 1.2;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Compact Notes */
+  .compact-notes {
+    margin: 6px 0;
+    padding: 5px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    font-size: 7.5pt;
+    line-height: 1.3;
+  }
+
+  /* Compact Footer */
+  .compact-footer {
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid #999;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
     page-break-inside: avoid;
   }
 
-  /* Grid layouts */
-  .print-grid-2 {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
+  .footer-signatures {
+    display: flex;
+    gap: 30px;
   }
 
-  .print-grid-3 {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+  .signature-box {
+    text-align: center;
+    font-size: 7.5pt;
   }
 
-  /* تحسينات الطباعة */
+  .signature-line {
+    width: 100px;
+    border-bottom: 1px solid #000;
+    margin-bottom: 4px;
+    padding-top: 25px;
+  }
+
+  .footer-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    font-size: 7pt;
+    color: #666;
+    gap: 2px;
+  }
+
+  /* Print enhancements */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -444,80 +469,22 @@
     height: auto;
   }
 
-  /* إخفاء scrollbars */
-  ::-webkit-scrollbar {
-    display: none;
+  /* Avoid breaks */
+  .compact-header,
+  .compact-info-grid,
+  .compact-section,
+  .compact-footer {
+    page-break-inside: avoid;
   }
 
-  /* تحسين النصوص */
+  /* Text optimization */
   p, div, span {
-    orphans: 3;
-    widows: 3;
+    orphans: 2;
+    widows: 2;
   }
 
   h1, h2, h3, h4, h5, h6 {
     page-break-after: avoid;
     page-break-inside: avoid;
   }
-
-  /* Progress bar للطباعة */
-  .print-progress {
-    width: 100%;
-    height: 20px;
-    background: #e0e0e0;
-    border: 1px solid #999;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .print-progress-bar {
-    height: 100%;
-    background: #4caf50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 9pt;
-    font-weight: bold;
-    color: #000;
-  }
-
-  /* Stats cards للطباعة */
-  .print-stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 15px 0;
-  }
-
-  .print-stat-card {
-    padding: 10px;
-    border: 1px solid #999;
-    text-align: center;
-  }
-
-  .print-stat-label {
-    font-size: 9pt;
-    color: #666;
-  }
-
-  .print-stat-value {
-    font-size: 14pt;
-    font-weight: bold;
-    margin-top: 5px;
-  }
-}
-
-/* Print preview styles (shown on screen before printing) */
-.print-preview {
-  background: #f5f5f5;
-  padding: 20px;
-  min-height: 100vh;
-}
-
-.print-preview .print-container {
-  background: white;
-  max-width: 210mm;
-  margin: 0 auto 20px auto;
-  padding: 15mm;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
