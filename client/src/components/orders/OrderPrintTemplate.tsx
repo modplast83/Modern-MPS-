@@ -201,7 +201,21 @@ function PrintContent({
       {/* Compact Header with Logo */}
       <div className="compact-header">
         <div className="header-logo">
-          <img src="/attached_assets/factory-logo.svg" alt="Factory Logo" />
+          <svg width="100" height="60" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="40" width="100" height="30" rx="3" fill="#1a1a1a"/>
+            <rect x="20" y="35" width="15" height="5" fill="#1a1a1a"/>
+            <rect x="45" y="35" width="15" height="5" fill="#1a1a1a"/>
+            <rect x="70" y="35" width="15" height="5" fill="#1a1a1a"/>
+            <rect x="95" y="35" width="5" height="5" fill="#1a1a1a"/>
+            
+            <path d="M15 40 L25 25 L35 40" fill="#2563eb"/>
+            <path d="M40 40 L50 25 L60 40" fill="#2563eb"/>
+            <path d="M65 40 L75 25 L85 40" fill="#2563eb"/>
+            <path d="M90 40 L100 25 L105 40" fill="#2563eb"/>
+            
+            <text x="60" y="58" fontFamily="Arial, sans-serif" fontSize="14" fontWeight="bold" fill="white" textAnchor="middle">مصنع الأكياس</text>
+            <text x="60" y="68" fontFamily="Arial, sans-serif" fontSize="8" fill="#94a3b8" textAnchor="middle">Plastic Bags Factory</text>
+          </svg>
         </div>
         <div className="header-center">
           <h1 className="header-title">طلب عميل</h1>
