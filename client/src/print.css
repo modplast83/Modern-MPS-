@@ -149,21 +149,23 @@
 }
 
 @media print {
-  /* إخفاء العناصر غير المطلوبة */
-  body > *:not(.print-container) {
-    display: none !important;
+  /* إخفاء كل شيء ما عدا print-container */
+  body * {
+    visibility: hidden;
   }
 
-  .no-print,
-  nav,
-  header,
-  footer,
-  .sidebar,
-  .mobile-nav,
-  button:not(.print-container button),
-  .toast,
-  .dialog-overlay,
-  .dropdown-menu {
+  .print-container,
+  .print-container * {
+    visibility: visible !important;
+  }
+
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  .no-print {
     display: none !important;
   }
 
