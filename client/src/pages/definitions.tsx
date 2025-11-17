@@ -858,15 +858,9 @@ export default function Definitions() {
 
   // Filter customers based on search term in customer products form
   const filteredCustomersInProducts = React.useMemo(() => {
-    console.log("🔍 Customer filter running:", {
-      totalCustomers: Array.isArray(customers) ? customers.length : 0,
-      searchTerm: customerSearchTermInProducts,
-      isArray: Array.isArray(customers)
-    });
-
     if (!Array.isArray(customers)) return [];
 
-    const filtered = customers.filter((customer: any) => {
+    return customers.filter((customer: any) => {
       if (!customerSearchTermInProducts) return true;
 
       const searchLower = customerSearchTermInProducts.toLowerCase();
@@ -877,9 +871,6 @@ export default function Definitions() {
         (customer.code || "").toLowerCase().includes(searchLower)
       );
     });
-
-    console.log("🔍 Filtered customers:", filtered.length);
-    return filtered;
   }, [customers, customerSearchTermInProducts]);
 
   // Parse plate_drawer_code when editing customer
@@ -4070,13 +4061,12 @@ export default function Definitions() {
                           </div>
                           <Select
                             value={customerProductForm.customer_id}
-                            onValueChange={(value) => {
+                            onValueChange={(value) =>
                               setCustomerProductForm({
                                 ...customerProductForm,
                                 customer_id: value,
-                              });
-                              console.log("Selected customer:", value);
-                            }}
+                              })
+                            }
                           >
                             <SelectTrigger data-testid="select-customer-in-products">
                               <SelectValue placeholder="اختر العميل" />
