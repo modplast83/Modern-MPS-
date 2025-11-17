@@ -69,12 +69,13 @@
 }
 
 .print-table th {
-  background: #333;
+  background: #1a1a1a;
   color: white;
   padding: 8px 5px;
   text-align: right;
-  font-weight: bold;
+  font-weight: 900;
   border: 1px solid #000;
+  font-size: 12px;
 }
 
 .print-table td {
@@ -270,13 +271,13 @@
   }
 
   .print-table th {
-    background: #333;
+    background: #1a1a1a;
     color: white;
     padding: 6px 4px;
     text-align: right;
-    font-weight: bold;
+    font-weight: 900;
     border: 1px solid #000;
-    font-size: 8.5pt;
+    font-size: 9pt;
     line-height: 1.2;
   }
 

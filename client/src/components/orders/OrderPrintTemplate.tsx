@@ -7,6 +7,7 @@ interface OrderPrintTemplateProps {
   productionOrders: any[];
   customerProducts: any[];
   items: any[];
+  categories: any[];
   onClose: () => void;
 }
 
@@ -54,6 +55,7 @@ export default function OrderPrintTemplate({
   productionOrders,
   customerProducts,
   items,
+  categories,
   onClose,
 }: OrderPrintTemplateProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
@@ -66,8 +68,9 @@ export default function OrderPrintTemplate({
       productionOrders,
       customerProducts: customerProducts.length,
       items: items.length,
+      categories: categories.length,
     });
-  }, [order, customer, productionOrders, customerProducts, items]);
+  }, [order, customer, productionOrders, customerProducts, items, categories]);
 
   useEffect(() => {
     // Generate QR code for the order
@@ -292,15 +295,16 @@ function PrintContent({
           <thead>
             <tr>
               <th style={{ width: "3%" }}>#</th>
-              <th style={{ width: "10%" }}>رقم أمر الإنتاج</th>
-              <th style={{ width: "15%" }}>المنتج</th>
-              <th style={{ width: "12%" }}>المقاس</th>
-              <th style={{ width: "8%" }}>الكمية المطلوبة (كجم)</th>
-              <th style={{ width: "8%" }}>الكمية المنتجة (كجم)</th>
-              <th style={{ width: "8%" }}>الكمية الصافية (كجم)</th>
-              <th style={{ width: "7%" }}>نسبة الإكمال</th>
-              <th style={{ width: "8%" }}>الحالة</th>
-              <th style={{ width: "21%" }}>الملاحظات</th>
+              <th style={{ width: "9%" }}>رقم أمر الإنتاج</th>
+              <th style={{ width: "10%" }}>فئة الصنف</th>
+              <th style={{ width: "12%" }}>المنتج</th>
+              <th style={{ width: "10%" }}>المقاس</th>
+              <th style={{ width: "7%" }}>الكمية المطلوبة (كجم)</th>
+              <th style={{ width: "7%" }}>الكمية المنتجة (كجم)</th>
+              <th style={{ width: "7%" }}>الكمية الصافية (كجم)</th>
+              <th style={{ width: "6%" }}>نسبة الإكمال</th>
+              <th style={{ width: "7%" }}>الحالة</th>
+              <th style={{ width: "22%" }}>الملاحظات</th>
             </tr>
           </thead>
           <tbody>
@@ -310,6 +314,9 @@ function PrintContent({
               );
               const item = items.find(
                 (i: any) => i.id === customerProduct?.item_id
+              );
+              const category = categories.find(
+                (cat: any) => cat.id === item?.category_id
               );
 
               const producedQty = parseFloat(po.produced_quantity_kg || 0);
@@ -323,6 +330,7 @@ function PrintContent({
                 <tr key={po.id}>
                   <td>{index + 1}</td>
                   <td>{po.production_order_number}</td>
+                  <td>{category?.name_ar || category?.name || "غير محدد"}</td>
                   <td>{item?.name_ar || item?.name || "غير محدد"}</td>
                   <td>{customerProduct?.size_caption || "غير محدد"}</td>
                   <td>{requiredQty.toFixed(2)}</td>
@@ -343,7 +351,7 @@ function PrintContent({
           </tbody>
           <tfoot>
             <tr>
-              <td colSpan={4} style={{ textAlign: "left" }}>
+              <td colSpan={5} style={{ textAlign: "left" }}>
                 <strong>المجموع الكلي:</strong>
               </td>
               <td>

@@ -895,6 +895,7 @@ export default function Orders() {
           productionOrders={productionOrders.filter((po: any) => po.order_id === printingOrder?.id)}
           customerProducts={customerProducts}
           items={items}
+          categories={categories}
           onClose={() => setPrintingOrder(null)}
         />
       )}
