@@ -16,4 +16,11 @@ export const pool = new Pool({
   max: 5,
   idleTimeoutMillis: 5000,
 });
+
+pool.on('error', (err: Error) => {
+  console.error('🔴 Database pool error (non-fatal):', err.message);
+  console.error('📍 Error code:', (err as any).code || 'Unknown');
+  console.error('💡 The application will continue running and attempt to reconnect on next query');
+});
+
 export const db = drizzle({ client: pool, schema });
