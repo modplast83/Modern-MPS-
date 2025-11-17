@@ -857,19 +857,30 @@ export default function Definitions() {
   });
 
   // Filter customers based on search term in customer products form
-  const filteredCustomersInProducts = Array.isArray(customers)
-    ? customers.filter((customer: any) => {
-        if (!customerSearchTermInProducts) return true;
+  const filteredCustomersInProducts = React.useMemo(() => {
+    console.log("🔍 Customer filter running:", {
+      totalCustomers: Array.isArray(customers) ? customers.length : 0,
+      searchTerm: customerSearchTermInProducts,
+      isArray: Array.isArray(customers)
+    });
 
-        const searchLower = customerSearchTermInProducts.toLowerCase();
-        return (
-          (customer.name || "").toLowerCase().includes(searchLower) ||
-          (customer.name_ar || "").toLowerCase().includes(searchLower) ||
-          String(customer.id || "").toLowerCase().includes(searchLower) ||
-          (customer.code || "").toLowerCase().includes(searchLower)
-        );
-      })
-    : [];
+    if (!Array.isArray(customers)) return [];
+
+    const filtered = customers.filter((customer: any) => {
+      if (!customerSearchTermInProducts) return true;
+
+      const searchLower = customerSearchTermInProducts.toLowerCase();
+      return (
+        (customer.name || "").toLowerCase().includes(searchLower) ||
+        (customer.name_ar || "").toLowerCase().includes(searchLower) ||
+        String(customer.id || "").toLowerCase().includes(searchLower) ||
+        (customer.code || "").toLowerCase().includes(searchLower)
+      );
+    });
+
+    console.log("🔍 Filtered customers:", filtered.length);
+    return filtered;
+  }, [customers, customerSearchTermInProducts]);
 
   // Parse plate_drawer_code when editing customer
   React.useEffect(() => {
@@ -4059,37 +4070,53 @@ export default function Definitions() {
                           </div>
                           <Select
                             value={customerProductForm.customer_id}
-                            onValueChange={(value) =>
+                            onValueChange={(value) => {
                               setCustomerProductForm({
                                 ...customerProductForm,
                                 customer_id: value,
-                              })
-                            }
+                              });
+                              console.log("Selected customer:", value);
+                            }}
                           >
                             <SelectTrigger data-testid="select-customer-in-products">
                               <SelectValue placeholder="اختر العميل" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="none">اختر العميل</SelectItem>
-                              {filteredCustomersInProducts
-                                .filter(
-                                  (customer) =>
-                                    customer.id &&
-                                    customer.id !== "" &&
-                                    customer.id !== null &&
-                                    customer.id !== undefined,
-                                )
-                                .map((customer: any) => (
-                                  <SelectItem
-                                    key={customer.id}
-                                    value={customer.id.toString()}
-                                  >
-                                    {customer.name_ar || customer.name}
-                                    {customer.name && customer.name_ar ? ` - ${customer.name}` : ""}
-                                  </SelectItem>
-                                ))}
+                              {filteredCustomersInProducts.length > 0 ? (
+                                filteredCustomersInProducts
+                                  .filter(
+                                    (customer) =>
+                                      customer.id &&
+                                      customer.id !== "" &&
+                                      customer.id !== null &&
+                                      customer.id !== undefined,
+                                  )
+                                  .map((customer: any) => (
+                                    <SelectItem
+                                      key={customer.id}
+                                      value={customer.id.toString()}
+                                    >
+                                      {customer.name_ar || customer.name}
+                                      {customer.name && customer.name_ar ? ` - ${customer.name}` : ""}
+                                    </SelectItem>
+                                  ))
+                              ) : (
+                                <div className="p-2 text-sm text-gray-500 text-center">
+                                  {customerSearchTermInProducts 
+                                    ? "لا توجد نتائج للبحث"
+                                    : "جاري تحميل العملاء..."}
+                                </div>
+                              )}
                             </SelectContent>
                           </Select>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {filteredCustomersInProducts.length > 0 && (
+                              <span>
+                                {filteredCustomersInProducts.length} عميل متاح
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div>
