@@ -202,6 +202,9 @@ export default function Definitions() {
     status: "active",
   });
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Search term for customer selection in customer products form
+  const [customerSearchTermInProducts, setCustomerSearchTermInProducts] = useState("");
 
   // Master Batch Colors (24 من الكتالوج)
   const masterBatchColors = [
@@ -852,6 +855,21 @@ export default function Definitions() {
     queryKey: ["/api/users/sales-reps"],
     staleTime: 0,
   });
+
+  // Filter customers based on search term in customer products form
+  const filteredCustomersInProducts = Array.isArray(customers)
+    ? customers.filter((customer: any) => {
+        if (!customerSearchTermInProducts) return true;
+
+        const searchLower = customerSearchTermInProducts.toLowerCase();
+        return (
+          (customer.name || "").toLowerCase().includes(searchLower) ||
+          (customer.name_ar || "").toLowerCase().includes(searchLower) ||
+          String(customer.id || "").toLowerCase().includes(searchLower) ||
+          (customer.code || "").toLowerCase().includes(searchLower)
+        );
+      })
+    : [];
 
   // Parse plate_drawer_code when editing customer
   React.useEffect(() => {
@@ -4026,22 +4044,34 @@ export default function Definitions() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <div>
                         <Label htmlFor="customer_id">العميل *</Label>
-                        <Select
-                          value={customerProductForm.customer_id}
-                          onValueChange={(value) =>
-                            setCustomerProductForm({
-                              ...customerProductForm,
-                              customer_id: value,
-                            })
-                          }
-                        >
-                          <SelectTrigger className="mt-1">
-                            <SelectValue placeholder="اختر العميل" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">اختر العميل</SelectItem>
-                            {Array.isArray(customers) &&
-                              customers
+                        <div className="space-y-2 mt-1">
+                          <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input
+                              placeholder="البحث بالاسم العربي أو الإنجليزي..."
+                              value={customerSearchTermInProducts}
+                              onChange={(e) =>
+                                setCustomerSearchTermInProducts(e.target.value)
+                              }
+                              className="pl-10"
+                              data-testid="input-search-customers-in-products"
+                            />
+                          </div>
+                          <Select
+                            value={customerProductForm.customer_id}
+                            onValueChange={(value) =>
+                              setCustomerProductForm({
+                                ...customerProductForm,
+                                customer_id: value,
+                              })
+                            }
+                          >
+                            <SelectTrigger data-testid="select-customer-in-products">
+                              <SelectValue placeholder="اختر العميل" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">اختر العميل</SelectItem>
+                              {filteredCustomersInProducts
                                 .filter(
                                   (customer) =>
                                     customer.id &&
@@ -4054,12 +4084,13 @@ export default function Definitions() {
                                     key={customer.id}
                                     value={customer.id.toString()}
                                   >
-                                    {customer.name_ar || customer.name} (
-                                    {customer.id})
+                                    {customer.name_ar || customer.name}
+                                    {customer.name && customer.name_ar ? ` - ${customer.name}` : ""}
                                   </SelectItem>
                                 ))}
-                          </SelectContent>
-                        </Select>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div>
                         <Label htmlFor="category_id">الفئة</Label>
