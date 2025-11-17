@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import "../../print.css";
 
 interface OrderPrintTemplateProps {
   order: any;
