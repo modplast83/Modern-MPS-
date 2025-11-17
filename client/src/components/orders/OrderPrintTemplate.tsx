@@ -20,6 +20,17 @@ export default function OrderPrintTemplate({
 }: OrderPrintTemplateProps) {
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
+  // Debug: Log the data received
+  useEffect(() => {
+    console.log("📄 OrderPrintTemplate - Data received:", {
+      order,
+      customer,
+      productionOrders,
+      customerProducts: customerProducts.length,
+      items: items.length,
+    });
+  }, [order, customer, productionOrders, customerProducts, items]);
+
   useEffect(() => {
     // Generate QR code for the order
     const generateQRCode = async () => {
