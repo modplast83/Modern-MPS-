@@ -238,23 +238,7 @@ function PrintContent({
         </div>
       </div>
 
-      {/* Production Assignment */}
-      <div className="print-section">
-        <h3 className="print-section-title">التخصيص</h3>
-        <div className="print-grid-2">
-          <div>
-            <strong>الماكينة:</strong>{" "}
-            {machine?.name_ar || machine?.name || "غير محدد"}
-            {machine?.id && ` (${machine.id})`}
-          </div>
-          <div>
-            <strong>العامل المخصص:</strong>{" "}
-            {operator?.display_name_ar ||
-              operator?.display_name ||
-              "غير محدد"}
-          </div>
-        </div>
-      </div>
+      
 
       {/* Product Specifications */}
       <div className="print-section avoid-page-break">
@@ -276,11 +260,11 @@ function PrintContent({
               {customerProduct?.width || "غير محدد"} سم
             </div>
             <div>
-              <strong>الكشة اليمنى:</strong>{" "}
+              <strong>الدخلات يمين:</strong>{" "}
               {customerProduct?.right_facing || "غير محدد"} سم
             </div>
             <div>
-              <strong>الكشة اليسرى:</strong>{" "}
+              <strong>الدخلات يسار:</strong>{" "}
               {customerProduct?.left_facing || "غير محدد"} سم
             </div>
             <div>
@@ -292,7 +276,7 @@ function PrintContent({
               {customerProduct?.cutting_length_cm || "غير محدد"} سم
             </div>
             <div>
-              <strong>اسطوانة الطباعة:</strong>{" "}
+              <strong>سلندر الطباعة:</strong>{" "}
               {customerProduct?.printing_cylinder || "غير محدد"}
             </div>
             <div>
@@ -308,7 +292,7 @@ function PrintContent({
               {customerProduct?.is_printed ? "نعم" : "لا"}
             </div>
             <div>
-              <strong>الثقب:</strong>{" "}
+              <strong>التخريم:</strong>{" "}
               {customerProduct?.punching || "غير محدد"}
             </div>
             <div>
@@ -342,7 +326,7 @@ function PrintContent({
             </div>
           </div>
           <div className="print-stat-card">
-            <div className="print-stat-label">نسبة الإنجاز</div>
+            <div className="print-stat-label">نسبة الاكتمال</div>
             <div className="print-stat-value">
               {progressPercentage.toFixed(1)}%
             </div>

@@ -260,7 +260,7 @@ function PrintContent({
               <th style={{ width: "8%" }}>الكمية المطلوبة (كجم)</th>
               <th style={{ width: "8%" }}>الكمية المنتجة (كجم)</th>
               <th style={{ width: "8%" }}>الكمية الصافية (كجم)</th>
-              <th style={{ width: "7%" }}>نسبة الإنجاز</th>
+              <th style={{ width: "7%" }}>نسبة الإكمال</th>
               <th style={{ width: "8%" }}>الحالة</th>
               <th style={{ width: "21%" }}>الملاحظات</th>
             </tr>
@@ -363,11 +363,11 @@ function PrintContent({
                     {customerProduct.width || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الكشة اليمنى:</strong>{" "}
+                    <strong>الدخلات يمين:</strong>{" "}
                     {customerProduct.right_facing || "غير محدد"} سم
                   </div>
                   <div>
-                    <strong>الكشة اليسرى:</strong>{" "}
+                    <strong>الدخلات يسار:</strong>{" "}
                     {customerProduct.left_facing || "غير محدد"} سم
                   </div>
                   <div>
@@ -375,7 +375,7 @@ function PrintContent({
                     {customerProduct.thickness || "غير محدد"} مايكرون
                   </div>
                   <div>
-                    <strong>طول القص:</strong>{" "}
+                    <strong>طول القطع:</strong>{" "}
                     {customerProduct.cutting_length_cm || "غير محدد"} سم
                   </div>
                   <div>
@@ -395,7 +395,7 @@ function PrintContent({
                     {customerProduct.is_printed ? "نعم" : "لا"}
                   </div>
                   <div>
-                    <strong>الثقب:</strong>{" "}
+                    <strong>التخريم:</strong>{" "}
                     {customerProduct.punching || "غير محدد"}
                   </div>
                   <div>
@@ -425,11 +425,11 @@ function PrintContent({
       <div className="print-signatures">
         <div className="print-signature">
           <div className="print-signature-line"></div>
-          <div className="print-signature-label">المُعد</div>
+          <div className="print-signature-label">تم الاعداد بواسطة</div>
         </div>
         <div className="print-signature">
           <div className="print-signature-line"></div>
-          <div className="print-signature-label">المدير الفني</div>
+          <div className="print-signature-label">المندوب</div>
         </div>
         <div className="print-signature">
           <div className="print-signature-line"></div>
