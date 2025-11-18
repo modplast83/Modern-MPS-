@@ -48,6 +48,12 @@ interface ActiveProductionOrderDetails {
   production_start_time?: string;
   production_end_time?: string;
   production_time_minutes?: number;
+  // Product details for Film section
+  category_id?: string;
+  category_name?: string;
+  size_caption?: string;
+  raw_material?: string;
+  thickness?: string;
 }
 
 interface Roll {
@@ -315,6 +321,34 @@ export default function FilmOperatorDashboard({ hideLayout = false }: FilmOperat
                           <p className="text-gray-500 dark:text-gray-400">المنتج</p>
                           <p className="font-medium" data-testid={`text-product-${order.id}`}>{order.product_name}</p>
                         </div>
+                      </div>
+
+                      {/* Product Details for Film */}
+                      <div className="grid grid-cols-2 gap-4 text-sm bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                        {order.category_name && (
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">الفئة</p>
+                            <p className="font-medium" data-testid={`text-category-${order.id}`}>{order.category_name}</p>
+                          </div>
+                        )}
+                        {order.size_caption && (
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">المقاس</p>
+                            <p className="font-medium" data-testid={`text-size-${order.id}`}>{order.size_caption}</p>
+                          </div>
+                        )}
+                        {order.raw_material && (
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">نوع الخام</p>
+                            <p className="font-medium" data-testid={`text-raw-material-${order.id}`}>{order.raw_material}</p>
+                          </div>
+                        )}
+                        {order.thickness && (
+                          <div>
+                            <p className="text-gray-500 dark:text-gray-400">السماكة</p>
+                            <p className="font-medium" data-testid={`text-thickness-${order.id}`}>{order.thickness}</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Quantities */}

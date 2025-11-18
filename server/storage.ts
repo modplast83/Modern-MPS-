@@ -11790,12 +11790,19 @@ export class DatabaseStorage implements IStorage {
             customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
             product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
             order_status: orders.status,
+            // Product details for Film section
+            category_id: customer_products.category_id,
+            category_name: sql<string>`COALESCE(${categories.name_ar}, ${categories.name})`,
+            size_caption: customer_products.size_caption,
+            raw_material: customer_products.raw_material,
+            thickness: customer_products.thickness,
           })
           .from(production_orders)
           .leftJoin(orders, eq(production_orders.order_id, orders.id))
           .leftJoin(customers, eq(orders.customer_id, customers.id))
           .leftJoin(customer_products, eq(production_orders.customer_product_id, customer_products.id))
           .leftJoin(items, eq(customer_products.item_id, items.id))
+          .leftJoin(categories, eq(customer_products.category_id, categories.id))
           .where(
             and(
               inArray(production_orders.status, ["pending", "in_production"]),
@@ -12052,6 +12059,8 @@ export class DatabaseStorage implements IStorage {
             order_number: orders.order_number,
             customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
             product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+            // Product details for Printing section
+            printing_cylinder: customer_products.printing_cylinder,
           })
           .from(rolls)
           .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
@@ -12072,6 +12081,7 @@ export class DatabaseStorage implements IStorage {
               order_number: roll.order_number,
               customer_name: roll.customer_name,
               product_name: roll.product_name,
+              printing_cylinder: roll.printing_cylinder,
               rolls: [],
               total_rolls: 0,
               total_weight: 0,
@@ -12127,6 +12137,9 @@ export class DatabaseStorage implements IStorage {
             order_number: orders.order_number,
             customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
             product_name: sql<string>`COALESCE(${items.name_ar}, ${items.name})`,
+            // Product details for Cutting section
+            cutting_length_cm: customer_products.cutting_length_cm,
+            punching: customer_products.punching,
           })
           .from(rolls)
           .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
@@ -12147,6 +12160,8 @@ export class DatabaseStorage implements IStorage {
               order_number: roll.order_number,
               customer_name: roll.customer_name,
               product_name: roll.product_name,
+              cutting_length_cm: roll.cutting_length_cm,
+              punching: roll.punching,
               rolls: [],
               total_rolls: 0,
               total_weight: 0,

@@ -39,6 +39,9 @@ interface ProductionOrderWithRolls {
   rolls: RollDetails[];
   total_rolls: number;
   total_weight: number;
+  // Product details for Cutting section
+  cutting_length_cm?: number;
+  punching?: string;
 }
 
 interface CuttingOperatorDashboardProps {
@@ -208,6 +211,24 @@ export default function CuttingOperatorDashboard({ hideLayout = false }: Cutting
                           <p className="font-medium" data-testid={`text-product-${order.production_order_id}`}>{order.product_name}</p>
                         </div>
                       </div>
+
+                      {/* Product Details for Cutting */}
+                      {(order.cutting_length_cm || order.punching) && (
+                        <div className="grid grid-cols-2 gap-4 text-sm bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                          {order.cutting_length_cm && (
+                            <div>
+                              <p className="text-gray-500 dark:text-gray-400">الطول</p>
+                              <p className="font-medium" data-testid={`text-cutting-length-${order.production_order_id}`}>{order.cutting_length_cm} سم</p>
+                            </div>
+                          )}
+                          {order.punching && (
+                            <div>
+                              <p className="text-gray-500 dark:text-gray-400">نوع التخريم</p>
+                              <p className="font-medium" data-testid={`text-punching-${order.production_order_id}`}>{order.punching}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">

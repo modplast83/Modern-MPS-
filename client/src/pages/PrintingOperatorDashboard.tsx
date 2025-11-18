@@ -40,6 +40,8 @@ interface ProductionOrderWithRolls {
   rolls: RollDetails[];
   total_rolls: number;
   total_weight: number;
+  // Product details for Printing section
+  printing_cylinder?: string;
 }
 
 interface PrintingOperatorDashboardProps {
@@ -209,6 +211,14 @@ export default function PrintingOperatorDashboard({ hideLayout = false }: Printi
                           <p className="font-medium" data-testid={`text-product-${order.production_order_id}`}>{order.product_name}</p>
                         </div>
                       </div>
+
+                      {/* Product Details for Printing */}
+                      {order.printing_cylinder && (
+                        <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg text-sm">
+                          <p className="text-gray-500 dark:text-gray-400">مقاس السلندر</p>
+                          <p className="font-medium" data-testid={`text-printing-cylinder-${order.production_order_id}`}>{order.printing_cylinder}</p>
+                        </div>
+                      )}
 
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
