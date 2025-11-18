@@ -373,7 +373,7 @@ export default function CuttingOperatorDashboard({ hideLayout = false }: Cutting
                 className="text-right"
                 data-testid="input-net-weight"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-gray-500 dark:text-gray-400" data-testid="text-expected-waste">
                 الهدر المتوقع: {formatNumberAr(
                   Math.max(0, Number(selectedRoll.weight_kg) - Number(netWeight || 0))
                 )} كجم
