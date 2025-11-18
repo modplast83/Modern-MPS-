@@ -537,6 +537,13 @@ export interface IStorage {
   getProductionAlerts(): Promise<any>;
   getMachineUtilizationStats(dateFrom?: string, dateTo?: string): Promise<any>;
 
+  // Production Monitoring - New APIs for sections
+  getProductionStatsBySection(section: string, dateFrom?: string, dateTo?: string): Promise<any>;
+  getUsersPerformanceBySection(section: string, dateFrom?: string, dateTo?: string): Promise<any[]>;
+  getMachinesProductionBySection(section: string, dateFrom?: string, dateTo?: string): Promise<any[]>;
+  getRollsBySection(section: string, search?: string): Promise<any[]>;
+  getProductionOrdersBySection(section: string, search?: string): Promise<any[]>;
+
   // Items
   getItems(): Promise<Item[]>;
 
@@ -5104,6 +5111,259 @@ export class DatabaseStorage implements IStorage {
       },
       "getMachineUtilizationStats",
       "إحصائيات استخدام المكائن",
+    );
+  }
+
+  // ============ Production Monitoring - Section-based Methods ============
+
+  async getProductionStatsBySection(
+    section: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<any> {
+    return await withDatabaseErrorHandling(
+      async () => {
+        const dateFilter =
+          dateFrom && dateTo
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+
+        // Map section string to actual section ID
+        // film → SEC03, printing → SEC04, cutting → SEC05
+        const sectionIdMap: { [key: string]: string } = {
+          'film': 'SEC03',
+          'printing': 'SEC04',
+          'cutting': 'SEC05'
+        };
+        const sectionId = sectionIdMap[section] || section;
+        const sectionFilter = sql`${machines.section_id} = ${sectionId}`;
+
+        const stats = await db
+          .select({
+            total_weight: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+            total_rolls: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+            completed_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} = 'completed' THEN ${production_orders.id} END)`,
+            active_orders: sql<number>`COUNT(DISTINCT CASE WHEN ${production_orders.status} IN ('active', 'pending') THEN ${production_orders.id} END)`,
+            efficiency: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 0)`,
+          })
+          .from(rolls)
+          .leftJoin(machines, eq(rolls.film_machine_id, machines.id))
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .where(and(dateFilter, sectionFilter));
+
+        return stats[0] || {
+          total_weight: 0,
+          total_rolls: 0,
+          completed_orders: 0,
+          active_orders: 0,
+          efficiency: 0,
+        };
+      },
+      "getProductionStatsBySection",
+      `إحصائيات قسم ${section}`,
+    );
+  }
+
+  async getUsersPerformanceBySection(
+    section: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<any[]> {
+    return await withDatabaseErrorHandling(
+      async () => {
+        const dateFilter =
+          dateFrom && dateTo
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+
+        // Map section string to actual section ID
+        // film → SEC03, printing → SEC04, cutting → SEC05
+        const sectionIdMap: { [key: string]: string } = {
+          'film': 'SEC03',
+          'printing': 'SEC04',
+          'cutting': 'SEC05'
+        };
+        const sectionId = sectionIdMap[section] || section;
+
+        // Get users who have production department role (role_id = 2 for production workers)
+        const roleFilter = sql`${users.role_id} = 2`;
+        const sectionFilter = sql`${machines.section_id} = ${sectionId}`;
+
+        const usersPerformance = await db
+          .select({
+            user_id: users.id,
+            username: users.username,
+            display_name_ar: users.display_name_ar,
+            section: sql<string>`${section}`,
+            total_production_kg: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+            rolls_count: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+            efficiency_score: sql<number>`COALESCE(AVG(95 - (${rolls.waste_kg}::decimal / NULLIF(${rolls.weight_kg}, 0) * 100)), 0)`,
+            last_activity: sql<Date>`MAX(${rolls.created_at})`,
+          })
+          .from(users)
+          .leftJoin(rolls, and(
+            eq(users.id, rolls.created_by),
+            dateFilter
+          ))
+          .leftJoin(machines, eq(rolls.film_machine_id, machines.id))
+          .where(and(roleFilter, sectionFilter))
+          .groupBy(users.id, users.username, users.display_name_ar)
+          .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+        return usersPerformance;
+      },
+      "getUsersPerformanceBySection",
+      `أداء مستخدمي قسم ${section}`,
+    );
+  }
+
+  async getMachinesProductionBySection(
+    section: string,
+    dateFrom?: string,
+    dateTo?: string,
+  ): Promise<any[]> {
+    return await withDatabaseErrorHandling(
+      async () => {
+        const dateFilter =
+          dateFrom && dateTo
+            ? sql`DATE(${rolls.created_at}) BETWEEN ${dateFrom} AND ${dateTo}`
+            : sql`DATE(${rolls.created_at}) >= CURRENT_DATE - INTERVAL '7 days'`;
+
+        // Map section string to actual section ID
+        // film → SEC03, printing → SEC04, cutting → SEC05
+        const sectionIdMap: { [key: string]: string } = {
+          'film': 'SEC03',
+          'printing': 'SEC04',
+          'cutting': 'SEC05'
+        };
+        const sectionId = sectionIdMap[section] || section;
+        const sectionFilter = sql`${machines.section_id} = ${sectionId}`;
+
+        const machinesProduction = await db
+          .select({
+            machine_id: machines.id,
+            machine_name: sql<string>`COALESCE(${machines.name_ar}, ${machines.name})`,
+            section: sql<string>`${section}`,
+            total_production_kg: sql<number>`COALESCE(SUM(${rolls.weight_kg}), 0)`,
+            rolls_produced: sql<number>`COUNT(DISTINCT ${rolls.id})`,
+            utilization_percent: sql<number>`COALESCE(COUNT(DISTINCT DATE(${rolls.created_at}))::decimal / 7 * 100, 0)`,
+            last_production: sql<Date>`MAX(${rolls.created_at})`,
+          })
+          .from(machines)
+          .leftJoin(rolls, and(eq(machines.id, rolls.film_machine_id), dateFilter))
+          .where(sectionFilter)
+          .groupBy(machines.id, machines.name, machines.name_ar)
+          .orderBy(sql`SUM(${rolls.weight_kg}) DESC`);
+
+        return machinesProduction;
+      },
+      "getMachinesProductionBySection",
+      `إنتاج مكائن قسم ${section}`,
+    );
+  }
+
+  async getRollsBySection(section: string, search?: string): Promise<any[]> {
+    return await withDatabaseErrorHandling(
+      async () => {
+        // Map section string to actual section ID
+        // film → SEC03, printing → SEC04, cutting → SEC05
+        const sectionIdMap: { [key: string]: string } = {
+          'film': 'SEC03',
+          'printing': 'SEC04',
+          'cutting': 'SEC05'
+        };
+        const sectionId = sectionIdMap[section] || section;
+        const sectionFilter = sql`${machines.section_id} = ${sectionId}`;
+        
+        let searchFilter = sql`TRUE`;
+        if (search) {
+          searchFilter = sql`(
+            ${rolls.roll_number} ILIKE ${`%${search}%`} OR
+            ${production_orders.production_order_number} ILIKE ${`%${search}%`} OR
+            COALESCE(${customers.name_ar}, ${customers.name}) ILIKE ${`%${search}%`}
+          )`;
+        }
+
+        const rollsData = await db
+          .select({
+            roll_id: rolls.id,
+            roll_number: rolls.roll_number,
+            production_order_number: production_orders.production_order_number,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            weight_kg: rolls.weight_kg,
+            stage: rolls.stage,
+            section: sql<string>`${section}`,
+            created_at: rolls.created_at,
+          })
+          .from(rolls)
+          .leftJoin(machines, eq(rolls.film_machine_id, machines.id))
+          .leftJoin(production_orders, eq(rolls.production_order_id, production_orders.id))
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .where(and(sectionFilter, searchFilter))
+          .orderBy(sql`${rolls.created_at} DESC`)
+          .limit(100);
+
+        return rollsData;
+      },
+      "getRollsBySection",
+      `رولات قسم ${section}`,
+    );
+  }
+
+  async getProductionOrdersBySection(section: string, search?: string): Promise<any[]> {
+    return await withDatabaseErrorHandling(
+      async () => {
+        // Map section string to actual section ID
+        // film → SEC03, printing → SEC04, cutting → SEC05
+        const sectionIdMap: { [key: string]: string } = {
+          'film': 'SEC03',
+          'printing': 'SEC04',
+          'cutting': 'SEC05'
+        };
+        const sectionId = sectionIdMap[section] || section;
+        
+        const sectionFilter = sql`${production_orders.assigned_machine_id} IN (
+          SELECT ${machines.id} FROM ${machines} WHERE ${machines.section_id} = ${sectionId}
+        )`;
+        
+        let searchFilter = sql`TRUE`;
+        if (search) {
+          searchFilter = sql`(
+            ${production_orders.production_order_number} ILIKE ${`%${search}%`} OR
+            ${orders.order_number} ILIKE ${`%${search}%`} OR
+            COALESCE(${customers.name_ar}, ${customers.name}) ILIKE ${`%${search}%`}
+          )`;
+        }
+
+        const ordersData = await db
+          .select({
+            production_order_id: production_orders.id,
+            production_order_number: production_orders.production_order_number,
+            order_number: orders.order_number,
+            customer_name: sql<string>`COALESCE(${customers.name_ar}, ${customers.name})`,
+            section: sql<string>`${section}`,
+            status: production_orders.status,
+            progress_percent: sql<number>`
+              CASE 
+                WHEN ${production_orders.status} = 'completed' THEN 100
+                WHEN ${production_orders.status} = 'active' THEN 50
+                ELSE 0
+              END
+            `,
+            created_at: production_orders.created_at,
+          })
+          .from(production_orders)
+          .leftJoin(orders, eq(production_orders.order_id, orders.id))
+          .leftJoin(customers, eq(orders.customer_id, customers.id))
+          .where(and(sectionFilter, searchFilter))
+          .orderBy(sql`${production_orders.created_at} DESC`)
+          .limit(100);
+
+        return ordersData;
+      },
+      "getProductionOrdersBySection",
+      `أوامر إنتاج قسم ${section}`,
     );
   }
 

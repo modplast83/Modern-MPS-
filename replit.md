@@ -41,6 +41,35 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
     4.  **Material Mixing**: `mixing_formulas`, `formula_ingredients`, `mixing_batches`, `batch_ingredients`. Includes an `Inventory Consumption API` for automatic stock deduction.
     All sections maintain referential integrity via foreign keys, real-time cache invalidation, and transaction-safe operations.
 
+## Recent Changes
+
+### Production Monitoring Dashboard Enhancement (November 18, 2025)
+
+**Major Updates:**
+- **New Backend APIs**: Added 5 section-specific endpoints for production monitoring:
+  - `GET /api/production/stats-by-section/:section` - Section-wide production statistics
+  - `GET /api/production/users-performance/:section` - User performance metrics by section
+  - `GET /api/production/machines-production/:section` - Machine production data by section
+  - `GET /api/production/rolls-tracking/:section` - Roll tracking and search by section
+  - `GET /api/production/orders-tracking/:section` - Production order tracking by section
+
+**Storage Layer:**
+- Added 5 new methods to `IStorage` interface and `DatabaseStorage` class
+- Implemented section mapping (`film` → `SEC03`, `printing` → `SEC04`, `cutting` → `SEC05`)
+- Handled schema inconsistency between `sections.id` (varchar) and `users.section_id` (integer)
+- All queries filter by production department users (role_id = 2) and specific sections
+
+**Technical Notes:**
+- Section filtering uses mapped section IDs to handle varchar/integer mismatch
+- Queries join rolls → machines → sections for proper section-based filtering
+- Default date range: last 7 days if not specified
+- Search functionality supports roll numbers, production order numbers, and customer names
+
+**Future Considerations:**
+- Schema migration recommended to standardize all `section_id` references to `varchar(20)`
+- Would eliminate casting and improve query performance
+- See architect review for detailed migration plan
+
 ## External Dependencies
 
 - **Database**: PostgreSQL (Neon Serverless)

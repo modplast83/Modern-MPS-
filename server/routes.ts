@@ -6723,6 +6723,116 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // ============ لوحة مراقبة الإنتاج - APIs جديدة ============
+
+  // Get production statistics by section
+  app.get("/api/production/stats-by-section/:section", requireAuth, async (req, res) => {
+    try {
+      const { section } = req.params;
+      const dateFrom = req.query.dateFrom as string;
+      const dateTo = req.query.dateTo as string;
+
+      // Validate section
+      if (!['film', 'printing', 'cutting'].includes(section)) {
+        return res.status(400).json({ message: "قسم غير صحيح" });
+      }
+
+      // Get production statistics for the section
+      const stats = await storage.getProductionStatsBySection(section, dateFrom, dateTo);
+
+      res.json(stats);
+    } catch (error: any) {
+      console.error("Error fetching section stats:", error);
+      res.status(500).json({ message: "خطأ في جلب إحصائيات القسم", error: error.message });
+    }
+  });
+
+  // Get users performance by section (production users only)
+  app.get("/api/production/users-performance/:section", requireAuth, async (req, res) => {
+    try {
+      const { section } = req.params;
+      const dateFrom = req.query.dateFrom as string;
+      const dateTo = req.query.dateTo as string;
+
+      // Validate section
+      if (!['film', 'printing', 'cutting'].includes(section)) {
+        return res.status(400).json({ message: "قسم غير صحيح" });
+      }
+
+      // Get users performance for the section
+      const users = await storage.getUsersPerformanceBySection(section, dateFrom, dateTo);
+
+      res.json({ data: users });
+    } catch (error: any) {
+      console.error("Error fetching users performance:", error);
+      res.status(500).json({ message: "خطأ في جلب أداء المستخدمين", error: error.message });
+    }
+  });
+
+  // Get machines production by section
+  app.get("/api/production/machines-production/:section", requireAuth, async (req, res) => {
+    try {
+      const { section } = req.params;
+      const dateFrom = req.query.dateFrom as string;
+      const dateTo = req.query.dateTo as string;
+
+      // Validate section
+      if (!['film', 'printing', 'cutting'].includes(section)) {
+        return res.status(400).json({ message: "قسم غير صحيح" });
+      }
+
+      // Get machines production for the section
+      const machines = await storage.getMachinesProductionBySection(section, dateFrom, dateTo);
+
+      res.json({ data: machines });
+    } catch (error: any) {
+      console.error("Error fetching machines production:", error);
+      res.status(500).json({ message: "خطأ في جلب إنتاج المكائن", error: error.message });
+    }
+  });
+
+  // Get rolls tracking by section
+  app.get("/api/production/rolls-tracking/:section", requireAuth, async (req, res) => {
+    try {
+      const { section } = req.params;
+      const search = req.query.search as string;
+
+      // Validate section
+      if (!['film', 'printing', 'cutting'].includes(section)) {
+        return res.status(400).json({ message: "قسم غير صحيح" });
+      }
+
+      // Get rolls for the section
+      const rolls = await storage.getRollsBySection(section, search);
+
+      res.json({ data: rolls });
+    } catch (error: any) {
+      console.error("Error fetching rolls:", error);
+      res.status(500).json({ message: "خطأ في جلب الرولات", error: error.message });
+    }
+  });
+
+  // Get production orders tracking by section
+  app.get("/api/production/orders-tracking/:section", requireAuth, async (req, res) => {
+    try {
+      const { section } = req.params;
+      const search = req.query.search as string;
+
+      // Validate section
+      if (!['film', 'printing', 'cutting'].includes(section)) {
+        return res.status(400).json({ message: "قسم غير صحيح" });
+      }
+
+      // Get production orders for the section
+      const orders = await storage.getProductionOrdersBySection(section, search);
+
+      res.json({ data: orders });
+    } catch (error: any) {
+      console.error("Error fetching production orders:", error);
+      res.status(500).json({ message: "خطأ في جلب أوامر الإنتاج", error: error.message });
+    }
+  });
+
   // ============ نظام التحذيرات الذكية ============
 
   // تم تعطيل خدمات المراقبة والتحذيرات التلقائية بناء على طلب المستخدم

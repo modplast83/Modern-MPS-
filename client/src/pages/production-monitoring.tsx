@@ -1,4 +1,3 @@
-// src/pages/production-monitoring.tsx
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Header from "../components/layout/Header";
@@ -21,20 +20,12 @@ import {
   TableHeader,
   TableRow,
 } from "../components/ui/table";
-import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../components/ui/select";
 import { Progress } from "../components/ui/progress";
 import {
   BarChart,
@@ -44,323 +35,285 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
 } from "recharts";
 import {
-  Activity,
+  Film,
+  Printer,
+  Scissors,
   Users,
-  Clock,
   TrendingUp,
-  AlertTriangle,
   RefreshCw,
   Download,
-  Filter,
-  Settings,
-  Play,
-  Pause,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Factory,
-  Timer,
-  Zap,
+  Search,
+  Package,
+  Activity,
+  Clock,
   Target,
+  CheckCircle2,
+  AlertCircle,
   BarChart3,
-  PieChart as PieChartIcon,
+  FileText,
 } from "lucide-react";
 
-import { useRealtime } from "../hooks/useRealtime";
-import MachineCard from "../components/MachineCard";
+const COLORS = {
+  film: "#3B82F6",      // blue
+  printing: "#10B981",  // green
+  cutting: "#F59E0B",   // amber
+  primary: "#6366F1",   // indigo
+  success: "#22C55E",   // green
+  warning: "#EAB308",   // yellow
+  danger: "#EF4444",    // red
+};
 
-interface RealTimeStats {
-  currentStats: {
-    daily_rolls: number;
-    daily_weight: number;
-    active_orders: number;
-    completed_today: number;
-    current_waste: number;
-    avg_efficiency: number;
-  };
-  machineStatus: Array<{
-    machine_id: string;
-    machine_name: string;
-    status: string;
-    current_rolls: number;
-    utilization?: number;
-    lastDowntime?: string | null;
-    last24hUtilization?: number[];
-    operatingTimeSec?: number;
-    plannedProductionSec?: number;
-    producedUnits?: number;
-    goodUnits?: number;
-    idealCycleTimeSec?: number;
-  }>;
-  queueStats: {
-    film_queue: number;
-    printing_queue: number;
-    cutting_queue: number;
-    pending_orders: number;
-  };
-  updateInterval: number;
-  lastUpdated: string;
+interface ProductionStats {
+  total_weight: number;
+  total_rolls: number;
+  completed_orders: number;
+  active_orders: number;
+  efficiency: number;
+}
+
+interface MachineProduction {
+  machine_id: string;
+  machine_name: string;
+  section: string;
+  total_production_kg: number;
+  rolls_produced: number;
+  utilization_percent: number;
+  last_production: string;
 }
 
 interface UserPerformance {
   user_id: number;
   username: string;
   display_name_ar: string;
-  role_name: string;
-  section_name: string;
-  rolls_created: number;
-  rolls_printed: number;
-  rolls_cut: number;
-  total_weight_kg: number;
-  avg_roll_weight: number;
-  hours_worked: number;
+  section: string;
+  total_production_kg: number;
+  rolls_count: number;
   efficiency_score: number;
+  last_activity: string;
 }
 
-interface RolePerformance {
-  role_id: number;
-  role_name: string;
-  user_count: number;
-  total_production_orders: number;
-  total_rolls: number;
-  total_weight_kg: number;
-  avg_order_completion_time: number;
-  quality_score: number;
-  on_time_delivery_rate: number;
+interface Roll {
+  roll_id: number;
+  roll_code: string;
+  production_order_number: string;
+  customer_name: string;
+  weight_kg: number;
+  status: string;
+  section: string;
+  created_at: string;
 }
 
-interface ProductionAlert {
-  type: "warning" | "error" | "info";
-  category: string;
-  title: string;
-  message: string;
-  data: any[];
-  priority: "critical" | "high" | "medium" | "low";
+interface ProductionOrder {
+  production_order_id: number;
+  production_order_number: string;
+  order_number: string;
+  customer_name: string;
+  section: string;
+  status: string;
+  progress_percent: number;
+  created_at: string;
 }
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export default function ProductionMonitoring() {
-  const [isAutoRefreshEnabled, setIsAutoRefreshEnabled] = useState(true);
-  const [dateFilter, setDateFilter] = useState("7");
+  const [activeTab, setActiveTab] = useState("film");
+  const [searchRoll, setSearchRoll] = useState("");
+  const [searchOrder, setSearchOrder] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState<number | undefined>();
 
   useEffect(() => {
     const now = new Date();
-    const days = parseInt(dateFilter);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    setDateFrom(weekAgo.toISOString().split("T")[0]);
+    setDateTo(now.toISOString().split("T")[0]);
+  }, []);
 
-    if (days > 0) {
-      const fromDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-      setDateFrom(fromDate.toISOString().split("T")[0]);
-      setDateTo(now.toISOString().split("T")[0]);
-    }
-  }, [dateFilter]);
-
-  // Queries
-  const {
-    data: realTimeStats,
-    refetch: refetchRealTimeStats,
-    isLoading: realTimeLoading,
-  } = useQuery({
-    queryKey: ["/api/production/real-time-stats"],
-    // تعتمد الآن على WebSocket للتحديث الفعلي
-    refetchInterval: false,
+  // Fetch production statistics by section
+  const { data: filmStats, refetch: refetchFilm } = useQuery<ProductionStats>({
+    queryKey: ["/api/production/stats-by-section", "film", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo,
   });
 
-  const {
-    data: userPerformanceData,
-    refetch: refetchUserPerformance,
-    isLoading: userPerformanceLoading,
-  } = useQuery({
-    queryKey: [
-      "/api/production/user-performance",
-      selectedUserId,
+  const { data: printingStats, refetch: refetchPrinting } = useQuery<ProductionStats>({
+    queryKey: ["/api/production/stats-by-section", "printing", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo,
+  });
+
+  const { data: cuttingStats, refetch: refetchCutting } = useQuery<ProductionStats>({
+    queryKey: ["/api/production/stats-by-section", "cutting", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo,
+  });
+
+  // Fetch users performance (production department only)
+  const { data: filmUsers } = useQuery<{ data: UserPerformance[] }>({
+    queryKey: ["/api/production/users-performance", "film", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "film",
+  });
+
+  const { data: printingUsers } = useQuery<{ data: UserPerformance[] }>({
+    queryKey: ["/api/production/users-performance", "printing", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "printing",
+  });
+
+  const { data: cuttingUsers } = useQuery<{ data: UserPerformance[] }>({
+    queryKey: ["/api/production/users-performance", "cutting", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "cutting",
+  });
+
+  // Fetch machines production
+  const { data: filmMachines } = useQuery<{ data: MachineProduction[] }>({
+    queryKey: ["/api/production/machines-production", "film", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "film",
+  });
+
+  const { data: printingMachines } = useQuery<{ data: MachineProduction[] }>({
+    queryKey: ["/api/production/machines-production", "printing", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "printing",
+  });
+
+  const { data: cuttingMachines } = useQuery<{ data: MachineProduction[] }>({
+    queryKey: ["/api/production/machines-production", "cutting", dateFrom, dateTo],
+    enabled: !!dateFrom && !!dateTo && activeTab === "cutting",
+  });
+
+  // Fetch rolls tracking
+  const { data: rollsData } = useQuery<{ data: Roll[] }>({
+    queryKey: ["/api/production/rolls-tracking", activeTab, searchRoll],
+    enabled: activeTab !== "",
+  });
+
+  // Fetch production orders
+  const { data: ordersData } = useQuery<{ data: ProductionOrder[] }>({
+    queryKey: ["/api/production/orders-tracking", activeTab, searchOrder],
+    enabled: activeTab !== "",
+  });
+
+  const handleRefresh = () => {
+    refetchFilm();
+    refetchPrinting();
+    refetchCutting();
+  };
+
+  const handleExport = () => {
+    const exportData = {
+      section: activeTab,
       dateFrom,
       dateTo,
-    ],
-    enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 60000 : false, // تحديث اختياري للأداء
-  });
+      timestamp: new Date().toISOString(),
+    };
 
-  const {
-    data: rolePerformanceData,
-    refetch: refetchRolePerformance,
-    isLoading: rolePerformanceLoading,
-  } = useQuery({
-    queryKey: ["/api/production/role-performance", dateFrom, dateTo],
-    enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 60000 : false,
-  });
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", `production-${activeTab}-${dateTo}.json`);
+    linkElement.click();
+  };
 
-  const {
-    data: alertsData,
-    refetch: refetchAlerts,
-    isLoading: alertsLoading,
-  } = useQuery({
-    queryKey: ["/api/production/alerts"],
-    // تعتمد التنبيهات على WebSocket أيضاً
-    refetchInterval: false,
-  });
+  const formatNumber = (num: number = 0) => {
+    return new Intl.NumberFormat("ar-EG").format(Math.round(num));
+  };
 
-  const { data: efficiencyData, isLoading: efficiencyLoading } = useQuery({
-    queryKey: ["/api/production/efficiency-metrics", dateFrom, dateTo],
-    enabled: !!dateFrom && !!dateTo,
-    refetchInterval: isAutoRefreshEnabled ? 120000 : false,
-  });
+  const formatWeight = (kg: number = 0) => {
+    return `${formatNumber(kg)} كجم`;
+  };
 
-  const { data: machineUtilizationData, isLoading: machineUtilizationLoading } =
-    useQuery({
-      queryKey: ["/api/production/machine-utilization", dateFrom, dateTo],
-      enabled: !!dateFrom && !!dateTo,
-      // نعتمد على WebSocket لتحديثات الماكينات
-      refetchInterval: false,
-    });
-
-  const defaultStats: RealTimeStats = {
-    currentStats: {
-      daily_rolls: 0,
-      daily_weight: 0,
+  const getStats = (section: string): ProductionStats => {
+    const defaultStats: ProductionStats = {
+      total_weight: 0,
+      total_rolls: 0,
+      completed_orders: 0,
       active_orders: 0,
-      completed_today: 0,
-      current_waste: 0,
-      avg_efficiency: 90,
-    },
-    machineStatus: [],
-    queueStats: {
-      film_queue: 0,
-      printing_queue: 0,
-      cutting_queue: 0,
-      pending_orders: 0,
-    },
-    updateInterval: 30000,
-    lastUpdated: new Date().toISOString(),
-  };
+      efficiency: 0,
+    };
 
-  const stats: RealTimeStats = realTimeStats
-    ? {
-        currentStats:
-          (realTimeStats as any)?.currentStats || defaultStats.currentStats,
-        machineStatus:
-          (realTimeStats as any)?.machineStatus || defaultStats.machineStatus,
-        queueStats:
-          (realTimeStats as any)?.queueStats || defaultStats.queueStats,
-        updateInterval:
-          (realTimeStats as any)?.updateInterval || defaultStats.updateInterval,
-        lastUpdated:
-          (realTimeStats as any)?.lastUpdated || defaultStats.lastUpdated,
-      }
-    : defaultStats;
-
-  const userPerformance: UserPerformance[] =
-    (userPerformanceData as any)?.data || [];
-  const rolePerformance: RolePerformance[] =
-    (rolePerformanceData as any)?.data || [];
-  const alerts: ProductionAlert[] = (alertsData as any)?.alerts || [];
-
-  const handleExport = async () => {
-    try {
-      const exportData = {
-        realTimeStats: stats,
-        userPerformance,
-        rolePerformance,
-        exportDate: new Date().toISOString(),
-        period: { from: dateFrom, to: dateTo },
-      };
-
-      const dataStr = JSON.stringify(exportData, null, 2);
-      const dataUri =
-        "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-
-      const exportFileDefaultName = `production-monitoring-${new Date().toISOString().split("T")[0]}.json`;
-
-      const linkElement = document.createElement("a");
-      linkElement.setAttribute("href", dataUri);
-      linkElement.setAttribute("download", exportFileDefaultName);
-      linkElement.click();
-    } catch (error) {
-      console.error("Export failed:", error);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "maintenance":
-        return "bg-yellow-100 text-yellow-800";
-      case "down":
-        return "bg-red-100 text-red-800";
+    switch (section) {
+      case "film":
+        return filmStats || defaultStats;
+      case "printing":
+        return printingStats || defaultStats;
+      case "cutting":
+        return cuttingStats || defaultStats;
       default:
-        return "bg-gray-100 text-gray-800";
+        return defaultStats;
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case "maintenance":
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
-      case "down":
-        return <XCircle className="w-4 h-4 text-red-500" />;
+  const getUsers = (): UserPerformance[] => {
+    switch (activeTab) {
+      case "film":
+        return filmUsers?.data || [];
+      case "printing":
+        return printingUsers?.data || [];
+      case "cutting":
+        return cuttingUsers?.data || [];
       default:
-        return <Timer className="w-4 h-4 text-gray-500" />;
+        return [];
     }
   };
 
-  const getAlertIcon = (type: string) => {
-    switch (type) {
-      case "error":
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      case "warning":
-        return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+  const getMachines = (): MachineProduction[] => {
+    switch (activeTab) {
+      case "film":
+        return filmMachines?.data || [];
+      case "printing":
+        return printingMachines?.data || [];
+      case "cutting":
+        return cuttingMachines?.data || [];
       default:
-        return <AlertCircle className="w-4 h-4 text-blue-500" />;
+        return [];
     }
   };
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat("ar-EG").format(num);
+  const getSectionIcon = (section: string) => {
+    switch (section) {
+      case "film":
+        return <Film className="w-5 h-5" />;
+      case "printing":
+        return <Printer className="w-5 h-5" />;
+      case "cutting":
+        return <Scissors className="w-5 h-5" />;
+      default:
+        return <Activity className="w-5 h-5" />;
+    }
   };
 
-  const formatWeight = (kg: number) => {
-    return `${formatNumber(Math.round(kg))} كجم`;
+  const getSectionColor = (section: string) => {
+    switch (section) {
+      case "film":
+        return COLORS.film;
+      case "printing":
+        return COLORS.printing;
+      case "cutting":
+        return COLORS.cutting;
+      default:
+        return COLORS.primary;
+    }
   };
 
-  const formatPercentage = (percent: number) => {
-    return `${formatNumber(Math.round(percent))}%`;
-  };
+  const currentStats = getStats(activeTab);
+  const currentUsers = getUsers();
+  const currentMachines = getMachines();
+  const rolls = rollsData?.data || [];
+  const orders = ordersData?.data || [];
 
   // Prepare chart data
-  const queueChartData = [
-    { name: "فيلم", value: stats.queueStats.film_queue, fill: COLORS[0] },
-    { name: "طباعة", value: stats.queueStats.printing_queue, fill: COLORS[1] },
-    { name: "قطع", value: stats.queueStats.cutting_queue, fill: COLORS[2] },
-    { name: "معلق", value: stats.queueStats.pending_orders, fill: COLORS[3] },
-  ];
-
-  const rolePerformanceChartData = rolePerformance.map((role) => ({
-    name: role.role_name,
-    production: role.total_weight_kg,
-    efficiency: role.quality_score,
-    orders: role.total_production_orders,
+  const usersChartData = currentUsers.slice(0, 10).map(user => ({
+    name: user.display_name_ar || user.username,
+    production: user.total_production_kg,
+    rolls: user.rolls_count,
   }));
 
-  // WebSocket realtime (optional feature for real-time production updates)
-  // To enable: Set VITE_PROD_WS_URL environment variable to your WebSocket server URL
-  // Example: VITE_PROD_WS_URL=ws://localhost:4000/ws
-  // The app works fine without WebSocket - it uses regular HTTP polling instead
-  const wsUrl = import.meta.env.VITE_PROD_WS_URL;
-  useRealtime(wsUrl);
+  const machinesChartData = currentMachines.map(machine => ({
+    name: machine.machine_name,
+    production: machine.total_production_kg,
+    utilization: machine.utilization_percent,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50" dir="rtl">
@@ -371,45 +324,26 @@ export default function ProductionMonitoring() {
         <MobileNav />
 
         <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4 space-y-6">
-          {/* Header Section */}
+          {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 لوحة مراقبة الإنتاج
               </h1>
               <p className="text-gray-600">
-                مراقبة شاملة وفورية لعمليات الإنتاج والأداء
+                مراقبة شاملة للأقسام الثلاثة: الفيلم - الطباعة - التقطيع
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
-                variant={isAutoRefreshEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setIsAutoRefreshEnabled(!isAutoRefreshEnabled)}
-                data-testid="button-auto-refresh"
-              >
-                {isAutoRefreshEnabled ? (
-                  <Pause className="w-4 h-4 mr-2" />
-                ) : (
-                  <Play className="w-4 h-4 mr-2" />
-                )}
-                {isAutoRefreshEnabled ? "إيقاف التحديث" : "تشغيل التحديث"}
-              </Button>
-
-              <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  refetchRealTimeStats();
-                  refetchUserPerformance();
-                  refetchRolePerformance();
-                  refetchAlerts();
-                }}
-                data-testid="button-manual-refresh"
+                onClick={handleRefresh}
+                data-testid="button-refresh"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                تحديث الآن
+                <RefreshCw className="w-4 h-4 ml-2" />
+                تحديث
               </Button>
 
               <Button
@@ -418,510 +352,569 @@ export default function ProductionMonitoring() {
                 onClick={handleExport}
                 data-testid="button-export"
               >
-                <Download className="w-4 h-4 mr-2" />
-                تصدير التقرير
+                <Download className="w-4 h-4 ml-2" />
+                تصدير
               </Button>
             </div>
           </div>
 
-          {/* Date Filter Section */}
+          {/* Date Filter */}
           <Card>
             <CardContent className="p-4">
               <div className="flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">فترة التقرير:</span>
-                </div>
-
-                <Select value={dateFilter || ""} onValueChange={setDateFilter}>
-                  <SelectTrigger
-                    className="w-32"
-                    data-testid="select-date-filter"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">اليوم</SelectItem>
-                    <SelectItem value="7">آخر أسبوع</SelectItem>
-                    <SelectItem value="30">آخر شهر</SelectItem>
-                    <SelectItem value="90">آخر 3 أشهر</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                    className="w-36"
-                    data-testid="input-date-from"
-                  />
-                  <span className="text-sm text-gray-500">إلى</span>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                    className="w-36"
-                    data-testid="input-date-to"
-                  />
-                </div>
-
-                <Badge variant="outline" className="text-xs">
-                  آخر تحديث:{" "}
-                  {new Date(stats.lastUpdated).toLocaleString("ar-EG")}
-                </Badge>
+                <span className="text-sm font-medium">الفترة الزمنية:</span>
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  className="w-40"
+                  data-testid="input-date-from"
+                />
+                <span className="text-sm text-gray-500">إلى</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  className="w-40"
+                  data-testid="input-date-to"
+                />
               </div>
             </CardContent>
           </Card>
 
-          {/* Real-time Statistics Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">رولات اليوم</p>
-                    <p
-                      className="text-xl font-bold text-blue-600"
-                      data-testid="stat-daily-rolls"
-                    >
-                      {formatNumber(stats.currentStats.daily_rolls)}
-                    </p>
-                  </div>
-                  <Factory className="w-8 h-8 text-blue-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">الإنتاج اليومي</p>
-                    <p
-                      className="text-xl font-bold text-green-600"
-                      data-testid="stat-daily-weight"
-                    >
-                      {formatWeight(stats.currentStats.daily_weight)}
-                    </p>
-                  </div>
-                  <Target className="w-8 h-8 text-green-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">الطلبات النشطة</p>
-                    <p
-                      className="text-xl font-bold text-purple-600"
-                      data-testid="stat-active-orders"
-                    >
-                      {formatNumber(stats.currentStats.active_orders)}
-                    </p>
-                  </div>
-                  <Activity className="w-8 h-8 text-purple-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">مكتمل اليوم</p>
-                    <p
-                      className="text-xl font-bold text-emerald-600"
-                      data-testid="stat-completed-today"
-                    >
-                      {formatNumber(stats.currentStats.completed_today)}
-                    </p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-emerald-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">الهدر الحالي</p>
-                    <p
-                      className="text-xl font-bold text-red-600"
-                      data-testid="stat-current-waste"
-                    >
-                      {formatWeight(stats.currentStats.current_waste)}
-                    </p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-red-500" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-600">متوسط الكفاءة</p>
-                    <p
-                      className="text-xl font-bold text-indigo-600"
-                      data-testid="stat-avg-efficiency"
-                    >
-                      {formatPercentage(stats.currentStats.avg_efficiency)}
-                    </p>
-                  </div>
-                  <Zap className="w-8 h-8 text-indigo-500" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Alerts Section */}
-          {alerts.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                تنبيهات الإنتاج ({alerts.length})
-              </h3>
-              {alerts.slice(0, 3).map((alert, index) => (
-                <Alert
-                  key={index}
-                  variant={alert.type === "error" ? "destructive" : "default"}
-                >
-                  <div className="flex items-center gap-2">
-                    {getAlertIcon(alert.type)}
-                    <AlertTitle>{alert.title}</AlertTitle>
-                  </div>
-                  <AlertDescription className="mt-2">
-                    {alert.message}
-                  </AlertDescription>
-                </Alert>
-              ))}
-            </div>
-          )}
-
-          {/* Charts and Analytics */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Queue Status Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PieChartIcon className="w-5 h-5" />
-                  حالة الطوابير
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={queueChartData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {queueChartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            {/* Role Performance Chart */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  أداء الأقسام
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={rolePerformanceChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar
-                      dataKey="production"
-                      fill="#8884d8"
-                      name="الإنتاج (كجم)"
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Machine Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                حالة المكائن
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.machineStatus.length === 0 ? (
-                  <div className="text-center py-6 text-gray-500 col-span-full">لا توجد بيانات للمكائن</div>
-                ) : (
-                  stats.machineStatus.map((machine) => (
-                    <MachineCard key={machine.machine_id} machine={machine} />
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Data Tables */}
-          <Tabs defaultValue="users" className="w-full">
-            <TabsList className="w-full lg:w-auto">
-              <TabsTrigger value="users" data-testid="tab-users">
-                أداء المستخدمين
+          {/* Main Tabs for Sections */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-white border-2 border-gray-200 p-1 h-auto">
+              <TabsTrigger
+                value="film"
+                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white flex items-center gap-2 py-3"
+                data-testid="tab-film"
+              >
+                <Film className="w-5 h-5" />
+                <span className="font-semibold">قسم الفيلم</span>
               </TabsTrigger>
-              <TabsTrigger value="roles" data-testid="tab-roles">
-                أداء الأقسام
+              <TabsTrigger
+                value="printing"
+                className="data-[state=active]:bg-green-500 data-[state=active]:text-white flex items-center gap-2 py-3"
+                data-testid="tab-printing"
+              >
+                <Printer className="w-5 h-5" />
+                <span className="font-semibold">قسم الطباعة</span>
               </TabsTrigger>
-              <TabsTrigger value="efficiency" data-testid="tab-efficiency">
-                مؤشرات الكفاءة
+              <TabsTrigger
+                value="cutting"
+                className="data-[state=active]:bg-amber-500 data-[state=active]:text-white flex items-center gap-2 py-3"
+                data-testid="tab-cutting"
+              >
+                <Scissors className="w-5 h-5" />
+                <span className="font-semibold">قسم التقطيع</span>
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="users">
-              <Card>
-                <CardHeader>
-                  <CardTitle>إحصائيات أداء المستخدمين</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>المستخدم</TableHead>
-                          <TableHead>القسم</TableHead>
-                          <TableHead>الرولات المُنشأة</TableHead>
-                          <TableHead>الرولات المطبوعة</TableHead>
-                          <TableHead>الرولات المقطوعة</TableHead>
-                          <TableHead>إجمالي الوزن</TableHead>
-                          <TableHead>ساعات العمل</TableHead>
-                          <TableHead>نقاط الكفاءة</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {userPerformance.map((user) => (
-                          <TableRow key={user.user_id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">
-                                  {user.display_name_ar || user.username}
-                                </div>
-                                <div className="text-sm text-gray-500">
-                                  {user.role_name}
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{user.section_name}</TableCell>
-                            <TableCell
-                              data-testid={`user-${user.user_id}-rolls-created`}
-                            >
-                              {formatNumber(user.rolls_created)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`user-${user.user_id}-rolls-printed`}
-                            >
-                              {formatNumber(user.rolls_printed)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`user-${user.user_id}-rolls-cut`}
-                            >
-                              {formatNumber(user.rolls_cut)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`user-${user.user_id}-total-weight`}
-                            >
-                              {formatWeight(user.total_weight_kg)}
-                            </TableCell>
-                            <TableCell>
-                              {formatNumber(user.hours_worked)}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Progress
-                                  value={user.efficiency_score}
-                                  className="w-16 h-2"
-                                />
-                                <span className="text-sm">
-                                  {formatPercentage(user.efficiency_score)}
-                                </span>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Film Section */}
+            <TabsContent value="film" className="space-y-6 mt-6">
+              <SectionContent
+                section="film"
+                stats={currentStats}
+                users={currentUsers}
+                machines={currentMachines}
+                rolls={rolls}
+                orders={orders}
+                searchRoll={searchRoll}
+                setSearchRoll={setSearchRoll}
+                searchOrder={searchOrder}
+                setSearchOrder={setSearchOrder}
+                usersChartData={usersChartData}
+                machinesChartData={machinesChartData}
+                color={COLORS.film}
+                formatNumber={formatNumber}
+                formatWeight={formatWeight}
+              />
             </TabsContent>
 
-            <TabsContent value="roles">
-              <Card>
-                <CardHeader>
-                  <CardTitle>إحصائيات أداء الأقسام</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>القسم</TableHead>
-                          <TableHead>عدد المستخدمين</TableHead>
-                          <TableHead>أوامر الإنتاج</TableHead>
-                          <TableHead>إجمالي الرولات</TableHead>
-                          <TableHead>إجمالي الوزن</TableHead>
-                          <TableHead>متوسط وقت الإنجاز</TableHead>
-                          <TableHead>نقاط الجودة</TableHead>
-                          <TableHead>معدل التسليم في الوقت</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {rolePerformance.map((role) => (
-                          <TableRow key={role.role_id}>
-                            <TableCell className="font-medium">
-                              {role.role_name}
-                            </TableCell>
-                            <TableCell>
-                              {formatNumber(role.user_count)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`role-${role.role_id}-production-orders`}
-                            >
-                              {formatNumber(role.total_production_orders)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`role-${role.role_id}-total-rolls`}
-                            >
-                              {formatNumber(role.total_rolls)}
-                            </TableCell>
-                            <TableCell
-                              data-testid={`role-${role.role_id}-total-weight`}
-                            >
-                              {formatWeight(role.total_weight_kg)}
-                            </TableCell>
-                            <TableCell>
-                              {formatNumber(
-                                Math.round(role.avg_order_completion_time),
-                              )}{" "}
-                              ساعة
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Progress
-                                  value={role.quality_score}
-                                  className="w-16 h-2"
-                                />
-                                <span className="text-sm">
-                                  {formatPercentage(role.quality_score)}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Progress
-                                  value={role.on_time_delivery_rate}
-                                  className="w-16 h-2"
-                                />
-                                <span className="text-sm">
-                                  {formatPercentage(role.on_time_delivery_rate)}
-                                </span>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Printing Section */}
+            <TabsContent value="printing" className="space-y-6 mt-6">
+              <SectionContent
+                section="printing"
+                stats={currentStats}
+                users={currentUsers}
+                machines={currentMachines}
+                rolls={rolls}
+                orders={orders}
+                searchRoll={searchRoll}
+                setSearchRoll={setSearchRoll}
+                searchOrder={searchOrder}
+                setSearchOrder={setSearchOrder}
+                usersChartData={usersChartData}
+                machinesChartData={machinesChartData}
+                color={COLORS.printing}
+                formatNumber={formatNumber}
+                formatWeight={formatWeight}
+              />
             </TabsContent>
 
-            <TabsContent value="efficiency">
-              <Card>
-                <CardHeader>
-                  <CardTitle>مؤشرات الكفاءة العامة</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {efficiencyLoading ? (
-                    <div className="text-center py-8">
-                      جاري تحميل البيانات...
-                    </div>
-                  ) : (efficiencyData as any)?.efficiency ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div className="text-center p-4 bg-blue-50 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600">
-                          {formatWeight(
-                            (efficiencyData as any).efficiency
-                              .total_production || 0,
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          إجمالي الإنتاج
-                        </div>
-                      </div>
-
-                      <div className="text-center p-4 bg-red-50 rounded-lg">
-                        <div className="text-2xl font-bold text-red-600">
-                          {formatPercentage(
-                            (efficiencyData as any).efficiency
-                              .waste_percentage || 0,
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">نسبة الهدر</div>
-                      </div>
-
-                      <div className="text-center p-4 bg-green-50 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600">
-                          {formatPercentage(
-                            (efficiencyData as any).efficiency.quality_score ||
-                              0,
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">نقاط الجودة</div>
-                      </div>
-
-                      <div className="text-center p-4 bg-purple-50 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600">
-                          {formatPercentage(
-                            (efficiencyData as any).efficiency
-                              .machine_utilization || 0,
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          استخدام المكائن
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      لا توجد بيانات متاحة
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+            {/* Cutting Section */}
+            <TabsContent value="cutting" className="space-y-6 mt-6">
+              <SectionContent
+                section="cutting"
+                stats={currentStats}
+                users={currentUsers}
+                machines={currentMachines}
+                rolls={rolls}
+                orders={orders}
+                searchRoll={searchRoll}
+                setSearchRoll={setSearchRoll}
+                searchOrder={searchOrder}
+                setSearchOrder={setSearchOrder}
+                usersChartData={usersChartData}
+                machinesChartData={machinesChartData}
+                color={COLORS.cutting}
+                formatNumber={formatNumber}
+                formatWeight={formatWeight}
+              />
             </TabsContent>
           </Tabs>
         </main>
       </div>
     </div>
+  );
+}
+
+// Section Content Component
+interface SectionContentProps {
+  section: string;
+  stats: ProductionStats;
+  users: UserPerformance[];
+  machines: MachineProduction[];
+  rolls: Roll[];
+  orders: ProductionOrder[];
+  searchRoll: string;
+  setSearchRoll: (value: string) => void;
+  searchOrder: string;
+  setSearchOrder: (value: string) => void;
+  usersChartData: any[];
+  machinesChartData: any[];
+  color: string;
+  formatNumber: (num: number) => string;
+  formatWeight: (kg: number) => string;
+}
+
+function SectionContent({
+  section,
+  stats,
+  users,
+  machines,
+  rolls,
+  orders,
+  searchRoll,
+  setSearchRoll,
+  searchOrder,
+  setSearchOrder,
+  usersChartData,
+  machinesChartData,
+  color,
+  formatNumber,
+  formatWeight,
+}: SectionContentProps) {
+  // Filter rolls and orders by search
+  const filteredRolls = rolls.filter(roll =>
+    roll.roll_code.toLowerCase().includes(searchRoll.toLowerCase()) ||
+    roll.production_order_number.toLowerCase().includes(searchRoll.toLowerCase()) ||
+    roll.customer_name.toLowerCase().includes(searchRoll.toLowerCase())
+  );
+
+  const filteredOrders = orders.filter(order =>
+    order.production_order_number.toLowerCase().includes(searchOrder.toLowerCase()) ||
+    order.order_number.toLowerCase().includes(searchOrder.toLowerCase()) ||
+    order.customer_name.toLowerCase().includes(searchOrder.toLowerCase())
+  );
+
+  return (
+    <>
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="border-2" style={{ borderColor: color }}>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">الإنتاج الكلي</p>
+                <p className="text-2xl font-bold" style={{ color }}>
+                  {formatWeight(stats.total_weight)}
+                </p>
+              </div>
+              <Target className="w-10 h-10 opacity-20" style={{ color }} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">عدد الرولات</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatNumber(stats.total_rolls)}
+                </p>
+              </div>
+              <Package className="w-10 h-10 text-gray-300" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">طلبات مكتملة</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatNumber(stats.completed_orders)}
+                </p>
+              </div>
+              <CheckCircle2 className="w-10 h-10 text-green-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">طلبات نشطة</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {formatNumber(stats.active_orders)}
+                </p>
+              </div>
+              <Activity className="w-10 h-10 text-orange-200" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-2 border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">الكفاءة</p>
+                <p className="text-2xl font-bold text-indigo-600">
+                  {formatNumber(stats.efficiency)}%
+                </p>
+              </div>
+              <TrendingUp className="w-10 h-10 text-indigo-200" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Users Performance Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              أداء المستخدمين (أفضل 10)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {usersChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={usersChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="production" fill={color} name="الإنتاج (كجم)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                لا توجد بيانات للمستخدمين
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Machines Production Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              إنتاج المكائن
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {machinesChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={machinesChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="production" fill={color} name="الإنتاج (كجم)" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                لا توجد بيانات للمكائن
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Users Performance Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            أداء المستخدمين - قسم الإنتاج
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">المستخدم</TableHead>
+                  <TableHead className="text-right">الإنتاج (كجم)</TableHead>
+                  <TableHead className="text-right">عدد الرولات</TableHead>
+                  <TableHead className="text-right">الكفاءة</TableHead>
+                  <TableHead className="text-right">آخر نشاط</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.length > 0 ? (
+                  users.map((user) => (
+                    <TableRow key={user.user_id}>
+                      <TableCell className="font-medium">
+                        {user.display_name_ar || user.username}
+                      </TableCell>
+                      <TableCell>{formatWeight(user.total_production_kg)}</TableCell>
+                      <TableCell>{formatNumber(user.rolls_count)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={user.efficiency_score} className="w-20" />
+                          <span className="text-sm">{formatNumber(user.efficiency_score)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {user.last_activity ? new Date(user.last_activity).toLocaleString('ar-EG') : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                      لا توجد بيانات للمستخدمين
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Machines Production Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            كمية إنتاج المكائن
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">الماكينة</TableHead>
+                  <TableHead className="text-right">الإنتاج الكلي (كجم)</TableHead>
+                  <TableHead className="text-right">عدد الرولات</TableHead>
+                  <TableHead className="text-right">نسبة التشغيل</TableHead>
+                  <TableHead className="text-right">آخر إنتاج</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {machines.length > 0 ? (
+                  machines.map((machine) => (
+                    <TableRow key={machine.machine_id}>
+                      <TableCell className="font-medium">{machine.machine_name}</TableCell>
+                      <TableCell>{formatWeight(machine.total_production_kg)}</TableCell>
+                      <TableCell>{formatNumber(machine.rolls_produced)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={machine.utilization_percent} className="w-20" />
+                          <span className="text-sm">{formatNumber(machine.utilization_percent)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {machine.last_production ? new Date(machine.last_production).toLocaleString('ar-EG') : '-'}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-gray-500 py-8">
+                      لا توجد بيانات للمكائن
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Rolls Tracking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="w-5 h-5" />
+            تتبع الرولات
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="ابحث برقم الرولة أو الأمر أو العميل..."
+              value={searchRoll}
+              onChange={(e) => setSearchRoll(e.target.value)}
+              className="flex-1"
+              data-testid="input-search-roll"
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">رقم الرولة</TableHead>
+                  <TableHead className="text-right">أمر الإنتاج</TableHead>
+                  <TableHead className="text-right">العميل</TableHead>
+                  <TableHead className="text-right">الوزن</TableHead>
+                  <TableHead className="text-right">الحالة</TableHead>
+                  <TableHead className="text-right">التاريخ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRolls.length > 0 ? (
+                  filteredRolls.slice(0, 20).map((roll) => (
+                    <TableRow key={roll.roll_id}>
+                      <TableCell className="font-mono font-medium">{roll.roll_code}</TableCell>
+                      <TableCell>{roll.production_order_number}</TableCell>
+                      <TableCell>{roll.customer_name}</TableCell>
+                      <TableCell>{formatWeight(roll.weight_kg)}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={roll.status === 'completed' ? 'default' : 'secondary'}
+                          className={roll.status === 'completed' ? 'bg-green-500' : ''}
+                        >
+                          {roll.status === 'completed' ? 'مكتمل' : 'قيد الإنتاج'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {new Date(roll.created_at).toLocaleDateString('ar-EG')}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                      {searchRoll ? 'لا توجد نتائج للبحث' : 'لا توجد رولات'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredRolls.length > 20 && (
+            <p className="text-sm text-gray-500 text-center">
+              عرض 20 من {formatNumber(filteredRolls.length)} رولة
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Production Orders Tracking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            تتبع أوامر الإنتاج
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="ابحث برقم أمر الإنتاج أو الطلب أو العميل..."
+              value={searchOrder}
+              onChange={(e) => setSearchOrder(e.target.value)}
+              className="flex-1"
+              data-testid="input-search-order"
+            />
+          </div>
+
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-right">أمر الإنتاج</TableHead>
+                  <TableHead className="text-right">رقم الطلب</TableHead>
+                  <TableHead className="text-right">العميل</TableHead>
+                  <TableHead className="text-right">الحالة</TableHead>
+                  <TableHead className="text-right">التقدم</TableHead>
+                  <TableHead className="text-right">التاريخ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.slice(0, 20).map((order) => (
+                    <TableRow key={order.production_order_id}>
+                      <TableCell className="font-mono font-medium">
+                        {order.production_order_number}
+                      </TableCell>
+                      <TableCell>{order.order_number}</TableCell>
+                      <TableCell>{order.customer_name}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={order.status === 'completed' ? 'default' : 'secondary'}
+                          className={order.status === 'completed' ? 'bg-green-500' : order.status === 'in_production' ? 'bg-blue-500' : ''}
+                        >
+                          {order.status === 'completed' ? 'مكتمل' : order.status === 'in_production' ? 'قيد الإنتاج' : 'معلق'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Progress value={order.progress_percent} className="w-24" />
+                          <span className="text-sm">{formatNumber(order.progress_percent)}%</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-gray-500">
+                        {new Date(order.created_at).toLocaleDateString('ar-EG')}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center text-gray-500 py-8">
+                      {searchOrder ? 'لا توجد نتائج للبحث' : 'لا توجد أوامر إنتاج'}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredOrders.length > 20 && (
+            <p className="text-sm text-gray-500 text-center">
+              عرض 20 من {formatNumber(filteredOrders.length)} أمر
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </>
   );
 }
