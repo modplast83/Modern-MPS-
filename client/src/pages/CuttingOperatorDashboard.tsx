@@ -7,6 +7,9 @@ import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 import { formatNumberAr } from "../../../shared/number-utils";
 import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
@@ -15,7 +18,8 @@ import {
   Scissors,
   CheckCircle2,
   Loader2,
-  Info
+  Info,
+  Weight
 } from "lucide-react";
 
 interface RollDetails {
@@ -51,39 +55,76 @@ interface CuttingOperatorDashboardProps {
 export default function CuttingOperatorDashboard({ hideLayout = false }: CuttingOperatorDashboardProps) {
   const { toast } = useToast();
   const [processingRollIds, setProcessingRollIds] = useState<Set<number>>(new Set());
+  const [selectedRoll, setSelectedRoll] = useState<RollDetails | null>(null);
+  const [netWeight, setNetWeight] = useState<string>("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const { data: productionOrders = [], isLoading } = useQuery<ProductionOrderWithRolls[]>({
     queryKey: ["/api/rolls/active-for-cutting"],
     refetchInterval: 30000,
   });
 
-  const moveToCuttingMutation = useMutation({
-    mutationFn: async (rollId: number) => {
-      return await apiRequest(`/api/rolls/${rollId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ stage: "cutting" }),
+  const completeCuttingMutation = useMutation({
+    mutationFn: async ({ rollId, netWeight }: { rollId: number; netWeight: number }) => {
+      return await apiRequest(`/api/rolls/${rollId}/complete-cutting`, {
+        method: "POST",
+        body: JSON.stringify({ net_weight: netWeight }),
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rolls/active-for-cutting"] });
-      toast({ title: "✓ تم بنجاح", description: "تم نقل الرول إلى مرحلة التقطيع", variant: "default" });
+      setIsDialogOpen(false);
+      setSelectedRoll(null);
+      setNetWeight("");
+      toast({ 
+        title: "✓ تم بنجاح", 
+        description: "تم إكمال عملية التقطيع وحساب الهدر تلقائياً", 
+        variant: "default" 
+      });
     },
-    onError: (error: Error) => {
-      toast({ title: "خطأ", description: "فشل نقل الرول", variant: "destructive" });
+    onError: (error: any) => {
+      toast({ 
+        title: "خطأ", 
+        description: error.message || "فشل في إكمال عملية التقطيع", 
+        variant: "destructive" 
+      });
     },
   });
 
-  const handleMoveToCutting = async (rollId: number) => {
-    setProcessingRollIds(prev => new Set(prev).add(rollId));
-    try {
-      await moveToCuttingMutation.mutateAsync(rollId);
-    } finally {
-      setProcessingRollIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(rollId);
-        return newSet;
+  const handleOpenCuttingDialog = (roll: RollDetails) => {
+    setSelectedRoll(roll);
+    setNetWeight(roll.weight_kg.toString());
+    setIsDialogOpen(true);
+  };
+
+  const handleCompleteCutting = () => {
+    if (!selectedRoll) return;
+    
+    const netWeightNum = parseFloat(netWeight);
+    const grossWeight = parseFloat(selectedRoll.weight_kg.toString());
+    
+    if (isNaN(netWeightNum) || netWeightNum <= 0) {
+      toast({ 
+        title: "خطأ", 
+        description: "يرجى إدخال وزن صافي صحيح", 
+        variant: "destructive" 
       });
+      return;
     }
+    
+    if (netWeightNum > grossWeight) {
+      toast({ 
+        title: "خطأ", 
+        description: "الوزن الصافي لا يمكن أن يكون أكبر من الوزن الخام", 
+        variant: "destructive" 
+      });
+      return;
+    }
+    
+    completeCuttingMutation.mutate({ 
+      rollId: selectedRoll.roll_id, 
+      netWeight: netWeightNum 
+    });
   };
 
   const stats = {
@@ -267,20 +308,13 @@ export default function CuttingOperatorDashboard({ hideLayout = false }: Cutting
                               </div>
                               
                               <Button
-                                onClick={() => handleMoveToCutting(roll.roll_id)}
-                                disabled={processingRollIds.has(roll.roll_id)}
+                                onClick={() => handleOpenCuttingDialog(roll)}
                                 size="sm"
                                 className="bg-green-600 hover:bg-green-700"
-                                data-testid={`button-move-to-cutting-${roll.roll_id}`}
+                                data-testid={`button-cut-${roll.roll_id}`}
                               >
-                                {processingRollIds.has(roll.roll_id) ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <Scissors className="h-4 w-4 ml-1" />
-                                    <span className="hidden sm:inline">قطع</span>
-                                  </>
-                                )}
+                                <Scissors className="h-4 w-4 ml-1" />
+                                <span className="hidden sm:inline">قطع</span>
                               </Button>
                             </div>
                           ))}
@@ -295,8 +329,98 @@ export default function CuttingOperatorDashboard({ hideLayout = false }: Cutting
     </div>
   );
 
+  const dialogContent = (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogContent className="sm:max-w-md" data-testid="dialog-cutting">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Weight className="h-5 w-5 text-green-600" />
+            إدخال الوزن الصافي
+          </DialogTitle>
+          <DialogDescription>
+            أدخل الوزن الصافي بعد عملية التقطيع. سيتم حساب الهدر تلقائياً.
+          </DialogDescription>
+        </DialogHeader>
+        
+        {selectedRoll && (
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400">رقم الرول</p>
+                  <p className="font-medium" data-testid="text-selected-roll-number">{selectedRoll.roll_number}</p>
+                </div>
+                <div>
+                  <p className="text-gray-500 dark:text-gray-400">الوزن الخام</p>
+                  <p className="font-medium" data-testid="text-selected-roll-gross-weight">
+                    {formatNumberAr(Number(selectedRoll.weight_kg))} كجم
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="netWeight">الوزن الصافي (كجم)</Label>
+              <Input
+                id="netWeight"
+                type="number"
+                step="0.01"
+                min="0"
+                max={selectedRoll.weight_kg.toString()}
+                value={netWeight}
+                onChange={(e) => setNetWeight(e.target.value)}
+                placeholder="أدخل الوزن الصافي"
+                className="text-right"
+                data-testid="input-net-weight"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                الهدر المتوقع: {formatNumberAr(
+                  Math.max(0, Number(selectedRoll.weight_kg) - Number(netWeight || 0))
+                )} كجم
+              </p>
+            </div>
+          </div>
+        )}
+        
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setIsDialogOpen(false)}
+            disabled={completeCuttingMutation.isPending}
+            data-testid="button-cancel-cutting"
+          >
+            إلغاء
+          </Button>
+          <Button
+            onClick={handleCompleteCutting}
+            disabled={completeCuttingMutation.isPending || !netWeight}
+            className="bg-green-600 hover:bg-green-700"
+            data-testid="button-confirm-cutting"
+          >
+            {completeCuttingMutation.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                جاري المعالجة...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="h-4 w-4 ml-2" />
+                تأكيد القطع
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
   if (hideLayout) {
-    return mainContent;
+    return (
+      <>
+        {mainContent}
+        {dialogContent}
+      </>
+    );
   }
 
   return (
@@ -309,6 +433,7 @@ export default function CuttingOperatorDashboard({ hideLayout = false }: Cutting
           {mainContent}
         </main>
       </div>
+      {dialogContent}
     </div>
   );
 }

@@ -9476,8 +9476,12 @@ export class DatabaseStorage implements IStorage {
 
         const grossWeight = parseFloat(roll.weight_kg?.toString() || "0");
         
-        if (netWeight >= grossWeight) {
-          throw new Error("الوزن الصافي يجب أن يكون أقل من الوزن الخام");
+        if (netWeight > grossWeight) {
+          throw new Error("الوزن الصافي لا يمكن أن يكون أكبر من الوزن الخام");
+        }
+        
+        if (netWeight <= 0) {
+          throw new Error("الوزن الصافي يجب أن يكون أكبر من صفر");
         }
 
         // حساب الهدر
