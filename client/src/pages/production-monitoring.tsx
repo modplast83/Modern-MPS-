@@ -99,11 +99,11 @@ interface UserPerformance {
 
 interface Roll {
   roll_id: number;
-  roll_code: string;
+  roll_number: string;
   production_order_number: string;
   customer_name: string;
   weight_kg: number;
-  status: string;
+  stage: string;
   section: string;
   created_at: string;
 }
@@ -135,61 +135,61 @@ export default function ProductionMonitoring() {
 
   // Fetch production statistics by section
   const { data: filmStats, refetch: refetchFilm } = useQuery<ProductionStats>({
-    queryKey: ["/api/production/stats-by-section", "film", dateFrom, dateTo],
+    queryKey: ["/api/production/stats-by-section/film", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo,
   });
 
   const { data: printingStats, refetch: refetchPrinting } = useQuery<ProductionStats>({
-    queryKey: ["/api/production/stats-by-section", "printing", dateFrom, dateTo],
+    queryKey: ["/api/production/stats-by-section/printing", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo,
   });
 
   const { data: cuttingStats, refetch: refetchCutting } = useQuery<ProductionStats>({
-    queryKey: ["/api/production/stats-by-section", "cutting", dateFrom, dateTo],
+    queryKey: ["/api/production/stats-by-section/cutting", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo,
   });
 
   // Fetch users performance (production department only)
   const { data: filmUsers } = useQuery<{ data: UserPerformance[] }>({
-    queryKey: ["/api/production/users-performance", "film", dateFrom, dateTo],
+    queryKey: ["/api/production/users-performance/film", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "film",
   });
 
   const { data: printingUsers } = useQuery<{ data: UserPerformance[] }>({
-    queryKey: ["/api/production/users-performance", "printing", dateFrom, dateTo],
+    queryKey: ["/api/production/users-performance/printing", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "printing",
   });
 
   const { data: cuttingUsers } = useQuery<{ data: UserPerformance[] }>({
-    queryKey: ["/api/production/users-performance", "cutting", dateFrom, dateTo],
+    queryKey: ["/api/production/users-performance/cutting", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "cutting",
   });
 
   // Fetch machines production
   const { data: filmMachines } = useQuery<{ data: MachineProduction[] }>({
-    queryKey: ["/api/production/machines-production", "film", dateFrom, dateTo],
+    queryKey: ["/api/production/machines-production/film", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "film",
   });
 
   const { data: printingMachines } = useQuery<{ data: MachineProduction[] }>({
-    queryKey: ["/api/production/machines-production", "printing", dateFrom, dateTo],
+    queryKey: ["/api/production/machines-production/printing", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "printing",
   });
 
   const { data: cuttingMachines } = useQuery<{ data: MachineProduction[] }>({
-    queryKey: ["/api/production/machines-production", "cutting", dateFrom, dateTo],
+    queryKey: ["/api/production/machines-production/cutting", { dateFrom, dateTo }],
     enabled: !!dateFrom && !!dateTo && activeTab === "cutting",
   });
 
   // Fetch rolls tracking
   const { data: rollsData } = useQuery<{ data: Roll[] }>({
-    queryKey: ["/api/production/rolls-tracking", activeTab, searchRoll],
+    queryKey: [`/api/production/rolls-tracking/${activeTab}`, { search: searchRoll }],
     enabled: activeTab !== "",
   });
 
   // Fetch production orders
   const { data: ordersData } = useQuery<{ data: ProductionOrder[] }>({
-    queryKey: ["/api/production/orders-tracking", activeTab, searchOrder],
+    queryKey: [`/api/production/orders-tracking/${activeTab}`, { search: searchOrder }],
     enabled: activeTab !== "",
   });
 
@@ -518,15 +518,15 @@ function SectionContent({
 }: SectionContentProps) {
   // Filter rolls and orders by search
   const filteredRolls = rolls.filter(roll =>
-    roll.roll_code.toLowerCase().includes(searchRoll.toLowerCase()) ||
-    roll.production_order_number.toLowerCase().includes(searchRoll.toLowerCase()) ||
-    roll.customer_name.toLowerCase().includes(searchRoll.toLowerCase())
+    (roll.roll_number || '').toLowerCase().includes(searchRoll.toLowerCase()) ||
+    (roll.production_order_number || '').toLowerCase().includes(searchRoll.toLowerCase()) ||
+    (roll.customer_name || '').toLowerCase().includes(searchRoll.toLowerCase())
   );
 
   const filteredOrders = orders.filter(order =>
-    order.production_order_number.toLowerCase().includes(searchOrder.toLowerCase()) ||
-    order.order_number.toLowerCase().includes(searchOrder.toLowerCase()) ||
-    order.customer_name.toLowerCase().includes(searchOrder.toLowerCase())
+    (order.production_order_number || '').toLowerCase().includes(searchOrder.toLowerCase()) ||
+    (order.order_number || '').toLowerCase().includes(searchOrder.toLowerCase()) ||
+    (order.customer_name || '').toLowerCase().includes(searchOrder.toLowerCase())
   );
 
   return (
@@ -801,16 +801,16 @@ function SectionContent({
                 {filteredRolls.length > 0 ? (
                   filteredRolls.slice(0, 20).map((roll) => (
                     <TableRow key={roll.roll_id}>
-                      <TableCell className="font-mono font-medium">{roll.roll_code}</TableCell>
+                      <TableCell className="font-mono font-medium">{roll.roll_number}</TableCell>
                       <TableCell>{roll.production_order_number}</TableCell>
                       <TableCell>{roll.customer_name}</TableCell>
                       <TableCell>{formatWeight(roll.weight_kg)}</TableCell>
                       <TableCell>
                         <Badge
-                          variant={roll.status === 'completed' ? 'default' : 'secondary'}
-                          className={roll.status === 'completed' ? 'bg-green-500' : ''}
+                          variant={roll.stage === 'done' ? 'default' : 'secondary'}
+                          className={roll.stage === 'done' ? 'bg-green-500' : ''}
                         >
-                          {roll.status === 'completed' ? 'مكتمل' : 'قيد الإنتاج'}
+                          {roll.stage === 'done' ? 'مكتمل' : roll.stage === 'film' ? 'فيلم' : roll.stage === 'printing' ? 'طباعة' : 'تقطيع'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">
