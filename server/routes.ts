@@ -1667,6 +1667,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         safeUpdates.cut_weight_total_kg = cut_weight_total_kg;
 
       const roll = await storage.updateRoll(id, safeUpdates);
+
+      // Update completion percentages when stage changes
+      if (stage && roll) {
+        await storage.updateProductionOrderCompletionPercentages(roll.production_order_id);
+      }
+
       res.json(roll);
     } catch (error) {
       console.error("Error updating roll:", error);

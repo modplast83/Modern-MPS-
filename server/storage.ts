@@ -848,6 +848,7 @@ export interface IStorage {
     created_by: number;
   }): Promise<Roll>;
   markRollPrinted(rollId: number, operatorId: number, printingMachineId?: string): Promise<Roll>;
+  updateProductionOrderCompletionPercentages(productionOrderId: number): Promise<void>;
   createCut(cutData: InsertCut): Promise<Cut>;
   createWarehouseReceipt(
     receiptData: InsertWarehouseReceipt,
@@ -8381,6 +8382,69 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error("Error marking roll printed:", error);
       throw new Error("فشل في تسجيل طباعة الرول");
+    }
+  }
+
+  async updateProductionOrderCompletionPercentages(productionOrderId: number): Promise<void> {
+    try {
+      // Get production order to get target weight
+      const [productionOrder] = await db
+        .select()
+        .from(production_orders)
+        .where(eq(production_orders.id, productionOrderId));
+
+      if (!productionOrder) {
+        throw new Error("أمر الإنتاج غير موجود");
+      }
+
+      const targetWeight = parseFloat(productionOrder.produced_quantity_kg?.toString() || productionOrder.final_quantity_kg?.toString() || "0");
+
+      if (targetWeight <= 0) {
+        return;
+      }
+
+      // Get all rolls for this production order
+      const allRolls = await db
+        .select({
+          stage: rolls.stage,
+          weight_kg: rolls.weight_kg,
+        })
+        .from(rolls)
+        .where(eq(rolls.production_order_id, productionOrderId));
+
+      // Calculate total weights by stage
+      const filmWeight = allRolls.reduce((sum, r) => sum + parseFloat(r.weight_kg?.toString() || "0"), 0);
+      
+      const printedWeight = allRolls
+        .filter(r => r.stage === "printing" || r.stage === "cutting" || r.stage === "done")
+        .reduce((sum, r) => sum + parseFloat(r.weight_kg?.toString() || "0"), 0);
+      
+      const cutWeight = allRolls
+        .filter(r => r.stage === "done")
+        .reduce((sum, r) => sum + parseFloat(r.weight_kg?.toString() || "0"), 0);
+
+      // Calculate percentages
+      const filmPercentage = Math.min(100, (filmWeight / targetWeight) * 100);
+      const printingPercentage = Math.min(100, (printedWeight / targetWeight) * 100);
+      const cuttingPercentage = Math.min(100, (cutWeight / targetWeight) * 100);
+
+      // Update production order
+      await db
+        .update(production_orders)
+        .set({
+          film_completion_percentage: numberToDecimalString(filmPercentage, 2),
+          printed_quantity_kg: numberToDecimalString(printedWeight, 2),
+          printing_completion_percentage: numberToDecimalString(printingPercentage, 2),
+          net_quantity_kg: numberToDecimalString(cutWeight, 2),
+          cutting_completion_percentage: numberToDecimalString(cuttingPercentage, 2),
+        })
+        .where(eq(production_orders.id, productionOrderId));
+
+      // Invalidate cache
+      invalidateProductionCache("all");
+    } catch (error) {
+      console.error("Error updating completion percentages:", error);
+      throw new Error("فشل في تحديث نسب الإكمال");
     }
   }
 
