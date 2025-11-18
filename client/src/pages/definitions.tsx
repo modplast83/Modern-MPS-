@@ -78,6 +78,23 @@ export default function Definitions() {
     setStatusFilter("all");
   }, [selectedTab]);
 
+  // Prevent mouse wheel from changing number inputs
+  useEffect(() => {
+    const preventWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' && (target as HTMLInputElement).type === 'number') {
+        e.preventDefault();
+      }
+    };
+
+    // Add listener to all number inputs
+    document.addEventListener('wheel', preventWheel, { passive: false });
+
+    return () => {
+      document.removeEventListener('wheel', preventWheel);
+    };
+  }, []);
+
   // Pagination states for each tab
   const [currentPages, setCurrentPages] = useState({
     customers: 1,
