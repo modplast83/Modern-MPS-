@@ -222,7 +222,7 @@ export default function OrdersTable({
           if (orderProductionOrders.length > 0) {
             // حساب الكمية المطلوبة الإجمالية لجميع أوامر الإنتاج
             const totalOrderedQuantity = orderProductionOrders.reduce(
-              (sum: number, po: any) => sum + parseFloat(po.ordered_quantity_kg || 0),
+              (sum: number, po: any) => sum + parseFloat(po.quantity_kg || 0),
               0
             );
             
@@ -231,7 +231,7 @@ export default function OrdersTable({
               const weightedFilm = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
                   const producedQty = parseFloat(po.produced_quantity_kg || 0);
-                  const orderedQty = parseFloat(po.ordered_quantity_kg || 0);
+                  const orderedQty = parseFloat(po.quantity_kg || 0);
                   const percentage = orderedQty > 0 ? (producedQty / orderedQty) * 100 : 0;
                   return sum + (orderedQty * percentage);
                 },
@@ -241,7 +241,7 @@ export default function OrdersTable({
               const weightedPrinting = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
                   const producedQty = parseFloat(po.produced_quantity_kg || 0);
-                  const orderedQty = parseFloat(po.ordered_quantity_kg || 0);
+                  const orderedQty = parseFloat(po.quantity_kg || 0);
                   const percentage = orderedQty > 0 ? (producedQty / orderedQty) * 100 : 0;
                   return sum + (orderedQty * percentage);
                 },
@@ -251,7 +251,7 @@ export default function OrdersTable({
               const weightedCutting = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
                   const producedQty = parseFloat(po.produced_quantity_kg || 0);
-                  const orderedQty = parseFloat(po.ordered_quantity_kg || 0);
+                  const orderedQty = parseFloat(po.quantity_kg || 0);
                   const percentage = orderedQty > 0 ? (producedQty / orderedQty) * 100 : 0;
                   return sum + (orderedQty * percentage);
                 },
