@@ -82,8 +82,12 @@ export default function Login() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto bg-primary text-primary-foreground p-3 rounded-full w-fit mb-4">
-            <img src="/FactoryLogoHPNGWg.png" alt="Logo" className="w-34 h-34" />
+          <div className="mx-auto w-20 h-20 mb-4 flex items-center justify-center">
+            <img 
+              src="/attached_assets/FactoryLogoHPNGW.png" 
+              alt="شعار مصنع الأكياس البلاستيكية" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <CardTitle className="text-2xl font-bold">MPBF System</CardTitle>
           <p className="text-muted-foreground">
