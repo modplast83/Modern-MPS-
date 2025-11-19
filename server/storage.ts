@@ -11969,15 +11969,54 @@ export class DatabaseStorage implements IStorage {
           0
         );
 
-        await db
-          .update(production_orders)
-          .set({ 
-            produced_quantity_kg: numberToDecimalString(totalProduced),
-            film_completion_percentage: numberToDecimalString(
-              Math.min(100, (totalProduced / Number(productionOrder.final_quantity_kg)) * 100)
-            ),
-          })
-          .where(eq(production_orders.id, productionOrderId));
+        const finalQuantity = Number(productionOrder.final_quantity_kg);
+        const completionPercentage = Math.min(100, (totalProduced / finalQuantity) * 100);
+        
+        // Check if production should be completed:
+        // 1. If this is explicitly marked as the last roll (is_last_roll = true)
+        // 2. Or if the total produced quantity >= final required quantity
+        const shouldComplete = rollData.is_last_roll || totalProduced >= finalQuantity;
+
+        if (shouldComplete) {
+          // Calculate production time
+          const firstRoll = await db
+            .select()
+            .from(rolls)
+            .where(eq(rolls.production_order_id, productionOrderId))
+            .orderBy(rolls.roll_created_at)
+            .limit(1);
+
+          let totalProductionMinutes = 0;
+          if (firstRoll.length > 0) {
+            const startTime = productionOrder.production_start_time || firstRoll[0].roll_created_at || firstRoll[0].created_at;
+            const timeDiff = Date.now() - new Date(startTime).getTime();
+            totalProductionMinutes = Math.floor(timeDiff / (1000 * 60));
+          }
+
+          // Mark film production as completed
+          const endTime = new Date();
+          await db
+            .update(production_orders)
+            .set({ 
+              produced_quantity_kg: numberToDecimalString(totalProduced),
+              film_completion_percentage: "100",
+              is_final_roll_created: true,
+              film_completed: true,
+              production_end_time: endTime,
+              production_time_minutes: totalProductionMinutes,
+              status: "completed",
+            })
+            .where(eq(production_orders.id, productionOrderId));
+        } else {
+          // Normal update without completion
+          await db
+            .update(production_orders)
+            .set({ 
+              produced_quantity_kg: numberToDecimalString(totalProduced),
+              film_completion_percentage: numberToDecimalString(completionPercentage),
+            })
+            .where(eq(production_orders.id, productionOrderId));
+        }
 
         return newRoll;
       },
