@@ -43,6 +43,41 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
 
 ## Recent Changes
 
+### Unified Mobile & Desktop Navigation System (November 19, 2025)
+
+**Architecture Overhaul:**
+- Created centralized navigation configuration system with role-based access control
+- Implemented unified `PageLayout` component that replaced legacy Header/Sidebar/MobileNav pattern across 30+ pages
+- Built responsive `MobileShell` component with dual navigation:
+  - **Quick Actions Bar**: Bottom bar with 4 high-priority items (priority ≤ 4)
+  - **Hamburger Drawer**: Full navigation menu grouped by categories with role-based filtering
+
+**Components:**
+- `navigationConfig.ts`: Single source of truth for all routes with role permissions, priorities, and grouping
+- `PageLayout.tsx`: Wrapper component that embeds Header, Sidebar, and MobileShell automatically
+- `MobileShell.tsx`: Mobile-first navigation with Sheet drawer and fixed bottom actions bar
+- Updated `Sidebar.tsx` to consume navigationConfig for consistency
+
+**Migration Details:**
+- Migrated 30+ pages from old pattern: `<div><Header/><Sidebar/><MobileNav/><main>...</main></div></div>`
+- To new pattern: `<PageLayout title="..." description="...">...</PageLayout>`
+- Eliminated duplicate navigation logic across components
+- Ensured consistent padding (pb-24) for mobile navigation clearance
+- Operator dashboards support `hideLayout` prop for embedding in tabs
+
+**Benefits:**
+- Single, consistent navigation experience across all devices
+- Role-based filtering applied uniformly
+- Reduced code duplication and maintenance overhead
+- Improved mobile user experience with quick access to priority features
+- Easier to add new pages (just update navigationConfig.ts)
+
+**Technical Notes:**
+- All navigation filtering uses `canAccessRoute()` helper for permission checks
+- MobileShell groups routes by category (أوامر الإنتاج, الإنتاج, الجودة والصيانة, etc.)
+- PageLayout provides consistent structure without nested div complexity
+- User confirmed mobile experience works correctly
+
 ### Film Production Auto-Completion & Order Progress Indicators (November 19, 2025)
 
 **Film Production Auto-Completion:**
