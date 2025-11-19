@@ -214,7 +214,7 @@ export default function OrdersTable({
             (po: any) => po.order_id === order.id
           );
           
-          // حساب متوسط مرجح لنسبة الإكمال لكل مرحلة بناءً على الكمية المنتجة مقارنة بالكمية المطلوبة
+          // حساب متوسط مرجح لنسبة الإكمال لكل مرحلة بناءً على الكمية الفعلية لكل مرحلة
           let avgFilmPercentage = 0;
           let avgPrintingPercentage = 0;
           let avgCuttingPercentage = 0;
@@ -227,7 +227,7 @@ export default function OrdersTable({
             );
             
             if (totalOrderedQuantity > 0) {
-              // حساب المتوسط المرجح لكل مرحلة: (الكمية المنتجة ÷ الكمية المطلوبة) × 100
+              // مرحلة الفيلم: (الكمية المنتجة ÷ الكمية المطلوبة) × 100
               const weightedFilm = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
                   const producedQty = parseFloat(po.produced_quantity_kg || 0);
@@ -238,21 +238,23 @@ export default function OrdersTable({
                 0
               );
               
+              // مرحلة الطباعة: (الكمية المطبوعة ÷ الكمية المطلوبة) × 100
               const weightedPrinting = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
-                  const producedQty = parseFloat(po.produced_quantity_kg || 0);
+                  const printedQty = parseFloat(po.printed_quantity_kg || 0);
                   const orderedQty = parseFloat(po.quantity_kg || 0);
-                  const percentage = orderedQty > 0 ? (producedQty / orderedQty) * 100 : 0;
+                  const percentage = orderedQty > 0 ? (printedQty / orderedQty) * 100 : 0;
                   return sum + (orderedQty * percentage);
                 },
                 0
               );
               
+              // مرحلة التقطيع: (الكمية الصافية ÷ الكمية المطلوبة) × 100
               const weightedCutting = orderProductionOrders.reduce(
                 (sum: number, po: any) => {
-                  const producedQty = parseFloat(po.produced_quantity_kg || 0);
+                  const netQty = parseFloat(po.net_quantity_kg || 0);
                   const orderedQty = parseFloat(po.quantity_kg || 0);
-                  const percentage = orderedQty > 0 ? (producedQty / orderedQty) * 100 : 0;
+                  const percentage = orderedQty > 0 ? (netQty / orderedQty) * 100 : 0;
                   return sum + (orderedQty * percentage);
                 },
                 0
