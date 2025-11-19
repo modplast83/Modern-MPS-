@@ -43,6 +43,33 @@ The system is built with a modern stack emphasizing efficiency and scalability, 
 
 ## Recent Changes
 
+### Film Production Auto-Completion & Order Progress Indicators (November 19, 2025)
+
+**Film Production Auto-Completion:**
+- Enhanced `createRollWithTiming` in `server/storage.ts` to auto-complete production orders when:
+  1. Total produced quantity (`produced_quantity_kg`) reaches or exceeds final quantity (`final_quantity_kg`), OR
+  2. Last roll is explicitly marked (`is_last_roll = true`)
+- On auto-completion, system automatically:
+  - Sets `film_completed = true`, `is_final_roll_created = true`, `status = "completed"`
+  - Calculates and stores total production time (`production_time_minutes`)
+  - Records production end time (`production_end_time`)
+  - Sets `film_completion_percentage = 100`
+
+**Order Management Progress Indicators:**
+- Fixed progress calculation in `OrdersTable.tsx` to show accurate stage-based completion percentages:
+  - **Film Stage**: `(produced_quantity_kg ÷ quantity_kg) × 100` - Reflects actual roll production
+  - **Printing Stage**: `(printed_quantity_kg ÷ quantity_kg) × 100` - Reflects rolls that completed printing
+  - **Cutting Stage**: `(net_quantity_kg ÷ quantity_kg) × 100` - Reflects final cut and packaged quantity
+- Each indicator now independently tracks its respective production stage
+- Uses weighted average when order has multiple production orders
+
+**Technical Implementation:**
+- Progress indicators use actual stage quantities from `production_orders` table:
+  - `produced_quantity_kg`: Total weight of all created rolls
+  - `printed_quantity_kg`: Total weight of rolls that completed printing
+  - `net_quantity_kg`: Total net weight after cutting (excluding waste)
+- Base comparison quantity: `quantity_kg` (ordered quantity from customer)
+
 ### Production Monitoring Dashboard Enhancement (November 18, 2025)
 
 **Major Updates:**
