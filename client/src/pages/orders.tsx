@@ -2,8 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
+import PageLayout from "../components/layout/PageLayout";
 import { useAuth } from "../hooks/use-auth";
 import { useToast } from "../hooks/use-toast";
 import { parseIntSafe } from "../../../shared/validation-utils";
@@ -710,15 +709,9 @@ export default function Orders() {
 
   if (ordersLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="text-center">جاري التحميل...</div>
-          </main>
-        </div>
-      </div>
+      <PageLayout title="إدارة الطلبات والإنتاج" description="جاري التحميل...">
+        <div className="text-center">جاري التحميل...</div>
+      </PageLayout>
     );
   }
 
@@ -732,29 +725,18 @@ export default function Orders() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
+    <PageLayout 
+      title="إدارة الطلبات والإنتاج" 
+      description="إنشاء ومتابعة الطلبات وأوامر الإنتاج والطوابير والتقارير"
+    >
+      {isAdmin && (
+        <div className="mb-4 text-sm text-green-600 dark:text-green-400 font-medium">
+          ✓ لديك صلاحيات المدير - يمكنك تعديل وحذف الطلبات
+        </div>
+      )}
 
-      <div className="flex">
-        <Sidebar />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الطلبات والإنتاج
-            </h1>
-            <p className="text-gray-600">
-              إنشاء ومتابعة الطلبات وأوامر الإنتاج والطوابير والتقارير
-            </p>
-            {isAdmin && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
-                ✓ لديك صلاحيات المدير - يمكنك تعديل وحذف الطلبات
-              </div>
-            )}
-          </div>
-
-          {/* التبويبات الرئيسية */}
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
+      {/* التبويبات الرئيسية */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
             <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
               <TabsTrigger value="orders" data-testid="tab-orders">
                 الطلبات
@@ -869,8 +851,6 @@ export default function Orders() {
               </Suspense>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
 
       {/* View Order Dialog */}
       <ViewOrderDialog
@@ -899,6 +879,6 @@ export default function Orders() {
           onClose={() => setPrintingOrder(null)}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }

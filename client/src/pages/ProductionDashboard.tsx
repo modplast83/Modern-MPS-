@@ -1,9 +1,7 @@
 import { useState, useMemo } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { userHasPermission } from "../utils/roleUtils";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
@@ -42,54 +40,36 @@ export default function ProductionDashboard() {
 
   if (availableTabs.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <MobileNav />
-          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <Card className="mt-8">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-8 w-8 text-yellow-500" />
-                  <div>
-                    <CardTitle>لا توجد صلاحيات</CardTitle>
-                    <CardDescription>
-                      ليس لديك صلاحيات الوصول إلى أي من لوحات الإنتاج
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  يرجى التواصل مع المدير للحصول على الصلاحيات المناسبة.
-                </p>
-              </CardContent>
-            </Card>
-          </main>
-        </div>
-      </div>
+      <PageLayout title="لوحة الإنتاج">
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-8 w-8 text-yellow-500" />
+              <div>
+                <CardTitle>لا توجد صلاحيات</CardTitle>
+                <CardDescription>
+                  ليس لديك صلاحيات الوصول إلى أي من لوحات الإنتاج
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              يرجى التواصل مع المدير للحصول على الصلاحيات المناسبة.
+            </p>
+          </CardContent>
+        </Card>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-              لوحة الإنتاج
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              إدارة مراحل الإنتاج المختلفة من خلال اللوحات المتخصصة
-            </p>
-          </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 h-auto bg-transparent">
+    <PageLayout 
+      title="لوحة الإنتاج"
+      description="إدارة مراحل الإنتاج المختلفة من خلال اللوحات المتخصصة"
+    >
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-1 md:grid-cols-3 gap-2 h-auto bg-transparent">
               {canViewFilm && (
                 <TabsTrigger
                   value="film"
@@ -160,8 +140,6 @@ export default function ProductionDashboard() {
               </TabsContent>
             )}
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </PageLayout>
   );
 }
