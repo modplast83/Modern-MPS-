@@ -1,5 +1,3 @@
-import { Bot } from "lucide-react";
-import { Button } from "../ui/button";
 import { useAuth } from "../../hooks/use-auth";
 import { NotificationBell } from "../notifications/NotificationBell";
 
@@ -28,11 +26,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-3 space-x-reverse">
-          <Button variant="default" size="sm" className="btn-primary">
-            <Bot className="h-4 w-4 ml-2" />
-            <span className="hidden sm:inline">المساعد الذكي</span>
-          </Button>
-
           <NotificationBell />
 
           <div className="flex items-center space-x-3 space-x-reverse">
