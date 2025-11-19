@@ -59,8 +59,7 @@ import {
   FileText,
   User,
 } from "lucide-react";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
+import PageLayout from "../components/layout/PageLayout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -523,210 +522,197 @@ export default function Warehouse() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة المستودع
-            </h1>
-            <p className="text-gray-600">
-              متابعة وإدارة المخزون والمواد الخام والمنتجات النهائية
+    <PageLayout title="إدارة المستودع" description="متابعة وإدارة المخزون والمواد الخام والمنتجات النهائية">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              إجمالي الأصناف
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.totalItems || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">صنف نشط</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              أصناف منخفضة
+            </CardTitle>
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">
+              {stats?.lowStockItems || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              تحتاج إعادة تموين
             </p>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  إجمالي الأصناف
-                </CardTitle>
-                <Package className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.totalItems || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">صنف نشط</p>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              قيمة المخزون
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.totalValue
+                ? `${Number(stats.totalValue).toLocaleString()} ر.س`
+                : "0 ر.س"}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              القيمة الإجمالية
+            </p>
+          </CardContent>
+        </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  أصناف منخفضة
-                </CardTitle>
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-destructive">
-                  {stats?.lowStockItems || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  تحتاج إعادة تموين
-                </p>
-              </CardContent>
-            </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              حركات اليوم
+            </CardTitle>
+            <TrendingDown className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats?.movementsToday || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              عملية دخول وخروج
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  قيمة المخزون
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.totalValue
-                    ? `${Number(stats.totalValue).toLocaleString()} ر.س`
-                    : "0 ر.س"}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  القيمة الإجمالية
-                </p>
-              </CardContent>
-            </Card>
+      <Tabs
+        defaultValue={activeLocationTab || "production-hall"}
+        className="space-y-4"
+      >
+        <TabsList className="flex flex-wrap w-full justify-start">
+          <TabsTrigger value="production-hall" className="shrink-0">
+            صالة الإنتاج
+          </TabsTrigger>
+          <TabsTrigger value="received-quantities" className="shrink-0">
+            الكميات المستلمة
+          </TabsTrigger>
+          {locations.map((location: any) => (
+            <TabsTrigger
+              key={location.id}
+              value={location.id.toString()}
+              className="shrink-0"
+            >
+              {location.name_ar || location.name}
+            </TabsTrigger>
+          ))}
+          <TabsTrigger value="movements" className="shrink-0">
+            حركات المخزون
+          </TabsTrigger>
+        </TabsList>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  حركات اليوم
-                </CardTitle>
-                <TrendingDown className="h-4 w-4 text-blue-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {stats?.movementsToday || 0}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  عملية دخول وخروج
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Production Hall Tab */}
+        <TabsContent value="production-hall" className="space-y-4">
+          <ProductionHallContent />
+        </TabsContent>
 
-          <Tabs
-            defaultValue={activeLocationTab || "production-hall"}
+        {/* Received Quantities Tab */}
+        <TabsContent value="received-quantities" className="space-y-4">
+          <ReceivedQuantitiesContent />
+        </TabsContent>
+
+        {/* Dynamic location-based inventory tabs */}
+        {locations.map((location: any) => (
+          <TabsContent
+            key={location.id}
+            value={location.id.toString()}
             className="space-y-4"
           >
-            <TabsList className="flex flex-wrap w-full justify-start">
-              <TabsTrigger value="production-hall" className="shrink-0">
-                صالة الإنتاج
-              </TabsTrigger>
-              <TabsTrigger value="received-quantities" className="shrink-0">
-                الكميات المستلمة
-              </TabsTrigger>
-              {locations.map((location: any) => (
-                <TabsTrigger
-                  key={location.id}
-                  value={location.id.toString()}
-                  className="shrink-0"
-                >
-                  {location.name_ar || location.name}
-                </TabsTrigger>
-              ))}
-              <TabsTrigger value="movements" className="shrink-0">
-                حركات المخزون
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Production Hall Tab */}
-            <TabsContent value="production-hall" className="space-y-4">
-              <ProductionHallContent />
-            </TabsContent>
-
-            {/* Received Quantities Tab */}
-            <TabsContent value="received-quantities" className="space-y-4">
-              <ReceivedQuantitiesContent />
-            </TabsContent>
-
-            {/* Dynamic location-based inventory tabs */}
-            {locations.map((location: any) => (
-              <TabsContent
-                key={location.id}
-                value={location.id.toString()}
-                className="space-y-4"
-              >
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle>
-                        مخزون {location.name_ar || location.name}
-                      </CardTitle>
-                      <div className="flex space-x-2 space-x-reverse">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                          <Input
-                            placeholder="البحث في المخزون..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 w-64"
-                          />
-                        </div>
-                        <Dialog
-                          open={isAddDialogOpen}
-                          onOpenChange={setIsAddDialogOpen}
-                        >
-                          <DialogTrigger asChild>
-                            <Button onClick={handleAdd}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              إضافة صنف
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-md">
-                            <DialogHeader>
-                              <DialogTitle>
-                                {editingItem
-                                  ? "تعديل صنف المخزون"
-                                  : "إضافة صنف جديد للمخزون"}
-                              </DialogTitle>
-                              <DialogDescription>
-                                {editingItem
-                                  ? "تعديل بيانات وكمية الصنف في المخزون"
-                                  : "إضافة صنف جديد إلى مخزون هذا الموقع"}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <Form {...form}>
-                              <form
-                                onSubmit={form.handleSubmit(onSubmit)}
-                                className="space-y-4"
-                              >
-                                <FormField
-                                  control={form.control}
-                                  name="material_group_id"
-                                  render={({ field }) => (
-                                    <FormItem>
-                                      <FormLabel>مجموعة المواد</FormLabel>
-                                      <Select
-                                        onValueChange={(value) => {
-                                          field.onChange(value);
-                                          form.setValue("item_id", "");
-                                        }}
-                                        value={field.value ?? ""}
-                                      >
-                                        <FormControl>
-                                          <SelectTrigger>
-                                            <SelectValue placeholder="اختر مجموعة المواد" />
-                                          </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                          {materialGroups.map((group: any) => (
-                                            <SelectItem
-                                              key={group.id}
-                                              value={group.id.toString()}
-                                            >
-                                              {group.name_ar || group.name}
-                                            </SelectItem>
-                                          ))}
-                                        </SelectContent>
-                                      </Select>
-                                      <FormMessage />
-                                    </FormItem>
-                                  )}
-                                />
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    مخزون {location.name_ar || location.name}
+                  </CardTitle>
+                  <div className="flex space-x-2 space-x-reverse">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="البحث في المخزون..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64"
+                      />
+                    </div>
+                    <Dialog
+                      open={isAddDialogOpen}
+                      onOpenChange={setIsAddDialogOpen}
+                    >
+                      <DialogTrigger asChild>
+                        <Button onClick={handleAdd}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          إضافة صنف
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>
+                            {editingItem
+                              ? "تعديل صنف المخزون"
+                              : "إضافة صنف جديد للمخزون"}
+                          </DialogTitle>
+                          <DialogDescription>
+                            {editingItem
+                              ? "تعديل بيانات وكمية الصنف في المخزون"
+                              : "إضافة صنف جديد إلى مخزون هذا الموقع"}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <Form {...form}>
+                          <form
+                            onSubmit={form.handleSubmit(onSubmit)}
+                            className="space-y-4"
+                          >
+                            <FormField
+                              control={form.control}
+                              name="material_group_id"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>مجموعة المواد</FormLabel>
+                                  <Select
+                                    onValueChange={(value) => {
+                                      field.onChange(value);
+                                      form.setValue("item_id", "");
+                                    }}
+                                    value={field.value ?? ""}
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="اختر مجموعة المواد" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {materialGroups.map((group: any) => (
+                                        <SelectItem
+                                          key={group.id}
+                                          value={group.id.toString()}
+                                        >
+                                          {group.name_ar || group.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
 
                                 <FormField
                                   control={form.control}
@@ -1302,11 +1288,9 @@ export default function Warehouse() {
                   )}
                 </CardContent>
               </Card>
-            </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-    </div>
+        </TabsContent>
+      </Tabs>
+    </PageLayout>
   );
 }
 

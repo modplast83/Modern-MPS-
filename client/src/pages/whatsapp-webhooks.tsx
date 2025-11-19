@@ -28,9 +28,7 @@ import {
   Send,
   Loader2,
 } from "lucide-react";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 
 export default function WhatsAppWebhooks() {
   const { toast } = useToast();
@@ -164,28 +162,10 @@ export default function WhatsAppWebhooks() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4" dir="rtl">
-          <div className="max-w-6xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center gap-2">
-                <Webhook className="h-8 w-8" />
-                إدارة WhatsApp Webhooks
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                تكوين واختبار webhooks للواتساب
-              </p>
-            </div>
-
-            {/* Webhook URLs */}
-            <Card>
+    <PageLayout title="إدارة WhatsApp Webhooks" description="تكوين واختبار webhooks للواتساب">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Webhook URLs */}
+        <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Code className="h-5 w-5" />
@@ -593,9 +573,7 @@ export default function WhatsAppWebhooks() {
                 </ul>
               </AlertDescription>
             </Alert>
-          </div>
-        </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }

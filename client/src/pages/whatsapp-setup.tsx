@@ -1,7 +1,5 @@
 import { useState } from "react";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import {
   Card,
   CardContent,
@@ -61,21 +59,8 @@ export default function WhatsAppSetup() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إعداد WhatsApp Business API
-            </h1>
-            <p className="text-gray-600">
-              ضبط إعدادات الواتس اب للأعمال وربطها بـ Meta Business
-            </p>
-          </div>
-
-          <Tabs defaultValue="meta" className="space-y-6">
+    <PageLayout title="إعداد WhatsApp Business API" description="ضبط إعدادات الواتس اب للأعمال وربطها بـ Meta Business">
+      <Tabs defaultValue="meta" className="space-y-6">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="meta">شهادة Meta</TabsTrigger>
               <TabsTrigger value="twilio">إعدادات Twilio</TabsTrigger>
@@ -291,10 +276,7 @@ export default function WhatsAppSetup() {
                 </CardContent>
               </Card>
             </TabsContent>
-          </Tabs>
-        </main>
-      </div>
-      <MobileNav />
-    </div>
+      </Tabs>
+    </PageLayout>
   );
 }

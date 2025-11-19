@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import {
   DndContext,
   DragEndEvent,
@@ -581,30 +579,20 @@ export default function ProductionQueues() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          {/* Smart Distribution Modal */}
-          <SmartDistributionModal
-            isOpen={isDistributionModalOpen}
-            onClose={() => setIsDistributionModalOpen(false)}
-            onDistribute={() => {
-              queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
-              queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
-            }}
-          />
+    <PageLayout title="طوابير الإنتاج" description="قم بسحب وإفلات أوامر الإنتاج لتنظيم العمل على المكائن">
+      {/* Smart Distribution Modal */}
+      <SmartDistributionModal
+        isOpen={isDistributionModalOpen}
+        onClose={() => setIsDistributionModalOpen(false)}
+        onDistribute={() => {
+          queryClient.invalidateQueries({ queryKey: ["/api/machine-queues"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/production-orders"] });
+        }}
+      />
 
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">طوابير الإنتاج</h1>
-                <p className="text-gray-600 mt-1">
-                  قم بسحب وإفلات أوامر الإنتاج لتنظيم العمل على المكائن
-                </p>
-              </div>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -748,8 +736,6 @@ export default function ProductionQueues() {
           </DragOverlay>
         </DndContext>
       )}
-        </main>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

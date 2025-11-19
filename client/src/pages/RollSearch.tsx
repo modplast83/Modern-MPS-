@@ -1,9 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Card } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
@@ -275,24 +273,8 @@ export default function RollSearch() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2 flex items-center gap-2">
-              <Search className="h-6 w-6" />
-              البحث عن الرولات
-            </h1>
-              <p className="text-muted-foreground mt-1">
-                ابحث عن الرولات بالرقم، الباركود، أمر الإنتاج أو الطلب
-              </p>
-            </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <PageLayout title="البحث عن الرولات" description="ابحث عن الرولات بالرقم، الباركود، أمر الإنتاج أو الطلب">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Search Panel */}
           <div className="lg:col-span-2">
             <Card className="p-6">
@@ -688,8 +670,6 @@ export default function RollSearch() {
             )}
           </div>
         </div>
-        </main>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

@@ -31,9 +31,7 @@ import { useToast } from "../hooks/use-toast";
 import { Beaker, Plus, Trash2, Eye } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 import { Skeleton } from "../components/ui/skeleton";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { useAuth } from "../hooks/use-auth";
 
 type Material = {
@@ -296,21 +294,9 @@ export default function MaterialMixing() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <Header />
-      
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        
-        <main className="flex-1 p-4 lg:pr-64">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <div className="flex items-center gap-2">
-              <Beaker className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold">خلط المواد</h1>
-            </div>
-
-            {/* Create New Batch Card */}
+    <PageLayout title="خلط المواد">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Create New Batch Card */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -675,6 +661,7 @@ export default function MaterialMixing() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </PageLayout>
   );
 }

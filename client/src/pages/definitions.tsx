@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import {
   Card,
   CardContent,
@@ -1631,23 +1629,9 @@ export default function Definitions() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex min-h-screen">
-        <Sidebar />
-        <MobileNav />
-        <main
-          className="flex-1 lg:mr-64 p-4 lg:p-6"
-          style={{ marginRight: "16rem" }}
-        >
-          <div className="w-full space-y-4">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-                التعريفات الأساسية
-              </h1>
-            </div>
-
-            {/* Search and Filter Controls */}
+    <PageLayout title="التعريفات الأساسية">
+      <div className="w-full space-y-4">
+        {/* Search and Filter Controls */}
             <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-4 rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center gap-4">
                 <div className="relative">
@@ -5421,9 +5405,7 @@ export default function Definitions() {
                 </DialogContent>
               </Dialog>
             )}
-          </div>
-        </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }

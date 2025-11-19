@@ -3,9 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "../lib/queryClient";
 import { useAuth } from "../hooks/use-auth";
 import { useToast } from "../hooks/use-toast";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Card } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -271,29 +269,17 @@ export default function ProductionOrdersManagement() {
 
   if (ordersLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <PageLayout title="إدارة أوامر الإنتاج" description="مراقبة وإدارة جميع أوامر الإنتاج وتحويلها للإنتاج">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة أوامر الإنتاج
-            </h1>
-            <p className="text-gray-600">
-              مراقبة وإدارة جميع أوامر الإنتاج وتحويلها للإنتاج
-            </p>
-          </div>
-
-          {/* الإحصائيات الإجمالية */}
+    <PageLayout title="إدارة أوامر الإنتاج" description="مراقبة وإدارة جميع أوامر الإنتاج وتحويلها للإنتاج">
+      {/* الإحصائيات الإجمالية */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card className="p-4" data-testid="card-total-orders">
               <div className="text-sm text-gray-600">إجمالي الأوامر</div>
@@ -475,7 +461,7 @@ export default function ProductionOrdersManagement() {
           onClose={() => setPrintingProductionOrder(null)}
         />
       )}
-    </div>
+    </PageLayout>
   );
 }
 

@@ -67,8 +67,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
+import PageLayout from "../components/layout/PageLayout";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -1164,21 +1163,8 @@ export default function Orders() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الطلبات والإنتاج
-            </h1>
-            <p className="text-gray-600">
-              متابعة وإدارة طلبات العملاء وأوامر الإنتاج
-            </p>
-          </div>
-
-          {/* Statistics Cards */}
+    <PageLayout title="إدارة الطلبات والإنتاج" description="متابعة وإدارة طلبات العملاء وأوامر الإنتاج">
+      {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -3196,6 +3182,6 @@ export default function Orders() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </PageLayout>
   );
 }

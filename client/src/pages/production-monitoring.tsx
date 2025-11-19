@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import {
   Card,
   CardContent,
@@ -316,26 +314,10 @@ export default function ProductionMonitoring() {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4 space-y-6">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                لوحة مراقبة الإنتاج
-              </h1>
-              <p className="text-gray-600">
-                مراقبة شاملة للأقسام الثلاثة: الفيلم - الطباعة - التقطيع
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2">
+    <PageLayout title="لوحة مراقبة الإنتاج" description="مراقبة شاملة للأقسام الثلاثة: الفيلم - الطباعة - التقطيع">
+      <div className="space-y-6" dir="rtl">
+        {/* Header with action buttons */}
+        <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -356,7 +338,6 @@ export default function ProductionMonitoring() {
                 تصدير
               </Button>
             </div>
-          </div>
 
           {/* Date Filter */}
           <Card>
@@ -474,9 +455,8 @@ export default function ProductionMonitoring() {
               />
             </TabsContent>
           </Tabs>
-        </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }
 

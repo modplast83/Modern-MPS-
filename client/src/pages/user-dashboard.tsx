@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import UserProfile from "../components/dashboard/UserProfile";
 import {
   Card,
@@ -667,25 +665,9 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="max-w-7xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                لوحة التحكم الشخصية
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                مرحباً {userData?.full_name || userData?.username}
-              </p>
-            </div>
-
-            <Tabs defaultValue="overview" className="space-y-6">
+    <PageLayout title="لوحة التحكم الشخصية" description={`مرحباً ${userData?.full_name || userData?.username}`}>
+      <div className="max-w-7xl mx-auto">
+        <Tabs defaultValue="overview" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 md:grid-cols-6">
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
                 <TabsTrigger value="profile">الملف الشخصي</TabsTrigger>
@@ -1914,9 +1896,7 @@ export default function UserDashboard() {
                 </Card>
               </TabsContent>
             </Tabs>
-          </div>
-        </main>
       </div>
-    </div>
+    </PageLayout>
   );
 }

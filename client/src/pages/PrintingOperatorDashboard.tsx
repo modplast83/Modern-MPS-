@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Button } from "../components/ui/button";
 import { Progress } from "../components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -107,27 +105,15 @@ export default function PrintingOperatorDashboard({ hideLayout = false }: Printi
     }
 
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <MobileNav />
-          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            {loadingContent}
-          </main>
-        </div>
-      </div>
+      <PageLayout title="لوحة عامل الطباعة" description="إدارة رولات الطباعة ونقلها إلى التقطيع">
+        {loadingContent}
+      </PageLayout>
     );
   }
 
   const mainContent = (
     <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">لوحة عامل الطباعة</h1>
-        <p className="text-gray-600 dark:text-gray-400">إدارة رولات الطباعة ونقلها إلى التقطيع</p>
-      </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card data-testid="card-active-orders">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium">الأوامر النشطة</CardTitle>
@@ -290,15 +276,8 @@ export default function PrintingOperatorDashboard({ hideLayout = false }: Printi
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          {mainContent}
-        </main>
-      </div>
-    </div>
+    <PageLayout title="لوحة عامل الطباعة" description="إدارة رولات الطباعة ونقلها إلى التقطيع">
+      {mainContent}
+    </PageLayout>
   );
 }

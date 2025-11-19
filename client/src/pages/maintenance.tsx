@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
 import {
@@ -295,24 +293,8 @@ export default function Maintenance() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الصيانة
-            </h1>
-            <p className="text-gray-600">
-              نظام متكامل لإدارة الصيانة وتتبع الأعطال
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <PageLayout title="إدارة الصيانة" description="نظام متكامل لإدارة الصيانة وتتبع الأعطال">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -651,8 +633,6 @@ export default function Maintenance() {
               <ConsumablePartsTab />
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
 
       {/* Action View Dialog */}
       <Dialog
@@ -862,7 +842,7 @@ export default function Maintenance() {
             })()}
         </DialogContent>
       </Dialog>
-    </div>
+    </PageLayout>
   );
 }
 

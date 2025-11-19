@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import { Badge } from "../components/ui/badge";
 import {
   Card,
@@ -44,24 +42,8 @@ export default function Quality() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              إدارة الجودة
-            </h1>
-            <p className="text-gray-600">
-              مراقبة فحوصات الجودة ومعايير الإنتاج
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <PageLayout title="إدارة الجودة" description="مراقبة فحوصات الجودة ومعايير الإنتاج">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -243,8 +225,6 @@ export default function Quality() {
               )}
             </CardContent>
           </Card>
-        </main>
-      </div>
-    </div>
+    </PageLayout>
   );
 }

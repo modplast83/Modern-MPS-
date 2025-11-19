@@ -1,7 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 
 /**
  * صفحة الأدوات — نسخة موسّعة وقابلة للاستبدال مباشرةً مكان الملف القديم
@@ -42,20 +40,9 @@ const tabs: TabDef[] = [
 // ===================== الغلاف =====================
 export default function ToolsPage(): JSX.Element {
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <MobileNav />
-        <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">الأدوات</h1>
-            <p className="text-gray-600">مجموعة من الحاسبات والمحوّلات المساعدة في الإنتاج والتكلفة والألوان.</p>
-          </div>
-          <ToolsContent />
-        </main>
-      </div>
-    </div>
+    <PageLayout title="الأدوات" description="مجموعة من الحاسبات والمحوّلات المساعدة في الإنتاج والتكلفة والألوان">
+      <ToolsContent />
+    </PageLayout>
   );
 }
 

@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../hooks/use-auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Header from "../components/layout/Header";
-import Sidebar from "../components/layout/Sidebar";
-import MobileNav from "../components/layout/MobileNav";
+import PageLayout from "../components/layout/PageLayout";
 import {
   Card,
   CardContent,
@@ -1009,19 +1007,8 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      <div className="flex">
-        <Sidebar />
-        <main className="flex-1 lg:mr-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">الإعدادات</h1>
-            <p className="text-gray-600">
-              إدارة إعدادات النظام والتفضيلات الشخصية
-            </p>
-          </div>
-
-          <Tabs defaultValue="roles" className="space-y-6">
+    <PageLayout title="الإعدادات" description="إدارة إعدادات النظام والتفضيلات الشخصية">
+      <Tabs defaultValue="roles" className="space-y-6">
             <TabsList className="grid w-full grid-cols-4 md:grid-cols-7">
               <TabsTrigger value="roles" className="flex items-center gap-2">
                 <Shield className="w-4 h-4" />
@@ -2655,6 +2642,6 @@ function LocationSettingsForm() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageLayout>
   );
 }

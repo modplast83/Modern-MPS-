@@ -737,120 +737,120 @@ export default function Orders() {
 
       {/* التبويبات الرئيسية */}
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
-              <TabsTrigger value="orders" data-testid="tab-orders">
-                الطلبات
-              </TabsTrigger>
-              <TabsTrigger value="production-orders" data-testid="tab-production-orders">
-                <ClipboardCheck className="h-4 w-4 ml-2" />
-                <span>أوامر الإنتاج</span>
-              </TabsTrigger>
-              <TabsTrigger value="rolls" data-testid="tab-rolls">
-                <Package className="h-4 w-4 ml-2" />
-                <span>الرولات</span>
-              </TabsTrigger>
-              <TabsTrigger value="production-queues" data-testid="tab-production-queues">
-                <Link2 className="h-4 w-4 ml-2" />
-                <span>طوابير الإنتاج</span>
-              </TabsTrigger>
-              <TabsTrigger value="roll-search" data-testid="tab-roll-search">
-                <Search className="h-4 w-4 ml-2" />
-                <span>البحث عن الرولات</span>
-              </TabsTrigger>
-              <TabsTrigger value="production-reports" data-testid="tab-production-reports">
-                <BarChart3 className="h-4 w-4 ml-2" />
-                <span>تقارير الإنتاج</span>
-              </TabsTrigger>
-            </TabsList>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 lg:w-auto lg:inline-grid">
+          <TabsTrigger value="orders" data-testid="tab-orders">
+            الطلبات
+          </TabsTrigger>
+          <TabsTrigger value="production-orders" data-testid="tab-production-orders">
+            <ClipboardCheck className="h-4 w-4 ml-2" />
+            <span>أوامر الإنتاج</span>
+          </TabsTrigger>
+          <TabsTrigger value="rolls" data-testid="tab-rolls">
+            <Package className="h-4 w-4 ml-2" />
+            <span>الرولات</span>
+          </TabsTrigger>
+          <TabsTrigger value="production-queues" data-testid="tab-production-queues">
+            <Link2 className="h-4 w-4 ml-2" />
+            <span>طوابير الإنتاج</span>
+          </TabsTrigger>
+          <TabsTrigger value="roll-search" data-testid="tab-roll-search">
+            <Search className="h-4 w-4 ml-2" />
+            <span>البحث عن الرولات</span>
+          </TabsTrigger>
+          <TabsTrigger value="production-reports" data-testid="tab-production-reports">
+            <BarChart3 className="h-4 w-4 ml-2" />
+            <span>تقارير الإنتاج</span>
+          </TabsTrigger>
+        </TabsList>
 
-            {/* محتوى الطلبات */}
-            <TabsContent value="orders">
-              {!ordersLoading && (
-                <>
-                  <OrdersStats orders={orders} productionOrders={productionOrders} />
-                  <div className="mt-6">
-                    <OrdersTabs
-                      orders={orders}
-                      productionOrders={productionOrders}
-                      customers={customers}
-                      customerProducts={customerProducts}
-                      users={users}
-                      items={items}
-                      categories={categories}
-                      searchTerm={searchTerm}
-                      setSearchTerm={setSearchTerm}
-                      statusFilter={statusFilter}
-                      setStatusFilter={setStatusFilter}
-                      productionSearchTerm={productionSearchTerm}
-                      setProductionSearchTerm={setProductionSearchTerm}
-                      productionStatusFilter={productionStatusFilter}
-                      setProductionStatusFilter={setProductionStatusFilter}
-                      filteredOrders={filteredOrders}
-                      filteredProductionOrders={filteredProductionOrders}
-                      isOrderDialogOpen={isOrderDialogOpen}
-                      setIsOrderDialogOpen={setIsOrderDialogOpen}
-                      editingOrder={editingOrder}
-                      onAddOrder={handleAddOrder}
-                      onEditOrder={handleEditOrder}
-                      onDeleteOrder={handleDeleteOrder}
-                      onStatusChange={handleStatusChange}
-                      onViewOrder={handleViewOrder}
-                      onPrintOrder={handlePrintOrder}
-                      onOrderSubmit={onOrderSubmit}
-                      onBulkDelete={handleBulkDelete}
-                      onBulkStatusChange={handleBulkStatusChange}
-                      currentUser={user}
-                      isAdmin={isAdmin}
-                    />
-                  </div>
-                </>
-              )}
-            </TabsContent>
+        {/* محتوى الطلبات */}
+        <TabsContent value="orders">
+          {!ordersLoading && (
+            <>
+              <OrdersStats orders={orders} productionOrders={productionOrders} />
+              <div className="mt-6">
+                <OrdersTabs
+                  orders={orders}
+                  productionOrders={productionOrders}
+                  customers={customers}
+                  customerProducts={customerProducts}
+                  users={users}
+                  items={items}
+                  categories={categories}
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  productionSearchTerm={productionSearchTerm}
+                  setProductionSearchTerm={setProductionSearchTerm}
+                  productionStatusFilter={productionStatusFilter}
+                  setProductionStatusFilter={setProductionStatusFilter}
+                  filteredOrders={filteredOrders}
+                  filteredProductionOrders={filteredProductionOrders}
+                  isOrderDialogOpen={isOrderDialogOpen}
+                  setIsOrderDialogOpen={setIsOrderDialogOpen}
+                  editingOrder={editingOrder}
+                  onAddOrder={handleAddOrder}
+                  onEditOrder={handleEditOrder}
+                  onDeleteOrder={handleDeleteOrder}
+                  onStatusChange={handleStatusChange}
+                  onViewOrder={handleViewOrder}
+                  onPrintOrder={handlePrintOrder}
+                  onOrderSubmit={onOrderSubmit}
+                  onBulkDelete={handleBulkDelete}
+                  onBulkStatusChange={handleBulkStatusChange}
+                  currentUser={user}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            </>
+          )}
+        </TabsContent>
 
-            {/* محتوى أوامر الإنتاج */}
-            <TabsContent value="production-orders">
-              <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
-                  <ProductionOrdersManagement />
-                </div>
-              </Suspense>
-            </TabsContent>
+        {/* محتوى أوامر الإنتاج */}
+        <TabsContent value="production-orders">
+          <Suspense fallback={<LoadingFallback />}>
+            <div className="embedded-page-wrapper">
+              <ProductionOrdersManagement />
+            </div>
+          </Suspense>
+        </TabsContent>
 
-            {/* محتوى الرولات */}
-            <TabsContent value="rolls">
-              <RollsTab 
-                customers={customers}
-                productionOrders={productionOrders}
-              />
-            </TabsContent>
+        {/* محتوى الرولات */}
+        <TabsContent value="rolls">
+          <RollsTab 
+            customers={customers}
+            productionOrders={productionOrders}
+          />
+        </TabsContent>
 
-            {/* محتوى طوابير الإنتاج */}
-            <TabsContent value="production-queues">
-              <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
-                  <ProductionQueues />
-                </div>
-              </Suspense>
-            </TabsContent>
+        {/* محتوى طوابير الإنتاج */}
+        <TabsContent value="production-queues">
+          <Suspense fallback={<LoadingFallback />}>
+            <div className="embedded-page-wrapper">
+              <ProductionQueues />
+            </div>
+          </Suspense>
+        </TabsContent>
 
-            {/* محتوى البحث عن الرولات */}
-            <TabsContent value="roll-search">
-              <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
-                  <RollSearch />
-                </div>
-              </Suspense>
-            </TabsContent>
+        {/* محتوى البحث عن الرولات */}
+        <TabsContent value="roll-search">
+          <Suspense fallback={<LoadingFallback />}>
+            <div className="embedded-page-wrapper">
+              <RollSearch />
+            </div>
+          </Suspense>
+        </TabsContent>
 
-            {/* محتوى تقارير الإنتاج */}
-            <TabsContent value="production-reports">
-              <Suspense fallback={<LoadingFallback />}>
-                <div className="embedded-page-wrapper">
-                  <ProductionReports />
-                </div>
-              </Suspense>
-            </TabsContent>
-          </Tabs>
+        {/* محتوى تقارير الإنتاج */}
+        <TabsContent value="production-reports">
+          <Suspense fallback={<LoadingFallback />}>
+            <div className="embedded-page-wrapper">
+              <ProductionReports />
+            </div>
+          </Suspense>
+        </TabsContent>
+      </Tabs>
 
       {/* View Order Dialog */}
       <ViewOrderDialog
