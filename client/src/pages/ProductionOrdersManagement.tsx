@@ -435,8 +435,6 @@ export default function ProductionOrdersManagement() {
               <ProductionOrderStatsCard productionOrderId={showStats} />
             </div>
           )}
-        </main>
-      </div>
 
       {/* نافذة التفعيل والتخصيص */}
       <ProductionOrderActivationModal
