@@ -53,7 +53,7 @@ export default function WhatsAppWebhooks() {
 
   const notificationsList = Array.isArray(notifications) ? notifications : [];
   const recentWebhookMessages = notificationsList
-    .filter((n: any) => n.channel === "whatsapp")
+    .filter((n: any) => n.type === "whatsapp")
     .slice(0, 10);
 
   // اختبار إرسال رسالة
@@ -555,9 +555,9 @@ export default function WhatsAppWebhooks() {
                         <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
                           {msg.message}
                         </p>
-                        {msg.external_id && (
+                        {msg.twilio_sid && (
                           <p className="text-xs text-gray-500 font-mono">
-                            Message ID: {msg.external_id}
+                            Message ID: {msg.twilio_sid}
                           </p>
                         )}
                         {msg.error_message && (
