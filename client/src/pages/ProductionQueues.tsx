@@ -545,21 +545,14 @@ export default function ProductionQueues() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <div className="flex">
-          <Sidebar />
-          <MobileNav />
-          <main className="flex-1 lg:mr-64 p-4 pb-20 lg:pb-4">
-            <div className="flex items-center justify-center h-96">
-              <div className="text-center">
-                <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-gray-600">جاري تحميل الطوابير...</p>
-              </div>
-            </div>
-          </main>
+      <PageLayout title="طوابير الإنتاج" description="قم بسحب وإفلات أوامر الإنتاج لتنظيم العمل على المكائن">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-gray-600">جاري تحميل الطوابير...</p>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
@@ -592,7 +585,6 @@ export default function ProductionQueues() {
 
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
           <div className="flex gap-2">
             <Button
               variant="outline"
