@@ -2835,8 +2835,6 @@ export default function Orders() {
               </Card>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
 
       {/* View Order Dialog */}
       <Dialog

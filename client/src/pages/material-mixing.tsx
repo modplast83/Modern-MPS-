@@ -581,8 +581,6 @@ export default function MaterialMixing() {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
 
       {/* Batch Details Dialog */}
       <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
@@ -661,7 +659,6 @@ export default function MaterialMixing() {
           )}
         </DialogContent>
       </Dialog>
-      </div>
     </PageLayout>
   );
 }

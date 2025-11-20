@@ -76,14 +76,6 @@ export default function LeaveManagement() {
     staleTime: 0,
     retry: 3,
     enabled: true,
-    onError: (err: any) => {
-      toast({
-        title: "خطأ",
-        description:
-          err instanceof Error ? err.message : "فشل في تحميل طلبات المستخدمين",
-        variant: "destructive",
-      });
-    },
   });
 
   const { data: users = [], isLoading: usersLoading } = useQuery<any[]>({

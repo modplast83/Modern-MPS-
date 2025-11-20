@@ -94,14 +94,6 @@ export default function AttendanceManagement() {
       if (!response.ok) throw new Error("فشل في جلب بيانات الحضور");
       return response.json();
     },
-    onError: (err: any) => {
-      toast({
-        title: "خطأ",
-        description:
-          err instanceof Error ? err.message : "فشل في جلب بيانات الحضور",
-        variant: "destructive",
-      });
-    },
   });
 
   // Fetch users data
@@ -112,14 +104,6 @@ export default function AttendanceManagement() {
         const response = await fetch("/api/users");
         if (!response.ok) throw new Error("فشل في جلب بيانات المستخدمين");
         return response.json();
-      },
-      onError: (err: any) => {
-        toast({
-          title: "خطأ",
-          description:
-            err instanceof Error ? err.message : "فشل في جلب بيانات المستخدمين",
-          variant: "destructive",
-        });
       },
     });
 

@@ -4,7 +4,7 @@
 // Description: Advanced error learning and pattern recognition
 // ===============================================
 
-import { AILearning } from "./ai-learning";
+// import { AILearning } from "./ai-learning"; // Commented out - file doesn't exist
 
 export interface ErrorPattern {
   errorType: string;
@@ -64,16 +64,17 @@ export class ErrorLearningEnhancer {
       }
 
       // تسجيل في نظام التعلم العام
-      if (context.userId) {
-        await AILearning.recordLearningData(
-          context.userId,
-          context.action || "error_encountered",
-          `${errorType}: ${errorMessage}`,
-          false,
-          0,
-          "negative"
-        );
-      }
+      // Commented out - AILearning module doesn't exist
+      // if (context.userId) {
+      //   await AILearning.recordLearningData(
+      //     context.userId,
+      //     context.action || "error_encountered",
+      //     `${errorType}: ${errorMessage}`,
+      //     false,
+      //     0,
+      //     "negative"
+      //   );
+      // }
 
       // توليد توصية إذا تكرر الخطأ
       if (pattern && pattern.frequency >= 3) {
@@ -245,16 +246,17 @@ export class ErrorLearningEnhancer {
     userId?: number
   ): Promise<void> {
     // تسجيل النجاح
-    if (userId) {
-      await AILearning.recordLearningData(
-        userId,
-        action,
-        JSON.stringify(context),
-        true,
-        0,
-        "positive"
-      );
-    }
+    // Commented out - AILearning module doesn't exist
+    // if (userId) {
+    //   await AILearning.recordLearningData(
+    //     userId,
+    //     action,
+    //     JSON.stringify(context),
+    //     true,
+    //     0,
+    //     "positive"
+    //   );
+    // }
 
     // البحث عن أخطاء مماثلة وتحديث الحلول المقترحة
     const relatedErrorTypes = Array.from(this.errorHistory.keys())
