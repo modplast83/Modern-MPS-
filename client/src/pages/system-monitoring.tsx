@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -17,12 +18,15 @@ import {
   FileWarning,
   RefreshCw,
   TrendingUp,
-  XCircle
+  XCircle,
+  ArrowRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
 
 export default function SystemMonitoring() {
+  const [, setLocation] = useLocation();
+
   const { data: performanceReport, isLoading: perfLoading, refetch: refetchPerf } = useQuery({
     queryKey: ['/api/monitoring/performance-report'],
     refetchInterval: 30000, // كل 30 ثانية
@@ -81,11 +85,21 @@ export default function SystemMonitoring() {
   return (
     <div className="container mx-auto p-6 space-y-6" data-testid="system-monitoring-page">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="page-title">مراقبة النظام</h1>
-          <p className="text-muted-foreground" data-testid="page-description">
-            مراقبة الأداء والصحة العامة للنظام
-          </p>
+        <div className="flex items-center gap-4">
+          <Button
+            onClick={() => setLocation('/')}
+            variant="ghost"
+            size="icon"
+            data-testid="button-back-home"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold" data-testid="page-title">مراقبة النظام</h1>
+            <p className="text-muted-foreground" data-testid="page-description">
+              مراقبة الأداء والصحة العامة للنظام
+            </p>
+          </div>
         </div>
         <Button
           onClick={() => {
