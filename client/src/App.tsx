@@ -40,6 +40,7 @@ import CuttingOperatorDashboard from "./pages/CuttingOperatorDashboard";
 import ProductionDashboard from "./pages/ProductionDashboard";
 import RollSearch from "./pages/RollSearch";
 import ProductionReports from "./pages/ProductionReports";
+import SystemMonitoring from "./pages/system-monitoring";
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -245,6 +246,12 @@ function AppRoutes() {
       <Route path="/whatsapp-webhooks">
         <ProtectedRoute path="/whatsapp-webhooks">
           <WhatsAppWebhooks />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/system-monitoring">
+        <ProtectedRoute path="/system-monitoring">
+          <SystemMonitoring />
         </ProtectedRoute>
       </Route>
 

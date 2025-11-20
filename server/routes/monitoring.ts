@@ -8,6 +8,7 @@ import { Router } from 'express';
 import { PerformanceMonitor } from '../middleware/performance-monitor';
 import { DatabaseMonitor } from '../middleware/database-monitor';
 import { MemoryMonitor } from '../middleware/memory-monitor';
+import { CodeHealthChecker } from '../services/code-health-checker';
 import { db } from '../db';
 import { system_performance_metrics } from '../../shared/schema';
 import { desc, sql, and, gte } from 'drizzle-orm';
@@ -179,6 +180,17 @@ router.get('/api/monitoring/health', async (req, res) => {
       status: 'unhealthy',
       error: 'Health check failed' 
     });
+  }
+});
+
+// 🔍 فحص صحة الكود
+router.get('/api/monitoring/code-health', async (req, res) => {
+  try {
+    const report = await CodeHealthChecker.runFullHealthCheck();
+    res.json(report);
+  } catch (error) {
+    console.error('Error running code health check:', error);
+    res.status(500).json({ error: 'Failed to run code health check' });
   }
 });
 
