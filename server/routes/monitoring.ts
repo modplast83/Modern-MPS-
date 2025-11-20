@@ -22,13 +22,15 @@ router.get('/api/monitoring/performance-report', async (req, res) => {
     const databaseStats = DatabaseMonitor.getQueryStats();
     const memoryStats = MemoryMonitor.getMemoryStats();
 
+    const warningsCount = memoryStats?.warnings?.length ?? 0;
+    
     res.json({
       timestamp: new Date(),
       api: apiPerformance,
       database: databaseStats,
       memory: memoryStats,
       systemHealth: {
-        status: memoryStats?.warnings.length === 0 ? 'healthy' : 'warning',
+        status: warningsCount === 0 ? 'healthy' : 'warning',
         uptime: process.uptime(),
         uptimeFormatted: formatUptime(process.uptime())
       }
@@ -155,8 +157,10 @@ router.get('/api/monitoring/health', async (req, res) => {
     const memoryStats = MemoryMonitor.getMemoryStats();
     const apiStats = await PerformanceMonitor.getPerformanceReport();
     
+    const memoryWarningsCount = memoryStats?.warnings?.length ?? 0;
+    
     const isHealthy = 
-      (!memoryStats || memoryStats.warnings.length === 0) &&
+      (memoryWarningsCount === 0) &&
       (apiStats.slowRequestsPercent || 0) < 20;
 
     res.json({
@@ -164,7 +168,7 @@ router.get('/api/monitoring/health', async (req, res) => {
       timestamp: new Date(),
       checks: {
         memory: {
-          status: !memoryStats || memoryStats.warnings.length === 0 ? 'ok' : 'warning',
+          status: memoryWarningsCount === 0 ? 'ok' : 'warning',
           details: memoryStats
         },
         api: {
@@ -184,10 +188,38 @@ router.get('/api/monitoring/health', async (req, res) => {
 });
 
 // 🔍 فحص صحة الكود
+// Cache full results for 5 minutes to prevent blocking the event loop
+// The cache is automatically evicted after expiry
+let codeHealthCache: { report: any; timestamp: number } | null = null;
+const CODE_HEALTH_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 router.get('/api/monitoring/code-health', async (req, res) => {
   try {
-    const report = await CodeHealthChecker.runFullHealthCheck();
-    res.json(report);
+    const now = Date.now();
+    const forceRefresh = req.query.force === 'true';
+    
+    // Evict expired cache
+    if (codeHealthCache && (now - codeHealthCache.timestamp) >= CODE_HEALTH_CACHE_DURATION) {
+      codeHealthCache = null;
+    }
+    
+    // Return cached result if available
+    if (!forceRefresh && codeHealthCache) {
+      return res.json({
+        ...codeHealthCache.report,
+        cached: true,
+        cacheAge: Math.floor((now - codeHealthCache.timestamp) / 1000) + 's'
+      });
+    }
+    
+    // Run health check
+    const fullReport = await CodeHealthChecker.runFullHealthCheck();
+    
+    // Store full report in cache (auto-evicted after 5 minutes)
+    codeHealthCache = { report: fullReport, timestamp: now };
+    
+    // Return full report to client
+    res.json({ ...fullReport, cached: false });
   } catch (error) {
     console.error('Error running code health check:', error);
     res.status(500).json({ error: 'Failed to run code health check' });

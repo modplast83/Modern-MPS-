@@ -17,9 +17,18 @@ export class MemoryMonitor {
   private static maxSnapshots = 1000;
   private static warningThreshold = 500 * 1024 * 1024; // 500MB
   private static criticalThreshold = 800 * 1024 * 1024; // 800MB
+  private static monitoringInterval: NodeJS.Timeout | null = null;
 
   static startMonitoring(intervalMs = 30000) {
-    setInterval(() => {
+    // Prevent duplicate monitoring intervals
+    if (this.monitoringInterval) {
+      return;
+    }
+
+    // Take an initial snapshot immediately to avoid null stats on startup
+    this.takeSnapshot();
+
+    this.monitoringInterval = setInterval(() => {
       this.takeSnapshot();
     }, intervalMs);
 

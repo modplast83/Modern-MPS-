@@ -1,4 +1,4 @@
-import { LucideIcon, Home, LayoutDashboard, FileText, Activity, Monitor, ClipboardCheck, Wrench, Users, Warehouse, Database, BarChart3, Settings } from "lucide-react";
+import { LucideIcon, Home, LayoutDashboard, FileText, Activity, Monitor, ClipboardCheck, Wrench, Users, Warehouse, Database, BarChart3, Settings, Gauge } from "lucide-react";
 
 export interface NavigationItem {
   name: string;
@@ -112,6 +112,14 @@ export const navigationItems: NavigationItem[] = [
     icon: Settings,
     path: "/settings",
     priority: 13,
+    group: 'admin',
+  },
+  {
+    name: "مراقبة النظام",
+    name_ar: "مراقبة النظام",
+    icon: Gauge,
+    path: "/system-monitoring",
+    priority: 14,
     group: 'admin',
   },
 ];
