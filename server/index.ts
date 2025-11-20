@@ -8,6 +8,9 @@ import { users } from "@shared/schema";
 import { sql } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import { populateUserFromSession } from "./middleware/session-auth";
+import { performanceMonitor } from "./middleware/performance-monitor";
+import { MemoryMonitor } from "./middleware/memory-monitor";
+import monitoringRoutes from "./routes/monitoring";
 
 const app = express();
 app.use(express.json({ limit: "50mb" }));
@@ -232,6 +235,9 @@ app.use(
 
 // Apply session authentication middleware - populate req.user from session
 app.use(populateUserFromSession);
+
+// 📊 Performance monitoring middleware - tracks API response times and resource usage
+app.use(performanceMonitor);
 
 // Session extension middleware - extends session on any API call with enhanced reliability
 app.use((req, res, next) => {
@@ -708,6 +714,12 @@ function sanitizeResponseForLogging(response: any): any {
     res.setHeader("Content-Type", "application/json");
     next();
   });
+
+  // 📊 Start memory monitoring
+  MemoryMonitor.startMonitoring(30000); // Every 30 seconds
+
+  // 🔧 Register monitoring routes
+  app.use(monitoringRoutes);
 
   const server = await registerRoutes(app);
 
