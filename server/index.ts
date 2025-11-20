@@ -21,31 +21,18 @@ async function performPasswordSecurityCheck(): Promise<void> {
   try {
     // Check for security bypass flag (emergency use only)
     if (process.env.SKIP_SECURITY_CHECK === "true") {
-      console.warn("⚠️  ============================================================");
-      console.warn("⚠️  WARNING: Password security check has been BYPASSED!");
-      console.warn("⚠️  This is for EMERGENCY deployment only.");
-      console.warn("⚠️  ============================================================");
-      console.warn("⚠️  IMMEDIATE ACTION REQUIRED:");
-      console.warn("⚠️  1. Run: node scripts/hash-passwords.js");
-      console.warn("⚠️  2. Remove SKIP_SECURITY_CHECK environment variable");
-      console.warn("⚠️  3. Restart the application");
-      console.warn("⚠️  ============================================================");
+      console.warn("⚠️ SECURITY CHECK BYPASSED via environment variable");
       return;
     }
 
-    console.log("🔒 Performing startup password security check...");
-
+    // Fetch all users to check their passwords
     const allUsers = await db.select().from(users);
+
     let plaintextPasswordsFound = 0;
     const problematicUserIds: number[] = [];
 
     for (const user of allUsers) {
-      if (!user.password) {
-        console.warn(
-          `⚠️ User ${user.id} (${user.username}) has no password set`,
-        );
-        continue;
-      }
+      if (!user.password) continue;
 
       // Check if password is already hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
       const isHashedPassword =
@@ -82,7 +69,7 @@ async function performPasswordSecurityCheck(): Promise<void> {
           `┌─────────────────────────────────────────────────────────────────────┐`,
         );
         console.error(
-          `│                    SECURITY FIX REQUIRED                           │`,
+          `│                     SECURITY FIX REQUIRED                           │`,
         );
         console.error(
           `├─────────────────────────────────────────────────────────────────────┤`,
@@ -91,7 +78,7 @@ async function performPasswordSecurityCheck(): Promise<void> {
           `│ OPTION 1 (Recommended): Hash passwords in production database     │`,
         );
         console.error(
-          `│   Run: node scripts/hash-passwords.js                             │`,
+          `│   Run: node scripts/hash-passwords.js                               │`,
         );
         console.error(
           `│                                                                     │`,
